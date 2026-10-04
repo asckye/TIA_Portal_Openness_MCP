@@ -65,6 +65,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ModelContextProtocol.ResponseJsonReport GetOpcUaConfig(string softwarePath)
         {
+            // envelope: legacy-roundtrip-data-stamp
             var data = new JsonObject { ["softwarePath"] = softwarePath, ["timestamp"] = DateTime.Now.ToString("O") };
 
             if (_session.IsProjectNull())
@@ -242,7 +243,7 @@ namespace TiaMcpServer.Siemens.Services
                 // Native observation: importing a missing file left an empty server interface when the exception was discarded.
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 var fi = new FileInfo(importPath);
-                if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = new JsonObject { ["success"] = false } };
+                if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false) };
                 var interfaceName = Path.GetFileNameWithoutExtension(importPath);
                 var existing = FindByName(collection, interfaceName);
 
@@ -250,20 +251,20 @@ namespace TiaMcpServer.Siemens.Services
                 if (target == null)
                 {
                     target = _session.TryInvokeMethodByName(collection, "Create", interfaceName);
-                    if (target == null) return new ResponseMessage { Message = $"Could not create {interfaceType} '{interfaceName}'.", Meta = new JsonObject { ["success"] = false } };
+                    if (target == null) return new ResponseMessage { Message = $"Could not create {interfaceType} '{interfaceName}'.", Meta = ResponseMeta.Unstamped(false) };
                     createdNow = true;
                 }
                 var import = target.GetType().GetMethod("Import", new[] { typeof(FileInfo) });
-                if (import == null) return new ResponseMessage { Message = $"Import(FileInfo) is not exposed by {target.GetType().Name}.", Meta = new JsonObject { ["success"] = false } };
+                if (import == null) return new ResponseMessage { Message = $"Import(FileInfo) is not exposed by {target.GetType().Name}.", Meta = ResponseMeta.Unstamped(false) };
                 try { import.Invoke(target, new object[] { fi }); }
                 catch (TargetInvocationException tie)
                 {
                     if (createdNow) { try { target.GetType().GetMethod("Delete", Type.EmptyTypes)?.Invoke(target, null); } catch { /* swallow(cleanup): Failure to delete a newly created interface must not replace the original import failure. */ } }
-                    return new ResponseMessage { Message = $"Import failed: {(tie.InnerException ?? tie).Message}" + (createdNow ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), Meta = new JsonObject { ["success"] = false } };
+                    return new ResponseMessage { Message = $"Import failed: {(tie.InnerException ?? tie).Message}" + (createdNow ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), Meta = ResponseMeta.Unstamped(false) };
                 }
                 return new ResponseMessage { Message = createdNow
                     ? $"{interfaceType} '{interfaceName}' created and imported from '{importPath}'."
-                    : $"Existing {interfaceType} '{interfaceName}' updated from '{importPath}'.", Meta = new JsonObject { ["success"] = true, ["created"] = createdNow } };
+                    : $"Existing {interfaceType} '{interfaceName}' updated from '{importPath}'.", Meta = ResponseMeta.Unstamped(true, ("created", createdNow)) };
             }
             catch (Exception ex)
             {
@@ -306,6 +307,7 @@ namespace TiaMcpServer.Siemens.Services
             if (plc.GetService<OpcUaProvider>() == null) throw new NotSupportedException("PLC does not expose OpcUaProvider.");
             var unit = string.IsNullOrEmpty(unitName) ? null : plc.GetService<PlcUnitProvider>()?.UnitGroup.Units.Find(unitName);
             if (!string.IsNullOrEmpty(unitName) && unit == null) throw new ArgumentException("Software unit not found: " + unitName);
+            // envelope: legacy-multiple-dynamic-fields
             var result = new JsonObject { ["success"] = true, ["dryRun"] = dryRun, ["softwarePath"] = softwarePath, ["unitName"] = unitName,
                 ["interfaceName"] = interfaceName, ["namespaceUri"] = namespaceUri, ["outputPath"] = output.FullName, ["accessLevels"] = access.DeepClone(),
                 ["source"] = "Siemens user-modelled OPC UA interface generation phases (317dfd06)",

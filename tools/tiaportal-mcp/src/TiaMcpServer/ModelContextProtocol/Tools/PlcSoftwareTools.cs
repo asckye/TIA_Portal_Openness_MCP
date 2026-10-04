@@ -53,11 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Name = software.Name,
                         Attributes = attributes,
                         Description = software.ToString(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -85,6 +81,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var summary = collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount);
                 summary["compileElapsedMs"] = compileMs;
                 summary["softwarePath"] = softwarePath;
+                // envelope: legacy-late-stamp
                 summary["timestamp"] = DateTime.Now;
 
                 return new ResponseCompile

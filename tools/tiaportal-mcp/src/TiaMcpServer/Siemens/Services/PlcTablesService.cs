@@ -296,6 +296,7 @@ namespace TiaMcpServer.Siemens.Services
                 bool triggerOk = string.Equals(hit.ModifyTrigger.ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
                 meta["readbackVerified"] = valueOk && triggerOk;
                 meta["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires. Project not saved.";
+                // envelope: legacy-single-verdict
                 meta["success"] = valueOk && triggerOk;   // The bridge reads Meta.success to determine operationStatus.
                 if (!valueOk || !triggerOk)
                     return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{hit.ModifyValue}' Trigger={hit.ModifyTrigger} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
@@ -520,6 +521,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ModelContextProtocol.ResponseJsonReport ReadPlcWatchTableCurrentValuesReadOnly(string softwarePath, string watchTableName, int maxEntries = 50)
         {
+            // envelope: legacy-roundtrip-data-stamp
             var data = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -890,7 +892,7 @@ namespace TiaMcpServer.Siemens.Services
                     ? $"Monitored {outRows.Count} live value(s) from watch table '{watchTableName}' in {elapsed} ms ({unresolved.Count} unresolved)."
                     : $"Watch table '{watchTableName}': {rows.Count} entries, {specs.Count} absolute, {unresolved.Count} unresolved. See values/unresolved.",
                 Data = data,
-                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                Meta = ResponseMeta.Basic(DateTime.Now, ok)
             };
         }
 

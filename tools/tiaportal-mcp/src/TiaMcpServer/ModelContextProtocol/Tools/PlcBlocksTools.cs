@@ -63,11 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         IsKnowHowProtected = block.IsKnowHowProtected,
                         Attributes = attributes,
                         Description = block.ToString(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -172,12 +168,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseExportBlock
                     {
                         Message = $"Block exported from '{blockPath}' to '{_session.LastExportedFile ?? exportPath}'",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["exportedFile"] = _session.LastExportedFile
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("exportedFile", _session.LastExportedFile))
                     };
                 }
                 // Should not be reachable because _session.ExportBlock throws on failure
@@ -239,7 +230,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = "Block exported to temp directory",
                         TempDir = res.Value.TempDir,
                         Paths = res.Value.Paths,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -370,6 +361,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         : $"⚠ 未验证：block imported from '{importPath}' to '{groupPath}', but the read-back "
                           + $"could not confirm it ({outcome.Detail}). Confirm with GetBlocks / GetBlockInfo "
                           + "before treating this as done.",
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
@@ -406,7 +398,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Imported {result.Imported?.Count() ?? 0} blocks from '{dir}' into '{groupPath}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -601,7 +593,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ImportError = null,
                     Compile = compile,
                     Suggestions = suggestions,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = compile == null || (compile.Meta?["success"]?.GetValue<bool>() ?? false) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, compile == null || (compile.Meta?["success"]?.GetValue<bool>() ?? false))
                 };
             }
             catch (PortalException pex)
@@ -615,7 +607,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ImportError = $"[{pex.Code}] {pex.Message}",
                     Compile = null,
                     Suggestions = suggestions,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                    Meta = ResponseMeta.Basic(DateTime.Now, false)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -678,14 +670,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"No blocks found with regex '{regexName}' in '{softwarePath}'",
                         Items = new List<ResponseBlockInfo>(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["totalBlocks"] = 0,
-                            ["exportedBlocks"] = 0,
-                            ["duration"] = (DateTime.Now - startTime).TotalSeconds
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("totalBlocks", 0), ("exportedBlocks", 0), ("duration", (DateTime.Now - startTime).TotalSeconds))
                     };
                 }
 
@@ -852,7 +837,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = "Blocks exported to temp directory",
                         TempDir = res.Value.TempDir,
                         Paths = res.Value.Paths,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 throw new McpException("Failed exporting blocks to temp", McpErrorCode.InternalError);
@@ -898,7 +883,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Language = lang,
                     Readable = readable,
                     Message = $"Logic of '{block.Name}' [{lang}] decoded. Series contacts joined with ' · ', parallel branches with ' + '; '⟨常量⟩' marks a contact wired to a literal constant (disabled/forced rung).",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["language"] = lang }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("language", lang))
                 };
             }
             catch (McpException)
@@ -1547,12 +1532,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = created.Count > 0
                         ? $"PLC block group '{groupPath}' ready (created: {string.Join(", ", created)})"
                         : $"PLC block group '{groupPath}' already existed",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["createdCount"] = created.Count
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("createdCount", created.Count))
                 };
             }
             catch (PortalException pex)
@@ -1578,7 +1558,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = summary,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)

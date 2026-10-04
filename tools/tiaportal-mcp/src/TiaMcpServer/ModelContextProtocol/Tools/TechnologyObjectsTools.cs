@@ -101,6 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // Report the exported and failed counts even when the batch contains no objects.
                 var exportedCount = result.Imported?.Count() ?? 0; var failedCount = result.Failed?.Count() ?? 0;
                 result.Message = $"Exported {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}" + (failedCount > 0 ? ": " + string.Join(" | ", result.Failed!.Take(5).Select(f => f.Path + " -> " + (f.Error ?? "").Split('\n')[0])) : "");
+                // envelope: legacy-existing-meta
                 result.Meta ??= new JsonObject { ["timestamp"] = DateTime.Now };
                 result.Meta["success"] = failedCount == 0;
                 return result;
@@ -121,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"Technology object imported from '{importPath}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -150,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Imported {result.Imported?.Count() ?? 0} technology objects from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

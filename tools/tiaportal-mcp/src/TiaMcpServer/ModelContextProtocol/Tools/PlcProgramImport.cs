@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ImportedBlocks = importedBlocks,
                 Failed = failed,
                 Compile = compile,
-                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = success, ["importOrdering"] = ImportSelectionPolicy.OrderingDescription, ["dependencyResolution"] = false }
+                Meta = ResponseMeta.Basic(DateTime.Now, success, ("importOrdering", ImportSelectionPolicy.OrderingDescription), ("dependencyResolution", false))
             };
         }
     }

@@ -144,7 +144,7 @@ namespace TiaMcpServer.Siemens.Services
                           "CreateVersionControlWorkspace, then map objects into it in the TIA UI."
                         : n + " version control workspace(s).",
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaces"] = entries },
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("workspaces", entries)),
                 };
             }
             catch (Exception ex)
@@ -152,7 +152,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "GetVersionControlWorkspaces failed: " + ex.Message,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                    Meta = ResponseMeta.Basic(DateTime.Now, false),
                 };
             }
         }
@@ -186,7 +186,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         Message = "A workspace named '" + workspaceName + "' already exists. " +
                                   "Use GetVersionControlWorkspaces to inspect it.",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                        Meta = ResponseMeta.Basic(DateTime.Now, false),
                     };
 
                 var group = Keep(vci.WorkspaceGroup);
@@ -196,7 +196,7 @@ namespace TiaMcpServer.Siemens.Services
                     Message = "Created workspace '" + ws.Name + "' at " + dir.FullName +
                               ". Next: ConnectProjectToWorkspace to map the project's objects into it, " +
                               "then SyncVersionControlWorkspace to write them out.",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true },
+                    Meta = ResponseMeta.Basic(DateTime.Now, true),
                 };
             }
             catch (Exception ex)
@@ -204,7 +204,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseMessage
                 {
                     Message = "CreateVersionControlWorkspace failed: " + ex.Message,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                    Meta = ResponseMeta.Basic(DateTime.Now, false),
                 };
             }
         }
@@ -247,6 +247,7 @@ namespace TiaMcpServer.Siemens.Services
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SyncVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
                 };
             }
@@ -255,7 +256,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "GetVersionControlStatus failed: " + ex.Message,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                    Meta = ResponseMeta.Basic(DateTime.Now, false),
                 };
             }
         }
@@ -299,7 +300,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         Message = "direction must be 'ProjectToWorkspace' (export for commit) or " +
                                   "'WorkspaceToProject' (import to restore); got '" + direction + "'.",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                        Meta = ResponseMeta.Basic(DateTime.Now, false),
                     };
 
                 // Exporting (project -> text files) is allowed; importing (text files -> project)
@@ -313,7 +314,7 @@ namespace TiaMcpServer.Siemens.Services
                                   "GetVersionControlStatus and SyncVersionControlWorkspace(direction='ProjectToWorkspace') " +
                                   "— so you can put the project under version control, see exactly what changed, " +
                                   "export it as text and commit it.",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                        Meta = ResponseMeta.Basic(DateTime.Now, false),
                     };
 
                 var vci = RequireVci();
@@ -382,7 +383,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "SyncVersionControlWorkspace failed: " + ex.Message,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                    Meta = ResponseMeta.Basic(DateTime.Now, false),
                 };
             }
         }
@@ -665,7 +666,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "ConnectProjectToWorkspace failed: " + ex.Message,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
+                    Meta = ResponseMeta.Basic(DateTime.Now, false),
                 };
             }
         }

@@ -80,7 +80,7 @@ namespace TiaMcpServer.Siemens.Services
                 // Native observation: other extensions are refused with "invalid file extension"; the official format is .DAT.
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 if (!exportPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
-                    return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = new JsonObject { ["success"] = false } };
+                    return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = ResponseMeta.Unstamped(false) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 AlarmClassExportImportResult result = provider.Export(new FileInfo(exportPath));
                 var state = result?.State.ToString() ?? "Unknown";
@@ -91,6 +91,7 @@ namespace TiaMcpServer.Siemens.Services
                     Message = ok
                         ? $"Alarm classes exported to '{exportPath}' (State={state}, Errors={errCount})."
                         : $"Alarm class export failed. State={state}, Errors={errCount}.",
+                    // envelope: legacy-success-last
                     Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["errorCount"] = errCount, ["warningCount"] = result?.WarningCount ?? 0, ["messages"] = AlarmClassMessages(result) }
                 };
             }
@@ -114,7 +115,7 @@ namespace TiaMcpServer.Siemens.Services
                     return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
                 if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase) || !File.Exists(importPath))
-                    return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = new JsonObject { ["success"] = false } };
+                    return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = ResponseMeta.Unstamped(false) };
                 AlarmClassExportImportResult result = provider.Import(new FileInfo(importPath));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
@@ -145,7 +146,7 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = new JsonObject { ["success"] = false } };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(exportPath));
                 var state = result?.State.ToString() ?? "Unknown";
@@ -159,7 +160,7 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 _session.Logger?.LogError(ex, "ExportAlarmTextLists failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message} (a PLC without any alarm text list answers TextListNotFoundException - create one in TIA or via ManagePlcAlarmTextList createFromMasterCopy first).", Meta = new JsonObject { ["success"] = false } };
+                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message} (a PLC without any alarm text list answers TextListNotFoundException - create one in TIA or via ManagePlcAlarmTextList createFromMasterCopy first).", Meta = ResponseMeta.Unstamped(false) };
             }
         }
 
@@ -171,8 +172,8 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = new JsonObject { ["success"] = false } };
-                if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = new JsonObject { ["success"] = false } };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false) };
+                if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false) };
                 TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(importPath), ImportOptions.None);
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result?.State != TextListXlsxResultState.Error;
@@ -185,7 +186,7 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 _session.Logger?.LogError(ex, "ImportAlarmTextLists failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Import failed: {ex.GetBaseException().Message}", Meta = new JsonObject { ["success"] = false } };
+                return new ResponseMessage { Message = $"Import failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
             }
         }
 
@@ -198,7 +199,7 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 var provider = plc.GetService<PlcAlarmTextProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC.", Meta = new JsonObject { ["success"] = false } };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC.", Meta = ResponseMeta.Unstamped(false) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 var option = PlcAlarmTextXlsxExportOption.None;
                 if (includeInfoText) option |= PlcAlarmTextXlsxExportOption.IncludeInfoText;
@@ -217,7 +218,7 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 _session.Logger?.LogError(ex, "ExportAlarmInstanceTexts failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = new JsonObject { ["success"] = false } };
+                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
             }
         }
 

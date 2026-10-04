@@ -56,11 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         IsKnowHowProtected = type.IsKnowHowProtected,
                         Attributes = attributes,
                         Description = type.ToString(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -134,11 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseExportType
                     {
                         Message = $"Type exported from '{typePath}' to '{_session.LastExportedFile ?? exportPath}'",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -188,7 +180,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = "Type exported to temp directory",
                         TempDir = res.Value.TempDir,
                         Paths = res.Value.Paths,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -212,11 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseImportType
                 {
                     Message = $"Type imported from '{importPath}' to '{groupPath}'",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -239,6 +227,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = _domain.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders);
+                // envelope: legacy-existing-meta
                 res.Meta ??= new JsonObject();
                 res.Meta["timestamp"] = DateTime.Now;
                 res.Meta["success"] = (res.Failed == null || !res.Failed.Any());
@@ -287,14 +276,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"No types found with regex '{regexName}' in '{softwarePath}'",
                         Items = new List<ResponseTypeInfo>(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["totalTypes"] = 0,
-                            ["exportedTypes"] = 0,
-                            ["duration"] = (DateTime.Now - startTime).TotalSeconds
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("totalTypes", 0), ("exportedTypes", 0), ("duration", (DateTime.Now - startTime).TotalSeconds))
                     };
                 }
 
@@ -396,6 +378,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = $"Export completed: {processedCount} types with regex '{regexName}' exported from '{softwarePath}' to '{exportPath}'",
                         Items = responseList,
                         Inconsistent = inconsistentTypeInfos,
+                        // envelope: legacy-multiple-dynamic-fields
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -454,7 +437,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = "Types exported to temp directory",
                         TempDir = res.Value.TempDir,
                         Paths = res.Value.Paths,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 throw new McpException("Failed exporting types to temp", McpErrorCode.InternalError);

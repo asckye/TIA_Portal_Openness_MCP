@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var okN = resp.Steps.Count(s => s.Status == "ok");
                 var failN = resp.Steps.Count(s => s.Status == "failed");
                 resp.Message = $"PatchProject dryRun '{resp.ProjectName}': {okN} ok, {failN} failed (offline validation, nothing changed).";
-                resp.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = resp.Ok, ["dryRun"] = true };
+                resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok, ("dryRun", true));
                 return resp;
             }
 
@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var okCount = resp.Steps.Count(s => s.Status == "ok");
             var failCount = resp.Steps.Count(s => s.Status == "failed");
             resp.Message = $"PatchProject '{resp.ProjectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
-            resp.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = resp.Ok };
+            resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok);
             return resp;
         }
     }

@@ -51,12 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Classic HMI minimal package built offline" : "Classic HMI minimal package built with validation findings",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -90,13 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Data = data,
                     OutputPath = outDir,
                     OutputFiles = files,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true,
-                        ["fileCount"] = data["fileCount"]?.GetValue<int>() ?? 0
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true), ("fileCount", data["fileCount"]?.GetValue<int>() ?? 0))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -118,13 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Classic HMI minimal package files validated offline" : "Classic HMI minimal package file validation found issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true,
-                        ["missingTagCount"] = data["missingTagCount"]?.GetValue<int>() ?? 0
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true), ("missingTagCount", data["missingTagCount"]?.GetValue<int>() ?? 0))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -147,13 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Classic HMI minimal package PLC symbol sync validated offline" : "Classic HMI minimal package PLC symbol sync validation found issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true,
-                        ["missingPlcSymbolCount"] = data["missingPlcSymbolCount"]?.GetValue<int>() ?? 0
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true), ("missingPlcSymbolCount", data["missingPlcSymbolCount"]?.GetValue<int>() ?? 0))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -175,13 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "PLC symbol manifest built offline" : "PLC symbol manifest built with findings",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true,
-                        ["symbolCount"] = data["symbolCount"]?.GetValue<int>() ?? 0
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true), ("symbolCount", data["symbolCount"]?.GetValue<int>() ?? 0))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -203,12 +174,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Classic HMI offline validation suite passed" : "Classic HMI offline validation suite found issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -231,12 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Offline release validation suite passed" : "Offline release validation suite found issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -262,12 +223,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = data["ok"]?.GetValue<bool>() == true,
                     Message = "Release diagnostic report built.",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -293,12 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = data["ok"]?.GetValue<bool>() == true,
                     Message = "Release runbook built.",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -325,12 +276,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = data["ok"]?.GetValue<bool>() == true,
                     Message = "Release manifest built.",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -352,12 +298,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = data["ok"]?.GetValue<bool>() == true,
                     Message = "Release handoff artifacts rebuilt.",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -380,12 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Classic HMI temporary import preflight passed" : "Classic HMI temporary import preflight blocked",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -410,12 +346,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "HMI template PLC sync precheck suite completed" : "HMI template PLC sync precheck suite found blocking issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -446,6 +377,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Ok = ok,
                     Message = ok ? "Unified HMI template execution design JSON built offline" : "Unified HMI template execution design JSON built with blocking layout findings",
+                    // envelope: legacy-roundtrip-data-stamp
                     Data = new JsonObject
                     {
                         ["format"] = "tia-unified-hmi-template-apply-design-offline-v1",
@@ -457,13 +389,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["layoutQa"] = layout,
                         ["applyDesign"] = designJson
                     },
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true,
-                        ["itemCount"] = itemCount
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true), ("itemCount", itemCount))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -539,6 +465,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Unified HMI template execution design manifest built offline" : "Unified HMI template execution design manifest has blocking findings",
                     Data = root,
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,

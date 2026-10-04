@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // 在这个版本上叫别的名字 / 读属性时抛了异常被吞掉。三者返回的东西
                     // 一模一样，用户报「枚举返回空但删除工具能找到同一张表」时我们手上
                     // 没有任何证据。所以空清单必须把「走过了什么」一并带回来。
-                    var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true };
+                    var meta = ResponseMeta.Basic(DateTime.Now, true);
                     if (items.Count == 0)
                     {
                         meta["walkedGroupType"] = walk.RootGroupType;
@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"PLC tag table '{tagTableName}' exported",
                         ExportPath = exportPath,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -123,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"PLC tag table imported from '{importPath}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -152,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Imported {result.Imported?.Count() ?? 0} PLC tag tables from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -174,7 +174,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"PLC watch tables listed for '{softwarePath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -293,7 +293,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"PLC watch table '{watchTableName}' exported",
                         ExportPath = exportPath,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -319,7 +319,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Exported {result.Imported?.Count() ?? 0} PLC watch tables to '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -335,7 +335,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _tables.ProbePlcMonitorOnlineCapabilities(softwarePath);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -353,7 +353,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _tables.ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, watchTableName, maxEntries);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -467,11 +467,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["warnings"] = warnings,
                     ["policy"] = policy
                 },
-                Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = ok
-                }
+                Meta = ResponseMeta.Basic(DateTime.Now, ok)
             };
         }
 
@@ -628,11 +624,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["policy"] = policy,
                     ["options"] = options
                 },
-                Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = ok
-                }
+                Meta = ResponseMeta.Basic(DateTime.Now, ok)
             };
         }
 
@@ -652,7 +644,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _tables.MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)

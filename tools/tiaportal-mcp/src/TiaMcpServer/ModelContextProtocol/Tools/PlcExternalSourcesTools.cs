@@ -51,10 +51,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Cross references retrieved for {objectKind} '{objectPath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["queried"] = queried, ["complete"] = true, ["status"] = "complete" }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("queried", queried), ("complete", true), ("status", "complete"))
                     };
                 }
 
+                // envelope: legacy-multiple-dynamic-fields
                 return new ResponseCrossReferences { Message = reason ?? "Cross-reference read failed.", Items = null,
                     Meta = new JsonObject { ["success"] = false, ["queried"] = queried, ["complete"] = false, ["status"] = queried ? "failed" : "notQueried" } };
             }
@@ -77,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"PLC external sources listed for '{softwarePath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -166,7 +167,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = "PLC external source imported",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -190,7 +191,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"PLC external source '{externalSourceName}' deleted or was not present",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -214,7 +215,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"Blocks generated from external source '{externalSourceName}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)

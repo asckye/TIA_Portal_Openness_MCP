@@ -50,11 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseExportAsDocuments
                     {
                         Message = $"Documents exported from '{blockPath}' to '{exportPath}'",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -111,14 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"No blocks found with regex '{regexName}' in '{softwarePath}'",
                         Items = new List<ResponseBlockInfo>(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["totalBlocks"] = 0,
-                            ["exportedBlocks"] = 0,
-                            ["duration"] = (DateTime.Now - startTime).TotalSeconds
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("totalBlocks", 0), ("exportedBlocks", 0), ("duration", (DateTime.Now - startTime).TotalSeconds))
                     };
                 }
 
@@ -206,6 +195,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         msg += $". {skipped} not exported: {reason}";
                     }
 
+                    // envelope: legacy-multiple-dynamic-fields
                     var meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,

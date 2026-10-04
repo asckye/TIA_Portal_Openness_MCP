@@ -165,7 +165,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _library.ProbeGlobalLibrary(libraryPath, maxItems);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -187,7 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _library.ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -203,6 +203,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var data = GlobalLibraryPackageAnalyzer.Analyze(libraryPath);
+                // envelope: legacy-roundtrip-data-stamp
                 data["timestamp"] = DateTime.Now.ToString("O");
                 data["safetyPolicy"] = new JsonObject
                 {
@@ -217,11 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Global library package offline analysis completed" : "Global library package offline analysis completed with findings",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -300,7 +297,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? "Global library template reuse plan built. Direct MasterCopy import remains optional until real readback is verified."
                         : "Global library template reuse plan blocked because the library path was not found.",
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = exists }
+                    Meta = ResponseMeta.Basic(DateTime.Now, exists)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -324,11 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "HMI template/reference offline analysis completed" : "HMI template/reference offline analysis completed with findings",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -351,12 +344,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "Unified HMI template layout offline QA completed" : "Unified HMI template layout offline QA found blocking issues",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
