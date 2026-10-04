@@ -30,7 +30,9 @@ internal static class Program
             var wanted = new AssemblyName(request.Name);
             if (wanted.Name == null || !wanted.Name.StartsWith("Siemens.Engineering", StringComparison.Ordinal)) return null;
             var file = Path.Combine(api, wanted.Name + ".dll");
-            if (!File.Exists(file)) throw new FileNotFoundException("No private/runtime fallback: missing selected Siemens dependency.", file);
+            // Siemens.Engineering.Contract and Siemens.Engineering.ClientAdapter.Interfaces are not in the
+            // PublicAPI folder; TIA's own resolution loads them. Throwing here blocked it on every release.
+            if (!File.Exists(file)) return null;
             var actual = AssemblyName.GetAssemblyName(file);
             if (!string.Equals(wanted.FullName, actual.FullName, StringComparison.OrdinalIgnoreCase))
                 throw new FileLoadException("Selected SDK identity mismatch: " + wanted.FullName + " / " + actual.FullName, file);
