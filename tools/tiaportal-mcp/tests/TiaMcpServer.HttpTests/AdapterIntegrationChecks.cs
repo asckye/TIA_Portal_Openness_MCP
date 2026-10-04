@@ -46,7 +46,7 @@ internal static class AdapterIntegrationChecks
         Func<T> provider = () => { reads++; return current!; };
         var services = over.Invoke(null, new object[] { provider })!;
         check(reads == 0, "Building PLC surfaces does not evaluate or attach the borrowed project");
-        var facets = new[] { "PlcProgram", "PlcData" }.Select(name => services.GetType().GetProperty(name)!.GetValue(services)!).ToArray();
+        var facets = new[] { "PlcProgram", "PlcData", "VersionControl" }.Select(name => services.GetType().GetProperty(name)!.GetValue(services)!).ToArray();
         foreach (var facet in facets)
         {
             var project = facet.GetType().GetProperty("CurrentProject", All)!;
@@ -57,7 +57,7 @@ internal static class AdapterIntegrationChecks
             current = (T)FormatterServices.GetUninitializedObject(concrete);
             check(ReferenceEquals(project.GetValue(facet), current), "PLC surface observes the new kernel handle without caching or ownership transfer");
         }
-        check(reads == 4, "Each PLC surface access evaluates the kernel provider exactly once");
+        check(reads == 6, "Each borrowed surface access evaluates the kernel provider exactly once");
         bool rejected = false;
         try { over.Invoke(null, new object?[] { null }); }
         catch (TargetInvocationException ex) { rejected = ex.InnerException is ArgumentNullException; }

@@ -4,14 +4,17 @@ using Siemens.Engineering;
 
 namespace TiaMcp.Adapters
 {
-    // Contract for the engine's borrowed project. Operations and host-specific policies
-    // are added in step I; construction never reads, owns or caches the native handle.
+    // Borrowed engine project. Construction never reads, owns or caches native handles;
+    // VCI shares raw operations while the host retains its policies.
     public sealed class PlcServices
     {
         private PlcServices(Func<ProjectBase> project)
         {
             PlcProgram = new ProgramSurface(project);
             PlcData = new DataSurface(project);
+#if STUDIO_VCI_MODERN
+            VersionControl = new VersionControlSurface(project);
+#endif
         }
 
         public static PlcServices Over(Func<ProjectBase> project)
@@ -19,6 +22,21 @@ namespace TiaMcp.Adapters
 
         public ProgramSurface PlcProgram { get; }
         public DataSurface PlcData { get; }
+#if STUDIO_VCI_MODERN
+        public VersionControlSurface VersionControl { get; }
+
+        // Borrow the engine's handle at the point of use; the engine retains cache lifetime,
+        // refusal policy and serialization on its existing MTA thread.
+        public sealed class VersionControlSurface
+        {
+            private readonly Func<ProjectBase> project;
+            internal VersionControlSurface(Func<ProjectBase> project) { this.project = project; }
+            public ProjectBase CurrentProject => project();
+            // Use the exact owner already checked against the engine's service cache.
+            public global::Siemens.Engineering.VersionControl.VersionControlInterface Acquire(ProjectBase owner)
+                => TiaOpenness.Openness.VersionControlPrimitives.Service(owner as IEngineeringServiceProvider);
+        }
+#endif
 
         public sealed class ProgramSurface
         {

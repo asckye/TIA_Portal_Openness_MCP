@@ -254,6 +254,60 @@ JIT 数量包含直接、反射、接口、对象分派和枚举输入等所有�
 HttpTests engineering-api 每版增加 13 项，native-diagnostics 每版增加 8 项日志/适配器检查和适配器 JIT 清单；
 旧检查保持不变。八版适配器全部织入并验证，引擎 ∪ 适配器不是合并程序集，也不改变 MCP 工具注册范围。
 
+## 第 I 步的领域迁移样板（P4-I1：VCI）
+
+引擎目录只导入一次 `TiaSharedAdapterPaths.props`，构建日志打印开关值，默认仍为 `false`。
+原语只有一份源码：[VersionControlPrimitives.cs](../../tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs)。
+默认引擎通过共享 props 链接它并定义 `TIA_ENGINE_LOCAL_PRIMITIVES`，命名空间为 `TiaMcpServer.Siemens.LocalVci`；
+开启开关时不链接该文件，改用适配器中的 `TiaOpenness.Openness.VersionControlPrimitives`，不会产生同名类型冲突。
+服务只在 `using Vci = …` 处选择原语类型，所有读写无条件调用 `Vci.X(...)`。
+工程借用集中在一个私有成员：共享路径经 `PlcServices.Over(Func<ProjectBase>).VersionControl` 读取同一个内核工程，
+默认路径直接读取原来的 session；这一个私有成员保留独立条件编译，不在工具实现中散布开关。
+构造不读取工程、不附加第二个会话，也不切换线程。原语中的其余条件编译仅处理六处既有 SDK 支持范围/API 差异。
+开关数量只统计 `TIA_SHARED_ADAPTER_PATHS` 与命名空间选择符号：服务为 2 个（别名与私有借用成员），
+原语为 1 个；`STUDIO_VCI*` 和发布版本宏等 SDK 条件不计入这一限制。
+
+`VersionControlService` 继续拥有信封、文案、方向拒绝、dryRun/changedOnly、工作区选择、命名、遍历顺序、
+maxObjects/walkTrace、失败后重取句柄和继续处理的策略，以及按工程保活的服务与中间代理。
+`OpennessVersionControl` 保留 Studio 自己的策略。`VersionControlPrimitives` 只提供类型化的原生读写，
+两宿主重复的原生调用在这里共享；它不加入默认选项、重试、异常翻译或会话生命周期。
+本次原语粒度没有宿主行为选项：差异仍在宿主的显式调用顺序中。以后原语若承载不同的原生行为，必须新增显式选项，
+两个宿主分别传入现有选择。组合枚举用值类型包装保留原来的类型化 `GetEnumerator` 分派；引擎逐项枚举，
+Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省掉重复读取。
+
+VCI 的默认与共享变体均以“展开后的逐工具调用图相等 + 完整类别多重集的精确去重差量 + 响应”验收。
+默认变体将基线中每个直接 VCI 成员的重复调用点合并为一个本地原语调用点，完整类别多重集仅允许这一差量；
+预期次数由基线独立推导，任何非预期新增、缺失、重复、类别或分派变化都失败。物理多重集去重前后是否相等仅作记录，
+展开后的完整类别多重集仍须相等，不再要求 VCI 方法自身 IL 相同。
+领域外方法逐条比较符号化 IL：仅将元数据 token 解析成成员/类型身份，操作码、操作数、局部变量、分支和异常区均保留；
+新增类型造成的原始字节差异另列数量，不当成字节完全相同。默认变体的精确物理差量与旧、新声明方法及次数均由检查器生成。
+
+两种变体的五个工具逐分支展开本地或跨程序集调用、局部函数、可静态定位的委托和迭代器/异步状态机；
+比较有方向、循环和异常边的调用图，核对成员身份、分派类别和调用次数，循环体保留一次。
+Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14sp1/15.1 明确记录未编译该扩展面。
+静态图不能代替真机回放，也不能证明所有原生异常和并发情形。
+
+共享路径的全局引擎 ∪ 适配器多重集按精确增减验收：引擎 VCI 的直接成员归零，适配器只加入宿主实际到达的新原语，
+共享成员不保留重复的原生实现。领域外的方法体及织入清单不允许变化。默认迁移及共享路径增减清单均由检查器生成到
+[VCI 原生迁移证据](p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
+该 JSON 的 `acceptanceRule` 记录上述规则；默认精确去重差量、展开图及其他检查全部通过时才令 `accepted` 为 `true`。
+每版 `errors` 保留实际失败；`--include-failed` 只允许输出失败证据，仍返回非零退出码。
+
+复跑时先保存修改前八版织入适配器、两版引擎及对应 `*-inventory.json`，然后执行：
+
+```powershell
+python scripts/checks/Compare-VciNativePaths.py --self-test
+pwsh -File scripts/checks/Test-EngineVciMigration.ps1 -PublicApiRoot <本机SDK父目录> -BaselineDirectory <基线目录> -OutputDirectory bin-build/vci-proof
+python scripts/checks/Compare-VciNativePaths.py --evidence-from bin-build/vci-proof --output docs/development/p4-i1-native-evidence.json
+```
+
+基线目录按 `v14sp1` 至 `v21` 分目录，使用 `adapter-inventory.json`；V20/V21 另有 `engine-inventory.json`。
+脚本顺序构建并保存默认/共享两种引擎，使用本机 NuGet 缓存与空还原源，不连接 TIA；IL 读取器仅解析元数据。
+随后跑离线 TRX 数量门禁、全部 HttpTests 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
+两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
+真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；
+接受这些结果前不能把开关默认值改为 `true`。
+
 ## 关键文件
 
 - `tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Adapter.Sources.props`

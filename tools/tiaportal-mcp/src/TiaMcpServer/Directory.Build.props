@@ -8,6 +8,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
   <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaFeatures.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaSharedAdapterPaths.props" />
   <PropertyGroup>
     <!-- Explicit build properties/environment still win, including an offline PublicAPI copy. -->
     <TiaPortalLocation Condition="'$(TiaPortalLocation)' == '' and '$(TiaBuildVersion)' != ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP$(TiaBuildVersion)\Global', 'Path', '', RegistryView.Registry64, RegistryView.Registry32))</TiaPortalLocation>

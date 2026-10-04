@@ -15,6 +15,7 @@ internal static class AdapterSourceClosureTests
         var files=props.Descendants("AdapterSource").Select(x=>(string)x.Attribute("Include")!).ToArray();
         check(files.Length==files.Distinct(StringComparer.Ordinal).Count(),"Explicit adapter source inventory has no duplicates");
         CheckEvaluatedCompileItems(src,files,check);
+        CheckEnginePrimitiveSelection(src,check);
         var code=new Dictionary<string,string>(StringComparer.Ordinal);
         foreach(var path in files)
         {
@@ -54,6 +55,37 @@ internal static class AdapterSourceClosureTests
             var owned=Methods(new[]{entry.Value});
             var without=Methods(studioCode.Where(x=>x.Key!=entry.Key).Select(x=>x.Value));
             check(owned.Except(without).Any(),"Omitting Studio native module is detected: "+entry.Key);
+        }
+    }
+    private static void CheckEnginePrimitiveSelection(string src,Action<bool,string> check)
+    {
+        var primitive=Path.GetFullPath(Path.Combine(src,"TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs"));
+        foreach(var release in new[]{"20","21"})
+        foreach(var enabled in new[]{false,true})
+        {
+            var start=new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH")??"dotnet")
+            {
+                WorkingDirectory=src,UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true,CreateNoWindow=true
+            };
+            foreach(var argument in new[]{"msbuild",Path.Combine(src,"TiaMcpServer","TiaMcpServer.V"+release+".csproj"),
+                "-nologo","-p:TiaPortalLocation="+Path.Combine(src,"unused-evaluation-only"),
+                "-p:TiaSharedAdapterPaths="+enabled.ToString().ToLowerInvariant(),"-getItem:Compile","-getProperty:DefineConstants"})
+                start.ArgumentList.Add(argument);
+            using var process=Process.Start(start)??throw new InvalidOperationException("Could not evaluate engine primitive selection.");
+            var output=process.StandardOutput.ReadToEndAsync();
+            var error=process.StandardError.ReadToEndAsync();
+            if(!process.WaitForExit(60000))
+            {
+                process.Kill(entireProcessTree:true);
+                throw new TimeoutException("Engine primitive selection evaluation timed out.");
+            }
+            check(process.ExitCode==0,"Engine primitive selection evaluates: V"+release+" shared="+enabled+" "+error.GetAwaiter().GetResult());
+            using var result=JsonDocument.Parse(output.GetAwaiter().GetResult());
+            var compile=result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray();
+            check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(enabled?0:1),
+                "Engine links the single primitive source only by default: V"+release+" shared="+enabled);
+            var defines=result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';');
+            check(defines.Contains("TIA_ENGINE_LOCAL_PRIMITIVES")==!enabled,"Engine-local namespace selection matches the source link: V"+release+" shared="+enabled);
         }
     }
     // Evaluation only: no targets, restore, native compiler, worker, or Siemens assembly load.
@@ -119,6 +151,8 @@ internal static class AdapterSourceClosureTests
                 "Legacy Studio links the moved source exactly once: "+name);
         }
         check(legacySources.Contains("../OpennessSessionFactory.cs"),"Legacy Studio factory remains in the original assembly");
+        check(legacySources.Count(path=>path.EndsWith("/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs",StringComparison.Ordinal))==1,
+            "Legacy Studio links the shared VCI primitives exactly once");
         check(!legacySources.Any(path=>path.EndsWith("/StudioAdapter.cs",StringComparison.Ordinal)),"Legacy Studio does not switch to the woven profile yet");
     }
 }

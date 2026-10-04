@@ -19,6 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs" Link="OpennessSession.cs" />
     <Compile Include="../OpennessSessionFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessVersionControl.cs" Link="OpennessVersionControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" Link="VersionControlPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
     <Compile Include="StudioRelease.cs" />
     <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />

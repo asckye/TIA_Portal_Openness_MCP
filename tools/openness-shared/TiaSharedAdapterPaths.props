@@ -4,4 +4,13 @@
     <TiaSharedAdapterPaths Condition="'$(TiaSharedAdapterPaths)' == ''">false</TiaSharedAdapterPaths>
     <DefineConstants Condition="'$(TiaSharedAdapterPaths)' == 'true'">$(DefineConstants);TIA_SHARED_ADAPTER_PATHS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
+    <DefineConstants>$(DefineConstants);TIA_ENGINE_LOCAL_PRIMITIVES</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
+    <Compile Include="$(MSBuildThisFileDirectory)../tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" Link="Native/Vci/VersionControlPrimitives.cs" />
+  </ItemGroup>
+  <Target Name="ReportSharedAdapterPaths" BeforeTargets="CoreCompile">
+    <Message Importance="high" Text="$(MSBuildProjectName): TiaSharedAdapterPaths=$(TiaSharedAdapterPaths)" />
+  </Target>
 </Project>

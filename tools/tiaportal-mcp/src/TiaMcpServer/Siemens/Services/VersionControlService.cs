@@ -12,6 +12,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
+#if TIA_SHARED_ADAPTER_PATHS
+using Vci = TiaOpenness.Openness.VersionControlPrimitives;
+#else
+using Vci = TiaMcpServer.Siemens.LocalVci.VersionControlPrimitives;
+#endif
 
 namespace TiaMcpServer.Siemens.Services
 {
@@ -36,6 +41,14 @@ namespace TiaMcpServer.Siemens.Services
     {
         private readonly IEngineeringSession _session;
 
+#if TIA_SHARED_ADAPTER_PATHS
+        private TiaMcp.Adapters.PlcServices.VersionControlSurface? _versionControl;
+        private ProjectBase? VciProject => (_versionControl ?? (_versionControl =
+            TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).VersionControl)).CurrentProject;
+#else
+        private ProjectBase? VciProject => _session.CurrentProject;
+#endif
+
         public VersionControlService(IEngineeringSession session) => _session = session;
 
         // The VCI service must be kept alive for the whole session. Openness disposes the objects
@@ -47,7 +60,7 @@ namespace TiaMcpServer.Siemens.Services
 
         private VersionControlInterface RequireVci()
         {
-            var project = _session.CurrentProject;
+            var project = VciProject;
             if (project == null)
             {
                 _vciOwnerProject = null;
@@ -59,7 +72,7 @@ namespace TiaMcpServer.Siemens.Services
             if (_vciCached != null && ReferenceEquals(_vciOwnerProject, project))
                 return _vciCached;
 
-            var vci = (project as IEngineeringServiceProvider)?.GetService<VersionControlInterface>();
+            var vci = Vci.Service(project as IEngineeringServiceProvider);
             if (vci == null)
                 throw new InvalidOperationException(
                     "This project exposes no VersionControlInterface. VCI requires TIA Portal V21 or later.");
@@ -89,13 +102,13 @@ namespace TiaMcpServer.Siemens.Services
             var found = new List<Workspace>();
             var pending = new Stack<WorkspaceGroup>();
             // The root is the typed WorkspaceSystemGroup, its descendants are WorkspaceUserGroups (Name / Groups / Workspaces).
-            WorkspaceSystemGroup root = Keep(vci.WorkspaceGroup);
+            WorkspaceSystemGroup root = Keep(Vci.Group(vci));
             pending.Push(root);
             while (pending.Count > 0)
             {
                 var g = pending.Pop();
-                foreach (var w in Keep(g.Workspaces)) found.Add(Keep(w));
-                foreach (WorkspaceUserGroup sub in Keep(g.Groups)) pending.Push(Keep(sub));
+                foreach (var w in Vci.Enumerate(Keep(Vci.Workspaces(g)))) found.Add(Keep(w));
+                foreach (WorkspaceUserGroup sub in Vci.Enumerate(Keep(Vci.Groups(g)))) pending.Push(Keep(sub));
             }
             return found;
         }
@@ -109,11 +122,11 @@ namespace TiaMcpServer.Siemens.Services
                     "CreateVersionControlWorkspace, then map objects into it with " +
                     "ConnectProjectToWorkspace (no UI interaction needed).");
             if (string.IsNullOrWhiteSpace(name)) return all[0];
-            var hit = all.FirstOrDefault(w => string.Equals(w.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            var hit = all.FirstOrDefault(w => string.Equals(Vci.Name(w), name.Trim(), StringComparison.OrdinalIgnoreCase));
             if (hit == null)
                 throw new InvalidOperationException(
                     "No workspace named '" + name + "'. Available: " +
-                    string.Join(", ", all.Select(w => w.Name)));
+                    string.Join(", ", all.Select(w => Vci.Name(w))));
             return hit;
         }
 
@@ -129,13 +142,13 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     n++;
                     int mapped = 0;
-                    try { mapped = w.MappedObjects.Count; } catch { /* swallow(probe-optional): An unavailable mapped-object count leaves the existing zero fallback while other workspace fields remain readable. */ }
+                    try { mapped = Vci.Count(Vci.MappedObjects(w)); } catch { /* swallow(probe-optional): An unavailable mapped-object count leaves the existing zero fallback while other workspace fields remain readable. */ }
                     string root = "";
-                    try { root = w.RootPath?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable workspace root leaves the existing empty-path fallback in the workspace listing. */ }
+                    try { root = Vci.Root(w)?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable workspace root leaves the existing empty-path fallback in the workspace listing. */ }
                     lines.Add(string.Format(
                         "{0} | folder={1} | mappedObjects={2} | language={3}",
-                        w.Name, root, mapped, SafeLanguage(w)));
-                    entries.Add(new JsonObject { ["name"] = w.Name, ["rootPath"] = root, ["mappedObjectCount"] = mapped, ["language"] = SafeLanguage(w) });
+                        Vci.Name(w), root, mapped, SafeLanguage(w)));
+                    entries.Add(new JsonObject { ["name"] = Vci.Name(w), ["rootPath"] = root, ["mappedObjectCount"] = mapped, ["language"] = SafeLanguage(w) });
                 }
                 return new ResponseStringList
                 {
@@ -159,7 +172,7 @@ namespace TiaMcpServer.Siemens.Services
 
         private static string SafeLanguage(Workspace w)
         {
-            try { return w.WorkspaceLanguage?.ToString() ?? "-"; }
+            try { return Vci.Language(w)?.ToString() ?? "-"; }
             catch { /* swallow(probe-optional): An unavailable workspace language is represented by the existing dash placeholder. */ return "-"; }
         }
 
@@ -180,7 +193,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 var vci = RequireVci();
                 var existing = AllWorkspaces(vci)
-                    .FirstOrDefault(w => string.Equals(w.Name, workspaceName.Trim(), StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(w => string.Equals(Vci.Name(w), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase));
                 if (existing != null)
                     return new ResponseMessage
                     {
@@ -189,11 +202,11 @@ namespace TiaMcpServer.Siemens.Services
                         Meta = ResponseMeta.Basic(DateTime.Now, false),
                     };
 
-                var group = Keep(vci.WorkspaceGroup);
-                var ws = Keep(Keep(group.Workspaces).Create(workspaceName.Trim(), dir));
+                var group = Keep(Vci.Group(vci));
+                var ws = Keep(Vci.Create(Keep(Vci.Workspaces(group)), workspaceName.Trim(), dir));
                 return new ResponseMessage
                 {
-                    Message = "Created workspace '" + ws.Name + "' at " + dir.FullName +
+                    Message = "Created workspace '" + Vci.Name(ws) + "' at " + dir.FullName +
                               ". Next: ConnectProjectToWorkspace to map the project's objects into it, " +
                               "then SyncVersionControlWorkspace to write them out.",
                     Meta = ResponseMeta.Basic(DateTime.Now, true),
@@ -221,13 +234,13 @@ namespace TiaMcpServer.Siemens.Services
                 var lines = new List<string>();
                 var entries = new JsonArray();
                 int total = 0, differing = 0;
-                foreach (var mo in Keep(ws.MappedObjects))
+                foreach (var mo in Vci.Enumerate(Keep(Vci.MappedObjects(ws))))
                 {
                     total++;
                     string status;
                     // GetStatus() returns an IndividualObjectCompareResult; ToString() on it yields the type
                     // name, not the verdict. The verdict is CompareState (Equal / Unequal / WorkspaceFileMissing).
-                    try { status = mo.GetStatus().CompareState.ToString(); }
+                    try { status = Vci.State(Vci.ReadStatus(mo)).ToString(); }
                     catch (Exception ex) { status = "Unknown(" + ex.Message + ")"; }
                     bool inSync = string.Equals(status, "Equal", StringComparison.OrdinalIgnoreCase);
                     if (!inSync) differing++;
@@ -242,13 +255,13 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     Message = string.Format(
                         "Workspace '{0}': {1} mapped object(s), {2} differ from the workspace files.{3}",
-                        ws.Name, total, differing,
+                        Vci.Name(ws), total, differing,
                         differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SyncVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
                 };
             }
             catch (Exception ex)
@@ -263,7 +276,7 @@ namespace TiaMcpServer.Siemens.Services
 
         private static string SafeName(MappedObject mo)
         {
-            try { return mo.FileNameWithoutExtension ?? "?"; } catch { /* swallow(probe-optional): An unavailable mapped-object name is represented by the existing question-mark placeholder. */ return "?"; }
+            try { return Vci.FileName(mo) ?? "?"; } catch { /* swallow(probe-optional): An unavailable mapped-object name is represented by the existing question-mark placeholder. */ return "?"; }
         }
 
         private static string SafeFile(MappedObject mo)
@@ -271,8 +284,8 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 string d = "";
-                try { d = mo.DirectoryPath?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable directory leaves the filename-only fallback intact. */ }
-                string f = mo.FileNameWithoutExtension ?? "";
+                try { d = Vci.Directory(mo)?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable directory leaves the filename-only fallback intact. */ }
+                string f = Vci.FileName(mo) ?? "";
                 return string.IsNullOrEmpty(d) ? f : d.TrimEnd('\\', '/') + "\\" + f;
             }
             catch { /* swallow(probe-optional): An unreadable mapped-object path is represented by the existing question-mark placeholder. */ return "?"; }
@@ -280,7 +293,7 @@ namespace TiaMcpServer.Siemens.Services
 
         private static string SafeFormat(MappedObject mo)
         {
-            try { return " | format=" + mo.FileFormat; } catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return ""; }
+            try { return " | format=" + Vci.Format(mo); } catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return ""; }
         }
 
         public ResponseStringList SyncVersionControlWorkspace(
@@ -327,10 +340,10 @@ namespace TiaMcpServer.Siemens.Services
                 // whether objects whose status could not be determined are attempted anyway.
                 var targets = new List<MappedObject>();
                 int skippedEqual = 0;
-                foreach (var mo in Keep(ws.MappedObjects))
+                foreach (var mo in Vci.Enumerate(Keep(Vci.MappedObjects(ws))))
                 {
                     string st;
-                    try { st = mo.GetStatus().CompareState.ToString(); } catch { /* swallow(probe-optional): A failed status probe retains Unknown so the existing synchronization selection rules can decide whether to proceed. */ st = "Unknown"; }
+                    try { st = Vci.State(Vci.ReadStatus(mo)).ToString(); } catch { /* swallow(probe-optional): A failed status probe retains Unknown so the existing synchronization selection rules can decide whether to proceed. */ st = "Unknown"; }
                     if (string.Equals(st, "Equal", StringComparison.OrdinalIgnoreCase)) { skippedEqual++; continue; }
                     if (changedOnly && string.Equals(st, "Unknown", StringComparison.OrdinalIgnoreCase)) continue;
                     targets.Add(mo);
@@ -339,8 +352,8 @@ namespace TiaMcpServer.Siemens.Services
                 if (targets.Count == 0)
                     return new ResponseStringList
                     {
-                        Message = "Workspace '" + ws.Name + "': nothing to synchronize — every mapped object is already in sync.",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
+                        Message = "Workspace '" + Vci.Name(ws) + "': nothing to synchronize — every mapped object is already in sync.",
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
                     };
 
                 var lines = new List<string>();
@@ -352,16 +365,16 @@ namespace TiaMcpServer.Siemens.Services
                         Message = string.Format(
                             "DRY RUN — nothing was written. {0} object(s) would be synchronized {1} in workspace '{2}' " +
                             "(folder {3}). Call again with dryRun=false to do it.",
-                            targets.Count, mode, ws.Name, SafeRoot(ws)),
+                            targets.Count, mode, Vci.Name(ws), SafeRoot(ws)),
                         Items = lines,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
                     };
                 }
 
                 int ok = 0, failed = 0;
                 foreach (var mo in targets)
                 {
-                    try { mo.Synchronize(mode); ok++; lines.Add(SafeName(mo) + " | synchronized"); }
+                    try { Vci.Synchronize(mo, mode); ok++; lines.Add(SafeName(mo) + " | synchronized"); }
                     catch (Exception ex) { failed++; lines.Add(SafeName(mo) + " | FAILED: " + ex.Message); }
                 }
 
@@ -369,13 +382,13 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     Message = string.Format(
                         "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {6} already equal (skipped). Folder: {4}.{5}",
-                        ws.Name, mode, ok, failed, SafeRoot(ws),
+                        Vci.Name(ws), mode, ok, failed, SafeRoot(ws),
                         mode == SynchronizationMode.ProjectToWorkspace
                             ? " The text files are updated — `git add -A && git commit` from that folder."
                             : " The project now holds the workspace's version — compile and save to persist it.",
                         skippedEqual),
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual },
                 };
             }
             catch (Exception ex)
@@ -405,7 +418,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             try
             {
-                var v = o.GetAttribute("Name");
+                var v = Vci.Attribute(o, "Name");
                 var text = v?.ToString();
                 if (!string.IsNullOrWhiteSpace(text)) return text!;
             }
@@ -463,45 +476,45 @@ namespace TiaMcpServer.Siemens.Services
             switch (node.Obj)
             {
                 case Project proj:
-                    foreach (var d in proj.Devices) Add(d, dir, true);
-                    foreach (var g in proj.DeviceGroups) Add(g, dir, true);
+                    foreach (var d in Vci.Enumerate(Vci.Devices(proj))) Add(d, dir, true);
+                    foreach (var g in Vci.Enumerate(Vci.DeviceGroups(proj))) Add(g, dir, true);
                     break;
 
                 case DeviceUserGroup dg:
-                    foreach (var d in dg.Devices) Add(d, Under(ObjName(dg)), true);
-                    foreach (var g in dg.Groups) Add(g, Under(ObjName(dg)), true);
+                    foreach (var d in Vci.Enumerate(Vci.Devices(dg))) Add(d, Under(ObjName(dg)), true);
+                    foreach (var g in Vci.Enumerate(Vci.DeviceGroups(dg))) Add(g, Under(ObjName(dg)), true);
                     break;
 
                 case Device dev:
-                    foreach (var di in dev.DeviceItems) Add(di, Under(ObjName(dev)), true);
+                    foreach (var di in Vci.Enumerate(Vci.DeviceItems(dev))) Add(di, Under(ObjName(dev)), true);
                     break;
 
                 case DeviceItem di2:
-                    foreach (var sub in di2.DeviceItems) Add(sub, dir, true);
-                    var sc = di2.GetService<SoftwareContainer>();
-                    var sw = sc?.Software as IEngineeringObject;
+                    foreach (var sub in Vci.Enumerate(Vci.DeviceItems(di2))) Add(sub, dir, true);
+                    var sc = Vci.SoftwareContainer(di2);
+                    var sw = Vci.Software(sc) as IEngineeringObject;
                     if (sw != null) Add(sw, dir, true);
                     break;
 
                 case PlcSoftware plc:
-                    Add(plc.BlockGroup, Under(ObjName(plc)), true);
-                    Add(plc.TagTableGroup, Under(ObjName(plc)), true);
-                    Add(plc.TypeGroup, Under(ObjName(plc)), true);
+                    Add(Vci.BlockGroup(plc), Under(ObjName(plc)), true);
+                    Add(Vci.TagTableGroup(plc), Under(ObjName(plc)), true);
+                    Add(Vci.TypeGroup(plc), Under(ObjName(plc)), true);
                     break;
 
                 case PlcBlockGroup bg:
-                    foreach (var b in bg.Blocks) Add(b, dir, false);
-                    foreach (var g in bg.Groups) Add(g, Under(ObjName(bg)), true);
+                    foreach (var b in Vci.Enumerate(Vci.Blocks(bg))) Add(b, dir, false);
+                    foreach (var g in Vci.Enumerate(Vci.BlockGroups(bg))) Add(g, Under(ObjName(bg)), true);
                     break;
 
                 case PlcTagTableGroup tg:
-                    foreach (var t in tg.TagTables) Add(t, dir, false);
-                    foreach (var g in tg.Groups) Add(g, Under(ObjName(tg)), true);
+                    foreach (var t in Vci.Enumerate(Vci.TagTables(tg))) Add(t, dir, false);
+                    foreach (var g in Vci.Enumerate(Vci.TagTableGroups(tg))) Add(g, Under(ObjName(tg)), true);
                     break;
 
                 case PlcTypeGroup ty:
-                    foreach (var t in ty.Types) Add(t, dir, false);
-                    foreach (var g in ty.Groups) Add(g, Under(ObjName(ty)), true);
+                    foreach (var t in Vci.Enumerate(Vci.Types(ty))) Add(t, dir, false);
+                    foreach (var g in Vci.Enumerate(Vci.TypeGroups(ty))) Add(g, Under(ObjName(ty)), true);
                     break;
             }
             return kids;
@@ -516,11 +529,11 @@ namespace TiaMcpServer.Siemens.Services
         {
             try
             {
-                var project = _session.CurrentProject;
+                var project = VciProject;
                 if (project == null) throw new InvalidOperationException("No project is open.");
 
                 var ws = FindWorkspace(RequireVci(), workspaceName);
-                string wsName = ws.Name;
+                string wsName = Vci.Name(ws);
                 string wsRootPath = SafeRoot(ws);
 
                 // An Openness call that throws DISPOSES the objects involved: after one
@@ -564,7 +577,7 @@ namespace TiaMcpServer.Siemens.Services
                     IList<string> formats;
                     try
                     {
-                        var f = ws.GetSupportedFileFormats(node.Obj);
+                        var f = Vci.SupportedFormats(ws, node.Obj);
                         formats = f == null ? new List<string>() : f.ToList();
                     }
                     catch (Exception ex)
@@ -585,7 +598,7 @@ namespace TiaMcpServer.Siemens.Services
                             (string.IsNullOrEmpty(rel) ? "" : rel.Replace(Path.DirectorySeparatorChar, '_') + "_") + ObjName(node.Obj));
 
                         MappedObject? existing = null;
-                        try { existing = ws.MappedObjects.Find(node.Obj); }
+                        try { existing = Vci.Find(Vci.MappedObjects(ws), node.Obj); }
                         catch { /* swallow(native-fallback): A failed mapped-object lookup can invalidate its workspace proxy; reacquire it before continuing the existing mapping flow. */ ws = ReAcquire(); }
 
                         if (existing != null)
@@ -607,7 +620,7 @@ namespace TiaMcpServer.Siemens.Services
                             {
                                 // Use the established root layout once. An exception can follow a partial
                                 // export, so never retry the same object with a different target directory.
-                                ws.ExportObject(node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
+                                Vci.Export(ws, node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt +
                                           " | dir=<root> | file=" + flatName);
@@ -673,7 +686,7 @@ namespace TiaMcpServer.Siemens.Services
 
         private static string SafeRoot(Workspace ws)
         {
-            try { return ws.RootPath?.FullName ?? "?"; } catch { /* swallow(probe-optional): An unreadable workspace root is represented by the existing question-mark placeholder. */ return "?"; }
+            try { return Vci.Root(ws)?.FullName ?? "?"; } catch { /* swallow(probe-optional): An unreadable workspace root is represented by the existing question-mark placeholder. */ return "?"; }
         }
     }
 }

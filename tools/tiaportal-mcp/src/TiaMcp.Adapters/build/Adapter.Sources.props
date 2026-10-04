@@ -58,6 +58,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/HmiNavigator.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessSession.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessVersionControl.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/PlcNavigator.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/StudioAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Policy/StudioThreadGuard.cs" />

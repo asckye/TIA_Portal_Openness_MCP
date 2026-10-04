@@ -305,6 +305,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
+      "TIA_ENGINE_LOCAL_PRIMITIVES",
       "TIA_V20",
       "TRACE"
     ]
@@ -315,6 +316,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
+      "TIA_ENGINE_LOCAL_PRIMITIVES",
       "TRACE"
     ]
   },

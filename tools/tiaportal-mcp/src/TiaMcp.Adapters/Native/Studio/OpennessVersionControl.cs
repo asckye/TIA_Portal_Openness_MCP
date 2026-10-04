@@ -76,7 +76,7 @@ namespace TiaOpenness.Openness
         {
             try
             {
-                return (project as IEngineeringServiceProvider)?.GetService<VersionControlInterface>() != null;
+                return VersionControlPrimitives.Service(project as IEngineeringServiceProvider) != null;
             }
             catch (Exception) /* swallow(probe-optional): a project without an accessible VersionControlInterface service is reported as VCI unavailable */
             {
@@ -109,12 +109,12 @@ namespace TiaOpenness.Openness
                 throw new InvalidOperationException("A workspace named '" + name + "' already exists.");
             }
 
-            var group = Keep(Service().WorkspaceGroup);
+            var group = Keep(VersionControlPrimitives.Group(Service()));
 #if STUDIO_VCI_INITIAL
-            var workspace = Keep(Keep(group.Workspaces).Create(name.Trim()));
-            workspace.RootPath = directory;
+            var workspace = Keep(VersionControlPrimitives.Create(Keep(VersionControlPrimitives.Workspaces(group)), name.Trim()));
+            VersionControlPrimitives.SetRoot(workspace, directory);
 #else
-            var workspace = Keep(Keep(group.Workspaces).Create(name.Trim(), directory));
+            var workspace = Keep(VersionControlPrimitives.Create(Keep(VersionControlPrimitives.Workspaces(group)), name.Trim(), directory));
 #endif
             return Describe(workspace);
         }
@@ -234,7 +234,7 @@ namespace TiaOpenness.Openness
                 flat += "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
             }
 #if STUDIO_VCI_MODERN
-            workspace.ExportObject(node.Object, new DirectoryInfo(rootPath), flat, format);
+            VersionControlPrimitives.Export(workspace, node.Object, new DirectoryInfo(rootPath), flat, format);
 #else
             var mapping = Keep(Keep(workspace.Mappings).Create(flat + ".xml", node.Object));
             var service = Keep(mapping.GetService<IndividualObjectSynchronizationStatus>());
@@ -340,7 +340,7 @@ namespace TiaOpenness.Openness
             error = null;
             try
             {
-                var state = ReadStatus(mapped).CompareState.ToString();
+                var state = VersionControlPrimitives.State(ReadStatus(mapped)).ToString();
                 VcCompareState parsed;
                 if (Enum.TryParse(state, true, out parsed)) return parsed;
 
@@ -402,20 +402,20 @@ namespace TiaOpenness.Openness
             var plc = node.Object as PlcSoftware;
             if (plc != null)
             {
-                children.Add(Node(plc.BlockGroup, node.Label + "/Program blocks", "Blocks", node.RelativeDirectory, true));
-                children.Add(Node(plc.TypeGroup, node.Label + "/PLC data types", "Types", node.RelativeDirectory, true));
-                children.Add(Node(plc.TagTableGroup, node.Label + "/PLC tags", "Tags", node.RelativeDirectory, true));
+                children.Add(Node(VersionControlPrimitives.BlockGroup(plc), node.Label + "/Program blocks", "Blocks", node.RelativeDirectory, true));
+                children.Add(Node(VersionControlPrimitives.TypeGroup(plc), node.Label + "/PLC data types", "Types", node.RelativeDirectory, true));
+                children.Add(Node(VersionControlPrimitives.TagTableGroup(plc), node.Label + "/PLC tags", "Tags", node.RelativeDirectory, true));
                 return children;
             }
 
             var blockGroup = node.Object as PlcBlockGroup;
             if (blockGroup != null)
             {
-                foreach (var block in Keep(blockGroup.Blocks).ToList())
+                foreach (var block in Keep(VersionControlPrimitives.Blocks(blockGroup)).ToList())
                 {
                     children.Add(Node(Keep(block), node.Label + "/" + block.Name, block.Name, node.RelativeDirectory, false));
                 }
-                foreach (var sub in Keep(blockGroup.Groups).ToList())
+                foreach (var sub in Keep(VersionControlPrimitives.BlockGroups(blockGroup)).ToList())
                 {
                     children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
                         Combine(node.RelativeDirectory, sub.Name), true));
@@ -426,11 +426,11 @@ namespace TiaOpenness.Openness
             var typeGroup = node.Object as PlcTypeGroup;
             if (typeGroup != null)
             {
-                foreach (var type in Keep(typeGroup.Types).ToList())
+                foreach (var type in Keep(VersionControlPrimitives.Types(typeGroup)).ToList())
                 {
                     children.Add(Node(Keep(type), node.Label + "/" + type.Name, type.Name, node.RelativeDirectory, false));
                 }
-                foreach (var sub in Keep(typeGroup.Groups).ToList())
+                foreach (var sub in Keep(VersionControlPrimitives.TypeGroups(typeGroup)).ToList())
                 {
                     children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
                         Combine(node.RelativeDirectory, sub.Name), true));
@@ -441,11 +441,11 @@ namespace TiaOpenness.Openness
             var tagGroup = node.Object as PlcTagTableGroup;
             if (tagGroup != null)
             {
-                foreach (var table in Keep(tagGroup.TagTables).ToList())
+                foreach (var table in Keep(VersionControlPrimitives.TagTables(tagGroup)).ToList())
                 {
                     children.Add(Node(Keep(table), node.Label + "/" + table.Name, table.Name, node.RelativeDirectory, false));
                 }
-                foreach (var sub in Keep(tagGroup.Groups).ToList())
+                foreach (var sub in Keep(VersionControlPrimitives.TagTableGroups(tagGroup)).ToList())
                 {
                     children.Add(Node(Keep(sub), node.Label + "/" + sub.Name, sub.Name,
                         Combine(node.RelativeDirectory, sub.Name), true));
@@ -481,7 +481,7 @@ namespace TiaOpenness.Openness
         private IList<string> SupportedFormats(ref Workspace workspace, IEngineeringObject o)
         {
 #if STUDIO_VCI_MODERN
-            var formats = workspace.GetSupportedFileFormats(o);
+            var formats = VersionControlPrimitives.SupportedFormats(workspace, o);
 #else
             // The old VCI API exposes individual PLC block/type/tag-table mappings only.
             IList<string> formats = o is PlcBlock || o is PlcType || o is PlcTagTable ? new[] { "xml" } : new string[0];
@@ -492,7 +492,7 @@ namespace TiaOpenness.Openness
         private MappedObject Existing(ref Workspace workspace, IEngineeringObject o)
         {
 #if STUDIO_VCI_MODERN
-            return workspace.MappedObjects.Find(o);
+            return VersionControlPrimitives.Find(VersionControlPrimitives.MappedObjects(workspace), o);
 #else
             return workspace.Mappings.Find(o);
 #endif
@@ -520,7 +520,7 @@ namespace TiaOpenness.Openness
 
             if (_service != null && ReferenceEquals(_serviceOwner, project)) return _service;
 
-            var service = (project as IEngineeringServiceProvider)?.GetService<VersionControlInterface>();
+            var service = VersionControlPrimitives.Service(project as IEngineeringServiceProvider);
             if (service == null)
             {
                 throw new NotSupportedException(
@@ -556,13 +556,13 @@ namespace TiaOpenness.Openness
         {
             var found = new List<Workspace>();
             var pending = new Stack<WorkspaceGroup>();
-            pending.Push(Keep(Service().WorkspaceGroup));
+            pending.Push(Keep(VersionControlPrimitives.Group(Service())));
 
             while (pending.Count > 0)
             {
                 var group = pending.Pop();
-                foreach (var workspace in Keep(group.Workspaces).ToList()) found.Add(Keep(workspace));
-                foreach (var sub in Keep(group.Groups).ToList()) pending.Push(Keep(sub));
+                foreach (var workspace in Keep(VersionControlPrimitives.Workspaces(group)).ToList()) found.Add(Keep(workspace));
+                foreach (var sub in Keep(VersionControlPrimitives.Groups(group)).ToList()) pending.Push(Keep(sub));
             }
             return found;
         }
@@ -608,18 +608,18 @@ namespace TiaOpenness.Openness
 
         private static string SafeName(Workspace workspace)
         {
-            try { return workspace.Name; } catch (Exception) /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ { return "?"; }
+            try { return VersionControlPrimitives.Name(workspace); } catch (Exception) /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ { return "?"; }
         }
 
         private static string SafeRoot(Workspace workspace)
         {
-            try { return workspace.RootPath?.FullName ?? "?"; } catch (Exception) /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ { return "?"; }
+            try { return VersionControlPrimitives.Root(workspace)?.FullName ?? "?"; } catch (Exception) /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ { return "?"; }
         }
 
         private static string SafeLanguage(Workspace workspace)
         {
 #if STUDIO_VCI_MODERN
-            try { return workspace.WorkspaceLanguage?.ToString() ?? "-"; } catch (Exception) /* swallow(native-fallback): unreadable workspace language uses the existing dash placeholder in the workspace description */ { return "-"; }
+            try { return VersionControlPrimitives.Language(workspace)?.ToString() ?? "-"; } catch (Exception) /* swallow(native-fallback): unreadable workspace language uses the existing dash placeholder in the workspace description */ { return "-"; }
 #else
             return "-";
 #endif
@@ -628,7 +628,7 @@ namespace TiaOpenness.Openness
         private static string SafeObjectName(MappedObject mapped)
         {
 #if STUDIO_VCI_MODERN
-            try { return mapped.FileNameWithoutExtension ?? "?"; } catch (Exception) /* swallow(native-fallback): unreadable mapped-object names use the question-mark label in status and sync progress results */ { return "?"; }
+            try { return VersionControlPrimitives.FileName(mapped) ?? "?"; } catch (Exception) /* swallow(native-fallback): unreadable mapped-object names use the question-mark label in status and sync progress results */ { return "?"; }
 #else
             return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
 #endif
@@ -640,8 +640,8 @@ namespace TiaOpenness.Openness
             try
             {
                 var directory = string.Empty;
-                try { directory = mapped.DirectoryPath?.FullName ?? string.Empty; } catch (Exception) /* swallow(native-fallback): unreadable mapping directory metadata leaves the filename-only status display available */ { }
-                var name = mapped.FileNameWithoutExtension ?? string.Empty;
+                try { directory = VersionControlPrimitives.Directory(mapped)?.FullName ?? string.Empty; } catch (Exception) /* swallow(native-fallback): unreadable mapping directory metadata leaves the filename-only status display available */ { }
+                var name = VersionControlPrimitives.FileName(mapped) ?? string.Empty;
                 return directory.Length == 0 ? name : Path.Combine(directory, name);
             }
             catch (Exception) /* swallow(native-fallback): unreadable mapping file metadata uses the question-mark placeholder in the status report */
@@ -652,43 +652,29 @@ namespace TiaOpenness.Openness
 
         private static string SafeFormat(MappedObject mapped)
         {
-            try { return mapped.FileFormat?.ToString(); } catch (Exception) /* swallow(native-fallback): unreadable mapping format is omitted from the status report */ { return null; }
+            try { return VersionControlPrimitives.Format(mapped)?.ToString(); } catch (Exception) /* swallow(native-fallback): unreadable mapping format is omitted from the status report */ { return null; }
         }
 
 #else
         private static string SafeFile(MappedObject mapped)
         {
             var workspace = (Workspace)mapped.Parent;
-            return Path.Combine(workspace.RootPath.FullName, mapped.RelativeWorkspacePath);
+            return Path.Combine(VersionControlPrimitives.Root(workspace).FullName, mapped.RelativeWorkspacePath);
         }
         private static string SafeFormat(MappedObject mapped) { return "xml"; }
 #endif
         private static IEnumerable<MappedObject> Mappings(Workspace workspace)
         {
 #if STUDIO_VCI_MODERN
-            return workspace.MappedObjects;
+            return VersionControlPrimitives.MappedObjects(workspace);
 #else
             return workspace.Mappings;
 #endif
         }
         private static IndividualObjectCompareResult ReadStatus(MappedObject mapped)
-        {
-#if STUDIO_VCI_MODERN
-            return mapped.GetStatus();
-#else
-            var service = mapped.GetService<IndividualObjectSynchronizationStatus>();
-            service.UpdateStatus();
-            return service.GetStatus();
-#endif
-        }
+            => VersionControlPrimitives.ReadStatus(mapped);
         private static void Synchronize(MappedObject mapped, SynchronizationMode mode)
-        {
-#if STUDIO_VCI_MODERN
-            mapped.Synchronize(mode);
-#else
-            mapped.GetService<IndividualObjectSynchronizationStatus>().Synchronize(mode);
-#endif
-        }
+            => VersionControlPrimitives.Synchronize(mapped, mode);
 
         private static string Combine(string parent, string child)
         {
@@ -716,5 +702,4 @@ namespace TiaOpenness.Openness
         }
     }
 }
-
 #endif
