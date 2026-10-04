@@ -173,7 +173,7 @@ internal static class DomainShapeChecks
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                 check(!tool.IsStatic && surface.Tool(name) == tool, domain.Name + " owns " + name);
-                var called = name == "CompileAndDiagnoseHmi" ? mcp.GetMethod("CompileAndDiagnoseHmiCore", all)!
+                var called = name == "CompileAndDiagnoseHmi" ? surface.Method("CompileAndDiagnoseCore", all)
                     : service.GetMethod(name, all)!;
                 var il = tool.GetMethodBody()!.GetILAsByteArray()!;
                 EngineSurface.CheckIl(check, Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>

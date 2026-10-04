@@ -63,7 +63,7 @@ namespace TiaMcpServer.Siemens
             if (name.Equals("ManagePlcProtection", StringComparison.OrdinalIgnoreCase))
             { allowed = PlcProtectionLogic.Actions; v21Actions = new[] { "protectAllConfiguration", "unprotectAllConfiguration" }; }
             if (name.Equals("ManagePlcExternalSources", StringComparison.OrdinalIgnoreCase))
-            { allowed = Step7LeftoversLogic.ExternalSourceActions; v21Actions = new[] { "renameGroup" }; defaultAction = ""; }
+            { allowed = ExternalSourceRules.ExternalSourceActions; v21Actions = new[] { "renameGroup" }; defaultAction = ""; }
             if (name.Equals("ManagePlcSafety", StringComparison.OrdinalIgnoreCase))
             { allowed = SafetyLogic.Actions; v21Actions = new[] { "generateBaseId" }; }
             if (name.Equals("ManagePlcDocuments", StringComparison.OrdinalIgnoreCase))
@@ -85,12 +85,12 @@ namespace TiaMcpServer.Siemens
             if (name.Equals("ManageDeviceServiceObjects", StringComparison.OrdinalIgnoreCase))
             {
                 var family = argument("family") ?? "";
-                if (!Contains(BaseLeftoversLogic.ServiceObjectFamilies, family)) return name + ": unknown family '" + family + "'.";
+                if (!Contains(DeviceServiceObjectRules.ServiceObjectFamilies, family)) return name + ": unknown family '" + family + "'.";
                 if (family.Equals("webApplications", StringComparison.OrdinalIgnoreCase))
-                { allowed = BaseLeftoversLogic.WebApplicationActions; v21Actions = allowed; }
+                { allowed = DeviceServiceObjectRules.WebApplicationActions; v21Actions = allowed; }
                 else if (family.Equals("telecontrolDataPoints", StringComparison.OrdinalIgnoreCase))
-                { allowed = BaseLeftoversLogic.TelecontrolActions; v21Actions = new[] { "read", "update", "delete" }; }
-                else { allowed = BaseLeftoversLogic.CertificateServiceActions; v21Actions = Array.Empty<string>(); }
+                { allowed = DeviceServiceObjectRules.TelecontrolActions; v21Actions = new[] { "read", "update", "delete" }; }
+                else { allowed = DeviceServiceObjectRules.CertificateServiceActions; v21Actions = Array.Empty<string>(); }
             }
             if (allowed != null)
             {

@@ -9,7 +9,7 @@ SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
 LOGIC = SRC.parent / "TiaMcp.Logic"
 sources = EngineSources()
 MCP = sources.type_text('PlcBlocksTools')
-SHARED = sources.member('BuildPlcProgramImportResponse', signature='private static')
+SHARED = sources.member('BuildPlcProgramImportResponse', owner='PlcProgramImport')
 BATCH = sources.member('ImportBlocksFromDirectory', signature='public ResponseImportBatch', tool=False)
 PROGRAM = sources.member('ImportPlcProgramFromDirectory', tool=True)
 
@@ -22,7 +22,7 @@ class ImportSelectionWiring(unittest.TestCase):
 
     def test_reject_before_every_native_action_and_dry_run(self):
         gate = PROGRAM.index("if (conflicts.Count > 0)")
-        returned = PROGRAM.index("return BuildPlcProgramImportResponse", gate)
+        returned = PROGRAM.index("return PlcProgramImport.BuildPlcProgramImportResponse", gate)
         for action in ("_session.ImportType", "_session.ImportPlcTagTable", "_session.ImportTechnologyObject", "_session.ImportBlock", "_session.CompileSoftware", "if (dryRun)"):
             self.assertLess(returned, PROGRAM.index(action))
         self.assertNotIn(".GroupBy(", PROGRAM)

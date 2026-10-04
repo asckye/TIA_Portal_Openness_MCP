@@ -1,3 +1,4 @@
+using static TiaMcpServer.ModelContextProtocol.ScaffoldOperations;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;

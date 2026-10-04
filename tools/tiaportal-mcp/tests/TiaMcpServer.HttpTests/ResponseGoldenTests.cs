@@ -200,7 +200,7 @@ internal sealed class ResponseGoldenTests
         foreach (var action in actions)
         {
             Capture("hmi/" + action.Name, hmi.Invoke(portal, new object[] { "GoldenHmi", action.Action, false })!);
-            Capture("offline/" + action.Name, surface.Invoke(surface.ToolMethod("RunOfflineAnalysisTool"), new object[] { "GoldenOffline", action.Action })!);
+            Capture("offline/" + action.Name, surface.Invoke(surface.Method("RunOfflineAnalysisTool", All), new object[] { "GoldenOffline", action.Action })!);
             Capture("batch/" + action.Name, surface.Invoke(surface.ToolMethod("BatchResult"), new object[] { action.Action })!);
         }
         bool invoked = false;
@@ -237,7 +237,7 @@ internal sealed class ResponseGoldenTests
         Capture("plcsim/empty-instance", surface.Invoke(surface.Tool("ManagePlcSimAdvancedInstance"),
             new object[] { "", "run", "", 60000, false, true, "", "" })!);
 
-        var builder = surface.ToolMethod("BuildOfflineXmlBuilderReport");
+        var builder = surface.Method("BuildOfflineXmlBuilderReport", All);
         foreach (var sample in new (string Name, JsonObject Data)[] {
             ("success", new JsonObject { ["ok"] = true, ["xml"] = "<root name=\"中文\" />", ["warnings"] = new JsonArray() }),
             ("single-error", new JsonObject { ["ok"] = false, ["error"] = "single error 中文" }),

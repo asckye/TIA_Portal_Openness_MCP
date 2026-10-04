@@ -937,7 +937,7 @@ namespace TiaMcpServer.Siemens.Services
         private static JsonObject ConstantRow(PlcConstant constant, string kind) => new JsonObject { ["name"] = constant.Name, ["dataTypeName"] = constant.DataTypeName, ["value"] = constant.Value, ["kind"] = kind, ["constantClass"] = constant.GetType().Name };
         public ResponseMessage ReadPlcTagTableConstants(string softwarePath, string tablePath, string kind = "all", string unitName = "", string unitKind = "unit", int offset = 0, int limit = 200)
             => _session.RunHmiStepTool("ReadPlcTagTableConstants", meta => {
-                Step7LeftoversLogic.ValidateConstantRequest(tablePath, kind, unitName, unitKind, offset, limit);
+                PlcTableRules.ValidateConstantRequest(tablePath, kind, unitName, unitKind, offset, limit);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
                 PlcTagTableSystemGroup root = unit == null ? plc.TagTableGroup : unit.TagTableGroup;
@@ -972,7 +972,7 @@ namespace TiaMcpServer.Siemens.Services
         }
         public ResponseMessage ManagePlcTableEntries(string softwarePath, string tableKind, string tablePath, string action = "read", int entryIndex = -1, bool confirmDelete = false, bool dryRun = true, int offset = 0, int limit = 200)
             => _session.RunHmiStepTool("ManagePlcTableEntries", meta => {
-                bool writing = Step7LeftoversLogic.ValidateTableEntryRequest(tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit);
+                bool writing = PlcTableRules.ValidateTableEntryRequest(tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 PlcWatchAndForceTableGroup root = plc.WatchAndForceTableGroup;

@@ -3,7 +3,6 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {

@@ -238,7 +238,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var analysis = GlobalLibraryPackageAnalyzer.Analyze(libraryPath);
-                var intent = McpServer.PlcTableToolSupport.ParseJsonObjectOrEmpty(templateIntentJson, "templateIntentJson");
+                var intent = ToolJsonArguments.ParseJsonObjectOrEmpty(templateIntentJson, "templateIntentJson");
                 var exists = analysis["exists"]?.GetValue<bool>() == true;
                 var hasCoreFiles = analysis["ok"]?.GetValue<bool>() == true;
                 var stringHints = analysis["stringHints"] as JsonObject;

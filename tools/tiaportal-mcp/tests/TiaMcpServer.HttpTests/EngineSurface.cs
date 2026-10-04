@@ -72,7 +72,10 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.HmiDescribeService",
         "TiaMcpServer.Siemens.Services.HmiTagDeletionService"
     };
-    private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
+    private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers",
+        "TiaMcpServer.ModelContextProtocol.OfflineToolExecution",
+        "TiaMcpServer.ModelContextProtocol.XmlBuildResults",
+        "TiaMcpServer.ModelContextProtocol.PlcCompilation" };
     private readonly Assembly engine;
     private readonly Type[] toolTypes;
     private readonly Type sessionType;

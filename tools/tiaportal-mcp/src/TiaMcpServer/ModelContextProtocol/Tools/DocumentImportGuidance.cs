@@ -1,25 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using ModelContextProtocol;
-using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using TiaMcpServer.Siemens;
-
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: documents. Extracted from McpServer.cs (god-file split); behavior unchanged.
-    public static partial class McpServer
+    internal static class DocumentImportGuidance
     {
         #region documents
 

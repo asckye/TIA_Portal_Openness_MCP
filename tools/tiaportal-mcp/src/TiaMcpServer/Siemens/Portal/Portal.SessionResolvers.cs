@@ -1,3 +1,14 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Security;
+using Siemens.Engineering;
+using Siemens.Engineering.Connection;
+using Siemens.Engineering.Download;
+using Siemens.Engineering.HW.Utilities;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.Types;
+using TiaMcpServer.ModelContextProtocol;
 using System;
 using Microsoft.Extensions.Logging;
 using System.Linq;
@@ -117,5 +128,15 @@ namespace TiaMcpServer.Siemens
 
             return software;
         }
+
+        // ---- hardware utilities ------------------------------------------------------------------------------------------------
+        private T RequireHardwareUtility<T>(string identifier) where T : HardwareUtility
+        {
+            HardwareUtilityComposition utilities = _project!.HwUtilities;
+            var utility = utilities.Find(identifier) as T ?? EngineeringGroupOperations.Items(utilities).OfType<T>().FirstOrDefault()
+                ?? throw new NotSupportedException(typeof(T).Name + " is not among Project.HwUtilities (" + string.Join(", ", EngineeringGroupOperations.Items(utilities).Cast<HardwareUtility>().Select(u => u.Identifier)) + ").");
+            return utility;
+        }
+
     }
 }

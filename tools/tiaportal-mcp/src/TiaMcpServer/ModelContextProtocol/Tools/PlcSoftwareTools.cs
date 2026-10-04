@@ -79,9 +79,9 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var compileWatch = System.Diagnostics.Stopwatch.StartNew();
-                var result = WithAutoOffline(() => _session.CompileSoftware(softwarePath, password));
+                var result = OnlineToolPolicy.WithAutoOffline(() => _session.CompileSoftware(softwarePath, password));
                 var compileMs = compileWatch.ElapsedMilliseconds;
-                var collected = CollectCompilerMessages(result.Messages);
+                var collected = CompilerDiagnostics.CollectCompilerMessages(result.Messages);
                 var summary = collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount);
                 summary["compileElapsedMs"] = compileMs;
                 summary["softwarePath"] = softwarePath;

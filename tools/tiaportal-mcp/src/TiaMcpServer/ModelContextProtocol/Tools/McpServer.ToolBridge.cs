@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
             _bridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
         }
 
-        private static Dictionary<string, MethodInfo> AllToolMethods(bool includeUnavailable = false)
+        internal static Dictionary<string, MethodInfo> AllToolMethods(bool includeUnavailable = false)
         {
             return AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable);
         }
@@ -56,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return "";
         }
 
-        private static string ToolDescription(MethodInfo m)
+        internal static string ToolDescription(MethodInfo m)
         {
             var d = m.GetCustomAttribute<DescriptionAttribute>();
             return (d == null ? "" : d.Description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(m.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? m.Name);

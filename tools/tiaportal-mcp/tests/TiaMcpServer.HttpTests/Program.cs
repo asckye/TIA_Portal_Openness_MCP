@@ -386,9 +386,9 @@ internal static partial class Program
                     HardwareNetworkShapeChecks.Run(Server, shapeCheck);
                     LibraryDeepShapeChecks.Run(Server, shapeCheck);
                     SecurityDeepShapeChecks.Run(Server, shapeCheck);
-                    BaseLeftoversShapeChecks.Run(Server, shapeCheck);
+                    SessionAndHardwareShapeChecks.Run(Server, shapeCheck);
                     SoftwareUnitDeepShapeChecks.Run(Server, shapeCheck);
-                    Step7LeftoversShapeChecks.Run(Server, shapeCheck);
+                    PlcDomainShapeChecks.Run(Server, shapeCheck);
                     TechnologyMappingShapeChecks.Run(Server, shapeCheck);
                     ClassicHmiFoldersShapeChecks.Run(Server, shapeCheck);
                     SivarcShapeChecks.Run(Server, shapeCheck);

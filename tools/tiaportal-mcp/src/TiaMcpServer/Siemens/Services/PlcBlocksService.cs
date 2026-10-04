@@ -871,7 +871,7 @@ namespace TiaMcpServer.Siemens.Services
                     else if (cfg is TlsVerificationConfiguration tls)   // FW >= 2.9 CPUs ask for certificate trust before any online read
                     {
                         var before = tls.CurrentSelection.ToString();
-                        if (BaseLeftoversLogic.TlsSelectionToApply(true, before) != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
+                        if (EngineeringCredentialRules.TlsSelectionToApply(true, before) != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
                         meta["tlsVerification"] = new JsonObject { ["plcName"] = tls.PlcName, ["verificationInfo"] = tls.VerificationInfo, ["selectionBefore"] = before, ["selectionAfter"] = tls.CurrentSelection.ToString() };
                     }
                 };

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    internal static class CompilerDiagnostics
     {
         internal sealed class CompilerMessageCollectResult
         {

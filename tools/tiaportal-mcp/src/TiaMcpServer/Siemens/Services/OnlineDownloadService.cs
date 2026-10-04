@@ -117,8 +117,8 @@ namespace TiaMcpServer.Siemens.Services
         // trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision).
         public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate)
         {
-            BaseLeftoversLogic.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
-            rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget);
+            EngineeringCredentialRules.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
+            rhTarget = EngineeringCredentialRules.ValidateRhTarget(rhTarget);
             var meta = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
             // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (_session.IsProjectNull())
@@ -488,7 +488,7 @@ namespace TiaMcpServer.Siemens.Services
             _session.Logger?.LogInformation(
                 "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
-            try { rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget); }
+            try { rhTarget = EngineeringCredentialRules.ValidateRhTarget(rhTarget); }
             catch (ArgumentException ex) { return new ResponseDownload { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
 
             if (_session.IsProjectNull())
@@ -1492,7 +1492,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (cfg is TlsVerificationConfiguration tls)
                 {
                     var before = tls.CurrentSelection.ToString();
-                    var apply = BaseLeftoversLogic.TlsSelectionToApply(trustDeviceCertificate, before);
+                    var apply = EngineeringCredentialRules.TlsSelectionToApply(trustDeviceCertificate, before);
                     if (apply != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
                     if (meta != null)
                         meta["tlsVerification"] = new JsonObject

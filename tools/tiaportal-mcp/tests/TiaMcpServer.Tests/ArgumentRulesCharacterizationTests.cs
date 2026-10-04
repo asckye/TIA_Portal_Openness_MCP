@@ -16,8 +16,8 @@ namespace TiaMcpServer.Tests
         private static readonly Type[] DeclaringTypes = {
             typeof(CfcLogic), typeof(ClassicHmiFoldersLogic), typeof(DccLogic), typeof(HardwareNetworkLogic),
             typeof(HardwareServicesLogic), typeof(LibraryDeepLogic), typeof(SafetyValidationLogic), typeof(SivarcLogic),
-            typeof(SoftwareUnitDeepLogic), typeof(Step7LeftoversLogic), typeof(TeamcenterLogic), typeof(TestSuiteLogic),
-            typeof(BaseLeftoversLogic), typeof(SecurityDeepLogic), typeof(StartdriveLogic), typeof(SafetyLogic),
+            typeof(SoftwareUnitDeepLogic), typeof(ExternalSourceRules), typeof(ProDiagExportRules), typeof(TeamcenterLogic), typeof(TestSuiteLogic),
+            typeof(HardwareUtilityRules), typeof(DeviceServiceObjectRules), typeof(SecurityDeepLogic), typeof(StartdriveLogic), typeof(SafetyLogic),
             typeof(PlcBuilderToolJson), typeof(PlcDocumentEditing), typeof(GlobalLibraryPackageAnalyzer),
             typeof(PlcBuilderFixtureReadinessAnalyzer), typeof(NativeFileOutput)
         };

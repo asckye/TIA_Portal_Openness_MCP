@@ -8,7 +8,6 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -27,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR",
             string outputPath = "",
             [Description("maxChars: cap on characters rendered.")] int maxChars = 60000)
-            => RunOfflineAnalysisTool("RenderPlcBlockDocument", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcBlockDocument", meta =>
             {
                 if (maxChars < 1000 || maxChars > 2000000) throw new ArgumentException("maxChars must be between 1000 and 2000000.");
                 var output = string.IsNullOrWhiteSpace(outputPath) ? null : NativeFileOutput.Plan(outputPath);
@@ -68,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = md.Length <= maxChars || output != null;
                     return "Rendered " + rendered.Document.BlockType + " '" + rendered.Document.BlockName + "': " + rendered.Networks.Count + " network(s) (" + rendered.GraphicalNetworks + " graphical, " + rendered.TextNetworks + " text), " + md.Length + " Markdown characters" + (output != null ? ", written to " + output.FullName : "") + ".";
                 }
-                finally { DeleteAnalysisTempDir(temp); }
+                finally { OfflineToolExecution.DeleteAnalysisTempDir(temp); }
             });
 
         [McpServerTool(Name = "GeneratePlcDocumentation"), Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensionsJson default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportBlocksAsDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
@@ -79,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("recursive: true also scans subfolders.")] bool recursive = true,
             [Description("extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl'].")] string extensionsJson = "",
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR")
-            => RunOfflineAnalysisTool("GeneratePlcDocumentation", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("GeneratePlcDocumentation", meta =>
             {
                 var output = NativeFileOutput.Plan(outputPath);
                 var extensions = OfflineAnalysisLogic.ParseExtensions(extensionsJson);
@@ -105,7 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string filePath = "",
             [Description("rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults).")] string rulesJson = "",
             int limit = 500)
-            => RunOfflineAnalysisTool("LintPlcSclSource", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("LintPlcSclSource", meta =>
             {
                 if (limit < 1 || limit > 5000) throw new ArgumentException("limit must be between 1 and 5000.");
                 var hasText = !string.IsNullOrWhiteSpace(sourceText);

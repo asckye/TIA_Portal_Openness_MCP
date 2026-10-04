@@ -378,7 +378,7 @@ namespace TiaMcpServer.Siemens
         public bool OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType)
         {
             _logger?.LogInformation($"Opening project: {projectPath} (credentials={(string.IsNullOrEmpty(umacUserName) ? "none" : "umac")})");
-            BaseLeftoversLogic.ValidateUmacCredentials(umacUserName, umacPassword, umacUserType);
+            EngineeringCredentialRules.ValidateUmacCredentials(umacUserName, umacPassword, umacUserType);
             UmacDelegate? umacDelegate = null; SecureString? umacSecret = null;
             if (!string.IsNullOrEmpty(umacUserName))
             {

@@ -70,20 +70,20 @@ namespace TiaMcpServer.Tests
                 check(PropertyPathReader.Read(p,test.Item1).Status == test.Item2, "path diagnosis " + test.Item1);
             check(PropertyPathReader.Read(null,"Name").Status == "ObjectNotFound", "root missing differs from null");
             var root = new Message(); root.Children.Add(new Message { State = "Error", Description = "missing tag" });
-            var collected = McpServer.CollectCompilerMessages(new[]{root});
+            var collected = CompilerDiagnostics.CollectCompilerMessages(new[]{root});
             check(collected.Summary("Success",0,0)["effectiveState"]!.ToString() == "Error" && root.ChildReads == 1, "root success cannot hide child error; children read once");
             check(collected.Nodes[1]!["treePath"]!.ToString() == "messages/0/messages/0", "diagnostic tree paths retained");
             check(!collected.Summary("Success",0,0)["success"]!.GetValue<bool>(), "compile business failure propagated");
-            check(McpServer.CollectCompilerMessages(Array.Empty<object>()).Summary("Error",2,0)["effectiveState"]!.ToString()=="Error", "root error retained");
-            check(McpServer.CollectCompilerMessages(new[]{new Message{State="Warning"}}).Summary("Success",0,0)["effectiveState"]!.ToString()=="Warning", "warning only");
-            check(McpServer.CollectCompilerMessages(Array.Empty<object>()).Summary("Success",0,0)["success"]!.GetValue<bool>(), "unchanged incremental compile success");
-            var limit=McpServer.CollectCompilerMessages(new[]{new Message{Description="3003 错误、688 警告，超过最大显示 1000 条"}});
+            check(CompilerDiagnostics.CollectCompilerMessages(Array.Empty<object>()).Summary("Error",2,0)["effectiveState"]!.ToString()=="Error", "root error retained");
+            check(CompilerDiagnostics.CollectCompilerMessages(new[]{new Message{State="Warning"}}).Summary("Success",0,0)["effectiveState"]!.ToString()=="Warning", "warning only");
+            check(CompilerDiagnostics.CollectCompilerMessages(Array.Empty<object>()).Summary("Success",0,0)["success"]!.GetValue<bool>(), "unchanged incremental compile success");
+            var limit=CompilerDiagnostics.CollectCompilerMessages(new[]{new Message{Description="3003 错误、688 警告，超过最大显示 1000 条"}});
             check(limit.Truncated && limit.HasError && limit.DeclaredTotals[0]!["errors"]!.GetValue<int>()==3003, "declared totals with source and upstream limit");
-            check(McpServer.CollectCompilerMessages(new[]{new Message(),new Message()},1).Truncated, "local node cap reports incomplete");
-            var duplicate=McpServer.CollectCompilerMessages(new[]{new Message{State="Error",Description="same"},new Message{State="Error",Description="same"}});
+            check(CompilerDiagnostics.CollectCompilerMessages(new[]{new Message(),new Message()},1).Truncated, "local node cap reports incomplete");
+            var duplicate=CompilerDiagnostics.CollectCompilerMessages(new[]{new Message{State="Error",Description="same"},new Message{State="Error",Description="same"}});
             check(duplicate.Nodes.Count==2 && duplicate.Errors.Count==2, "same diagnostic text at distinct nodes is retained");
             root.Children.Add(root);
-            check(McpServer.CollectCompilerMessages(new[]{root}).CollectFailures.Count==1, "cycles bounded and incomplete");
+            check(CompilerDiagnostics.CollectCompilerMessages(new[]{root}).CollectFailures.Count==1, "cycles bounded and incomplete");
             var directory=Path.Combine(Path.GetTempPath(),"tia-export-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
             try
             {

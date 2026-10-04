@@ -126,8 +126,9 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 | `ToolUsage.cs` | [ToolUsageTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
 | `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 16 |
 
-[McpServer.PilotTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PilotTools.cs)
-仅保留对共享辅助方法的访问；`GuideTools` 通过构造器注入 `ToolUsageTools`，指南入口不再经过静态转发。
+试点工具直接使用 [OfflineToolExecution](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineToolExecution.cs)
+与 [XmlBuildResults](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
+`GuideTools` 通过构造器注入 `ToolUsageTools`，指南入口不再经过静态转发。
 这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
 HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；
 [Test-PilotTools.py](../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
@@ -183,6 +184,22 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 跨类调用显式限定声明类型，仅共享成员改为 `internal`；结构化文本委托随 XML 生成器迁移。
 这些类全部留在受原生调用织入的引擎程序集中。CLI 通过 `EngineServices.Get<T>()` 调用所属工具或服务；
 服务生命周期、Openness 调用参数、顺序和线程调度保持不变。
+
+### 共享辅助与会话余项收尾
+
+P3-18 删除迁移期嵌套 `*ToolSupport` 和 HMI 编译转发。目录枚举、工具构造与描述读取仍由 `McpServer`
+提供；编译与编译诊断分别由 `PlcCompilation`、`CompilerDiagnostics` 承载；XML 构建响应、PLC 批量导入响应、
+离线执行、文件名、名称建议、在线策略、工程编排和 JSON 参数解析分别使用具名内部静态辅助类。
+辅助类仍在引擎程序集，工具直接调用其实现。HttpTests 通过显式辅助类型清单定位黄金响应的执行器。
+
+最后的会话余项分布到 `Portal.HmiOperation.cs`（响应钩子）、`Portal.Diagnostics.cs`（门户诊断）、
+`Portal.SessionResolvers.cs`（硬件实用程序解析）、`Portal.ObjectIdentity.cs`（对象标识与编辑器）和
+`Portal.Transactions.cs`（事务与环境独占访问）。原 Base 校验拆为 `HardwareUtilityRules`、`DeviceServiceObjectRules`、
+`ObjectIdentityRules`、`ToolTransactionRules`、`EngineeringCredentialRules`；原 Step7 校验拆为 Logic 中的
+`ExternalSourceRules`、`PlcTableRules`、`AlarmTextListRules`、`ProDiagExportRules`。成员不跨程序集迁移。
+
+`Compare-NativeCallOrder.py` 包含这些工具辅助类，并对其反射、接口、对象分派与枚举输入点一并比较有序清单。
+删除的辅助层不再参与调用；保留实现中的原生调用、参数与线程归属不变。
 
 ### PLC 块、编辑与用户组
 
@@ -360,7 +377,7 @@ Motion、HMI、库及 SiVArc 生成工具已归入所属实例工具类；
 
 跨领域成员保持在内核，接口显式转发现有方法体：
 
-- `RequireHardwareUtility<T>` 读取当前工程的 `HwUtilities`，保留在 `Portal.BaseLeftovers.cs`，
+- `RequireHardwareUtility<T>` 读取当前工程的 `HwUtilities`，保留在 `Portal.SessionResolvers.cs`，
   由 V20Options 和原硬件工具共用。
 - `ExactSiVArcRoot` 保留在 `Portal.OptionalEngineering.cs`，继续复用 SiVArc 领域的 `Family` / `RequireSivarc`。
 - `RequireUnitProvider`、`ExactUnit`、`OptionalUnit`、`BlockRootOf`、`TypeRootOf`、`ExactObjectUnder`、
@@ -410,7 +427,7 @@ GetBlocksRecursive、HardwareOwnerPath、RequireHardwareService、DynamicAttribu
 FindOnFresh、CountOnFresh、LibraryRef、EnumerateGroupDevices。原硬件、库与 PLC 调用方保持不变。
 调用这些接口的领域辅助方法随之成为实例方法；Safety 登录/注销、UMC 认证事件订阅与凭据设置的顺序保持不变。
 ManageMultiuserSession 仍在 CloseAndCommit 后调用 ReleaseProject，由内核清理会话字段。
-Portal.cs 中调用 BaseLeftoversLogic.ValidateUmacCredentials 的工程打开路径保留在会话内核，本步不新增其接口转发。
+Portal.cs 中调用 EngineeringCredentialRules.ValidateUmacCredentials 的工程打开路径保留在会话内核，本步不新增其接口转发。
 
 BaseLeftovers 中的 ManageDeviceServiceObjects 同时处理 Web 应用、遥控点与动态证书配置，连同其
 CertificateServiceRow / CertificateConfigurationRow 保留在硬件领域；本步不拆分该工具的方法体。

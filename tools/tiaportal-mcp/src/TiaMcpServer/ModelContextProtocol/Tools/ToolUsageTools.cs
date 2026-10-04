@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaOpenness.Shared;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -27,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
-                var methods = AllToolMethods();
+                var methods = McpServer.AllToolMethods();
                 var release = Siemens.EngineRouter.CompiledTiaMajorVersion.ToString();
                 if ((toolName.Length > 0 || operation.Length > 0 || language.Length > 0 || exampleId.Length > 0) && (query.Length > 0 || documentId.Length > 0))
                     throw new ArgumentException("Select a tool/language/example, or search/read official references.");
@@ -38,9 +37,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (query.Length > 0 || documentId.Length > 0) throw new ArgumentException("Use toolName alone, or query/documentId for references.");
                     if (!methods.TryGetValue(toolName, out var method)) throw new ArgumentException("Tool is not available in this release: " + toolName + ". Use FindTools or empty GetToolUsage.");
                     var name = methods.Keys.First(k => string.Equals(k, toolName, StringComparison.OrdinalIgnoreCase));
-                    var tool = CreateTool(name, method).ProtocolTool;
+                    var tool = McpServer.CreateTool(name, method).ProtocolTool;
                     var example = ToolExamples.Find(name);
-                    usage = ToolUsageCatalog.Describe(name, release, "full-engine", ToolDescription(method),
+                    usage = ToolUsageCatalog.Describe(name, release, "full-engine", McpServer.ToolDescription(method),
                         (JsonObject)JsonNode.Parse(tool.InputSchema.GetRawText())!, example?.ArgumentsJson, example?.Note, operation,
                         methods.Keys, UsageResultContract(method.ReturnType),
                         args => Siemens.ToolVersionPolicy.CallProblem(release, name, key => args[key]?.ToString()));

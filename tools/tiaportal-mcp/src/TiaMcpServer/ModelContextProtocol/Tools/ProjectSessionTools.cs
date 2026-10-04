@@ -11,8 +11,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TiaMcpServer.Siemens;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
-using static TiaMcpServer.ModelContextProtocol.McpServer.SessionToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -322,7 +320,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             // ---- PLC elements (per-item collect) ----
-            ApplyScaffoldPlcElements(root, plcName, resp);
+            ScaffoldOperations.ApplyScaffoldPlcElements(root, plcName, resp);
 
             foreach (var item in Arr("ladDocs"))
             {
@@ -334,14 +332,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             // ---- compile ----
-            if (B("compile", true)) CompileScaffoldPlc(plcName, resp);
+            if (B("compile", true)) ScaffoldOperations.CompileScaffoldPlc(plcName, resp);
 
             // ---- HMI connection / screens / tags ----
             if (hmiRequested && hmiDeviceOk)
             {
                 // Resolve the real Unified HMI software path instead of assuming HMI_RT_1 — it varies
                 // with device naming. Probe candidates with GetHmiProgramInfo (first that succeeds wins).
-                ApplyScaffoldHmi(root, plcName, hmiName, hmiSoftwarePathSpec, connectionName, resp);
+                ScaffoldOperations.ApplyScaffoldHmi(root, plcName, hmiName, hmiSoftwarePathSpec, connectionName, resp);
             }
 
             // ---- save ----
@@ -530,14 +528,14 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["tool"] = "RunToolsInTransaction", ["success"] = false, ["dryRun"] = dryRun, ["mayHaveChanged"] = false };
             try
             {
-                var calls = BaseLeftoversLogic.ParseToolCalls(callsJson);
-                BaseLeftoversLogic.ValidateTransactionRequest(text, calls, confirmChange, dryRun);
-                var all = AllToolMethods(); var plan = new JsonArray(); meta["calls"] = plan;
+                var calls = ToolTransactionRules.ParseToolCalls(callsJson);
+                ToolTransactionRules.ValidateTransactionRequest(text, calls, confirmChange, dryRun);
+                var all = McpServer.AllToolMethods(); var plan = new JsonArray(); meta["calls"] = plan;
                 foreach (var call in calls)
                 {
                     if (!all.ContainsKey(call.Name)) throw new ArgumentException("No tool named '" + call.Name + "'.");
                     TransactionExecution.RequireSupported(call.Name);
-                    call.ArgumentsJson = BaseLeftoversLogic.ForceRealExecution(call.ArgumentsJson);
+                    call.ArgumentsJson = ToolTransactionRules.ForceRealExecution(call.ArgumentsJson);
                     var preflight = PreflightToolCall(call.Name, call.ArgumentsJson);
                     if (preflight.Meta?["ok"]?.GetValue<bool?>() != true)
                         throw new ArgumentException("Preflight failed for " + call.Name + ": " + preflight.Message);

@@ -6,10 +6,9 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    internal static class ScaffoldOperations
     {
-        // Shared spec operations after the caller has opened or created its project.
-        private static void ApplyScaffoldPlcElements(JsonNode root, string plcName, ResponseScaffold resp)
+        internal static void ApplyScaffoldPlcElements(JsonNode root, string plcName, ResponseScaffold resp)
         {
             void Step(string name, string status, string? detail = null)
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
@@ -36,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static void CompileScaffoldPlc(string plcName, ResponseScaffold resp)
+        internal static void CompileScaffoldPlc(string plcName, ResponseScaffold resp)
         {
             void Step(string name, string status, string? detail = null)
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
@@ -51,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) { Step("compile", "failed", ex.Message); resp.Ok = false; }
         }
 
-        private static void ApplyScaffoldHmi(JsonNode root, string plcName, string hmiName,
+        internal static void ApplyScaffoldHmi(JsonNode root, string plcName, string hmiName,
             string hmiSoftwarePathSpec, string connectionName, ResponseScaffold resp)
         {
             void Step(string name, string status, string? detail = null)

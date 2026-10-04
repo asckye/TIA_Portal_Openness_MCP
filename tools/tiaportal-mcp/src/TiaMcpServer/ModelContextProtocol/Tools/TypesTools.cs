@@ -18,7 +18,6 @@ using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -152,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 switch (pex.Code)
                 {
                     case TiaMcpServer.Siemens.PortalErrorCode.NotFound:
-                        throw new McpException(("Type not found." + BuildTypeDidYouMean(softwarePath, typePath)).Trim(), McpErrorCode.InvalidParams);
+                        throw new McpException(("Type not found." + EngineeringLookupHints.BuildTypeDidYouMean(softwarePath, typePath)).Trim(), McpErrorCode.InvalidParams);
                     case TiaMcpServer.Siemens.PortalErrorCode.InvalidState:
                     case TiaMcpServer.Siemens.PortalErrorCode.InvalidParams:
                         throw new McpException(pex.Message, McpErrorCode.InvalidParams);

@@ -70,9 +70,9 @@ namespace TiaMcpServer.Tests
             foreach (var row in CheckSuite.Run(nameof(LibraryDeepTests), LibraryDeepTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(LibraryWriteSafetyTests), LibraryWriteSafetyTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(SecurityDeepTests), SecurityDeepTests.Run)) yield return row;
-            foreach (var row in CheckSuite.Run(nameof(BaseLeftoversTests), BaseLeftoversTests.Run)) yield return row;
+            foreach (var row in CheckSuite.Run(nameof(SessionAndHardwareRulesTests), SessionAndHardwareRulesTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(SoftwareUnitDeepTests), SoftwareUnitDeepTests.Run)) yield return row;
-            foreach (var row in CheckSuite.Run(nameof(Step7LeftoversTests), Step7LeftoversTests.Run)) yield return row;
+            foreach (var row in CheckSuite.Run(nameof(PlcDomainRulesTests), PlcDomainRulesTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(TechnologyMappingTests), TechnologyMappingTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(ClassicHmiFoldersTests), ClassicHmiFoldersTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(BindingAndTagDeletionTests), BindingAndTagDeletionTests.Run)) yield return row;

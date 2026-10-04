@@ -74,7 +74,11 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\BaseLeftoversLogic.cs" Link="BaseLeftoversLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareUtilityRules.cs" Link="HardwareUtilityRules.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\DeviceServiceObjectRules.cs" Link="DeviceServiceObjectRules.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ObjectIdentityRules.cs" Link="ObjectIdentityRules.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolTransactionRules.cs" Link="ToolTransactionRules.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringCredentialRules.cs" Link="EngineeringCredentialRules.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolExamples.cs" Link="ToolExamples.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\StartdriveLogic.cs" Link="StartdriveLogic.cs" />
@@ -88,7 +92,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs" Link="Shared/McpServer.ScaffoldOperations.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/ScaffoldOperations.cs" Link="Shared/ScaffoldOperations.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>

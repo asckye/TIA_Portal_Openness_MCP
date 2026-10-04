@@ -314,7 +314,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageDeviceServiceObjects(string devicePathJson, string itemPathJson, string family, string action = "read", string name = "", string propertiesJson = "{}", string filePath = "", bool confirmChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDeviceServiceObjects", meta => {
                 var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson");
-                BaseLeftoversLogic.ValidateServiceObjectRequest(family, action, name, properties, filePath, confirmChange, dryRun);
+                DeviceServiceObjectRules.ValidateServiceObjectRequest(family, action, name, properties, filePath, confirmChange, dryRun);
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
@@ -641,7 +641,7 @@ namespace TiaMcpServer.Siemens.Services
                 CompilerResult result = compilable.Compile();
                 meta["compileElapsedMs"] = watch.ElapsedMilliseconds;
                 meta["apiCallSuccess"] = true;
-                var collected = McpServer.CollectCompilerMessages(result.Messages);
+                var collected = CompilerDiagnostics.CollectCompilerMessages(result.Messages);
                 foreach (var kv in collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount)) meta[kv.Key] = kv.Value?.DeepClone();
                 meta["errors"] = new JsonArray(collected.Errors.Select(e => (JsonNode)JsonValue.Create(e)!).ToArray());
                 meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
@@ -652,7 +652,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageHardwareUtilities(string action = "list", string typeIdentifier = "", string devicePathJson = "[]", string itemPathJson = "[]", string filePath = "", string password = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageHardwareUtilities", meta => {
-                BaseLeftoversLogic.ValidateHardwareUtilityRequest(action, typeIdentifier, devicePathJson, filePath, password, dryRun);
+                HardwareUtilityRules.ValidateHardwareUtilityRequest(action, typeIdentifier, devicePathJson, filePath, password, dryRun);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 if (action == "list")
                 {
@@ -661,7 +661,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 if (action == "findModuleTypes" || action == "findContainerTypes" || action == "normalizeTypeIdentifier")
                 {
-                    ModuleInformationProvider provider = _session.RequireHardwareUtility<ModuleInformationProvider>(BaseLeftoversLogic.ModuleInformationProviderId);
+                    ModuleInformationProvider provider = _session.RequireHardwareUtility<ModuleInformationProvider>(HardwareUtilityRules.ModuleInformationProviderId);
                     meta["typeIdentifier"] = typeIdentifier;
                     switch (action)
                     {
@@ -678,13 +678,13 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "exportOpcUa")
                 {
                     var item = owner as DeviceItem ?? throw new ArgumentException("exportOpcUa needs the PLC DeviceItem (non-empty itemPathJson).");
-                    OpcUaExportProvider provider = _session.RequireHardwareUtility<OpcUaExportProvider>(BaseLeftoversLogic.OpcUaExportProviderId);
+                    OpcUaExportProvider provider = _session.RequireHardwareUtility<OpcUaExportProvider>(HardwareUtilityRules.OpcUaExportProviderId);
                     provider.Export(item, file);
                 }
                 else
                 {
                     var device = owner as Device ?? throw new ArgumentException("exportCardReaderPsc needs the Device (empty itemPathJson).");
-                    CardReaderPscProvider provider = _session.RequireHardwareUtility<CardReaderPscProvider>(BaseLeftoversLogic.CardReaderPscProviderId);
+                    CardReaderPscProvider provider = _session.RequireHardwareUtility<CardReaderPscProvider>(HardwareUtilityRules.CardReaderPscProviderId);
                     if (string.IsNullOrEmpty(password)) provider.Export(device, file);
                     else using (var secure = PlcBlockServicesLogic.ToSecureString(password)) provider.Export(device, file, secure);
                 }

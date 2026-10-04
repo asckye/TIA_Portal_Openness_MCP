@@ -16,7 +16,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using TiaMcpServer.Siemens;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -31,7 +30,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(ClassicHmiTagTableXmlBuilder.BuildFromJson(tableJson), "Classic HMI tag table XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(ClassicHmiTagTableXmlBuilder.BuildFromJson(tableJson), "Classic HMI tag table XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {

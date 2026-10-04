@@ -7,7 +7,7 @@ using System.Security;
 // Native members used by the 2.7.33 Base leftovers (Portal.BaseLeftovers.cs, the rebind guard, transactions, credential-bearing
 // OpenProject / GoOnline, R/H providers, typed transfer prompts / results, typed cross references / compare / catalog rows),
 // verified member by member against the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base) PublicAPI.
-internal static class BaseLeftoversShapeChecks
+internal static class SessionAndHardwareShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
     {

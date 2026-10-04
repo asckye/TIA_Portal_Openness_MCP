@@ -10,8 +10,6 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 
 using TiaMcpServer.Siemens.Services;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSoftwareToolSupport;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -28,15 +26,15 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset = 0,
             int limit = 100,
             [Description("contextLines: lines of context around each difference.")] int contextLines = 2)
-            => RunOfflineAnalysisTool("ComparePlcBlockDocuments", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("ComparePlcBlockDocuments", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
                 if (contextLines < 0 || contextLines > 20) throw new ArgumentException("contextLines must be between 0 and 20.");
                 string? leftTemp = null, rightTemp = null;
                 try
                 {
-                    var left = ResolveCompareSide("left", leftFilePath, leftBlockPath, softwarePath, meta, out leftTemp);
-                    var right = ResolveCompareSide("right", rightFilePath, rightBlockPath, softwarePath, meta, out rightTemp);
+                    var left = OfflineToolExecution.ResolveCompareSide("left", leftFilePath, leftBlockPath, softwarePath, meta, out leftTemp);
+                    var right = OfflineToolExecution.ResolveCompareSide("right", rightFilePath, rightBlockPath, softwarePath, meta, out rightTemp);
                     var result = OfflineAnalysisLogic.CompareFiles(left, right, offset, limit, contextLines);
                     foreach (var kv in result.ToList()) meta[kv.Key] = kv.Value?.DeepClone();
                     meta["apiCallSuccess"] = true;
@@ -48,8 +46,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 finally
                 {
-                    DeleteAnalysisTempDir(leftTemp);
-                    DeleteAnalysisTempDir(rightTemp);
+                    OfflineToolExecution.DeleteAnalysisTempDir(leftTemp);
+                    OfflineToolExecution.DeleteAnalysisTempDir(rightTemp);
                 }
             });
 
@@ -62,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset = 0,
             int limit = 200,
             [Description("csvPath: full path of the CSV file to write ('' = no CSV).")] string csvPath = "")
-            => RunOfflineAnalysisTool("ScanPlcSourceAnnotations", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("ScanPlcSourceAnnotations", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
                 var markers = OfflineAnalysisLogic.ParseMarkers(markersJson);
@@ -106,7 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl'].")] string extensionsJson = "",
             int offset = 0,
             int limit = 100)
-            => RunOfflineAnalysisTool("ExtractPlcBlockMetrics", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("ExtractPlcBlockMetrics", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
                 if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute file or directory path required.");

@@ -1,8 +1,9 @@
-"""Compare NativeCallWeaver verify inventories across engine and CLI moves.
+"""Compare NativeCallWeaver verify inventories across engine, helper and CLI moves.
 
 Discover disappeared source method families and match newly appearing service/tool/CLI
 families by name. Compare the global Siemens member multiset and each moved body's
-ordered direct sites, folding lambdas and local functions into their source method.
+ordered direct sites, plus all categories for CLI and shared helpers, folding lambdas
+and local functions into their source method.
 Only compiler-wide closure ordinals and absolute IL offsets are ignored. This is
 a static site-order check, not a live trace; methods without inventory sites need
 the separate source/dispatch checks used by the domain migration template.
@@ -16,8 +17,25 @@ import re
 import unittest
 
 SOURCES = {'TiaMcpServer.Siemens.Portal', 'TiaMcpServer.ModelContextProtocol.McpServer',
-           'TiaMcpServer.Program'}
+           'TiaMcpServer.Program', 'TiaMcpServer.Siemens.BaseLeftoversLogic'}
 CLI_CLASSES = {'HmiTemplateBuilder', 'PlcHmiSyncXml', 'ReportBuilders', 'CliProbes'}
+HELPER_CLASSES = {'CompilerDiagnostics', 'PlcCompilation', 'PlcProgramImport', 'OfflineToolExecution',
+                  'XmlBuildResults', 'EngineeringFileNames', 'EngineeringLookupHints', 'OnlineToolPolicy',
+                  'ScaffoldOperations', 'ToolJsonArguments', 'DocumentImportGuidance'}
+HELPER_OWNERS = {'TiaMcpServer.ModelContextProtocol.' + name for name in HELPER_CLASSES}
+RULE_OWNERS = {'TiaMcpServer.Siemens.' + name for name in
+               ('HardwareUtilityRules', 'DeviceServiceObjectRules', 'ObjectIdentityRules',
+                'ToolTransactionRules', 'EngineeringCredentialRules')}
+HOST = 'TiaMcpServer.ModelContextProtocol.McpServer'
+HELPER_METHODS = {'CompileAndDiagnoseCore', 'BuildCompileResponse', 'ReadIntProperty',
+                  'ClassifyPlcXml', 'BuildPlcProgramImportResponse', 'ResolveCompareSide',
+                  'DeleteAnalysisTempDir', 'RunOfflineAnalysisTool', 'BuildOfflineXmlBuilderReport',
+                  'MakeSafeFileName', 'BuildBlockDidYouMean', 'BuildTypeDidYouMean',
+                  'GetOnlineMonitoringSafetyPolicy', 'IsOnlineModeError', 'WithAutoOffline',
+                  'ApplyScaffoldPlcElements', 'CompileScaffoldPlc', 'ApplyScaffoldHmi',
+                  'ParseJsonObjectOrEmpty', 'CollectCompilerMessages', 'Count', 'ParseDeclared',
+                  'CompilerMessageCollectResult.Summary', 'CompilerReferenceComparer.Equals',
+                  'CompilerReferenceComparer.GetHashCode'}
 PORTAL = 'TiaMcpServer.Siemens.Portal'
 SERVICE = 'TiaMcpServer.Siemens.Services.ExampleService'
 CLI_OWNERS = {'TiaMcpServer.Program'} | {
@@ -32,10 +50,24 @@ def normalize_cli_types(value):
 
 
 def destination(owner):
-    return (owner.startswith('TiaMcpServer.Siemens.Services.') or
+    return (owner in HELPER_OWNERS | RULE_OWNERS or owner.startswith('TiaMcpServer.Siemens.Services.') or
             owner.startswith('TiaMcpServer.ModelContextProtocol.') and owner.endswith('Tools') or
             any(owner == prefix + name for prefix in ('TiaMcpServer.', 'TiaMcpServer.Cli.')
                 for name in CLI_CLASSES))
+
+
+def normalize_helper_types(value):
+    # These private diagnostic result/comparer types move with their implementation.
+    value = re.sub(r'TiaMcpServer\.ModelContextProtocol\.(?:McpServer|CompilerDiagnostics)/'
+                   r'(CompilerMessageCollectResult|CompilerReferenceComparer)', r'<compiler>/\1', value)
+    return re.sub(r'TiaMcpServer\.Siemens\.(?:BaseLeftoversLogic|ToolTransactionRules)/ToolCall',
+                  '<transaction>/ToolCall', value)
+
+
+def all_categories(method):
+    owner, name = method
+    return (owner in CLI_OWNERS | HELPER_OWNERS | RULE_OWNERS or
+            owner == 'TiaMcpServer.Siemens.BaseLeftoversLogic' or owner == HOST and name in HELPER_METHODS)
 
 
 def family(caller):
@@ -71,6 +103,7 @@ def family(caller):
         name = declared[len(owner) + 1:] + '.' + method if '/' in declared else method
         body = 'body'
     # Retain overload signatures and closure-local indices, not compilation-wide IDs.
+    parameters = normalize_helper_types(parameters)
     parameters = normalize_cli_types(parameters) if owner in CLI_OWNERS else parameters.replace(owner, '<owner>')
     parameters = re.sub(r'<>c__DisplayClass\d+_', '<>c__DisplayClass#_', parameters)
     return (owner, name), (body, parameters)
@@ -84,12 +117,12 @@ def sequences(sites):
             continue
         method, body = key
         bodies = families[method]  # Non-direct sites still establish method existence.
-        # CLI parts enumerate and reflect over returned objects without direct
-        # Siemens calls. Their indirect sites must retain order as well.
-        if site['category'] == 'direct' or method[0] in CLI_OWNERS:
+        # CLI parts and shared helpers can reach native objects indirectly.
+        # Their reflection, enumeration and dispatch sites must retain order as well.
+        if site['category'] == 'direct' or all_categories(method):
             bodies[body].append(site)
-    return {method: [(body, row['category'] + ':' + row['opcode'] if method[0] in CLI_OWNERS else row['opcode'],
-                     normalize_cli_types(row['member']) if method[0] in CLI_OWNERS else row['member'])
+    return {method: [(body, row['category'] + ':' + row['opcode'] if all_categories(method) else row['opcode'],
+                     normalize_cli_types(row['member']) if method[0] in CLI_OWNERS else normalize_helper_types(row['member']))
                      for body, rows in sorted(bodies.items())
                      for row in sorted(rows, key=lambda item: item['offset'])]
             for method, bodies in families.items()}
@@ -199,6 +232,16 @@ class SelfTests(unittest.TestCase):
     def test_retained_kernel_is_not_a_move(self):
         before, _ = self.inventories()
         self.assertEqual([], compare(before, before)[1])
+
+    def test_shared_helper_move_preserves_indirect_order(self):
+        before = [dict(caller=f'void {HOST}::BuildCompileResponse(System.String,System.Object)',
+                       offset=offset, opcode='callvirt', member=member, category='reflection')
+                  for offset, member in ((10, 'PropertyInfo::GetValue'), (20, 'MethodInfo::Invoke'))]
+        after = [dict(row, caller=row['caller'].replace(HOST,
+                     'TiaMcpServer.ModelContextProtocol.PlcCompilation')) for row in before]
+        self.assertEqual([], compare(before, after)[0])
+        after[0]['offset'], after[1]['offset'] = after[1]['offset'], after[0]['offset']
+        self.assertTrue(compare(before, after)[0])
 
     def test_program_moves_and_retained_host(self):
         for prefix in ('TiaMcpServer.', 'TiaMcpServer.Cli.'):

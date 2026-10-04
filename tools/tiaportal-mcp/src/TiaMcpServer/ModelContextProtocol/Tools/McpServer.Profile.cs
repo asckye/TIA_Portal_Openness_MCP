@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // The protocol description carries the worked example from ToolExamples (one table, validated at build
         // time), so the model sees a correct call next to every listed tool without duplicating examples in attributes.
-        private static McpServerTool CreateTool(string name, MethodInfo method)
+        internal static McpServerTool CreateTool(string name, MethodInfo method)
         {
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";

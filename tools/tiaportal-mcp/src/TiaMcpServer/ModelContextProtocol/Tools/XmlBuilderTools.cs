@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 
 using TiaMcpServer.Siemens.Services;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -32,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(ClassicHmiScreenXmlBuilder.BuildFromJson(designJson), "Classic HMI screen XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(ClassicHmiScreenXmlBuilder.BuildFromJson(designJson), "Classic HMI screen XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -47,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey), "PLC UDT XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey), "PLC UDT XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -61,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTable(tagTableJson), "PLC tag table XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTable(tagTableJson), "PLC tag table XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -76,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey), "PLC GlobalDB XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey), "PLC GlobalDB XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -91,7 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildStructuredText(structuredTextJson, innerOnly), "PLC StructuredText XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildStructuredText(structuredTextJson, innerOnly), "PLC StructuredText XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -105,7 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildFlgNetCall(flgNetJson), "PLC FlgNet call XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildFlgNetCall(flgNetJson), "PLC FlgNet call XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -119,7 +118,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeFcBlock(fcBlockJson), "PLC FC block XML composed offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeFcBlock(fcBlockJson), "PLC FC block XML composed offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -133,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeFbBlock(fbBlockJson), "PLC FB block XML composed offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeFbBlock(fbBlockJson), "PLC FB block XML composed offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -147,7 +146,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeLadFcBlock(ladFcBlockJson), "PLC LAD FC block XML composed offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.ComposeLadFcBlock(ladFcBlockJson), "PLC LAD FC block XML composed offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {

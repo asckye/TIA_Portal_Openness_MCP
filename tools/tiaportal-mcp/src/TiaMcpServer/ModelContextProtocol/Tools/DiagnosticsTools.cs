@@ -10,7 +10,6 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TiaMcpServer.Siemens;
-using static TiaMcpServer.ModelContextProtocol.McpServer.SessionToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -164,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             try
             {
-                var toolNames = GetMcpToolNames();
+                var toolNames = McpServer.GetMcpToolNames();
                 var toolNameList = toolNames.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
                 // Read-only getters (Get*) may legitimately reference force tables (e.g. GetPlcForceTables
                 // lists names). The safety red line is that no force-EXECUTION/WRITE tool is exposed.
@@ -250,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         : "ProbePlcMonitorOnlineCapabilities was not found.");
 
                 var ok = items.All(i => i.Status == "pass");
-                var policy = GetOnlineMonitoringSafetyPolicy();
+                var policy = OnlineToolPolicy.GetOnlineMonitoringSafetyPolicy();
                 return new ResponseSafetySelfTest
                 {
                     Ok = ok,

@@ -11,8 +11,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TiaMcpServer.Siemens;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
-using static TiaMcpServer.ModelContextProtocol.McpServer.SessionToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -270,7 +268,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "SaveProject", "CloseProject", "GetProjectTree", "GetSoftwareTree",
                         "PlcBuildAndImport", "CompileSoftware", "DownloadToPlc", "GoOnline", "GoOffline"
                     },
-                    L2Count = GetMcpToolNames().Count(),
+                    L2Count = McpServer.GetMcpToolNames().Count(),
                 };
 
                 var rules = new[] { TiaOpenness.Shared.ToolUsageCatalog.Instructions,

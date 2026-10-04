@@ -1,24 +1,5 @@
 {
   "format": 1,
   "fingerprint": "sha256 of category and normalized comment line/literal; Leftovers is a file count; paths/lines are informational; multiplicity is retained",
-  "entries": [
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Step7LeftoversLogic.cs",
-      "line": 1
-    },
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/BaseLeftoversLogic.cs",
-      "line": 1
-    },
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 1
-    }
-  ]
+  "entries": []
 }

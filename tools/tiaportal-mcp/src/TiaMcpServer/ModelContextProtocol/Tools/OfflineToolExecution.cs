@@ -1,19 +1,15 @@
 using System;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    internal static class OfflineToolExecution
     {
-        private static string ResolveCompareSide(string side, string filePath, string blockPath, string softwarePath, JsonObject meta, out string? tempDir)
+        internal static string ResolveCompareSide(string side, string filePath, string blockPath, string softwarePath, JsonObject meta, out string? tempDir)
         {
             tempDir = null;
             var hasFile = !string.IsNullOrWhiteSpace(filePath);
@@ -32,14 +28,13 @@ namespace TiaMcpServer.ModelContextProtocol
             return export.XmlPath;
         }
 
-        private static void DeleteAnalysisTempDir(string? tempDir)
+        internal static void DeleteAnalysisTempDir(string? tempDir)
         {
             if (string.IsNullOrWhiteSpace(tempDir)) return;
             try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* swallow(cleanup): Failure to delete an analysis export must not replace the comparison result or its original error. */ /* best-effort cleanup of our own temp export */ }
         }
 
-        // File-only tools never need a project; mirrors RunHmiStepTool's meta/status contract without touching Portal.
-        private static ResponseMessage RunOfflineAnalysisTool(string toolName, Func<JsonObject, string> action)
+        internal static ResponseMessage RunOfflineAnalysisTool(string toolName, Func<JsonObject, string> action)
         {
             var meta = ResponseMeta.Step(toolName, ("offlineOnly", true));
             try

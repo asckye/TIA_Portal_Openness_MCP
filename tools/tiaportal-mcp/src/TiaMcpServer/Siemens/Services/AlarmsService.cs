@@ -227,7 +227,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ExchangePlcAlarmTextListsXlsx(string softwarePath, string action, string filePath, string unitName = "", string unitKind = "unit",
             string textListNamesJson = "[]", string culturesJson = "[]", string importOption = "None", bool confirmImport = false, bool dryRun = true)
             => _session.RunHmiStepTool("ExchangePlcAlarmTextListsXlsx", meta => {
-                var request = Step7LeftoversLogic.ValidateXlsxRequest(action, filePath, unitName, unitKind, textListNamesJson, culturesJson, importOption, confirmImport, dryRun);
+                var request = AlarmTextListRules.ValidateXlsxRequest(action, filePath, unitName, unitKind, textListNamesJson, culturesJson, importOption, confirmImport, dryRun);
                 bool writing = request.Writing;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);

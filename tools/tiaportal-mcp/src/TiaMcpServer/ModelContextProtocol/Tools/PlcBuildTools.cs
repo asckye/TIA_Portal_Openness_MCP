@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 
 using TiaMcpServer.Siemens.Services;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSoftwareToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -56,11 +55,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 var objectName = ResolveBuiltPlcObjectName(xml);
                 var tempDir = Path.Combine(Path.GetTempPath(), "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
                 Directory.CreateDirectory(tempDir);
-                var fileName = MakeSafeFileName(string.IsNullOrWhiteSpace(objectName) ? normalizedKind : objectName) + ".xml";
+                var fileName = EngineeringFileNames.MakeSafeFileName(string.IsNullOrWhiteSpace(objectName) ? normalizedKind : objectName) + ".xml";
                 var xmlPath = Path.Combine(tempDir, fileName);
                 File.WriteAllText(xmlPath, xml, System.Text.Encoding.UTF8);
 
-                var classifiedKind = ClassifyPlcXml(xmlPath, out var subKind, out var classifiedObjectName);
+                var classifiedKind = PlcProgramImport.ClassifyPlcXml(xmlPath, out var subKind, out var classifiedObjectName);
                 if (classifiedKind == "unknown")
                 {
                     failed.Add(new ImportFailure { Path = xmlPath, Error = "Generated XML could not be classified as a supported PLC XML artifact." });
@@ -73,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!dryRun && failed.Count == 0)
                     compile = PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind, classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed);
 
-                var response = BuildPlcProgramImportResponse(
+                var response = PlcProgramImport.BuildPlcProgramImportResponse(
                     tempDir,
                     dryRun,
                     discoveredTypes,
@@ -150,7 +149,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _session.CompileSoftware(softwarePath);
-                return BuildCompileResponse(softwarePath, result);
+                return PlcCompilation.BuildCompileResponse(softwarePath, result);
             }
             catch (PortalException pex)
             {

@@ -18,7 +18,6 @@ using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -104,7 +103,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var nameMatch = Regex.Match(sclContent,
                     "(?:FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|TYPE)\\s+\"?([A-Za-z_][A-Za-z0-9_]*)\"?",
                     RegexOptions.IgnoreCase);
-                var defaultName = MakeSafeFileName(nameMatch.Success ? nameMatch.Groups[1].Value : "MCP_Source");
+                var defaultName = EngineeringFileNames.MakeSafeFileName(nameMatch.Success ? nameMatch.Groups[1].Value : "MCP_Source");
 
                 string finalPath;
                 if (string.IsNullOrWhiteSpace(outputPath))

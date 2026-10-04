@@ -1,3 +1,17 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Security;
+using Siemens.Engineering;
+using Siemens.Engineering.Connection;
+using Siemens.Engineering.Download;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
+using Siemens.Engineering.HW.Utilities;
+using Siemens.Engineering.Online;
+using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.Types;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -82,6 +96,27 @@ namespace TiaMcpServer.Siemens
                 if (HmiReadSafety.ConnectionUnavailable(ex)) RecordHmiReadFault(meta);
                 return new ResponseMessage { Message = $"{toolName} failed", Meta = meta };
             }
+        }
+
+
+        // ---- RunHmiStepTool hooks (the offline test project substitutes both) -------------------------------------------------
+        private string ProjectNullMessage(JsonObject meta)
+        {
+            if (_expectedProjectName == null) return "Project is null";
+            meta["expectedProject"] = _expectedProjectName;
+            return "Project is null: the explicitly bound project '" + _expectedProjectName + "' is not open in any TIA Portal instance (nothing else was bound in its place); reopen it and call AttachToOpenProject.";
+        }
+        // Openness exceptions carry structured ExceptionMessageData (Text / DetailText) beside the message.
+        private static void AddExceptionMessageData(Exception ex, JsonObject meta)
+        {
+            if (MigrationRead.Cause(ex) is not EngineeringException engineering) return;
+            try
+            {
+                ExceptionMessageData data = engineering.MessageData;
+                meta["messageData"] = new JsonObject { ["text"] = data.Text, ["detailText"] = data.DetailText };
+                meta["detailMessageData"] = new JsonArray(engineering.DetailMessageData.Select(d => (JsonNode)new JsonObject { ["text"] = d.Text, ["detailText"] = d.DetailText }).ToArray());
+            }
+            catch /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ { }
         }
 
     }

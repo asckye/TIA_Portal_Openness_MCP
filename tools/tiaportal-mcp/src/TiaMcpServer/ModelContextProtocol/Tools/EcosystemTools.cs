@@ -7,7 +7,6 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 using System.Linq;
 using System.Threading.Tasks;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -16,7 +15,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         [McpServerTool(Name = "RenderPlcVisualDiff"), Description("[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download.")]
         public ResponseMessage RenderPlcVisualDiff([Description("Existing absolute before-export SimaticML XML path.")] string leftFilePath, [Description("Existing absolute after-export SimaticML XML path.")] string rightFilePath, [Description("New absolute output file; existing files are refused.")] string outputPath)
-            => RunOfflineAnalysisTool("RenderPlcVisualDiff", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcVisualDiff", meta =>
             {
                 if (!outputPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end in .html.");
                 var output = NativeFileOutput.Plan(outputPath);
@@ -29,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         [McpServerTool(Name = "ReadOpennessGuidance"), Description("[L2][Guide][READ] Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Does not connect to TIA.")]
         public ResponseMessage ReadOpennessGuidance([Description("Case-insensitive text to search; empty lists all guides.")] string query = "", [Description("Exact document ID returned by listing; empty lists documents.")] string document = "", [Description("Zero-based item/line offset.")] int offset = 0, [Description("Maximum returned items; see tool limits.")] int limit = 100)
-            => RunOfflineAnalysisTool("ReadOpennessGuidance", meta => { var result = EcosystemFiles.Guidance(EcosystemFiles.RepositoryRoot(), query, document, offset, limit); foreach (var item in result) meta[item.Key] = item.Value?.DeepClone(); return "Official Openness reference."; });
+            => OfflineToolExecution.RunOfflineAnalysisTool("ReadOpennessGuidance", meta => { var result = EcosystemFiles.Guidance(EcosystemFiles.RepositoryRoot(), query, document, offset, limit); foreach (var item in result) meta[item.Key] = item.Value?.DeepClone(); return "Official Openness reference."; });
 
         [McpServerTool(Name = "RunPlcCompanionTool"), Description("[L2][Simulation][ONLINE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. argumentsJson is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ installed by scripts/ecosystem/Install-PlcTools.ps1; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.")]
         public async Task<ResponseMessage> RunPlcCompanionTool([Description("Existing absolute project directory used by the companion command.")] string workingDirectory, [Description("catalog/help/run; catalog and help do not execute command callbacks.")] string mode = "catalog", [Description("JSON string array of exact CLI arguments; no shell syntax.")] string argumentsJson = "[]", [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true, [Description("Command-tree timeout in seconds, 1..300; partial effects may remain after timeout.")] int timeoutSeconds = 60)

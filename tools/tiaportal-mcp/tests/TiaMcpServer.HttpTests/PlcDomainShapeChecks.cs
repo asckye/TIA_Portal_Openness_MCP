@@ -8,7 +8,7 @@ using System.Reflection;
 // typed access rules, OPC UA communication group / namespace restrictions, alarm class and supervision result messages,
 // STEP 7 library type subclasses, user group classes, verified member by member against the installed V20
 // (Siemens.Engineering) or V21 (Siemens.Engineering.Base / Siemens.Engineering.Step7) PublicAPI.
-internal static class Step7LeftoversShapeChecks
+internal static class PlcDomainShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
     {

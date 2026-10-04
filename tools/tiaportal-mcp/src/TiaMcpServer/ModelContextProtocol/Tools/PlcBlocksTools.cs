@@ -20,8 +20,6 @@ using Siemens.Engineering;
 using System.Globalization;
 using System.Text;
 using TiaMcpServer.Siemens.Services;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcBlockToolSupport;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -192,7 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     case TiaMcpServer.Siemens.PortalErrorCode.NotFound:
                         {
-                            var msg = ("Block not found." + BuildBlockDidYouMean(softwarePath, blockPath)).Trim();
+                            var msg = ("Block not found." + EngineeringLookupHints.BuildBlockDidYouMean(softwarePath, blockPath)).Trim();
                             throw new McpException(msg, McpErrorCode.InvalidParams);
                         }
 
@@ -203,7 +201,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var msg = "Failed to export block.";
                             if (!string.IsNullOrEmpty(reason)) msg += $" Reason: {reason}";
 
-                            Logger?.LogError(pex, "MCP ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
+                            McpServer.Logger?.LogError(pex, "MCP ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
                                 pex.Data?["softwarePath"], pex.Data?["blockPath"], pex.Data?["exportPath"]);
 
                             throw new McpException(msg, McpErrorCode.InternalError);
@@ -442,7 +440,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (string.IsNullOrWhiteSpace(sourceDir) || !Directory.Exists(sourceDir))
                 {
                     failed.Add(new ImportFailure { Path = sourceDir, Error = "Directory not found" });
-                    return BuildPlcProgramImportResponse(sourceDir, dryRun, new List<string>(), new List<string>(), new List<string>(), new List<string>(), importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                    return PlcProgramImport.BuildPlcProgramImportResponse(sourceDir, dryRun, new List<string>(), new List<string>(), new List<string>(), new List<string>(), importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
                 }
 
                 Regex? regex = null;
@@ -456,7 +454,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Where(f => regex == null || regex.IsMatch(Path.GetFileNameWithoutExtension(f)))
                     .Select(f =>
                     {
-                        var kind = ClassifyPlcXml(f, out var subKind, out var objectName);
+                        var kind = PlcProgramImport.ClassifyPlcXml(f, out var subKind, out var objectName);
                         return new { File = f, Kind = kind, SubKind = subKind, ObjectName = objectName };
                     })
                     .Where(x => x.Kind != "unknown")
@@ -477,12 +475,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     failed.Add(new ImportFailure { Path = ".", Error = $"Duplicate diagnostics truncated: conflictCount={conflicts.Count}, reportedConflicts=16, truncated=true. Entire selected batch rejected before import or compile." });
                 if (conflicts.Count > 0)
                 {
-                    return BuildPlcProgramImportResponse(sourceDir, dryRun, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                    return PlcProgramImport.BuildPlcProgramImportResponse(sourceDir, dryRun, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
                 }
 
                 if (dryRun)
                 {
-                    return BuildPlcProgramImportResponse(sourceDir, true, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                    return PlcProgramImport.BuildPlcProgramImportResponse(sourceDir, true, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
                 }
 
                 foreach (var item in files.Where(x => x.Kind == "type").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.File, StringComparer.Ordinal))
@@ -547,7 +545,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     try
                     {
-                        compile = BuildCompileResponse(softwarePath, _session.CompileSoftware(softwarePath));
+                        compile = PlcCompilation.BuildCompileResponse(softwarePath, _session.CompileSoftware(softwarePath));
                     }
                     catch (PortalException pex)
                     {
@@ -555,12 +553,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                return BuildPlcProgramImportResponse(sourceDir, false, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                return PlcProgramImport.BuildPlcProgramImportResponse(sourceDir, false, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
             }
             catch (Exception ex) when (ex is not McpException)
             {
                 failed.Add(new ImportFailure { Path = sourceDir, Error = ex.ToString() });
-                return BuildPlcProgramImportResponse(sourceDir, dryRun, new List<string>(), new List<string>(), new List<string>(), new List<string>(), importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                return PlcProgramImport.BuildPlcProgramImportResponse(sourceDir, dryRun, new List<string>(), new List<string>(), new List<string>(), new List<string>(), importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
             }
         }
 
@@ -568,7 +566,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseCompileDiagnose CompileAndDiagnosePlc(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("password: optional safety password")] string password = "")
-            => CompileAndDiagnoseCore(softwarePath, password);
+            => PlcCompilation.CompileAndDiagnoseCore(softwarePath, password);
 
 
 
@@ -658,7 +656,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 // First, get the list of blocks to determine total count
-                Logger?.LogInformation($"Starting export of blocks from '{softwarePath}' to '{exportPath}'");
+                McpServer.Logger?.LogInformation($"Starting export of blocks from '{softwarePath}' to '{exportPath}'");
                 
                 var allBlocks = await Task.Run(() => _session.GetBlocks(softwarePath, regexName));
                 var totalBlocks = allBlocks?.Count ?? 0;
@@ -788,7 +786,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
 
                     var duration = (DateTime.Now - startTime).TotalSeconds;
-                    Logger?.LogInformation($"Export completed: {processedCount} blocks exported in {duration:F2} seconds");
+                    McpServer.Logger?.LogInformation($"Export completed: {processedCount} blocks exported in {duration:F2} seconds");
 
                     return new ResponseExportBlocks
                     {
@@ -833,7 +831,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
                 
-                Logger?.LogError(ex, $"Failed exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}");
+                McpServer.Logger?.LogError(ex, $"Failed exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}");
                 throw new McpException($"Unexpected error exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
@@ -1191,14 +1189,14 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Absolute exported SimaticML XML; mutually exclusive with blockPath.")] string filePath = "",
             [Description("Exact PLC software path when exporting a live block.")] string softwarePath = "",
             [Description("Exact group-qualified live block path; empty for file-only mode.")] string blockPath = "")
-            => RunOfflineAnalysisTool("ReadPlcBlockEditCapabilities", meta => {
+            => OfflineToolExecution.RunOfflineAnalysisTool("ReadPlcBlockEditCapabilities", meta => {
                 string? temp = null;
                 try {
                     meta["offlineOnly"] = !string.IsNullOrWhiteSpace(filePath);
-                    var path = ResolveCompareSide("document", filePath, blockPath, softwarePath, meta, out temp);
+                    var path = OfflineToolExecution.ResolveCompareSide("document", filePath, blockPath, softwarePath, meta, out temp);
                     meta["data"] = PlcDocumentEditing.Inspect(PlcDocumentEditing.Read(path));
                     return "Exported block editing capabilities inspected. Network indexes are zero-based; native import remains unverified.";
-                } finally { DeleteAnalysisTempDir(temp); }
+                } finally { OfflineToolExecution.DeleteAnalysisTempDir(temp); }
             });
 
         [McpServerTool(Name = "AnalyzePlcReferences"), Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes.")]
@@ -1209,7 +1207,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Maximum call-path edge depth, 1..50.")] int maxDepth = 10,
             [Description("Zero-based result offset.")] int offset = 0,
             [Description("Page size, 1..500.")] int limit = 100)
-            => RunOfflineAnalysisTool("AnalyzePlcReferences", meta => {
+            => OfflineToolExecution.RunOfflineAnalysisTool("AnalyzePlcReferences", meta => {
                 meta["data"] = PlcOfflineReferences.Analyze(directory, action, target, maxDepth, offset, limit);
                 meta["dataComplete"] = false;
                 return "Partial offline reference query completed. Inspect failures, unresolvedCalls and scope; never use it alone to justify deletion.";
@@ -1222,7 +1220,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("documentFingerprint returned by ReadPlcBlockEditCapabilities for this input.")] string expectedFingerprint,
             [Description("New absolute output file; existing parent directory required when dryRun=false.")] string outputPath = "",
             [Description("Preview only by default; false writes a new file, never imports into TIA.")] bool dryRun = true)
-            => RunOfflineAnalysisTool("PatchPlcBlockDocument", meta => {
+            => OfflineToolExecution.RunOfflineAnalysisTool("PatchPlcBlockDocument", meta => {
                 var edited = PlcDocumentEditing.Patch(PlcDocumentEditing.Read(filePath), changesJson, expectedFingerprint);
                 meta["dryRun"] = dryRun; meta["result"] = PlcDocumentEditing.Inspect(edited);
                 meta["nativeImportValidated"] = false;

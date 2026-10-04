@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 
 using TiaMcpServer.Siemens.Services;
-using static TiaMcpServer.ModelContextProtocol.McpServer.PlcTableToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -375,7 +374,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var acceptedTags = new JsonArray();
                 var rejectedTags = new JsonArray();
                 var policy = new JsonArray();
-                foreach (var policyLine in GetOnlineMonitoringSafetyPolicy())
+                foreach (var policyLine in OnlineToolPolicy.GetOnlineMonitoringSafetyPolicy())
                 {
                     policy.Add(policyLine);
                 }
@@ -528,11 +527,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     "s7-readonly"
                 };
 
-                var policy = new JsonArray(GetOnlineMonitoringSafetyPolicy().Select(x => JsonValue.Create(x)).ToArray());
+                var policy = new JsonArray(OnlineToolPolicy.GetOnlineMonitoringSafetyPolicy().Select(x => JsonValue.Create(x)).ToArray());
                 var warnings = new JsonArray();
                 var acceptedTags = new JsonArray();
                 var rejectedTags = new JsonArray();
-                var options = ParseJsonObjectOrEmpty(optionsJson, "optionsJson");
+                var options = ToolJsonArguments.ParseJsonObjectOrEmpty(optionsJson, "optionsJson");
 
                 if (!allowedProviders.Contains(normalizedProvider))
                 {

@@ -711,13 +711,13 @@ namespace TiaMcpServer.Siemens.Services
         // ---- ProDiag CSV export -------------------------------------------------------------------------------------------------------------------
         public ResponseMessage ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName = "", string unitKind = "unit", bool dryRun = true)
             => _session.RunHmiStepTool("ExportPlcProDiagInfo", meta => {
-                Step7LeftoversLogic.ValidateProDiagRequest(blockPath, directoryPath, unitName, unitKind);
+                ProDiagExportRules.ValidateProDiagRequest(blockPath, directoryPath, unitName, unitKind);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
                 var block = (PlcBlock)_session.ExactObjectUnder(_session.BlockRootOf(plc, unit), blockPath, "Blocks", "block");
                 CodeBlock code = block as CodeBlock ?? throw new ArgumentException("blockPath must name a code block (FB); " + block.GetType().Name + " has no ExportProDIAGInfo.");
                 meta["block"] = new JsonObject { ["name"] = code.Name, ["blockClass"] = code.GetType().Name, ["programmingLanguage"] = code.ProgrammingLanguage.ToString(), ["isConsistent"] = code.IsConsistent, ["unit"] = unit?.Name };
-                var refusal = Step7LeftoversLogic.ProDiagRefusal(code.ProgrammingLanguage.ToString(), code.IsConsistent);
+                var refusal = ProDiagExportRules.ProDiagRefusal(code.ProgrammingLanguage.ToString(), code.IsConsistent);
                 if (refusal != null) throw new PortalException(PortalErrorCode.InvalidState, refusal);
                 var directory = new DirectoryInfo(directoryPath);
                 if (!directory.Exists) throw new DirectoryNotFoundException("directoryPath must already exist: " + directoryPath);

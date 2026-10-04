@@ -63,7 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("specJson: JSON object describing the document to build (see the tool description).")] string specJson,
             string outputPath,
             [Description("referenceAmlPath: full path of a reference AML file whose structure is reused.")] string referenceAmlPath = "")
-            => McpServer.PilotToolSupport.RunOfflineAnalysisTool("BuildDeviceAmlDocument", meta =>
+            => OfflineToolExecution.RunOfflineAnalysisTool("BuildDeviceAmlDocument", meta =>
             {
                 var output = NativeFileOutput.Plan(outputPath);
                 if (!output.Extension.Equals(".aml", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end with .aml.");

@@ -281,7 +281,7 @@ namespace TiaMcpServer.Siemens.Services
             string filePath = "", string libraryName = "", string masterCopyPath = "", string copyMode = "", string generateOption = "None", string targetKind = "", string targetGroupPath = "",
             string newName = "", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcExternalSources", meta => {
-                bool writing = Step7LeftoversLogic.ValidateExternalSourceRequest(action, name, unitName, unitKind, filePath, libraryName, masterCopyPath, copyMode, generateOption, targetKind, targetGroupPath, newName, confirmDelete, dryRun);
+                bool writing = ExternalSourceRules.ValidateExternalSourceRequest(action, name, unitName, unitKind, filePath, libraryName, masterCopyPath, copyMode, generateOption, targetKind, targetGroupPath, newName, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
@@ -390,7 +390,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true, int maxDepth = 4)
             => _session.RunHmiStepTool("ReadPlcSystemGroups", meta => {
-                Step7LeftoversLogic.ValidateSystemGroupRequest(unitName, unitKind, maxDepth);
+                ExternalSourceRules.ValidateSystemGroupRequest(unitName, unitKind, maxDepth);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
                 PlcBlockSystemGroup blockRoot = unit == null ? plc.BlockGroup : unit.BlockGroup; PlcTypeSystemGroup typeRoot = unit == null ? plc.TypeGroup : unit.TypeGroup;
