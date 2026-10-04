@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "domain": "watch-technology",
+  "label": "watch tables and technology objects",
+  "engine": {
+    "types": [
+      "TiaMcpServer.Siemens.Services.PlcTablesService",
+      "TiaMcpServer.Siemens.Services.TechnologyObjectsService"
+    ],
+    "releases": [
+      "20",
+      "21"
+    ],
+    "methodScopes": {
+      "TiaMcpServer.Siemens.Services.PlcTablesService": [
+        {
+          "method": "GetPlcWatchTables",
+          "signature": "System.Collections.Generic.List`1<System.String> TiaMcpServer.Siemens.Services.PlcTablesService::GetPlcWatchTables(System.String)"
+        },
+        {
+          "method": "ExportPlcWatchTable",
+          "signature": "System.Boolean TiaMcpServer.Siemens.Services.PlcTablesService::ExportPlcWatchTable(System.String,System.String,System.String)"
+        },
+        {
+          "method": "ExportPlcWatchTablesToDirectory",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseImportBatch TiaMcpServer.Siemens.Services.PlcTablesService::ExportPlcWatchTablesToDirectory(System.String,System.String,System.String)"
+        },
+        {
+          "method": "GetPlcForceTables",
+          "signature": "System.Collections.Generic.List`1<System.String> TiaMcpServer.Siemens.Services.PlcTablesService::GetPlcForceTables(System.String)"
+        },
+        {
+          "method": "CollectForceTableNames",
+          "signature": "System.Void TiaMcpServer.Siemens.Services.PlcTablesService::CollectForceTableNames(System.Object,System.String,System.Collections.Generic.List`1<System.String>,System.Collections.Generic.HashSet`1<System.Object>)"
+        },
+        {
+          "method": "EnsureWatchTableEntry",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseMessage TiaMcpServer.Siemens.Services.PlcTablesService::EnsureWatchTableEntry(System.String,System.String,System.String,System.String,System.String)"
+        },
+        {
+          "method": "ResolveWatchTable",
+          "signature": "System.ValueTuple`4<Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable,Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup,System.String,System.String> TiaMcpServer.Siemens.Services.PlcTablesService::ResolveWatchTable(Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup,System.String)"
+        },
+        {
+          "method": "EnsureForceTableEntry",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseMessage TiaMcpServer.Siemens.Services.PlcTablesService::EnsureForceTableEntry(System.String,System.String,System.String,System.String)"
+        },
+        {
+          "method": "FindOrCreateWatchTable",
+          "signature": "System.Object TiaMcpServer.Siemens.Services.PlcTablesService::FindOrCreateWatchTable(System.Object,System.String)"
+        },
+        {
+          "method": "FindOrCreateForceTable",
+          "signature": "System.Object TiaMcpServer.Siemens.Services.PlcTablesService::FindOrCreateForceTable(System.Object,System.String)"
+        },
+        {
+          "method": "FindOrCreateTableEntry",
+          "signature": "System.Object TiaMcpServer.Siemens.Services.PlcTablesService::FindOrCreateTableEntry(System.Object,System.String,System.String,System.Boolean&)"
+        },
+        {
+          "method": "WatchEntryAddressAttribute",
+          "signature": "System.String TiaMcpServer.Siemens.Services.PlcTablesService::WatchEntryAddressAttribute(System.String)"
+        },
+        {
+          "method": "SetWatchEntryAttribute",
+          "signature": "System.Void TiaMcpServer.Siemens.Services.PlcTablesService::SetWatchEntryAttribute(System.Object,System.String,System.Object,System.Text.Json.Nodes.JsonObject)"
+        },
+        {
+          "method": "ReadWatchEntryAttributes",
+          "signature": "System.Text.Json.Nodes.JsonObject TiaMcpServer.Siemens.Services.PlcTablesService::ReadWatchEntryAttributes(System.Object,System.String[])"
+        },
+        {
+          "method": "SetEnumPropertyByName",
+          "signature": "System.Void TiaMcpServer.Siemens.Services.PlcTablesService::SetEnumPropertyByName(System.Object,System.String,System.String)"
+        },
+        {
+          "method": "ReadPlcWatchTableCurrentValuesReadOnly",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseJsonReport TiaMcpServer.Siemens.Services.PlcTablesService::ReadPlcWatchTableCurrentValuesReadOnly(System.String,System.String,System.Int32)"
+        },
+        {
+          "method": "ProbePlcMonitorOnlineCapabilities",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseJsonReport TiaMcpServer.Siemens.Services.PlcTablesService::ProbePlcMonitorOnlineCapabilities(System.String)"
+        },
+        {
+          "method": "ResolvePlcWatchAndForceTableGroup",
+          "signature": "System.Object TiaMcpServer.Siemens.Services.PlcTablesService::ResolvePlcWatchAndForceTableGroup(System.Object)"
+        },
+        {
+          "method": "EnumeratePlcWatchTables",
+          "signature": "System.Collections.Generic.List`1<System.ValueTuple`3<System.String,System.String,System.Object>> TiaMcpServer.Siemens.Services.PlcTablesService::EnumeratePlcWatchTables(System.Object)"
+        },
+        {
+          "method": "EnumeratePlcWatchTablesRecursive",
+          "signature": "System.Void TiaMcpServer.Siemens.Services.PlcTablesService::EnumeratePlcWatchTablesRecursive(System.Object,System.String,System.Collections.Generic.List`1<System.ValueTuple`3<System.String,System.String,System.Object>>,System.Collections.Generic.HashSet`1<System.Object>)"
+        },
+        {
+          "method": "ReadWatchTableEntryReadOnly",
+          "signature": "System.Text.Json.Nodes.JsonObject TiaMcpServer.Siemens.Services.PlcTablesService::ReadWatchTableEntryReadOnly(System.Object,System.Boolean)"
+        },
+        {
+          "method": "MonitorWatchTableLiveS7",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseJsonReport TiaMcpServer.Siemens.Services.PlcTablesService::MonitorWatchTableLiveS7(System.String,System.String,System.String,System.Int32,System.Int32,System.String)"
+        },
+        {
+          "method": "ReadEntryAttr",
+          "signature": "System.String TiaMcpServer.Siemens.Services.PlcTablesService::ReadEntryAttr(System.Object,System.String[])"
+        },
+        {
+          "method": "ImportPlcWatchTableOffline",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseMessage TiaMcpServer.Siemens.Services.PlcTablesService::ImportPlcWatchTableOffline(System.String,System.String,System.String,System.Boolean)"
+        },
+        {
+          "method": "TableEntryRow",
+          "signature": "System.Text.Json.Nodes.JsonObject TiaMcpServer.Siemens.Services.PlcTablesService::TableEntryRow(Siemens.Engineering.SW.WatchAndForceTables.PlcTableCommentEntry,System.Int32)"
+        },
+        {
+          "method": "ManagePlcTableEntries",
+          "signature": "TiaMcpServer.ModelContextProtocol.ResponseMessage TiaMcpServer.Siemens.Services.PlcTablesService::ManagePlcTableEntries(System.String,System.String,System.String,System.String,System.Int32,System.Boolean,System.Boolean,System.Int32,System.Int32)"
+        },
+        {
+          "method": "IsProjectNull",
+          "signature": "System.Boolean TiaMcpServer.Siemens.Services.PlcTablesService::IsProjectNull()"
+        }
+      ]
+    }
+  },
+  "adapter": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "mutableTypes": [
+      "TiaMcp.Adapters.PlcServices"
+    ]
+  },
+  "hosts": [
+    {
+      "name": "foundation",
+      "types": [
+        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+      ],
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "methodScopes": {
+        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+          {
+            "method": "ReadWatchTableNames",
+            "signature": "TiaMcp.PlcFoundation.PlcSupplementaryReadResult TiaMcp.PlcFoundation.PlcFoundationEngine::ReadWatchTableNames(System.String)"
+          },
+          {
+            "method": "ReadTechnologyObjects",
+            "signature": "TiaMcp.PlcFoundation.PlcSupplementaryReadResult TiaMcp.PlcFoundation.PlcFoundationEngine::ReadTechnologyObjects(System.String)"
+          },
+          {
+            "method": "TechnologyMetadata",
+            "signature": "TiaMcp.PlcFoundation.PlcTechnologyReadRow TiaMcp.PlcFoundation.PlcFoundationEngine::TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB)"
+          },
+          {
+            "method": "ExportPlcWatchTable",
+            "signature": "TiaMcp.PlcFoundation.PlcSpecialExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportPlcWatchTable(System.String,System.String,System.String,System.String,System.Boolean)"
+          },
+          {
+            "method": "ExportTechnologyObject",
+            "signature": "TiaMcp.PlcFoundation.PlcSpecialExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportTechnologyObject(System.String,System.String,System.String,System.String,System.Boolean)"
+          }
+        ]
+      }
+    }
+  ],
+  "primitives": [
+    {
+      "adapterType": "TiaMcp.PlcFoundation.WatchTechnologyPrimitives",
+      "engineNamespace": "TiaMcpServer.Siemens.LocalWatchTechnology"
+    }
+  ],
+  "expansionTypes": [],
+  "expansionNamespaces": [],
+  "tools": [
+    {
+      "name": "GetPlcWatchTables",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "GetPlcWatchTables"
+        }
+      ]
+    },
+    {
+      "name": "GetPlcForceTables",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "GetPlcForceTables"
+        }
+      ]
+    },
+    {
+      "name": "SetWatchTableModifyValue",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "EnsureWatchTableEntry"
+        }
+      ]
+    },
+    {
+      "name": "SetForceTableEntry",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "EnsureForceTableEntry"
+        }
+      ]
+    },
+    {
+      "name": "ExportPlcWatchTable",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ExportPlcWatchTable"
+        }
+      ]
+    },
+    {
+      "name": "ExportPlcWatchTablesToDirectory",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ExportPlcWatchTablesToDirectory"
+        }
+      ]
+    },
+    {
+      "name": "ProbePlcMonitorOnlineCapabilities",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ProbePlcMonitorOnlineCapabilities"
+        }
+      ]
+    },
+    {
+      "name": "ReadPlcWatchTableCurrentValuesReadOnly",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ReadPlcWatchTableCurrentValuesReadOnly"
+        }
+      ]
+    },
+    {
+      "name": "MonitorWatchTableLiveS7",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "MonitorWatchTableLiveS7"
+        }
+      ]
+    },
+    {
+      "name": "ImportPlcWatchTableOffline",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ImportPlcWatchTableOffline"
+        }
+      ]
+    },
+    {
+      "name": "ManagePlcTableEntries",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcTablesService",
+          "method": "ManagePlcTableEntries"
+        }
+      ]
+    },
+    {
+      "name": "GetTechnologyObjects",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "GetTechnologyObjects"
+        }
+      ]
+    },
+    {
+      "name": "ExportTechnologyObject",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ExportTechnologyObject"
+        }
+      ]
+    },
+    {
+      "name": "ExportTechnologyObjectsToDirectory",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ExportTechnologyObjectsToDirectory"
+        }
+      ]
+    },
+    {
+      "name": "ImportTechnologyObject",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ImportTechnologyObject"
+        }
+      ]
+    },
+    {
+      "name": "ImportTechnologyObjectsFromDirectory",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ImportTechnologyObjectsFromDirectory"
+        }
+      ]
+    },
+    {
+      "name": "ReadTechnologyObjectTree",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ReadTechnologyObjectTree"
+        }
+      ]
+    },
+    {
+      "name": "ManageTechnologyObject",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
+          "method": "ManageTechnologyObject"
+        }
+      ]
+    }
+  ],
+  "evidence": "docs/development/p4-i2-native-evidence.json"
+}

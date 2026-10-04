@@ -6,11 +6,13 @@ namespace Siemens.Engineering.SW.WatchAndForceTables
     public abstract class PlcWatchAndForceTableGroup
     {
         public string Name { get; set; } = "";
-        public List<PlcWatchTable> WatchTables { get; } = new();
-        public List<PlcWatchAndForceTableUserGroup> Groups { get; } = new();
+        public PlcWatchTableComposition WatchTables { get; } = new();
+        public PlcWatchAndForceTableUserGroupComposition Groups { get; } = new();
     }
     public sealed class PlcWatchAndForceTableSystemGroup : PlcWatchAndForceTableGroup { }
     public sealed class PlcWatchAndForceTableUserGroup : PlcWatchAndForceTableGroup { }
+    public sealed class PlcWatchTableComposition : List<PlcWatchTable> { }
+    public sealed class PlcWatchAndForceTableUserGroupComposition : List<PlcWatchAndForceTableUserGroup> { }
     public sealed class PlcWatchTable
     {
         public string Name { get; set; } = "";
@@ -24,8 +26,9 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
     public sealed class TechnologicalInstanceDBGroup
     {
         public string Name { get; set; } = "";
-        public List<TechnologicalInstanceDB> TechnologicalObjects { get; } = new();
+        public TechnologicalInstanceDBComposition TechnologicalObjects { get; } = new();
     }
+    public sealed class TechnologicalInstanceDBComposition : List<TechnologicalInstanceDB> { }
     public sealed class TechnologicalInstanceDB
     {
         public string Name { get; set; } = "";
@@ -33,23 +36,26 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
         public bool IsConsistent { get; set; } = true;
     }
 }
-namespace TiaMcp.PlcFoundation
+namespace Siemens.Engineering.SW
 {
-    internal sealed class FakeSoftware
+    public sealed class PlcSoftware
     {
         public Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableSystemGroup WatchAndForceTableGroup { get; } = new();
         public Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup TechnologicalObjectGroup { get; } = new();
     }
+}
+namespace TiaMcp.PlcFoundation
+{
     public sealed partial class PlcFoundationEngine
     {
-        internal FakeSoftware Software { get; } = new();
+        internal Siemens.Engineering.SW.PlcSoftware Software { get; } = new();
         private string ReleaseKey => "20";
-        private (FakeSoftware Value, string ExactPath) ReadSelection(string path) => (Software, "devices/D/CPU");
+        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) ReadSelection(string path) => (Software, "devices/D/CPU");
         private readonly FakeLifecycle lifecycle = new();
         private sealed class FakeLifecycle { public bool IsLocalSession => true; }
         private sealed class FakeProject { public FileInfo Path => new("project.ap20"); }
         private FakeProject Project() => new();
-        private void RequireTargetOffline((FakeSoftware Value, string ExactPath) selected) { }
+        private void RequireTargetOffline((Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) selected) { }
         private static PlcTechnologyReadRow TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB item) => new() { Name=item.Name };
     }
     internal static class PlcLifecyclePolicy

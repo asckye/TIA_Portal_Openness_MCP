@@ -39,6 +39,12 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.WatchAndForceTables;
 using TiaMcpServer.Runtime;
 
+#if TIA_SHARED_ADAPTER_PATHS
+using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+#else
+using Native = TiaMcpServer.Siemens.LocalWatchTechnology.WatchTechnologyPrimitives;
+#endif
+
 namespace TiaMcpServer.Siemens.Services
 {
     internal sealed class PlcTablesService
@@ -92,7 +98,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public List<string>? GetPlcWatchTables(string softwarePath)
         {
-            if (_session.IsProjectNull()) return null;
+            if (IsProjectNull()) return null;
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null) return null;
 
@@ -111,7 +117,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public bool ExportPlcWatchTable(string softwarePath, string watchTableName, string exportPath)
         {
-            if (_session.IsProjectNull()) return false;
+            if (IsProjectNull()) return false;
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null) return false;
 
@@ -176,7 +182,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public List<string>? GetPlcForceTables(string softwarePath)
         {
-            if (_session.IsProjectNull()) return null;
+            if (IsProjectNull()) return null;
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null) return null;
 
@@ -228,7 +234,7 @@ namespace TiaMcpServer.Siemens.Services
             string modifyValue,
             string trigger = "Permanent")
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
             if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(address)) return new ResponseMessage { Message = "tableName and address are required." };
@@ -247,7 +253,7 @@ namespace TiaMcpServer.Siemens.Services
             string? tempFile = null;
             try
             {
-                var root = plc.WatchAndForceTableGroup;
+                var root = Native.WatchGroup(plc);
                 var (table, group, resolvedPath, ambiguity) = ResolveWatchTable(root, tableName);
                 if (ambiguity != null) return new ResponseMessage { Message = ambiguity, Meta = meta };
                 meta["resolvedTablePath"] = resolvedPath;
@@ -258,7 +264,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     tempFile = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
                     if (File.Exists(tempFile)) File.Delete(tempFile);
-                    table.Export(new FileInfo(tempFile), ExportOptions.None);
+                    Native.Export(table, new FileInfo(tempFile), ExportOptions.None);
                     doc = XDocument.Load(tempFile);
                     meta["entriesBefore"] = WatchTableEntryXml.Entries(doc).Count();
                 }
@@ -273,33 +279,33 @@ namespace TiaMcpServer.Siemens.Services
                 doc.Save(tempFile);
 
                 meta["mayHaveChanged"] = true;
-                var imported = group.WatchTables.Import(new FileInfo(tempFile), ImportOptions.Override).ToArray();
+                var imported = Native.Import(Native.WatchTables(group), new FileInfo(tempFile), ImportOptions.Override).ToArray();
                 meta["importedCount"] = imported.Length;
                 meta["apiCallSuccess"] = true;
 
                 // readback from a fresh navigation (the old proxy is dead after Override)
-                var (after, _, _, _) = ResolveWatchTable(plc.WatchAndForceTableGroup, resolvedPath);
+                var (after, _, _, _) = ResolveWatchTable(Native.WatchGroup(plc), resolvedPath);
                 if (after == null) return new ResponseMessage { Message = $"Watch table '{resolvedPath}' is missing after the import; nothing verified.", Meta = meta };
-                var rows = EngineeringGroupOperations.Items(after.Entries).ToArray();
+                var rows = EngineeringGroupOperations.Items(Native.Entries(after)).ToArray();
                 meta["entriesAfter"] = rows.Length;
                 global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableEntry? hit = null;
                 var attribute = WatchTableEntryXml.AttributeFor(address);
                 foreach (var row in rows.OfType<global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableEntry>())
                 {
-                    var key = attribute == "Address" ? row.Address ?? "" : row.Name ?? "";
+                    var key = attribute == "Address" ? Native.Address(row) ?? "" : Native.Name(row) ?? "";
                     if (attribute == "Address" ? string.Equals(key, address.Trim(), StringComparison.OrdinalIgnoreCase) : WatchTableEntryXml.SameSymbol(key, address)) { hit = row; break; }
                 }
                 if (hit == null)
                     return new ResponseMessage { Message = $"Watch table '{resolvedPath}' was re-imported ({rows.Length} rows) but no row for '{address}' came back; TIA may have rejected the row (check the address / symbol).", Meta = meta };
-                meta["after"] = new JsonObject { ["Name"] = hit.Name, ["Address"] = hit.Address, ["DisplayFormat"] = hit.DisplayFormat.ToString(), ["ModifyValue"] = hit.ModifyValue, ["ModifyTrigger"] = hit.ModifyTrigger.ToString(), ["MonitorTrigger"] = hit.MonitorTrigger.ToString(), ["ModifyIntention"] = hit.ModifyIntention };
-                bool valueOk = string.Equals(hit.ModifyValue ?? "", modifyValue ?? "", StringComparison.OrdinalIgnoreCase);
-                bool triggerOk = string.Equals(hit.ModifyTrigger.ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
+                meta["after"] = new JsonObject { ["Name"] = Native.Name(hit), ["Address"] = Native.Address(hit), ["DisplayFormat"] = Native.DisplayFormat(hit).ToString(), ["ModifyValue"] = Native.ModifyValue(hit), ["ModifyTrigger"] = Native.ModifyTrigger(hit).ToString(), ["MonitorTrigger"] = Native.MonitorTrigger(hit).ToString(), ["ModifyIntention"] = Native.ModifyIntention(hit) };
+                bool valueOk = string.Equals(Native.ModifyValue(hit) ?? "", modifyValue ?? "", StringComparison.OrdinalIgnoreCase);
+                bool triggerOk = string.Equals(Native.ModifyTrigger(hit).ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
                 meta["readbackVerified"] = valueOk && triggerOk;
                 meta["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires. Project not saved.";
                 // envelope: legacy-single-verdict
                 meta["success"] = valueOk && triggerOk;   // The bridge reads Meta.success to determine operationStatus.
                 if (!valueOk || !triggerOk)
-                    return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{hit.ModifyValue}' Trigger={hit.ModifyTrigger} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
+                    return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{Native.ModifyValue(hit)}' Trigger={Native.ModifyTrigger(hit)} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
                 return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action} with ModifyValue='{modifyValue}' Trigger={triggerName} (readback verified; {rows.Length} rows).", Meta = meta };
             }
             catch (Exception ex)
@@ -326,16 +332,16 @@ namespace TiaMcpServer.Siemens.Services
             var groupPath = string.Join("/", parts.Take(parts.Length - 1));
             var leaf = parts.Last();
             var group = (global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup)EngineeringGroupOperations.Group(root, groupPath);
-            var direct = group.WatchTables.Find(leaf);
+            var direct = Native.Find(Native.WatchTables(group), leaf);
             if (direct != null || parts.Length > 1) return (direct, group, wanted, null);
 
             var hits = new List<(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable, global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup, string)>();
             void Walk(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup g, string path)
             {
-                foreach (var sub in EngineeringGroupOperations.Items(g.Groups).Cast<global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup>())
+                foreach (var sub in EngineeringGroupOperations.Items(Native.Groups(g)).Cast<global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup>())
                 {
-                    var subPath = path.Length == 0 ? sub.Name : path + "/" + sub.Name;
-                    var t = sub.WatchTables.Find(leaf);
+                    var subPath = path.Length == 0 ? Native.Name(sub) : path + "/" + Native.Name(sub);
+                    var t = Native.Find(Native.WatchTables(sub), leaf);
                     if (t != null) hits.Add((t, sub, subPath + "/" + leaf));
                     Walk(sub, subPath);
                 }
@@ -352,7 +358,7 @@ namespace TiaMcpServer.Siemens.Services
             string address,
             string forceValue)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
 
@@ -486,7 +492,7 @@ namespace TiaMcpServer.Siemens.Services
                     try { typedValue = Enum.Parse(enumType, triggerName, true); }
                     catch (ArgumentException) /* swallow(parse-fallback): Invalid trigger names are reported in refused attributes without attempting a write. */ { refused[name] = "unknown trigger '" + triggerName + "'; valid: " + string.Join("/", Enum.GetNames(enumType)); return; }
                 }
-                engineeringObject.SetAttribute(name, typedValue);
+                Native.SetAttribute(engineeringObject, name, typedValue);
             }
             catch (Exception ex) { refused[name] = ex.Message; }
         }
@@ -497,7 +503,7 @@ namespace TiaMcpServer.Siemens.Services
             if (entry is not IEngineeringObject engineeringObject) return o;
             foreach (var name in names)
             {
-                try { var v = engineeringObject.GetAttribute(name); o[name] = v == null ? null : JsonValue.Create(Convert.ToString(v)); }
+                try { var v = Native.Attribute(engineeringObject, name); o[name] = v == null ? null : JsonValue.Create(Convert.ToString(v)); }
                 catch { /* swallow(probe-optional): Attributes absent from this entry kind are omitted from the readback. */ }
             }
             return o;
@@ -538,7 +544,7 @@ namespace TiaMcpServer.Siemens.Services
 
             try
             {
-                if (_session.IsProjectNull())
+                if (IsProjectNull())
                     return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "Project is null. Attach to the open project first.", Data = data };
 
                 var plc = _session.GetPlcSoftware(softwarePath);
@@ -800,7 +806,7 @@ namespace TiaMcpServer.Siemens.Services
                 ["safety"] = new JsonObject { ["readOnly"] = true, ["modifiesWatchTables"] = false, ["writesValues"] = false, ["usesForce"] = false }
             };
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
                 return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "No project open. Attach first.", Data = data };
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null)
@@ -921,14 +927,14 @@ namespace TiaMcpServer.Siemens.Services
                 meta["expectedCount"] = WatchTableImportValidation.Validate(source.FullName);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);
-                var group = (PlcWatchAndForceTableGroup)EngineeringGroupOperations.Group(plc.WatchAndForceTableGroup, groupPath);
+                var group = (PlcWatchAndForceTableGroup)EngineeringGroupOperations.Group(Native.WatchGroup(plc), groupPath);
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true;
-                    var imported = group.WatchTables.Import(source, ImportOptions.None).ToArray();
+                    var imported = Native.Import(Native.WatchTables(group), source, ImportOptions.None).ToArray();
                     meta["actualCount"] = imported.Length;
-                    meta["names"] = new JsonArray(imported.Select(x => (JsonNode)JsonValue.Create(x.Name)!).ToArray());
+                    meta["names"] = new JsonArray(imported.Select(x => (JsonNode)JsonValue.Create(Native.Name(x))!).ToArray());
                     meta["dataComplete"] = imported.Length == meta["expectedCount"]!.GetValue<int>();
                     if (!meta["dataComplete"]!.GetValue<bool>()) throw new InvalidOperationException("Import returned a different number of watch tables; inspect project before retry.");
                 }
@@ -963,11 +969,11 @@ namespace TiaMcpServer.Siemens.Services
             switch (entry)
             {
                 case PlcWatchTableEntry w:
-                    row["kind"] = "watch"; row["name"] = w.Name; row["address"] = w.Address; row["displayFormat"] = w.DisplayFormat.ToString(); row["monitorTrigger"] = w.MonitorTrigger.ToString();
-                    row["modifyTrigger"] = w.ModifyTrigger.ToString(); row["modifyValue"] = w.ModifyValue; row["modifyIntention"] = w.ModifyIntention; break;
+                    row["kind"] = "watch"; row["name"] = Native.Name(w); row["address"] = Native.Address(w); row["displayFormat"] = Native.DisplayFormat(w).ToString(); row["monitorTrigger"] = Native.MonitorTrigger(w).ToString();
+                    row["modifyTrigger"] = Native.ModifyTrigger(w).ToString(); row["modifyValue"] = Native.ModifyValue(w); row["modifyIntention"] = Native.ModifyIntention(w); break;
                 case PlcForceTableEntry f:
-                    row["kind"] = "force"; row["name"] = f.Name; row["address"] = f.Address; row["displayFormat"] = f.DisplayFormat.ToString(); row["monitorTrigger"] = f.MonitorTrigger.ToString();
-                    row["forceValue"] = f.ForceValue; row["forceIntention"] = f.ForceIntention; break;
+                    row["kind"] = "force"; row["name"] = Native.Name(f); row["address"] = Native.Address(f); row["displayFormat"] = Native.DisplayFormat(f).ToString(); row["monitorTrigger"] = Native.MonitorTrigger(f).ToString();
+                    row["forceValue"] = Native.ForceValue(f); row["forceIntention"] = Native.ForceIntention(f); break;
                 default: row["kind"] = "comment"; break;
             }
             return row;
@@ -977,11 +983,11 @@ namespace TiaMcpServer.Siemens.Services
                 bool writing = PlcTableRules.ValidateTableEntryRequest(tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
-                PlcWatchAndForceTableGroup root = plc.WatchAndForceTableGroup;
+                PlcWatchAndForceTableGroup root = Native.WatchGroup(plc);
                 PlcTableCommentEntryComposition entries; string tableName; bool consistent; PlcWatchTable? watchTable = null;
-                if (tableKind == "watch") { var table = (PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); watchTable = table; entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
-                else { var table = (PlcForceTable)_session.ExactObjectUnder(root, tablePath, "ForceTables", "force table"); entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["table"] = new JsonObject { ["name"] = tableName, ["kind"] = tableKind, ["isConsistent"] = consistent, ["entryCount"] = entries.Count };
+                if (tableKind == "watch") { var table = (PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); watchTable = table; entries = Native.Entries(table); tableName = Native.Name(table); consistent = Native.IsConsistent(table); }
+                else { var table = (PlcForceTable)_session.ExactObjectUnder(root, tablePath, "ForceTables", "force table"); entries = Native.Entries(table); tableName = Native.Name(table); consistent = Native.IsConsistent(table); }
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["table"] = new JsonObject { ["name"] = tableName, ["kind"] = tableKind, ["isConsistent"] = consistent, ["entryCount"] = Native.Count(entries) };
                 var all = EngineeringGroupOperations.Items(entries).Cast<PlcTableCommentEntry>().ToArray();
                 if (action == "deleteTable")
                 {
@@ -989,9 +995,9 @@ namespace TiaMcpServer.Siemens.Services
                     meta["before"] = new JsonArray(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray());
                     if (!writing) return "Watch table deletion preview (" + all.Length + " rows would go with it); no changes.";
                     meta["mayHaveChanged"] = true;
-                    watchTable!.Delete(); meta["apiCallSuccess"] = true;
+                    Native.Delete(watchTable!); meta["apiCallSuccess"] = true;
                     bool absent;
-                    try { _session.ExactObjectUnder(plc.WatchAndForceTableGroup, tablePath, "WatchTables", "watch table"); absent = false; }
+                    try { _session.ExactObjectUnder(Native.WatchGroup(plc), tablePath, "WatchTables", "watch table"); absent = false; }
                     catch (PortalException) /* swallow(native-fallback): Failed exact lookup is the existing post-delete absence check. */ { absent = true; }
                     meta["verifiedAbsent"] = absent;
                     if (!absent) throw new InvalidOperationException("Watch table still resolvable after Delete().");
@@ -1008,10 +1014,10 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     if (!writing) return "Comment entry creation preview; no changes.";
                     meta["mayHaveChanged"] = true;
-                    PlcTableCommentEntry created = entries.Create(); meta["apiCallSuccess"] = true;
+                    PlcTableCommentEntry created = Native.Create(entries); meta["apiCallSuccess"] = true;
                     // TIA V21 native evidence (2026-09-19): the Create proxy can retain the old Count; count on a fresh navigation.
                     // See docs/reference/real-machine-ledger.md for the native evidence.
-                    int after = EngineeringGroupOperations.Items(((PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = after;
+                    int after = EngineeringGroupOperations.Items(Native.Entries((PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table"))).Count(); meta["entryCountAfter"] = after;
                     if (after != all.Length + 1) throw new InvalidOperationException("Entry count did not increase by one after Create (fresh readback).");
                     meta["after"] = TableEntryRow(created, after - 1);
                     return "Comment entry appended to the watch table and counted back; project not saved.";
@@ -1020,11 +1026,23 @@ namespace TiaMcpServer.Siemens.Services
                 meta["before"] = TableEntryRow(all[entryIndex], entryIndex);
                 if (!writing) return "Entry deletion preview; no changes.";
                 meta["mayHaveChanged"] = true;
-                all[entryIndex].Delete(); meta["apiCallSuccess"] = true;
-                int remaining = EngineeringGroupOperations.Items(((PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = remaining;
+                Native.Delete(all[entryIndex]); meta["apiCallSuccess"] = true;
+                int remaining = EngineeringGroupOperations.Items(Native.Entries((PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table"))).Count(); meta["entryCountAfter"] = remaining;
                 if (remaining != all.Length - 1) throw new InvalidOperationException("Entry count did not decrease by one after Delete.");
                 return "Watch table entry deleted and counted back; project not saved.";
             });
 
+#if TIA_SHARED_ADAPTER_PATHS
+        private TiaMcp.Adapters.PlcServices.WatchTechnologySurface? _watchTechnology;
+        private bool IsProjectNull()
+        {
+            // Keep the engine's binding check before borrowing its current handle.
+            if (_session.IsProjectNull()) return true;
+            return (_watchTechnology ?? (_watchTechnology =
+                TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).WatchTechnology)).CurrentProject == null;
+        }
+#else
+        private bool IsProjectNull() => _session.IsProjectNull();
+#endif
     }
 }

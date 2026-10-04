@@ -38,6 +38,12 @@ using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 
+#if TIA_SHARED_ADAPTER_PATHS
+using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+#else
+using Native = TiaMcpServer.Siemens.LocalWatchTechnology.WatchTechnologyPrimitives;
+#endif
+
 namespace TiaMcpServer.Siemens.Services
 {
     internal sealed class TechnologyObjectsService
@@ -61,7 +67,7 @@ namespace TiaMcpServer.Siemens.Services
 
             try
             {
-                if (_session.IsProjectNull())
+                if (IsProjectNull())
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
                     return new ResponseImportBatch { Imported = imported, Failed = failed };
@@ -114,12 +120,12 @@ namespace TiaMcpServer.Siemens.Services
             var list = new List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB, string)>();
             void Walk(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup group, string folder)
             {
-                foreach (var to in EngineeringGroupOperations.Items(group.TechnologicalObjects).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB>())
+                foreach (var to in EngineeringGroupOperations.Items(Native.Objects(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB>())
                     list.Add((to, folder));
-                foreach (var sub in EngineeringGroupOperations.Items(group.Groups).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBUserGroup>())
-                    Walk(sub, folder.Length == 0 ? sub.Name : folder + "/" + sub.Name);
+                foreach (var sub in EngineeringGroupOperations.Items(Native.Groups(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBUserGroup>())
+                    Walk(sub, folder.Length == 0 ? Native.Name(sub) : folder + "/" + Native.Name(sub));
             }
-            Walk(plc.TechnologicalObjectGroup, "");
+            Walk(Native.TechnologyGroup(plc), "");
             return list;
         }
 
@@ -132,11 +138,11 @@ namespace TiaMcpServer.Siemens.Services
             var slash = text.LastIndexOf('/');
             var folder = slash < 0 ? null : text.Substring(0, slash);
             var name = slash < 0 ? text : text.Substring(slash + 1);
-            var hits = all.Where(x => string.Equals(x.To.Name, name, StringComparison.OrdinalIgnoreCase)
+            var hits = all.Where(x => string.Equals(Native.Name(x.To), name, StringComparison.OrdinalIgnoreCase)
                 && (folder == null || string.Equals(x.Folder, folder, StringComparison.OrdinalIgnoreCase))).ToList();
             if (hits.Count == 1) return hits[0].To;
             if (hits.Count > 1) { error = $"'{name}' exists in {hits.Count} folders ({string.Join(", ", hits.Select(h => h.Folder.Length == 0 ? "(root)" : h.Folder))}); give folder/name."; return null; }
-            error = $"Technology object '{toName}' not found. Available: {string.Join(", ", all.Select(x => x.Folder.Length == 0 ? x.To.Name : x.Folder + "/" + x.To.Name).Take(30))}";
+            error = $"Technology object '{toName}' not found. Available: {string.Join(", ", all.Select(x => x.Folder.Length == 0 ? Native.Name(x.To) : x.Folder + "/" + Native.Name(x.To)).Take(30))}";
             return null;
         }
 
@@ -157,7 +163,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var result = new List<JsonObject>();
             // 未连接工程、路径不存在或枚举失败必须报错；空列表只表示已解析的 PLC 确实没有 TO。
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "GetTechnologyObjects: no project is open. Call Connect + OpenProject "
@@ -201,7 +207,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExportTechnologyObject(string softwarePath, string toName, string exportPath)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
 
@@ -235,7 +241,7 @@ namespace TiaMcpServer.Siemens.Services
             var exported = new List<string>();
             var failed = new List<ImportFailure>();
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 failed.Add(new ImportFailure { Path = softwarePath, Error = "No project open." });
                 return new ResponseImportBatch { Imported = exported, Failed = failed };
@@ -257,7 +263,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 foreach (var (item, folder) in EnumerateTechnologyObjectsRecursive(plc))
                 {
-                    var name = item.Name ?? string.Empty;
+                    var name = Native.Name(item) ?? string.Empty;
                     if (string.IsNullOrEmpty(name)) continue;
                     if (regex != null && !regex.IsMatch(name)) continue;
 
@@ -289,7 +295,7 @@ namespace TiaMcpServer.Siemens.Services
                 bool writing = action != "read" && !dryRun;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
-                var group = EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, string.Join("/", parts.Take(parts.Length - 1)));
+                var group = EngineeringGroupOperations.Group(Native.TechnologyGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));
                 var collection = EngineeringGroupOperations.Get(group, "TechnologicalObjects");
                 var target = EngineeringGroupOperations.Find(collection, parts.Last());
                 meta["objectPath"] = objectPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -308,8 +314,8 @@ namespace TiaMcpServer.Siemens.Services
                         // Typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
                         if (collection is TechnologicalInstanceDBComposition typedCollection)
                         {
-                            TechnologicalInstanceDB created = typedCollection.Create(parts.Last(), typeIdentifier, apiVersion);
-                            if (typedCollection.Find(parts.Last()) == null) throw new InvalidOperationException("Technology object not found by readback after Create.");
+                            TechnologicalInstanceDB created = Native.Create(typedCollection, parts.Last(), typeIdentifier, apiVersion);
+                            if (Native.Find(typedCollection, parts.Last()) == null) throw new InvalidOperationException("Technology object not found by readback after Create.");
                             target = created; meta["after"] = _session.TechnologyObjectRow(created);
                         }
                         else
@@ -348,7 +354,7 @@ namespace TiaMcpServer.Siemens.Services
                         else
                         {
                             // Typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
-                            var p = (typedParameters != null ? typedParameters.Find(parameter) : null) ?? EngineeringGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
+                            var p = (typedParameters != null ? Native.Find(typedParameters, parameter) : null) ?? EngineeringGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
                             meta["before"] = p is TechnologicalParameter typedBefore ? _session.ParameterRow(typedBefore) : EngineeringScalarProperties.Read(p);
                             if (action == "setParameter")
                             {
@@ -368,33 +374,45 @@ namespace TiaMcpServer.Siemens.Services
         // ---- ReadTechnologyObjectTree ---------------------------------------------------------------------------------------------------
         private JsonObject TechnologyGroupRow(TechnologicalInstanceDBGroup group, bool includeParameters, int depth, int maxDepth)
         {
-            TechnologicalInstanceDBComposition objects = group.TechnologicalObjects; TechnologicalInstanceDBUserGroupComposition groups = group.Groups;
-            var row = new JsonObject { ["name"] = group.Name, ["groupClass"] = group.GetType().Name, ["objectCount"] = objects.Count, ["groupCount"] = groups.Count };
+            TechnologicalInstanceDBComposition objects = Native.Objects(group); TechnologicalInstanceDBUserGroupComposition groups = Native.Groups(group);
+            var row = new JsonObject { ["name"] = Native.Name(group), ["groupClass"] = group.GetType().Name, ["objectCount"] = Native.Count(objects), ["groupCount"] = Native.Count(groups) };
             row["technologicalObjects"] = new JsonArray(EngineeringGroupOperations.Items(objects).Cast<TechnologicalInstanceDB>().Take(200).Select(db =>
             {
                 var o = _session.TechnologyObjectRow(db);
-                if (includeParameters) Safe(o, "parameters", () => { TechnologicalParameterComposition parameters = db.Parameters; return new JsonArray(EngineeringGroupOperations.Items(parameters).Cast<TechnologicalParameter>().Take(500).Select(p => (JsonNode)_session.ParameterRow(p)).ToArray()); });
+                if (includeParameters) Safe(o, "parameters", () => { TechnologicalParameterComposition parameters = Native.Parameters(db); return new JsonArray(EngineeringGroupOperations.Items(parameters).Cast<TechnologicalParameter>().Take(500).Select(p => (JsonNode)_session.ParameterRow(p)).ToArray()); });
                 return (JsonNode)o;
             }).ToArray());
             if (depth < maxDepth) row["groups"] = new JsonArray(EngineeringGroupOperations.Items(groups).Cast<TechnologicalInstanceDBUserGroup>().Select(g => (JsonNode)TechnologyGroupRow(g, includeParameters, depth + 1, maxDepth)).ToArray());
-            else row["groupsTruncated"] = groups.Count > 0;
+            else row["groupsTruncated"] = Native.Count(groups) > 0;
             return row;
         }
         public ResponseMessage ReadTechnologyObjectTree(string softwarePath, string groupPath = "", bool includeParameters = false, bool includeMotionView = false, int maxDepth = 4)
             => _session.RunHmiStepTool("ReadTechnologyObjectTree", meta => {
                 if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
-                TechnologicalInstanceDBGroup root = (TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, groupPath);
+                TechnologicalInstanceDBGroup root = (TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(Native.TechnologyGroup(plc), groupPath);
                 meta["groupPath"] = groupPath; meta["tree"] = TechnologyGroupRow(root, includeParameters, 1, maxDepth);
                 if (includeMotionView)
                 {
                     var views = new JsonObject();
-                    foreach (TechnologicalInstanceDB db in EngineeringGroupOperations.Items(root.TechnologicalObjects).Cast<TechnologicalInstanceDB>().Take(50)) Safe(views, db.Name, () => _session.TypedMotionView(db));
+                    foreach (TechnologicalInstanceDB db in EngineeringGroupOperations.Items(Native.Objects(root)).Cast<TechnologicalInstanceDB>().Take(50)) Safe(views, Native.Name(db), () => _session.TypedMotionView(db));
                     meta["motionViews"] = views;
                 }
                 meta["apiCallSuccess"] = true;
                 meta["scope"] = "TechnologicalInstanceDBGroup Name / TechnologicalObjects (TechnologicalInstanceDB Name, Number, OfSystemLibElement, OfSystemLibVersion, IsConsistent, parameter count) / Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value (first 500 per object); includeMotionView adds the typed hardware interfaces, master values and mappings of the root group's objects (first 50). No modification.";
                 return "Technology object tree read; no modification.";
             });
+#if TIA_SHARED_ADAPTER_PATHS
+        private TiaMcp.Adapters.PlcServices.WatchTechnologySurface? _watchTechnology;
+        private bool IsProjectNull()
+        {
+            // Keep the engine's binding check before borrowing its current handle.
+            if (_session.IsProjectNull()) return true;
+            return (_watchTechnology ?? (_watchTechnology =
+                TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).WatchTechnology)).CurrentProject == null;
+        }
+#else
+        private bool IsProjectNull() => _session.IsProjectNull();
+#endif
     }
 }

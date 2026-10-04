@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <TiaSharedNativePrimitive Include="$(MSBuildThisFileDirectory)../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="Native/Plc/WatchTechnologyPrimitives.cs" />
+  </ItemGroup>
+</Project>

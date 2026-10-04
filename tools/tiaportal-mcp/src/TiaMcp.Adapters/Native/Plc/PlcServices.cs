@@ -12,6 +12,7 @@ namespace TiaMcp.Adapters
         {
             PlcProgram = new ProgramSurface(project);
             PlcData = new DataSurface(project);
+            WatchTechnology = new WatchTechnologySurface(project);
 #if STUDIO_VCI_MODERN
             VersionControl = new VersionControlSurface(project);
 #endif
@@ -22,6 +23,14 @@ namespace TiaMcp.Adapters
 
         public ProgramSurface PlcProgram { get; }
         public DataSurface PlcData { get; }
+        public WatchTechnologySurface WatchTechnology { get; }
+
+        public sealed class WatchTechnologySurface
+        {
+            private readonly Func<ProjectBase> project;
+            internal WatchTechnologySurface(Func<ProjectBase> project) { this.project = project; }
+            public ProjectBase CurrentProject => project();
+        }
 #if STUDIO_VCI_MODERN
         public VersionControlSurface VersionControl { get; }
 
