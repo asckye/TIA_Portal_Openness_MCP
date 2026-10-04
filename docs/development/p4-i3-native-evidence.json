@@ -1,0 +1,2657 @@
+{
+  "generator": "scripts/checks/Compare-SharedNativePaths.py --evidence-from",
+  "formatVersion": 2,
+  "scope": "Static woven IL; labelled native paths, default bodies and exact physical native deltas. No live execution.",
+  "acceptanceRule": {
+    "id": "expanded-native-paths-exact-dedup-v1",
+    "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+    "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+    "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+    "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+    "methodScopes": {
+      "TiaMcpServer.Siemens.Services.DevicesService": [
+        {
+          "method": "AddDevice",
+          "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+        },
+        {
+          "method": "AddHardwareCatalogDeviceWithProbe",
+          "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+        },
+        {
+          "method": "AddGsdDeviceWithProbe",
+          "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+        },
+        {
+          "method": "CatalogEntryToHardwareCandidate",
+          "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+        },
+        {
+          "method": "get_HardwareProject",
+          "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+        }
+      ]
+    },
+    "hostMethodScopes": {
+      "foundation": {
+        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+          {
+            "method": "SearchHardwareCatalog",
+            "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+          },
+          {
+            "method": "AddDeviceWithFallback",
+            "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          }
+        ]
+      }
+    }
+  },
+  "accepted": true,
+  "releases": {
+    "14sp1": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "115a3d76289998ad0b96af59e14c486a697ce6605f8327bf5dac5a2efbea9458",
+            "inventorySha256": "ebadbb932368f93544756f8d3b0b8126ac8d2e4c8996f56be8964b08a2efbc5a"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        }
+      ],
+      "expectedNativeDelta": [],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 495,
+        "adapterAfter": 495
+      },
+      "errors": []
+    },
+    "15.1": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "6d40739d81386e8b8ee717a267fa54a27bdffec115f66c7b784b2554fddf885a",
+            "inventorySha256": "8f8528efcf3616564ccce69e421786d2a88b4aca896da4c85e46d1df9f6f40fd"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        }
+      ],
+      "expectedNativeDelta": [],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 508,
+        "adapterAfter": 508
+      },
+      "errors": []
+    },
+    "16": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "fdc129edc67026dc772cf840b83434bb14fe1d8c885dfee1ca1bf17b9ff78119",
+            "inventorySha256": "5f892c4ffad2cb16b2c71e2fb0e1291e017ad578ab6f9a8075c7f7a5952f861a"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        }
+      ],
+      "expectedNativeDelta": [],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 564,
+        "adapterAfter": 564
+      },
+      "errors": []
+    },
+    "17": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "ef0b76ff3d53aa3b16629a724e21b9f521f00c88a7e7de7aba9db27c4308a750",
+            "inventorySha256": "4a7fa4ec3ecdcb2fee4e1faf3b313d576daccfe3e55b4f26fb7678d815fa9015"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        }
+      ],
+      "expectedNativeDelta": [],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 585,
+        "adapterAfter": 585
+      },
+      "errors": []
+    },
+    "18": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "a392af6069bc7109d9f00003dd65695b7a42b1c42c87c200dd0cd37d74cbcbba",
+            "inventorySha256": "6dd2192694754b2d37ba8246e7f3e1b40a6955bdcd9ba91de118115dd9319016"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        }
+      ],
+      "expectedNativeDelta": [],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 584,
+        "adapterAfter": 584
+      },
+      "errors": []
+    },
+    "19": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "9d74d3799d63829a04d3ca8330f87ac82bfd063fcd10668ecc155ed35ffda3e5",
+            "inventorySha256": "a081e158f8179316ea57d95d53731212afa90c85aa6ae8347f10160de659bf4c"
+          }
+        }
+      },
+      "foundationPaths": [
+        {
+          "method": "System.Boolean TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::<AddDeviceWithFallback>b__7(System.Object)",
+          "equal": true,
+          "beforeNodes": 2,
+          "afterNodes": 2,
+          "expandedGraphSha256": "0c117d5e715c307e51b84e1a8777072f2ad69e6029c07bff8f3900c1d9ece44e"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcDeviceAddItem> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__2()",
+          "equal": true,
+          "beforeNodes": 19,
+          "afterNodes": 19,
+          "expandedGraphSha256": "cf8d93bade4da3adeec093dac2131987b3d6dae17268e229b0ae6c06efe6d922"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__1()",
+          "equal": true,
+          "beforeNodes": 7,
+          "afterNodes": 7,
+          "expandedGraphSha256": "9eff139af6ab1ce700afb2a75c702b4e20cd22b57b6b08508b095d2fd8094a91"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<SearchHardwareCatalog>b__0(System.String)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "179debaa4582a830d2a003b9132128b7dfcf25cce09b2c914dc1ae67984cd97e"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__0()",
+          "equal": true,
+          "beforeNodes": 45,
+          "afterNodes": 45,
+          "expandedGraphSha256": "b865d62a58df44aa52208d9327bce976f4a7f571e9be904a19b9f53f2f95d760"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__5(Siemens.Engineering.HW.DeviceComposition,System.Object)",
+          "equal": true,
+          "beforeNodes": 23,
+          "afterNodes": 23,
+          "expandedGraphSha256": "04429b86b198f4309fbad4be2606aaf712f9ff813c88c224c21d8834c06f293d"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__6(Siemens.Engineering.HW.DeviceUserGroup,System.Object,System.Int32)",
+          "equal": true,
+          "beforeNodes": 28,
+          "afterNodes": 28,
+          "expandedGraphSha256": "e8a0af75eb55577719f41981d0d806fd4a5ab8a16df8b87275814d260db76613"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddItem TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__3(System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 12,
+          "afterNodes": 12,
+          "expandedGraphSha256": "62d17c237c26962d87e729cef84edb6941abf53a677751364c16c0044fa4b216"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 611,
+          "afterNodes": 611,
+          "expandedGraphSha256": "c66a7228e6d6200b3e9864796fd470aa40d54ded958ce1517d23b01c967dda46"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<AddDeviceWithFallback>b__#_4(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 4,
+          "afterNodes": 4,
+          "expandedGraphSha256": "03a9580964c665cb1a06659ecd9d1b95af68915aecb1c542e390df5554213ae5"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<SearchHardwareCatalog>b__#_1(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 8,
+          "afterNodes": 8,
+          "expandedGraphSha256": "2ee26a556757b45660a82fe0895b6aa538a390405f567d60f28e46c33312a2b3"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 37,
+          "afterNodes": 37,
+          "expandedGraphSha256": "80f72ecaf6dc5dbff26f04d782ab827a5763da3ba07e79012a5746354e041295"
+        }
+      ],
+      "expectedNativeDelta": [
+        {
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "engine": 0,
+          "adapter": -1,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_ArticleNumber()",
+          "engine": 0,
+          "adapter": -1,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifier()",
+          "engine": 0,
+          "adapter": -1,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Version()",
+          "engine": 0,
+          "adapter": -1,
+          "union": -1
+        }
+      ],
+      "nativeCounts": {
+        "engineBefore": 0,
+        "engineAfter": 0,
+        "adapterBefore": 619,
+        "adapterAfter": 615
+      },
+      "errors": []
+    },
+    "20": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "0aac82aacc87f35a74e0b576331819ed7db4d086f6bca968e45b2919b9a77dda",
+            "inventorySha256": "b464b1b0aa5986287d888e250c0f564d07b54f125cf5974adb7eb719e9ed5800"
+          },
+          "engine": {
+            "ilSha256": "e0c84b97e8f5bffce7af5df775ac1bba86c102bb69c046bcf5e7de931db4baae",
+            "inventorySha256": "7846bb38e8bc2b8939dbdbe5e460f0087bdf9ad5e964a4fe4c1ba70bc58ed96c"
+          }
+        },
+        "default": {
+          "variant": "default",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "engine": {
+            "ilSha256": "5e062388079cab78b637769408f8c7a7ec8b5c269322220fe340c29fac479342",
+            "inventorySha256": "a72ecd545f4fc6aac5143fe5749b0a97cfed246bbc8d9ba6f3c0beac0889f8ea"
+          },
+          "adapter": {
+            "ilSha256": "0aac82aacc87f35a74e0b576331819ed7db4d086f6bca968e45b2919b9a77dda",
+            "inventorySha256": "b464b1b0aa5986287d888e250c0f564d07b54f125cf5974adb7eb719e9ed5800"
+          }
+        }
+      },
+      "defaultMethods": {
+        "before": 20746,
+        "after": 20746,
+        "differences": [],
+        "rawBodyDifferences": 7804,
+        "comparison": "IL with metadata references resolved to member/type identities; opcodes, operands, locals and exception regions unchanged"
+      },
+      "defaultFullInventoryEqual": false,
+      "defaultDeduplicatedInventoryEqual": true,
+      "defaultPhysicalSiteCounts": {
+        "before": 12522,
+        "after": 12518
+      },
+      "defaultExpectedPhysicalDelta": [
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "before": 3,
+          "after": 1
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "before": 28,
+          "after": 26
+        }
+      ],
+      "defaultUnexpectedPhysicalDelta": [],
+      "defaultExpectedMemberMoves": [
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::CreateWithItem(Siemens.Engineering.HW.DeviceComposition,System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.DeviceComposition TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Devices(Siemens.Engineering.ProjectBase)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_ArticleNumber()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::ArticleNumber(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_CatalogPath()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::CatalogPath(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Description()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Description(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifier()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeIdentifier(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifierNormalized()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeIdentifierNormalized(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeName()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeName(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Version()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Version(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean EnumerableExtensions::Contains<System.Char>(System.Collections.Generic.IEnumerable`1<!!0>,!!0)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean System.Linq.Enumerable::Any<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean System.Linq.Enumerable::Any<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Distinct<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Collections.Generic.IEqualityComparer`1<!!0>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Take<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Int32)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 3,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 3,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<System.String,System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<System.String>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Linq.IOrderedEnumerable`1<!!0> System.Linq.Enumerable::OrderByDescending<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Int32>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Linq.IOrderedEnumerable`1<!!0> System.Linq.Enumerable::OrderByDescending<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Int32>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.String System.String::Join(System.String,System.Collections.Generic.IEnumerable`1<System.String>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "newobj",
+          "member": "System.Void TiaMcpServer.Siemens.PortalException::.ctor(TiaMcpServer.Siemens.PortalErrorCode,System.String,System.Collections.Generic.IEnumerable`1<System.String>,System.Exception)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<System.String>::get_Current()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>::get_Current()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>::get_Current()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Boolean System.Collections.IEnumerator::MoveNext()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<System.String>::GetEnumerator()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>::GetEnumerator()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>::GetEnumerator()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Void System.IDisposable::Dispose()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "object-dispatch",
+          "opcode": "callvirt",
+          "member": "System.String System.Object::ToString()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 7
+          },
+          "after": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 7
+          }
+        }
+      ],
+      "defaultExpandedFullInventoryEqual": true,
+      "defaultEnginePaths": [
+        {
+          "method": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 39,
+          "afterNodes": 39,
+          "expandedGraphSha256": "2f1be89b2a7b80a846efe564470d3868e054724e51c5e78668aa1a866cbba7ce"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_1(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_3(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<CatalogEntryToHardwareCandidate>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchInstalledGsdDevices(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 105,
+          "afterNodes": 105,
+          "expandedGraphSha256": "c9c5bf9de8878bfbe695fe08770ef4e9ba3df63a9e800c1c9043858b91032054"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 103,
+          "afterNodes": 103,
+          "expandedGraphSha256": "4b47459f8f74f1664ad48751fbe587d5d436c430b9aa85859950cb2ef8d53010"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.String TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_2(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,System.String,System.String,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddDeviceWithFallback(System.String,System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 51,
+          "afterNodes": 51,
+          "expandedGraphSha256": "3119967eef46a9617003110d941f0a4841cfe6ba9b7ea3f5fe5dd672b0208c61"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 132,
+          "afterNodes": 132,
+          "expandedGraphSha256": "6bb4d7ae73533f9c2bd94b9fc04f2ee5f6054c3f4c6249b9fc70a29eb8ac8b70"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 168,
+          "afterNodes": 168,
+          "expandedGraphSha256": "511a4f08e9ad8300696b32970831d813efb9b15084bf16375721cbefe121d511"
+        },
+        {
+          "method": "System.Void TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddGsdDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "2a3b697168fdd6ff4ab94ed1bc72ca20d0ed663faddce91c5cbb4530dcd57295"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddHardwareCatalogDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 44,
+          "afterNodes": 44,
+          "expandedGraphSha256": "58272c8ce2deae1546f5992edc91d63bf99390e46bbfa78434d6d1d831a646af"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)",
+          "equal": true,
+          "beforeNodes": 35,
+          "afterNodes": 35,
+          "expandedGraphSha256": "725e7595637f778e556922571d78c98c4db2c9a97110264585c89613076ae6d5"
+        }
+      ],
+      "enginePaths": [
+        {
+          "method": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 39,
+          "afterNodes": 39,
+          "expandedGraphSha256": "2f1be89b2a7b80a846efe564470d3868e054724e51c5e78668aa1a866cbba7ce"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_1(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_3(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<CatalogEntryToHardwareCandidate>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchInstalledGsdDevices(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 105,
+          "afterNodes": 105,
+          "expandedGraphSha256": "c9c5bf9de8878bfbe695fe08770ef4e9ba3df63a9e800c1c9043858b91032054"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 103,
+          "afterNodes": 103,
+          "expandedGraphSha256": "4b47459f8f74f1664ad48751fbe587d5d436c430b9aa85859950cb2ef8d53010"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.String TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_2(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,System.String,System.String,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddDeviceWithFallback(System.String,System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 51,
+          "afterNodes": 51,
+          "expandedGraphSha256": "3119967eef46a9617003110d941f0a4841cfe6ba9b7ea3f5fe5dd672b0208c61"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 132,
+          "afterNodes": 132,
+          "expandedGraphSha256": "6bb4d7ae73533f9c2bd94b9fc04f2ee5f6054c3f4c6249b9fc70a29eb8ac8b70"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 168,
+          "afterNodes": 168,
+          "expandedGraphSha256": "511a4f08e9ad8300696b32970831d813efb9b15084bf16375721cbefe121d511"
+        },
+        {
+          "method": "System.Void TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddGsdDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "2a3b697168fdd6ff4ab94ed1bc72ca20d0ed663faddce91c5cbb4530dcd57295"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddHardwareCatalogDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 44,
+          "afterNodes": 44,
+          "expandedGraphSha256": "58272c8ce2deae1546f5992edc91d63bf99390e46bbfa78434d6d1d831a646af"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)",
+          "equal": true,
+          "beforeNodes": 35,
+          "afterNodes": 35,
+          "expandedGraphSha256": "725e7595637f778e556922571d78c98c4db2c9a97110264585c89613076ae6d5"
+        }
+      ],
+      "foundationPaths": [
+        {
+          "method": "System.Boolean TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::<AddDeviceWithFallback>b__7(System.Object)",
+          "equal": true,
+          "beforeNodes": 2,
+          "afterNodes": 2,
+          "expandedGraphSha256": "0c117d5e715c307e51b84e1a8777072f2ad69e6029c07bff8f3900c1d9ece44e"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcDeviceAddItem> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__2()",
+          "equal": true,
+          "beforeNodes": 19,
+          "afterNodes": 19,
+          "expandedGraphSha256": "cf8d93bade4da3adeec093dac2131987b3d6dae17268e229b0ae6c06efe6d922"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__1()",
+          "equal": true,
+          "beforeNodes": 7,
+          "afterNodes": 7,
+          "expandedGraphSha256": "9eff139af6ab1ce700afb2a75c702b4e20cd22b57b6b08508b095d2fd8094a91"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<SearchHardwareCatalog>b__0(System.String)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "179debaa4582a830d2a003b9132128b7dfcf25cce09b2c914dc1ae67984cd97e"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__0()",
+          "equal": true,
+          "beforeNodes": 45,
+          "afterNodes": 45,
+          "expandedGraphSha256": "b865d62a58df44aa52208d9327bce976f4a7f571e9be904a19b9f53f2f95d760"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__5(Siemens.Engineering.HW.DeviceComposition,System.Object)",
+          "equal": true,
+          "beforeNodes": 23,
+          "afterNodes": 23,
+          "expandedGraphSha256": "04429b86b198f4309fbad4be2606aaf712f9ff813c88c224c21d8834c06f293d"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__6(Siemens.Engineering.HW.DeviceUserGroup,System.Object,System.Int32)",
+          "equal": true,
+          "beforeNodes": 28,
+          "afterNodes": 28,
+          "expandedGraphSha256": "e8a0af75eb55577719f41981d0d806fd4a5ab8a16df8b87275814d260db76613"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddItem TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__3(System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 12,
+          "afterNodes": 12,
+          "expandedGraphSha256": "62d17c237c26962d87e729cef84edb6941abf53a677751364c16c0044fa4b216"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 611,
+          "afterNodes": 611,
+          "expandedGraphSha256": "c66a7228e6d6200b3e9864796fd470aa40d54ded958ce1517d23b01c967dda46"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<AddDeviceWithFallback>b__#_4(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 4,
+          "afterNodes": 4,
+          "expandedGraphSha256": "03a9580964c665cb1a06659ecd9d1b95af68915aecb1c542e390df5554213ae5"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<SearchHardwareCatalog>b__#_1(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 8,
+          "afterNodes": 8,
+          "expandedGraphSha256": "2ee26a556757b45660a82fe0895b6aa538a390405f567d60f28e46c33312a2b3"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 37,
+          "afterNodes": 37,
+          "expandedGraphSha256": "80f72ecaf6dc5dbff26f04d782ab827a5763da3ba07e79012a5746354e041295"
+        }
+      ],
+      "expectedNativeDelta": [
+        {
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "engine": -3,
+          "adapter": 0,
+          "union": -3
+        },
+        {
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "engine": -3,
+          "adapter": -1,
+          "union": -4
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_ArticleNumber()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_CatalogPath()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Description()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifier()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifierNormalized()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeName()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Version()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        }
+      ],
+      "nativeCounts": {
+        "engineBefore": 4116,
+        "engineAfter": 4103,
+        "adapterBefore": 715,
+        "adapterAfter": 711
+      },
+      "errors": []
+    },
+    "21": {
+      "formatVersion": 2,
+      "acceptanceRule": {
+        "id": "expanded-native-paths-exact-dedup-v1",
+        "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
+        "default": "The full-category member multiset must equal the baseline after collapsing each direct Hardware catalog and device creation member into one local primitive site; no other delta is allowed.",
+        "shared": "Engine Hardware catalog and device creation direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside Hardware catalog and device creation.",
+        "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.",
+        "methodScopes": {
+          "TiaMcpServer.Siemens.Services.DevicesService": [
+            {
+              "method": "AddDevice",
+              "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddHardwareCatalogDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "AddGsdDeviceWithProbe",
+              "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+            },
+            {
+              "method": "CatalogEntryToHardwareCandidate",
+              "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+            },
+            {
+              "method": "get_HardwareProject",
+              "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+            }
+          ]
+        },
+        "hostMethodScopes": {
+          "foundation": {
+            "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+              {
+                "method": "SearchHardwareCatalog",
+                "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+              },
+              {
+                "method": "AddDeviceWithFallback",
+                "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+              }
+            ]
+          }
+        }
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "adapter": {
+            "ilSha256": "9f86b19447ce27254303cb1112e28b2b1c8d6fbb7c5d564296657ca75bc7c543",
+            "inventorySha256": "197d13d9d63efd66fc837d3e24d91c691639d8ff1fda034b5c9a77fa35332f35"
+          },
+          "engine": {
+            "ilSha256": "590895643ae02315e8d45b505f9dead682f84594cdcb58ba3f77d63f743ac8be",
+            "inventorySha256": "94bb5596921af5c2a57f594e7afb83822c1d15d08286c54d323cc908dbab9734"
+          }
+        },
+        "default": {
+          "variant": "default",
+          "revision": "e50b5c485516e4a0f8dd18d03995266a744b148d",
+          "engine": {
+            "ilSha256": "763cd1c538a043c4b1170a89e0f41e997da48f086fa61ec10a0eb7e8c9afea50",
+            "inventorySha256": "c147b6618b21c4fcfb47c67f66f5b74183beb0f0c8be39f8ee501fc227c1b89e"
+          },
+          "adapter": {
+            "ilSha256": "9f86b19447ce27254303cb1112e28b2b1c8d6fbb7c5d564296657ca75bc7c543",
+            "inventorySha256": "197d13d9d63efd66fc837d3e24d91c691639d8ff1fda034b5c9a77fa35332f35"
+          }
+        }
+      },
+      "defaultMethods": {
+        "before": 21310,
+        "after": 21310,
+        "differences": [],
+        "rawBodyDifferences": 8271,
+        "comparison": "IL with metadata references resolved to member/type identities; opcodes, operands, locals and exception regions unchanged"
+      },
+      "defaultFullInventoryEqual": false,
+      "defaultDeduplicatedInventoryEqual": true,
+      "defaultPhysicalSiteCounts": {
+        "before": 12972,
+        "after": 12968
+      },
+      "defaultExpectedPhysicalDelta": [
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "before": 3,
+          "after": 1
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "before": 28,
+          "after": 26
+        }
+      ],
+      "defaultUnexpectedPhysicalDelta": [],
+      "defaultExpectedMemberMoves": [
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::CreateWithItem(Siemens.Engineering.HW.DeviceComposition,System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.DeviceComposition TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Devices(Siemens.Engineering.ProjectBase)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_ArticleNumber()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::ArticleNumber(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_CatalogPath()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::CatalogPath(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Description()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Description(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifier()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeIdentifier(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifierNormalized()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeIdentifierNormalized(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeName()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::TypeName(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "direct",
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Version()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "System.String TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives::Version(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean EnumerableExtensions::Contains<System.Char>(System.Collections.Generic.IEnumerable`1<!!0>,!!0)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean System.Linq.Enumerable::Any<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Boolean System.Linq.Enumerable::Any<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Distinct<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Collections.Generic.IEqualityComparer`1<!!0>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Take<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Int32)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 3,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 3,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::Where<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<System.String,System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.IEnumerable`1<!!1> System.Linq.Enumerable::Select<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<System.String>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Collections.Generic.List`1<!!0> System.Linq.Enumerable::ToList<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>(System.Collections.Generic.IEnumerable`1<!!0>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Linq.IOrderedEnumerable`1<!!0> System.Linq.Enumerable::OrderByDescending<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Int32>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.Linq.IOrderedEnumerable`1<!!0> System.Linq.Enumerable::OrderByDescending<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Int32>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,!!1>)",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "call",
+          "member": "System.String System.String::Join(System.String,System.Collections.Generic.IEnumerable`1<System.String>)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 1
+          }
+        },
+        {
+          "category": "enumeration-input",
+          "opcode": "newobj",
+          "member": "System.Void TiaMcpServer.Siemens.PortalException::.ctor(TiaMcpServer.Siemens.PortalErrorCode,System.String,System.Collections.Generic.IEnumerable`1<System.String>,System.Exception)",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<System.String>::get_Current()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>::get_Current()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "!0 System.Collections.Generic.IEnumerator`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>::get_Current()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Boolean System.Collections.IEnumerator::MoveNext()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<System.String>::GetEnumerator()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>::GetEnumerator()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Collections.Generic.IEnumerator`1<!0> System.Collections.Generic.IEnumerable`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>::GetEnumerator()",
+          "before": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "interface",
+          "opcode": "callvirt",
+          "member": "System.Void System.IDisposable::Dispose()",
+          "before": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          },
+          "after": {
+            "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)": 4,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)": 1,
+            "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)": 1
+          }
+        },
+        {
+          "category": "object-dispatch",
+          "opcode": "callvirt",
+          "member": "System.String System.Object::ToString()",
+          "before": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 7
+          },
+          "after": {
+            "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)": 7
+          }
+        }
+      ],
+      "defaultExpandedFullInventoryEqual": true,
+      "defaultEnginePaths": [
+        {
+          "method": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 39,
+          "afterNodes": 39,
+          "expandedGraphSha256": "2f1be89b2a7b80a846efe564470d3868e054724e51c5e78668aa1a866cbba7ce"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_1(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_3(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<CatalogEntryToHardwareCandidate>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchInstalledGsdDevices(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 105,
+          "afterNodes": 105,
+          "expandedGraphSha256": "c9c5bf9de8878bfbe695fe08770ef4e9ba3df63a9e800c1c9043858b91032054"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 103,
+          "afterNodes": 103,
+          "expandedGraphSha256": "4b47459f8f74f1664ad48751fbe587d5d436c430b9aa85859950cb2ef8d53010"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.String TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_2(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,System.String,System.String,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddDeviceWithFallback(System.String,System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 51,
+          "afterNodes": 51,
+          "expandedGraphSha256": "3119967eef46a9617003110d941f0a4841cfe6ba9b7ea3f5fe5dd672b0208c61"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 132,
+          "afterNodes": 132,
+          "expandedGraphSha256": "6bb4d7ae73533f9c2bd94b9fc04f2ee5f6054c3f4c6249b9fc70a29eb8ac8b70"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 168,
+          "afterNodes": 168,
+          "expandedGraphSha256": "511a4f08e9ad8300696b32970831d813efb9b15084bf16375721cbefe121d511"
+        },
+        {
+          "method": "System.Void TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddGsdDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "2a3b697168fdd6ff4ab94ed1bc72ca20d0ed663faddce91c5cbb4530dcd57295"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddHardwareCatalogDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 44,
+          "afterNodes": 44,
+          "expandedGraphSha256": "58272c8ce2deae1546f5992edc91d63bf99390e46bbfa78434d6d1d831a646af"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)",
+          "equal": true,
+          "beforeNodes": 35,
+          "afterNodes": 35,
+          "expandedGraphSha256": "725e7595637f778e556922571d78c98c4db2c9a97110264585c89613076ae6d5"
+        }
+      ],
+      "enginePaths": [
+        {
+          "method": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 39,
+          "afterNodes": 39,
+          "expandedGraphSha256": "2f1be89b2a7b80a846efe564470d3868e054724e51c5e78668aa1a866cbba7ce"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_1(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_3(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_2(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_3(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Boolean TiaMcpServer.Siemens.Services.DevicesService/<>c::<CatalogEntryToHardwareCandidate>b__#_0(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchInstalledGsdDevices(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 105,
+          "afterNodes": 105,
+          "expandedGraphSha256": "c9c5bf9de8878bfbe695fe08770ef4e9ba3df63a9e800c1c9043858b91032054"
+        },
+        {
+          "method": "System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate> TiaMcpServer.Siemens.Services.DevicesService::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 103,
+          "afterNodes": 103,
+          "expandedGraphSha256": "4b47459f8f74f1664ad48751fbe587d5d436c430b9aa85859950cb2ef8d53010"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddGsdDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Int32 TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddHardwareCatalogDeviceWithProbe>b__#_1(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.String TiaMcpServer.Siemens.Services.DevicesService/<>c::<AddDevice>b__#_2(System.String)",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,System.String,System.String,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddDeviceWithFallback(System.String,System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 51,
+          "afterNodes": 51,
+          "expandedGraphSha256": "3119967eef46a9617003110d941f0a4841cfe6ba9b7ea3f5fe5dd672b0208c61"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 132,
+          "afterNodes": 132,
+          "expandedGraphSha256": "6bb4d7ae73533f9c2bd94b9fc04f2ee5f6054c3f4c6249b9fc70a29eb8ac8b70"
+        },
+        {
+          "method": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 168,
+          "afterNodes": 168,
+          "expandedGraphSha256": "511a4f08e9ad8300696b32970831d813efb9b15084bf16375721cbefe121d511"
+        },
+        {
+          "method": "System.Void TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddGsdDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "2a3b697168fdd6ff4ab94ed1bc72ca20d0ed663faddce91c5cbb4530dcd57295"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService/<>c__DisplayClass#_0::<AddHardwareCatalogDeviceWithProbe>b__0(TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate)",
+          "equal": true,
+          "beforeNodes": 44,
+          "afterNodes": 44,
+          "expandedGraphSha256": "58272c8ce2deae1546f5992edc91d63bf99390e46bbfa78434d6d1d831a646af"
+        },
+        {
+          "method": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)",
+          "equal": true,
+          "beforeNodes": 35,
+          "afterNodes": 35,
+          "expandedGraphSha256": "725e7595637f778e556922571d78c98c4db2c9a97110264585c89613076ae6d5"
+        }
+      ],
+      "foundationPaths": [
+        {
+          "method": "System.Boolean TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::<AddDeviceWithFallback>b__7(System.Object)",
+          "equal": true,
+          "beforeNodes": 2,
+          "afterNodes": 2,
+          "expandedGraphSha256": "0c117d5e715c307e51b84e1a8777072f2ad69e6029c07bff8f3900c1d9ece44e"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcDeviceAddItem> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__2()",
+          "equal": true,
+          "beforeNodes": 19,
+          "afterNodes": 19,
+          "expandedGraphSha256": "cf8d93bade4da3adeec093dac2131987b3d6dae17268e229b0ae6c06efe6d922"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__1()",
+          "equal": true,
+          "beforeNodes": 7,
+          "afterNodes": 7,
+          "expandedGraphSha256": "9eff139af6ab1ce700afb2a75c702b4e20cd22b57b6b08508b095d2fd8094a91"
+        },
+        {
+          "method": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate> TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<SearchHardwareCatalog>b__0(System.String)",
+          "equal": true,
+          "beforeNodes": 11,
+          "afterNodes": 11,
+          "expandedGraphSha256": "179debaa4582a830d2a003b9132128b7dfcf25cce09b2c914dc1ae67984cd97e"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__0()",
+          "equal": true,
+          "beforeNodes": 45,
+          "afterNodes": 45,
+          "expandedGraphSha256": "b865d62a58df44aa52208d9327bce976f4a7f571e9be904a19b9f53f2f95d760"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__5(Siemens.Engineering.HW.DeviceComposition,System.Object)",
+          "equal": true,
+          "beforeNodes": 23,
+          "afterNodes": 23,
+          "expandedGraphSha256": "04429b86b198f4309fbad4be2606aaf712f9ff813c88c224c21d8834c06f293d"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_1::<AddDeviceWithFallback>b__6(Siemens.Engineering.HW.DeviceUserGroup,System.Object,System.Int32)",
+          "equal": true,
+          "beforeNodes": 28,
+          "afterNodes": 28,
+          "expandedGraphSha256": "e8a0af75eb55577719f41981d0d806fd4a5ab8a16df8b87275814d260db76613"
+        },
+        {
+          "method": "System.Void TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_2::.ctor()",
+          "equal": true,
+          "beforeNodes": 1,
+          "afterNodes": 1,
+          "expandedGraphSha256": "fbf7beed499b7b7bd36ba88ad754621b04458200982a90f0b44fa256c1f50bcd"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddItem TiaMcp.PlcFoundation.PlcFoundationEngine/<>c__DisplayClass#_0::<AddDeviceWithFallback>b__3(System.String,System.String)",
+          "equal": true,
+          "beforeNodes": 12,
+          "afterNodes": 12,
+          "expandedGraphSha256": "62d17c237c26962d87e729cef84edb6941abf53a677751364c16c0044fa4b216"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)",
+          "equal": true,
+          "beforeNodes": 611,
+          "afterNodes": 611,
+          "expandedGraphSha256": "c66a7228e6d6200b3e9864796fd470aa40d54ded958ce1517d23b01c967dda46"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<AddDeviceWithFallback>b__#_4(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 4,
+          "afterNodes": 4,
+          "expandedGraphSha256": "03a9580964c665cb1a06659ecd9d1b95af68915aecb1c542e390df5554213ae5"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate TiaMcp.PlcFoundation.PlcFoundationEngine/<>c::<SearchHardwareCatalog>b__#_1(Siemens.Engineering.HW.HardwareCatalog.CatalogEntry)",
+          "equal": true,
+          "beforeNodes": 8,
+          "afterNodes": 8,
+          "expandedGraphSha256": "2ee26a556757b45660a82fe0895b6aa538a390405f567d60f28e46c33312a2b3"
+        },
+        {
+          "method": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)",
+          "equal": true,
+          "beforeNodes": 37,
+          "afterNodes": 37,
+          "expandedGraphSha256": "80f72ecaf6dc5dbff26f04d782ab827a5763da3ba07e79012a5746354e041295"
+        }
+      ],
+      "expectedNativeDelta": [
+        {
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.Device Siemens.Engineering.HW.DeviceComposition::CreateWithItem(System.String,System.String,System.String)",
+          "engine": -3,
+          "adapter": 0,
+          "union": -3
+        },
+        {
+          "opcode": "callvirt",
+          "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
+          "engine": -3,
+          "adapter": -1,
+          "union": -4
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_ArticleNumber()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_CatalogPath()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Description()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifier()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeIdentifierNormalized()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_TypeName()",
+          "engine": -1,
+          "adapter": 0,
+          "union": -1
+        },
+        {
+          "opcode": "callvirt",
+          "member": "System.String Siemens.Engineering.HW.HardwareCatalog.CatalogEntry::get_Version()",
+          "engine": -1,
+          "adapter": -1,
+          "union": -2
+        }
+      ],
+      "nativeCounts": {
+        "engineBefore": 4428,
+        "engineAfter": 4415,
+        "adapterBefore": 712,
+        "adapterAfter": 708
+      },
+      "errors": []
+    }
+  }
+}

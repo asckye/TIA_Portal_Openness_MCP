@@ -13,6 +13,9 @@ namespace TiaMcp.Adapters
             PlcProgram = new ProgramSurface(project);
             PlcData = new DataSurface(project);
             WatchTechnology = new WatchTechnologySurface(project);
+#if PLC_HARDWARE_CATALOG
+            Hardware = new HardwareSurface(project);
+#endif
 #if STUDIO_VCI_MODERN
             VersionControl = new VersionControlSurface(project);
 #endif
@@ -31,6 +34,16 @@ namespace TiaMcp.Adapters
             internal WatchTechnologySurface(Func<ProjectBase> project) { this.project = project; }
             public ProjectBase CurrentProject => project();
         }
+#if PLC_HARDWARE_CATALOG
+        public HardwareSurface Hardware { get; }
+
+        public sealed class HardwareSurface
+        {
+            private readonly Func<ProjectBase> project;
+            internal HardwareSurface(Func<ProjectBase> project) { this.project = project; }
+            public ProjectBase CurrentProject => project();
+        }
+#endif
 #if STUDIO_VCI_MODERN
         public VersionControlSurface VersionControl { get; }
 

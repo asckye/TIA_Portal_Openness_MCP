@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "domain": "hardware",
+  "label": "Hardware catalog and device creation",
+  "engine": {
+    "types": [
+      "TiaMcpServer.Siemens.Services.DevicesService"
+    ],
+    "releases": [
+      "20",
+      "21"
+    ],
+    "methodScopes": {
+      "TiaMcpServer.Siemens.Services.DevicesService": [
+        {
+          "method": "AddDevice",
+          "signature": "Siemens.Engineering.HW.Device TiaMcpServer.Siemens.Services.DevicesService::AddDevice(System.String,System.String,System.String)"
+        },
+        {
+          "method": "AddHardwareCatalogDeviceWithProbe",
+          "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddHardwareCatalogDeviceWithProbe(System.String,System.String,System.String)"
+        },
+        {
+          "method": "AddGsdDeviceWithProbe",
+          "signature": "System.ValueTuple`5<Siemens.Engineering.HW.Device,TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate,System.Collections.Generic.List`1<TiaMcpServer.ModelContextProtocol.GsdDeviceCandidate>,System.Collections.Generic.List`1<System.String>,System.String> TiaMcpServer.Siemens.Services.DevicesService::AddGsdDeviceWithProbe(System.String,System.String,System.String)"
+        },
+        {
+          "method": "CatalogEntryToHardwareCandidate",
+          "signature": "TiaMcpServer.ModelContextProtocol.HardwareCatalogCandidate TiaMcpServer.Siemens.Services.DevicesService::CatalogEntryToHardwareCandidate(System.Object,System.String)"
+        },
+        {
+          "method": "get_HardwareProject",
+          "signature": "Siemens.Engineering.ProjectBase TiaMcpServer.Siemens.Services.DevicesService::get_HardwareProject()"
+        }
+      ]
+    }
+  },
+  "adapter": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "mutableTypes": [
+      "TiaMcp.Adapters.PlcServices"
+    ]
+  },
+  "hosts": [
+    {
+      "name": "foundation",
+      "methodScopes": {
+        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+          {
+            "method": "SearchHardwareCatalog",
+            "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+          },
+          {
+            "method": "AddDeviceWithFallback",
+            "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          }
+        ]
+      },
+      "types": [
+        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+      ],
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ]
+    }
+  ],
+  "primitives": [
+    {
+      "adapterType": "TiaMcp.Adapters.Hardware.HardwarePrimitives",
+      "engineNamespace": "TiaMcpServer.Siemens.LocalHardware"
+    }
+  ],
+  "expansionTypes": [],
+  "expansionNamespaces": [],
+  "tools": [
+    {
+      "name": "AddDevice",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "AddDevice"
+        }
+      ]
+    },
+    {
+      "name": "AddDeviceWithFallback",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "AddDeviceWithFallback"
+        }
+      ]
+    },
+    {
+      "name": "SearchInstalledGsdDevices",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "SearchInstalledGsdDevices"
+        }
+      ]
+    },
+    {
+      "name": "SearchHardwareCatalog",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "SearchHardwareCatalog"
+        }
+      ]
+    },
+    {
+      "name": "AddHardwareCatalogDeviceWithProbe",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "AddHardwareCatalogDeviceWithProbe"
+        }
+      ]
+    },
+    {
+      "name": "AddGsdDeviceWithProbe",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DevicesService",
+          "method": "AddGsdDeviceWithProbe"
+        }
+      ]
+    }
+  ],
+  "evidence": "docs/development/p4-i3-native-evidence.json"
+}

@@ -1,18 +1,47 @@
 // Pure test doubles. This is NOT an SDK signature check or native acceptance.
-namespace TiaMcp.PlcFoundation;
-public sealed class FakeCatalog
+namespace TiaMcp.PlcFoundation
 {
-    public int Calls;
-    public IList<PlcHardwareCatalogCandidate> Rows = new List<PlcHardwareCatalogCandidate>();
-    public IList<PlcHardwareCatalogCandidate> Find(string query) { Calls++; return Rows; }
+    public sealed class FakeCatalog
+    {
+        public int Calls;
+        public IList<PlcHardwareCatalogCandidate> Rows = new List<PlcHardwareCatalogCandidate>();
+        public IEnumerable<Siemens.Engineering.HW.HardwareCatalog.CatalogEntry> Find(string query) { Calls++; return Rows.Select(row=>new Siemens.Engineering.HW.HardwareCatalog.CatalogEntry(row)); }
+    }
+    public sealed class FakePortal { public FakeCatalog HardwareCatalog { get; }=new(); }
+    public sealed partial class PlcFoundationEngine
+    {
+        public string ReleaseKey { get; set; }="19";
+        public bool Bound { get; set; }
+        public int PortalReads { get; private set; }
+        public FakePortal Attached { get; }=new();
+        private Siemens.Engineering.ProjectBase Project() => Bound?new Siemens.Engineering.ProjectBase():throw new InvalidOperationException("Explicit project binding required.");
+        private FakePortal Portal() { PortalReads++; return Attached; }
+    }
 }
-public sealed class FakePortal { public FakeCatalog HardwareCatalog { get; }=new(); }
-public sealed partial class PlcFoundationEngine
+namespace Siemens.Engineering
 {
-    public string ReleaseKey { get; set; }="19";
-    public bool Bound { get; set; }
-    public int PortalReads { get; private set; }
-    public FakePortal Attached { get; }=new();
-    private object Project() => Bound?new object():throw new InvalidOperationException("Explicit project binding required.");
-    private FakePortal Portal() { PortalReads++; return Attached; }
+    public class ProjectBase { public HW.DeviceComposition Devices { get; }=new(); }
+}
+namespace Siemens.Engineering.HW
+{
+    public class Device { }
+    public class DeviceComposition
+    {
+        public Device CreateWithItem(string typeIdentifier,string name,string deviceName) => throw new NotSupportedException("Catalog tests do not create devices.");
+    }
+}
+namespace Siemens.Engineering.HW.HardwareCatalog
+{
+    public sealed class CatalogEntry
+    {
+        private readonly TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate row;
+        public CatalogEntry(TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate row) { this.row=row; }
+        public string ArticleNumber => row.ArticleNumber!;
+        public string CatalogPath => row.CatalogPath!;
+        public string Description => row.Description!;
+        public string TypeIdentifier => row.TypeIdentifier!;
+        public string TypeIdentifierNormalized => row.TypeIdentifierNormalized!;
+        public string TypeName => row.TypeName!;
+        public string Version => row.Version!;
+    }
 }

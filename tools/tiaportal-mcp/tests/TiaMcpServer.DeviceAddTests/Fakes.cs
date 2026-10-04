@@ -1,3 +1,7 @@
+namespace Siemens.Engineering
+{
+    public class ProjectBase {public HW.DeviceComposition Devices { get; }=new();}
+}
 namespace Siemens.Engineering.HW
 {
     public class Device { public string Name="";public object? Parent; }
@@ -15,16 +19,16 @@ namespace Siemens.Engineering.HW
 }
 namespace TiaMcp.PlcFoundation
 {
-    public class FakeProject
+    public class FakeProject : Siemens.Engineering.ProjectBase
     {
-        public FakePath Path=new();public Siemens.Engineering.HW.DeviceComposition Devices=new();
+        public FakePath Path=new();
         public List<Siemens.Engineering.HW.DeviceUserGroup> DeviceGroups=new();
         public Siemens.Engineering.HW.DeviceSystemGroup UngroupedDevicesGroup=new();
         public FakeProject(){Devices.Owner=this;UngroupedDevicesGroup.Parent=this;}
     }
     public class FakePath {public string FullName=@"C:\Test\Test.ap19";}
     public class FakePortal {public FakeCatalog HardwareCatalog=new();}
-    public class FakeCatalog {public List<PlcHardwareCatalogCandidate> Rows=new();public int Calls;public IEnumerable<PlcHardwareCatalogCandidate> Find(string q){Calls++;return Rows;}}
+    public class FakeCatalog {public List<PlcHardwareCatalogCandidate> Rows=new();public int Calls;public IEnumerable<Siemens.Engineering.HW.HardwareCatalog.CatalogEntry> Find(string q){Calls++;return Rows.Select(row=>new Siemens.Engineering.HW.HardwareCatalog.CatalogEntry(row));}}
     public class FakeLifecycle {public bool IsLocalSession=true;public int? ProcessId=42;}
     internal static class PlcLifecyclePolicy {internal static void RequireLocalSessionExecution(bool local,bool unused){if(!local)throw new InvalidOperationException("local required");}}
     public sealed partial class PlcFoundationEngine
@@ -33,5 +37,20 @@ namespace TiaMcp.PlcFoundation
         private FakeProject Project()=>Bound?BoundProject:throw new InvalidOperationException("explicit project required");
         private FakePortal Portal()=>AttachedPortal;
         private void RequireProjectIdentity(string path)=>MutationIdentityPolicy.RequireSameProject(path,Project().Path.FullName);
+    }
+}
+namespace Siemens.Engineering.HW.HardwareCatalog
+{
+    public sealed class CatalogEntry
+    {
+        private readonly TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate row;
+        public CatalogEntry(TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate row) { this.row=row; }
+        public string ArticleNumber => row.ArticleNumber!;
+        public string CatalogPath => row.CatalogPath!;
+        public string Description => row.Description!;
+        public string TypeIdentifier => row.TypeIdentifier!;
+        public string TypeIdentifierNormalized => row.TypeIdentifierNormalized!;
+        public string TypeName => row.TypeName!;
+        public string Version => row.Version!;
     }
 }

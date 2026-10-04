@@ -35,6 +35,11 @@ using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
+#if TIA_SHARED_ADAPTER_PATHS
+using Hardware = TiaMcp.Adapters.Hardware.HardwarePrimitives;
+#else
+using Hardware = TiaMcpServer.Siemens.LocalHardware.HardwarePrimitives;
+#endif
 
 namespace TiaMcpServer.Siemens.Services
 {
@@ -58,7 +63,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 // Openness CreateWithItem expects a TypeIdentifier, not split order/version.
                 // Example: OrderNumber:6ES7 513-1AM03-0AB0/V3.0
-                var project = (_session.CurrentProject as Project);
+                var project = (HardwareProject as Project);
                 if (project == null) throw new PortalException(PortalErrorCode.InvalidState, "Current project is not a local Project instance");
 
                 var orderRaw = orderNumber ?? "";
@@ -144,7 +149,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         try
                         {
-                            var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
+                            var dev = Hardware.CreateWithItem(Hardware.Devices(project), typeIdentifier, itemName, deviceName);
                             if (dev is Device d) return d;
                             attempts.Add($"{typeIdentifier} [{itemName}] -> CreateWithItem returned null");
                         }
@@ -399,7 +404,7 @@ namespace TiaMcpServer.Siemens.Services
                 return (null, null, candidates, attempts, "No project is open. Open or attach to a project before adding the device.");
             }
 
-            var project = _session.CurrentProject as Project;
+            var project = HardwareProject as Project;
             if (project == null)
             {
                 return (null, null, candidates, attempts, "Current project is not a local Project instance.");
@@ -413,7 +418,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     GuardUnifiedPanelVersion(typeIdentifier, "");        // The Unified panel version guard also applies to catalog candidates.
                     var itemName = MakeEngineeringName(deviceName);
-                    var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
+                    var dev = Hardware.CreateWithItem(Hardware.Devices(project), typeIdentifier, itemName, deviceName);
                     if (dev is Device d)
                     {
                         attempts.Add($"{typeIdentifier} -> OK");
@@ -464,7 +469,7 @@ namespace TiaMcpServer.Siemens.Services
                 return (null, null, candidates, attempts, "No project is open. Open or attach to a project before adding the device.");
             }
 
-            var project = _session.CurrentProject as Project;
+            var project = HardwareProject as Project;
             if (project == null)
             {
                 return (null, null, candidates, attempts, "Current project is not a local Project instance.");
@@ -477,7 +482,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                     var itemName = MakeEngineeringName(deviceName);
-                    var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
+                    var dev = Hardware.CreateWithItem(Hardware.Devices(project), typeIdentifier, itemName, deviceName);
                     if (dev is Device d)
                     {
                         attempts.Add($"{typeIdentifier} -> OK");
@@ -543,8 +548,8 @@ namespace TiaMcpServer.Siemens.Services
             var c = entry is global::Siemens.Engineering.HW.HardwareCatalog.CatalogEntry typed
                 ? new HardwareCatalogCandidate
                 {
-                    Source = "HardwareCatalog", Keyword = keyword, ArticleNumber = typed.ArticleNumber, CatalogPath = typed.CatalogPath, Description = typed.Description,
-                    TypeIdentifier = typed.TypeIdentifier, TypeIdentifierNormalized = typed.TypeIdentifierNormalized, TypeName = typed.TypeName, Version = typed.Version
+                    Source = "HardwareCatalog", Keyword = keyword, ArticleNumber = Hardware.ArticleNumber(typed), CatalogPath = Hardware.CatalogPath(typed), Description = Hardware.Description(typed),
+                    TypeIdentifier = Hardware.TypeIdentifier(typed), TypeIdentifierNormalized = Hardware.TypeIdentifierNormalized(typed), TypeName = Hardware.TypeName(typed), Version = Hardware.Version(typed)
                 }
                 : new HardwareCatalogCandidate
                 {
@@ -1076,5 +1081,13 @@ namespace TiaMcpServer.Siemens.Services
             }
             return null;
         }
+
+#if TIA_SHARED_ADAPTER_PATHS
+        private TiaMcp.Adapters.PlcServices.HardwareSurface? _hardware;
+        private ProjectBase? HardwareProject => (_hardware ?? (_hardware =
+            TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).Hardware)).CurrentProject;
+#else
+        private ProjectBase? HardwareProject => _session.CurrentProject;
+#endif
     }
 }

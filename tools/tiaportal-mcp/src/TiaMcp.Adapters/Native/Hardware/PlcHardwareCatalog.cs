@@ -1,5 +1,8 @@
 using System;
 using System.Linq;
+#if PLC_HARDWARE_CATALOG
+using Hardware = TiaMcp.Adapters.Hardware.HardwarePrimitives;
+#endif
 
 namespace TiaMcp.PlcFoundation
 {
@@ -14,9 +17,9 @@ namespace TiaMcp.PlcFoundation
             Project();
             var attached=Portal();
             return PlcHardwareCatalogPolicy.Search(ReleaseKey,keyword,limit,query=>attached.HardwareCatalog.Find(query).Select(entry=>new PlcHardwareCatalogCandidate {
-                ArticleNumber=entry.ArticleNumber,CatalogPath=entry.CatalogPath,Description=entry.Description,
-                TypeIdentifier=entry.TypeIdentifier,TypeIdentifierNormalized=entry.TypeIdentifierNormalized,
-                TypeName=entry.TypeName,Version=entry.Version
+                ArticleNumber=Hardware.ArticleNumber(entry),CatalogPath=Hardware.CatalogPath(entry),Description=Hardware.Description(entry),
+                TypeIdentifier=Hardware.TypeIdentifier(entry),TypeIdentifierNormalized=Hardware.TypeIdentifierNormalized(entry),
+                TypeName=Hardware.TypeName(entry),Version=Hardware.Version(entry)
             }));
 #else
             throw new NotSupportedException("This build has no verified typed hardware catalog API.");
