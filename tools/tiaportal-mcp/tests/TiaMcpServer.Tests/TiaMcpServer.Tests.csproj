@@ -103,4 +103,5 @@
     <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
     <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
 </Project>

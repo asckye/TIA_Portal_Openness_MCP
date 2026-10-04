@@ -33,9 +33,11 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", scratch);
             string prior = Path.Combine(scratch, "calls-fixture.jsonl.previous");
-            File.WriteAllText(prior, "{\"nativeCallId\":\"pair\",\"phase\":\"BEFORE\"}\n");
+            const string oldEncoding = "{\"text\":\"中文 😀 <>&'`+ \\\"quote\\\" \\n\\u0000\",\"null\":null,\"number\":-2146233079}";
+            const string newEncoding = "{\"text\":\"\\u4E2D\\u6587 \\uD83D\\uDE00 \\u003C\\u003E\\u0026\\u0027\\u0060\\u002B \\u0022quote\\u0022 \\n\\u0000\",\"null\":null,\"number\":-2146233079}";
+            File.WriteAllText(prior, "{\"nativeCallId\":\"pair\",\"phase\":\"BEFORE\",\"binding\":" + oldEncoding + "}\n");
             File.SetLastWriteTimeUtc(prior, DateTime.UtcNow.AddMinutes(-1));
-            File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl"), "{\"nativeCallId\":\"pair\",\"phase\":\"RETURNED\"}\n{partial");
+            File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl"), "{\"nativeCallId\":\"pair\",\"phase\":\"RETURNED\",\"binding\":" + newEncoding + "}\n{partial");
             File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl.unrelated"), "{\"phase\":\"unrelated\"}\n");
             var read = EngineSurface.For(Server).Tool("ReadNativeInvocationLog")!;
             string Read(int take)
@@ -44,7 +46,8 @@ internal static partial class Program
                 return response.GetType().GetProperty("Meta")!.GetValue(response)!.ToString()!;
             }
             var meta = Parse(Read(100));
-            Check(Convert.ToInt32(meta["filesRead"]) == 2 && Read(100).Contains("BEFORE") && Read(100).Contains("RETURNED"), "Rotated native pair was not read");
+            var records = ((System.Collections.IEnumerable)meta["records"]).Cast<System.Collections.Generic.Dictionary<string, object>>().ToArray();
+            Check(Json.Serialize(records[0]["binding"]) == Json.Serialize(records[1]["binding"]) && Convert.ToInt32(meta["filesRead"]) == 2 && Read(100).Contains("BEFORE") && Read(100).Contains("RETURNED"), "Rotated native pair was not read");
             Check(Convert.ToInt32(meta["malformedLines"]) == 1 && !Read(100).Contains("unrelated"), "Reader accepted unrelated file or hid truncation");
             Check(!Read(1).Contains("BEFORE") && Read(1).Contains("RETURNED"), "Reader bounded window is incorrect");
             Console.WriteLine("COMPLETE: 3 native journal reader checks passed; no native call executed");

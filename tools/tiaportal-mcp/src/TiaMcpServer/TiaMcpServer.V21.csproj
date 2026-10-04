@@ -39,7 +39,7 @@
     <EmbeddedResource Include="..\..\..\third-party\SiemensOpcUaModelled\Phases\Phase1\InterfaceTemplate.xml" LogicalName="TiaMcp.OpcUa.InterfaceTemplate.xml" />
     <EmbeddedResource Include="../../../../reference/v21-ecosystem.json" LogicalName="TiaMcp.V21Ecosystem.json" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /><Compile Include="../../../openness-shared/NativeCallDiagnostics.Journal.cs" Link="Shared/NativeCallDiagnostics.Journal.cs" /><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>

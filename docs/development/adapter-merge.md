@@ -217,7 +217,7 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 
 - **R1 重复的公开类型**：适配器源码链接的 `TiaVersionCatalog`/`TiaVersionDescriptor` 在 `TiaMcp.Logic` 中也是公开的；引擎同时引用
   两者会出现 CS0433。第 B 步解决。
-- **R2 同一进程两份日志**：引擎和适配器各有静态 `InvocationJournal`，进程内会产生两份互不关联的日志。前提是 P2-04 合并日志分支。
+- **R2 同一进程两份日志**：P2-04c 已合并 `InvocationJournal` 与原生诊断写入层，并提供共享输出及关联 ID 接口，日志分支重复问题已解决；第 H 步将进程内适配器接到引擎的同一输出，当前不改变接线。
 - **R3 引擎构建引用**：引擎通过 NuGet Openness 包的 targets 解析西门子引用（回退到注册表或包），适配器要求显式 PublicAPI 目录和
   精确身份核对。引擎构建必须固定同一目录并增加同样的核对。
 - **R4 宏含义重叠**：`PLC_SAFETY` 同时选择 `ProjectBase`/LocalSession API，后续单独拆出一个特性宏。

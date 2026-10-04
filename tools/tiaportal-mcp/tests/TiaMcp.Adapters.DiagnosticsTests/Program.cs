@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
 // Runs only our API-independent diagnostic runtime. Workers and Siemens modules
@@ -12,6 +12,7 @@ string output=Path.GetFullPath(args[0]), journal=Path.GetFullPath(args[1]);
 if(Directory.Exists(journal)) throw new ArgumentException("Use a new directory so existing evidence is preserved.");
 Directory.CreateDirectory(journal);
 Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY",journal);
+InvocationJournalGoldenTests.Run(journal);
 int checks=0;
 void Check(bool condition,string name){if(!condition)throw new Exception(name);checks++;}
 Check(!Assembly.GetExecutingAssembly().GetReferencedAssemblies().Any(a=>a.Name!.StartsWith("Siemens",StringComparison.Ordinal)),"diagnostic runtime has no Siemens dependency");
@@ -42,7 +43,7 @@ var files=Directory.GetFiles(journal,"calls-*.jsonl");
 Check(files.Length==1,"one process journal");
 var text=File.ReadAllText(files[0]);
 Check(!text.Contains("DO_NOT_LOG_PASSWORD_OR_EXCEPTION_MESSAGE"),"exception message redacted");
-var rows=File.ReadAllLines(files[0]).Select(JObject.Parse).ToArray();
+var rows=File.ReadAllLines(files[0]).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
 Check(rows.All(r=>(string?)r["id"]==correlation),"journal correlation retained");
 var nativeRows=rows.Where(r=>r["nativeCallId"]!=null).ToArray();
 foreach(var group in nativeRows.GroupBy(r=>(string?)r["nativeCallId"])){
@@ -54,7 +55,7 @@ Check(nativeRows.Any(r=>((string?)r["member"])?.Contains("MoveNext")==true),"enu
 Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY","relative-path-rejected");
 var badPath=NativeCallDiagnostics.Enter("site-badpath","Native::Read()","direct",receiver,null,null);
 NativeCallDiagnostics.Returned(badPath,null);
-Check((long)InvocationJournal.Health()["failedWrites"]!>0,"journal failure observable without changing operation");
+Check((long)JsonNode.Parse(InvocationJournal.Health().ToString())!["failedWrites"]!>0,"journal failure observable without changing operation");
 
 foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
     string tfm="net48";
@@ -68,6 +69,8 @@ foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
     using var adapterStream=File.OpenRead(Path.Combine(folder,$"TiaMcp.Adapter.{key}.dll"));
     using var adapterPe=new PEReader(adapterStream);
     var adapter=adapterPe.GetMetadataReader();
+    Check(!adapter.AssemblyReferences.Any(h=>adapter.GetString(adapter.GetAssemblyReference(h).Name) is "Newtonsoft.Json" or "System.Text.Json"),key+" adapter has no JSON library dependency");
+    Check(!workerRefs.Contains("Newtonsoft.Json") && !File.Exists(Path.Combine(folder,"Newtonsoft.Json.dll")),key+" worker payload has no Newtonsoft dependency");
     var types=adapter.TypeDefinitions.Select(h=>adapter.GetTypeDefinition(h)).ToArray();
     var engine=types.Single(t=>adapter.GetString(t.Name)=="PlcFoundationEngine");
     Check(engine.GetMethods().Any(h=>adapter.GetString(adapter.GetMethodDefinition(h).Name)=="ReadExternalSourceNames"),key+" latest external-source operation retained");

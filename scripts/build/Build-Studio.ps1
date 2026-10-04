@@ -33,9 +33,7 @@ function RunDotnet([string[]]$Arguments,[string]$Log) {
 }
 RunDotnet @('build',(Join-Path $studio 'src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'),'-c','Release','--nologo') 'gui.log'
 $app=Join-Path $studio "src/TiaOpenness.Gui/bin/Release/${outputSubdirectory}net10.0-windows"
-$legacyJson=Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll' | Where-Object {
-    !$shared -or !$_.FullName.StartsWith((Join-Path $app 'bridge/adapters')+[IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
-}
+$legacyJson=Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll'
 if($legacyJson){throw 'Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging'}
 if (!(Test-Path -LiteralPath (Join-Path $app 'TiaMcp.WorkerChannel.dll'))) { throw 'Studio client worker channel is missing' }
 foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
@@ -78,6 +76,7 @@ if($Test) {
     RunDotnet @('test',(Join-Path $studio 'tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj'),'-c','Release','--nologo') 'gui-tests.log'
 }
 if(Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Siemens.*.dll'){throw 'Studio output contains a Siemens assembly'}
+if(Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll'){throw 'Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging'}
 $record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');app=$app;nativeAdapters=$native;functionalTestsExecuted=[bool]$Test;nativeTiaExecuted=$false}
 $record | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $logs 'result.json') -Encoding UTF8
 Write-Output "Studio and selected direct Openness adapters built: $app"

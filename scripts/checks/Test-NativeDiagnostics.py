@@ -32,6 +32,9 @@ def main():
     text = run([str(fixture)], 'behavior')
     found = re.search(r'COMPLETE: (\d+) instrumented diagnostic checks passed', text)
     require(found is not None and int(found[1]) >= 26, 'Incomplete fixture suite')
+    golden = json.loads((output / 'behavior' / 'encoding-golden.json').read_text(encoding='utf-8'))
+    require(len(golden) == 12 and all(json.loads(row['old']) == json.loads(row['new']) for row in golden),
+            'Python journal readers must decode old Newtonsoft and shared rows equally')
     run([str(fixture), 'abrupt'], 'abrupt', 23)
     rows = [json.loads(line) for file in (output / 'abrupt').glob('calls-*.jsonl') for line in file.read_text(encoding='utf-8').splitlines()]
     pending = [row for row in rows if row.get('nativeCallId') and row['phase'] == 'BEFORE']
@@ -43,7 +46,7 @@ def main():
     text = run(['dotnet', str(weaver), 'self-test', str(fixture)], 'rejections')
     require('5 diagnostic coverage rejection checks passed' in text, 'Coverage rejection sentinels incomplete')
     record = {'behaviorChecks': int(found[1]), 'abruptExitChecks': 2, 'idempotenceChecks': 1, 'rejectionChecks': 5,
-              'fixtureSha256': before, 'weaverSha256': hashlib.sha256(weaver.read_bytes()).hexdigest(), 'nativeTiaExecuted': False}
+              'encodingChecks': len(golden), 'fixtureSha256': before, 'weaverSha256': hashlib.sha256(weaver.read_bytes()).hexdigest(), 'nativeTiaExecuted': False}
     (output / 'result.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
     print('COMPLETE: diagnostic fixture, abrupt-exit, idempotence and coverage rejection checks passed; no TIA connection')
 

@@ -94,6 +94,7 @@ internal static class Program
             Check(Node.Calls == before + 1, "logging failure does not suppress or duplicate operation");
             Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", previous);
             Check((long)InvocationJournal.Health()["failedWrites"]! >= 2, "diagnostic I/O failures visible");
+            InvocationJournalGoldenTests.Run(directory);
             Console.WriteLine("COMPLETE: " + checks + " instrumented diagnostic checks passed; no TIA connection");
             return 0;
         }
