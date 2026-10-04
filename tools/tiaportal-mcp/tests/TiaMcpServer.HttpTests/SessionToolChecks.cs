@@ -26,8 +26,13 @@ internal static class SessionToolChecks
             check(target != null && ReferenceEquals(target, provider.GetService(type))
                 && ReferenceEquals(type.GetField("_session", all)!.GetValue(target), session)
                 && ReferenceEquals(session, provider.GetService(portal)), domain.Name + " tools share the kernel singleton");
-            check(type.GetConstructors().Single().GetParameters().Single().ParameterType == contract,
-                domain.Name + " tools require only IEngineeringSession");
+            check(type.GetConstructors().Single().GetParameters().Select(p => p.ParameterType).SequenceEqual(
+                    domain.Name == "ProjectSession" ? new[] { contract,
+                        server.GetType("TiaMcpServer.ModelContextProtocol.SessionTools", true)!,
+                        server.GetType("TiaMcpServer.ModelContextProtocol.PlcBuildTools", true)!,
+                        server.GetType("TiaMcpServer.ModelContextProtocol.DevicesTools", true)!,
+                        server.GetType("TiaMcpServer.ModelContextProtocol.DocumentsTools", true)! } : new[] { contract }),
+                domain.Name + " tools declare their session and tool dependencies");
             var methods = type.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
             check(methods.Length == domain.Count, domain.Name + " tool count");
             foreach (var method in methods)
@@ -36,10 +41,8 @@ internal static class SessionToolChecks
                 check(!method.IsStatic && surface.Tool(name) == method && ReferenceEquals(target, surface.Target(method)),
                     name + " resolves to the instance tool");
                 var forwarder = facade.GetMethod(method.Name, all, null, method.GetParameters().Select(p => p.ParameterType).ToArray(), null)!;
-                check(forwarder.IsStatic && forwarder.GetCustomAttribute<McpServerToolAttribute>() == null
-                    && forwarder.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>() == null
-                    && forwarder.GetParameters().All(p => p.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>() == null),
-                    name + " keeps an attribute-less compatibility forwarder");
+                check(forwarder == null && ReferenceEquals(surface.Target(method), provider.GetService(method.DeclaringType!)),
+                    name + " resolves directly through EngineServices without a static compatibility forwarder");
                 check(!(bool)isControl.Invoke(null, new object[] { name })!, name + " remains proxied to the isolated worker");
                 var preflight = Invoke("PreflightToolCall", name, "{\"probe\":true,\"PROBE\":false}");
                 check(preflight.ToJsonString().IndexOf("duplicate", StringComparison.OrdinalIgnoreCase) >= 0,

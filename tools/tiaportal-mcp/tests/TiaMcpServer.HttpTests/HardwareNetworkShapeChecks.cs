@@ -192,11 +192,8 @@ internal static class HardwareNetworkShapeChecks
                 (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
             EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
             var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
-            bool needsForwarder = name == "ProbeHardwareHmiConnectionOwnerCandidates" || name == "ProbeHardwareHmiConnectionWhitelistedServices";
-            check(needsForwarder ? forwarder != null && forwarder.IsStatic && !forwarder.GetCustomAttributes().Any()
-                && forwarder.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))
-                    .SequenceEqual(tool.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))) : forwarder == null,
-                domain + " tool retains only its required attribute-less CLI forwarder: " + name);
+            check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tools)),
+                domain + " tool resolves directly without a static CLI forwarder: " + name);
         }
     }
 }

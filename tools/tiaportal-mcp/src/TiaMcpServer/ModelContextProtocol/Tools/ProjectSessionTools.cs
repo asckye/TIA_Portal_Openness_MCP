@@ -21,7 +21,20 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly IEngineeringSession _session;
 
-        public ProjectSessionTools(IEngineeringSession session) => _session = session;
+        private readonly SessionTools _sessionTools;
+        private readonly PlcBuildTools _plcBuild;
+        private readonly DevicesTools _devices;
+        private readonly DocumentsTools _documents;
+
+        public ProjectSessionTools(IEngineeringSession session, SessionTools sessionTools,
+            PlcBuildTools plcBuild, DevicesTools devices, DocumentsTools documents)
+        {
+            _session = session;
+            _sessionTools = sessionTools;
+            _plcBuild = plcBuild;
+            _devices = devices;
+            _documents = documents;
+        }
 
         [McpServerTool(Name = "GetProject"), Description("[L1][Project] List all open local projects and multi-user sessions with their attributes. Requires: Connect. Use this to confirm which project is active, or to find the project name for AttachToOpenProject.")]
         public ResponseGetProjects GetProjects()
@@ -244,7 +257,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var pair in new[] { ("udt", "udt"), ("globalDb", "globaldb"), ("tagTable", "tagtable") })
                     foreach (var item in Arr(pair.Item1))
                     {
-                        try { PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true); Step(pair.Item2, "ok", "dryRun: XML built"); }
+                        try { _plcBuild.PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true); Step(pair.Item2, "ok", "dryRun: XML built"); }
                         catch (Exception ex) { Step(pair.Item2, "failed", ex.Message); resp.Ok = false; }
                     }
                 foreach (var item in Arr("sclSourceFiles"))
@@ -277,7 +290,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // ---- critical: connect + create project + PLC device ----
             try
             {
-                if (!_session.IsConnected()) { Connect(); Step("connect", "ok"); }
+                if (!_session.IsConnected()) { _sessionTools.Connect(); Step("connect", "ok"); }
                 else Step("connect", "skipped", "already connected");
             }
             catch (Exception ex) { Step("connect", "failed", ex.Message); resp.Ok = false; throw new McpException($"ScaffoldProject aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
@@ -287,7 +300,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             try
             {
-                var d = AddDeviceWithFallback(plcMlfb, "", plcName, plcFamily);
+                var d = _devices.AddDeviceWithFallback(plcMlfb, "", plcName, plcFamily);
                 if (d.Ok == true) Step("addDevicePlc", "ok", $"{plcName} {d.MlfbUsed}");
                 else throw new McpException($"PLC device add failed: {d.Error}", McpErrorCode.InternalError);
             }
@@ -301,7 +314,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 try
                 {
-                    var d = AddDeviceWithFallback("", "", hmiName, hmiFamily);
+                    var d = _devices.AddDeviceWithFallback("", "", hmiName, hmiFamily);
                     if (d.Ok == true) { hmiDeviceOk = true; Step("addDeviceHmi", "ok", $"{hmiName} {d.MlfbUsed}"); }
                     else { Step("addDeviceHmi", "failed", d.Error); resp.Ok = false; }
                 }
@@ -316,7 +329,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var importPath = IS(item, "importPath");
                 var name = IS(item, "name");
                 if (string.IsNullOrWhiteSpace(importPath) || string.IsNullOrWhiteSpace(name)) { Step("lad", "skipped", "missing importPath/name"); continue; }
-                try { ImportFromDocuments(plcName, "", importPath, name); Step("lad", "ok", name); }
+                try { _documents.ImportFromDocuments(plcName, "", importPath, name); Step("lad", "ok", name); }
                 catch (Exception ex) { Step("lad", "failed", $"{name}: {ex.Message}"); resp.Ok = false; }
             }
 

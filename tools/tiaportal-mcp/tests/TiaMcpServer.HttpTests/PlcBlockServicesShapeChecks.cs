@@ -119,8 +119,8 @@ internal static class PlcBlockServicesShapeChecks
             "CompileAndDiagnosePlc", "ExportBlocksToTemp" })
         {
             var method = facade.GetMethod(name, all)!;
-            check(method.IsStatic && !method.GetCustomAttributes().Any(attribute => attribute.GetType().Name == "McpServerToolAttribute"),
-                name + " retains an attribute-less CLI forwarder");
+            check(method == null && ReferenceEquals(tools.Target(toolType.GetMethod(name, all)!), toolInstance),
+                name + " uses the PLC block tool singleton without a CLI forwarder");
         }
         check(tools.Field("_blockGroupDeleteGate", all).DeclaringType == serviceType,
             "Block group deletion gate belongs to the service");

@@ -104,12 +104,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string BatchState(string project)
         {
             if (string.IsNullOrWhiteSpace(project)) throw new ArgumentException("expectedProject is required.");
-            Portal.EnsureBoundProjectUnchanged("Batch identity");
-            var state = GetState();
+            EngineServices.Get<Siemens.Portal>().EnsureBoundProjectUnchanged("Batch identity");
+            var state = EngineServices.Get<SessionTools>().GetState();
             if (state.IsConnected != true || !string.Equals(state.Project, project, StringComparison.Ordinal)) throw new InvalidOperationException("Expected project is not connected: " + project);
-            var health = Portal.GetPortalProcessHealth();
+            var health = EngineServices.Get<Siemens.Portal>().GetPortalProcessHealth();
             if (health["boundProcessId"] == null || health["processAlive"]?.GetValue<bool?>() != true) throw new InvalidOperationException("Bound TIA process identity is unavailable.");
-            return BatchPlanStore.BindingState(Portal.GetBindingIdentity());
+            return BatchPlanStore.BindingState(EngineServices.Get<Siemens.Portal>().GetBindingIdentity());
         }
         private static ResponseMessage BatchResult(Func<JsonObject, string> action)
         {

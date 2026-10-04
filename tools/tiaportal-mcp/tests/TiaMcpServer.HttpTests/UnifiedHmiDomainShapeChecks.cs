@@ -14,12 +14,6 @@ internal static class UnifiedHmiDomainShapeChecks
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
-        var forwarders = new[] {
-            "EnsureUnifiedHmiScreen", "EnsureUnifiedHmiTagTable", "EnsureUnifiedHmiTag", "EnsureUnifiedHmiConnection",
-            "EnsureUnifiedHmiScreenItem", "ApplyUnifiedHmiScreenDesignJson", "BindUnifiedHmiButtonPressedTag",
-            "EnsureUnifiedHmiButtonEventHandler", "DescribeUnifiedHmiButtonEventScript", "SetUnifiedHmiButtonEventScriptCode",
-            "BuildUnifiedHmiButtonActionScript", "EnsureUnifiedHmiButtonAction", "BindUnifiedHmiTagDynamization"
-        };
         foreach (var domain in new[] {
             (Name: "UnifiedHmi", Count: 22), (Name: "UnifiedObjectServices", Count: 12),
             (Name: "UnifiedUiModel", Count: 7), (Name: "UnifiedScreenItems", Count: 2),
@@ -57,11 +51,8 @@ internal static class UnifiedHmiDomainShapeChecks
                         name + " tool calls the migrated service", tool, method);
                 }
                 var forwarder = facade.GetMethod(name, all);
-                check(forwarders.Contains(name)
-                    ? forwarder != null && forwarder.IsStatic && !forwarder.GetCustomAttributes().Any()
-                        && forwarder.ReturnType == tool.ReturnType
-                        && forwarder.GetParameters().Select(p => p.ParameterType).SequenceEqual(tool.GetParameters().Select(p => p.ParameterType))
-                    : forwarder == null, name + " retains only the required attribute-less CLI facade");
+                check(forwarder == null && ReferenceEquals(surface.Target(tool), toolTarget),
+                    name + " resolves directly without a static CLI facade");
             }
         }
         foreach (var name in new[] { "FindExistingByName", "TryGetEngineeringAttribute", "SummarizeHmiObjectReadback",

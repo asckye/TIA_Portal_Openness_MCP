@@ -20,7 +20,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var state = Portal.GetState();
+                var state = EngineServices.Get<Siemens.Portal>().GetState();
                 connected = state?.IsConnected;
                 project = state?.Project;
             }

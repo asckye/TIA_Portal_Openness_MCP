@@ -50,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var pair in new[] { ("udt", "udt"), ("globalDb", "globaldb"), ("tagTable", "tagtable") })
                     foreach (var item in Arr(pair.Item1))
                     {
-                        try { PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true); Step(pair.Item2, "ok", "dryRun: XML built"); }
+                        try { EngineServices.Get<PlcBuildTools>().PlcBuildAndImport(plcName, pair.Item2, item!.ToJsonString(), "", "", "", false, true); Step(pair.Item2, "ok", "dryRun: XML built"); }
                         catch (Exception ex) { Step(pair.Item2, "failed", ex.Message); resp.Ok = false; }
                     }
                 foreach (var item in Arr("sclSourceFiles"))
@@ -82,12 +82,12 @@ namespace TiaMcpServer.ModelContextProtocol
             // ---- critical: connect + open existing project ----
             try
             {
-                if (!Portal.IsConnected()) { Connect(); Step("connect", "ok"); }
+                if (!EngineServices.Get<Siemens.Portal>().IsConnected()) { EngineServices.Get<SessionTools>().Connect(); Step("connect", "ok"); }
                 else Step("connect", "skipped", "already connected");
             }
             catch (Exception ex) { Step("connect", "failed", ex.Message); resp.Ok = false; throw new McpException($"PatchProject aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
-            try { OpenProject(projectPath); Step("openProject", "ok", projectPath); }
+            try { EngineServices.Get<ProjectSessionTools>().OpenProject(projectPath); Step("openProject", "ok", projectPath); }
             catch (Exception ex) { Step("openProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"PatchProject aborted at openProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             // ---- PLC elements (per-item collect; re-import = upsert) ----
@@ -98,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var importPath = IS(item, "importPath");
                 var name = IS(item, "name");
                 if (string.IsNullOrWhiteSpace(importPath) || string.IsNullOrWhiteSpace(name)) { Step("lad", "skipped", "missing importPath/name"); continue; }
-                try { ImportFromDocuments(plcName, "", importPath, name, ladOption); Step("lad", "ok", name + (noOverwrite ? " (no-overwrite)" : "")); }
+                try { EngineServices.Get<DocumentsTools>().ImportFromDocuments(plcName, "", importPath, name, ladOption); Step("lad", "ok", name + (noOverwrite ? " (no-overwrite)" : "")); }
                 catch (Exception ex) { Step("lad", "failed", $"{name}: {ex.Message}"); resp.Ok = false; }
             }
 
@@ -117,7 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // ---- save ----
             if (B("save", true))
             {
-                try { SaveProject(); Step("save", "ok"); }
+                try { EngineServices.Get<ProjectSessionTools>().SaveProject(); Step("save", "ok"); }
                 catch (Exception ex) { Step("save", "failed", ex.Message); resp.Ok = false; }
             }
 

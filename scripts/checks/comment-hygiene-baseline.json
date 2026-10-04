@@ -5,8 +5,8 @@
     {
       "kind": "product-version",
       "fingerprint": "0f957ca34f2a4bd176097d40a05c3b51d1e96203fe2dd2ae76ed66fe15257eb5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 152
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs",
+      "line": 153
     },
     {
       "kind": "tombstone",
@@ -53,8 +53,8 @@
     {
       "kind": "product-version",
       "fingerprint": "434fab7bcdadbb2db2695eb4210424b93752e0817e5cf1908871596a80a81ae8",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 305
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs",
+      "line": 306
     },
     {
       "kind": "product-version",
@@ -137,14 +137,14 @@
     {
       "kind": "product-version",
       "fingerprint": "a3c1f71dbb2fcffeeeabaaee2e3579096032cfe2c153502557d182092df6f95e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 266
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs",
+      "line": 267
     },
     {
       "kind": "product-version",
       "fingerprint": "a49c458e9275469b67e9984ae1be138276b8fbebb550ff446514975e1f636470",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 373
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs",
+      "line": 374
     },
     {
       "kind": "product-version",
@@ -240,12 +240,6 @@
       "kind": "leftovers-file",
       "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
       "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Step7LeftoversLogic.cs",
-      "line": 1
-    },
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs",
       "line": 1
     },
     {

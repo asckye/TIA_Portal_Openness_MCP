@@ -49,15 +49,15 @@ namespace TiaMcpServer
             WritePlcHmiSyncMinimalPlcXml(importDir, expected);
             Program.LogDiag($"PLC/HMI sync minimal validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
 
-            McpServer.Connect();
-            McpServer.CreateProject(projectDirectory, projectName);
-            var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
+            EngineServices.Get<SessionTools>().Connect();
+            EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName);
+            var plc = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
             if (plc.Ok != true) throw new InvalidOperationException("Failed to add PLC for PLC/HMI sync validation: " + plc.Error);
-            var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
+            var hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
             if (hmi.Ok != true) throw new InvalidOperationException("Failed to add Unified HMI for PLC/HMI sync validation: " + hmi.Error);
 
-            var import = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: true);
-            var compile = McpServer.CompileAndDiagnosePlc("PLC_1");
+            var import = EngineServices.Get<PlcBlocksTools>().ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: true);
+            var compile = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc("PLC_1");
             // 三态：ErrorCount==null 表示编译结果没读回来，不是零错误——不放行，但报告和异常文案要和"真有错误"分开。
             bool? compileClean = compile.ErrorCount == null ? (bool?)null : compile.ErrorCount.Value == 0;
             if (compileClean == false || (import.Failed?.Any() ?? false))
@@ -75,7 +75,7 @@ namespace TiaMcpServer
             var exportOk = false;
             try
             {
-                McpServer.ExportPlcTagTable("PLC_1", "Sync_Minimal_Tags", exportedTagTable);
+                EngineServices.Get<PlcTablesTools>().ExportPlcTagTable("PLC_1", "Sync_Minimal_Tags", exportedTagTable);
                 exportOk = File.Exists(exportedTagTable);
             }
             catch (Exception ex)
@@ -83,29 +83,29 @@ namespace TiaMcpServer
                 Program.LogDiag("PLC sync tag table export failed: " + (ex.InnerException?.Message ?? ex.Message));
             }
             var plcReadback = exportOk ? ReadPlcTagTableExport(exportedTagTable) : new Dictionary<string, (string DataType, string Address)>(StringComparer.OrdinalIgnoreCase);
-            var plcTables = McpServer.GetPlcTagTables("PLC_1").Items?.ToArray() ?? Array.Empty<string>();
+            var plcTables = EngineServices.Get<PlcTablesTools>().GetPlcTagTables("PLC_1").Items?.ToArray() ?? Array.Empty<string>();
             var plcTableOk = plcTables.Any(t => string.Equals(t, "Sync_Minimal_Tags", StringComparison.OrdinalIgnoreCase));
 
             var connectionName = "HMI_Connection_1";
-            var connectionReadback = McpServer.EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1").Message ?? "";
-            McpServer.EnsureUnifiedHmiTagTable("HMI_RT_1", "Sync_HMI_Tags");
+            var connectionReadback = EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1").Message ?? "";
+            EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTagTable("HMI_RT_1", "Sync_HMI_Tags");
             foreach (var tag in expected)
             {
-                McpServer.EnsureUnifiedHmiTag("HMI_RT_1", "Sync_HMI_Tags", tag.Name, tag.DataType, "PLC_1", tag.Name, connectionName, tag.Address);
+                EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag("HMI_RT_1", "Sync_HMI_Tags", tag.Name, tag.DataType, "PLC_1", tag.Name, connectionName, tag.Address);
                 SetHmiTagAbsolute("Sync_HMI_Tags", tag.Name, tag.DataType, connectionName, tag.Address);
             }
 
-            McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", "Sync_Main", 800, 480);
-            McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", "Sync_Main", BuildPlcHmiSyncMinimalDesignJson());
-            McpServer.BindUnifiedHmiButtonPressedTag("HMI_RT_1", "Sync_Main", "Btn_Start", "Sync_Start");
-            McpServer.EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped");
-            McpServer.SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped", "HMIRuntime.Tags.SysFct.SetBitInTag(\"Sync_Start\", 0);", "", false);
-            McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", "Sync_Main", "Lamp_Run", "Visible", "Sync_Run", "Bool", "Sync_Run", "");
-            McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", "Sync_Main", "IO_Count", "ProcessValue", "Sync_Count", "Int", "Sync_Count", "");
+            EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen("HMI_RT_1", "Sync_Main", 800, 480);
+            EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", "Sync_Main", BuildPlcHmiSyncMinimalDesignJson());
+            EngineServices.Get<UnifiedHmiTools>().BindUnifiedHmiButtonPressedTag("HMI_RT_1", "Sync_Main", "Btn_Start", "Sync_Start");
+            EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped");
+            EngineServices.Get<UnifiedHmiTools>().SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped", "HMIRuntime.Tags.SysFct.SetBitInTag(\"Sync_Start\", 0);", "", false);
+            EngineServices.Get<UnifiedHmiTools>().BindUnifiedHmiTagDynamization("HMI_RT_1", "Sync_Main", "Lamp_Run", "Visible", "Sync_Run", "Bool", "Sync_Run", "");
+            EngineServices.Get<UnifiedHmiTools>().BindUnifiedHmiTagDynamization("HMI_RT_1", "Sync_Main", "IO_Count", "ProcessValue", "Sync_Count", "Int", "Sync_Count", "");
 
-            var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
-            var hmiTables = McpServer.GetHmiTagTables("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
-            var hmiTags = McpServer.GetHmiTags("HMI_RT_1", "Sync_HMI_Tags").Items?.ToArray() ?? Array.Empty<string>();
+            var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+            var hmiTables = EngineServices.Get<HmiExchangeTools>().GetHmiTagTables("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+            var hmiTags = EngineServices.Get<HmiExchangeTools>().GetHmiTags("HMI_RT_1", "Sync_HMI_Tags").Items?.ToArray() ?? Array.Empty<string>();
             var rows = new List<Dictionary<string, object?>>();
             foreach (var tag in expected)
             {
@@ -137,15 +137,15 @@ namespace TiaMcpServer
                 rows.Add(row);
             }
 
-            var btnDesc = McpServer.DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "Btn_Start", 120);
-            var lampDesc = McpServer.DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "Lamp_Run", 120);
-            var ioDesc = McpServer.DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "IO_Count", 120);
-            var eventDesc = McpServer.DescribeUnifiedHmiButtonEventScript("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped", 120);
+            var btnDesc = EngineServices.Get<HmiDescribeTools>().DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "Btn_Start", 120);
+            var lampDesc = EngineServices.Get<HmiDescribeTools>().DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "Lamp_Run", 120);
+            var ioDesc = EngineServices.Get<HmiDescribeTools>().DescribeHmiScreenItem("HMI_RT_1", "Sync_Main", "IO_Count", 120);
+            var eventDesc = EngineServices.Get<UnifiedHmiTools>().DescribeUnifiedHmiButtonEventScript("HMI_RT_1", "Sync_Main", "Btn_Start", "Tapped", 120);
             var controlsOk = hmiTags.Length >= expected.Length;
             var rowsOk = rows.All(r => Equals(r["addressSynced"], true) && Equals(r["dataTypeSynced"], true) && Equals(r["hmiTagReadback"], true));
             var passed = exportOk && rowsOk && controlsOk;
 
-            var save = McpServer.SaveProject();
+            var save = EngineServices.Get<ProjectSessionTools>().SaveProject();
             Program.LogDiag(save.Message ?? "Project saved");
             WritePlcHmiSyncReport(reportPath, jsonReportPath, projectName, projectDirectory, importDir, passed, connectionReadback, expected, import, compile, rows, passed ? "" : "Readback mismatch in PLC tags, HMI tags, or screen controls.");
             if (!passed)
@@ -217,10 +217,10 @@ namespace TiaMcpServer
 
         private static void SetHmiTagAbsolute(string tableName, string tagName, string dataType, string connection, string address)
         {
-            McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("Connection", connection), "", true);
-            McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("DataType", dataType), "", true);
-            McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("AccessMode", "AbsoluteAccess"), "", true);
-            McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("Address", address), "", true);
+            EngineServices.Get<ReflectionTools>().InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("Connection", connection), "", true);
+            EngineServices.Get<ReflectionTools>().InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("DataType", dataType), "", true);
+            EngineServices.Get<ReflectionTools>().InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("AccessMode", "AbsoluteAccess"), "", true);
+            EngineServices.Get<ReflectionTools>().InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "SetAttribute", new JsonArray("Address", address), "", true);
         }
 
         private static string ReadHmiTagSummary(string tableName, string tagName)
@@ -229,7 +229,7 @@ namespace TiaMcpServer
             {
                 try
                 {
-                    return McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "GetAttribute", new JsonArray(attr)).Value?.ToString() ?? "";
+                    return EngineServices.Get<ReflectionTools>().InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "GetAttribute", new JsonArray(attr)).Value?.ToString() ?? "";
                 }
                 catch /* swallow(probe-optional): unavailable HMI tag attributes remain empty while alternate binding names are checked */
                 {
@@ -337,22 +337,22 @@ namespace TiaMcpServer
             var jsonReportPath = Path.Combine(reportDir, "plc_chinese_comments_minimal.json");
 
             Program.LogDiag($"PLC Chinese comments validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
-            McpServer.Connect();
-            McpServer.CreateProject(projectDirectory, projectName);
-            var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
+            EngineServices.Get<SessionTools>().Connect();
+            EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName);
+            var plc = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
             if (plc.Ok != true) throw new InvalidOperationException("Failed to add PLC for Chinese comments validation: " + plc.Error);
 
-            var import = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: true);
-            var compile = McpServer.CompileAndDiagnosePlc("PLC_1");
+            var import = EngineServices.Get<PlcBlocksTools>().ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: true);
+            var compile = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc("PLC_1");
 
-            var blocks = McpServer.GetBlocks("PLC_1", "Motor").Items?.ToArray() ?? Array.Empty<ResponseBlockInfo>();
+            var blocks = EngineServices.Get<PlcBlocksTools>().GetBlocks("PLC_1", "Motor").Items?.ToArray() ?? Array.Empty<ResponseBlockInfo>();
             Program.LogDiag("Chinese comments blocks readback: " + string.Join(",", blocks.Select(b => b.Name)));
 
             var exportDir = Path.Combine(reportDir, "exported_readback");
             Directory.CreateDirectory(exportDir);
             var tagExport = Path.Combine(exportDir, "Motor_IO_Tags.xml");
-            McpServer.ExportPlcTagTable("PLC_1", "Motor_IO_Tags", tagExport);
-            var blockExport = McpServer.ExportBlocksToTemp("PLC_1", "FB1_LAD_Motor|FB2_SCL_Count", false);
+            EngineServices.Get<PlcTablesTools>().ExportPlcTagTable("PLC_1", "Motor_IO_Tags", tagExport);
+            var blockExport = EngineServices.Get<PlcBlocksTools>().ExportBlocksToTemp("PLC_1", "FB1_LAD_Motor|FB2_SCL_Count", false);
             if (!string.IsNullOrWhiteSpace(blockExport.TempDir) && Directory.Exists(blockExport.TempDir))
             {
                 foreach (var file in Directory.GetFiles(blockExport.TempDir, "*.xml", SearchOption.AllDirectories))
@@ -383,7 +383,7 @@ namespace TiaMcpServer
                 && exportedFileNames.Any(n => string.Equals(n, "FB2_SCL_Count", StringComparison.OrdinalIgnoreCase))
                 && checks.Values.All(v => v);
             var passed = compileClean == true && otherChecksPassed;
-            McpServer.SaveProject();
+            EngineServices.Get<ProjectSessionTools>().SaveProject();
             WriteChineseCommentsReport(reportPath, jsonReportPath, projectName, projectDirectory, importDir, exportDir, passed, import, compile, checks, exportedFiles);
             if (!passed)
             {

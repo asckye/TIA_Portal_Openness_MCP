@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var compileWatch = System.Diagnostics.Stopwatch.StartNew();
-                var result = Portal.CompileSoftware(softwarePath, password);
+                var result = EngineServices.Get<Siemens.Portal>().CompileSoftware(softwarePath, password);
 
                 // CollectCompilerMessages 逐条收集诊断，拿不到的记进 CollectFailures，
                 // 让调用方区分没有明细与诊断收集不完整。
@@ -77,49 +77,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error compiling software '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
-        public static ResponseBlocks GetBlocks(
-            string softwarePath,
-            string regexName = "")
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).GetBlocks(softwarePath, regexName);
-
-        public static ResponseExportBlock ExportBlock(
-            string softwarePath,
-            string blockPath,
-            string exportPath,
-            bool preservePath = false)
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).ExportBlock(softwarePath, blockPath, exportPath, preservePath);
-
-        public static ResponseImportBatch ImportBlocksFromDirectory(
-            string softwarePath,
-            string groupPath,
-            string dir,
-            string regexName = "",
-            bool overwrite = true)
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite);
-
-        public static ResponsePlcProgramImport ImportPlcProgramFromDirectory(
-            string softwarePath,
-            string sourceDir,
-            string typeGroupPath = "",
-            string tagFolderPath = "",
-            string technologyFolderPath = "",
-            string blockGroupPath = "",
-            string regexName = "",
-            bool compileAfter = true,
-            bool stopOnImportFailure = false,
-            bool dryRun = false)
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).ImportPlcProgramFromDirectory(softwarePath, sourceDir, typeGroupPath, tagFolderPath, technologyFolderPath, blockGroupPath, regexName, compileAfter, stopOnImportFailure, dryRun);
-
-        public static ResponseCompileDiagnose CompileAndDiagnosePlc(
-            string softwarePath,
-            string password = "")
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).CompileAndDiagnosePlc(softwarePath, password);
-
-        public static ResponseTempExport ExportBlocksToTemp(
-            string softwarePath,
-            string regexName = "",
-            bool preservePath = false)
-            => ((PlcBlocksTools)EngineServices.Get(typeof(PlcBlocksTools))).ExportBlocksToTemp(softwarePath, regexName, preservePath);
 
         private static string ClassifyPlcXml(string file, out string subKind, out string objectName)
         {

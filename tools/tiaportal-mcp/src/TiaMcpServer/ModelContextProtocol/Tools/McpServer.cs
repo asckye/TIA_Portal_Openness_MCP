@@ -22,86 +22,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public static partial class McpServer
     {
-        private static IServiceProvider? _services => EngineServices.Host;
-        private static Portal? _portal;
-
         public static ILogger? Logger { get; set; }
 
-        public static Portal Portal
-        {
-            get
-            {
-                if (_services !=null)
-                {
-                    return _services.GetRequiredService<Portal>();
-                }
-                else
-                {
-                    if (_portal == null)
-                    {
-                        _portal = (Portal)EngineServices.Get(typeof(Portal));
-                    }
-                    return _portal;
-                }
-            }
-            set
-            {
-                _portal = value ?? throw new ArgumentNullException(nameof(value), "Portal cannot be null");
-            }
-        }
-
-        public static void SetServiceProvider(IServiceProvider services)
-        {
-            EngineServices.SetServiceProvider(services);
-        }
-
-        #region portal
-
-        public static ResponseConnect Connect(
-            string projectName = "",
-            bool allowStart = false)
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).Connect(projectName, allowStart);
-
-        public static ResponseConnect ConnectIsolated()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).ConnectIsolated();
-
-        public static ResponseStringList ListPortalProcessProjects()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).ListPortalProcessProjects();
-
-        public static Task<ResponseMessage> EnsureOpennessUserGroup()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).EnsureOpennessUserGroup();
-
-        public static ResponseDisconnect Disconnect()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).Disconnect();
-
-        #endregion
-
-        #region state
-
-        public static ResponseState GetState()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).GetState();
-
-        #endregion
-
-        #region bootstrap
-
-        public static Task<ResponseBootstrap> Bootstrap()
-            => ((SessionTools)EngineServices.Get(typeof(SessionTools))).Bootstrap();
-
-        #endregion
-
         #region capability self-test
-
-        public static Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(
-            bool connectIfNeeded = false,
-            bool includeProjectTree = false,
-            bool inspectPortalProcesses = false,
-            string expectedPlcSoftwarePath = "PLC_1",
-            string expectedHmiSoftwarePath = "HMI_RT_1")
-            => ((DiagnosticsTools)EngineServices.Get(typeof(DiagnosticsTools))).RunCapabilitySelfTest(connectIfNeeded, includeProjectTree, inspectPortalProcesses, expectedPlcSoftwarePath, expectedHmiSoftwarePath);
-
-        public static ResponseSafetySelfTest RunOnlineMonitoringSafetySelfTest()
-            => ((DiagnosticsTools)EngineServices.Get(typeof(DiagnosticsTools))).RunOnlineMonitoringSafetySelfTest();
 
         private static List<string> GetMcpToolNames()
         {
@@ -122,28 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        #region acceptance report
-
-        public static Task<ResponseAcceptanceReport> GenerateAcceptanceReport(
-            string outputDirectory = "",
-            bool connectIfNeeded = false,
-            bool includeProjectTree = false,
-            bool inspectPortalProcesses = false,
-            string title = "TIA MCP Acceptance Report")
-            => ((DiagnosticsTools)EngineServices.Get(typeof(DiagnosticsTools))).GenerateAcceptanceReport(outputDirectory, connectIfNeeded, includeProjectTree, inspectPortalProcesses, title);
-
-        #endregion
-
         #region error report
-
-        public static ResponseErrorReport GenerateErrorReport(
-            string errorCode,
-            string summary,
-            string detail = "",
-            string recommendedNextActions = "",
-            string severity = "error",
-            string outputDirectory = "")
-            => ((DiagnosticsTools)EngineServices.Get(typeof(DiagnosticsTools))).GenerateErrorReport(errorCode, summary, detail, recommendedNextActions, severity, outputDirectory);
 
         // Best-effort "Did you mean …?" suffix for a not-found block name. Only fires for a
         // bare name (no '/'), where a typo is the likely cause. Returns "" on any failure.
@@ -153,13 +55,13 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var escaped = Regex.Escape(blockPath);
-                var blocks = Portal.GetBlocks(softwarePath, $"^{escaped}$");
+                var blocks = EngineServices.Get<Siemens.Portal>().GetBlocks(softwarePath, $"^{escaped}$");
                 if (blocks == null || blocks.Count == 0)
-                    blocks = Portal.GetBlocks(softwarePath, escaped);
+                    blocks = EngineServices.Get<Siemens.Portal>().GetBlocks(softwarePath, escaped);
 
                 var candidates = blocks
                     .Take(10)
-                    .Select(b => Portal.GetBlockPath(b))
+                    .Select(b => EngineServices.Get<Siemens.Portal>().GetBlockPath(b))
                     .Where(p => !string.IsNullOrWhiteSpace(p))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
@@ -179,9 +81,9 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var escaped = Regex.Escape(typePath);
-                var types = Portal.GetTypes(softwarePath, $"^{escaped}$");
+                var types = EngineServices.Get<Siemens.Portal>().GetTypes(softwarePath, $"^{escaped}$");
                 if (types == null || types.Count == 0)
-                    types = Portal.GetTypes(softwarePath, escaped);
+                    types = EngineServices.Get<Siemens.Portal>().GetTypes(softwarePath, escaped);
 
                 var candidates = types
                     .Take(10)

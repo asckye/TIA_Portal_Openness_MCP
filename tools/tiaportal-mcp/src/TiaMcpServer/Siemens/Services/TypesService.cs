@@ -41,7 +41,13 @@ namespace TiaMcpServer.Siemens.Services
     {
         private readonly IEngineeringSession _session;
 
-        public TypesService(IEngineeringSession session) => _session = session;
+        private readonly HmiExchangeService _hmiExchange;
+
+        public TypesService(IEngineeringSession session, HmiExchangeService hmiExchange)
+        {
+            _session = session;
+            _hmiExchange = hmiExchange;
+        }
 
         public IEnumerable<PlcType>? ExportTypes(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
         {
@@ -269,14 +275,14 @@ namespace TiaMcpServer.Siemens.Services
                 // HMI tag tables then screens
                 if (Directory.Exists(tempHmiTags))
                 {
-                    var r = _session.ImportHmiTagTablesFromDirectory(hmiSoftwarePath, hmiTagTableFolderPath, tempHmiTags);
+                    var r = _hmiExchange.ImportHmiTagTablesFromDirectory(hmiSoftwarePath, hmiTagTableFolderPath, tempHmiTags);
                     imported.AddRange(r.Imported?.Select(x => "hmi:tagtable:" + x) ?? Array.Empty<string>());
                     failed.AddRange(r.Failed?.Select(x => new ImportFailure { Path = x.Path, Error = "hmi:tagtable:" + x.Error }) ?? Array.Empty<ImportFailure>());
                 }
 
                 if (Directory.Exists(tempHmiScreens))
                 {
-                    var r = _session.ImportHmiScreensFromDirectory(hmiSoftwarePath, hmiScreenFolderPath, tempHmiScreens);
+                    var r = _hmiExchange.ImportHmiScreensFromDirectory(hmiSoftwarePath, hmiScreenFolderPath, tempHmiScreens);
                     imported.AddRange(r.Imported?.Select(x => "hmi:screen:" + x) ?? Array.Empty<string>());
                     failed.AddRange(r.Failed?.Select(x => new ImportFailure { Path = x.Path, Error = "hmi:screen:" + x.Error }) ?? Array.Empty<ImportFailure>());
                 }

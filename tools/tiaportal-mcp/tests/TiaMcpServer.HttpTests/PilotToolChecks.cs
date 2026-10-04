@@ -48,19 +48,19 @@ internal static class PilotToolChecks
 
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod("GetToolUsage")!;
         var usage = surface.Tool("GetToolUsage");
-        check(facade.IsStatic && !facade.GetCustomAttributes().Any()
-            && facade.GetParameters().Select(parameter => (parameter.Name, parameter.ParameterType, parameter.DefaultValue))
-                .SequenceEqual(usage.GetParameters().Select(parameter => (parameter.Name, parameter.ParameterType, parameter.DefaultValue))),
-            "Tool usage facade keeps its signature without a duplicate MCP registration");
+        check(facade == null && !usage.IsStatic,
+            "Tool usage resolves to the instance without a duplicate static entry");
         var arguments = usage.GetParameters().Select(parameter => parameter.DefaultValue).ToArray();
-        var forwarded = facade.Invoke(null, arguments)!;
+        var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!
+            .GetProperty("Provider", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+        var resolved = usage.Invoke(provider.GetService(usage.DeclaringType!), arguments)!;
         var direct = surface.Invoke(usage, arguments)!;
-        check(forwarded.GetType().GetProperty("Meta")!.GetValue(forwarded)!.ToString()
+        check(resolved.GetType().GetProperty("Meta")!.GetValue(resolved)!.ToString()
             == direct.GetType().GetProperty("Meta")!.GetValue(direct)!.ToString(),
-            "Tool usage facade returns the instance result");
+            "EngineServices and EngineSurface return the same tool usage result");
         var guide = surface.Invoke(surface.Tool("GetAuthoringGuide"), new object[] { "errors" })!;
         check(guide.GetType().GetProperty("Meta")!.GetValue(guide)!.ToString()
             == direct.GetType().GetProperty("Meta")!.GetValue(direct)!.ToString(),
-            "Guide instance reaches tool usage through the migration facade");
+            "Guide instance reaches its injected tool usage singleton");
     }
 }

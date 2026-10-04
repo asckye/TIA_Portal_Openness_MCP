@@ -15,6 +15,9 @@ namespace TiaMcpServer
             => Host = services ?? throw new ArgumentNullException(nameof(services));
 
         internal static void InitializeStandalone() { _ = Provider; }
+        internal static T Get<T>() where T : class => (T)Get(typeof(T));
+        internal static object? GetIfInitialized(Type type)
+            => (Host ?? (standalone.IsValueCreated ? standalone.Value : null))?.GetService(type);
         internal static object Get(Type type) => Provider.GetRequiredService(type);
     }
 }

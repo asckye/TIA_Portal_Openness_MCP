@@ -223,8 +223,6 @@ namespace TiaMcpServer.Siemens
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> IEngineeringSession.PlcScopes(PlcSoftware plc) => PlcScopes(plc);
         IEnumerable<(string Path, object Value)> IEngineeringSession.ScopedObjects(object group, string collection, string prefix, int depth) => ScopedObjects(group, collection, prefix, depth);
         PlcType? IEngineeringSession.ExportType(string softwarePath, string typePath, string exportPath, bool preservePath) => ExportType(softwarePath, typePath, exportPath, preservePath);
-        ResponseImportBatch IEngineeringSession.ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName, bool overwrite) => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
-        ResponseImportBatch IEngineeringSession.ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName, bool overwrite) => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
         List<CrossReferenceEntry>? IEngineeringSession.GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind) => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried, unitName, unitKind);
         (string TempDir, string XmlPath) IEngineeringSession.ExportBlockDocumentForAnalysis(string softwarePath, string blockPath) => ExportBlockDocumentForAnalysis(softwarePath, blockPath);
         ResponseMessage IEngineeringSession.ManageProjectLanguage(string action, string culture, bool dryRun) => ManageProjectLanguage(action, culture, dryRun);

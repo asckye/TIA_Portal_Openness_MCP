@@ -19,7 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void ValidateRuntimeTool(string name, string? description)
         {
             // Never create a Portal for an offline request; inspection stays available after a fault.
-            var portal = _services?.GetService(typeof(Siemens.Portal)) as Siemens.Portal ?? _portal;
+            var portal = EngineServices.GetIfInitialized(typeof(Siemens.Portal)) as Siemens.Portal;
             if (portal != null && PreflightLogic.NeedsProject(ToolTaxonomy.OperationOf(name, description).Operation, name))
                 portal.VerifyBinding(name);
         }

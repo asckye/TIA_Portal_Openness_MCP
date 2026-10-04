@@ -28,7 +28,6 @@ namespace TiaMcpServer.Siemens
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer { internal static readonly Siemens.Portal Portal = new Siemens.Portal(); }
 
     public class ResponseMessage { public string? Message { get; set; } public JsonObject? Meta { get; set; } }
     public class ResponseStringList : ResponseMessage { public IEnumerable<string>? Items { get; set; } }

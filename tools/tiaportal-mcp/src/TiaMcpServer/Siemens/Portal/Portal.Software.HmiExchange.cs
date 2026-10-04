@@ -155,11 +155,7 @@ namespace TiaMcpServer.Siemens
             return sb.ToString();
         }
 
-        public ResponseImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
-            => ((Services.HmiExchangeService)EngineServices.Get(typeof(Services.HmiExchangeService))).ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
 
-        public ResponseImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
-            => ((Services.HmiExchangeService)EngineServices.Get(typeof(Services.HmiExchangeService))).ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
 
     }
 }

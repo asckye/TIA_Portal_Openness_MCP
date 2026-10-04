@@ -619,12 +619,12 @@ END_DATA_BLOCK
 
             Program.LogDiag($"Unified HMI template validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
 
-            var connect = McpServer.Connect();
+            var connect = EngineServices.Get<SessionTools>().Connect();
             Program.LogDiag(connect.Message ?? "Connect completed");
-            var create = McpServer.CreateProject(projectDirectory, projectName);
+            var create = EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName);
             Program.LogDiag(create.Message ?? "Project created");
 
-            var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
+            var hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
             Program.LogDiag($"HMI add for template validation: ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}, error={hmi.Error}");
             if (hmi.Ok != true)
             {
@@ -665,8 +665,8 @@ END_DATA_BLOCK
                 try
                 {
                     var designJson = HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(templateFile, 800, 480);
-                    McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
-                    var apply = McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, designJson);
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
+                    var apply = EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, designJson);
                     var applyFailureCount = CountHmiApplyFailures(apply.Meta);
                     result["applied"] = true;
                     result["message"] = apply.Message ?? "";
@@ -677,7 +677,7 @@ END_DATA_BLOCK
                         result["error"] = "ApplyUnifiedHmiScreenDesignJson reported failed writes: " + applyFailureCount;
                     }
 
-                    var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+                    var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                     result["screenReadback"] = screens.Any(s => string.Equals(s, screenName, StringComparison.OrdinalIgnoreCase));
                     result["screenCount"] = screens.Length;
                     Program.LogDiag($"Template {Path.GetFileName(templateFile)}: readback={result["screenReadback"]}, screen={screenName}");
@@ -691,7 +691,7 @@ END_DATA_BLOCK
                 results.Add(result);
             }
 
-            var save = McpServer.SaveProject();
+            var save = EngineServices.Get<ProjectSessionTools>().SaveProject();
             Program.LogDiag(save.Message ?? "Project saved");
 
             var failed = results.Where(r => !Equals(r["applied"], true) || !Equals(r["screenReadback"], true) || (r.TryGetValue("applyFailures", out var af) && Convert.ToInt32(af ?? 0) > 0) || !string.IsNullOrWhiteSpace(r["error"]?.ToString())).ToList();
@@ -744,16 +744,16 @@ END_DATA_BLOCK
             var jsonReportPath = Path.Combine(reportDir, "unified_hmi_template_binding_validation.json");
 
             Program.LogDiag($"Unified HMI template binding validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
-            McpServer.Connect();
-            McpServer.CreateProject(projectDirectory, projectName);
-            var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
+            EngineServices.Get<SessionTools>().Connect();
+            EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName);
+            var plc = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
             if (plc.Ok != true) throw new InvalidOperationException("Failed to add PLC for HMI binding validation: " + plc.Error);
-            var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
+            var hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
             if (hmi.Ok != true) throw new InvalidOperationException("Failed to add Unified HMI for binding validation: " + hmi.Error);
 
             var connectionName = "HMI_Connection_1";
-            McpServer.EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
-            McpServer.EnsureUnifiedHmiTagTable("HMI_RT_1", "Template_Binding_Tags");
+            EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
+            EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTagTable("HMI_RT_1", "Template_Binding_Tags");
 
             var templates = Directory.GetFiles(templateDirectory, "*.json", SearchOption.TopDirectoryOnly)
                 .Where(path => Path.GetFileName(path).StartsWith("unified_", StringComparison.OrdinalIgnoreCase))
@@ -786,8 +786,8 @@ END_DATA_BLOCK
                     var root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
                     var requiredTags = ReadHmiTemplateTags(root);
                     currentTags = requiredTags;
-                    McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
-                    var apply = McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(template, 800, 480));
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
+                    var apply = EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(template, 800, 480));
                     var applyFailures = CountHmiApplyFailures(apply.Meta);
                     result["applyFailures"] = applyFailures;
                     if (applyFailures > 0)
@@ -796,12 +796,12 @@ END_DATA_BLOCK
                         results.Add(result);
                         continue;
                     }
-                    var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+                    var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                     result["screenReadback"] = screens.Any(s => string.Equals(s, screenName, StringComparison.OrdinalIgnoreCase));
 
                     foreach (var tag in requiredTags)
                     {
-                        McpServer.EnsureUnifiedHmiTag("HMI_RT_1", "Template_Binding_Tags", tag.Name, tag.DataType, "PLC_1", tag.PlcTag, connectionName, tag.Address);
+                        EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag("HMI_RT_1", "Template_Binding_Tags", tag.Name, tag.DataType, "PLC_1", tag.PlcTag, connectionName, tag.Address);
                         result["hmiTagsCreated"] = (int)result["hmiTagsCreated"]! + 1;
                     }
 
@@ -848,8 +848,8 @@ END_DATA_BLOCK
                     try
                     {
                         var tag = currentTags.FirstOrDefault(x => string.Equals(x.Name, tagName, StringComparison.OrdinalIgnoreCase));
-                        var bind = McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", screenName, itemName, propertyName, tagName, tag?.DataType ?? "Bool", tag?.PlcTag ?? "", "");
-                        var itemReadback = McpServer.DescribeHmiScreenItem("HMI_RT_1", screenName, itemName, 80);
+                        var bind = EngineServices.Get<UnifiedHmiTools>().BindUnifiedHmiTagDynamization("HMI_RT_1", screenName, itemName, propertyName, tagName, tag?.DataType ?? "Bool", tag?.PlcTag ?? "", "");
+                        var itemReadback = EngineServices.Get<HmiDescribeTools>().DescribeHmiScreenItem("HMI_RT_1", screenName, itemName, 80);
                         var bindFailure = DescribeHmiTagBindingFailure(bind, itemReadback);
                         if (bindFailure == null)
                         {
@@ -876,9 +876,9 @@ END_DATA_BLOCK
                         {
                             scriptCode = $"HMIRuntime.Tags.SysFct.SetBitInTag(\"{tagName}\", 0);";
                         }
-                        McpServer.EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
-                        McpServer.SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
-                        var readback = McpServer.DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
+                        EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
+                        EngineServices.Get<UnifiedHmiTools>().SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
+                        var readback = EngineServices.Get<UnifiedHmiTools>().DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
                         // 事件绑定必须回读到成员才算成功。
                         // 只看 Message 不算数 —— 失败路径（Project is null / 找不到 handler）同样带 Message，成员却是空的。
                         if (readback.Members?.Any() ?? false)
@@ -898,7 +898,7 @@ END_DATA_BLOCK
                 }
             }
 
-            McpServer.SaveProject();
+            EngineServices.Get<ProjectSessionTools>().SaveProject();
             var failed = results.Where(r => !(bool)r["screenReadback"]! || (r.TryGetValue("applyFailures", out var af) && Convert.ToInt32(af ?? 0) > 0) || (int)r["hmiTagsCreated"]! == 0 || (int)r["bindingsAttempted"]! != (int)r["bindingsSucceeded"]! || (int)r["eventsAttempted"]! != (int)r["eventsSucceeded"]!).ToList();
             WriteBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, failed.Count == 0, results);
             if (failed.Count > 0)
@@ -1202,18 +1202,18 @@ END_DATA_BLOCK
 
             WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, false, "PLC export precheck passed for mapped templates; TIA temporary-project validation is about to start.", mappingFile, plcExportCatalog, precheck, results);
             Program.LogDiag($"Mapped HMI template binding validation: project={projectName}, mappedTemplates={mappedFiles.Count}");
-            if (!TryRunMappedTiaStep("Connect", tiaStepTimeoutSeconds, () => McpServer.Connect(), results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
+            if (!TryRunMappedTiaStep("Connect", tiaStepTimeoutSeconds, () => EngineServices.Get<SessionTools>().Connect(), results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
             {
                 throw new TimeoutException("Mapped HMI template binding validation timed out or failed at TIA Connect. Report: " + reportPath);
             }
-            if (!TryRunMappedTiaStep("CreateProject", tiaStepTimeoutSeconds, () => McpServer.CreateProject(projectDirectory, projectName), results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
+            if (!TryRunMappedTiaStep("CreateProject", tiaStepTimeoutSeconds, () => EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName), results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
             {
                 throw new TimeoutException("Mapped HMI template binding validation timed out or failed at CreateProject. Report: " + reportPath);
             }
             ResponseDeviceProbe plc = null!;
             if (!TryRunMappedTiaStep("Add PLC", tiaStepTimeoutSeconds, () =>
                 {
-                    plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
+                    plc = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
                     if (plc.Ok != true) throw new InvalidOperationException("Failed to add PLC for mapped HMI binding validation: " + plc.Error);
                     return plc;
                 }, results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
@@ -1224,7 +1224,7 @@ END_DATA_BLOCK
             ResponseDeviceProbe hmi = null!;
             if (!TryRunMappedTiaStep("Add HMI", tiaStepTimeoutSeconds, () =>
                 {
-                    hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
+                    hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
                     if (hmi.Ok != true) throw new InvalidOperationException("Failed to add Unified HMI for mapped HMI binding validation: " + hmi.Error);
                     return hmi;
                 }, results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
@@ -1236,8 +1236,8 @@ END_DATA_BLOCK
             var connectionName = "Mapped_HMI_Connection_1";
             if (!TryRunMappedTiaStep("Ensure HMI connection/tag table", tiaStepTimeoutSeconds, () =>
                 {
-                    McpServer.EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
-                    McpServer.EnsureUnifiedHmiTagTable("HMI_RT_1", "Mapped_Template_Tags");
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTagTable("HMI_RT_1", "Mapped_Template_Tags");
                     return "ok";
                 }, results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
             {
@@ -1249,7 +1249,7 @@ END_DATA_BLOCK
                 ValidateOneMappedTemplate(kv.Key, kv.Value, connectionName, results);
             }
 
-            McpServer.SaveProject();
+            EngineServices.Get<ProjectSessionTools>().SaveProject();
             var failed = results.Where(r => string.Equals(r["status"]?.ToString(), "failed", StringComparison.OrdinalIgnoreCase)).ToList();
             var passed = failed.Count == 0 && results.Any(r => string.Equals(r["status"]?.ToString(), "validated", StringComparison.OrdinalIgnoreCase));
             WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, passed, "", mappingFile, plcExportCatalog, precheck, results);
@@ -1290,9 +1290,9 @@ END_DATA_BLOCK
                     var root = JsonNode.Parse(File.ReadAllText(templateFile, Encoding.UTF8))?.AsObject() ?? new JsonObject();
                     currentTags = ReadHmiTemplateTags(root);
                     Program.LogDiag($"Mapped HMI template binding validation: Ensure screen start template={templateName}, screen={screenName}");
-                    McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
                     Program.LogDiag($"Mapped HMI template binding validation: Apply screen start template={templateName}, screen={screenName}");
-                    var apply = McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(templateFile, 800, 480));
+                    var apply = EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(templateFile, 800, 480));
                     var applyFailures = CountHmiApplyFailures(apply.Meta);
                     result["applyFailures"] = applyFailures;
                     if (applyFailures > 0)
@@ -1300,14 +1300,14 @@ END_DATA_BLOCK
                         ((List<string>)result["errors"]!).Add("ApplyUnifiedHmiScreenDesignJson reported failed writes: " + applyFailures);
                     }
 
-                    var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+                    var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                     result["screenReadback"] = screens.Any(s => string.Equals(s, screenName, StringComparison.OrdinalIgnoreCase));
                     Program.LogDiag($"Mapped HMI template binding validation: Screen readback template={templateName}, readback={result["screenReadback"]}, applyFailures={applyFailures}");
 
                     foreach (var tag in currentTags)
                     {
                         Program.LogDiag($"Mapped HMI template binding validation: Ensure HMI tag {tag.Name}->{tag.PlcTag}");
-                        McpServer.EnsureUnifiedHmiTag("HMI_RT_1", "Mapped_Template_Tags", tag.Name, tag.DataType, "PLC_1", tag.PlcTag, connectionNameLocal, tag.Address);
+                        EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag("HMI_RT_1", "Mapped_Template_Tags", tag.Name, tag.DataType, "PLC_1", tag.PlcTag, connectionNameLocal, tag.Address);
                         result["hmiTagsCreated"] = (int)result["hmiTagsCreated"]! + 1;
                     }
 
@@ -1364,8 +1364,8 @@ END_DATA_BLOCK
                 try
                 {
                     var tag = currentTags.FirstOrDefault(x => string.Equals(x.Name, tagName, StringComparison.OrdinalIgnoreCase));
-                    var bind = McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", screenName, itemName, propertyName, tagName, tag?.DataType ?? "Bool", tag?.PlcTag ?? "", "");
-                    var itemReadback = McpServer.DescribeHmiScreenItem("HMI_RT_1", screenName, itemName, 80);
+                    var bind = EngineServices.Get<UnifiedHmiTools>().BindUnifiedHmiTagDynamization("HMI_RT_1", screenName, itemName, propertyName, tagName, tag?.DataType ?? "Bool", tag?.PlcTag ?? "", "");
+                    var itemReadback = EngineServices.Get<HmiDescribeTools>().DescribeHmiScreenItem("HMI_RT_1", screenName, itemName, 80);
                     var bindFailure = DescribeHmiTagBindingFailure(bind, itemReadback);
                     if (bindFailure == null)
                     {
@@ -1392,9 +1392,9 @@ END_DATA_BLOCK
                     {
                         scriptCode = $"HMIRuntime.Tags.SysFct.SetBitInTag(\"{tagName}\", 0);";
                     }
-                    McpServer.EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
-                    McpServer.SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
-                    var readback = McpServer.DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
+                    EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
+                    EngineServices.Get<UnifiedHmiTools>().SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
+                    var readback = EngineServices.Get<UnifiedHmiTools>().DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
                     // 事件绑定必须回读到成员才算成功。
                     // 只看 Message 不算数 —— 失败路径（Project is null / 找不到 handler）同样带 Message，成员却是空的。
                     if (readback.Members?.Any() ?? false)

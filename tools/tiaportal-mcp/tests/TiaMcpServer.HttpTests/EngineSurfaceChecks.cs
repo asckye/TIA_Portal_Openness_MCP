@@ -113,6 +113,11 @@ internal static class EngineSurfaceChecks
         }), "EngineSurface matches every tool in the woven engine catalog");
 
         var services = server.GetType("TiaMcpServer.EngineServices", true)!;
+        var lazy = services.GetField("standalone", All)!.GetValue(null)!;
+        var created = lazy.GetType().GetProperty("IsValueCreated")!;
+        check(services.GetMethod("GetIfInitialized", All)!.Invoke(null,
+            new object[] { server.GetType("TiaMcpServer.Siemens.Portal", true)! }) == null
+            && !(bool)created.GetValue(lazy)!, "Cold optional session lookup does not initialize the standalone provider");
         var host = services.GetProperty("Host", All)!;
         var previous = host.GetValue(null);
         var provider = new Provider();
@@ -125,9 +130,34 @@ internal static class EngineSurfaceChecks
                 "EngineSurface invokes the registered singleton with its injected dependency");
             check(surface.Target(fallback) == null && (string?)surface.Invoke(fallback, null) == "static" && provider.Requests == 3,
                 "EngineSurface invokes static tools with null and without resolving services");
+            var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
+            var optional = services.GetMethod("GetIfInitialized", All)!;
+            check(optional.Invoke(null, new object[] { portal }) == null,
+                "A host without a session never falls back to the standalone session");
+            var mcp = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+            check(!mcp.GetFields(All).Any(field => field.FieldType == portal || field.FieldType == typeof(IServiceProvider))
+                && !mcp.GetProperties(All).Any(property => property.PropertyType == portal || property.PropertyType == typeof(IServiceProvider)),
+                "McpServer owns no session or service provider state");
         }
         finally { host.SetValue(null, previous); }
         check(ReferenceEquals(host.GetValue(null), previous), "EngineSurface fixture restores the engine service provider");
+        var sessionType = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
+        var rootProvider = (IServiceProvider)services.GetProperty("Provider", All)!.GetValue(null)!;
+        var session = rootProvider.GetService(sessionType)!;
+        check(ReferenceEquals(session, engine.Target(engine.Method("GetState")))
+            && ReferenceEquals(session, services.GetMethod("GetIfInitialized", All)!.Invoke(null, new object[] { sessionType })),
+            "EngineSurface and optional session lookup share the container singleton");
+        var state = engine.Invoke(engine.Tool("GetState"), null)!;
+        check(!(bool)state.GetType().GetProperty("IsConnected")!.GetValue(state)!
+            && !(bool)sessionType.GetMethod("IsConnected")!.Invoke(session, null)!,
+            "Tool and kernel observe the same disconnected session");
+        try
+        {
+            services.GetMethod("SetServiceProvider", All)!.Invoke(null, new object[] { provider });
+            check(services.GetMethod("GetIfInitialized", All)!.Invoke(null, new object[] { sessionType }) == null,
+                "A session-free host cannot borrow an already initialized standalone session");
+        }
+        finally { host.SetValue(null, previous); }
         PilotToolChecks.Run(server, check);
     }
 }

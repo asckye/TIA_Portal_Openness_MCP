@@ -747,7 +747,7 @@ namespace TiaMcpServer
             var jsonPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".json");
             var mdPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".md");
 
-            var safety = McpServer.RunOnlineMonitoringSafetySelfTest();
+            var safety = EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest();
             var root = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -770,7 +770,7 @@ namespace TiaMcpServer
 
             try
             {
-                var connect = McpServer.Connect();
+                var connect = EngineServices.Get<SessionTools>().Connect();
                 root["connect"] = new JsonObject
                 {
                     ["message"] = connect.Message ?? "",
@@ -790,7 +790,7 @@ namespace TiaMcpServer
             {
                 try
                 {
-                    var attach = McpServer.AttachToOpenProject(options.ProjectName!);
+                    var attach = EngineServices.Get<ProjectSessionTools>().AttachToOpenProject(options.ProjectName!);
                     root["attachToOpenProject"] = new JsonObject
                     {
                         ["projectName"] = options.ProjectName,
@@ -811,7 +811,7 @@ namespace TiaMcpServer
 
             try
             {
-                var state = McpServer.GetState();
+                var state = EngineServices.Get<SessionTools>().GetState();
                 root["state"] = new JsonObject
                 {
                     ["isConnected"] = state.IsConnected == true,
@@ -826,7 +826,7 @@ namespace TiaMcpServer
 
             try
             {
-                var context = McpServer.ValidateAutomationContext("", "");
+                var context = EngineServices.Get<DevicesTools>().ValidateAutomationContext("", "");
                 root["automationContext"] = new JsonObject
                 {
                     ["message"] = context.Message ?? "",
@@ -858,7 +858,7 @@ namespace TiaMcpServer
 
             try
             {
-                var tables = McpServer.GetPlcWatchTables(softwarePath);
+                var tables = EngineServices.Get<PlcTablesTools>().GetPlcWatchTables(softwarePath);
                 root["watchTables"] = new JsonArray((tables.Items ?? Array.Empty<string>()).Select(x => JsonValue.Create(x)).ToArray());
             }
             catch (Exception ex)
@@ -868,7 +868,7 @@ namespace TiaMcpServer
 
             try
             {
-                var export = McpServer.ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName);
+                var export = EngineServices.Get<PlcTablesTools>().ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName);
                 root["watchTableExport"] = new JsonObject
                 {
                     ["message"] = export.Message ?? "",
@@ -891,7 +891,7 @@ namespace TiaMcpServer
 
             try
             {
-                var probe = McpServer.ProbePlcMonitorOnlineCapabilities(softwarePath);
+                var probe = EngineServices.Get<PlcTablesTools>().ProbePlcMonitorOnlineCapabilities(softwarePath);
                 root["onlineCapabilityProbe"] = probe.Data ?? new JsonObject();
                 root["onlineCapabilityProbeOk"] = probe.Ok == true;
             }
@@ -913,7 +913,7 @@ namespace TiaMcpServer
 
                 if (!string.IsNullOrWhiteSpace(selectedTable))
                 {
-                    var read = McpServer.ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50);
+                    var read = EngineServices.Get<PlcTablesTools>().ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50);
                     root["onlineCurrentValueRead"] = read.Data ?? new JsonObject();
                     root["onlineCurrentValueReadOk"] = read.Ok == true;
                     root["onlineCurrentValueReadMessage"] = read.Message ?? "";
@@ -983,7 +983,7 @@ namespace TiaMcpServer
 
             try
             {
-                var connect = McpServer.Connect();
+                var connect = EngineServices.Get<SessionTools>().Connect();
                 root["connect"] = new JsonObject
                 {
                     ["success"] = connect.Meta?["success"]?.GetValue<bool>() == true,
@@ -1001,7 +1001,7 @@ namespace TiaMcpServer
 
             try
             {
-                var probe = McpServer.ProbeGlobalLibrary(libraryPath, 1000);
+                var probe = EngineServices.Get<LibraryTools>().ProbeGlobalLibrary(libraryPath, 1000);
                 root["probe"] = GlobalLibraryProbeToJson(probe);
                 root["ok"] = probe.Ok == true;
             }
@@ -1079,13 +1079,13 @@ namespace TiaMcpServer
             try
             {
                 Program.LogDiag($"Global library MasterCopy import validation: project={projectName}, library={libraryPath}, masterCopy={masterCopyName}");
-                var connect = McpServer.Connect();
+                var connect = EngineServices.Get<SessionTools>().Connect();
                 root["connect"] = ResponseMessageToJson(connect);
 
-                var create = McpServer.CreateProject(projectDirectory, projectName);
+                var create = EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName);
                 root["createProject"] = ResponseMessageToJson(create);
 
-                var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
+                var hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
                 root["addHmi"] = new JsonObject
                 {
                     ["ok"] = hmi.Ok == true,
@@ -1097,24 +1097,24 @@ namespace TiaMcpServer
                 if (hmi.Ok != true)
                     throw new InvalidOperationException("Failed to add Unified HMI for MasterCopy import validation: " + hmi.Error);
 
-                root["ensureScreen"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480));
+                root["ensureScreen"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480));
 
-                var probe = McpServer.ProbeGlobalLibrary(libraryPath, 1000);
+                var probe = EngineServices.Get<LibraryTools>().ProbeGlobalLibrary(libraryPath, 1000);
                 root["probe"] = GlobalLibraryProbeToJson(probe);
                 if (probe.Ok != true)
                     throw new InvalidOperationException("ProbeGlobalLibrary failed before import: " + probe.Error);
 
-                var import = McpServer.ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, "HMI_RT_1", screenName, importedItemName, 40, 40);
+                var import = EngineServices.Get<LibraryTools>().ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, "HMI_RT_1", screenName, importedItemName, 40, 40);
                 root["import"] = GlobalLibraryImportToJson(import);
 
-                var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
+                var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                 root["screenReadback"] = new JsonArray(screens.Select(x => JsonValue.Create(x)).ToArray());
                 var screenExists = screens.Any(x => string.Equals(x, screenName, StringComparison.OrdinalIgnoreCase));
                 root["masterCopyImportReadbackOk"] = import.Ok == true;
                 root["screenExists"] = screenExists;
                 root["ok"] = import.Ok == true && screenExists;
 
-                root["save"] = ResponseMessageToJson(McpServer.SaveProject());
+                root["save"] = ResponseMessageToJson(EngineServices.Get<ProjectSessionTools>().SaveProject());
             }
             catch (Exception ex)
             {
@@ -1192,10 +1192,10 @@ namespace TiaMcpServer
             try
             {
                 Program.LogDiag($"Unified HMI action SyntaxCheck validation: project={projectName}");
-                root["connect"] = ResponseMessageToJson(McpServer.Connect());
-                root["createProject"] = ResponseMessageToJson(McpServer.CreateProject(projectDirectory, projectName));
+                root["connect"] = ResponseMessageToJson(EngineServices.Get<SessionTools>().Connect());
+                root["createProject"] = ResponseMessageToJson(EngineServices.Get<ProjectSessionTools>().CreateProject(projectDirectory, projectName));
 
-                var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", hmiSoftwarePath, "WinCCUnifiedPC");
+                var hmi = EngineServices.Get<DevicesTools>().AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", hmiSoftwarePath, "WinCCUnifiedPC");
                 root["addHmi"] = new JsonObject
                 {
                     ["ok"] = hmi.Ok == true,
@@ -1207,12 +1207,12 @@ namespace TiaMcpServer
                 if (hmi.Ok != true)
                     throw new InvalidOperationException("Failed to add Unified HMI for action SyntaxCheck validation: " + hmi.Error);
 
-                root["ensureScreen"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, 800, 480));
-                root["ensureTagTable"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName));
-                root["ensureTag"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiTag(hmiSoftwarePath, tagTableName, tagName, "Bool", "", tagName, "", "", false));
-                root["ensureButton"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiScreenItem(hmiSoftwarePath, screenName, buttonName, "Button", 40, 40, 160, 56, "Start"));
+                root["ensureScreen"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, 800, 480));
+                root["ensureTagTable"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName));
+                root["ensureTag"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag(hmiSoftwarePath, tagTableName, tagName, "Bool", "", tagName, "", "", false));
+                root["ensureButton"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreenItem(hmiSoftwarePath, screenName, buttonName, "Button", 40, 40, 160, 56, "Start"));
 
-                var build = McpServer.BuildUnifiedHmiButtonActionScript(actionKind, eventType, tagName);
+                var build = EngineServices.Get<UnifiedHmiTools>().BuildUnifiedHmiButtonActionScript(actionKind, eventType, tagName);
                 root["recipe"] = ResponseMessageToJson(build);
                 var script = build.Meta?["script"]?.ToString() ?? "";
                 if (string.IsNullOrWhiteSpace(script))
@@ -1220,7 +1220,7 @@ namespace TiaMcpServer
 
                 // 此 CLI 显式启用 SyntaxCheck，以取得真实语法检查结果；
                 // 普通写脚本路径仍默认关闭。
-                root["ensureAction"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, actionKind, tagName, syntaxCheck: true));
+                root["ensureAction"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, actionKind, tagName, syntaxCheck: true));
                 var setMeta = root["ensureAction"]?["meta"]?["setMeta"] as JsonObject;
                 var syntaxErrorCount = setMeta?["syntaxErrorCount"]?.GetValue<int>() ?? -1;
                 var syntaxWarningCount = setMeta?["syntaxWarningCount"]?.GetValue<int>() ?? -1;
@@ -1229,7 +1229,7 @@ namespace TiaMcpServer
                 root["syntaxCheckZeroError"] = syntaxErrorCount == 0;
                 root["syntaxCheckEvidence"] = syntaxErrorCount == 0 ? "SyntaxCheck 0 error" : "SyntaxCheck did not report 0 error.";
 
-                var readback = McpServer.DescribeUnifiedHmiButtonEventScript(hmiSoftwarePath, screenName, buttonName, eventType, 120);
+                var readback = EngineServices.Get<UnifiedHmiTools>().DescribeUnifiedHmiButtonEventScript(hmiSoftwarePath, screenName, buttonName, eventType, 120);
                 root["scriptReadback"] = new JsonObject
                 {
                     ["message"] = readback.Message ?? "",
@@ -1238,7 +1238,7 @@ namespace TiaMcpServer
                 };
 
                 root["ok"] = syntaxErrorCount == 0;
-                root["save"] = ResponseMessageToJson(McpServer.SaveProject());
+                root["save"] = ResponseMessageToJson(EngineServices.Get<ProjectSessionTools>().SaveProject());
             }
             catch (Exception ex)
             {
@@ -1312,7 +1312,7 @@ namespace TiaMcpServer
             {
                 try
                 {
-                    var connect = McpServer.Connect();
+                    var connect = EngineServices.Get<SessionTools>().Connect();
                     root["connect"] = new JsonObject
                     {
                         ["success"] = connect.Meta?["success"]?.GetValue<bool>() == true,
@@ -1326,7 +1326,7 @@ namespace TiaMcpServer
 
                 try
                 {
-                    var tables = McpServer.GetPlcTagTables(softwarePath).Items?.ToArray() ?? Array.Empty<string>();
+                    var tables = EngineServices.Get<PlcTablesTools>().GetPlcTagTables(softwarePath).Items?.ToArray() ?? Array.Empty<string>();
                     root["plcTagTables"] = new JsonArray(tables.Select(x => JsonValue.Create(x)).ToArray());
                     var selectedTables = SelectPlcTagTablesForPrecheck(tables, tagTableRegex, maxTagTablesToExport);
                     root["selectedPlcTagTablesForExport"] = new JsonArray(selectedTables.Select(x => JsonValue.Create(x)).ToArray());
@@ -1340,7 +1340,7 @@ namespace TiaMcpServer
                             var outPath = Path.Combine(tagExportDir, HmiTemplateBuilder.MakeSafeReportFileName(table) + ".xml");
                             try
                             {
-                                var export = McpServer.ExportPlcTagTable(softwarePath, table, outPath);
+                                var export = EngineServices.Get<PlcTablesTools>().ExportPlcTagTable(softwarePath, table, outPath);
                                 if (export.Meta?["success"]?.GetValue<bool>() == true)
                                 {
                                     exported.Add(outPath);

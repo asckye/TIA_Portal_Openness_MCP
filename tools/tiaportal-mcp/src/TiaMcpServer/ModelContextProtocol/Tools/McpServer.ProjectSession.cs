@@ -17,48 +17,11 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 
-
 namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
         #region project/session
-
-        public static ResponseGetProjects GetProjects()
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).GetProjects();
-
-        public static ResponseOpenProject OpenProject(
-            string path,
-            bool closeForeignProject = false,
-            string umacUserName = "",
-            string umacPassword = "",
-            string umacUserType = "")
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).OpenProject(path, closeForeignProject, umacUserName, umacPassword, umacUserType);
-
-        public static ResponseMessage AttachToOpenProject(
-            string projectName)
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).AttachToOpenProject(projectName);
-
-        public static ResponseMessage CreateProject(
-            string directoryPath,
-            string projectName,
-            bool closeForeignProject = false)
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).CreateProject(directoryPath, projectName, closeForeignProject);
-
-        public static ResponseScaffold ScaffoldProject(
-            string spec,
-            bool dryRun = true)
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).ScaffoldProject(spec, dryRun);
-
-        public static ResponseSaveProject SaveProject()
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).SaveProject();
-
-        public static ResponseSaveAsProject SaveAsProject(
-            string newProjectPath)
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).SaveAsProject(newProjectPath);
-
-        public static ResponseCloseProject CloseProject()
-            => ((ProjectSessionTools)EngineServices.Get(typeof(ProjectSessionTools))).CloseProject();
 
         internal static class SessionToolSupport
         {

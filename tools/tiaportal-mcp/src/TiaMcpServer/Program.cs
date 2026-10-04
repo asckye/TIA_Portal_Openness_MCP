@@ -700,7 +700,7 @@ namespace TiaMcpServer
                 var host = builder.Build();
 
                 // Set the service provider for the MCP server, to retrieve Portal with injected logger
-                McpServer.SetServiceProvider(host.Services);
+                EngineServices.SetServiceProvider(host.Services);
 
                 // Set the logger for the MCP server
                 McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
@@ -784,7 +784,7 @@ namespace TiaMcpServer
                     builder.Services.AddEngine(includeSession: Isolation.IsolatedWorkerHost.Current == null);
 
                     using var host = builder.Build();
-                    McpServer.SetServiceProvider(host.Services);
+                    EngineServices.SetServiceProvider(host.Services);
                     McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
                     var swallowedLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("TiaMcpServer.Swallowed");
                     // TIA_MCP_LOG_SWALLOWED=1 writes to stderr like the bridge and the workers; otherwise only Debug logging shows it.

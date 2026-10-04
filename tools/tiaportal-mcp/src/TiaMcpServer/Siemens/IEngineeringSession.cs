@@ -178,8 +178,6 @@ namespace TiaMcpServer.Siemens
         string? CrossReferenceRefusal(string softwarePath);
 
         PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false);
-        ResponseImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true);
-        ResponseImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true);
         List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind);
         (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath);
         ResponseMessage ManageProjectLanguage(string action = "read", string culture = "", bool dryRun = true);

@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 foreach (var item in Arr(key))
                 {
-                    try { PlcBuildAndImport(plcName, kind, item!.ToJsonString(), "", "", "", false, false); Step(kind, "ok"); }
+                    try { EngineServices.Get<PlcBuildTools>().PlcBuildAndImport(plcName, kind, item!.ToJsonString(), "", "", "", false, false); Step(kind, "ok"); }
                     catch (Exception ex) { Step(kind, "failed", ex.Message); resp.Ok = false; }
                 }
             }
@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string p; try { p = item?.GetValue<string>() ?? ""; } catch { p = ""; }
                 if (string.IsNullOrWhiteSpace(p)) continue;
                 var srcName = Path.GetFileName(p);
-                try { ImportPlcExternalSource(plcName, "", p); GenerateBlocksFromExternalSource(plcName, srcName); Step("scl", "ok", srcName); }
+                try { EngineServices.Get<PlcExternalSourcesTools>().ImportPlcExternalSource(plcName, "", p); EngineServices.Get<PlcExternalSourcesTools>().GenerateBlocksFromExternalSource(plcName, srcName); Step("scl", "ok", srcName); }
                 catch (Exception ex) { Step("scl", "failed", $"{srcName}: {ex.Message}"); resp.Ok = false; }
             }
         }
@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
             try
             {
-                var c = CompileAndDiagnosePlc(plcName);
+                var c = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc(plcName);
                 resp.CompileState = c.State; resp.CompileErrorCount = c.ErrorCount; resp.CompileWarningCount = c.WarningCount;
                 bool clean = (c.ErrorCount ?? 0) == 0;
                 Step("compile", clean ? "ok" : "failed", $"state={c.State} errors={c.ErrorCount} warnings={c.WarningCount}");
@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var c in candidates)
             {
                 if (string.IsNullOrWhiteSpace(c)) continue;
-                try { GetHmiProgramInfo(c); hmiPath = c; break; } catch { /* swallow(probe-optional): a missing HMI candidate permits the next exact candidate */ }
+                try { EngineServices.Get<HmiDescribeTools>().GetHmiProgramInfo(c); hmiPath = c; break; } catch { /* swallow(probe-optional): a missing HMI candidate permits the next exact candidate */ }
             }
 
             if (string.IsNullOrWhiteSpace(hmiPath))
@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else
             {
                 Step("hmiResolve", "ok", hmiPath);
-                try { EnsureUnifiedHmiConnection(hmiPath, connectionName, plcName); Step("hmiConnection", "ok"); }
+                try { EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection(hmiPath, connectionName, plcName); Step("hmiConnection", "ok"); }
                 catch (Exception ex) { Step("hmiConnection", "failed", ex.Message); resp.Ok = false; }
 
                 foreach (var item in Arr("hmiScreens"))
@@ -84,9 +84,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (string.IsNullOrWhiteSpace(screenName)) continue;
                     try
                     {
-                        EnsureUnifiedHmiScreen(hmiPath, screenName, IU(item, "width"), IU(item, "height"));
+                        EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen(hmiPath, screenName, IU(item, "width"), IU(item, "height"));
                         var design = item?["designJson"];
-                        if (design != null) ApplyUnifiedHmiScreenDesignJson(hmiPath, screenName, design.ToJsonString(), true);
+                        if (design != null) EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson(hmiPath, screenName, design.ToJsonString(), true);
                         Step("hmiScreen", "ok", screenName);
                     }
                     catch (Exception ex) { Step("hmiScreen", "failed", $"{screenName}: {ex.Message}"); resp.Ok = false; }
@@ -100,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var dt = IS(item, "hmiDataType", "Bool");
                     var plcTag = IS(item, "plcTag");
                     var address = IS(item, "address");
-                    try { EnsureUnifiedHmiTag(hmiPath, tagTable, tagName, dt, plcName, plcTag, connectionName, address, true); Step("hmiTag", "ok", tagName); }
+                    try { EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag(hmiPath, tagTable, tagName, dt, plcName, plcTag, connectionName, address, true); Step("hmiTag", "ok", tagName); }
                     catch (Exception ex) { Step("hmiTag", "failed", $"{tagName}: {ex.Message}"); resp.Ok = false; }
                 }
             }

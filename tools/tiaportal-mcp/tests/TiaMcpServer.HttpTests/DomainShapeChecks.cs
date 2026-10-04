@@ -96,11 +96,8 @@ internal static class DomainShapeChecks
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
                 EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls service: " + name, tool, method);
                 var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
-                bool needsForwarder = name == "ProbeGlobalLibrary" || name == "ImportMasterCopyFromGlobalLibrary";
-                check(needsForwarder ? forwarder != null && forwarder.IsStatic && !forwarder.GetCustomAttributes().Any()
-                    && forwarder.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))
-                        .SequenceEqual(tool.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))) : forwarder == null,
-                    name + " retains only its required attribute-less CLI forwarder");
+                check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tool.DeclaringType!)),
+                    name + " resolves directly without a static CLI forwarder");
             }
         }
         foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",
@@ -158,9 +155,6 @@ internal static class DomainShapeChecks
         check(ReferenceEquals(contract.GetProperty("Logger")!.GetValue(session), portal.GetField("_logger", all)!.GetValue(session)),
             "Online/download keeps the existing Portal logger instance and category");
 
-        var hmiForwarders = new[] { "GetHmiScreens", "GetHmiTagTables", "GetHmiTags", "GetHmiConnections",
-            "ExportHmiTagTable", "ImportHmiScreen", "ImportHmiTagTable", "GetHmiProgramInfo",
-            "DescribeHmiTagTable", "DescribeHmiTag", "DescribeHmiScreenItem" };
         var mcp = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         foreach (var domain in new[] { (Name: "HmiExchange", Count: 13), (Name: "HmiDescribe", Count: 7), (Name: "HmiTagDeletion", Count: 1) })
         {
@@ -186,9 +180,8 @@ internal static class DomainShapeChecks
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == called.MetadataToken),
                     name + " calls its service or shared compiler", tool, called);
                 var forwarder = mcp.GetMethod(name, all);
-                check(hmiForwarders.Contains(name) ? forwarder != null && forwarder.IsStatic
-                    && forwarder.GetCustomAttribute<McpServerToolAttribute>() == null : forwarder == null,
-                    name + " CLI forwarder matches actual callers");
+                check(forwarder == null && ReferenceEquals(surface.Target(tool), toolTarget),
+                    name + " CLI target is the registered instance without a static forwarder");
             }
         }
         foreach (var name in new[] { "TryGetHmiTagRoot", "TryGetHmiTagTablesCollection", "TryFindHmiTagTable",
@@ -196,6 +189,16 @@ internal static class DomainShapeChecks
             "TryImportEngineeringObjectIntoCollection", "GetBindingIdentity" })
             check(portal.GetMethods(all).Any(method => method.Name == name) && contract.GetMethod(name) != null,
                 name + " remains shared on the kernel through IEngineeringSession");
+        var types = server.GetType("TiaMcpServer.Siemens.Services.TypesService", true)!;
+        var exchange = server.GetType("TiaMcpServer.Siemens.Services.HmiExchangeService", true)!;
+        check(types.GetConstructors().Single().GetParameters().Select(p => p.ParameterType)
+            .SequenceEqual(new[] { contract, exchange })
+            && ReferenceEquals(types.GetField("_hmiExchange", all)!.GetValue(provider.GetService(types)), provider.GetService(exchange)),
+            "Types service injects the registered HMI exchange singleton without a kernel dependency cycle");
+        foreach (var name in new[] { "ImportHmiScreensFromDirectory", "ImportHmiTagTablesFromDirectory" })
+            check(contract.GetMethod(name) == null && portal.GetMethod(name, all) == null
+                && surface.Method(name).DeclaringType == exchange,
+                name + " resolves directly to the HMI exchange service without a kernel forwarder");
         check(surface.Property("LastImportNotes").DeclaringType!.Name == "HmiExchangeService"
             && portal.GetProperty("LastImportNotes", all) == null, "HMI import notes belong to the exchange service");
     }

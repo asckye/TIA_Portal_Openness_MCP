@@ -53,7 +53,7 @@ namespace TiaMcpServer.Cli
         private static int Gen(string[] args)
         {
             var json = SpecLoader.LoadAsJson(Positional(args));
-            var resp = McpServer.ScaffoldProject(json, Flag(args, "--dry-run"));
+            var resp = EngineServices.Get<ProjectSessionTools>().ScaffoldProject(json, Flag(args, "--dry-run"));
             return Report(resp, Flag(args, "--json"));
         }
 
@@ -68,7 +68,7 @@ namespace TiaMcpServer.Cli
         {
             EnsureConnectedOpen(Positional(args));
             var plc = Opt(args, "--plc") ?? "PLC_1";
-            var c = McpServer.CompileAndDiagnosePlc(plc);
+            var c = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc(plc);
             // 三态：ErrorCount==null 表示编译结果没读回来，不是零错误。
             // 编译结果不可读时必须退 1，避免脚本和 CI 将未知结果当成零错误。
             bool? clean = c.ErrorCount == null ? (bool?)null : c.ErrorCount.Value == 0;
@@ -83,7 +83,7 @@ namespace TiaMcpServer.Cli
         private static int Describe(string[] args)
         {
             EnsureConnectedOpen(Positional(args));
-            var tree = McpServer.GetProjectTree();
+            var tree = EngineServices.Get<DevicesTools>().GetProjectTree();
             if (Flag(args, "--json")) { Console.WriteLine(Json(tree)); }
             else
             {
@@ -92,7 +92,7 @@ namespace TiaMcpServer.Cli
                 var plc = Opt(args, "--plc");
                 if (!string.IsNullOrWhiteSpace(plc))
                 {
-                    var blocks = McpServer.GetBlocks(plc!, "");
+                    var blocks = EngineServices.Get<PlcBlocksTools>().GetBlocks(plc!, "");
                     Console.WriteLine();
                     Console.WriteLine($"== {plc} · 程序块 ==");
                     if (blocks.Items != null)
@@ -113,8 +113,8 @@ namespace TiaMcpServer.Cli
             var block = Opt(args, "--block") ?? throw new ArgumentException("export requires --block <path> (single block; bulk export not yet wired)");
             Directory.CreateDirectory(outDir);
             bool scl = Flag(args, "--scl");
-            if (scl) McpServer.ExportAsDocuments(plc, block, outDir);
-            else McpServer.ExportBlock(plc, block, outDir);
+            if (scl) EngineServices.Get<DocumentsTools>().ExportAsDocuments(plc, block, outDir);
+            else EngineServices.Get<PlcBlocksTools>().ExportBlock(plc, block, outDir);
             Console.WriteLine($"exported {block} ({(scl ? "SCL/documents" : "XML")}) -> {outDir}");
             return 0;
         }
@@ -130,7 +130,7 @@ namespace TiaMcpServer.Cli
             var xml = Directory.GetFiles(dir, "*.xml");
             if (xml.Length > 0)
             {
-                var r = McpServer.ImportBlocksFromDirectory(plc, "", dir, "", overwrite);
+                var r = EngineServices.Get<PlcBlocksTools>().ImportBlocksFromDirectory(plc, "", dir, "", overwrite);
                 Console.WriteLine(r.Message);
                 n += xml.Length;
             }
@@ -138,7 +138,7 @@ namespace TiaMcpServer.Cli
             foreach (var f in docs)
             {
                 var name = Path.GetFileNameWithoutExtension(f);
-                try { McpServer.ImportFromDocuments(plc, "", dir, name, overwrite ? "Override" : "None"); Console.WriteLine($"  imported {name}"); n++; }
+                try { EngineServices.Get<DocumentsTools>().ImportFromDocuments(plc, "", dir, name, overwrite ? "Override" : "None"); Console.WriteLine($"  imported {name}"); n++; }
                 catch (Exception ex) { Console.Error.WriteLine($"  skip {name}: {ex.Message}"); }
             }
             if (n == 0) Console.Error.WriteLine($"no .xml or .s7dcl files found under {dir}");
@@ -149,24 +149,24 @@ namespace TiaMcpServer.Cli
         {
             if (Flag(args, "--stop"))
             {
-                if (!McpServer.Portal.IsConnected()) McpServer.Connect(); // attach to the running headless instance
-                McpServer.Disconnect();                          // Dispose it
+                if (!EngineServices.Get<Siemens.Portal>().IsConnected()) EngineServices.Get<SessionTools>().Connect(); // attach to the running headless instance
+                EngineServices.Get<SessionTools>().Disconnect();                          // Dispose it
                 Console.WriteLine("prewarm: stopped (headless instance disposed).");
                 return 0;
             }
 
             Console.WriteLine("prewarm: cold-starting headless TIA and holding it open. Press Ctrl+C to stop.");
-            McpServer.Connect();
-            Console.WriteLine($"prewarm: ready ({McpServer.GetState().Message}). Subsequent `tia` commands will attach in ~1s.");
+            EngineServices.Get<SessionTools>().Connect();
+            Console.WriteLine($"prewarm: ready ({EngineServices.Get<SessionTools>().GetState().Message}). Subsequent `tia` commands will attach in ~1s.");
 
             var stop = new ManualResetEventSlim(false);
             Console.CancelKeyPress += (_, e) => { e.Cancel = true; stop.Set(); };
             while (!stop.IsSet)
             {
                 stop.Wait(60000);
-                if (!stop.IsSet) { try { _ = McpServer.GetState(); } catch { /* swallow(probe-optional): a failed heartbeat must keep the prewarm loop alive */ } } // heartbeat
+                if (!stop.IsSet) { try { _ = EngineServices.Get<SessionTools>().GetState(); } catch { /* swallow(probe-optional): a failed heartbeat must keep the prewarm loop alive */ } } // heartbeat
             }
-            try { McpServer.Disconnect(); } catch { /* swallow(teardown): prewarm shutdown remains best-effort */ }
+            try { EngineServices.Get<SessionTools>().Disconnect(); } catch { /* swallow(teardown): prewarm shutdown remains best-effort */ }
             Console.WriteLine("prewarm: stopped.");
             return 0;
         }
@@ -332,8 +332,8 @@ namespace TiaMcpServer.Cli
         {
             // Openness resolves a relative project path against the exe directory, not the shell's
             // working dir — confusing failures. Resolve against CWD so `tia describe foo.ap21` works.
-            if (!McpServer.Portal.IsConnected()) McpServer.Connect();
-            McpServer.OpenProject(Path.GetFullPath(projectPath));
+            if (!EngineServices.Get<Siemens.Portal>().IsConnected()) EngineServices.Get<SessionTools>().Connect();
+            EngineServices.Get<ProjectSessionTools>().OpenProject(Path.GetFullPath(projectPath));
         }
 
         private static int Report(ResponseScaffold resp, bool asJson)
