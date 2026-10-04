@@ -51,6 +51,14 @@ version identity, diagnostics, example retrieval and dependency planning belong
 in API-independent code; native assemblies remain compiled per exact release.
 Equal tool names do not imply compatible schemas or response envelopes.
 
+G7 is complete: engines and Studio locate bundled resources through `BundleLayout`
+and known install/development outputs, using `manifest/package-manifest.json` as
+the root marker. Complete bundles work outside the repository; existing caller
+probes remain compatibility fallbacks until 4.0. The V21 ecosystem catalog is
+embedded directly in both full engines. See [runtime layout](runtime-layout.md)
+for resource-specific overrides, engine/bridge/adapter paths and validation limits.
+G7 no longer blocks directory reorganization, which still waits until after phase 4.
+
 `GetToolUsage` is the single [tool and programming example library](official-tool-usage.md).
 It supplies actual schemas, operation-specific calls, input origins, expected
 results, language files and call sequences. Edit `reference/tool-examples` and

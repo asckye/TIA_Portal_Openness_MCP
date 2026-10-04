@@ -15,7 +15,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | G4 | 整理桌面端 | 配置器靠运行时改写 XAML 嵌入；两套主题引擎；两套本地化；`MainViewModel` 1,017 行并直接弹对话框 |
 | G5 | 契约与错误模型 | 292 个 `string …Json` 参数；1,353 处手拼 `JsonObject`；抛 `McpException` 与返回 `success=false` 并存；206 个空 `catch` |
 | G6 | 版本号单一来源 | 发布时在约 8 个文件中替换字符串；LegacyHost 健康检查硬编码 `3.1.0` |
-| G7 | 运行时与仓库布局解耦 | 引擎通过探测 `scripts/ecosystem/plc_tools_bridge.py` 定位仓库根，运行时读取 `reference/`、`templates/` |
+| G7 | 运行时与仓库布局解耦 | 已完成：运行时资源由安装布局定位，生态目录嵌入完整引擎；旧仓库探测仅作为兼容回退保留到 4.0 |
 | G8 | 职责分离 | `Runtime/`（Sharp7、OPC UA、PLCSIM Advanced、Web API）编译进 Openness 引擎；`Program` partial 承载报告和模板逻辑 |
 | G9 | 会话绑定安全 | 其他客户端改绑工程后，`Guard.MatchPlcName` 的“单 PLC 工程匹配任意名称”规则会把请求静默解析到错误 PLC |
 | G10 | 清除噪音 | 3 套 worker 协议（未接线的预览协议已在 P4-A 删除）、3 套 JSON 库、`#if COMMERCIAL` 死代码、166 条 `// 2.x.y:` 历史注释、`*Leftovers` 文件、注释中过时的工具数 |
@@ -81,7 +81,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
 | P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
 | P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；当时两个 TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
-| P1-07 | 目录整理第一批：设计验收页归入 `docs/development/design-qa.md`；启动器归入 `tools/tia-openness-studio/src/TiaOpenness.Launcher`；Glass 资源归入 `tools/tia-openness-studio/src/TiaOpenness.Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。整体目录重组在阶段 4 之后、G7 解耦之后进行 | done |
+| P1-07 | 目录整理第一批：设计验收页归入 `docs/development/design-qa.md`；启动器归入 `tools/tia-openness-studio/src/TiaOpenness.Launcher`；Glass 资源归入 `tools/tia-openness-studio/src/TiaOpenness.Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。G7 解耦已完成，目录重组的 G7 阻塞已解除；整体目录重组仍在阶段 4 完成后进行 | done |
 
 ### 阶段 2：公共层（兼容）
 
@@ -116,7 +116,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-17 | 源码契约检查改为按成员名定位（`scripts/checks/engine_sources.py`），随迁移失效的检查已修复，纯源码检查接入 CI `source-contracts` 任务 | done |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集（由 P3-16a/P3-16b 完成） | done |
-| P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构。设计见[运行时布局与清理](runtime-layout.md)（G7-1…7，原有探测保留为兼容回退到 4.0）。G7-1、G7-2 完成：P0-06 加入参考资料工具，`BundleLayout.cs` 与 `Check-BundleLayout.py`；G7-3 完成：引擎查找伴随与参考文件改用解析器（布局矩阵 37 项，仓库外交付包原始响应 0 差异；质量 PDF 一项因本机缺少 reportlab 未验证）；G7-4 完成：安装根、CLI 交付包根与同级引擎查找改用解析器，原探测保留为回退（布局矩阵 56 项，仓库外交付包 9 项比对仅时间字段不同）；G7-5 完成：Studio 交付包根、引擎路径、更新检查、桥接与适配器目录改用解析器，worktree 的 `.git` 文件不再被当作安装包；C# 5 启动器保留原探测，由 `Check-BundleLayout.py` 核对其路径（Core 118、GUI 1407、配置 197，仓库外重定位 1921 份结果一致）；G7-6 完成：V21 生态目录由仓库 JSON 直接嵌入引擎，交付包缺少该文件时仍可查询（生态检查两版各 75 项，含 HTTP） | doing |
+| P3-xx | 运行时资源改由安装布局优先定位。实现见[运行时布局与清理](runtime-layout.md)（G7-1…7，原有探测保留为兼容回退到 4.0）。G7-1、G7-2 完成：P0-06 加入参考资料工具，`BundleLayout.cs` 与 `Check-BundleLayout.py`；G7-3 完成：引擎查找伴随与参考文件改用解析器（布局矩阵 37 项，仓库外交付包原始响应 0 差异；质量 PDF 一项因本机缺少 reportlab 未验证）；G7-4 完成：安装根、CLI 交付包根与同级引擎查找改用解析器，原探测保留为回退（布局矩阵 56 项，仓库外交付包 9 项比对仅时间字段不同）；G7-5 完成：Studio 交付包根、引擎路径、更新检查、桥接与适配器目录改用解析器，worktree 的 `.git` 文件不再被当作安装包；C# 5 启动器保留原探测，由 `Check-BundleLayout.py` 核对其路径（Core 118、GUI 1407、配置 197，仓库外重定位 1921 份结果一致）；G7-6 完成：V21 生态目录由仓库 JSON 直接嵌入引擎，交付包缺少该文件时仍可查询（生态检查两版各 75 项，含 HTTP）。G7-7 完成：文档改为现行布局说明，合并 CHANGELOG，关闭 G7 并解除 P1-07 的 G7 前置阻塞，整体目录重组仍待阶段 4 完成 | done |
 
 ### 阶段 4：合并三套实现（兼容，需要真机）
 

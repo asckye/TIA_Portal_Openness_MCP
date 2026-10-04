@@ -32,7 +32,7 @@
 | `ValidatePlcXmlSchemas` | 用本地匹配版本 XSD 检查识别出的 XML 片段。`fragmentSchemasPassed` 不等于整文档可导入。 |
 | `DecodePlcSimaticMl` | V21 FC/FB 的可读逻辑与元数据分析；V20、S7DCL 和未知语义有明确限制。 |
 | `ManageUnifiedCwcPackage` | 检查 CWC 文件夹并打包新 ZIP；不执行 JavaScript、不部署到 TIA、不认证运行行为。CWC 与面板库类型不同。 |
-| `ReadV21EcosystemCatalog` | 查询随包生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
+| `ReadV21EcosystemCatalog` | V20/V21 完整引擎查询嵌入的 V21 生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
 
 完整引擎的 `ReadToolBatch`、`PreviewToolBatch` / `ApplyToolBatch` 可组合支持的工具。批处理失败可能保留先前修改，不是原子事务；原生 `RunToolsInTransaction` 只支持自身声明的同步编辑白名单。不能把编译、保存、在线、文件或嵌套编排塞入事务。
 
@@ -46,11 +46,19 @@
 
 在运行 MCP 的电脑上，按 [伴随工具说明](../../tools/third-party/siemens-plc-tools/README.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
 
+V20/V21 完整引擎通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及
+`scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。生态文件保留 `TIA_MCP_REPOSITORY_ROOT`
+显式覆盖，具体校验、默认 Python 路径及保留到 4.0 的兼容回退见[运行时布局](../development/runtime-layout.md)。
+此覆盖不影响嵌入的生态目录，也不扩展 Foundation 的工具范围。
+
 `code` 提供代码分析、测试、文档与差异；`iol` 提供 I/O 与标签交换；`net`、`sim`、`sup`、`trace` 按各自配置处理网络、仿真、监督及跟踪。部分命令执行项目 Python、访问设备或抓包，不应把所有伴随命令当作离线只读检查。上游 PDF 文档命令所需的 pandoc/TeX 等环境与本项目 ReportLab 审计报告是不同路线。
 
 ## 外部参考与尚未集成项
 
 [生态目录快照](../../reference/v21-ecosystem.json)保存当次检索证据。上游 README 声称支持 V21，不等于本项目验收；`not_confirmed`、`adaptation_required`、`unsupported_v21` 不能视为可用。目录数量与 GitHub 星数均不作为成熟度或覆盖率结论。
+
+这份 JSON 是目录的唯一可编辑源，构建时直接嵌入 V20/V21 引擎；随包副本缺失不影响
+`ReadV21EcosystemCatalog`，修改磁盘副本也不会覆盖编译进引擎的数据。目录更新需要重新构建。
 
 - 官方 Openness Explorer 可辅助检查对象模型；Project Check、Modular Application Creator 和 SiOME 仍需独立安装及各自环境，没有自动安装或整包嵌入。
 - TiaImportExport.VSExt 的已审阅公开树不足以复用完整扩展核心；TIAOpennessManager / AnyAutomation Studio 也未建立可直接并入的许可核心证据。

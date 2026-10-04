@@ -64,7 +64,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 | 命令（仓库根目录） | 守护范围 |
 |---|---|
 | `python scripts/checks/Check-Repository.py --no-binaries` | 文档、入口与下列五个静态门禁 |
-| `python scripts/checks/Check-BundleLayout.py` | 资源路径、版本管理与交付清单 |
+| `python scripts/checks/Check-BundleLayout.py` | 资源代码表、Git 文件集、交付校验清单及 Launcher/GUI 路径一致性 |
 | `python scripts/checks/Check-SwallowedExceptions.py` | 吞异常标记及只减不增基线 |
 | `python scripts/checks/Check-CommentHygiene.py` | 注释与 Leftovers 基线 |
 | `python scripts/checks/Check-McpText.py` | MCP 中文字面量基线 |
@@ -128,10 +128,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
 `Check-Repository.py` 同时运行纯 Python 的 [BundleLayout 检查](../../scripts/checks/Check-BundleLayout.py)：
-读取资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `Validate-Bundle.ps1`
-实际执行的资源清单中；不调用 dotnet，也不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证
-Logic（offline/offline-v20）与 Studio Core，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
-和中文/空格/尾分隔符路径；缺失资源不能借用祖先仓库。GUI 只链接解析器，尚无调用方。
+读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `Validate-Bundle.ps1`
+实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
+不调用 dotnet，也不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
+（offline/offline-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
+和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
+仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
+[运行时布局](runtime-layout.md)。Markdown 本地链接及入口路径统一由
+`python scripts/checks/Check-Repository.py --no-binaries` 检查。
 `Check-Repository.py` 同时运行纯 Python 的吞异常门禁；offline-checks CI 还运行其自检，不依赖 dotnet。
 门禁扫描 `tools/tiaportal-mcp/src`、`tools/openness-shared`、`tools/tia-openness-studio/src`，
 排除 `bin`/`obj`（含 `-v20`）、`Generated` 目录、`.g.cs`/`.g.i.cs`/`.generated.cs`/`.designer.cs`

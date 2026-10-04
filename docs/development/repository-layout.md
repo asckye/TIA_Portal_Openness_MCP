@@ -15,7 +15,7 @@
 | `tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml`、`Controls/GlassLogView.cs`、`Fonts` | 工作台内的 Glass 样式、日志视图和字体；字体许可及来源记录与字体同目录 |
 | `tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests` | .NET 10 配置控制台测试 |
 | `tools/tia-openness-studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |
-| `tools/openness-shared` | 无 Siemens 版本依赖的环境信息、参数、诊断、导入依赖规划和统一示例库 |
+| `tools/openness-shared` | 无 Siemens 版本依赖的安装布局解析、环境信息、参数、诊断、导入依赖规划和统一示例库 |
 | `tools/third-party` | 固定版本的第三方组件及其许可证 |
 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` | 构建生成的八个 MCP 运行目录 |
 | `runtime/studio` | 统一桌面程序及 `bridge/adapters` 内的八版适配器 |
@@ -35,6 +35,18 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 `TiaPublicApiRoot` 指定这些文件夹的父目录；单工程显式 `SiemensEngineeringDirectory` 优先。
 具体命令见[验证分层](validation.md)。SDK 不随仓库或公开交付包分发。
 `bin-build`、本机输出、用户工程、客户端配置及设计交接素材不属于版本化源码。
+
+## 运行时资源定位
+
+引擎与 Studio 使用 [`BundleLayout.cs`](../../tools/openness-shared/BundleLayout.cs) 从已知安装/开发输出定位
+含 `manifest/package-manifest.json` 的包根。完整包放在仓库外仍可使用，无需 `.git`。
+指南、Python 桥接和 CLI 模板相对包根读取；V21 生态目录直接嵌入 V20/V21 引擎，随包 JSON 仅是参考副本。
+`TIA_MCP_REPOSITORY_ROOT` 只沿用生态文件调用方的覆盖语义，不是所有资源的全局覆盖。
+
+安装引擎在 `runtime/<RuntimeDirectory>`；Studio 在 `runtime/studio`，原生桥接及其按版本的适配器在
+`runtime/studio/bridge` 及其 `adapters` 子目录。版本路径取自 `TiaVersionCatalog`，生成的二进制不列入交付资源代码表。
+开发输出候选、各调用方保留到 4.0 的兼容回退及新增资源流程见[运行时布局](runtime-layout.md)。
+新增调用方复用解析器，不新增仓库结构探测。G7 已解除目录重组的前置阻塞，整体目录重组仍待阶段 4 完成后进行。
 
 ## 测试工程
 
