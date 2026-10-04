@@ -30,6 +30,21 @@ class Domain:
             raise ValueError('Unsupported domain configuration version')
         self.name, self.label = data['domain'], data['label']
         self.engine = tuple(data['engine']['types'])
+        self.method_scopes = data['engine'].get('methodScopes', {})
+        if not isinstance(self.method_scopes, dict) or not self.method_scopes.keys() <= set(self.engine):
+            raise ValueError('Method scopes must name configured engine types')
+        for type_name, entries in self.method_scopes.items():
+            if not isinstance(entries, list) or not entries:
+                raise ValueError('Method scope include lists must not be empty')
+            signatures = set()
+            for entry in entries:
+                signature = entry.get('signature', '')
+                if not entry.get('method') or not signature.endswith(')') or '(' not in signature \
+                        or method_name(signature) != entry['method'] or not owner(dict(caller=signature), type_name):
+                    raise ValueError('Method scope requires a matching method name and full IL signature')
+                if signature in signatures:
+                    raise ValueError('Duplicate method scope signature: ' + signature)
+                signatures.add(signature)
         self.engine_releases = data['engine']['releases']
         self.releases = data['adapter']['releases']
         self.hosts = data['hosts']
@@ -62,12 +77,15 @@ class Domain:
 
     @property
     def acceptance_rule(self):
-        return dict(
+        rule = dict(
             id='expanded-native-paths-exact-dedup-v1',
             paths='Default and switched per-tool expanded native call graphs must equal the baseline.',
             default=f'The full-category member multiset must equal the baseline after collapsing each direct {self.label} member into one local primitive site; no other delta is allowed.',
             shared=f'Engine {self.label} direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside {self.label}.',
             evidence='Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.')
+        if self.method_scopes:
+            rule['methodScopes'] = self.method_scopes
+        return rule
 
 
 def read(path):
@@ -97,8 +115,70 @@ def owned(row, prefixes):
     return any(owner(row, prefix) for prefix in prefixes)
 
 
-def outside(sites, prefixes):
-    return Counter((s['caller'], s['category'], s['opcode'], s['member']) for s in sites if not owned(s, prefixes))
+def method_name(signature):
+    return signature.split('::')[-1].split('(')[0]
+
+
+def matches_entry(method, entry):
+    return method['owner'] == entry['type'] and method_name(method['name']) == entry['method'] \
+        and ('signature' not in entry or method['name'] == entry['signature'])
+
+
+class EngineScope:
+    def __init__(self, domain, document, counterparts=()):
+        self.domain = domain
+        self.methods = {m['name']: m for m in document['methods']}
+        self.selected = set()
+        for type_name, entries in domain.method_scopes.items():
+            for entry in entries:
+                matches = [m['name'] for m in document['methods'] if matches_entry(m, dict(entry, type=type_name))]
+                known = any(matches_entry(m, dict(entry, type=type_name)) for doc in counterparts for m in doc['methods'])
+                if len(matches) > 1 or (not matches and not known):
+                    raise ValueError('Scoped method missing or ambiguous: ' + entry['signature'])
+                self.selected.update(matches)
+        # Follow only compiler-generated children for ownership, never ordinary
+        # callees. A shared closure constructor belongs to every referring root.
+        generated = {key for key, m in self.methods.items()
+            if ('<' in m['owner'] or method_name(key).startswith('<')) and '__TiaMcpNativeCall' not in m['owner']}
+        parents = {}
+        for root, method in self.methods.items():
+            if root in generated or '__TiaMcpNativeCall' in method['owner'] or not owned(method, tuple(domain.method_scopes)):
+                continue
+            pending, visited = [root], set()
+            while pending:
+                key = pending.pop()
+                if key in visited:
+                    continue
+                visited.add(key)
+                current = self.methods[key]
+                children = {row['operand'].get('definition') for row in current.get('il') or []} & generated
+                children.update(name for name, child in self.methods.items() if child['owner'] in current.get('states', []))
+                for child in children:
+                    parents.setdefault(child, set()).add(root)
+                pending.extend(children - visited)
+        self.selected.update(key for key, roots in parents.items() if roots <= self.selected)
+        self.entries = {key for key, method in self.methods.items() if self(method) and '__TiaMcpNativeCall' not in method['owner']}
+        if domain.method_scopes:
+            for tool in domain.tools:
+                for entry in tool['entryMethods']:
+                    matches = [key for key, method in self.methods.items() if matches_entry(method, entry)]
+                    if len(matches) != 1:
+                        raise ValueError('Tool entry missing or ambiguous: ' + tool['name'])
+                    self.entries.update(matches)
+
+    def __call__(self, row):
+        return owned(row, tuple(t for t in self.domain.engine if t not in self.domain.method_scopes)) \
+            or (row.get('name') or row.get('caller')) in self.selected
+
+    def body(self, row):
+        # Woven wrappers are verified by the weaver and the exact caller/member
+        # inventory; moving a selected native site removes its old wrapper.
+        return self(row) or ('__TiaMcpNativeCall' in row['owner'] and owned(row, tuple(self.domain.method_scopes)))
+
+
+def outside(sites, prefixes=(), scope=lambda row: False):
+    return Counter((s['caller'], s['category'], s['opcode'], s['member']) for s in sites
+        if not owned(s, prefixes) and not scope(s))
 
 
 def native_counts(sites):
@@ -109,11 +189,11 @@ def member_counts(sites):
     return Counter((row['category'], row['opcode'], row['member']) for row in sites)
 
 
-def moved_members(before, after, prefixes):
+def moved_members(before, after, prefixes, scopes=(lambda row: False, lambda row: False)):
     # Keep every category and every original/current declaring caller in the
     # generated evidence; repeated sites in one method retain their count.
-    selected = lambda rows: [row for row in rows if any(owner(row, prefix) for prefix in prefixes)]
-    old, new = selected(before), selected(after)
+    old, new = ([row for row in rows if owned(row, prefixes) or scope(row)]
+                for rows, scope in zip((before, after), scopes))
     keys = sorted(member_counts(old).keys() | member_counts(new).keys())
     return [dict(category=category, opcode=opcode, member=member,
         before=dict(sorted(Counter(row['caller'] for row in old
@@ -123,7 +203,7 @@ def moved_members(before, after, prefixes):
         for category, opcode, member in keys]
 
 
-def expanded_engine_inventory(document, sites, domain):
+def expanded_engine_inventory(document, sites, domain, scope=None):
     methods = Paths([document]).methods
     result = member_counts([row for row in sites if not owned(row, domain.local_primitives)])
 
@@ -145,8 +225,14 @@ def expanded_engine_inventory(document, sites, domain):
 
     # Expand each original service call site once, not every path from every
     # public tool; existing engine helper methods already have their own sites.
-    for method in methods.values():
-        if not owned(method, domain.engine):
+    reached = None
+    if domain.method_scopes:
+        paths = Paths([document])
+        for key in scope.entries:
+            paths.build(key)
+        reached = paths.reached
+    for key, method in methods.items():
+        if owned(method, domain.local_primitives) or (key not in reached if reached is not None else not owned(method, domain.engine)):
             continue
         for instruction in method['il']:
             target = normalize(instruction['operand'].get('definition') or '')
@@ -155,16 +241,18 @@ def expanded_engine_inventory(document, sites, domain):
     return result
 
 
-def expected_local_inventory(sites, domain):
-    moved = member_counts([row for row in sites if owned(row, domain.engine) and row['category'] == 'direct'])
+def expected_local_inventory(sites, domain, scope=None):
+    selected = scope or (lambda row: owned(row, domain.engine))
+    moved = member_counts([row for row in sites if selected(row) and row['category'] == 'direct'])
     return member_counts(sites) - moved + Counter({key: 1 for key in moved})
 
 
-def compare_default_inventory(before, after, domain):
+def compare_default_inventory(before, after, domain, scopes=None):
     # Derive the only allowed delta from the baseline, never from current sites.
-    old, current, expected = member_counts(before), member_counts(after), expected_local_inventory(before, domain)
-    prefixes = domain.engine + domain.local_primitives
-    moves = moved_members(before, after, prefixes)
+    scopes = scopes or (lambda row: owned(row, domain.engine),) * 2
+    old, current, expected = member_counts(before), member_counts(after), expected_local_inventory(before, domain, scopes[0])
+    prefixes = domain.local_primitives
+    moves = moved_members(before, after, prefixes, scopes)
     report = dict(defaultFullInventoryEqual=old == current,
         defaultDeduplicatedInventoryEqual=expected == current,
         defaultPhysicalSiteCounts=dict(before=len(before), after=len(after)),
@@ -180,11 +268,11 @@ def compare_default_inventory(before, after, domain):
     errors = [] if expected == current else [f'Default physical inventory differs from the exact {domain.label} deduplication delta']
     # Check ownership as well as totals: one domain must never pay for another
     # domain's missing or extra copy of the same Siemens member.
-    selected_before = [s for s in before if owned(s, prefixes)]
-    selected_after = [s for s in after if owned(s, prefixes)]
-    if expected_local_inventory(selected_before, domain) != member_counts(selected_after):
+    selected_before = [s for s in before if owned(s, prefixes) or scopes[0](s)]
+    selected_after = [s for s in after if owned(s, prefixes) or scopes[1](s)]
+    if expected_local_inventory(selected_before, domain, scopes[0]) != member_counts(selected_after):
         errors.append('Default domain inventory differs from its exact deduplication delta')
-    if outside(before, prefixes) != outside(after, prefixes):
+    if outside(before, prefixes, scopes[0]) != outside(after, prefixes, scopes[1]):
         errors.append('Default non-domain inventory changed')
     return errors, report
 
@@ -412,9 +500,10 @@ class Paths:
         return graph.canonical(root)
 
 
-def compare_paths(before, after, prefix):
+def compare_paths(before, after, prefix, entries=None):
     errors, evidence = [], []
-    originals = sorted(key for key, method in before.methods.items() if method['owner'].split('/')[0] == prefix)
+    originals = sorted(key for key, method in before.methods.items() if method['owner'].split('/')[0] == prefix
+        and (entries is None or key in entries))
     for key in originals:
         if key not in after.methods:
             errors.append('Missing original method: ' + key)
@@ -432,10 +521,11 @@ def compare_paths(before, after, prefix):
     return errors, evidence
 
 
-def compare_host_paths(before, after, types):
+def compare_host_paths(before, after, types, scope=None):
     errors, evidence = [], []
     for prefix in types:
-        failures, rows = compare_paths(before, after, prefix)
+        entries = {normalize(key) for key in scope.entries} if scope is not None else None
+        failures, rows = compare_paths(before, after, prefix, entries)
         errors += failures
         evidence += rows
     return errors, evidence
@@ -446,17 +536,18 @@ def check_tools(domain, rows):
     for tool in domain.tools:
         for entry in tool['entryMethods']:
             matches = [row for row in rows if owner(dict(caller=row['method']), entry['type'])
-                and '::' + entry['method'] + '(' in row['method']]
+                and '::' + entry['method'] + '(' in row['method']
+                and ('signature' not in entry or row['method'] == normalize(entry['signature']))]
             if len(matches) != 1:
                 errors.append('Tool entry missing or ambiguous: ' + tool['name'] + ' -> '
                               + entry['type'] + '::' + entry['method'])
     return errors
 
 
-def all_methods(before, after, raw=False, exclude=()):
-    select = lambda doc: {m['name']: m['raw' if raw else 'semantic'] for m in doc['methods']
-        if not owned(m, exclude)}
-    old, new = select(before), select(after)
+def all_methods(before, after, raw=False, exclude=(), scopes=(lambda row: False, lambda row: False)):
+    select = lambda doc, scope: {m['name']: m['raw' if raw else 'semantic'] for m in doc['methods']
+        if not owned(m, exclude) and not scope(m)}
+    old, new = select(before, scopes[0]), select(after, scopes[1])
     return [key for key in sorted(old.keys() | new.keys()) if old.get(key) != new.get(key)], len(old), len(new)
 
 
@@ -504,7 +595,8 @@ class SelfTests(unittest.TestCase):
 
     @staticmethod
     def method(name, instructions, states=(), handlers=()):
-        return dict(name=name, owner=name.split('::')[0], semantic=name, il=[dict(offset=i, **row)
+        body = json.dumps([instructions, states, handlers], sort_keys=True)
+        return dict(name=name, owner=name.split('::')[0].rsplit(' ', 1)[-1], semantic=body, raw=body, il=[dict(offset=i, **row)
             for i, row in enumerate(instructions)], states=states, handlers=handlers)
 
     @staticmethod
@@ -736,6 +828,156 @@ class SelfTests(unittest.TestCase):
         host['il'][0]['op'] = 'ldarg.1'
         self.assertNotEqual(old, Paths([dict(methods=[host])]).build(host['name']))
 
+    def scoped_config(self):
+        config = self.config()
+        config['engine']['methodScopes'] = {'sample.Engine': [dict(method='Run', signature='System.Void sample.Engine::Run()')]}
+        config['tools'][0]['entryMethods'] = [dict(type='sample.Engine', method='Run', signature='System.Void sample.Engine::Run()')]
+        return config
+
+    def scoped_proof(self, mutation=None):
+        config = self.scoped_config()
+        # The public tool can itself be outside the migration's include list.
+        config['tools'][0]['entryMethods'] = [dict(type='sample.Engine', method='Tool')]
+        domain = Domain(config)
+        selected, untouched, tool = ('System.Void sample.Engine::' + name for name in ('Run()', 'Run(System.Int32)', 'Tool()'))
+        target, local = 'System.Void sample.Primitives::Read()', 'System.Void sample.Local.Primitives::Read()'
+        native = self.call('Siemens::Read()', True)
+        helper = self.method(untouched, [native, self.call('Siemens::Other()', True), self.ret()])
+        entry = self.method(tool, [self.call(selected, definition=selected), self.call(untouched, definition=untouched), self.ret()])
+        old = self.method(selected, [native, native, self.ret()])
+        default = self.method(selected, [self.call(local, definition=local), self.call(local, definition=local), self.ret()])
+        shared = self.method(selected, [self.call(target, definition=target), self.call(target, definition=target), self.ret()])
+        primitive, local_primitive = (self.method(name, [native, self.ret()]) for name in (target, local))
+        host = self.method('sample.Foundation::Read()', [self.ret()])
+        site = dict(caller=selected, member='Siemens::Read()', category='direct', opcode='callvirt')
+        untouched_sites = [dict(site, caller=untouched), dict(site, caller=untouched, member='Siemens::Other()')]
+        docs = dict(baseline_engine=[old, helper, entry], default_engine=[default, helper, entry, local_primitive],
+            shared_engine=[shared, helper, entry], baseline_adapter=[host], current_adapter=[host, primitive])
+        inventories = dict(baseline_engine=[site, site] + untouched_sites,
+            default_engine=[dict(site, caller=local)] + untouched_sites, shared_engine=untouched_sites,
+            baseline_adapter=[], current_adapter=[dict(site, caller=target)])
+        if mutation == 'unscoped':
+            for variant in ('default_engine', 'shared_engine'):
+                docs[variant][1] = self.method(untouched, [self.call('Siemens::Changed()', True), self.ret()])
+        elif mutation == 'direct':
+            docs['shared_engine'][0] = self.method(selected, [native, self.call(target, definition=target), self.ret()])
+            inventories['shared_engine'] = untouched_sites + [site]
+        elif mutation == 'new-helper':
+            helper_name = 'System.Void sample.Engine::NewHelper()'
+            config['engine']['methodScopes']['sample.Engine'].append(dict(method='NewHelper', signature=helper_name))
+            for variant in ('default_engine', 'shared_engine'):
+                instructions = [dict(op=row['op'], flow=row['flow'], operand=row['operand']) for row in docs[variant][0]['il']]
+                docs[variant].append(self.method(helper_name, instructions))
+                docs[variant][0] = self.method(selected, [self.call(helper_name, definition=helper_name), self.ret()])
+        scratch = ROOT / 'bin-build/shared-native-self-test'
+        scratch.mkdir(parents=True, exist_ok=True)
+        path = (scratch / uuid.uuid4().hex).resolve()
+        path.mkdir()
+        try:
+            write(path / 'domain.json', config)
+            args = [sys.executable, __file__, '--config', str(path / 'domain.json'), '--release', '20', '--output', str(path / 'proof.json')]
+            for name, methods in docs.items():
+                write(path / (name + '.json'), dict(methods=methods))
+                write(path / (name + '-inventory.json'), dict(sites=inventories[name]))
+                args += ['--' + name.replace('_', '-'), str(path / (name + '.json')),
+                    '--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
+            result = subprocess.run(args, capture_output=True, text=True)
+            self.assertTrue((path / 'proof.json').exists(), result.stdout + result.stderr)
+            proof = read(path / 'proof.json')
+            self.assertEqual(bool(proof['errors']), bool(result.returncode))
+        finally:
+            if not path.is_relative_to(scratch.resolve()):
+                raise ValueError('Self-test directory leaves its scratch root')
+            shutil.rmtree(path)
+        return proof, docs, domain
+
+    def test_scoped_method_migrates_and_unscoped_overload_is_unchanged(self):
+        proof, _, _ = self.scoped_proof()
+        self.assertEqual([], proof['errors'])
+        self.assertEqual(2, proof['defaultMethods']['before'])
+        self.assertEqual(2, len(proof['enginePaths']))
+        delta = proof['defaultExpectedPhysicalDelta'][0]
+        self.assertEqual((3, 2), (delta['before'], delta['after']))
+
+    def test_scoped_proof_rejects_unscoped_method_change(self):
+        proof, _, _ = self.scoped_proof('unscoped')
+        for prefix in ('Default method body differs:', 'Non-domain engine body changed:'):
+            self.assertTrue(any(error.startswith(prefix) and 'Run(System.Int32)' in error for error in proof['errors']))
+
+    def test_scoped_proof_rejects_remaining_direct_site(self):
+        proof, _, _ = self.scoped_proof('direct')
+        self.assertIn('Direct Siemens domain sites remain in the engine', proof['errors'])
+
+    def test_scoped_new_helper_is_explicit_and_expanded(self):
+        proof, _, _ = self.scoped_proof('new-helper')
+        self.assertEqual([], proof['errors'])
+
+    def test_scoped_tool_graph_follows_unscoped_method(self):
+        proof, docs, _ = self.scoped_proof()
+        paths = Paths([dict(methods=docs['shared_engine']), dict(methods=docs['current_adapter'])])
+        graph = paths.build('System.Void sample.Engine::Tool()')
+        self.assertIn('System.Void sample.Engine::Run(System.Int32)', paths.reached)
+        self.assertTrue(any('Siemens::Other()' in row[0] for row in graph))
+        changed, _, _ = self.scoped_proof('unscoped')
+        self.assertTrue(any('Tool()' in error and 'expanded branch graph changed' in error for error in changed['errors']))
+
+    def test_scoped_generated_methods_follow_their_declaring_overload(self):
+        domain = Domain(self.scoped_config())
+        selected, other = 'System.Void sample.Engine::Run()', 'System.Void sample.Engine::Run(System.Int32)'
+        callback = 'System.Void sample.Engine/<>c::<Run>b__0_0()'
+        local = 'System.Void sample.Engine::<Run>g__Local|0_0()'
+        foreign = 'System.Void sample.Engine/<>c::<Run>b__1_0()'
+        constructor = 'System.Void sample.Engine/<>c__DisplayClass0_0::.ctor()'
+        state = 'sample.Engine/<Run>d__0'
+        generated = [self.method(name, [self.ret()]) for name in (callback, local, foreign, constructor, state + '::MoveNext()', state + '::Dispose()')]
+        root = self.method(selected, [self.call(local, definition=local), self.call(constructor, definition=constructor),
+            dict(op='ldftn', flow='Next', operand=dict(definition=callback))], states=[state])
+        unscoped = self.method(other, [self.call(constructor, definition=constructor),
+            dict(op='ldftn', flow='Next', operand=dict(definition=foreign))])
+        document = dict(methods=[root, unscoped] + generated)
+        scope = EngineScope(domain, document)
+        for name in (selected, callback, local, state + '::MoveNext()', state + '::Dispose()'):
+            self.assertTrue(scope(dict(caller=name)), name)
+        for name in (other, foreign, constructor):
+            self.assertFalse(scope(dict(caller=name)), name)
+        changed = json.loads(json.dumps(document))
+        changed['methods'][4]['semantic'] = 'changed unscoped lambda'
+        self.assertEqual([foreign], all_methods(document, changed, scopes=(scope, EngineScope(domain, changed)))[0])
+
+    def test_scoped_wrapper_moves_are_checked_by_inventory(self):
+        domain = Domain(self.scoped_config())
+        root = self.method('System.Void sample.Engine::Run()', [self.ret()])
+        wrapper = self.method('System.Void sample.Engine/__TiaMcpNativeCall_123::Call_123()', [self.ret()])
+        before, after = dict(methods=[root, wrapper]), dict(methods=[root])
+        scopes = EngineScope(domain, before), EngineScope(domain, after)
+        self.assertFalse(scopes[0](wrapper))
+        self.assertEqual([], all_methods(before, after, scopes=tuple(scope.body for scope in scopes))[0])
+        site = dict(caller=root['name'], member='Siemens::Read()', category='direct', opcode='callvirt')
+        self.assertTrue(compare_default_inventory([site], [], domain, scopes)[0])
+
+    def test_mixed_whole_type_and_method_scopes_expand_without_wrappers(self):
+        config = self.scoped_config()
+        config['engine']['types'].append('sample.OtherEngine')
+        domain = Domain(config)
+        root = self.method('System.Void sample.Engine::Run()', [self.ret()])
+        other = self.method('System.Void sample.OtherEngine::Run()', [self.ret()])
+        wrapper = self.method('System.Void sample.OtherEngine/__TiaMcpNativeCall_123::Call_123()', [self.ret()])
+        document = dict(methods=[root, other, wrapper])
+        scope = EngineScope(domain, document)
+        self.assertTrue(scope(other))
+        self.assertNotIn(wrapper['name'], scope.entries)
+        self.assertEqual(Counter(), expanded_engine_inventory(document, [], domain, scope))
+
+    def test_method_scope_fails_closed_on_invalid_or_missing_signature(self):
+        for entries in ([], [dict(method='Run')], [dict(method='Other', signature='System.Void sample.Engine::Run()')]):
+            config = self.scoped_config()
+            config['engine']['methodScopes']['sample.Engine'] = entries
+            with self.assertRaises(ValueError):
+                Domain(config)
+        domain = Domain(self.scoped_config())
+        with self.assertRaisesRegex(ValueError, 'Scoped method missing'):
+            EngineScope(domain, dict(methods=[self.method('System.Void sample.Engine::Run(System.Int32)', [self.ret()])]))
+
     @staticmethod
     def graph(events, branch=False):
         graph = Graph()
@@ -854,31 +1096,36 @@ def main():
     report, errors = dict(acceptanceRule=domain.acceptance_rule), []
     if args.baseline_engine:
         old_engine, default_engine, new_engine = map(read, (args.baseline_engine, args.default_engine, args.shared_engine))
+        documents = (old_engine, default_engine, new_engine)
+        old_scope, default_scope, new_scope = (EngineScope(domain, doc, documents) for doc in documents)
         old_docs.append(old_engine)
         new_docs.append(new_engine)
         differences, old_count, new_count = all_methods(old_engine, default_engine,
-                                                       exclude=domain.engine + domain.local_primitives)
-        raw_differences, _, _ = all_methods(old_engine, default_engine, raw=True, exclude=domain.engine + domain.local_primitives)
+                                                       exclude=domain.local_primitives, scopes=(old_scope.body, default_scope.body))
+        raw_differences, _, _ = all_methods(old_engine, default_engine, raw=True,
+            exclude=domain.local_primitives, scopes=(old_scope.body, default_scope.body))
         report['defaultMethods'] = dict(before=old_count, after=new_count, differences=differences,
             rawBodyDifferences=len(raw_differences), comparison='IL with metadata references resolved to member/type identities; opcodes, operands, locals and exception regions unchanged')
         errors += ['Default method body differs: ' + name for name in differences]
         old_inv, default_inv = map(read, (args.baseline_engine_inventory, args.default_engine_inventory))
-        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'], domain)
+        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'], domain, (old_scope, default_scope))
         errors += failures
         report.update(inventory_report)
-        report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain)
+        if any(default_scope(s) and s['category'] == 'direct' for s in default_inv['sites']):
+            errors.append('Direct Siemens domain sites remain in the default engine')
+        report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain, default_scope)
         if not report['defaultExpandedFullInventoryEqual']:
             errors.append('Default expanded full-category weave member multiset changed')
     old, new = Paths(old_docs), Paths(new_docs)
     if args.baseline_engine:
         default_paths = Paths([default_engine, new_adapter])
-        failures, rows = compare_host_paths(old, default_paths, domain.engine)
+        failures, rows = compare_host_paths(old, default_paths, domain.engine, old_scope)
         errors += ['Default path: ' + failure for failure in failures]
         report['defaultEnginePaths'] = rows
         unused_local = {normalize(s['caller']) for s in default_inv['sites'] if owned(s, domain.local_primitives)
             and s['category'] == 'direct'} - default_paths.reached
         errors += ['Unexplained local primitive: ' + method for method in sorted(unused_local)]
-        failures, rows = compare_host_paths(old, new, domain.engine)
+        failures, rows = compare_host_paths(old, new, domain.engine, old_scope)
         errors += failures
         report['enginePaths'] = rows
         errors += check_tools(domain, rows)
@@ -898,20 +1145,26 @@ def main():
         errors += ['Unexplained native primitive (not reached by either host): ' + method for method in unused]
     # Every pre-existing body outside this domain remains unchanged. Instrumented
     # wrappers are checked through their exact caller/member inventory instead.
-    def unchanged_methods(old_document, new_document, allowed):
+    def unchanged_methods(old_document, new_document, allowed=(), scope=lambda row: False):
         existing = {m['name']: m for m in new_document['methods']}
         return [m['name'] for m in old_document['methods'] if '__TiaMcpNativeCall' not in m['owner']
-            and not owned(m, allowed)
+            and not owned(m, allowed) and not scope(m)
             and (m['name'] not in existing or m['semantic'] != existing[m['name']]['semantic'])]
     errors += ['Non-domain adapter body changed: ' + method for method in unchanged_methods(old_adapter, new_adapter, domain.adapter_hosts + domain.mutable_adapter)]
     if outside(old_sites, domain.adapter_hosts + domain.primitives) != outside(new_sites, domain.adapter_hosts + domain.primitives):
         errors.append('Non-domain adapter inventory changed')
     if args.baseline_engine:
         old_engine_sites, new_engine_sites = [read(p)['sites'] for p in (args.baseline_engine_inventory, args.shared_engine_inventory)]
-        if outside(old_engine_sites, domain.engine) != outside(new_engine_sites, domain.engine):
+        if outside(old_engine_sites, scope=old_scope) != outside(new_engine_sites, scope=new_scope):
             errors.append('Non-domain engine inventory changed')
-        errors += ['Non-domain engine body changed: ' + method for method in unchanged_methods(old_engine, new_engine, domain.engine)]
-        if any(owned(s, domain.engine) and s['category'] == 'direct' for s in new_engine_sites):
+        if domain.method_scopes:
+            differences, _, _ = all_methods(old_engine, new_engine, scopes=(
+                lambda m: old_scope(m) or '__TiaMcpNativeCall' in m['owner'],
+                lambda m: new_scope(m) or '__TiaMcpNativeCall' in m['owner']))
+        else:
+            differences = unchanged_methods(old_engine, new_engine, scope=old_scope)
+        errors += ['Non-domain engine body changed: ' + method for method in differences]
+        if any(new_scope(s) and s['category'] == 'direct' for s in new_engine_sites):
             errors.append('Direct Siemens domain sites remain in the engine')
         # A member moved into a primitive may not retain another physical copy
         # in any domain host. Existing host-only sites are outside this rule.
@@ -922,7 +1175,7 @@ def main():
     else:
         engine_before = engine_after = Counter()
     adapter_before, adapter_after = native_counts(old_sites), native_counts(new_sites)
-    allowed_gains = native_counts([s for s in old_engine_sites if owned(s, domain.engine)]) if args.baseline_engine else Counter()
+    allowed_gains = native_counts([s for s in old_engine_sites if old_scope(s)]) if args.baseline_engine else Counter()
     errors += ['Unexplained adapter native gain: ' + member for member, count in (adapter_after - adapter_before).items()
                if member not in allowed_gains or count > allowed_gains[member]]
     members = sorted(engine_before.keys() | engine_after.keys() | adapter_before.keys() | adapter_after.keys())

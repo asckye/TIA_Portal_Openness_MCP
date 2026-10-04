@@ -10,7 +10,7 @@
   <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
   <Import Project="$(MSBuildThisFileDirectory)shared-native/*.props" Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'" />
   <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
-    <Compile Include="@(TiaEngineLocalPrimitive)" />
+    <Compile Include="@(TiaSharedNativePrimitive)" />
   </ItemGroup>
   <Target Name="ReportSharedAdapterPaths" BeforeTargets="CoreCompile">
     <Message Importance="high" Text="$(MSBuildProjectName): TiaSharedAdapterPaths=$(TiaSharedAdapterPaths)" />

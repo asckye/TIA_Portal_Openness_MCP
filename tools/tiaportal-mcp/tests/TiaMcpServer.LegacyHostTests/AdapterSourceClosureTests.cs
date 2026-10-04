@@ -12,18 +12,30 @@ internal static class AdapterSourceClosureTests
     {
         var src=Path.GetFullPath(Path.Combine(Path.GetDirectoryName(currentFile)!,"../../src"));
         var props=XDocument.Load(Path.Combine(src,"TiaMcp.Adapters/build/Adapter.Sources.props"));
-        var files=props.Descendants("AdapterSource").Select(x=>(string)x.Attribute("Include")!).ToArray();
+        var files=props.Descendants("AdapterSource").Select(x=>(string)x.Attribute("Include")!).Select(path=>
+        {
+            check(path.StartsWith("$(AdapterSourceRoot)/",StringComparison.Ordinal),"Adapter source uses verified source root");
+            return Path.GetFullPath(Path.Combine(src,path.Substring("$(AdapterSourceRoot)/".Length)));
+        }).ToArray();
+        var domains=Path.GetFullPath(Path.Combine(src,"../../openness-shared/shared-native"));
+        var primitives=Directory.GetFiles(domains,"*.props").OrderBy(path=>path,StringComparer.Ordinal)
+            .SelectMany(path=>XDocument.Load(path).Descendants("TiaSharedNativePrimitive").Select(item=>
+            {
+                var include=(string)item.Attribute("Include")!;
+                check(include.StartsWith("$(MSBuildThisFileDirectory)",StringComparison.Ordinal)
+                    && include.IndexOfAny(new[]{'*','?'})<0,"Domain primitive is an explicit source path: "+include);
+                return Path.GetFullPath(Path.Combine(domains,include.Substring("$(MSBuildThisFileDirectory)".Length)));
+            })).ToArray();
+        files=files.Concat(primitives).ToArray();
         check(files.Length==files.Distinct(StringComparer.Ordinal).Count(),"Explicit adapter source inventory has no duplicates");
-        CheckEvaluatedCompileItems(src,files,check);
-        CheckEnginePrimitiveSelection(src,check);
+        CheckEvaluatedCompileItems(src,files,primitives,check);
+        CheckEnginePrimitiveSelection(src,primitives,check);
         var code=new Dictionary<string,string>(StringComparer.Ordinal);
         foreach(var path in files)
         {
-            check(path.StartsWith("$(AdapterSourceRoot)/",StringComparison.Ordinal),"Adapter source uses verified source root");
-            var relative=path.Substring("$(AdapterSourceRoot)/".Length);
-            var full=Path.Combine(src,relative);
-            check(File.Exists(full),"Adapter source exists: "+relative);
-            code[relative]=File.ReadAllText(full);
+            var relative=Path.GetRelativePath(src,path).Replace('\\','/');
+            check(File.Exists(path),"Adapter source exists: "+relative);
+            code[relative]=File.ReadAllText(path);
         }
         foreach(var folder in new[]{"Native","Policy"})
             foreach(var file in Directory.GetFiles(Path.Combine(src,"TiaMcp.Adapters",folder),"*.cs",SearchOption.AllDirectories))
@@ -57,9 +69,8 @@ internal static class AdapterSourceClosureTests
             check(owned.Except(without).Any(),"Omitting Studio native module is detected: "+entry.Key);
         }
     }
-    private static void CheckEnginePrimitiveSelection(string src,Action<bool,string> check)
+    private static void CheckEnginePrimitiveSelection(string src,string[] primitives,Action<bool,string> check)
     {
-        var primitive=Path.GetFullPath(Path.Combine(src,"TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs"));
         foreach(var release in new[]{"20","21"})
         foreach(var enabled in new[]{false,true})
         {
@@ -82,27 +93,28 @@ internal static class AdapterSourceClosureTests
             check(process.ExitCode==0,"Engine primitive selection evaluates: V"+release+" shared="+enabled+" "+error.GetAwaiter().GetResult());
             using var result=JsonDocument.Parse(output.GetAwaiter().GetResult());
             var compile=result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray();
-            check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(enabled?0:1),
-                "Engine links the single primitive source only by default: V"+release+" shared="+enabled);
+            foreach(var primitive in primitives)
+                check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(enabled?0:1),
+                    "Engine links each domain primitive only by default: V"+release+" shared="+enabled+" / "+Path.GetFileName(primitive));
             var defines=result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';');
             check(defines.Contains("TIA_ENGINE_LOCAL_PRIMITIVES")==!enabled,"Engine-local namespace selection matches the source link: V"+release+" shared="+enabled);
         }
     }
     // Evaluation only: no targets, restore, native compiler, worker, or Siemens assembly load.
-    private static void CheckEvaluatedCompileItems(string src,string[] files,Action<bool,string> check)
+    private static void CheckEvaluatedCompileItems(string src,string[] files,string[] primitives,Action<bool,string> check)
     {
         var adapters=Path.Combine(src,"TiaMcp.Adapters");
         var projects=Directory.GetFiles(adapters,"Adapter.*.csproj",SearchOption.AllDirectories);
         check(projects.Length==8,"Evaluate all eight exact adapter projects");
         var comparer=OperatingSystem.IsWindows()?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal;
-        var expected=files.Select(path=>Path.GetFullPath(Path.Combine(src,path.Substring("$(AdapterSourceRoot)/".Length)))).ToHashSet(comparer);
+        var expected=files.ToHashSet(comparer);
         foreach(var project in projects.OrderBy(path=>path,StringComparer.Ordinal))
         {
             var start=new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH")??"dotnet")
             {
                 WorkingDirectory=adapters,UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true,CreateNoWindow=true
             };
-            foreach(var argument in new[]{"msbuild",project,"-nologo","-getItem:Compile,AdapterSource,ProjectReference","-getProperty:DefineConstants"}) start.ArgumentList.Add(argument);
+            foreach(var argument in new[]{"msbuild",project,"-nologo","-getItem:Compile,AdapterSource,TiaSharedNativePrimitive,ProjectReference","-getProperty:DefineConstants"}) start.ArgumentList.Add(argument);
             start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"]="false";
             start.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"]="false";
             start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"]="1";
@@ -120,7 +132,8 @@ internal static class AdapterSourceClosureTests
             using var result=JsonDocument.Parse(stdout);
             var items=result.RootElement.GetProperty("Items");
             string[] Paths(string item)=>items.GetProperty(item).EnumerateArray().Select(value=>Path.GetFullPath(value.GetProperty("FullPath").GetString()!)).ToArray();
-            var sources=Paths("AdapterSource");
+            var sources=Paths("AdapterSource").Concat(Paths("TiaSharedNativePrimitive")).ToArray();
+            check(primitives.ToHashSet(comparer).SetEquals(Paths("TiaSharedNativePrimitive")),"Adapter imports every explicit domain primitive: "+project);
             var compile=Paths("Compile");
             var release=Path.GetFileName(project);
             var contracts=Path.Combine(src,"TiaMcp.Adapters.Contracts");

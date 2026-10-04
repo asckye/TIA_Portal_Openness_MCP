@@ -1,6 +1,8 @@
 <Project>
   <!-- Transitional shared native source, compiled separately against each exact API.
-       Deliberately no glob, generated placeholder, or Siemens copy. DTOs come from Contracts. -->
+       No source glob, generated placeholder, or Siemens copy. DTOs come from Contracts. -->
+  <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../../openness-shared/shared-native/*.props" />
   <ItemGroup>
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Plc/PlcServices.cs" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
@@ -58,11 +60,10 @@
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/HmiNavigator.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessSession.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessVersionControl.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/PlcNavigator.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/StudioAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Policy/StudioThreadGuard.cs" />
-    <Compile Include="@(AdapterSource)" Link="NativeShared/%(Filename)%(Extension)" />
+    <Compile Include="@(AdapterSource);@(TiaSharedNativePrimitive)" Link="NativeShared/%(Filename)%(Extension)" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.Shared.cs" />

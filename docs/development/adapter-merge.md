@@ -285,13 +285,25 @@ Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省�
 `tools` 分别声明 MCP 名称与 `entryMethods` 的类型、方法名，入口缺失或重载歧义会失败。
 `expansionTypes/expansionNamespaces` 仅决定读取器跨方法展开的范围，不豁免领域外方法体或清单检查；
 `adapter.mutableTypes` 只用于借用工程的接线类型，仍须保持其原生清单。
+可选的 `engine.methodScopes` 按类型声明方法 include 列表，例如
+`{"TiaMcpServer.Siemens.Portal":[{"method":"Compile","signature":"System.Void TiaMcpServer.Siemens.Portal::Compile(System.String)"}]}`；
+`signature` 使用 IL 读取器输出的完整方法签名，名称和签名必须同时匹配，全部输入中均缺失、重复或歧义均失败。
+新增的领域辅助方法也须显式列入范围，其原生路径由工具调用树展开验证；基线已有的方法不得消失。
+未设置范围的类型仍按整类验收；设置后只迁移所列方法及其 lambda、局部函数、迭代器/异步状态机，
+共享生成方法若也属于未选中方法则不能豁免 IL 检查。同类型的未选中方法保持 IL 不变，直接原生调用归零及去重差量只作用于选中方法。
+展开图同时覆盖所选方法和工具入口的完整调用树，跨入未选中方法不会截断；工具入口有重载时也可提供 `signature`。
 `evidence` 是仓库内证据输出路径，版本键必须使用字符串。不同领域单独运行证明，不能合并差量后验收；
 默认变体同时核对领域内精确去重与领域外逐调用者清单，防止同一 Siemens 成员在两个领域一增一减互相抵消。
 
 原语链接也按领域拆分：[vci.props](../../tools/openness-shared/shared-native/vci.props) 显式列出
-`TiaEngineLocalPrimitive` 项及其 `Link` 路径。共享 props 只通配导入 `tools/openness-shared/shared-native/*.props`，
-仅默认引擎消费这些项；不通配收集 C# 源码。以后每个领域新增自己的小 props 文件即可，避免并行任务修改同一清单，
-审查者仍能逐行核对进入引擎的原语源码。默认开关与原语编译符号不变。
+`TiaSharedNativePrimitive` 项及其 `Link` 路径。共享引擎 props 与 `Adapter.Sources.props` 都只通配导入
+`tools/openness-shared/shared-native/*.props` 这个专用目录，默认引擎和每版适配器消费同一项；不通配收集 C# 源码。
+以后每个领域新增自己的小 props 文件即可，避免并行任务修改同一清单，审查者仍能逐行核对进入引擎和适配器的原语源码。
+源码闭包测试核对所有领域声明、八版适配器的实际 Compile 项以及两版引擎的开关选择。默认开关与原语编译符号不变。
+
+迁移可能改写 `scripts/checks/Test-*Sources.py`、`Test-HmiImportSafety.py` 等源码契约检查所匹配的字面文本。
+可以同步更新检查，使其沿宿主调用进入原语，但必须保留每一项安全断言，验证相同的守卫及其相对原生调用的先后顺序；
+不能为了让迁移通过而仅删除断言。
 
 VCI 的默认与共享变体均以“展开后的逐工具调用图相等 + 完整类别多重集的精确去重差量 + 响应”验收。
 默认变体将基线中每个直接 VCI 成员的重复调用点合并为一个本地原语调用点，完整类别多重集仅允许这一差量；
