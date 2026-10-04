@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Offline validation: required files, JSON parse, blueprint bundle list, tool roster count.
