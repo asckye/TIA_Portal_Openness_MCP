@@ -40,7 +40,7 @@
                 <Grid>
                   <ContentPresenter/>
                   <Border x:Name="Check" Width="15" Height="15" CornerRadius="8" BorderBrush="{DynamicResource Ui.DashedBorder}" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <TextBlock x:Name="Tick" Text="" FontFamily="Segoe Fluent Icons" FontSize="9" Visibility="Collapsed" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="Tick" Text="" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" Visibility="Collapsed" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                   </Border>
                 </Grid>
               </Border>

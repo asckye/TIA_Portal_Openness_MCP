@@ -102,7 +102,7 @@
     <Setter Property="FontWeight" Value="Normal"/>
   </Style>
   <Style x:Key="Glass.CaptionButton" TargetType="ButtonBase" BasedOn="{StaticResource Glass.Quiet}">
-    <Setter Property="FontFamily" Value="Segoe Fluent Icons"/>
+    <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
     <Setter Property="Width" Value="32"/>
     <Setter Property="Height" Value="32"/>
   </Style>
@@ -193,7 +193,7 @@
               <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
                   <Border CornerRadius="10" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
-                    <TextBlock Text="" FontFamily="Segoe Fluent Icons" FontSize="8" Foreground="{DynamicResource Ui.SecondaryLabel}" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="8" Foreground="{DynamicResource Ui.SecondaryLabel}" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center"/>
                   </Border>
                 </ControlTemplate>
               </ToggleButton.Template>
