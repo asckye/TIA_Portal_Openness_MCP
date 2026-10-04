@@ -15,6 +15,40 @@
 | Studio 桥接协议 2（P4-F）及桥接 JSON 改用 System.Text.Json（P2-04a） | 发布前用 Studio 分别连接 V14 SP1、V16、V21 的真实 TIA：核对 hello 身份后连接、打开测试工程副本、读取块列表、导出一个块；再触发一次已处理的错误（如导出到不存在的目录），确认界面显示原错误文本且同一会话可继续操作；最后断开并关闭 Studio，确认桥接进程退出。离线桥接冒烟和 mock 测试不代替此验收；当前为 **NOT RUN**。 |
 | PLC 名称严格解析（G9，见 [CHANGELOG](../../CHANGELOG.md) Unreleased） | V20 与 V21 各一份测试工程副本：单 PLC 工程中错误名称返回“未找到”并列出可用路径，不再选中唯一 PLC；软件名、CPU 名、站点名、分组路径和空名称仍解析到正确 PLC；两个 PLC 共用站点名时返回歧义；对读取和写入（如变量表导出与离线写入）各验证一次；在设备较多的工程中确认同一路径的后续调用不再重新遍历（解析耗时与改动前相当）。 |
 
+## 3.3.0 发布前最小验收（按虚拟机）
+
+3.3.0 只发布上表中已进入默认构建的改动；`TiaSharedAdapterPaths` 开关后的改动（引擎 VCI 共享原语、Studio 共享适配器会话）不在 3.3.0 范围内，不需要在此验收。每个 TIA 版本在各自的虚拟机上验收，全部使用 3.3.0 候选包（解压到仓库以外的新目录，不覆盖原有安装）和测试工程副本。每项记录：虚拟机、TIA 版本及补丁、候选包 SHA-256、通过/失败，以及返回文本或截图。
+
+| 虚拟机 | 项目 |
+|---|---|
+| V14 SP1 | A（同时验证 net48 worker）、B |
+| V15.1 | A（同时验证 net48 worker） |
+| V16 | A（同时验证 net48 worker）、B |
+| V17、V18、V19 | A |
+| V20 | C、D |
+| V21 | B、C、D |
+
+**A Foundation MCP（协议 2、worker DTO；V14 SP1–V16 另含 net48）**：在 TIA 中打开测试工程副本；启动该版本的 3.3.0 MCP 服务；依次调用
+`ListPortalProcessProjects` → `Connect {processId}` → `GetState`（版本正确、worker 正常）→ `GetProjectTree` → `GetBlocks`（PLC 名）→
+`GetBlockInfo`（一个已有块）；再用不存在的块名调用 `GetBlockInfo`，应返回错误，随后再次 `GetBlocks` 仍正常（会话未失效、调用未重放）；
+最后 `Disconnect`，应确认 worker 已断开。
+
+**B Studio 桥接（协议 2、桥接 JSON）**：用候选包根目录的 `TiaMcpConfigurator.exe` 打开工作台并选择该版本；工程操作页连接已打开的 TIA、
+打开测试工程副本、读取块列表、导出一个块到桌面文件夹（文件生成）；再导出到不存在的目录，界面应显示原错误文本，随后再次读取块列表
+仍正常；最后断开并关闭工作台，确认桥接进程（任务管理器中的 `TiaOpenness.Bridge`）已退出。
+
+**C PLC 名称严格解析（G9）**：单 PLC 工程：`GetBlocks` 的 `softwarePath` 用不存在的名字，应返回“未找到”并列出可用 PLC 路径
+（3.2 会错误地选中唯一 PLC）；空名字、软件名、CPU 名、站点名和分组路径都解析到该 PLC。两个 PLC 共用站点名的工程：用站点名应返回歧义
+并列出两个候选，用各自的软件名解析到正确 PLC。读取（如 `ExportPlcTagTable`）与写入（如在测试变量表中 `CreatePlcTag`）各验证一次；
+设备较多的工程中，同一路径的后续调用应与 3.2 一样快（不重新遍历）。
+
+**D 引擎冒烟（阶段 3 拆分、响应构造器、引擎引用共享适配器后的默认构建）**：连接并绑定测试工程副本 → `GetProjectTree` →
+`ExportBlock`（一个块，导出到桌面文件夹）→ `CompileSoftware`（测试工程）→ V21 再调用 `GetVersionControlWorkspaces`（工程无 VCI 时
+记录返回的提示即可）→ `Disconnect`；检查 `%LOCALAPPDATA%\TiaMcp\diagnostics` 下当天的调用日志存在且无写入失败。
+
+A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启动该版本的 HTTP 服务后从开发机远程执行；B 必须在虚拟机界面上手动操作。
+任何一项失败时停止发布，记录现象后修复并重新生成候选包。
+
 ## 4.0 安全策略验收计划（P6-R2）
 
 以下为[4.0 规范](../development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。
