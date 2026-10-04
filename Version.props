@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <TiaMcpRelease>3.2.0</TiaMcpRelease>
+    <TiaMcpRelease>3.3.0</TiaMcpRelease>
     <Version>$(TiaMcpRelease)</Version>
     <AssemblyVersion>$(TiaMcpRelease)</AssemblyVersion>
     <FileVersion>$(TiaMcpRelease).0</FileVersion>

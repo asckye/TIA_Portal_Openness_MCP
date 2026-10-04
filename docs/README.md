@@ -29,6 +29,6 @@
 - [源码结构](development/repository-layout.md) · [构建验证](development/validation.md) · [发布](development/release-workflow.md) · [当前交接](development/handoff.md) · [待完成工作](development/roadmap.md)
 - [多版本架构](development/unified-version-framework.md) · [调用诊断](development/native-call-diagnostics.md) · [原生生命周期测试](development/native-lifecycle-tests.md) · [原生 MCP 测试](development/native-mcp-session-tests.md)
 - [脚本](../scripts/README.md) · [清单](../manifest/README.md) · [模板](../templates/README.md) · [贡献](../.github/CONTRIBUTING.md) · [支持](../.github/SUPPORT.md)
-- [当前版本说明](releases/v3.2.0.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
+- [当前版本说明](releases/v3.3.0.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
 
 当前文档只保留持续使用的说明。旧版本发布正文、临时审计和阶段交接可从 Git 历史查询。示例路径相对完整交付包或仓库根目录；运行时参数和各版示例以连接到的服务为准。

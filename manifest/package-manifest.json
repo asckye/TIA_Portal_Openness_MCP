@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "3.2.0",
-    "packageName":  "TIA_MCP_Delivery_v3.2.0_20261003",
+    "bundleVersion":  "3.3.0",
+    "packageName":  "TIA_MCP_Delivery_v3.3.0_20261003",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-10-03T13:17:15.9590264+00:00",
+    "refreshedAt":  "2026-10-04T22:24:12.1915532+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  14,
@@ -105,9 +105,9 @@
     "capabilities":  {
                          "mcpToolCount":  488,
                          "mcpToolLayers":  {
-                                               "L0":  19,
+                                               "L2":  424,
                                                "L1":  45,
-                                               "L2":  424
+                                               "L0":  19
                                            },
                          "hmiTemplateJsonCount":  8,
                          "plcTemplateJsonCount":  9,
@@ -134,8 +134,8 @@
                                              "note":  "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "3.2.0.0",
-    "validationStatus":  "Delivery 3.2.0; engine 3.2.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "3.3.0.0",
+    "validationStatus":  "Delivery 3.3.0; engine 3.3.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",
