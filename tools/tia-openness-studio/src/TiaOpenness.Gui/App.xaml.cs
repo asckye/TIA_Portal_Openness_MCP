@@ -22,14 +22,9 @@ public partial class App : Application
     {
         if (e.Args.Length > 0 && e.Args[0] == "--network")
         {
-            StartupUri = null;
-            try
-            {
-                if (e.Args.Length != 4) throw new ArgumentException("Invalid network configuration arguments.");
-                TiaMcpConfigurator.ConfigCore.ConfigureNetwork(e.Args[1], int.Parse(e.Args[2]), e.Args[3]);
-                Shutdown(0);
-            }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error); Shutdown(1); }
+            // The elevated network helper never opens the workbench: no StartupUri is set on this path
+            // (WPF on .NET 10 rejects assigning null to it, which used to crash this helper).
+            Shutdown(RunNetworkConfiguration(e.Args));
             return;
         }
         // A background failure that reaches the dispatcher would otherwise kill the app
@@ -51,7 +46,29 @@ public partial class App : Application
             Settings.Save();
         };
 
+        StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
         base.OnStartup(e);
+    }
+
+    /// <summary>
+    /// <c>--network address port sid</c>, run elevated by the configuration page: reserve the HTTP prefix
+    /// and open the firewall. Returns the process exit code. With TIA_OPENNESS_NETWORK_NO_DIALOG=1 the
+    /// error goes to stderr instead of a dialog, so the path can be exercised without a desktop.
+    /// </summary>
+    internal static int RunNetworkConfiguration(string[] args)
+    {
+        try
+        {
+            if (args.Length != 4) throw new ArgumentException("Invalid network configuration arguments.");
+            TiaMcpConfigurator.ConfigCore.ConfigureNetwork(args[1], int.Parse(args[2]), args[3]);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            if (Environment.GetEnvironmentVariable("TIA_OPENNESS_NETWORK_NO_DIALOG") == "1") Console.Error.WriteLine(ex.Message);
+            else MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error);
+            return 1;
+        }
     }
 
     /// <summary>
