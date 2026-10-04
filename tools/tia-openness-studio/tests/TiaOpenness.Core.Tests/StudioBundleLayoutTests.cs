@@ -58,7 +58,11 @@ public sealed class StudioBundleLayoutTests : IDisposable
                 {
                     string directory = spelling + suffix;
                     Assert.Equal(StudioLookupBaseline.LocateBridge(directory), LocateBridge(directory));
-                    Assert.Equal(StudioLookupBaseline.AdapterPath(directory, key), SessionFactoryLoader.AdapterPath(directory, key));
+                    var expected = StudioLookupBaseline.AdapterPath(directory, key);
+#if TIA_SHARED_ADAPTER_PATHS
+                    expected = Path.Combine(directory, "adapters", "v" + key, "TiaMcp.Adapter." + key + ".dll");
+#endif
+                    Assert.Equal(expected, SessionFactoryLoader.AdapterPath(directory, key));
                 }
             }
         }

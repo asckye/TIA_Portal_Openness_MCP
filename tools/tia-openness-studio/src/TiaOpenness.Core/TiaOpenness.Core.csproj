@@ -1,5 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFrameworks>net48;net10.0-windows</TargetFrameworks></PropertyGroup>
+  <ItemGroup Condition="'$(TiaSharedAdapterPaths)' == 'true'">
+    <ProjectReference Include="../../../tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <!-- Keep the original compilation units byte-identical in the default build.
+         The switched loader/channel copies are checked against those originals. -->
+    <Compile Remove="Abstractions/SessionFactoryLoader.cs;Rpc/BridgeChannel.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'">
+    <Compile Remove="Adapters/**/*.cs" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../TiaOpenness.Contracts/TiaOpenness.Contracts.csproj" />
     <ProjectReference Include="../../../tiaportal-mcp/src/TiaMcp.WorkerChannel/TiaMcp.WorkerChannel.csproj" />

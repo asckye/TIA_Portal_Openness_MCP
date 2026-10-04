@@ -1,0 +1,7 @@
+<Project>
+  <!-- Native path migrations remain opt-in until the real-machine ledger is accepted. -->
+  <PropertyGroup>
+    <TiaSharedAdapterPaths Condition="'$(TiaSharedAdapterPaths)' == ''">false</TiaSharedAdapterPaths>
+    <DefineConstants Condition="'$(TiaSharedAdapterPaths)' == 'true'">$(DefineConstants);TIA_SHARED_ADAPTER_PATHS</DefineConstants>
+  </PropertyGroup>
+</Project>

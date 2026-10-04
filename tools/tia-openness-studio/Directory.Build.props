@@ -1,5 +1,15 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../openness-shared/TiaSharedAdapterPaths.props" />
+  <PropertyGroup Condition="'$(TiaSharedAdapterPaths)' == 'true'">
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <StudioOutputSubdirectory>shared-adapter/</StudioOutputSubdirectory>
+    <OutputPath>bin/$(Configuration)/$(StudioOutputSubdirectory)</OutputPath>
+    <BaseIntermediateOutputPath>obj/$(StudioOutputSubdirectory)</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin/**;obj/**</DefaultItemExcludes>
+  </PropertyGroup>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

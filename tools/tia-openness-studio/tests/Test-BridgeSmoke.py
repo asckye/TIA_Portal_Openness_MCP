@@ -13,9 +13,10 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def smoke(bridge, sdk_root, key, relative):
+def smoke(bridge, sdk_root, key, relative, shared_adapter_paths=False):
     nonce = secrets.token_hex(32)
-    adapter = bridge.parent / 'adapters' / ('v' + key) / 'TiaOpenness.Openness.dll'
+    adapter = bridge.parent / 'adapters' / ('v' + key) / (
+        f'TiaMcp.Adapter.{key}.dll' if shared_adapter_paths else 'TiaOpenness.Openness.dll')
     expected = dict(protocol=2, releaseKey=key, workerSha256=digest(bridge),
                     adapterSha256=digest(adapter), nonce=nonce, bindingEpoch=0, bound=False)
     child = subprocess.Popen([str(bridge), '--openness-version', key, '--nonce', nonce,
@@ -72,8 +73,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--bridge', type=Path, required=True)
     parser.add_argument('--public-api-root', type=Path, required=True)
+    parser.add_argument('--shared-adapter-paths', action='store_true')
     args = parser.parse_args()
-    count = sum(smoke(args.bridge.resolve(), args.public_api_root.resolve(), key, relative) for key, relative in (
+    count = sum(smoke(args.bridge.resolve(), args.public_api_root.resolve(), key, relative, args.shared_adapter_paths) for key, relative in (
         ('14sp1', 'TIA_V14SP1_PublicAPI/V14 SP1'),
         ('16', 'TIA_V16_PublicAPI/V16'),
         ('21', 'TIA_V21_PublicAPI/V21/net48')))

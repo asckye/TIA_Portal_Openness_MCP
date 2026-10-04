@@ -65,17 +65,20 @@ jobs:
 
   studio-tests:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        shared-adapter-paths: ['false', 'true']
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Build Studio
-        run: dotnet build tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj -c Release --nologo
+        run: dotnet build tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio client functional tests
-        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo
+        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio WPF functional tests
-        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo
+        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
 
   foundation-transport:
     runs-on: windows-latest
