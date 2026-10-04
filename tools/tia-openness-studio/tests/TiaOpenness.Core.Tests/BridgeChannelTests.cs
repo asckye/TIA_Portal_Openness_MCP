@@ -179,16 +179,30 @@ public sealed class BridgeChannelTests
         bridge.Start(BridgeExe, forceMock: true);
         await bridge.CallAsync<object>("session.connect");
         await bridge.CallAsync<object>("project.open", new { path = "Synthetic.ap21" });
-        using var entered = new ManualResetEventSlim();
-        using var release = new ManualResetEventSlim();
-        using var stopped = new ManualResetEventSlim();
-        bridge.Progress += (_, _) => { entered.Set(); release.Wait(Budget); stopped.Set(); };
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stopped = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int handlerState = 0;
+        void OnProgress(object? sender, ProgressEventArgs args)
+        {
+            // Admit one callback; cleanup can close admission before a late callback starts.
+            if (Interlocked.CompareExchange(ref handlerState, 1, 0) != 0) return;
+            entered.SetResult(true);
+            stopped.SetResult(release.Task.Wait(Budget));
+        }
+        bridge.Progress += OnProgress;
         using var cancellation = new CancellationTokenSource();
         bridge.DefaultTimeout = failure == "timeout" ? TimeSpan.FromMilliseconds(500) : Budget;
         var call = bridge.CallAsync<object>("block.import", new { deviceId = "PLC_1", files = new[] { "missing.scl" } }, cancellation.Token);
         try
         {
-            Assert.True(entered.Wait(Budget));
+            // The call budget includes transport and scheduling before the first progress.
+            // Timeout may win that race; cancel/concurrent must exercise a blocked callback.
+            if (failure != "timeout")
+            {
+                await entered.Task.WaitAsync(Budget);
+                Assert.False(call.IsCompleted);
+            }
             if (failure == "concurrent")
             {
                 await Assert.ThrowsAsync<ChannelFault>(() => bridge.CallAsync<object>("session.state"));
@@ -206,9 +220,19 @@ public sealed class BridgeChannelTests
                 Assert.Equal("The bridge did not answer 'block.import' within " + bridge.DefaultTimeout + ".", error.Message);
             }
         }
-        finally { release.Set(); Assert.True(stopped.Wait(Budget)); }
+        finally
+        {
+            bridge.Progress -= OnProgress;
+            release.TrySetResult(true);
+            if (Interlocked.CompareExchange(ref handlerState, 2, 0) == 1)
+                Assert.True(await stopped.Task.WaitAsync(Budget), "The progress callback was not released within its budget.");
+        }
         Assert.True(Channel(bridge).Poisoned);
+        Assert.True(Channel(bridge).OutcomeUnknown);
+        Assert.Equal(3, Channel(bridge).LastRequestId);
         await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.CallAsync<object>("session.state"));
+        Assert.Equal(3, Channel(bridge).LastRequestId);
+        Assert.Throws<InvalidOperationException>(() => bridge.Start(BridgeExe, forceMock: true));
     }
 
     [Fact]
