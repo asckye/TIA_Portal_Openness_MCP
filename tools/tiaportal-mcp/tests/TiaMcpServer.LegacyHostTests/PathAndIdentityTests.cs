@@ -57,7 +57,7 @@ internal static class PathAndIdentityTests
         Reject(()=>Gate(false,true,@"C:\Projects\New.ap17","OpenProject",file:@"C:\Projects\Old.ap17"),"Open identity mismatch refused");
         foreach(var key in new[]{"14sp1","15.1","16","17","18","19","20","21"})
         {
-            var major=key=="14sp1"?"14":key=="15.1"?"15":key;
+            var major=key=="14sp1"?"14":key=="15.1"?"15_1":key;
             Gate(false,true,@"C:\Projects\New\New.ap"+major,"CreateProject",key,directory:@"C:\Projects",name:"New");
             check(boundChecks==before,"Create exact version target "+key);
         }

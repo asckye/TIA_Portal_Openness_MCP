@@ -14,9 +14,12 @@ internal static class LifecycleContractTests
         check(TiaMcp.PlcWorker.WorkerOperations.Names.SetEquals(FoundationTools.Definitions.Select(d=>d.Operation)),"Worker allowlist matches actual public tool operations");
         foreach(var internalMethod in new[]{"Dispose","UnbindProject","RequireProjectIdentity","ListPlcs","ListBlocks"}) check(!TiaMcp.PlcWorker.WorkerOperations.Names.Contains(internalMethod),"Internal facade method not exposed on worker wire: "+internalMethod);
         void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(Exception ex) when(ex is ArgumentException or InvalidOperationException or NotSupportedException) { check(true,message); } }
+        // Spelled out rather than derived: the file names TIA itself writes for each release.
+        var suffixes=new Dictionary<string,string>{["14sp1"]="14",["15.1"]="15_1",["16"]="16",["17"]="17",["18"]="18",["19"]="19",["20"]="20",["21"]="21"};
         foreach(var key in new[]{"14sp1","15.1","16","17","18","19","20","21"})
         {
-            var major=PlcLifecyclePolicy.Major(key);
+            var major=suffixes[key];
+            check(PlcLifecyclePolicy.FileSuffix(key)==major,"Project file suffix "+key);
             check(!PlcLifecyclePolicy.IsSessionFile(key,"Project.ap"+major),"Exact project format "+key);
             Reject(()=>PlcLifecyclePolicy.IsSessionFile(key,"Project.ap99"),"No cross-version upgrade "+key);
             Reject(()=>PlcLifecyclePolicy.IsSessionFile(key,"Project.zap"+major),"No archive/server-open fallback "+key);
@@ -24,6 +27,7 @@ internal static class LifecycleContractTests
             else check(PlcLifecyclePolicy.IsSessionFile(key,"Project.als"+major),"Local-session format admitted "+key);
             check(PlcLifecyclePolicy.CreationFile(key,@"C:\Projects","New")==@"C:\Projects\New\New.ap"+major,"Creation preview identity "+key);
         }
+        Reject(()=>PlcLifecyclePolicy.IsSessionFile("15.1","Project.ap15"),"A V15 project is not opened as V15.1");
         var state=new PlcLifecycleState();
         Reject(state.RequireUnbound,"Cannot open while detached"); Reject(()=>state.RequireAttach(0),"No automatic process selection");
         state.RequireAttach(123); check(!state.ProcessId.HasValue,"Validation does not attach");

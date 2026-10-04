@@ -30,10 +30,11 @@ namespace TiaMcp.PlcFoundation
         {
             if(localSession && !dryRun) throw new NotSupportedException("Local-session mutation is blocked until session kind, server-lock effects and project identity are reconciled. Opening an exclusive session can lock a server project; preview grants no execution permission.");
         }
-        internal static string Major(string release) { TiaVersionCatalog.Get(release); return release=="14sp1" ? "14" : release=="15.1" ? "15" : release; }
+        // TIA names project files by release: V14 SP1 keeps .ap14, V15.1 uses .ap15_1 (.ap15 is the older V15 format).
+        internal static string FileSuffix(string release) { TiaVersionCatalog.Get(release); return release=="14sp1" ? "14" : release=="15.1" ? "15_1" : release; }
         internal static bool IsSessionFile(string release,string path)
         {
-            var major=Major(release); var extension=Path.GetExtension(path);
+            var major=FileSuffix(release); var extension=Path.GetExtension(path);
             if(extension.Equals(".ap"+major,StringComparison.OrdinalIgnoreCase)) return false;
             if(extension.Equals(".als"+major,StringComparison.OrdinalIgnoreCase))
             {
@@ -43,6 +44,6 @@ namespace TiaMcp.PlcFoundation
             throw new ArgumentException("Use this release's exact .ap"+major+" or supported .als"+major+" file; archive, upgrade and server-open operations are unavailable.");
         }
         internal static string CreationFile(string release,string directory,string name)
-        { PlcFoundationPolicy.RequireName(name); return MutationIdentityPolicy.Absolute(MutationIdentityPolicy.Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+Major(release)); }
+        { PlcFoundationPolicy.RequireName(name); return MutationIdentityPolicy.Absolute(MutationIdentityPolicy.Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+FileSuffix(release)); }
     }
 }

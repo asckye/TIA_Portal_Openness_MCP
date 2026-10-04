@@ -73,8 +73,8 @@ namespace TiaMcp.PlcFoundation
                 if(string.IsNullOrWhiteSpace(name) || name=="." || name==".." || name.Contains("/") || name.Contains("\\"))
                     throw new ArgumentException("A single new project name is required.");
                 RequireSegment(name);
-                var major=releaseKey=="14sp1" ? "14" : releaseKey=="15.1" ? "15" : releaseKey;
-                if(major!="14" && major!="15" && major!="16" && major!="17" && major!="18" && major!="19" && major!="20" && major!="21") throw new ArgumentException("Unsupported release key.");
+                var major=releaseKey=="14sp1" ? "14" : releaseKey=="15.1" ? "15_1" : releaseKey;
+                if(major!="14" && major!="15_1" && major!="16" && major!="17" && major!="18" && major!="19" && major!="20" && major!="21") throw new ArgumentException("Unsupported release key.");
                 RequireSameProject(expected,Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+major);
             }
             else requireBound(expected);

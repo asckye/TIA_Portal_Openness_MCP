@@ -15,6 +15,7 @@
 - V14 SP1、V15.1、V16 Foundation worker 升为 .NET Framework 4.8；.NET Framework 4.8 属于 Windows 组件，无法随包附带，Windows 10 1903 之前的系统需另行安装。
 - Foundation worker 与 Studio 桥接统一使用内部协议 2 和 System.Text.Json，校验进程身份及请求/会话关联，无需修改 MCP 客户端协议，失败请求不自动重放；Studio 已处理的操作错误保留原文及可继续使用的会话。
 - 引擎与同进程适配器共用一份调用诊断日志及关联 ID；独立 worker 各自记录，默认目录仍为 `%LOCALAPPDATA%\TiaMcp\diagnostics`。
+- V15.1 基础引擎接受 TIA V15.1 实际写出的 `.ap15_1` 工程文件；此前（3.2.0 起）只认 `.ap15`，无法绑定、打开或创建 V15.1 工程。V15 的 `.ap15` 工程不会被当作 V15.1 打开。
 - 子进程标准输入统一为无 BOM UTF-8，修复控制台代码页导致的非 ASCII 请求损坏；基础宿主健康检查使用实际应用版本；更新器识别 worktree 的 `.git` 文件，避免把源码工作区当作安装包更新。
 - 保留 MCP/桌面入口文件名，新增 Logic、Runtime、Adapters.Contracts、WorkerChannel 等运行依赖，V20/V21 附带同版适配器；升级须替换完整包。设计清单移至 `docs/development/design-qa.md`，历史诊断证据移至 `manifest/history/`，启动器源码与 Glass 资源归入 Studio 源码目录。
 - 引擎按领域拆分服务、工具及会话内核，共用逻辑和运行通道拆为独立库；以契约、原始响应快照、逐领域字节比对和原生调用清单验证兼容性。离线证据不代替真机验收；[3.3.0 按虚拟机最小验收清单](docs/reference/real-machine-ledger.md#330-发布前最小验收按虚拟机)已登记，结果待维护者在发布前填写。
