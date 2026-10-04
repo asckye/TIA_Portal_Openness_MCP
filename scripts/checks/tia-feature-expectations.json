@@ -319,6 +319,16 @@
     ]
   },
   {
+    "project": "tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "JOURNAL_ADAPTER",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"
