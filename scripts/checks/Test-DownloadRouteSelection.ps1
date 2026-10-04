@@ -97,27 +97,32 @@ public static class FakeBuilder {
 
 try {
   $asm = [Reflection.Assembly]::LoadFrom((Join-Path $tmp "TiaMcpServer.exe"))
+  # Since the engine split the route selection lives in OnlineDownloadService; its reflection helpers come
+  # from the session kernel, so the service gets an uninitialized Portal (no TIA, no constructor side effects).
   $portal = $asm.GetType("TiaMcpServer.Siemens.Portal")
-  if (-not $portal) { Write-Host "FAIL: Portal type not found"; exit 1 }
-  $flags = [Reflection.BindingFlags]"NonPublic,Static"
-  $enumM   = $portal.GetMethod("EnumerateDownloadRoutes", $flags)
-  $scoreM  = $portal.GetMethod("ScoreDownloadRoutes", $flags)
-  $selectM = $portal.GetMethod("SelectDownloadRoute", $flags)
+  $serviceType = $asm.GetType("TiaMcpServer.Siemens.Services.OnlineDownloadService")
+  if (-not $portal -or -not $serviceType) { Write-Host "FAIL: Portal or OnlineDownloadService type not found"; exit 1 }
+  $session = [Runtime.Serialization.FormatterServices]::GetUninitializedObject($portal)
+  $service = $serviceType.GetConstructors()[0].Invoke([object[]]@($session))
+  $flags = [Reflection.BindingFlags]"NonPublic,Static,Instance"
+  $enumM   = $serviceType.GetMethod("EnumerateDownloadRoutes", $flags)
+  $scoreM  = $serviceType.GetMethod("ScoreDownloadRoutes", $flags)
+  $selectM = $serviceType.GetMethod("SelectDownloadRoute", $flags)
   if (-not $enumM -or -not $scoreM -or -not $selectM) {
-    Write-Host "FAIL: route selection methods not found on Portal"; exit 1
+    Write-Host "FAIL: route selection methods not found on OnlineDownloadService"; exit 1
   }
 
   $pass = 0; $fail = 0
   function Check($desc, $expectPattern, $config, $pgPcFilter, $targetIp) {
     # Print the scores so a failure shows why the ranking came out the way it did.
-    $routes = $enumM.Invoke($null, [object[]]@($config))
+    $routes = $enumM.Invoke($service, [object[]]@($config))
     $scoreM.Invoke($null, [object[]]@($routes, $targetIp)) | Out-Null
     foreach ($r in $routes) {
       Write-Host ("        score={0,-2} {1}" -f $r.GetType().GetField("Score").GetValue($r),
                                                $r.GetType().GetMethod("Describe").Invoke($r, @()))
     }
 
-    $sel = $selectM.Invoke($null, [object[]]@($config, $pgPcFilter, $targetIp))
+    $sel = $selectM.Invoke($service, [object[]]@($config, $pgPcFilter, $targetIp))
     $t = $sel.GetType()
     $err = $t.GetField("Error").GetValue($sel)
     $got = if ($err) { "ERROR: $err" } else { $t.GetField("Description").GetValue($sel) }

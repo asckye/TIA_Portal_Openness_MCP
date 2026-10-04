@@ -1,4 +1,5 @@
-﻿# Offline deterministic test of Guard.MatchPlcName (the tolerant softwarePath matcher).
+﻿# Offline deterministic test of Guard.MatchPlcName (strict softwarePath matching since G9: exact name ignoring case
+# and surrounding whitespace; an omitted name selects the only PLC; no substring guesses, no fallback to the sole PLC).
 # No TIA Portal needed: reflects over the built V21 assembly and invokes the pure static.
 # The assembly and dependencies are copied to an ASCII %TEMP% path so Windows PowerShell 5.1 can
 # LoadFrom it even when the repo lives under a non-ASCII (e.g. Chinese) path.
@@ -52,21 +53,22 @@ try {
   Check "single exact"      $single "PLC_1"   "PLC_1"
   Check "single case"       $single "plc_1"   "PLC_1"
   Check "single trim"       $single " PLC_1 " "PLC_1"
-  Check "single sole-auto"  $single "garbage" "PLC_1"
-  Check "single substr"     $single "plc"     "PLC_1"
+  Check "single wrong name"  $single "garbage" $null
+  Check "single substr"     $single "plc"     $null
+  Check "single omitted"    $single ""        "PLC_1"
 
   $multi = @("MainPLC","SafetyPLC","PLC_1")
   Check "multi exact"       $multi "SafetyPLC"   "SafetyPLC"
   Check "multi case"        $multi "safetyplc"   "SafetyPLC"
   Check "multi trim"        $multi " SafetyPLC " "SafetyPLC"
-  Check "multi uniq-substr" $multi "Safety"      "SafetyPLC"
+  Check "multi substr"      $multi "Safety"      $null
   Check "multi ambiguous"   $multi "PLC"         $null
   Check "multi not-found"   $multi "NoSuch"      $null
   Check "multi empty"       $multi ""            $null
 
   $two = @("PLC_1","PLC_2")
   Check "two exact"         $two "PLC_2"  "PLC_2"
-  Check "two uniq-digit"    $two "1"      "PLC_1"
+  Check "two digit"         $two "1"      $null
   Check "two ambiguous"     $two "PLC"    $null
 
   Check "empty list"        @()    "PLC_1" $null
