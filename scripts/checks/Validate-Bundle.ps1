@@ -81,6 +81,9 @@ foreach ($guiFile in @(
     'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
     'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
     'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
+    'tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcServices.cs',
+    'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/InvocationJournal.Adapter.cs',
+    'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs',
     'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
     'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
     'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',
@@ -117,8 +120,25 @@ foreach ($name in @('TiaMcp.Runtime.csproj','S7LiveReader.cs','OpcUaLiveReader.c
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing runtime channel source: $path" }
 }
 if (!$NoBinaries) {
+    $verifier = Join-Path $root 'runtime/verification/NativeCallWeaver.dll'
+    foreach ($name in @('NativeCallWeaver.dll','NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json','Mono.Cecil.dll')) {
+        if (!(Test-Path -LiteralPath (Join-Path $root "runtime/verification/$name"))) { Fail "Missing packaged native verifier: $name" }
+    }
     foreach ($major in @(20,21)) {
         if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$major/TiaMcp.Runtime.dll"))) { Fail "Missing runtime channel assembly: V$major" }
+        foreach ($name in @("TiaMcp.Adapter.$major.dll",'TiaMcp.Adapters.Contracts.dll')) {
+            if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$major/$name"))) { Fail "Missing shared adapter dependency: V$major/$name" }
+        }
+        $adapters = @(Get-ChildItem -LiteralPath (Join-Path $root "runtime/v$major") -Filter 'TiaMcp.Adapter.*.dll' -File -ErrorAction SilentlyContinue)
+        if ($adapters.Count -ne 1 -or $adapters[0].Name -cne "TiaMcp.Adapter.$major.dll") { Fail "V$major must contain exactly its matching adapter" }
+        elseif (Test-Path -LiteralPath $verifier) {
+            try {
+                if ([Reflection.AssemblyName]::GetAssemblyName($adapters[0].FullName).Name -cne "TiaMcp.Adapter.$major") { Fail "Packaged V$major adapter assembly identity mismatch" }
+            } catch { Fail "Packaged V$major adapter metadata is unreadable" }
+            & dotnet $verifier verify $adapters[0].FullName
+            if ($LASTEXITCODE -ne 0) { Fail "Packaged V$major adapter weave verification failed" }
+            else { Ok "Packaged V$major adapter weave verified" }
+        }
     }
 }
 

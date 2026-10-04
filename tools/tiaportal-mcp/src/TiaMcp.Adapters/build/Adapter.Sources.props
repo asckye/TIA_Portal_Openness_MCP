@@ -2,6 +2,7 @@
   <!-- Transitional shared native source, compiled separately against each exact API.
        Deliberately no glob, generated placeholder, or Siemens copy. DTOs come from Contracts. -->
   <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Plc/PlcServices.cs" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />

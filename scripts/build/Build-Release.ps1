@@ -16,6 +16,7 @@ $expectedCheckCounts=[ordered]@{
     nativeMcpSafety=@{value=8;mode='min'}
     crashEvidence=@{value=6;mode='min'}
     nativeJournalReader=@{value=3;mode='min'}
+    adapterJournal=@{value=8;mode='min'}
     processLeases=@{value=2;mode='min'}
     workerFaults=@{value=25;mode='min'}
     workerProtocol=@{value=58;mode='min'}
@@ -98,6 +99,12 @@ $weaverProject=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj
 Restore $weaverProject @()
 Run $Dotnet @('build',$weaverProject,'-c','Release','--no-restore','-v:q') 'native-weaver-build.log'
 $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll'
+$verifierDirectory=Join-Path $repo 'runtime/verification'
+New-Item -ItemType Directory -Force $verifierDirectory | Out-Null
+foreach ($name in @('NativeCallWeaver.dll','NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json','Mono.Cecil.dll')) {
+    Copy-Item -LiteralPath (Join-Path (Split-Path $weaver) $name) -Destination $verifierDirectory -Force
+}
+$packagedWeaver=Join-Path $verifierDirectory 'NativeCallWeaver.dll'
 $diagnosticProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj'
 Restore $diagnosticProject @()
 Run $Dotnet @('build',$diagnosticProject,'-c','Release','--no-restore','-v:q') 'native-diagnostics-build.log'
@@ -142,6 +149,10 @@ foreach($major in @(20,21)) {
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
     $payload=@(Get-ChildItem -LiteralPath $built -File | Where-Object {$_.Extension -in '.exe','.dll','.config' -and $_.Name -notlike 'Siemens.Engineering*'})
     if ('TiaMcp.Runtime.dll' -notin $payload.Name) { throw "V$major runtime channel assembly missing from build output" }
+    foreach ($name in @("TiaMcp.Adapter.$major.dll",'TiaMcp.Adapters.Contracts.dll')) {
+        if ($name -notin $payload.Name) { throw "V$major shared adapter dependency missing: $name" }
+    }
+    if (@($payload | Where-Object { $_.Name -like 'TiaMcp.Adapter.*.dll' }).Count -ne 1) { throw "V$major must ship exactly its own shared adapter" }
     # Fail on obsolete dependencies so an old DLL is never silently republished.
     foreach($file in Get-ChildItem -LiteralPath $runtime -File | Where-Object {$_.Extension -in '.exe','.dll','.config'}){if($file.Name -notin $payload.Name){throw "Review obsolete runtime file: $($file.FullName)"}}
     $payload | Copy-Item -Destination $runtime -Force
@@ -151,9 +162,16 @@ foreach($major in @(20,21)) {
     $coveragePath=Join-Path $out "native-call-coverage-v$major.json"
     Run $Dotnet @($weaver,'verify',$exe,$coveragePath) "native-coverage-v$major.log"
     $coverage=Get-Content $coveragePath -Raw | ConvertFrom-Json
+    $adapterCoveragePath=Join-Path $out "adapter-native-call-coverage-v$major.json"
+    Run $Dotnet @($packagedWeaver,'verify',(Join-Path $runtime "TiaMcp.Adapter.$major.dll"),$adapterCoveragePath) "adapter-native-coverage-v$major.log"
+    $adapterCoverage=Get-Content $adapterCoveragePath -Raw | ConvertFrom-Json
     Run $harness @($exe,'native-diagnostics-only',$api) "native-jit-v$major.log"
     $nativeJit=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) native diagnostic wrappers JIT prepared; (\d+) open generic wrappers')
     if(!$nativeJit.Success -or ([int]$nativeJit.Groups[1].Value+[int]$nativeJit.Groups[2].Value) -ne $coverage.count){throw 'Diagnostic wrapper JIT/inventory mismatch'}
+    $adapterJit=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) adapter native diagnostic wrappers JIT prepared; (\d+) open generic wrappers')
+    if(!$adapterJit.Success -or ([int]$adapterJit.Groups[1].Value+[int]$adapterJit.Groups[2].Value) -ne $adapterCoverage.count){throw 'Adapter diagnostic wrapper JIT/inventory mismatch'}
+    $adapterJournal=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) adapter integration diagnostic checks passed')
+    Assert-MatchedCheckCount 'adapterJournal' $adapterJournal 'Shared adapter journal checks incomplete'
     $nativeJournalReader=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) native journal reader checks passed')
     Assert-MatchedCheckCount 'nativeJournalReader' $nativeJournalReader 'Native journal reader checks incomplete'
     Run $harness @($exe,'process-leases-only') "process-leases-v$major.log"
@@ -274,7 +292,7 @@ $manifest.capabilities.liteProfile.toolCount=$liteNames.Count
 $manifest.capabilities.liteProfile.note='Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative.'
 $manifest.validationStatus='Both runtimes compiled and tested locally; new real-project acceptance remains pending'
 WriteJson $manifestPath $manifest
-$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo 'runtime/v21') -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config'} | Sort-Object FullName | ForEach-Object {
+$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo 'runtime/v21'),$verifierDirectory -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config' -or ($_.DirectoryName -eq $verifierDirectory -and $_.Name -in 'NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json')} | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.

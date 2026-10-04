@@ -103,6 +103,7 @@ internal static class EngineSurfaceChecks
         check(failure != null && failure.StartsWith("original assertion") && failure.Contains(typeof(Service).FullName!) && failure.Contains("WithDelegate"), "EngineSurface IL failures retain the assertion and name its declaring type");
 
         var engine = EngineSurface.For(server);
+        AdapterIntegrationChecks.Surface(server, engine, check);
         var catalogType = server.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
         var catalog = catalogType.GetProperty("Engine", All)!.GetValue(null)!;
         var entries = (IEnumerable)catalogType.GetProperty("Methods", All)!.GetValue(catalog)!;

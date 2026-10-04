@@ -43,6 +43,7 @@
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../TiaMcp.Adapters/V21/Adapter.21.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" AdditionalProperties="SiemensEngineeringDirectory=$(SiemensEngineeringDirectory)" />
     <ProjectReference Include="../TiaMcp.Runtime/TiaMcp.Runtime.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>

@@ -218,6 +218,11 @@ def main():
     required += ['tools/tiaportal-mcp/src/TiaMcp.Runtime/' + name for name in
                  ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs')]
     required += [f'runtime/v{major}/TiaMcp.Runtime.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
+    required += ['runtime/verification/' + name for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll')]
+    required += ['tools/tiaportal-mcp/src/' + name for name in ('TiaMcp.Adapters/Native/Plc/PlcServices.cs', 'TiaMcpServer/ModelContextProtocol/InvocationJournal.Adapter.cs')]
+    required += ['tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs']
     required += ['tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
     required += ['tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]

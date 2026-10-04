@@ -186,7 +186,7 @@ foundation / foundation-api 的最低数量各减少上述 **10** 项；offline 
 | E（P4-02） | PlcWorker、LegacyHost、TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 八版 PublicAPI 构建和离线冒烟后仍须按真机台账逐 Foundation 版本验收 | P4-E1 已统一 net48；P4-E2 信封先用 STJ，DTO codec 留给 P2-04 |
 | F（P4-03） | Studio 桥接进程和客户端改用通道；方法名不变 | 无 | 是 | 独立 |
 | G（P4-03） | Studio `ITiaSession` 在 `TiaOpenness.Core` 中基于扩展面重新实现；桥接进程加载织入的 `TiaMcp.Adapter.<key>`；删除 `StudioOpenness.V*` | 高（替换连接和遍历代码，新增织入） | 否（构建开关） | 独立 |
-| H（P4-04） | 引擎引用 `Adapter.20/21`，打包并校验 DLL；日志输出接口；`EngineSurface` 也搜索适配器 | 无（尚无调用） | 是 | P2-04 日志合并及阶段 3 第 3–4 步之后 |
+| H（P4-04，已完成） | 引擎引用 `Adapter.20/21`，打包并校验 DLL；日志输出接口；`EngineSurface` 也搜索适配器 | 无（尚无调用） | 是 | P2-04 日志合并及阶段 3 第 3–4 步之后 |
 | I（P4-04） | 引擎各领域改用共享原语，保留引擎专有选项（顺序见下） | 高 | 否（构建开关） | 见下 |
 | J | L5 之后：去掉开关和旧路径；列出阶段 6 的语义统一候选 | — | — | — |
 
@@ -215,14 +215,44 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 
 ## 风险
 
-- **R1 重复的公开类型**：适配器源码链接的 `TiaVersionCatalog`/`TiaVersionDescriptor` 在 `TiaMcp.Logic` 中也是公开的；引擎同时引用
-  两者会出现 CS0433。第 B 步解决。
-- **R2 同一进程两份日志**：P2-04c 已合并 `InvocationJournal` 与原生诊断写入层，并提供共享输出及关联 ID 接口，日志分支重复问题已解决；第 H 步将进程内适配器接到引擎的同一输出，当前不改变接线。
-- **R3 引擎构建引用**：引擎通过 NuGet Openness 包的 targets 解析西门子引用（回退到注册表或包），适配器要求显式 PublicAPI 目录和
-  精确身份核对。引擎构建必须固定同一目录并增加同样的核对。
-- **R4 宏含义重叠**：`PLC_SAFETY` 同时选择 `ProjectBase`/LocalSession API，后续单独拆出一个特性宏。
-- **R5 路径换算**：引擎 `softwarePath`、Foundation 转义路径和 Studio 设备名之间的换算本身就是行为变化，放在 G9 之后。
-- **R6 测试范围**：编译、假 SDK 和传输测试不能证明原生语义，第 G、I 步完全依赖 L5。
+- **R1 重复的公开类型（已解决）**：第 B 步已将适配器内链接的版本类型改为 internal；第 H 步在真实织入产物上
+  枚举引擎、Logic、Contracts 和适配器的所有公开类型，确认没有重复完整名称，编译无 CS0433/CS0436，故不再改可见性。
+- **R2 同一进程两份日志（已解决）**：引擎专属的 `InvocationJournal.Adapter.cs` 静态初始化把适配器的
+  `AdapterJournal.ConfigureOutput` 接到引擎 `WriteLine` 与 `CorrelationId`（接线在单独的不内联方法中，适配器程序集缺失或无法加载时只记录一次吞异常，适配器继续写自己的日志文件，引擎日志与工具不受影响），不向离线源码链接测试引入原生依赖；
+  两次真实 `SerializedCallTool` 调用内的异步适配器原生 span 测试证明同文件、同调用关联 ID、先后顺序及调用之间 ID 隔离。
+- **R3 引擎构建引用（已解决）**：继续使用 NuGet Openness targets 的目录选择，但在项目引用求值时把最终绝对
+  `SiemensEngineeringDirectory` 传给适配器；适配器核对精确程序集身份，引擎在 ResolveAssemblyReferences 后逐项拒绝
+  位于该目录以外的 Siemens.Engineering 引用。适配器显式依赖织入工具的构建，避免首次构建的顺序竞争。
+  托管 CI 原本不编译完整引擎或真实 SDK 适配器：offline、source-contracts、Studio 两种变体及 foundation-transport
+  都保持无需 PublicAPI；仅发布验包 job 增加 .NET 8 供随包 IL 校验器运行，不引入 Siemens SDK。
+
+## 第 H 步接线与验收
+
+`TiaMcpServer.V20/V21` 通过项目引用复制 `TiaMcp.Adapter.20/21.dll` 与 Contracts；没有引擎领域调用适配器。
+`PlcServices.Over(Func<ProjectBase>)` 是仅 net48 且 SDK 支持 ProjectBase 的类型化借用入口，构造 PLC program/data
+两个扩展面，不求值委托、不建立会话、不缓存或释放句柄、不切换线程；具体原语和引擎策略由第 I 步逐项添加。
+不复用 Foundation 的 STA 会话来承载引擎 MTA 调用。借用入口检查使用未初始化的托管引用，不执行西门子构造函数或属性。
+
+`EngineSurface` 从织入 EXE 的程序集引用找到同目录适配器，跨两程序集查找 MCP 工具及显式列出的服务/PLC 入口；
+没有注册属性的 Foundation/Studio 辅助类不被当作引擎领域服务。工具重名、成员跨程序集重名和公开类型冲突均有检查；
+原有 Portal 优先于引擎服务的规则不掩盖适配器重名。旧引擎基线仍可由比较工具读取。
+
+`Build-Release.ps1` 在复制后再次校验适配器，并把校验器及其运行依赖放入 `runtime/verification`，纳入 runtimeFiles
+哈希清单；`Validate-Bundle.ps1` 直接使用随包校验器复验 DLL，不构建、不加载西门子程序集，完整验包需要 .NET 8。
+三份必需文件清单覆盖新增源码、两版适配器/Contracts 和校验器，`-NoBinaries` 的干净检出路径保持跳过全部运行产物。
+
+成员多重集的验收边界现在为引擎 ∪ 适配器；第 H 步唯一预期增量是加入该版本适配器自己的完整成员多重集，
+引擎没有新增或删除的 Siemens 成员，也没有变动原生调用顺序、参数或线程归属。所有类别的引擎插桩点同样不变：
+
+| 版本 | 引擎 Siemens 成员（前后） | 加入的适配器 Siemens 成员 | 合计 | 引擎 JIT / 开放泛型 | 适配器 JIT / 开放泛型 |
+|---|---:|---:|---:|---:|---:|
+| V20 | 5230 → 5230 | 902 | 6132 | 12478 / 110 | 1720 / 32 |
+| V21 | 5604 → 5604 | 899 | 6503 | 12928 / 110 | 1717 / 32 |
+
+JIT 数量包含直接、反射、接口、对象分派和枚举输入等所有类别；加上未准备的开放泛型数，分别等于引擎清单
+12588/13038、适配器清单 1752/1749。开放泛型沿用独立泛型夹具验证，JIT 不执行原生调用。
+HttpTests engineering-api 每版增加 13 项，native-diagnostics 每版增加 8 项日志/适配器检查和适配器 JIT 清单；
+旧检查保持不变。八版适配器全部织入并验证，引擎 ∪ 适配器不是合并程序集，也不改变 MCP 工具注册范围。
 
 ## 关键文件
 

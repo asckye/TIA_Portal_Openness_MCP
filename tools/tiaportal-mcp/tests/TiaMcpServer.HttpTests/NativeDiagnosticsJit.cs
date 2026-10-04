@@ -26,6 +26,9 @@ internal static partial class Program
         { pagesType.GetMethod("Expire", All)!.Invoke(pages, null); }
         Console.WriteLine("PASS native diagnostic wrappers preserve private-type access in timer cleanup");
         Console.WriteLine("COMPLETE: " + prepared + " native diagnostic wrappers JIT prepared; " + open + " open generic wrappers not prepared (generic patterns tested separately); no native call executed");
+        int adapterChecks = 0;
+        AdapterIntegrationChecks.Diagnostics(Server, EngineSurface.For(Server).Adapter!, (ok, message) => { Check(ok, message); adapterChecks++; });
+        Console.WriteLine("COMPLETE: " + adapterChecks + " adapter integration diagnostic checks passed");
         string previous = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY");
         string scratch = Path.Combine(Path.GetTempPath(), "tia-journal-reader-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scratch);

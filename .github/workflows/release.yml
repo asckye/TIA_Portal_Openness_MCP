@@ -68,7 +68,11 @@ jobs:
           if (-not (Test-Path "assets/$env:package.zip") -or -not (Test-Path "assets/$env:package.sha256")) { throw "release $env:tag lacks $env:package.zip or its .sha256" }
       - name: ZIP equals the reviewed tree plus the validated binaries
         run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip" --root tagtree
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
       - name: Unpacked package passes the strict bundle validation
+        # The packaged verifier reads IL only; no Siemens SDK or engine build is needed.
         shell: pwsh
         run: |
           Expand-Archive -LiteralPath "assets/$env:package.zip" -DestinationPath unpacked -Force

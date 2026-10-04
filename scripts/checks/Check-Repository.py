@@ -61,6 +61,13 @@ def check(root, no_binaries=False):
         required('tools/tiaportal-mcp/src/TiaMcp.Runtime/' + name, 'runtime channel source')
     for major in (20, 21):
         required(f'runtime/v{major}/TiaMcp.Runtime.dll', 'runtime channel assembly')
+        required(f'runtime/v{major}/TiaMcp.Adapter.{major}.dll', 'in-process shared adapter')
+        required(f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll', 'adapter contracts assembly')
+    for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll'):
+        required('runtime/verification/' + name, 'packaged native verifier')
+    for name in ('TiaMcp.Adapters/Native/Plc/PlcServices.cs', 'TiaMcpServer/ModelContextProtocol/InvocationJournal.Adapter.cs'):
+        required('tools/tiaportal-mcp/src/' + name, 'engine adapter wiring')
+    required('tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs', 'engine adapter checks')
     required('tools/openness-shared/BundleLayout.cs', 'bundle layout')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')

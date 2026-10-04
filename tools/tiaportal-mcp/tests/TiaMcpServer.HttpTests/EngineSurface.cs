@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -80,10 +81,27 @@ internal sealed class EngineSurface
     private readonly Type[] toolTypes;
     private readonly Type sessionType;
     private readonly Type[] serviceTypes;
+    internal Assembly? Adapter { get; private set; }
 
-    internal static EngineSurface For(Assembly engine) => surfaces.GetValue(engine, assembly =>
-        new EngineSurface(assembly, LoadableTypes(assembly), assembly.GetType("TiaMcpServer.Siemens.Portal", true)!,
-            serviceTypeNames.Concat(helperTypeNames).Select(name => assembly.GetType(name, true)!).ToArray()));
+    internal static EngineSurface For(Assembly engine) => surfaces.GetValue(engine, Create);
+
+    private static EngineSurface Create(Assembly engine)
+    {
+        var reference = engine.GetReferencedAssemblies().SingleOrDefault(name => name.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
+        // Baseline engines from before step H remain readable by comparison runs.
+        var adapter = reference == null ? null : Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(engine.Location)!, reference.Name + ".dll"));
+        var assemblies = adapter == null ? new[] { engine } : new[] { engine, adapter };
+        var services = serviceTypeNames.Concat(helperTypeNames).Select(name => assemblies
+            .Select(assembly => assembly.GetType(name, false)).Where(type => type != null).Single()!).ToList();
+        if (adapter != null) services.Add(adapter.GetType("TiaMcp.Adapters.PlcServices", true)!);
+        return new EngineSurface(engine, assemblies.SelectMany(LoadableTypes), engine.GetType("TiaMcpServer.Siemens.Portal", true)!, services.ToArray()) { Adapter = adapter };
+    }
+
+    internal string[] CrossAssemblyMemberNames() => serviceTypes.Where(type => type.Assembly == Adapter)
+        .SelectMany(type => type.GetMembers(All | BindingFlags.DeclaredOnly)).Select(member => member.Name)
+        .Intersect(new[] { sessionType }.Concat(serviceTypes.Where(type => type.Assembly == engine))
+            .SelectMany(type => type.GetMembers(All | BindingFlags.DeclaredOnly)).Select(member => member.Name))
+        .Where(name => name != ".ctor" && name != ".cctor").Distinct().ToArray();
 
     // Explicit types let the harness exercise future instance tools and services without adding engine fixtures.
     internal EngineSurface(Assembly engine, IEnumerable<Type> toolTypes, Type sessionType, params Type[] serviceTypes)
@@ -135,7 +153,8 @@ internal sealed class EngineSurface
     private T SessionMember<T>(string name, Func<Type, IEnumerable<T>> find) where T : MemberInfo
     {
         var session = find(sessionType).ToArray();
-        if (session.Length != 0) return Unique(session, "session member '" + name + "'", new[] { sessionType });
+        if (session.Length != 0) return Unique(session.Concat(serviceTypes.Where(type => type.Assembly == Adapter).SelectMany(find)),
+            "session/adapter member '" + name + "'", new[] { sessionType }.Concat(serviceTypes));
         return Unique(serviceTypes.SelectMany(find), "session/service member '" + name + "'", new[] { sessionType }.Concat(serviceTypes));
     }
 

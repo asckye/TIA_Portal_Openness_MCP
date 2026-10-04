@@ -1,4 +1,7 @@
 <Project>
+  <ItemGroup Condition="'$(DesignTimeBuild)' != 'true'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../../native-call-weaver/NativeCallWeaver.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier" AdditionalProperties="Configuration=Release" />
+  </ItemGroup>
   <ItemGroup>
     <CustomAdditionalCompileInputs Include="$(NativeCallWeaverPath)" />
   </ItemGroup>
