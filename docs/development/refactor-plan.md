@@ -112,10 +112,10 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-13 | 步骤 13 PLC 程序：P3-13a 块与组（27 个工具）、P3-13b 类型/文档/外部源/原生交换（29 个）、P3-13c 软件信息/反射/审计/导出缓存/XML 构建（34 个）。叠加验证：逐方法西门子调用顺序 V21 221、V20 220 一致，同名歧义 12 族另行核对；领域工具 464 项逐字节一致；foundation 6610、foundation-api 7671；契约与返回快照 0 差异 | done |
 | P3-14 | 步骤 14 Unified HMI：P3-14a 离线测试覆盖的 21 个 HMI 工具（服务依赖不含西门子类型的窄接口 `IHmiToolSession`，测试替身取代 partial `Portal`）；P3-14b Unified HMI 核心 51 个；P3-14c HMI 交换、描述与变量删除 21 个。叠加验证：逐方法西门子调用顺序 248 个一致，同名歧义 21 族另行核对；领域工具 292 项逐字节一致；契约与返回快照 0 差异 | done |
 | P3-15 | 步骤 15：P3-15a 会话、工程与诊断工具 24 个迁入 `SessionTools`、`ProjectSessionTools`、`DiagnosticsTools`（经 `IEngineeringSession` 访问内核，CLI 保留无属性转发）；`McpServer` 只剩基础设施工具（ToolBridge、Batch、Worker、Doctor、CheckForUpdate）与转发 | done |
-| P3-16 | 步骤 16：P3-16a 运行时通道（S7、OPC UA、Web API、Unified Open Pipe）迁入 `TiaMcp.Runtime`，PLCSIM Advanced 与环境诊断因可反射西门子对象留在织入的引擎，20 个运行时工具迁入实例工具类；P3-16b `Program` 只保留入口，报告、探针、HMI 模板与 PLC/HMI 同步 XML 拆为 `Cli/` 下的具名类（CLI 输出 78 项、生成文件 340 项逐字节一致；未处理异常的堆栈类名变化按 D1 接受）；P3-16c 删除静态会话入口与 CLI 转发进行中 | doing |
+| P3-16 | 步骤 16：P3-16a 运行时通道（S7、OPC UA、Web API、Unified Open Pipe）迁入 `TiaMcp.Runtime`，PLCSIM Advanced 与环境诊断因可反射西门子对象留在织入的引擎，20 个运行时工具迁入实例工具类；P3-16b `Program` 只保留入口，报告、探针、HMI 模板与 PLC/HMI 同步 XML 拆为 `Cli/` 下的具名类（CLI 输出 78 项、生成文件 340 项逐字节一致；未处理异常的堆栈类名变化按 D1 接受）；P3-16c 删除静态会话入口 `McpServer.Portal`、83 个 CLI 转发与 9 个空 partial，CLI 与基础设施改从 `EngineServices` 取实例，内核到服务的定位器转发改为服务注入（领域工具 424 项、CLI 78 项与生成文件 340 项一致）。阶段 3 完成 | done |
 | P3-17 | 源码契约检查改为按成员名定位（`scripts/checks/engine_sources.py`），随迁移失效的检查已修复，纯源码检查接入 CI `source-contracts` 任务 | done |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |
-| P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
+| P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集（由 P3-16a/P3-16b 完成） | done |
 | P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构。设计见[运行时布局与清理](runtime-layout.md)（G7-1…7，原有探测保留为兼容回退到 4.0）。G7-1、G7-2 完成：P0-06 加入参考资料工具，`BundleLayout.cs` 与 `Check-BundleLayout.py`；G7-3 完成：引擎查找伴随与参考文件改用解析器（布局矩阵 37 项，仓库外交付包原始响应 0 差异；质量 PDF 一项因本机缺少 reportlab 未验证）；G7-4 完成：安装根、CLI 交付包根与同级引擎查找改用解析器，原探测保留为回退（布局矩阵 56 项，仓库外交付包 9 项比对仅时间字段不同）；G7-5 完成：Studio 交付包根、引擎路径、更新检查、桥接与适配器目录改用解析器，worktree 的 `.git` 文件不再被当作安装包；C# 5 启动器保留原探测，由 `Check-BundleLayout.py` 核对其路径（Core 118、GUI 1407、配置 197，仓库外重定位 1921 份结果一致）；G7-6 完成：V21 生态目录由仓库 JSON 直接嵌入引擎，交付包缺少该文件时仍可查询（生态检查两版各 75 项，含 HTTP） | doing |
 
 ### 阶段 4：合并三套实现（兼容，需要真机）
