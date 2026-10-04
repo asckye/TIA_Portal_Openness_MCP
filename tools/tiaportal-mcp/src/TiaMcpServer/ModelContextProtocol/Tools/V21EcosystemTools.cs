@@ -40,7 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "DecodePlcSimaticMl"), Description("[L2][Validation][OFFLINE] Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Python >=3.11 via TIA_MCP_PLC_TOOLS_PYTHON or existing ecosystem environment. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine.")]
         public async Task<ResponseMessage> DecodePlcSimaticMl([Description("Absolute existing V21 FC/FB XML export; upstream boundary <=10 MiB.")] string filePath, [Description("Isolated local Python timeout 1..60 seconds.")] int timeoutSeconds = 30)
         {
-            var meta = new JsonObject { ["success"] = false, ["operationSuccess"] = false, ["offlineOnly"] = true, ["tool"] = "DecodePlcSimaticMl" };
+            var meta = ResponseMeta.Unstamped(false, ("operationSuccess", false), ("offlineOnly", true), ("tool", "DecodePlcSimaticMl"));
             try {
                 if (!Path.IsPathRooted(filePath) || !File.Exists(filePath)) throw new ArgumentException("Existing absolute filePath required.");
                 if (timeoutSeconds < 1 || timeoutSeconds > 60) throw new ArgumentException("timeoutSeconds 1..60 required.");
@@ -53,6 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var data = JsonNode.Parse(run["stdout"]!.GetValue<string>())?.AsObject() ?? throw new InvalidOperationException("Decoder returned no JSON object.");
                 meta["data"] = data;
                 var ok = run["success"]!.GetValue<bool>() && data["success"]!.GetValue<bool>();
+                // envelope: legacy-independent-verdicts
                 meta["success"] = ok; meta["operationSuccess"] = ok;
                 return new ResponseMessage { Message = ok ? "Analysis-only decoded logic; do not import this output." : "Decode refused or failed; inspect data.error.", Meta = meta };
             } catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }

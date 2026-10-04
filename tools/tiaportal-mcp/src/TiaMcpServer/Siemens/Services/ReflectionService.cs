@@ -91,7 +91,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "Property value is null",
-                    Meta = new JsonObject { ["success"] = true, ["status"] = "Value", ["valueIsNull"] = true },
+                    Meta = ResponseMeta.Unstamped(true, ("status", "Value"), ("valueIsNull", true)),
                     ObjectKind = objectKind,
                     ObjectPath = $"{objectPath}.{propertyPath}",
                     TypeName = null,

@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -17,6 +18,21 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static JsonObject Basic(bool success, params (string Key, JsonNode? Value)[] after)
         {
             var meta = Basic(success);
+            Append(meta, after);
+            return meta;
+        }
+
+        // Inline callers evaluate the clock before success and the remaining values.
+        internal static JsonObject Basic(DateTime timestamp, bool success, params (string Key, JsonNode? Value)[] after)
+        {
+            var meta = new JsonObject { ["timestamp"] = timestamp, ["success"] = success };
+            Append(meta, after);
+            return meta;
+        }
+
+        internal static JsonObject Unstamped(bool success, params (string Key, JsonNode? Value)[] after)
+        {
+            var meta = new JsonObject { ["success"] = success };
             Append(meta, after);
             return meta;
         }

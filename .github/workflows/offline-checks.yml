@@ -49,6 +49,7 @@ jobs:
           python3 scripts/checks/Check-CommentHygiene.py --self-test
           python3 scripts/checks/Check-McpText.py --self-test
           python3 scripts/checks/Inventory-ResponseEnvelopes.py --self-test
+          python3 scripts/checks/Check-EnvelopeRewrite.py --self-test
           python3 scripts/checks/Test-EngineSources.py
       - name: Diagnostic membership contracts
         run: python3 scripts/checks/Test-DiagnosticMembershipSources.py

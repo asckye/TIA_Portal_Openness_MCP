@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "RunPlcCompanionTool"), Description("[L2][Simulation][ONLINE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. argumentsJson is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ installed by scripts/ecosystem/Install-PlcTools.ps1; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.")]
         public async Task<ResponseMessage> RunPlcCompanionTool([Description("Existing absolute project directory used by the companion command.")] string workingDirectory, [Description("catalog/help/run; catalog and help do not execute command callbacks.")] string mode = "catalog", [Description("JSON string array of exact CLI arguments; no shell syntax.")] string argumentsJson = "[]", [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true, [Description("Command-tree timeout in seconds, 1..300; partial effects may remain after timeout.")] int timeoutSeconds = 60)
         {
-            var meta = new JsonObject { ["success"] = false, ["tool"] = "RunPlcCompanionTool", ["mode"] = mode };
+            var meta = ResponseMeta.Unstamped(false, ("tool", "RunPlcCompanionTool"), ("mode", mode));
             try
             {
                 if (mode != "catalog" && mode != "help" && mode != "run") throw new ArgumentException("mode must be catalog/help/run.");
@@ -44,6 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string python = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? Path.Combine(root, "TiaMcp_Output", "ecosystem-python", "Scripts", "python.exe");
                 if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Run Install-PlcTools.ps1 and configure TIA_MCP_PLC_TOOLS_PYTHON.");
                 meta["arguments"] = args.DeepClone(); meta["workingDirectory"] = workingDirectory; meta["python"] = python;
+                // envelope: legacy-single-verdict
                 if (mode == "run" && dryRun) { meta["success"] = true; meta["executed"] = false; return new ResponseMessage { Message = "Execution plan only. Review selected command/config; dryRun=false executes it.", Meta = meta }; }
                 var request = new JsonObject { ["mode"] = mode, ["arguments"] = args.DeepClone() };
                 var result = await EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", Path.Combine(root, "scripts", "ecosystem", "plc_tools_bridge.py") }, workingDirectory, request.ToJsonString(), timeoutSeconds).ConfigureAwait(false);

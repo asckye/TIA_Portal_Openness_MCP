@@ -85,9 +85,43 @@ E2–E6 全部 0 差异，不满足的调用点保持手写，不另设构建开
 | P2-01b（T1） | `Inventory-ResponseEnvelopes.py` 计数并作为只减不增的检查 |
 | P2-01c（T2） | `ResponseMeta`/`ResponseClock` 与 E2 测试 |
 | P2-01d（T3） | 执行器与 meta 工厂（B4–B6）原位改用构造器，不改名；E3/E5/E6 0 差异 |
-| P2-01e…（T4…） | 内联调用点随阶段 3 各领域迁移前转换：先“迁移前清理”提交，再“纯迁移”提交 |
+| P2-01e…（T4…） | 阶段 3 已完成；e0 提供 E4 检查器与反射/生态/Git/用法试点，e1–e3 按领域转换内联调用点 |
 
-T0–T3 应在阶段 3 第 5 步之前完成（第 4 步的内核接口已保留 `RunHmiStepTool` 原名，可原位改造）。
+T0–T3 已完成；执行器保留 `RunHmiStepTool` 等原名，内联转换不再伴随文件搬迁。
+
+### E4 内联模板与复跑（P2-01e0–e3）
+
+`scripts/checks/Check-EnvelopeRewrite.py --base <sha> [paths...]` 比较基线与当前 worktree，包含已跟踪和未跟踪的
+C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查所有改动的 C# 文件，不豁免构造器或测试文件。
+构造器及 E2 测试单独审查，调用点检查显式传本任务的工具/服务文件。CI `source-contracts` 运行 `--self-test`，不依赖 master 的父提交。
+
+封闭模板如下；`s`、`v` 和键的次序、表达式 token、字面量拼写必须原样保留，不能省键、加转换或自动 `ToString()`。
+`t` 只接受原有 `DateTime.Now/UtcNow` 或 `ResponseClock.Now/UtcNow`，不能互换或提前存入变量。
+
+| 模板 | 原初始化器的字段顺序 | 替换表达式 |
+|---|---|---|
+| `Basic/explicit-clock` | `timestamp=t, success=s, k=v, …` | `ResponseMeta.Basic(t, s, ("k", v), …)`（尾字段可为空） |
+| `Unstamped/verdict` | `success=s` | `ResponseMeta.Unstamped(s)` |
+| `Unstamped/fields` | `success=s, k=v, …`（无 timestamp） | `ResponseMeta.Unstamped(s, ("k", v), …)` |
+
+仅模板内部 token 之间的空白可变，文件其余字符保持不变；模板不接受内部注释、预处理指令、重复键或集合参数，字段只通过
+`JsonNode` 元组传递（C# 编译核对类型），原有枚举/格式化表达式仍在调用方执行。显式时间参数在后续参数求值之前取得。
+尾字段至多一个非常量表达式，避免后续字段读取先前节点的 `Parent` 等状态时因推迟挂接而改变结果；更复杂形状先保留。
+不可改用隐式取时钟的 `Basic(bool, …)`。单独一行 `// envelope: legacy-<variant>` 可作为纯注释增删；其他不匹配形状
+保持手写。试点的 `legacy-single-verdict` 与 `legacy-independent-verdicts` 保留只写 success 或分别写两个布尔值的语义，
+不改成会补键、读取并克隆节点的 `Complete`。其他旧构造器方法没有在本次内联转换中使用，检查器不开放其替换模板；
+后续确需增加时，同步补封闭模板、正反例和 E2 字节用例。
+
+每个领域任务先记录基线 SHA，构建并保留 V20/V21 EXE、依赖和全类别 weave 清单；然后只转换可匹配的调用点：
+
+1. 运行检查器 `--self-test`、`--base <sha> <本任务调用点路径…>`；临时在一个转换处插入额外语句，确认非零退出后恢复。
+2. E2 跑 `Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy`（检查 TRX 下限）；E3 两版
+   HttpTests `response-golden-only` 各 124 项。新增模板需覆盖键序、CLR 类型、节点归属和时钟取值位置。
+3. E5 对两版 weave `sites` 按声明方法归并 lambda/异步状态机，比较 **全部 category + opcode + member** 多重集合；
+   只允许本次初始化器的 `JsonObject::.ctor` 移到不织入的 Logic，并逐方法列出减少数；其余类别及西门子调用顺序不变。
+4. E6 两版 `Snapshot-ToolResponses.py capture/compare` 要求 `changed=0 rawChanged=0`；工具契约要求 0/0/0。
+   跑 `Test-DomainTools.py` 的已登记领域，试点其余工具另跑 `Test-PilotTools.py`，以及两版 HttpTests 离线模式。
+   最后跑吞异常、注释、MCP 文本、仓库与 bundle 门禁；用 `Inventory-ResponseEnvelopes.py --update-baseline` 收紧基线。
 
 ## P2-03 吞异常治理
 

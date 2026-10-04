@@ -60,11 +60,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         usage["exampleLibrary"] = ToolUsageCatalog.Examples(release, "full-engine", methods.Keys);
                     }
                 }
-                return new ResponseMessage { Message = "Tool and programming examples for the selected release.", Meta = new JsonObject { ["success"] = true, ["usage"] = usage } };
+                return new ResponseMessage { Message = "Tool and programming examples for the selected release.", Meta = ResponseMeta.Unstamped(true, ("usage", usage)) };
             }
             catch (ArgumentException ex)
             {
-                return new ResponseMessage { Message = ex.Message, Meta = new JsonObject { ["success"] = false } };
+                return new ResponseMessage { Message = ex.Message, Meta = ResponseMeta.Unstamped(false) };
             }
         }
 

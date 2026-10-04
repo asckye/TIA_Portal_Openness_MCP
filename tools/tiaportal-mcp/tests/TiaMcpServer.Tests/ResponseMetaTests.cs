@@ -45,6 +45,7 @@ namespace TiaMcpServer.Tests
                 check(ResponseClock.UtcNow.Kind == DateTimeKind.Utc && ResponseClock.UtcNow == Instant.UtcDateTime, "pinned UTC clock represents the same instant");
                 GoldenBytes(check);
                 Initializers(check);
+                InlinePilot(check);
                 ExecutorFactories(check);
                 Mutations(check);
                 BridgeCases(check);
@@ -112,6 +113,55 @@ namespace TiaMcpServer.Tests
                 ["inputPath"] = libraryPath
             }, roundTrip, check);
             check(roundTrip["timestamp"]!.GetValue<string>() == "2001-02-03T04:05:06.1234567+08:00", "round-trip stamp remains a string with seven fractional digits");
+        }
+
+        private static void InlinePilot(Action<bool, string> check)
+        {
+            // ReflectionTools.DescribeObjectProperty: retain Count() after the clock.
+            IDisposable? later = null;
+            int CountAfterClock()
+            {
+                later = ResponseClock.Pin(Instant.AddHours(1));
+                return 3;
+            }
+            var old = new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = true, ["memberCount"] = CountAfterClock() };
+            later!.Dispose();
+            var built = ResponseMeta.Basic(ResponseClock.Now, true, ("memberCount", CountAfterClock()));
+            later!.Dispose();
+            Compare("Basic/explicit-clock-before-count", old, built, check);
+            check(built["timestamp"]!.GetValue<DateTime>() == FixedDate(DateTimeKind.Local), "inline clock is taken before later argument evaluation");
+            check(((JsonValue)built["memberCount"]!).TryGetValue<int>(out var count) && count == 3, "inline memberCount stays Int32");
+            foreach (var kind in new[] { DateTimeKind.Local, DateTimeKind.Utc, DateTimeKind.Unspecified })
+                foreach (bool success in new[] { false, true })
+                {
+                    var stamp = FixedDate(kind);
+                    var meta = ResponseMeta.Basic(stamp, success);
+                    Compare("Basic/explicit-" + kind + "/" + success,
+                        new JsonObject { ["timestamp"] = stamp, ["success"] = success }, meta, check);
+                    check(meta["timestamp"]!.GetValue<DateTime>().Kind == kind, "explicit stamp retains DateTime kind " + kind + "/" + success);
+                }
+
+            // Literal initializers from the six pilot files, without adding a clock.
+            Compare("Unstamped/ReflectionService", new JsonObject { ["success"] = true, ["status"] = "Value", ["valueIsNull"] = true },
+                ResponseMeta.Unstamped(true, ("status", "Value"), ("valueIsNull", true)), check);
+            string mode = "catalog", action = "status";
+            Compare("Unstamped/EcosystemTools", new JsonObject { ["success"] = false, ["tool"] = "RunPlcCompanionTool", ["mode"] = mode },
+                ResponseMeta.Unstamped(false, ("tool", "RunPlcCompanionTool"), ("mode", mode)), check);
+            Compare("Unstamped/V21EcosystemTools", new JsonObject { ["success"] = false, ["operationSuccess"] = false, ["offlineOnly"] = true, ["tool"] = "DecodePlcSimaticMl" },
+                ResponseMeta.Unstamped(false, ("operationSuccess", false), ("offlineOnly", true), ("tool", "DecodePlcSimaticMl")), check);
+            var usage = new JsonObject { ["text"] = "中文 <>& 😀" };
+            var usageMeta = ResponseMeta.Unstamped(true, ("usage", usage));
+            Compare("Unstamped/ToolUsageTools", new JsonObject { ["success"] = true, ["usage"] = new JsonObject { ["text"] = "中文 <>& 😀" } }, usageMeta, check);
+            check(ReferenceEquals(usage, usageMeta["usage"]) && ReferenceEquals(usage.Parent, usageMeta), "unstamped keeps child ownership");
+            Compare("Unstamped/ToolUsageTools-failure", new JsonObject { ["success"] = false }, ResponseMeta.Unstamped(false), check);
+            Compare("Unstamped/GitWorkflowTools", new JsonObject { ["success"] = false, ["action"] = action, ["offlineOnly"] = true },
+                ResponseMeta.Unstamped(false, ("action", action), ("offlineOnly", true)), check);
+            var opaque = new NoString();
+            var values = ResponseMeta.Unstamped(true, ("int", 42), ("long", 9007199254740993L), ("decimal", 1.2300m), ("nil", null));
+            Compare("Unstamped/types-null", new JsonObject { ["success"] = true, ["int"] = 42, ["long"] = 9007199254740993L, ["decimal"] = 1.2300m, ["nil"] = null }, values, check);
+            check(((JsonValue)values["long"]!).TryGetValue<long>(out var number) && number == 9007199254740993L, "unstamped retains Int64 precision and type");
+            check(ReferenceEquals(opaque, ResponseMeta.Unstamped(true, ("value", JsonValue.Create(opaque)))["value"]!.GetValue<NoString>()), "unstamped does not stringify caller values");
+            check(!values.ContainsKey("timestamp"), "unstamped never invents a timestamp");
         }
 
         private static JsonObject HmiLiteral(string toolName) => new JsonObject

@@ -40,12 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _reflection.DescribeObjectProperty(objectKind, objectPath, propertyPath, softwarePath, maxMembers);
                 // 对象解析成功即为成功；成员表可以为空，实际数量由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)
