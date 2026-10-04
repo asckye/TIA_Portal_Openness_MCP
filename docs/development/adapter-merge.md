@@ -285,12 +285,14 @@ Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省�
 `tools` 分别声明 MCP 名称与 `entryMethods` 的类型、方法名，入口缺失或重载歧义会失败。
 `expansionTypes/expansionNamespaces` 仅决定读取器跨方法展开的范围，不豁免领域外方法体或清单检查；
 `adapter.mutableTypes` 只用于借用工程的接线类型，仍须保持其原生清单。
-可选的 `engine.methodScopes` 按类型声明方法 include 列表，例如
+可选的 `engine.methodScopes` 和每个 `hosts[]` 项内的 `methodScopes` 按类型声明方法 include 列表，例如
 `{"TiaMcpServer.Siemens.Portal":[{"method":"Compile","signature":"System.Void TiaMcpServer.Siemens.Portal::Compile(System.String)"}]}`；
 `signature` 使用 IL 读取器输出的完整方法签名，名称和签名必须同时匹配，全部输入中均缺失、重复或歧义均失败。
 新增的领域辅助方法也须显式列入范围，其原生路径由工具调用树展开验证；基线已有的方法不得消失。
 未设置范围的类型仍按整类验收；设置后只迁移所列方法及其 lambda、局部函数、迭代器/异步状态机，
 共享生成方法若也属于未选中方法则不能豁免 IL 检查。同类型的未选中方法保持 IL 不变，直接原生调用归零及去重差量只作用于选中方法。
+宿主也按所选方法比较展开图；同类型未选中方法的 Siemens 成员不纳入本领域去重差量，即使与原语使用同一成员。
+读取器仍保留整个类型的 IL，以验证未选中方法不变及生成方法的归属；方法范围只在比较阶段应用。
 展开图同时覆盖所选方法和工具入口的完整调用树，跨入未选中方法不会截断；工具入口有重载时也可提供 `signature`。
 `evidence` 是仓库内证据输出路径，版本键必须使用字符串。不同领域单独运行证明，不能合并差量后验收；
 默认变体同时核对领域内精确去重与领域外逐调用者清单，防止同一 Siemens 成员在两个领域一增一减互相抵消。
@@ -323,21 +325,32 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 该 JSON 的 `acceptanceRule` 记录上述规则；默认精确去重差量、展开图及其他检查全部通过时才令 `accepted` 为 `true`。
 每版 `errors` 保留实际失败；`--include-failed` 只允许输出失败证据，仍返回非零退出码。
 
-复跑时先保存修改前八版织入适配器、两版引擎及对应 `*-inventory.json`，然后执行：
+新领域的驱动器默认从 `master` 的固定提交导出源码到当前 worktree 的输出目录，再构建基线和候选。
+以下 VCI 历史证明显式使用其迁移前提交：
 
 ```powershell
 python scripts/checks/Compare-SharedNativePaths.py --self-test
-pwsh -File scripts/checks/Test-SharedNativeMigration.ps1 -Config scripts/checks/shared-native/vci.json -PublicApiRoot <本机SDK父目录> -BaselineDirectory <基线目录> -OutputDirectory bin-build/vci-proof
+pwsh -File scripts/checks/Test-SharedNativeMigration.ps1 -Config scripts/checks/shared-native/vci.json -PublicApiRoot <本机SDK父目录> -BaselineDirectory bin-build/vci-baseline -BaselineRef '89401efa^' -OutputDirectory bin-build/vci-proof
 python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/shared-native/vci.json --evidence-from bin-build/vci-proof
 ```
 
-基线目录按 `v14sp1` 至 `v21` 分目录，使用 `adapter-inventory.json`；V20/V21 另有 `engine-inventory.json`。
-脚本顺序构建并保存默认/共享两种引擎，使用本机 NuGet 缓存与空还原源，不连接 TIA；IL 读取器仅解析元数据。
-驱动器从配置读取版本范围；`-Releases` 可选择其中的版本，`-SkipBuild` 可复核已保存的产物。
+基线目录在当前 worktree 内，按 `default/v20`、`default/v21` 和 `shared/v<release>` 保存产物及
+`adapter-inventory.json` / `engine-inventory.json`，`baseline.json` 记录来源提交。每份产物同时保存原织入器，以原指纹复核。
+默认候选只与默认基线比较，共享候选只与共享基线比较；两侧展开图也各自使用同变体的适配器。
+这样 master 已迁移的其他领域不会被误报为本次迁移的领域外变化。所有原有图、IL、完整类别清单与去重规则保持不变。
+每版证据的 `baselines.default/shared` 记录变体、来源提交及基线 IL/清单的 SHA-256，缺少变体基线身份的旧证明必须重跑。
+脚本顺序构建并保存两侧的默认/共享引擎，使用本机 NuGet 缓存与空还原源，不连接 TIA；IL 读取器仅解析元数据。
+`-BaselineRef` 默认为 `master`；重现历史 VCI 证据时用其迁移前提交 `89401efa^`，以保留原迁移的全部比较内容。
+驱动器从配置读取版本范围；`-Releases` 可选择其中的版本，`-SkipBaselineBuild` 复用已保存基线，
+`-SkipBuild` 复核两侧已保存产物。脚本只读取 Git 历史，不更改分支或其他 worktree。
 完整版本运行还生成输出目录内的 `evidence.json`；最后一条命令才写入配置声明的证据路径，亦可用 `--output` 覆盖。
 逐版本手动比较须传 `--release`，读取器的 `--dump` 同样必须传 `--config`。
+`--baseline-engine/adapter` 指共享基线；默认基线用 `--baseline-default-engine/adapter`，均须提供对应
+`-inventory` 参数。默认候选适配器用 `--default-adapter`；
+驱动器同时传入 `--baseline-revision`。引擎版本缺少任何一侧变体输入均失败，不回退到另一变体。
 自测保留 P4-I1 的 18 项，并覆盖第二个合成领域的多服务、多原语、Foundation 宿主、不同工具入口、
-未编译版本与证据生成，以及跨领域差量抵消和类型前缀混淆。
+未编译版本与证据生成，以及跨领域差量抵消和类型前缀混淆。另覆盖 master 已切换一个领域后再迁移第二个领域、
+错用基线的拒绝，以及宿主方法范围、未选中方法 IL 改动/新增和选中方法残留直接调用的拒绝。
 随后跑离线 TRX 数量门禁、全部 HttpTests 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
 两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
 真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；

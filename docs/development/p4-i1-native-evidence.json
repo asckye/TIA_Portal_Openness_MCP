@@ -18,6 +18,16 @@
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
       },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "152dceea6a3334e30488cc833f2ddae311d258ea8db5937e6c2ad2d0a2050d32",
+            "inventorySha256": "3bd197bfb281a548991e2e59f2af75f1b15c863d722b01d42e6bc632de5b4841"
+          }
+        }
+      },
       "studioPaths": "VCI not compiled on this release",
       "expectedNativeDelta": [],
       "nativeCounts": {
@@ -36,6 +46,16 @@
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
       },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "bea6f6d1ff4a91842ba41f190e5b2a0397bd22932dbfea5338b710733188d8c4",
+            "inventorySha256": "63161fbfe3cef5112c91ba5c312c3b8354ed8cecf2f71c31411c803dcecc22f6"
+          }
+        }
+      },
       "studioPaths": "VCI not compiled on this release",
       "expectedNativeDelta": [],
       "nativeCounts": {
@@ -53,6 +73,16 @@
         "default": "The full-category member multiset must equal the baseline after collapsing each direct VCI member into one local primitive site; no other delta is allowed.",
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "194bda1dbc7b84ba4612cae66554a847877becd39fdec74ad335fb5bafe39286",
+            "inventorySha256": "e93576b69e7e6fc7e7012c819ce09ae3cad4805a0b9c0cb22d5583114dc75d03"
+          }
+        }
       },
       "studioPaths": [
         {
@@ -399,6 +429,16 @@
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
       },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "6677e888959cbfe8f8ffcd8b9126ac02c6f02539fd8fddb074ac670ac48f4efd",
+            "inventorySha256": "ed094089ff27d93c81634b1d5fa8c458205614d00bae1950e8deb28e7b347a8f"
+          }
+        }
+      },
       "studioPaths": [
         {
           "method": "Siemens.Engineering.VersionControl.IndividualObjectCompareResult TiaOpenness.Openness.OpennessVersionControl::ReadStatus(Siemens.Engineering.VersionControl.WorkspaceMapping)",
@@ -743,6 +783,16 @@
         "default": "The full-category member multiset must equal the baseline after collapsing each direct VCI member into one local primitive site; no other delta is allowed.",
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "c29a57f5f0a3685c5337c77e1ac504f7f237ff1ba176fe8b9e129e2f700f3db5",
+            "inventorySha256": "6ae4fb1578b9a082854841b79b5385045dd3ee8ef3a3793f4a184ad5e091ef7b"
+          }
+        }
       },
       "studioPaths": [
         {
@@ -1089,6 +1139,16 @@
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
       },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "b35ff8e77eebfd48435e13ec1fe995a285b3a23f8d784f5b2b2f894deb15c097",
+            "inventorySha256": "d707d54ab8ec4dd03200da00728274e988adb948d14b37d001503517c1b0fb54"
+          }
+        }
+      },
       "studioPaths": [
         {
           "method": "Siemens.Engineering.VersionControl.IndividualObjectCompareResult TiaOpenness.Openness.OpennessVersionControl::ReadStatus(Siemens.Engineering.VersionControl.WorkspaceMapping)",
@@ -1433,6 +1493,32 @@
         "default": "The full-category member multiset must equal the baseline after collapsing each direct VCI member into one local primitive site; no other delta is allowed.",
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "4f9ab7b31241f60e522943ff9f822101e602a491694dd373f2a5f290231a8a8e",
+            "inventorySha256": "ca552a96eb7f413c39b81b1bca855938afc94ca1532d3399cdfd2c5c1ff1c934"
+          },
+          "engine": {
+            "ilSha256": "d7c88636cb48f04580b86702f5e62a364d30b5e17991a5f1a57fae5c3eee5dc3",
+            "inventorySha256": "7924f0070135203e9a248b95af5518fca753e8af84e314d03261521affad43d6"
+          }
+        },
+        "default": {
+          "variant": "default",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "engine": {
+            "ilSha256": "d7c88636cb48f04580b86702f5e62a364d30b5e17991a5f1a57fae5c3eee5dc3",
+            "inventorySha256": "7924f0070135203e9a248b95af5518fca753e8af84e314d03261521affad43d6"
+          },
+          "adapter": {
+            "ilSha256": "4f9ab7b31241f60e522943ff9f822101e602a491694dd373f2a5f290231a8a8e",
+            "inventorySha256": "ca552a96eb7f413c39b81b1bca855938afc94ca1532d3399cdfd2c5c1ff1c934"
+          }
+        }
       },
       "defaultMethods": {
         "before": 20738,
@@ -3502,6 +3588,32 @@
         "default": "The full-category member multiset must equal the baseline after collapsing each direct VCI member into one local primitive site; no other delta is allowed.",
         "shared": "Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.",
         "evidence": "Generate per-member counts and declaring-method moves; physical equality before deduplication is informational."
+      },
+      "baselines": {
+        "shared": {
+          "variant": "shared",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "adapter": {
+            "ilSha256": "216b576a6fb6a0298d6df1962160ae2edd23211cb4ed4ac6fdfa81bf4c201975",
+            "inventorySha256": "1e5473c0c5a27754073d79d3b4e77fdb887b7f351a5831c3e27be1fde6140b37"
+          },
+          "engine": {
+            "ilSha256": "21ba2df97331bc265ffc8629b3797fdda22a7b8832e538ed993257a8659d7e68",
+            "inventorySha256": "679b8ebc3e34ee94e81e86399445943a81ffa5063fd1aa35cacf3da22322a269"
+          }
+        },
+        "default": {
+          "variant": "default",
+          "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
+          "engine": {
+            "ilSha256": "21ba2df97331bc265ffc8629b3797fdda22a7b8832e538ed993257a8659d7e68",
+            "inventorySha256": "679b8ebc3e34ee94e81e86399445943a81ffa5063fd1aa35cacf3da22322a269"
+          },
+          "adapter": {
+            "ilSha256": "216b576a6fb6a0298d6df1962160ae2edd23211cb4ed4ac6fdfa81bf4c201975",
+            "inventorySha256": "1e5473c0c5a27754073d79d3b4e77fdb887b7f351a5831c3e27be1fde6140b37"
+          }
+        }
       },
       "defaultMethods": {
         "before": 21302,

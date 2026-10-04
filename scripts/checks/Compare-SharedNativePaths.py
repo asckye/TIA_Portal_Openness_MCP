@@ -31,24 +31,12 @@ class Domain:
         self.name, self.label = data['domain'], data['label']
         self.engine = tuple(data['engine']['types'])
         self.method_scopes = data['engine'].get('methodScopes', {})
-        if not isinstance(self.method_scopes, dict) or not self.method_scopes.keys() <= set(self.engine):
-            raise ValueError('Method scopes must name configured engine types')
-        for type_name, entries in self.method_scopes.items():
-            if not isinstance(entries, list) or not entries:
-                raise ValueError('Method scope include lists must not be empty')
-            signatures = set()
-            for entry in entries:
-                signature = entry.get('signature', '')
-                if not entry.get('method') or not signature.endswith(')') or '(' not in signature \
-                        or method_name(signature) != entry['method'] or not owner(dict(caller=signature), type_name):
-                    raise ValueError('Method scope requires a matching method name and full IL signature')
-                if signature in signatures:
-                    raise ValueError('Duplicate method scope signature: ' + signature)
-                signatures.add(signature)
+        self.validate_scopes(self.engine, self.method_scopes)
         self.engine_releases = data['engine']['releases']
         self.releases = data['adapter']['releases']
         self.hosts = data['hosts']
-        self.adapter_hosts = tuple(t for host in self.hosts for t in host['types'])
+        for host in self.hosts:
+            self.validate_scopes(host['types'], host.get('methodScopes', {}))
         self.mutable_adapter = tuple(data['adapter']['mutableTypes'])
         self.primitives = tuple(p['adapterType'] for p in data['primitives'])
         self.local_primitives = tuple(p['engineNamespace'] + '.' + p['adapterType'].rsplit('.', 1)[-1]
@@ -75,6 +63,23 @@ class Domain:
             if not tool['entryMethods'] or any(entry['type'] not in self.engine for entry in tool['entryMethods']):
                 raise ValueError('Tool entry methods must belong to configured engine types')
 
+    @staticmethod
+    def validate_scopes(types, scopes):
+        if not isinstance(scopes, dict) or not scopes.keys() <= set(types):
+            raise ValueError('Method scopes must name configured types')
+        for type_name, entries in scopes.items():
+            if not isinstance(entries, list) or not entries:
+                raise ValueError('Method scope include lists must not be empty')
+            signatures = set()
+            for entry in entries:
+                signature = entry.get('signature', '')
+                if not entry.get('method') or not signature.endswith(')') or '(' not in signature \
+                        or method_name(signature) != entry['method'] or not owner(dict(caller=signature), type_name):
+                    raise ValueError('Method scope requires a matching method name and full IL signature')
+                if signature in signatures:
+                    raise ValueError('Duplicate method scope signature: ' + signature)
+                signatures.add(signature)
+
     @property
     def acceptance_rule(self):
         rule = dict(
@@ -85,6 +90,9 @@ class Domain:
             evidence='Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.')
         if self.method_scopes:
             rule['methodScopes'] = self.method_scopes
+        host_scopes = {host['name']: host['methodScopes'] for host in self.hosts if host.get('methodScopes')}
+        if host_scopes:
+            rule['hostMethodScopes'] = host_scopes
         return rule
 
 
@@ -124,12 +132,12 @@ def matches_entry(method, entry):
         and ('signature' not in entry or method['name'] == entry['signature'])
 
 
-class EngineScope:
-    def __init__(self, domain, document, counterparts=()):
-        self.domain = domain
+class MethodScope:
+    def __init__(self, types, method_scopes, document, counterparts=(), tools=()):
+        self.types, self.method_scopes = types, method_scopes
         self.methods = {m['name']: m for m in document['methods']}
         self.selected = set()
-        for type_name, entries in domain.method_scopes.items():
+        for type_name, entries in method_scopes.items():
             for entry in entries:
                 matches = [m['name'] for m in document['methods'] if matches_entry(m, dict(entry, type=type_name))]
                 known = any(matches_entry(m, dict(entry, type=type_name)) for doc in counterparts for m in doc['methods'])
@@ -142,7 +150,7 @@ class EngineScope:
             if ('<' in m['owner'] or method_name(key).startswith('<')) and '__TiaMcpNativeCall' not in m['owner']}
         parents = {}
         for root, method in self.methods.items():
-            if root in generated or '__TiaMcpNativeCall' in method['owner'] or not owned(method, tuple(domain.method_scopes)):
+            if root in generated or '__TiaMcpNativeCall' in method['owner'] or not owned(method, tuple(method_scopes)):
                 continue
             pending, visited = [root], set()
             while pending:
@@ -158,8 +166,8 @@ class EngineScope:
                 pending.extend(children - visited)
         self.selected.update(key for key, roots in parents.items() if roots <= self.selected)
         self.entries = {key for key, method in self.methods.items() if self(method) and '__TiaMcpNativeCall' not in method['owner']}
-        if domain.method_scopes:
-            for tool in domain.tools:
+        if method_scopes:
+            for tool in tools:
                 for entry in tool['entryMethods']:
                     matches = [key for key, method in self.methods.items() if matches_entry(method, entry)]
                     if len(matches) != 1:
@@ -167,13 +175,18 @@ class EngineScope:
                     self.entries.update(matches)
 
     def __call__(self, row):
-        return owned(row, tuple(t for t in self.domain.engine if t not in self.domain.method_scopes)) \
+        return owned(row, tuple(t for t in self.types if t not in self.method_scopes)) \
             or (row.get('name') or row.get('caller')) in self.selected
 
     def body(self, row):
         # Woven wrappers are verified by the weaver and the exact caller/member
         # inventory; moving a selected native site removes its old wrapper.
-        return self(row) or ('__TiaMcpNativeCall' in row['owner'] and owned(row, tuple(self.domain.method_scopes)))
+        return self(row) or ('__TiaMcpNativeCall' in row['owner'] and owned(row, tuple(self.method_scopes)))
+
+
+class EngineScope(MethodScope):
+    def __init__(self, domain, document, counterparts=()):
+        super().__init__(domain.engine, domain.method_scopes, document, counterparts, domain.tools)
 
 
 def outside(sites, prefixes=(), scope=lambda row: False):
@@ -775,19 +788,28 @@ class SelfTests(unittest.TestCase):
                         shared_engine=shared_engine, baseline_adapter=[host], current_adapter=[host] + primitives)
             inventories = dict(baseline_engine=old_sites, default_engine=default_sites, shared_engine=[],
                                baseline_adapter=[], current_adapter=new_sites)
+            docs.update(baseline_default_engine=docs['baseline_engine'], baseline_default_adapter=docs['baseline_adapter'], default_adapter=docs['current_adapter'])
+            inventories.update(baseline_default_engine=inventories['baseline_engine'], baseline_default_adapter=inventories['baseline_adapter'], default_adapter=inventories['current_adapter'])
             arguments = [sys.executable, __file__, '--config', str(path / 'domain.json')]
             compare = arguments + ['--release', '20', '--output', str(path / 'proof-v20.json')]
             for name, methods in docs.items():
                 write(path / (name + '.json'), dict(methods=methods))
                 write(path / (name + '-inventory.json'), dict(sites=inventories[name]))
-                compare += ['--' + name.replace('_', '-'), str(path / (name + '.json')),
-                            '--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
+                compare += ['--' + name.replace('_', '-'), str(path / (name + '.json'))]
+                if name != 'default_adapter':
+                    compare += ['--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
             result = subprocess.run(compare, capture_output=True, text=True)
             self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             proof = read(path / 'proof-v20.json')
             self.assertEqual([], proof['errors'])
             self.assertEqual(2, len(proof['enginePaths']))
             self.assertEqual(1, len(proof['foundationPaths']))
+            missing = list(compare)
+            index = missing.index('--baseline-default-engine')
+            del missing[index:index+2]
+            result = subprocess.run(missing, capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn('Missing comparison inputs: --baseline-default-engine', result.stderr)
             write(path / 'empty.json', dict(methods=[], sites=[]))
             older = arguments + ['--release', '19', '--output', str(path / 'proof-v19.json')]
             for flag in ('baseline-adapter', 'current-adapter', 'baseline-adapter-inventory', 'current-adapter-inventory'):
@@ -813,6 +835,11 @@ class SelfTests(unittest.TestCase):
             result = subprocess.run(publish + ['--include-failed'], capture_output=True, text=True)
             self.assertNotEqual(0, result.returncode)
             self.assertFalse(read(path / 'failed.json')['accepted'])
+            del proof['baselines']['default']
+            write(path / 'proof-v20.json', proof)
+            result = subprocess.run(publish + ['--include-failed'], capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn('Missing variant baseline identity', result.stderr)
         finally:
             if not path.is_relative_to(scratch.resolve()):
                 raise ValueError('Self-test directory leaves its scratch root')
@@ -834,7 +861,7 @@ class SelfTests(unittest.TestCase):
         config['tools'][0]['entryMethods'] = [dict(type='sample.Engine', method='Run', signature='System.Void sample.Engine::Run()')]
         return config
 
-    def scoped_proof(self, mutation=None):
+    def scoped_proof(self, mutation=None, host_scope=False, prior_domain=False, release='20'):
         config = self.scoped_config()
         # The public tool can itself be outside the migration's include list.
         config['tools'][0]['entryMethods'] = [dict(type='sample.Engine', method='Tool')]
@@ -856,6 +883,8 @@ class SelfTests(unittest.TestCase):
         inventories = dict(baseline_engine=[site, site] + untouched_sites,
             default_engine=[dict(site, caller=local)] + untouched_sites, shared_engine=untouched_sites,
             baseline_adapter=[], current_adapter=[dict(site, caller=target)])
+        docs.update(baseline_default_engine=docs['baseline_engine'], baseline_default_adapter=docs['baseline_adapter'], default_adapter=docs['current_adapter'])
+        inventories.update(baseline_default_engine=inventories['baseline_engine'], baseline_default_adapter=inventories['baseline_adapter'], default_adapter=inventories['current_adapter'])
         if mutation == 'unscoped':
             for variant in ('default_engine', 'shared_engine'):
                 docs[variant][1] = self.method(untouched, [self.call('Siemens::Changed()', True), self.ret()])
@@ -869,18 +898,68 @@ class SelfTests(unittest.TestCase):
                 instructions = [dict(op=row['op'], flow=row['flow'], operand=row['operand']) for row in docs[variant][0]['il']]
                 docs[variant].append(self.method(helper_name, instructions))
                 docs[variant][0] = self.method(selected, [self.call(helper_name, definition=helper_name), self.ret()])
+        if host_scope:
+            host_selected, host_other = ('System.Void sample.Foundation::Read()', 'System.Void sample.Foundation::Read(System.Int32)')
+            config['hosts'][0]['methodScopes'] = {'sample.Foundation': [dict(method='Read', signature=host_selected)]}
+            old_host = self.method(host_selected, [native, native, self.ret()])
+            new_host = self.method(host_selected, [self.call(target, definition=target), self.call(target, definition=target), self.ret()])
+            untouched_host = self.method(host_other, [native, self.call('Siemens::HostOnly()', True), self.ret()])
+            host_sites = [dict(site, caller=host_other), dict(site, caller=host_other, member='Siemens::HostOnly()')]
+            docs['baseline_adapter'] = [old_host, untouched_host]
+            docs['current_adapter'] = [new_host, untouched_host, primitive]
+            inventories['baseline_adapter'] = [dict(site, caller=host_selected)] * 2 + host_sites
+            inventories['current_adapter'] += host_sites
+            if mutation == 'host-unscoped':
+                # A pure IL change leaves the native graph/inventory unchanged.
+                docs['current_adapter'][1] = self.method(host_other, [dict(op='nop', flow='Next', operand={}), native,
+                    self.call('Siemens::HostOnly()', True), self.ret()])
+            elif mutation == 'host-direct':
+                docs['current_adapter'][0] = self.method(host_selected, [native, self.call(target, definition=target), self.ret()])
+                inventories['current_adapter'].append(dict(site, caller=host_selected))
+            elif mutation == 'host-added':
+                docs['current_adapter'].append(self.method('System.Void sample.Foundation::Unlisted()', [self.ret()]))
+            docs['baseline_default_adapter'] = docs['baseline_adapter']
+            docs['default_adapter'] = docs['current_adapter']
+            inventories['baseline_default_adapter'] = inventories['baseline_adapter']
+            inventories['default_adapter'] = inventories['current_adapter']
+        if prior_domain:
+            # Master already routes a different domain through local primitives
+            # in default and adapter primitives in shared builds.
+            foreign_entry = 'System.Void first.Engine::Run()'
+            foreign_local, foreign_shared = 'System.Void first.Local.Primitives::Read()', 'System.Void first.Primitives::Read()'
+            foreign_native = self.call('Siemens::First()', True)
+            local_body, shared_body = (self.method(name, [foreign_native, self.ret()]) for name in (foreign_local, foreign_shared))
+            foreign_site = dict(site, member='Siemens::First()')
+            for variant in ('baseline_default_engine', 'default_engine'):
+                docs[variant] = docs[variant] + [self.method(foreign_entry, [self.call(foreign_local, definition=foreign_local), self.ret()]), local_body]
+                inventories[variant] = inventories[variant] + [dict(foreign_site, caller=foreign_local)]
+            for variant in ('baseline_engine', 'shared_engine'):
+                docs[variant] = docs[variant] + [self.method(foreign_entry, [self.call(foreign_shared, definition=foreign_shared), self.ret()])]
+            for variant in ('baseline_adapter', 'current_adapter', 'baseline_default_adapter', 'default_adapter'):
+                docs[variant] = docs[variant] + [shared_body]
+                inventories[variant] = inventories[variant] + [dict(foreign_site, caller=foreign_shared)]
+            if mutation == 'wrong-baseline':
+                docs['baseline_engine'] = docs['baseline_default_engine']
+                inventories['baseline_engine'] = inventories['baseline_default_engine']
+            elif mutation == 'wrong-default-baseline':
+                docs['baseline_default_engine'] = docs['baseline_engine']
+                inventories['baseline_default_engine'] = inventories['baseline_engine']
+        if release not in domain.engine_releases:
+            docs = {name: docs[name] for name in ('baseline_adapter', 'current_adapter')}
+            inventories = {name: inventories[name] for name in docs}
         scratch = ROOT / 'bin-build/shared-native-self-test'
         scratch.mkdir(parents=True, exist_ok=True)
         path = (scratch / uuid.uuid4().hex).resolve()
         path.mkdir()
         try:
             write(path / 'domain.json', config)
-            args = [sys.executable, __file__, '--config', str(path / 'domain.json'), '--release', '20', '--output', str(path / 'proof.json')]
+            args = [sys.executable, __file__, '--config', str(path / 'domain.json'), '--release', release, '--output', str(path / 'proof.json')]
             for name, methods in docs.items():
                 write(path / (name + '.json'), dict(methods=methods))
                 write(path / (name + '-inventory.json'), dict(sites=inventories[name]))
-                args += ['--' + name.replace('_', '-'), str(path / (name + '.json')),
-                    '--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
+                args += ['--' + name.replace('_', '-'), str(path / (name + '.json'))]
+                if name != 'default_adapter':
+                    args += ['--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
             result = subprocess.run(args, capture_output=True, text=True)
             self.assertTrue((path / 'proof.json').exists(), result.stdout + result.stderr)
             proof = read(path / 'proof.json')
@@ -890,6 +969,56 @@ class SelfTests(unittest.TestCase):
                 raise ValueError('Self-test directory leaves its scratch root')
             shutil.rmtree(path)
         return proof, docs, domain
+
+    def test_second_domain_uses_each_variant_baseline(self):
+        proof, _, _ = self.scoped_proof(prior_domain=True)
+        self.assertEqual([], proof['errors'])
+        baselines = proof['baselines']
+        self.assertNotEqual(baselines['default']['engine'], baselines['shared']['engine'])
+        self.assertTrue(all(row['equal'] for key in ('defaultEnginePaths', 'enginePaths') for row in proof[key]))
+        wrong, _, _ = self.scoped_proof('wrong-baseline', prior_domain=True)
+        self.assertIn('Non-domain engine inventory changed', wrong['errors'])
+        self.assertTrue(any('Non-domain engine body changed:' in error for error in wrong['errors']))
+        wrong, _, _ = self.scoped_proof('wrong-default-baseline', prior_domain=True)
+        self.assertIn('Default non-domain inventory changed', wrong['errors'])
+        self.assertTrue(any('Default method body differs:' in error for error in wrong['errors']))
+
+    def test_scoped_host_excludes_unscoped_members_from_dedup(self):
+        proof, _, _ = self.scoped_proof(host_scope=True)
+        self.assertEqual([], proof['errors'])
+        self.assertEqual(['System.Void sample.Foundation::Read()'], [row['method'] for row in proof['foundationPaths']])
+        self.assertIn('foundation', proof['acceptanceRule']['hostMethodScopes'])
+        self.assertFalse(any('HostOnly' in row['member'] for row in proof['expectedNativeDelta']))
+
+    def test_scoped_host_on_adapter_only_release(self):
+        proof, _, _ = self.scoped_proof(host_scope=True, release='19')
+        self.assertEqual([], proof['errors'])
+        self.assertEqual({'shared'}, set(proof['baselines']))
+
+    def test_scoped_host_rejects_unscoped_body_change(self):
+        proof, _, _ = self.scoped_proof('host-unscoped', host_scope=True)
+        self.assertIn('Non-domain host body changed: System.Void sample.Foundation::Read(System.Int32)', proof['errors'])
+
+    def test_scoped_host_rejects_unlisted_new_method(self):
+        proof, _, _ = self.scoped_proof('host-added', host_scope=True)
+        self.assertIn('Non-domain host body changed: System.Void sample.Foundation::Unlisted()', proof['errors'])
+
+    def test_scoped_host_rejects_remaining_direct_site(self):
+        for release in ('19', '20'):
+            with self.subTest(release=release):
+                proof, _, _ = self.scoped_proof('host-direct', host_scope=True, release=release)
+                self.assertIn('Duplicated shared primitive member: Siemens::Read()', proof['errors'])
+
+    def test_host_method_scope_validates_types_and_signatures(self):
+        for scopes in ({'Foreign': []}, {'sample.Foundation': []},
+                {'sample.Foundation': [dict(method='Read', signature='System.Void sample.Engine::Read()')]},
+                {'sample.Foundation': [dict(method='Wrong', signature='System.Void sample.Foundation::Read()')]}):
+            config = self.config()
+            config['hosts'][0]['methodScopes'] = scopes
+            with self.assertRaises(ValueError):
+                Domain(config)
+        with self.assertRaisesRegex(ValueError, 'Scoped method missing'):
+            MethodScope(['sample.Foundation'], {'sample.Foundation': [dict(method='Read', signature='System.Void sample.Foundation::Read()')]}, dict(methods=[]))
 
     def test_scoped_method_migrates_and_unscoped_overload_is_unchanged(self):
         proof, _, _ = self.scoped_proof()
@@ -1037,7 +1166,13 @@ def main():
     parser.add_argument('--dump', type=Path, metavar='ASSEMBLY')
     parser.add_argument('--inventory', type=Path)
     parser.add_argument('--output', type=Path, required=False)
-    parser.add_argument('--baseline-engine', type=Path)
+    parser.add_argument('--baseline-revision', help='Source revision of the saved baselines')
+    parser.add_argument('--baseline-default-engine', type=Path)
+    parser.add_argument('--baseline-default-engine-inventory', type=Path)
+    parser.add_argument('--baseline-default-adapter', type=Path)
+    parser.add_argument('--baseline-default-adapter-inventory', type=Path)
+    parser.add_argument('--default-adapter', type=Path)
+    parser.add_argument('--baseline-engine', type=Path, help='Switched baseline engine')
     parser.add_argument('--default-engine', type=Path)
     parser.add_argument('--shared-engine', type=Path)
     parser.add_argument('--baseline-adapter', type=Path)
@@ -1062,6 +1197,14 @@ def main():
         releases = {}
         for release in domain.releases:
             proof = read(args.evidence_from / ('proof-v' + release + '.json'))
+            variants = ('default', 'shared') if release in domain.engine_releases else ('shared',)
+            for variant in variants:
+                baseline = proof.get('baselines', {}).get(variant, {})
+                required = ('engine', 'adapter') if release in domain.engine_releases else ('adapter',)
+                if baseline.get('variant') != variant or any(
+                        not re.fullmatch(r'[0-9a-f]{64}', baseline.get(kind, {}).get(field, ''))
+                        for kind in required for field in ('ilSha256', 'inventorySha256')):
+                    raise ValueError('Missing variant baseline identity for V' + release + ': ' + variant)
             if proof.get('acceptanceRule') != domain.acceptance_rule:
                 raise ValueError('Rerun proof with the current acceptance rule for V' + release)
             if proof.get('errors') != [] and not args.include_failed:
@@ -1091,24 +1234,51 @@ def main():
         parser.error('--release must name a configured adapter release')
     if bool(args.baseline_engine) != (args.release in domain.engine_releases):
         parser.error('Engine inputs must match the configured engine release surface')
+    required = ['baseline_adapter_inventory', 'current_adapter_inventory']
+    engine_inputs = ['baseline_engine', 'baseline_engine_inventory', 'baseline_default_engine',
+        'baseline_default_engine_inventory', 'default_engine', 'default_engine_inventory', 'shared_engine',
+        'shared_engine_inventory', 'baseline_default_adapter', 'baseline_default_adapter_inventory',
+        'default_adapter']
+    if args.release in domain.engine_releases:
+        required += engine_inputs
+    elif any(getattr(args, name) for name in engine_inputs):
+        parser.error('Engine inputs must match the configured engine release surface')
+    if any(getattr(args, name) is None for name in required):
+        parser.error('Missing comparison inputs: ' + ', '.join('--' + name.replace('_', '-')
+            for name in required if getattr(args, name) is None))
     old_adapter, new_adapter = read(args.baseline_adapter), read(args.current_adapter)
     old_docs, new_docs = [old_adapter], [new_adapter]
-    report, errors = dict(acceptanceRule=domain.acceptance_rule), []
+    def baseline_identity(variant, **inputs):
+        result = dict(variant=variant)
+        if args.baseline_revision:
+            result['revision'] = args.baseline_revision
+        for kind, (document, inventory) in inputs.items():
+            result[kind] = dict(ilSha256=hashlib.sha256(document.read_bytes()).hexdigest(),
+                inventorySha256=hashlib.sha256(inventory.read_bytes()).hexdigest())
+        return result
+    baselines = dict(shared=baseline_identity('shared', adapter=(args.baseline_adapter, args.baseline_adapter_inventory)))
+    report, errors = dict(acceptanceRule=domain.acceptance_rule, baselines=baselines), []
     if args.baseline_engine:
         old_engine, default_engine, new_engine = map(read, (args.baseline_engine, args.default_engine, args.shared_engine))
-        documents = (old_engine, default_engine, new_engine)
-        old_scope, default_scope, new_scope = (EngineScope(domain, doc, documents) for doc in documents)
+        old_default_engine, old_default_adapter, default_adapter = map(read,
+            (args.baseline_default_engine, args.baseline_default_adapter, args.default_adapter))
+        documents = (old_default_engine, default_engine, old_engine, new_engine)
+        old_default_scope, default_scope, old_scope, new_scope = (EngineScope(domain, doc, documents) for doc in documents)
+        baselines['default'] = baseline_identity('default',
+            engine=(args.baseline_default_engine, args.baseline_default_engine_inventory),
+            adapter=(args.baseline_default_adapter, args.baseline_default_adapter_inventory))
+        baselines['shared'].update(baseline_identity('shared', engine=(args.baseline_engine, args.baseline_engine_inventory)))
         old_docs.append(old_engine)
         new_docs.append(new_engine)
-        differences, old_count, new_count = all_methods(old_engine, default_engine,
-                                                       exclude=domain.local_primitives, scopes=(old_scope.body, default_scope.body))
-        raw_differences, _, _ = all_methods(old_engine, default_engine, raw=True,
-            exclude=domain.local_primitives, scopes=(old_scope.body, default_scope.body))
+        differences, old_count, new_count = all_methods(old_default_engine, default_engine,
+                                                       exclude=domain.local_primitives, scopes=(old_default_scope.body, default_scope.body))
+        raw_differences, _, _ = all_methods(old_default_engine, default_engine, raw=True,
+            exclude=domain.local_primitives, scopes=(old_default_scope.body, default_scope.body))
         report['defaultMethods'] = dict(before=old_count, after=new_count, differences=differences,
             rawBodyDifferences=len(raw_differences), comparison='IL with metadata references resolved to member/type identities; opcodes, operands, locals and exception regions unchanged')
         errors += ['Default method body differs: ' + name for name in differences]
-        old_inv, default_inv = map(read, (args.baseline_engine_inventory, args.default_engine_inventory))
-        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'], domain, (old_scope, default_scope))
+        old_inv, default_inv = map(read, (args.baseline_default_engine_inventory, args.default_engine_inventory))
+        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'], domain, (old_default_scope, default_scope))
         errors += failures
         report.update(inventory_report)
         if any(default_scope(s) and s['category'] == 'direct' for s in default_inv['sites']):
@@ -1118,8 +1288,8 @@ def main():
             errors.append('Default expanded full-category weave member multiset changed')
     old, new = Paths(old_docs), Paths(new_docs)
     if args.baseline_engine:
-        default_paths = Paths([default_engine, new_adapter])
-        failures, rows = compare_host_paths(old, default_paths, domain.engine, old_scope)
+        default_paths = Paths([default_engine, default_adapter])
+        failures, rows = compare_host_paths(Paths([old_default_engine, old_default_adapter]), default_paths, domain.engine, old_default_scope)
         errors += ['Default path: ' + failure for failure in failures]
         report['defaultEnginePaths'] = rows
         unused_local = {normalize(s['caller']) for s in default_inv['sites'] if owned(s, domain.local_primitives)
@@ -1129,16 +1299,27 @@ def main():
         errors += failures
         report['enginePaths'] = rows
         errors += check_tools(domain, rows)
+    host_scopes = []
     for host in domain.hosts:
         key = host['name'] + 'Paths'
         if args.release in host['releases']:
-            failures, rows = compare_host_paths(old, new, host['types'])
+            scopes = tuple(MethodScope(host['types'], host.get('methodScopes', {}), doc, (old_adapter, new_adapter))
+                for doc in (old_adapter, new_adapter))
+            host_scopes.append(scopes)
+            failures, rows = compare_host_paths(old, new, host['types'], scopes[0])
+            if host.get('methodScopes'):
+                documents = [dict(methods=[m for m in doc['methods'] if owned(m, tuple(host['methodScopes']))])
+                    for doc in (old_adapter, new_adapter)]
+                differences, _, _ = all_methods(*documents, scopes=tuple(scope.body for scope in scopes))
+                errors += ['Non-domain host body changed: ' + method for method in differences]
             errors += failures
             report[key] = rows
         else:
             if any(owned(m, host['types']) for doc in (old_adapter, new_adapter) for m in doc['methods']):
                 errors.append('Host unexpectedly compiled: ' + host['name'])
             report[key] = domain.label + ' not compiled on this release'
+    old_host_scope = lambda row: any(scopes[0](row) for scopes in host_scopes)
+    new_host_scope = lambda row: any(scopes[1](row) for scopes in host_scopes)
     old_sites, new_sites = [read(p)['sites'] for p in (args.baseline_adapter_inventory, args.current_adapter_inventory)]
     unused = sorted({normalize(s['caller']) for s in new_sites if owned(s, domain.primitives) and s['category'] == 'direct'} - new.reached)
     if unused:
@@ -1150,8 +1331,8 @@ def main():
         return [m['name'] for m in old_document['methods'] if '__TiaMcpNativeCall' not in m['owner']
             and not owned(m, allowed) and not scope(m)
             and (m['name'] not in existing or m['semantic'] != existing[m['name']]['semantic'])]
-    errors += ['Non-domain adapter body changed: ' + method for method in unchanged_methods(old_adapter, new_adapter, domain.adapter_hosts + domain.mutable_adapter)]
-    if outside(old_sites, domain.adapter_hosts + domain.primitives) != outside(new_sites, domain.adapter_hosts + domain.primitives):
+    errors += ['Non-domain adapter body changed: ' + method for method in unchanged_methods(old_adapter, new_adapter, domain.mutable_adapter, old_host_scope)]
+    if outside(old_sites, domain.primitives, old_host_scope) != outside(new_sites, domain.primitives, new_host_scope):
         errors.append('Non-domain adapter inventory changed')
     if args.baseline_engine:
         old_engine_sites, new_engine_sites = [read(p)['sites'] for p in (args.baseline_engine_inventory, args.shared_engine_inventory)]
@@ -1166,14 +1347,16 @@ def main():
         errors += ['Non-domain engine body changed: ' + method for method in differences]
         if any(new_scope(s) and s['category'] == 'direct' for s in new_engine_sites):
             errors.append('Direct Siemens domain sites remain in the engine')
-        # A member moved into a primitive may not retain another physical copy
-        # in any domain host. Existing host-only sites are outside this rule.
-        primitives = native_counts([s for s in new_sites if owned(s, domain.primitives)])
-        domain_counts = native_counts([s for s in new_sites if owned(s, domain.adapter_hosts + domain.primitives)])
-        errors += ['Duplicated shared primitive member: ' + member for member in primitives if domain_counts[member] != 1]
         engine_before, engine_after = native_counts(old_engine_sites), native_counts(new_engine_sites)
     else:
         engine_before = engine_after = Counter()
+    if args.baseline_engine or any(scopes[0].method_scopes for scopes in host_scopes):
+        # A member moved into a primitive may not retain another physical copy
+        # in a selected host method. Unscoped and host-only sites stay outside
+        # this rule; whole-type adapter-only proofs retain their existing rules.
+        primitives = native_counts([s for s in new_sites if owned(s, domain.primitives)])
+        domain_counts = native_counts([s for s in new_sites if new_host_scope(s) or owned(s, domain.primitives)])
+        errors += ['Duplicated shared primitive member: ' + member for member in primitives if domain_counts[member] != 1]
     adapter_before, adapter_after = native_counts(old_sites), native_counts(new_sites)
     allowed_gains = native_counts([s for s in old_engine_sites if old_scope(s)]) if args.baseline_engine else Counter()
     errors += ['Unexplained adapter native gain: ' + member for member, count in (adapter_after - adapter_before).items()
