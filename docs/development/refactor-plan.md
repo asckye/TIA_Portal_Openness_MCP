@@ -89,9 +89,9 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P2-01 | 统一响应信封构造器替代手写 `["success"]`/`["timestamp"]`；明确抛异常与返回失败的规则；返回结构逐字节兼容。设计见[响应信封与吞异常治理](response-and-errors.md)（族规则、构造器、E1–E6 离线证明、P2-01a–e）；须先加强 P0-06（原始文本哈希）。P2-01a 完成：快照格式 3（原始文本哈希）、序列化黄金字节与执行器表征（HttpTests `response-golden-only`，各 124 项）；P2-01bc 完成：`ResponseMeta`/`ResponseClock` 与 249 项逐字节比对，`Inventory-ResponseEnvelopes.py` 只减不增（timestamp 245、success 306）；P2-01d 完成：执行器与 meta 工厂原地改用构造器（黄金样本与全类别插桩 0 差异，245→236、306→295） | doing |
 | P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics`（日志与诊断两份分支随 P2-04 一并决定） | done |
-| P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛。设计见[响应信封与吞异常治理](response-and-errors.md)（218 个空 catch、类别、标注与只减不增检查、P2-03a–z）；L5 之前原生路径不改为上抛。P2-03a 完成：`Check-SwallowedExceptions.py` 与基线（205 个空、194 个丢弃型，只减不增）；P2-03c 完成：引擎拆分领域外 88 处补写原因（只改注释，产物逐字节相同），基线 399 → 311；P2-03d 完成：Studio 与 Foundation 74 处，基线 → 237；P2-03b 完成：`SwallowedExceptions.Note` 与三个进程统一的 `TIA_MCP_LOG_SWALLOWED=1` 开关（默认不输出） | doing |
+| P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛。设计见[响应信封与吞异常治理](response-and-errors.md)（218 个空 catch、类别、标注与只减不增检查、P2-03a–z）；L5 之前原生路径不改为上抛。P2-03a 完成：`Check-SwallowedExceptions.py` 与基线（205 个空、194 个丢弃型，只减不增）；P2-03c 完成：引擎拆分领域外 88 处补写原因（只改注释，产物逐字节相同），基线 399 → 311；P2-03d 完成：Studio 与 Foundation 74 处，基线 → 237；P2-03b 完成：`SwallowedExceptions.Note` 与三个进程统一的 `TIA_MCP_LOG_SWALLOWED=1` 开关（默认不输出）；P3-18 完成：引擎领域内其余吞异常全部写明原因或改为记录，`swallowed-exceptions-baseline.json` 清零，只减不增检查继续在 CI 中运行 | done |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界。P2-04a 完成：Studio 桌面端与桥接改用 System.Text.Json（单一选项工厂，PascalCase、字符串枚举、日期往返与原 Newtonsoft 一致；29 个 DTO、24 个 RPC 方法黄金测试；Studio 产物不再含 Newtonsoft）；P2-04b 完成：Foundation worker 的 DTO 结果与失败证据改用单一 System.Text.Json 编解码（枚举仍为数值、宿主 STJ 解码一致；适配器契约 673 项含黄金样本）；P2-04c 适配器日志去 Newtonsoft 与两份 InvocationJournal 合并待做 | doing |
-| P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略。设计见[运行时布局与清理](runtime-layout.md)：新增 MCP 文本一律英文（维护者 2026-10-03 决定），现有文本冻结到 4.0；`*Leftovers` 随领域迁移消解。P2-05a 完成：`Check-CommentHygiene.py` 与 `Check-McpText.py` 只减不增（版本号注释 266、受约束中文字面量 316）；P2-05e 完成：Studio 剩余硬编码中文迁入 `Loc`（62 个词条，客户端配置 384 份逐字节不变）；P2-05b 完成：领域外注释改写，注释基线 348 → 248（只改注释，14 个产物逐字节相同） | doing |
+| P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略。设计见[运行时布局与清理](runtime-layout.md)：新增 MCP 文本一律英文（维护者 2026-10-03 决定），现有文本冻结到 4.0；`*Leftovers` 随领域迁移消解。P2-05a 完成：`Check-CommentHygiene.py` 与 `Check-McpText.py` 只减不增（版本号注释 266、受约束中文字面量 316）；P2-05e 完成：Studio 剩余硬编码中文迁入 `Loc`（62 个词条，客户端配置 384 份逐字节不变）；P2-05b 完成：领域外注释改写，注释基线 348 → 248（只改注释，14 个产物逐字节相同）；P3-18 完成：领域内注释改写、`*Leftovers` 文件与迁移辅助垫片消解，`comment-hygiene-baseline.json` 清零；受约束中文字面量按语言策略冻结到 4.0 | done |
 | P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`openness-shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与 `Test-EcosystemAssembly.ps1` 已同步引擎启动设置 | done |
 
 ### 阶段 3：拆分完整引擎（兼容）
@@ -123,7 +123,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | ID | 任务 | 状态 |
 |---|---|---|
 | P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定未接线的预览协议采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D4（worker 改 net48）、D7（删除 WorkerProtocol，先移植规则）已决定，其余随对应步骤决定 | done |
-| P4-A | 第 A 步：删除未接线的预览协议、七套测试与两个夹具；移除旧 Decode 和门禁豁免，补齐协议 2 测试并保存最终规则映射 | review |
+| P4-A | 第 A 步：删除未接线的预览协议、七套测试与两个夹具；移除旧 Decode 和门禁豁免，补齐协议 2 测试并保存最终规则映射 | done |
 | P4-B | 第 B 步：`TiaMcp.Adapters.Contracts`（原样迁移 DTO、错误类型、黄金 JSON 测试；适配器内 `TiaVersionCatalog` 改为 internal）；48 个类型原样迁移，`adapter-contracts` 套件 232 项 | done |
 | P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变；`tools/openness-shared/TiaFeatures.props` + `Check-TiaFeatures.py`（validate 流程） | done |
 | P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48（P4-E1 完成，三个旧版本冒烟通过，真机验收已登记）与协议 2（P4-E2 完成：`TiaMcp.WorkerChannel`、握手与不重放规则、`worker-channel` 套件 98 项，预览规则逐条映射；P4-A 完成：删除 `TiaMcp.WorkerProtocol.*`（约 10,700 行、6,676 个断言），删除前补 155 项规则测试，`worker-channel` 253 项）） | doing |
