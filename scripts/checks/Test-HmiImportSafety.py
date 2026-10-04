@@ -21,7 +21,9 @@ assert 'break;' in batch and 'later matching files were not attempted' in batch
 assert 'ImportOptions.Override' in helper  # Preserve this family's existing default.
 wrapper = sources.member('ImportHmiScreensFromDirectory', tool=True)
 assert 'Imported = result.Imported' in wrapper and 'Failed = result.Failed' in wrapper
-assert '["success"] = (result.Failed == null || !result.Failed.Any())' in wrapper
+# The verdict may be written inline or through the envelope builder (P2-01e).
+assert any(form in wrapper for form in ('["success"] = (result.Failed == null || !result.Failed.Any())',
+                                        'ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))'))
 
 program = r'''
 using System;

@@ -41,8 +41,10 @@ class ImportSelectionWiring(unittest.TestCase):
 
     def test_ordering_honest_and_deterministic(self):
         self.assertNotIn('correct dependency order', MCP)
-        self.assertIn('["dependencyResolution"] = false', SHARED)
-        self.assertIn('["importOrdering"] = ImportSelectionPolicy.OrderingDescription', SHARED)
+        # The metadata keys may be written inline or through the envelope builder (P2-01e).
+        self.assertTrue(any(form in SHARED for form in ('["dependencyResolution"] = false', '("dependencyResolution", false)')))
+        self.assertTrue(any(form in SHARED for form in ('["importOrdering"] = ImportSelectionPolicy.OrderingDescription',
+                                                        '("importOrdering", ImportSelectionPolicy.OrderingDescription)')))
         self.assertEqual(PROGRAM.count('.ThenBy(x => x.File, StringComparer.Ordinal)'), 5)
 
     def test_both_production_projects_reference_policy_library(self):
