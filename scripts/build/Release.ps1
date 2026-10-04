@@ -183,12 +183,13 @@ else {
     Say ("bumping " + $previous + " -> " + $Version)
     ReplaceOnce (Join-Path $repo '.claude-plugin\plugin.json') ('"version": "' + $previous + '"') ('"version": "' + $Version + '"') 'plugin.json'
     ReplaceOnce $versionProps ('<TiaMcpRelease>' + $previous + '</TiaMcpRelease>') ('<TiaMcpRelease>' + $Version + '</TiaMcpRelease>') 'Version.props'
-    ReplaceOnce (Join-Path $repo 'docs\README.md') ('[当前发布说明](releases/v' + $previous + '.md)') ('[当前发布说明](releases/v' + $Version + '.md)') 'docs/README.md current release link'
+    ReplaceOnce (Join-Path $repo 'docs\README.md') ('[当前版本说明](releases/v' + $previous + '.md)') ('[当前版本说明](releases/v' + $Version + '.md)') 'docs/README.md current release link'
     # Capability prose is maintained with the release note; do not rewrite historical entries.
     $roadmap = Join-Path $repo 'docs\development\roadmap.md'
     $rm = ReadText $roadmap
     $title = [regex]::Match($rm, '(?m)^# 路线图与待办（[^）]*，' + [regex]::Escape($previous) + ' 更新）')
-    if ($title.Success) { WriteText $roadmap ($rm.Replace($title.Value, $title.Value.Replace($previous + ' 更新', $Version + ' 更新'))); Say '  bumped: roadmap title' }
+    if (-not $title.Success) { $title = [regex]::Match($rm, '(?m)^# 路线图与待办（v' + [regex]::Escape($previous) + '）') }
+    if ($title.Success) { WriteText $roadmap ($rm.Replace($title.Value, $title.Value.Replace($previous + ' 更新', $Version + ' 更新').Replace('（v' + $previous + '）', '（v' + $Version + '）'))); Say '  bumped: roadmap title' }
     elseif ($rm.Contains($Version + ' 更新）')) { Say '  already applied: roadmap title' }
     else { Say '  WARNING: roadmap title not bumped (pattern not found) - fix by hand' }
 }
