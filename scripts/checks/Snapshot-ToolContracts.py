@@ -11,16 +11,12 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
 
 RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
-P6_07 = {'GetAuthoringGuide': 'GetToolUsage', 'GetRecipe': 'GetToolUsage',
-         'PreflightToolCall': 'PreviewToolCall', 'ReadToolBatch': 'RunReadOnlyToolBatch',
-         **{name: name for name in ('CallTool', 'FindTools', 'ListToolCategories',
-                                   'GetToolUsage', 'PreviewToolBatch', 'ApplyToolBatch')}}
-
 
 def tool_records(tools):
     names = [tool['name'] for tool in tools]
@@ -175,8 +171,8 @@ def load_snapshots(directory):
 
 
 def compare(args):
-    if getattr(args, 'migration', None) == 'P6-07':
-        return compare_infrastructure(args)
+    if getattr(args, 'migration', None):
+        return compare_migration(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -216,32 +212,68 @@ def compare(args):
     return int(bool(total['breaking']))
 
 
-def compare_infrastructure(args):
-    """Explicit phase-6 proof; the normal compatibility comparison remains strict."""
+def _recursive_refs_only(schema):
+    """Exported schemas are inlined; only definitions on a reference cycle may stay as $ref (P6-07 rule 4)."""
+    text = json.dumps(schema)
+    if '"$ref"' not in text:
+        return True
+    definitions = schema.get('$defs', {}) if isinstance(schema, dict) else {}
+    edges = {name: set(re.findall(r'"#/\$defs/([^"]+)"', json.dumps(body))) for name, body in definitions.items()}
+
+    def on_cycle(start):
+        seen, stack = set(), list(edges.get(start, ()))
+        while stack:
+            node = stack.pop()
+            if node == start:
+                return True
+            if node not in seen:
+                seen.add(node)
+                stack.extend(edges.get(node, ()))
+        return False
+    return all(name in edges and on_cycle(name) for name in set(re.findall(r'"#/\$defs/([^"]+)"', text)))
+
+
+def compare_migration(args):
+    """Phase-6 group proof: only the task's group may change; every other record stays byte-identical."""
     import xml.etree.ElementTree as ET
+    import phase6_groups
     resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
     runtime = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
-    for release in args.releases or ('20', '21'):
+    failures = 0
+    for release in args.releases or sorted(baseline.keys() & current.keys()):
         old, new = baseline[release], current[release]
         a, b = ({t['name']: t for t in snapshot['tools']} for snapshot in (old, new))
-        assert set(b) == {P6_07.get(name, name) for name in a}, (release, 'unexpected roster change')
-        untouched = set(a) - P6_07.keys()
-        assert all(a[name] == b[name] for name in untouched), (release, 'unmigrated contract changed')
-        expected_lite = {r['currentName'] for r in runtime['releases'][release] if 'lite' in r['profiles']}
-        assert set(new['liteTools']) == expected_lite <= set(b), (release, 'lite differs from generated runtime data')
-        for name, schema in ((n, b[n]['inputSchema']) for n in b):
-            assert '"$ref"' not in json.dumps(schema), (release, name, 'unexpected nonrecursive schema reference')
-        for name in ('CallTool', 'PreviewToolCall'):
-            properties = b[name]['inputSchema']['properties']
-            assert properties['arguments']['type'] == 'object' and 'argumentsJson' not in properties
-        for name in ('RunReadOnlyToolBatch', 'PreviewToolBatch'):
-            operations = b[name]['inputSchema']['properties']['operations']
-            assert operations['type'] == 'array' and operations['minItems'] == 1 and operations['maxItems'] == 50
-        assert b['GetToolUsage']['inputSchema']['properties']['exampleKind']['enum'] == ['all', 'sequence', 'language']
-        changed = sum(a[name] != b[name] for name in a.keys() & b.keys())
-        print(f'V{release} P6-07: changed={changed} removed={len(a.keys() - b.keys())} added={len(b.keys() - a.keys())}; untouched={len(untouched)} byte-identical records; lite={len(expected_lite)}')
-    return 0
+        members = phase6_groups.group(args.migration, release, a)
+        expected = {phase6_groups.mapped(name, members) for name in a}
+        problems = []
+        if set(b) != expected:
+            problems.append('roster differs: ' + ', '.join(sorted(set(b) ^ expected)))
+        untouched = [name for name in a if name not in members]
+        problems += [name + ': unmigrated contract changed' for name in untouched if name in b and a[name] != b[name]]
+        if new.get('liteTools') is not None and release in runtime.get('releases', {}):
+            expected_lite = {r['currentName'] for r in runtime['releases'][release] if 'lite' in r['profiles']}
+            if set(new['liteTools']) != expected_lite or not expected_lite <= set(b):
+                problems.append('lite differs from the generated runtime data')
+        problems += [name + ': nonrecursive schema reference' for name, tool in b.items() if not _recursive_refs_only(tool['inputSchema'])]
+        if args.migration == 'P6-07' and not problems:
+            _p6_07_checks(b)
+        changed = sum(a[name] != b.get(phase6_groups.mapped(name, members)) for name in members)
+        print(f'V{release} {args.migration}: group={len(members)} changed={changed} untouched={len(untouched)}; FAILED={len(problems)}')
+        for problem in problems:
+            print('  unexpected: ' + problem)
+        failures += len(problems)
+    return int(failures != 0)
+
+
+def _p6_07_checks(b):
+    for name in ('CallTool', 'PreviewToolCall'):
+        properties = b[name]['inputSchema']['properties']
+        assert properties['arguments']['type'] == 'object' and 'argumentsJson' not in properties
+    for name in ('RunReadOnlyToolBatch', 'PreviewToolBatch'):
+        operations = b[name]['inputSchema']['properties']['operations']
+        assert operations['type'] == 'array' and operations['minItems'] == 1 and operations['maxItems'] == 50
+    assert b['GetToolUsage']['inputSchema']['properties']['exampleKind']['enum'] == ['all', 'sequence', 'language']
 
 
 def main():
@@ -260,7 +292,7 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)
     compare_parser.add_argument('--current', type=Path, required=True)
-    compare_parser.add_argument('--migration', choices=['P6-07'], help='Verify only the reviewed infrastructure transition against the 3.x baseline')
+    compare_parser.add_argument('--migration', choices=list(__import__('phase6_groups').TASKS), help='Verify one phase-6 group migration: only its tools may change')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
                                 help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)

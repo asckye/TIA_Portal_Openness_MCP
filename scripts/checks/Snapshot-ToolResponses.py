@@ -710,8 +710,8 @@ def response_length(call):
 
 
 def compare(args):
-    if getattr(args, 'migration', None) == 'P6-07':
-        return compare_infrastructure(args)
+    if getattr(args, 'migration', None):
+        return compare_migration(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -763,29 +763,45 @@ def compare(args):
     return int(any(total.values()))
 
 
-def compare_infrastructure(args):
+def compare_migration(args):
+    """Phase-6 group proof: only the task's group (including bridge calls that wrap it) may change."""
+    import phase6_groups
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
-    allowed = set(contracts.P6_07) | set(contracts.P6_07.values())
     failures = 0
-    for release in args.releases or FULL_RELEASES:
+    for release in args.releases or sorted(baseline.keys() & current.keys()):
         old, new = baseline[release], current[release]
         a, b = ({identity(call): call for call in snapshot['calls']} for snapshot in (old, new))
-        other_a = {key: value for key, value in a.items() if key[1] not in allowed}
-        other_b = {key: value for key, value in b.items() if key[1] not in allowed}
+        members = phase6_groups.group(args.migration, release, {key[1] for key in a})
+        allowed = members | {phase6_groups.mapped(name, members) for name in members}
+
+        def in_group(key):
+            if key[1] in allowed:
+                return True
+            if key[1] in ('CallTool', 'PreviewToolCall', 'PreflightToolCall'):
+                try:
+                    inner = json.loads(key[2]).get('name')
+                except (ValueError, AttributeError):
+                    return False
+                return inner in allowed
+            return False
+        other_a = {key: value for key, value in a.items() if not in_group(key)}
+        other_b = {key: value for key, value in b.items() if not in_group(key)}
         outside = [key for key in sorted(other_a.keys() | other_b.keys()) if other_a.get(key) != other_b.get(key)]
-        failures += len(outside)
         for key in ('release', 'formatVersion', 'profiles', 'transport', 'maxResponseChars'):
             assert old[key] == new[key], (release, key)
         assert new['rawMaskRules'] == RAW_MASK_RULES
-        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - 2
-        expected = {contracts.P6_07.get(name, name) for name in old['coverage']['directRejectedTools']}
-        assert set(new['coverage']['directRejectedTools']) == expected
-        assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}
+        merged = len(members) - len({phase6_groups.mapped(name, members) for name in members})
+        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged, (release, 'registered tool count')
+        expected = {phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']}
+        assert set(new['coverage']['directRejectedTools']) == expected, (release, 'direct refusal roster')
+        if old['coverage'].get('bridgeRejectedTools'):
+            assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}, (release, 'bridge refusal roster')
         changed = sum(a[key] != b[key] for key in a.keys() & b.keys())
-        print(f'V{release} P6-07: changed={changed} added={len(b.keys() - a.keys())} removed={len(a.keys() - b.keys())}; unchanged outside group={len(other_a) - len(outside)}; FAILED outside group={len(outside)}')
+        print(f'V{release} {args.migration}: changed={changed} added={len(b.keys() - a.keys())} removed={len(a.keys() - b.keys())}; '
+              f'unchanged outside group={len(other_a) - len(outside)}; FAILED outside group={len(outside)}')
         for key in outside:
-            print('  unexpected: ' + key[0] + ' ' + key[1] + '(' + key[2] + ') ' +
-                  str(first_difference(other_a.get(key), other_b.get(key))))
+            print('  unexpected: ' + key[0] + ' ' + key[1] + '(' + key[2] + ') ' + str(first_difference(other_a.get(key), other_b.get(key))))
+        failures += len(outside)
     return int(failures != 0)
 
 
@@ -939,7 +955,7 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
-    compare_parser.add_argument('--migration', choices=['P6-07'], help='Verify the reviewed infrastructure transition; every other call and raw hash must match')
+    compare_parser.add_argument('--migration', choices=list(__import__('phase6_groups').TASKS), help='Verify one phase-6 group migration; every call outside the group (and its bridge calls) must match')
     compare_parser.add_argument('--normalized-only', action='store_true',
                                 help='Migration check against format 2 only; does not prove raw-byte compatibility')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
