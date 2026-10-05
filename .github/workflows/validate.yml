@@ -60,6 +60,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py
+      - name: Supplementary read and worker dispatch source contracts
+        run: python scripts/checks/Test-SupplementaryReadSources.py
       - name: Build launcher and test .NET 10 configuration page
         shell: powershell
         run: ./scripts/build/Build-Configurator.ps1 -Test

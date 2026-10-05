@@ -8,6 +8,10 @@ root=Path(__file__).resolve().parents[2]
 src=root/'src'
 props=ET.parse(src/'Adapters/build/Adapter.Sources.props').getroot()
 files=[src / x.attrib['Include'].replace('$(AdapterSourceRoot)/','') for x in props.iter('AdapterSource')]
+# Step-I domain primitives reach the adapter through their shared-native props, not the base inventory.
+for domain in sorted((src/'Shared/shared-native').glob('*.props')):
+ for x in ET.parse(domain).getroot().iter('TiaSharedNativePrimitive'):
+  files.append((domain.parent / x.attrib['Include'].replace('$(MSBuildThisFileDirectory)','')).resolve())
 assert len(files)==len(set(files)), 'Duplicate adapter source'
 for f in files: assert f.is_file(), f'Missing source: {f}'
 for folder in ['Native','Policy']:
@@ -30,10 +34,12 @@ assert native.count('PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey')==2
 assert native.count('PlcSupplementaryReadPolicy.ReadSnapshot(')==2
 assert '.ForceTables' not in native and 'GetType().Get' not in native
 assert '()=>item.OfSystemLibElement,()=>item.OfSystemLibVersion' in native
-assert 'PlcSupplementaryReadPolicy.TechnologyMetadata(item.Name' in native
-for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngineeringObject']:
+assert 'PlcSupplementaryReadPolicy.TechnologyMetadata(Native.Name(item)' in native
+# Since P4-I2 the typed reads go through the shared watch/technology primitives, which also
+# carry engine write accessors; the read-only adapter path must not reach those.
+for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngineeringObject', 'Native.Attribute(', 'Native.SetAttribute(']:
  assert forbidden not in native, f'Technology metadata must use typed getters only: {forbidden}'
-assert not re.search(r'item\.OfSystemLib(?:Element|Version)\s*=',native), 'No metadata setter permitted'
+assert not re.search(r'item\.OfSystemLib(?:Element|Version)\s*=(?!=)',native), 'No metadata setter permitted'
 worker=(src/'Worker/Program.cs').read_text(encoding='utf-8-sig')
 # The read-only dispatch list lives in WorkerOperations.IsReadOnly; the worker loop must use it.
 assert 'WorkerOperations.IsReadOnly(name)' in worker

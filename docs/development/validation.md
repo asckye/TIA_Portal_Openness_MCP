@@ -114,7 +114,7 @@ CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞�
 下列命令不进入 Python-only job。HMI/技术对象与外部源替身需要 .NET 10；
 依赖须已缓存，替身项目只使用本地还原源。它们编译提取的实际方法体并运行托管替身，不连接 TIA。
 外部源的工作目录保留生成源码与构建证据；HMI/技术对象在 `bin-build` 创建并清理临时目录。
-另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens。
+另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens，并在 validate-bundle CI 中运行。
 
 ```powershell
 python scripts/checks/Test-HmiImportSafety.py
