@@ -47,6 +47,7 @@ internal sealed class FakeStudioClient : IStudioClient
     public bool VcSupported { get; set; } = true;
     public ProjectInfo? AttachedProject { get; set; }
     public Exception? ImportError { get; set; }
+    public Func<string, string[], string, ExportFormat, ExportResult>? ExportHandler { get; set; }
     public List<DeviceInfo> Devices { get; } = [new() { Id = "PLC_1", Name = "PLC_1", Category = "Plc" }];
     public List<BlockInfo> Blocks { get; } = [new() { Name = "Main", Path = "Main", Kind = BlockKind.OB, IsConsistent = true }];
     public List<WorkspaceInfo> Workspaces { get; } = [new() { Name = "git", RootPath = @"D:\workspace" }];
@@ -79,7 +80,8 @@ internal sealed class FakeStudioClient : IStudioClient
     public Task<List<DeviceInfo>> ListDevicesAsync() => Reply("Devices", Devices);
     public Task<List<BlockInfo>> ListBlocksAsync(string deviceId) => Reply("Blocks", Blocks, deviceId);
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
-        => Reply("Export", new ExportResult { OutputDirectory = outputDirectory }, deviceId, blocks.ToArray(), outputDirectory, format);
+        => Reply("Export", ExportHandler?.Invoke(deviceId, blocks.ToArray(), outputDirectory, format)
+            ?? new ExportResult { OutputDirectory = outputDirectory }, deviceId, blocks.ToArray(), outputDirectory, format);
     public Task<ExportResult> ImportBlocksAsync(string deviceId, IEnumerable<string> files, bool overwrite)
     {
         Record("Import", deviceId, files.ToArray(), overwrite);

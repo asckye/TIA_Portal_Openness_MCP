@@ -14,6 +14,26 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class EcosystemTools
     {
+        [McpServerTool(Name = "RenderPlcBlock"), Description("[L2][PLC-Software][FILE] Render one existing SimaticML block export as a self-contained static HTML page with ladder SVG, interface and code. Offline local files only. Writes a new absolute .html path; never overwrites. No Siemens calls or online power-flow display.")]
+        public CallToolResult RenderPlcBlock(
+            [Description("Existing absolute local SimaticML XML file containing exactly one block.")] string inputPath,
+            [Description("New absolute local .html output path in an existing directory; existing files are refused.")] string outputPath)
+            => Render(inputPath, outputPath, false);
+
+        [McpServerTool(Name = "RenderPlcProgramAtlas"), Description("[L2][PLC-Software][FILE] Render a SimaticML block XML file or recursive block export directory into one self-contained static HTML program atlas. Contents, call links and called-by counts cover only included blocks. Offline local file output, no Siemens calls. Requires a new absolute .html path; never overwrites.")]
+        public CallToolResult RenderPlcProgramAtlas(
+            [Description("Existing absolute local SimaticML XML file or directory containing block exports; at most 256 files and 512 networks.")] string inputPath,
+            [Description("New absolute local .html output path in an existing directory; existing files are refused.")] string outputPath)
+            => Render(inputPath, outputPath, true);
+
+        private static CallToolResult Render(string inputPath, string outputPath, bool atlas)
+        {
+            var mapped = TiaMcp.Logic.V4.McpResult.From(PlcProgramRenderer.Write(inputPath, outputPath, atlas,
+                McpServer.ReleaseKey, InvocationJournal.CorrelationId));
+            return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+        }
+
         [McpServerTool(Name = "RenderPlcVisualDiff"), Description("[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download.")]
         public CallToolResult RenderPlcVisualDiffV4(
             [Description("Existing absolute before-export SimaticML XML path.")] string leftFilePath,

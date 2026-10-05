@@ -96,7 +96,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             + " Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply.";
         if (parameter == "artifacts") description = "Offline dependency-first import planning. artifacts is a typed array of {id, target?, priority?, dependencies?}; 1..256 unique IDs, no missing or cyclic dependencies. No worker or file operations.";
         tool = new Tool { Name = Name(source.Name), Description = description
-            + (inner is FoundationTool ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
+            + (inner is FoundationTool { IsNative: true } ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
@@ -109,7 +109,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
-            if (validation.Error != null) return FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool);
+            if (validation.Error != null) return FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true });
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             if (parameter != null)
             {

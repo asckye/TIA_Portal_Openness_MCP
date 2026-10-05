@@ -1,0 +1,231 @@
+<Document>
+  <Engineering version="V21" />
+  <SW.Blocks.FB ID="0">
+    <AttributeList>
+      <Name>RoutingParts</Name>
+      <Number>42</Number>
+      <ProgrammingLanguage>LAD</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="Contact" UId="10" />
+                <Part Name="Contact" UId="11" />
+                <Part Name="Contact" UId="12" />
+                <Part Name="O" UId="13" />
+                <Part Name="Or" UId="14" />
+                <Part Name="Wire" UId="15" />
+                <Part Name="BranchWire" UId="16" />
+                <Part Name="Coil" UId="17" />
+                <Access UId="1008" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Branch10" />
+                  </Symbol>
+                </Access>
+                <Access UId="1009" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Branch11" />
+                  </Symbol>
+                </Access>
+                <Access UId="1010" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Branch12" />
+                  </Symbol>
+                </Access>
+                <Access UId="1011" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Branch17" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                  <NameCon UId="11" Name="in" />
+                  <NameCon UId="12" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1008" />
+                  <NameCon UId="10" Name="operand" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1009" />
+                  <NameCon UId="11" Name="operand" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1010" />
+                  <NameCon UId="12" Name="operand" />
+                </Wire>
+                <Wire UId="104">
+                  <IdentCon UId="1011" />
+                  <NameCon UId="17" Name="operand" />
+                </Wire>
+                <Wire UId="105">
+                  <NameCon UId="10" Name="out" />
+                  <NameCon UId="13" Name="in1" />
+                </Wire>
+                <Wire UId="106">
+                  <NameCon UId="11" Name="out" />
+                  <NameCon UId="13" Name="in2" />
+                </Wire>
+                <Wire UId="107">
+                  <NameCon UId="13" Name="out" />
+                  <NameCon UId="14" Name="in1" />
+                </Wire>
+                <Wire UId="108">
+                  <NameCon UId="12" Name="out" />
+                  <NameCon UId="14" Name="in2" />
+                </Wire>
+                <Wire UId="109">
+                  <NameCon UId="14" Name="out" />
+                  <NameCon UId="15" Name="in" />
+                </Wire>
+                <Wire UId="110">
+                  <NameCon UId="15" Name="out" />
+                  <NameCon UId="16" Name="in" />
+                </Wire>
+                <Wire UId="111">
+                  <NameCon UId="16" Name="out" />
+                  <NameCon UId="17" Name="in" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Nested OR branches</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="Move" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Value" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="pre" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Internal pre on Move</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="TON" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Value" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="pre" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="PT" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Internal pre on TON</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="VendorGate" UId="10">
+                  <Parameter Name="IN" Section="Input" Type="Int" />
+                  <Parameter Name="Start" Section="Input" Type="Bool" />
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Value" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="pre" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="IN" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Internal pre on VendorGate</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FB>
+</Document>

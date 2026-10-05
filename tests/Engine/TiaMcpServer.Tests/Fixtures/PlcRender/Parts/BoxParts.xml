@@ -1,0 +1,687 @@
+<Document>
+  <Engineering version="V21" />
+  <SW.Blocks.FB ID="0">
+    <AttributeList>
+      <Name>BoxParts</Name>
+      <Number>42</Number>
+      <ProgrammingLanguage>LAD</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="TON" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="TONInstance" />
+                  </Instance>
+                  <TemplateValue Name="time_type" Type="Type">Time</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="TONPT" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="IN" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="PT" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="ET" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>TON</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="TOF" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="TOFInstance" />
+                  </Instance>
+                  <TemplateValue Name="time_type" Type="Type">Time</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="TOFPT" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="IN" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="PT" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="ET" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>TOF</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="TP" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="TPInstance" />
+                  </Instance>
+                  <TemplateValue Name="time_type" Type="Type">Time</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="TPPT" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="IN" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="PT" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="ET" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>TP</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="TONR" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="TONRInstance" />
+                  </Instance>
+                  <TemplateValue Name="time_type" Type="Type">Time</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="TONRR" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="TONRPT" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="IN" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="R" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="PT" />
+                </Wire>
+                <Wire UId="103">
+                  <NameCon UId="10" Name="ET" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>TONR</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="CTU" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="CTUInstance" />
+                  </Instance>
+                  <TemplateValue Name="value_type" Type="Type">Int</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUR" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUPV" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="CU" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="R" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="PV" />
+                </Wire>
+                <Wire UId="103">
+                  <NameCon UId="10" Name="CV" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>CTU</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="CTD" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="CTDInstance" />
+                  </Instance>
+                  <TemplateValue Name="value_type" Type="Type">Int</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTDLD" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTDPV" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="CD" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="LD" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="PV" />
+                </Wire>
+                <Wire UId="103">
+                  <NameCon UId="10" Name="CV" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>CTD</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="CTUD" UId="10">
+                  <Instance Scope="LocalVariable">
+                    <Component Name="CTUDInstance" />
+                  </Instance>
+                  <TemplateValue Name="value_type" Type="Type">Int</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUDCD" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUDR" />
+                  </Symbol>
+                </Access>
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUDLD" />
+                  </Symbol>
+                </Access>
+                <Access UId="1004" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="CTUDPV" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="CU" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="CD" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="R" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="10" Name="LD" />
+                </Wire>
+                <Wire UId="104">
+                  <IdentCon UId="1004" />
+                  <NameCon UId="10" Name="PV" />
+                </Wire>
+                <Wire UId="105">
+                  <NameCon UId="10" Name="CV" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>CTUD</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Call UId="10">
+                  <CallInfo Name="MixedCaseFB" BlockType="FB">
+                    <Instance Scope="GlobalVariable">
+                      <Component Name="InstanceDB" />
+                    </Instance>
+                    <Parameter Name="en" Section="Input" Type="Bool" />
+                    <Parameter Name="eno" Section="Output" Type="Bool" />
+                    <Parameter Name="Speed" Section="Input" Type="Real" />
+                    <Parameter Name="Value" Section="InOut" Type="Int" />
+                    <Parameter Name="Result" Section="Output" Type="Real" />
+                  </CallInfo>
+                </Call>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FBSpeed" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FBValue" />
+                  </Symbol>
+                </Access>
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FBResult" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="en" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="Speed" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="Value" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="10" Name="Result" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>FB call</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Call UId="10">
+                  <CallInfo Name="MixedCaseFC" BlockType="FC">
+                    <Parameter Name="en" Section="Input" Type="Bool" />
+                    <Parameter Name="eno" Section="Output" Type="Bool" />
+                    <Parameter Name="Speed" Section="Input" Type="Real" />
+                    <Parameter Name="Value" Section="InOut" Type="Int" />
+                    <Parameter Name="Result" Section="Output" Type="Real" />
+                  </CallInfo>
+                </Call>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FCSpeed" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FCValue" />
+                  </Symbol>
+                </Access>
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="FCResult" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="en" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="Speed" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="Value" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="10" Name="Result" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>FC call</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="Move" UId="10">
+                  <TemplateValue Name="Card" Type="Cardinality">3</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Source" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Destination" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="en" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="out1" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Variadic MOVE</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>FBD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="And" UId="10">
+                  <TemplateValue Name="SrcType" Type="Type">Word</TemplateValue>
+                  <TemplateValue Name="Card" Type="Cardinality">3</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Logicin1" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Logicin2" />
+                  </Symbol>
+                </Access>
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Logicin3" />
+                  </Symbol>
+                </Access>
+                <Access UId="1004" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Logicout" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="en" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="in1" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="in2" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="10" Name="in3" />
+                </Wire>
+                <Wire UId="104">
+                  <IdentCon UId="1004" />
+                  <NameCon UId="10" Name="out" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Word logic</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="VendorMystery" UId="10">
+                  <TemplateValue Name="Card" Type="Cardinality">2</TemplateValue>
+                </Part>
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="UnknownInput" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="pre" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="in1" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="out" />
+                  <OpenCon UId="90" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>Unknown fallback</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FB>
+</Document>

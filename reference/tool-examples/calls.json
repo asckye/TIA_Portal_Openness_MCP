@@ -2257,6 +2257,46 @@
           "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
+      },
+      "RenderPlcBlock": {
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports\\Main.xml",
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+        },
+        "parameters": {
+          "inputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:\\Examples\\exports\\Main.xml",
+            "source": "Existing local SimaticML export. Use the selected release export contract first; rendering makes no Siemens call."
+          },
+          "outputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:/Examples/reports/RenderPlcBlock.html",
+            "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation."
+          }
+        },
+        "operations": {},
+        "validation": "NOT RUN with these placeholder paths; bind real local input and a new output path. Offline file-output example. V4 envelope; complete static HTML with inline SVG/CSS. Called-by counts include only blocks inside the atlas. No online power flow or editing."
+      },
+      "RenderPlcProgramAtlas": {
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports",
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+        },
+        "parameters": {
+          "inputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:\\Examples\\exports",
+            "source": "Existing local SimaticML export. Use the selected release export contract first; rendering makes no Siemens call."
+          },
+          "outputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:/Examples/reports/RenderPlcProgramAtlas.html",
+            "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation."
+          }
+        },
+        "operations": {},
+        "validation": "NOT RUN with these placeholder paths; bind real local input and a new output path. Offline file-output example. V4 envelope; complete static HTML with inline SVG/CSS. Called-by counts include only blocks inside the atlas. No online power flow or editing."
       }
     },
     "full-engine": {
@@ -15665,6 +15705,46 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "RenderPlcBlock": {
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports\\Main.xml",
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+        },
+        "parameters": {
+          "inputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:\\Examples\\exports\\Main.xml",
+            "source": "Existing local SimaticML export. Use the selected release export contract first; rendering makes no Siemens call."
+          },
+          "outputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:/Examples/reports/RenderPlcBlock.html",
+            "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation."
+          }
+        },
+        "operations": {},
+        "validation": "NOT RUN with these placeholder paths; bind real local input and a new output path. Offline file-output example. V4 envelope; complete static HTML with inline SVG/CSS. Called-by counts include only blocks inside the atlas. No online power flow or editing."
+      },
+      "RenderPlcProgramAtlas": {
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports",
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+        },
+        "parameters": {
+          "inputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:\\Examples\\exports",
+            "source": "Existing local SimaticML export. Use the selected release export contract first; rendering makes no Siemens call."
+          },
+          "outputPath": {
+            "requiresBinding": true,
+            "exampleValue": "C:/Examples/reports/RenderPlcProgramAtlas.html",
+            "source": "New absolute .html path in an existing directory. Existing files are refused, including concurrent creation."
+          }
+        },
+        "operations": {},
+        "validation": "NOT RUN with these placeholder paths; bind real local input and a new output path. Offline file-output example. V4 envelope; complete static HTML with inline SVG/CSS. Called-by counts include only blocks inside the atlas. No online power flow or editing."
       }
     }
   }

@@ -31017,6 +31017,28 @@
       "name": "ReleaseUnifiedReadCursor"
     },
     {
+      "descriptionSha256": "82e9228abfb54e48c9ef215e78c440625db22cae6b4d55fd07de197a7caf8e70",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "inputPath": {
+            "description": "Existing absolute local SimaticML XML file containing exactly one block.",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "New absolute local .html output path in an existing directory; existing files are refused.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputPath",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "RenderPlcBlock"
+    },
+    {
       "descriptionSha256": "16f0aa268681bc4385a19bf7f5bc0dcf8cda469125abff46fcb7c4cbadf43d55",
       "inputSchema": {
         "additionalProperties": false,
@@ -31055,6 +31077,28 @@
         "type": "object"
       },
       "name": "RenderPlcBlockDocument"
+    },
+    {
+      "descriptionSha256": "4115b1fe081ed5fe02318d0911792e179a8ec3b0b59cc2c0624dc9dfdbb3c775",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "inputPath": {
+            "description": "Existing absolute local SimaticML XML file or directory containing block exports; at most 256 files and 512 networks.",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "New absolute local .html output path in an existing directory; existing files are refused.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputPath",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "RenderPlcProgramAtlas"
     },
     {
       "descriptionSha256": "3aa83b56a9eacd9dc03e0884dbe9693409aceec09390c871bc6ecd0955945ede",

@@ -1,5 +1,6 @@
 """Build the embedded, pinned official-source catalog. No native calls or downloads."""
 import argparse
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -15,6 +16,20 @@ OUTPUT = ROOT / 'src/Shared/ToolUsageData.json'
 
 def read(path):
     return json.loads(path.read_text('utf-8-sig'))
+
+
+def new_v4_tools(root=ROOT):
+    tree = ast.parse((root / 'scripts/generate/Generate-Phase6Plan.py').read_text('utf-8-sig'))
+    entries = [ast.literal_eval(node.value) for node in tree.body if isinstance(node, ast.Assign)
+               and any(isinstance(t, ast.Name) and t.id == 'NEW_V4_TOOLS' for t in node.targets)]
+    assert len(entries) == 1, 'Exactly one reviewed new-in-4.0 list is required'
+    result = entries[0]
+    for name, entry in result.items():
+        assert re.fullmatch(r'RenderPlc(?:Block|ProgramAtlas)', name), ('Unreviewed new V4 name', name)
+        assert entry['owner'] == 'P6-48' and entry['operation'] == 'FILE', ('Unreviewed owner/category', name)
+        assert entry['releases'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], name
+    assert set(result) == {'RenderPlcBlock', 'RenderPlcProgramAtlas'}, 'Reviewed new V4 list differs'
+    return result
 
 
 def appendix_names(root=ROOT):
@@ -42,8 +57,14 @@ def registered_rosters(root=ROOT):
     import engine_sources
     engine = engine_sources.EngineSources(root)
     targets = appendix_names(root)
+    additions = new_v4_tools(root)
+    targets.update({n: n for n in additions})
     baseline = {key: read(root / f'manifest/contracts/baseline/{key}.json')['tools']
                 for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+    for name, entry in additions.items():
+        for key in entry['releases']:
+            assert name not in {t['name'] for t in baseline[key]}, ('New tool exists in 3.x', name)
+            baseline[key].append({'name': name})
     full = set()
     for source in engine.sources.values():
         full.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source))
@@ -133,6 +154,7 @@ def generate():
     from engine_sources import EngineSources
     full = source_metadata(EngineSources(ROOT).sources.values())
     assert set(full) == rosters['21'], 'Source metadata differs from the registered roster'
+    additions = new_v4_tools()
     names = set().union(*rosters.values())
     domains = {
         'Portal': ['session-and-project', 'licensing-and-firewall'],
@@ -183,7 +205,7 @@ def generate():
         domain = full.get(name, {}).get('domain', '')
         topics = domains.get(domain, [])
         # HMI/third-party/offline composition contracts must not be presented as PLC native examples.
-        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage'
+        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage' or name in additions
         unsupported = 'Hmi' in name or 'Unified' in name or 'Sivarc' in name or 'SiVArc' in name or domain in ('PLC-OpcUA', 'VersionControl')
         if not project_defined and not unsupported:
             for pattern, matched in rules:
@@ -262,6 +284,14 @@ class RosterTests(unittest.TestCase):
         for invalid in ([sources[0], sources[0]], ['[McpServerTool(Name="Missing")]'],
                         ['[McpServerTool(Name="Missing"), Description("no domain")]']):
             with self.subTest(invalid=invalid), self.assertRaises(AssertionError): source_metadata(invalid)
+
+    def test_reviewed_additions_are_exact(self):
+        additions = new_v4_tools()
+        self.assertEqual(set(additions), {'RenderPlcBlock', 'RenderPlcProgramAtlas'})
+        targets = {'Old': 'New', **{n: n for n in additions}}
+        resolve_names(targets, {'New', *additions}, targets)
+        for names in ({'New', 'RenderPlcBlock'}, {'New', *additions, 'RenderPlcOther'}):
+            with self.assertRaises(AssertionError): resolve_names(targets, names, targets)
 
     def test_migrated_and_unmigrated_names(self):
         targets = {'BuildOld': 'BuildNew', 'ReadOld': 'GetNew', 'Typed': 'Typed'}

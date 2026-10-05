@@ -1,144 +1,144 @@
 {
-    "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "3.3.0",
-    "packageName":  "TIA_MCP_Delivery_v3.3.0_20261003",
-    "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
-    "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-10-04T22:24:12.1915532+00:00",
-    "target":  {
-                   "tiaPortalMajorVersion":  [
-                                                 14,
-                                                 15,
-                                                 16,
-                                                 17,
-                                                 18,
-                                                 19,
-                                                 20,
-                                                 21
-                                             ],
-                   "publicApiPathExample":  "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48",
-                   "runtimeRequirement":  "Target computers need only .NET Framework 4.8 (full engines and Openness workers); foundation hosts and the workbench use the bundled .NET 10 runtime in runtime/dotnet",
-                   "windowsGroupRequirement":  "Siemens TIA Openness",
-                   "newCliFlags":  [
-                                       "--tia-portal-location \u003cpath\u003e",
-                                       "--tia-major-version {20|21}"
-                                   ],
-                   "releaseKeys":  [
-                                       "14sp1",
-                                       "15.1",
-                                       "16",
-                                       "17",
-                                       "18",
-                                       "19",
-                                       "20",
-                                       "21"
-                                   ]
-               },
-    "selfContainedScope":  {
-                               "description":  "Eight version-specific MCP catalogs, direct Openness Studio, configurator, examples, documentation, templates and licenses. Foundation and full-engine capabilities differ by release.",
-                               "bundled":  [
-                                               "TiaMcpServer runtime and dependent DLLs",
-                                               "Skill and MCP operation rules",
-                                               "Static MCP tool roster",
-                                               "Tool capability matrix",
-                                               "Complete PLC + HMI project blueprint",
-                                               "PLC instruction recipes, PlcBuildAndImport JSON templates, LAD recipes and SCL examples",
-                                               "WinCC Unified designJson screen templates",
-                                               "Project generation runbook and validation checklist"
-                                           ],
-                               "notBundled":  [
-                                                  "Siemens TIA Portal installation",
-                                                  "Siemens PublicAPI assemblies installed with TIA Portal",
-                                                  "Project-specific exported source folders",
-                                                  "Project-specific process logic, site names or business program segments"
-                                              ]
-                           },
-    "entrypoints":  {
-                        "readme":  "README.md",
-                        "skill":  "plugin/skill/SKILL.md",
-                        "mcpServerExe":  "runtime/v21/TiaMcpServer.exe",
-                        "cursorExample":  "docs/getting-started/cursor.example.json",
-                        "toolRoster":  "manifest/tools-list.json",
-                        "toolMatrix":  "docs/reference/tool-matrix.md",
-                        "fullProjectBlueprint":  "templates/project-blueprints/full_plc_hmi_project.json",
-                        "fullProjectRunbook":  "docs/guides/project-generation.md",
-                        "hmiTemplateIndex":  "templates/hmi/README.md",
-                        "plcTemplateIndex":  "templates/plc/README.md",
-                        "plcTemplateLibrary":  "docs/guides/plc/templates.md",
-                        "hmiTemplateGuide":  "docs/guides/hmi/design.md",
-                        "hmiBindingGuide":  "docs/guides/hmi/tag-binding.md",
-                        "mcpIdeNeutral":  "docs/getting-started/configuration.md",
-                        "optionalReferenceReadme":  "templates/README.md",
-                        "bundleValidationScript":  "scripts/checks/Validate-Bundle.ps1",
-                        "studio":  "runtime/studio/TiaOpenness.exe",
-                        "versionToolMatrix":  "manifest/version-tools.json",
-                        "beginnerGuide":  "docs/getting-started/beginners.zh-CN.md",
-                        "configurator":  "TiaMcpConfigurator.exe"
-                    },
-    "cli":  {
-                "description":  "Call runtime/v21/TiaMcpServer.exe or runtime/v20/TiaMcpServer.exe with a CLI verb. JSON/YAML generation requires no MCP client.",
-                "exe":  "runtime/v21/TiaMcpServer.exe",
-                "verbs":  [
-                              "gen",
-                              "patch",
-                              "compile",
-                              "export",
-                              "import",
-                              "describe",
-                              "prewarm",
-                              "config",
-                              "doctor",
-                              "schema",
-                              "version",
-                              "help"
-                          ],
-                "specFormats":  [
-                                    "json",
-                                    "yaml"
-                                ],
-                "exitCodes":  {
-                                  "0":  "success",
-                                  "1":  "completed with failed steps",
-                                  "2":  "error"
-                              }
-            },
-    "capabilities":  {
-                         "mcpToolCount":  486,
-                         "mcpToolLayers":  {
-                                               "L2":  424,
-                                               "L1":  45,
-                                               "L0":  17
-                                           },
-                         "hmiTemplateJsonCount":  8,
-                         "plcTemplateJsonCount":  9,
-                         "projectBlueprintJsonCount":  1,
-                         "supports":  [
-                                          "project/session management",
-                                          "hardware catalog search and insertion",
-                                          "PROFINET subnet connection",
-                                          "PLC tag/type/block generation and import",
-                                          "SCL FC/FB examples",
-                                          "LAD call-network recipe generation",
-                                          "PLC compile diagnostics",
-                                          "WinCC Unified screen/tag/connection generation",
-                                          "Unified HMI screen designJson application",
-                                          "button Down/Up actions and tag dynamization",
-                                          "read-only online live-value monitoring over S7 (port 102) and OPC UA (port 4840): single read, trend sampling (PID step-response capture), watch-table live read, CPU RUN/STOP state, and offline+live tag causal trace",
-                                          "reflection-based API discovery for uncovered Openness shapes"
-                                      ],
-                         "liteProfile":  {
-                                             "toolCount":  63,
-                                             "isDefault":  true,
-                                             "scope":  "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
-                                             "optOut":  "--profile full (or TIA_MCP_PROFILE=full)",
-                                             "note":  "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
-                                         }
-                     },
-    "fileVersion":  "3.3.0.0",
-    "validationStatus":  "Delivery 3.3.0; engine 3.3.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
-    "validationRecords":  {
-                              "engine":  "manifest/release-build.json",
-                              "configurator":  "manifest/configurator-build.json",
-                              "delivery":  "manifest/delivery.json"
-                          }
+  "schemaVersion": "2026-05-25",
+  "bundleVersion": "3.3.0",
+  "packageName": "TIA_MCP_Delivery_v3.3.0_20261003",
+  "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
+  "generatedAt": "2026-05-31T05:30:00-07:00",
+  "refreshedAt": "2026-10-04T22:24:12.1915532+00:00",
+  "target": {
+    "tiaPortalMajorVersion": [
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "publicApiPathExample": "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48",
+    "runtimeRequirement": "Target computers need only .NET Framework 4.8 (full engines and Openness workers); foundation hosts and the workbench use the bundled .NET 10 runtime in runtime/dotnet",
+    "windowsGroupRequirement": "Siemens TIA Openness",
+    "newCliFlags": [
+      "--tia-portal-location <path>",
+      "--tia-major-version {20|21}"
+    ],
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "selfContainedScope": {
+    "description": "Eight version-specific MCP catalogs, direct Openness Studio, configurator, examples, documentation, templates and licenses. Foundation and full-engine capabilities differ by release.",
+    "bundled": [
+      "TiaMcpServer runtime and dependent DLLs",
+      "Skill and MCP operation rules",
+      "Static MCP tool roster",
+      "Tool capability matrix",
+      "Complete PLC + HMI project blueprint",
+      "PLC instruction recipes, PlcBuildAndImport JSON templates, LAD recipes and SCL examples",
+      "WinCC Unified designJson screen templates",
+      "Project generation runbook and validation checklist"
+    ],
+    "notBundled": [
+      "Siemens TIA Portal installation",
+      "Siemens PublicAPI assemblies installed with TIA Portal",
+      "Project-specific exported source folders",
+      "Project-specific process logic, site names or business program segments"
+    ]
+  },
+  "entrypoints": {
+    "readme": "README.md",
+    "skill": "plugin/skill/SKILL.md",
+    "mcpServerExe": "runtime/v21/TiaMcpServer.exe",
+    "cursorExample": "docs/getting-started/cursor.example.json",
+    "toolRoster": "manifest/tools-list.json",
+    "toolMatrix": "docs/reference/tool-matrix.md",
+    "fullProjectBlueprint": "templates/project-blueprints/full_plc_hmi_project.json",
+    "fullProjectRunbook": "docs/guides/project-generation.md",
+    "hmiTemplateIndex": "templates/hmi/README.md",
+    "plcTemplateIndex": "templates/plc/README.md",
+    "plcTemplateLibrary": "docs/guides/plc/templates.md",
+    "hmiTemplateGuide": "docs/guides/hmi/design.md",
+    "hmiBindingGuide": "docs/guides/hmi/tag-binding.md",
+    "mcpIdeNeutral": "docs/getting-started/configuration.md",
+    "optionalReferenceReadme": "templates/README.md",
+    "bundleValidationScript": "scripts/checks/Validate-Bundle.ps1",
+    "studio": "runtime/studio/TiaOpenness.exe",
+    "versionToolMatrix": "manifest/version-tools.json",
+    "beginnerGuide": "docs/getting-started/beginners.zh-CN.md",
+    "configurator": "TiaMcpConfigurator.exe"
+  },
+  "cli": {
+    "description": "Call runtime/v21/TiaMcpServer.exe or runtime/v20/TiaMcpServer.exe with a CLI verb. JSON/YAML generation requires no MCP client.",
+    "exe": "runtime/v21/TiaMcpServer.exe",
+    "verbs": [
+      "gen",
+      "patch",
+      "compile",
+      "export",
+      "import",
+      "describe",
+      "prewarm",
+      "config",
+      "doctor",
+      "schema",
+      "version",
+      "help"
+    ],
+    "specFormats": [
+      "json",
+      "yaml"
+    ],
+    "exitCodes": {
+      "0": "success",
+      "1": "completed with failed steps",
+      "2": "error"
+    }
+  },
+  "capabilities": {
+    "mcpToolCount": 488,
+    "mcpToolLayers": {
+      "L2": 426,
+      "L1": 45,
+      "L0": 17
+    },
+    "hmiTemplateJsonCount": 8,
+    "plcTemplateJsonCount": 9,
+    "projectBlueprintJsonCount": 1,
+    "supports": [
+      "project/session management",
+      "hardware catalog search and insertion",
+      "PROFINET subnet connection",
+      "PLC tag/type/block generation and import",
+      "SCL FC/FB examples",
+      "LAD call-network recipe generation",
+      "PLC compile diagnostics",
+      "WinCC Unified screen/tag/connection generation",
+      "Unified HMI screen designJson application",
+      "button Down/Up actions and tag dynamization",
+      "read-only online live-value monitoring over S7 (port 102) and OPC UA (port 4840): single read, trend sampling (PID step-response capture), watch-table live read, CPU RUN/STOP state, and offline+live tag causal trace",
+      "reflection-based API discovery for uncovered Openness shapes"
+    ],
+    "liteProfile": {
+      "toolCount": 60,
+      "isDefault": true,
+      "scope": "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
+      "optOut": "--profile full (or TIA_MCP_PROFILE=full)",
+      "note": "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
+    }
+  },
+  "fileVersion": "3.3.0.0",
+  "validationStatus": "Delivery 3.3.0; engine 3.3.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+  "validationRecords": {
+    "engine": "manifest/release-build.json",
+    "configurator": "manifest/configurator-build.json",
+    "delivery": "manifest/delivery.json"
+  }
 }

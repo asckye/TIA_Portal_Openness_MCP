@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-05 05:38:30
+- 生成时间：2026-10-05 06:39:13
 - 引擎文件版本：3.3.0.0
-- 工具数量：486
+- 工具数量：488
 
 ## 读法
 
@@ -17,7 +17,7 @@
 | `SESSION` | 会话与发现，不改工程 | 16 |
 | `READ` | 读取已打开工程，不改动 | 147 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 194 |
-| `FILE` | 导出/导入文件或生成离线产物 | 48 |
+| `FILE` | 导出/导入文件或生成离线产物 | 50 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 33 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
@@ -31,7 +31,7 @@
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 48 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 69 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
-| `plc` | PLC 软件 / PLC software | 126 | `PLC-Software` (80)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
+| `plc` | PLC 软件 / PLC software | 128 | `PLC-Software` (82)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
@@ -227,11 +227,11 @@
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markers default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 | `ValidatePlcDocumentSchemas` | L2 | OFFLINE | Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI XSD files. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. |
 
-## plc — PLC 软件 / PLC software（126）
+## plc — PLC 软件 / PLC software（128）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
-### [PLC-Software]（80）
+### [PLC-Software]（82）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -310,6 +310,8 @@
 | `ManageSivarcBlockDefinition` | L2 | WRITE | One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None\|CyclicContinuous\|CyclicInOperation\|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. Current native policy; V4 native acceptance is pending. |
 | `ManageTechnologyObject` | L2 | WRITE | Native technology object read/create/delete/setParameter. Exact objectPath relative to TechnologicalObjectGroup, including user folders. create requires official typeIdentifier and version (official 'Overview of technology objects and versions': S7-1500 TO_PositioningAxis / TO_SpeedAxis / ... >= V5.0 with FW >= 2.8, PID_Compact >= V2.3; version as 'major.minor'). WARNING (real project, crash 9 in the handoff): Create("MCP_Axis", "TO_PositioningAxis", 6.0) on a CPU 1515F-2 PN V2.9 in TIA V21 threw NonRecoverableException and TIA Portal exited, while TO_PositioningAxis / TO_SpeedAxis 5.0 and PID_Compact 2.3 were created normally on the same CPU - a version the CPU does not offer is not refused cleanly, so use the lowest version of the official table (S7-1500 motion 5.0, PID_Compact 2.3) and save the project before a create. setParameter takes exact parameter name and scalar value. dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. Current native policy; V4 safety behavior is not yet accepted. |
 | `MovePlcBlockToGroup` | L2 | WRITE* | Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block, deletes it, and re-imports it into the target group (SIMATIC SD .s7dcl preferred, SimaticML XML fallback for STL/mixed-language). The block number and references are preserved. autoCreateGroup creates the target group path if missing. Requires: ConnectPortal + OpenProject + block consistent (compile first). After moving, call CompilePlcDiagnostics to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip. Current native policy; V4 safety behavior is not yet accepted. |
+| `RenderPlcBlock` | L2 | FILE | Render one existing SimaticML block export as a self-contained static HTML page with ladder SVG, interface and code. Offline local files only. Writes a new absolute .html path; never overwrites. No Siemens calls or online power-flow display. |
+| `RenderPlcProgramAtlas` | L2 | FILE | Render a SimaticML block XML file or recursive block export directory into one self-contained static HTML program atlas. Contents, call links and called-by counts cover only included blocks. Offline local file output, no Siemens calls. Requires a new absolute .html path; never overwrites. |
 | `RepairAndReimportPlcBlock` | L2 | WRITE* | Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). Current native policy; V4 safety behavior is not yet accepted. |
 | `SeedProjectFromReference` | L2 | WRITE* | Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) Current native policy; V4 safety behavior is not yet accepted. |
 | `SetPlcProgram` | L2 | WRITE | Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. |

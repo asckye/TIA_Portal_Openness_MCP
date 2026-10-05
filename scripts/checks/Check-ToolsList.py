@@ -71,7 +71,11 @@ def compare_names(rows, expected, label):
                                 'missing', sorted(expected - actual), 'extra', sorted(actual - expected))
 
 
-def compare_operation(old, actual, baseline):
+def compare_operation(old, actual, baseline, additions=None):
+    if additions and old in additions:
+        assert old not in baseline, ('new name collides with frozen baseline', old)
+        assert actual == additions[old]['operation'], (old, actual, additions[old]['operation'])
+        return
     expected = baseline[old]
     if old in EXCEPTIONS:
         previous, expected, reason = EXCEPTIONS[old]
@@ -90,7 +94,8 @@ def check(manifest_path):
     runtime = json.loads(ET.parse(ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx')
                          .find("./data[@name='Catalog']/value").text)
     baseline = read(BASELINE)['operations']
-    assert set(baseline) == set(mapping), '3.3.0 operation baseline coverage differs'
+    additions = generator['new_v4_tools'](ROOT)
+    assert set(baseline) | set(additions) == set(mapping), '3.3.0 plus reviewed V4 coverage differs'
     assert set(EXCEPTIONS) <= set(baseline), 'unused exception'
     taxonomy = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
     classify = operation_classifier(taxonomy)
@@ -113,19 +118,28 @@ def check(manifest_path):
             description = descriptions[current]
             source_operation = classify(current, description)
             assert listed[current]['operation'] == source_operation, (current, 'stale manifest operation')
-            compare_operation(old, source_operation, baseline)
-            compare_operation(old, classify(final, description), baseline)
+            compare_operation(old, source_operation, baseline, additions)
+            compare_operation(old, classify(final, description), baseline, additions)
             seen.add(old)
     # The two removed guide aliases share GetToolUsage; their READ category is still checked.
     for old in MERGED:
         compare_operation(old, listed[mapping[old]]['operation'], baseline)
-    assert seen | MERGED == set(baseline), ('Uncompared baseline tools', set(baseline) - seen - MERGED)
+    assert seen | MERGED == set(baseline) | set(additions), ('Uncompared baseline tools', set(baseline) - seen - MERGED)
     print(f'Tool list: V20={len(rosters["20"])}, V21={len(rosters["21"])}, union={len(expected)}; names match.')
     print(f'Operation comparison: {len(baseline)} released tools, {len(seen)} runtime mappings, '
           f'{len(MERGED)} merged guides, {len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
 
 
 class Checks(unittest.TestCase):
+    def test_new_v4_operations_remain_offline_file_output(self):
+        generator = runpy.run_path(str(ROOT / 'scripts/generate/Generate-ToolUsage.py'))
+        additions = generator['new_v4_tools'](ROOT)
+        for name in additions:
+            compare_operation(name, 'FILE', {}, additions)
+            for wrong in ('ONLINE-WRITE', 'READ', 'WRITE', 'OFFLINE'):
+                with self.assertRaises(AssertionError): compare_operation(name, wrong, {}, additions)
+        with self.assertRaises(KeyError): compare_operation('RenderPlcOther', 'FILE', {}, additions)
+
     def test_stale_and_duplicate_names(self):
         for rows in ([{'name': 'Old'}], [], [{'name': 'New'}, {'name': 'New'}]):
             with self.assertRaises(AssertionError): compare_names(rows, {'New'}, 'sentinel')

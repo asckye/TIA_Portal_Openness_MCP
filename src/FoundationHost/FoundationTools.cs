@@ -13,6 +13,10 @@ internal static class FoundationTools
 {
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
+    private static readonly Definition[] RenderDefinitions = {
+        new("RenderPlcBlock", "RenderPlcBlock", "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
+        new("RenderPlcProgramAtlas", "RenderPlcProgramAtlas", "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
+    };
     internal static readonly Definition[] Definitions = {
         new("GetState","ReadState","[runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("ListPortalProcessProjects","ReadPortalProcessProjects","[runtime-query-candidate] Detached read of this release's process metadata; acquisition time is snapshot time, not process start. Separate OS start UTC is observation-only and may be unknown; no attach, launch or stable identity guarantee.",Array.Empty<Argument>(),"RuntimeQuery"),
@@ -79,8 +83,8 @@ internal static class FoundationTools
         }
         return definition.Name != "GetPlcWatchTables" || releaseKey != "14sp1";
     }
-    internal static IList<McpServerTool> Create(IFoundationWorker worker, string releaseKey) => Definitions.Where(d => Available(d, releaseKey)).Select(d => (McpServerTool)new FoundationTool(d, worker)).ToArray();
-    internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
+    internal static IList<McpServerTool> Create(IFoundationWorker worker, string releaseKey) => Definitions.Where(d => Available(d, releaseKey)).Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d, worker)).ToArray();
+    internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
 }
 
 internal sealed class FoundationTool : McpServerTool
@@ -88,6 +92,7 @@ internal sealed class FoundationTool : McpServerTool
     private readonly Definition definition;
     private readonly IFoundationWorker worker;
     private readonly Tool tool;
+    internal bool IsNative => definition.ResponseMember != "PlcRender";
     internal FoundationTool(Definition definition, IFoundationWorker worker)
     {
         if(definition.Arguments.Any(a=>a.Name=="dryRun")) definition=definition with { Arguments=definition.Arguments.Concat(new[]{new Argument("confirm","boolean",false,false),new Argument("expectedProjectFile","string",false,"")}).ToArray() };
@@ -95,7 +100,7 @@ internal sealed class FoundationTool : McpServerTool
         var properties=new JsonObject();
         foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]="Exact foundation argument: "+p.Name }; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
-        tool=new Tool { Name=definition.Name, Description="[PLC foundation; native unverified] "+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
+        tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
     public override Tool ProtocolTool=>tool;
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
@@ -140,6 +145,14 @@ internal sealed class FoundationTool : McpServerTool
             if(definition.ResponseMember=="ExternalSourceDelete" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Delete requires a reviewed expectedPlanHash.");
             if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.");
             if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.");
+            if (definition.ResponseMember == "PlcRender")
+            {
+                var mapped = TiaMcp.Logic.V4.McpResult.From(TiaMcpServer.ModelContextProtocol.PlcProgramRenderer.Write(
+                    values["inputPath"]!.GetValue<string>(), values["outputPath"]!.GetValue<string>(),
+                    definition.Name == "RenderPlcProgramAtlas", release, id, cancellationToken));
+                return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                    Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+            }
             cancellationToken.ThrowIfCancellationRequested();
             dispatched = true;
             var result=await worker.Call(definition.Operation,values,cancellationToken);

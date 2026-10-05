@@ -17,6 +17,20 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class LadTextRenderer
     {
+        internal static string Code(XElement network)
+        {
+            var doc = new XDocument(new XElement(network));
+            StripNamespaces(doc);
+            return RenderStructuredText(doc.Root!);
+        }
+
+        internal static (string text, bool literal) Operand(XElement access)
+        {
+            var doc = new XDocument(new XElement(access));
+            StripNamespaces(doc);
+            return ReadAccess(doc.Root!);
+        }
+
         public static string Render(string xml)
         {
             XDocument doc;

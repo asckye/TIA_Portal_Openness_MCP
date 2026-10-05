@@ -135,7 +135,7 @@ namespace TiaMcpServer.Tests
                     Check(method.GetParameters().All(p => p.ParameterType != typeof(JsonElement) && p.ParameterType.Name != "OptionalOfflineInput"), "No erased carriers: " + name);
                     Check(method.ReturnType.Name == "CallToolResult" || method.ReturnType.GenericTypeArguments.Single().Name == "CallToolResult", "Envelope return: " + name);
                 }
-            Check(names.Count == 46, "All 46 entries migrated");
+            Check(names.Count == 48 && names.Contains("RenderPlcBlock") && names.Contains("RenderPlcProgramAtlas"), "All migrated entries and both new offline renderers registered");
             foreach (string old in new[] { "BuildPlcUdtXml", "ComposePlcFbBlockXml", "ReadOpennessGuidance", "LintPlcSclSource", "PlcBuildAndImport" })
                 Check(!names.Contains(old), "No legacy alias: " + old);
         }

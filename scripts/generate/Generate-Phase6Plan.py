@@ -11,6 +11,11 @@ read = lambda p: (root / p).read_text(encoding="utf-8-sig")
 files = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
 RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
 REJECTIONS = 'tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json'
+# Reviewed additions, independent of the frozen 3.x rename baseline. No implicit new names.
+NEW_V4_TOOLS = {
+    'RenderPlcBlock': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'RenderPlcProgramAtlas': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+}
 files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE, REJECTIONS})
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
@@ -20,6 +25,12 @@ catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96
 assert set(catalog) == set(names)
 for n in names:
     assert catalog[n].strip().split(", ") == [k for k in keys if n in tools[k]], n
+for n, entry in NEW_V4_TOOLS.items():
+    assert n not in names
+    for k in entry['releases']:
+        tools[k][n] = {'name': n, 'inputSchema': {'type': 'object', 'additionalProperties': False,
+            'required': ['inputPath', 'outputPath'], 'properties': {'inputPath': {'type': 'string'}, 'outputPath': {'type': 'string'}}}}
+names = sorted(set(names) | set(NEW_V4_TOOLS))
 E = "src/Engine/"
 L = "src/Logic/"
 F = "src/FoundationHost/"
@@ -365,6 +376,8 @@ def validate_parameter_transition(name, current, target, actual, expected, v4, t
 
 for n, sig in signatures.items():
     actual = parameters(sig)
+    if n in NEW_V4_TOOLS:
+        assert actual == {'inputPath': 'string', 'outputPath': 'string'} and envelope_versions[n] == 4, (n, 'new V4 contract differs')
     expected = {p for p in typed.get(n, {}) if '21' in typed[n][p]}
     validate_parameter_transition(n, current_names[n], renames[n], actual, expected,
                                   envelope_versions[n] == 4, {p: shape(n, p) for p in expected})
@@ -429,6 +442,10 @@ for k in keys[-2:]:
     runtime["releases"][k] = sorted(runtime_rows.values(), key=lambda r: r["name"])
     assert {r["currentName"] for r in runtime["releases"][k]} == {current_names[n] for n in tools[k]}
     assert all(isinstance(r["arguments"], dict) for r in runtime["releases"][k] if "lite" in r["profiles"])
+for k in keys[:6]:
+    runtime['releases'][k] = [{'name': renames[n], 'currentName': foundation_current[k][n], 'sourceName': n,
+        'profiles': ['plc-foundation'], 'arguments': calls['plc-foundation'][foundation_current[k][n]]['arguments'],
+        'envelopeVersion': 4} for n in sorted(tools[k])]
 
 # Rejection fixtures are derived from the same appendix A/B mapping and checked
 # source signatures. They exercise the shared boundary without native bodies.
@@ -595,6 +612,7 @@ section("A. 全量 current name → 4.0 name（包括不变项）")
 rows = []
 for n in names:
     reason = "不变；符合命名规则" if n == renames[n] else "规则：动词、对象、领域、复数或大小写/表示规范化"
+    if n in NEW_V4_TOOLS: reason = "4.0 新增；" + NEW_V4_TOOLS[n]['owner'] + "；操作分类 " + NEW_V4_TOOLS[n]['operation']
     if renames[n] in MERGE_PROOF: reason = MERGE_PROOF[renames[n]]
     if n in {"Connect", "ConnectToProject", "AttachToOpenProject", "CompileSoftware", "CompileAndDiagnosePlc", "CompileAndDiagnoseHmi"}:
         reason += "；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义"
@@ -799,6 +817,15 @@ out.append("台账已核对：" + "、".join("P6-"+f for f in behavior_families)
 end()
 
 def self_test():
+    assert usage_generator['new_v4_tools'](root) == NEW_V4_TOOLS
+    for n in NEW_V4_TOOLS:
+        assert envelope_versions[n] == 4 and renames[n] == n
+        assert parameters(signatures[n]) == {'inputPath': 'string', 'outputPath': 'string'}
+    for registered in ({'RenderPlcBlock'}, set(NEW_V4_TOOLS) | {'RenderPlcOther'}):
+        try: usage_generator['resolve_names'](NEW_V4_TOOLS, registered, {n: n for n in NEW_V4_TOOLS})
+        except AssertionError: pass
+        else: raise AssertionError('Unreviewed or missing new V4 registration accepted')
+    validate_parameter_transition("Keep", "Keep", "Keep", {"valuesJson": "string"}, {"valuesJson"}, False, {})
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
     validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",
@@ -862,6 +889,15 @@ def main():
     generated = content[:a] + '\n\n' + '\n'.join(out) + '\n' + content[b:]
     outputs = {doc: generated, root / RESOURCE: resource_text(),
                root / REJECTIONS: rejections_text}
+    # Refresh derived package counts only; retain all build/source hash evidence.
+    package_path = root / 'manifest/package-manifest.json'
+    package = json.loads(package_path.read_text(encoding='utf-8-sig'))
+    roster = json.loads(read('manifest/tools-list.json'))
+    assert {t['name'] for t in roster['tools']} == registered_rosters['21'], 'Regenerate tools-list before package counts'
+    package['capabilities']['mcpToolCount'] = len(roster['tools'])
+    package['capabilities']['mcpToolLayers'] = dict(collections.Counter(t['layer'] for t in roster['tools']))
+    package['capabilities']['liteProfile']['toolCount'] = len(lite_proposal['releases']['21'])
+    outputs[package_path] = json.dumps(package, ensure_ascii=False, indent=2) + '\n'
     for path, value in outputs.items():
         expected = value.encode('utf-8')
         if args.check:

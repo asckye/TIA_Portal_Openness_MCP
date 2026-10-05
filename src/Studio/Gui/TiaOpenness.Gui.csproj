@@ -11,6 +11,7 @@
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../Client/TiaOpenness.Client.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../Shared/OpennessEnvironment.cs" Link="Configuration/OpennessEnvironment.cs" />

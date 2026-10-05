@@ -21,7 +21,7 @@ public partial class BlocksView : UserControl, IDisposable
         DataContextChanged += (_, _) =>
         {
             Atlas?.Dispose();
-            Atlas = DataContext is MainViewModel model ? new AtlasPresentation(model, new AtlasServiceStub()) : null;
+            Atlas = DataContext is MainViewModel model ? new AtlasPresentation(model, model.AtlasService) : null;
         };
     }
 

@@ -10,3 +10,6 @@ manifest/** -text whitespace=cr-at-eol
 *.ps1 text
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Renderer goldens are compared byte for byte; keep their LF bytes on every checkout.
+tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/** -text

@@ -21,6 +21,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public MainViewModel(IStudioClient client, IDialogService dialogs)
     {
         _client = client;
+        AtlasService = new Services.Stubs.AtlasService(client);
         Activity = new WorkbenchActivity();
         Engineering = new EngineeringViewModel(client, dialogs, Activity);
         Session = new SessionViewModel(client, dialogs, Activity, LoadProjectAsync);
@@ -36,6 +37,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public EngineeringViewModel Engineering { get; }
     public VersionControlViewModel VersionControl { get; }
     public WorkbenchActivity Activity { get; }
+    internal Services.Stubs.IAtlasService AtlasService { get; }
 
     // Shared with the window chrome and the configuration page.
     public IEnumerable<TiaMcp.Versioning.TiaVersionDescriptor> Releases => Session.Releases;

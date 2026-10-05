@@ -1,0 +1,304 @@
+<Document>
+  <Engineering version="V21" />
+  <SW.Blocks.FB ID="0">
+    <AttributeList>
+      <Name>EdgeParts</Name>
+      <Number>42</Number>
+      <ProgrammingLanguage>LAD</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="PContact" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="PContactMemory" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="PContactSignal" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>PContact</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="NContact" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="NContactMemory" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="NContactSignal" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>NContact</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="PCoil" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="PCoilMemory" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="PCoilSignal" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>PCoil</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="NCoil" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="NCoilMemory" />
+                  </Symbol>
+                </Access>
+                <Access UId="1002" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="NCoilSignal" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <IdentCon UId="1002" />
+                  <NameCon UId="10" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>NCoil</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="PBox" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="PBoxMemory" />
+                  </Symbol>
+                </Access>
+                <Part Name="Coil" UId="11" />
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Pulse" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="out" />
+                  <NameCon UId="11" Name="in" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="11" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>PBox</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit>
+        <AttributeList>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5">
+              <Parts>
+                <Part Name="NBox" UId="10" />
+                <Access UId="1001" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="NBoxMemory" />
+                  </Symbol>
+                </Access>
+                <Part Name="Coil" UId="11" />
+                <Access UId="1003" Scope="LocalVariable">
+                  <Symbol>
+                    <Component Name="Pulse" />
+                  </Symbol>
+                </Access>
+              </Parts>
+              <Wires>
+                <Wire UId="100">
+                  <Powerrail />
+                  <NameCon UId="10" Name="in" />
+                </Wire>
+                <Wire UId="101">
+                  <IdentCon UId="1001" />
+                  <NameCon UId="10" Name="bit" />
+                </Wire>
+                <Wire UId="102">
+                  <NameCon UId="10" Name="out" />
+                  <NameCon UId="11" Name="in" />
+                </Wire>
+                <Wire UId="103">
+                  <IdentCon UId="1003" />
+                  <NameCon UId="11" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem>
+                <AttributeList>
+                  <Text>NBox</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FB>
+</Document>

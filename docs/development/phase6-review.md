@@ -380,16 +380,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
 |---|---|---|---|---|---|---|
-| 14sp1 | 57 | 不设 | 9 | 9 | 57 | 不设 |
-| 15.1 | 58 | 不设 | 9 | 9 | 58 | 不设 |
-| 16 | 60 | 不设 | 9 | 9 | 60 | 不设 |
-| 17 | 60 | 不设 | 9 | 9 | 60 | 不设 |
-| 18 | 60 | 不设 | 9 | 9 | 60 | 不设 |
-| 19 | 62 | 不设 | 9 | 9 | 62 | 不设 |
-| 20 | 477 | 63 | 272 | 156 | 475 | 60 |
-| 21 | 488 | 63 | 289 | 164 | 486 | 60 |
+| 14sp1 | 59 | 不设 | 9 | 9 | 59 | 不设 |
+| 15.1 | 60 | 不设 | 9 | 9 | 60 | 不设 |
+| 16 | 62 | 不设 | 9 | 9 | 62 | 不设 |
+| 17 | 62 | 不设 | 9 | 9 | 62 | 不设 |
+| 18 | 62 | 不设 | 9 | 9 | 62 | 不设 |
+| 19 | 64 | 不设 | 9 | 9 | 64 | 不设 |
+| 20 | 479 | 63 | 272 | 156 | 477 | 60 |
+| 21 | 490 | 63 | 289 | 164 | 488 | 60 |
 
-八版当前名称并集 496；V4 名称并集 494；改名/合并入口 183；不变 313。数字只指目录，不代表原生能力验收。
+八版当前名称并集 498；V4 名称并集 496；改名/合并入口 183；不变 315。数字只指目录，不代表原生能力验收。
 
 <details>
 <summary>A. 全量 current name → 4.0 name（包括不变项）</summary>
@@ -828,7 +828,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadV21EcosystemCatalog` | `GetV21EcosystemCatalog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) |
 | `RebuildReleaseHandoffArtifacts` | `BuildReleaseHandoffArtifacts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
 | `ReleaseUnifiedReadCursor` | `ReleaseUnifiedReadCursor` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `RenderPlcBlock` | `RenderPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-48；操作分类 FILE；[源码](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) |
 | `RenderPlcBlockDocument` | `RenderPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `RenderPlcProgramAtlas` | `RenderPlcProgramAtlas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-48；操作分类 FILE；[源码](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) |
 | `RenderPlcVisualDiff` | `RenderPlcVisualDiff` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) |
 | `RepairAndReimportBlock` | `RepairAndReimportPlcBlock` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ResolveSivarcExpression` | `ResolveSivarcExpression` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
@@ -1515,7 +1517,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | parser/策略来源:行 | 原始边界表达式 |
 |---|---|
 | [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs):275 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):63 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):83 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
 | [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):28 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):35 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):48 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
@@ -1633,9 +1635,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../src/Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):564 | `if (raw.Length > options.MaxLineLength) Add("SCL007", "info", lineNo, "Line longer than " + options.MaxLineLength + " characters (" + raw.Length + ").", raw);` |
 | [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../src/Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):603 | `if (stack.Count == 0) { Add("SCL001", "error", lineNo, upper + " without a matching opener.", raw.Trim()); continue; }` |
 | [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../src/Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):621 | `if (firstWord == "REGION" && words.Count == 1 && code.Trim().Equals("REGION", StringComparison.OrdinalIgnoreCase)) Add("SCL012", "info", lineNo, "REGION without a name.", raw.Trim());` |
+| [ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs](../../src/Logic/ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs):295 | `if (count < 1 \|\| count > PlcProgramRenderer.MaxElements) throw new ArgumentException("Instruction pin cardinality exceeds the render budget.");` |
+| [ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs](../../src/Logic/ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs):332 | `if (rail && ends.Count > 0) ends.Insert(0, (24, ends[0].y, true));` |
+| [ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs](../../src/Logic/ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs):379 | `if (node.Finding.Length > 0) b.Append("<circle class=\"finding\" cx=\"").Append(x + 23).Append("\" cy=\"").Append(y - 18).Append("\" r=\"4\"><title>").Append(E(node.Finding)).Append("</title></circle>");` |
+| [ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs](../../src/Logic/ModelContextProtocol/Builders/PlcLadderDrawing.Network.cs):389 | `if (node.Preset.Length > 0) Text(b, "instruction-type", node.X, node.Top + header - 7 - (Wrap(node.Preset, 22).Count() - 1) * 16, node.Preset, "middle", 22);` |
 | [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../src/Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):37 | `files.Add(file); if (files.Count > 2000) throw new ArgumentException("Maximum 2000 export documents.");` |
 | [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../src/Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):39 | `foreach (var sub in Directory.EnumerateDirectories(folder)) { pending.Push(sub); if (pending.Count > 2000) throw new ArgumentException("Directory traversal limit exceeded."); }` |
 | [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../src/Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):124 | `if (++visits > 10000 \|\| rows.Count >= 2000) { truncated = true; return; }` |
+| [ModelContextProtocol/Builders/PlcProgramRenderer.cs](../../src/Logic/ModelContextProtocol/Builders/PlcProgramRenderer.cs):20 | `public const int MaxFiles = 256;` |
+| [ModelContextProtocol/Builders/PlcProgramRenderer.cs](../../src/Logic/ModelContextProtocol/Builders/PlcProgramRenderer.cs):21 | `public const int MaxNetworks = 512;` |
+| [ModelContextProtocol/Builders/PlcProgramRenderer.cs](../../src/Logic/ModelContextProtocol/Builders/PlcProgramRenderer.cs):22 | `public const int MaxElements = 256;` |
 | [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../src/Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):19 | `if (bytes.Length > 16 * 1024 * 1024) throw new ArgumentException("XML exceeds 16 MiB.");` |
 | [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../src/Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):21 | `using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });` |
 | [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../src/Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):59 | `if (!file.Exists \|\| file.Length > 16 * 1024 * 1024) throw new ArgumentException("Existing XML <=16 MiB required.");` |
@@ -1758,7 +1767,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 243 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 250 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1847,7 +1856,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):42 `DiagnosticsDirectory` | data/diagnostics 调用日志；10 MiB + 一份 previous | P6-45 读取；P6-46 配置保留与时间窗口，审计另存 logs/audit |
 | [Program.cs](../../src/Engine/Program.cs):26 `DiagLogPathLocal` | 主日志经 DataLocations；启动日志仍在安装目录 | 数据根 logs/<releaseKey>；只读安装沿用用户目录回退 |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):16 `.crash.log` | Studio 安装目录崩溃日志 | 数据根 logs/studio；只读安装沿用用户目录回退 |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):66 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):86 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
 | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):53 `GetWorkspaceRoot` | TMP_EXPORT/src/cwd 探测 | 显式 workspace/fixture 根 |
 | [Cli/HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs):63 `TIA_MCP_AI_PACK` | 私有 HMI 模板默认输入 | 显式模板路径 |
 | [ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../src/Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs):55 `TMP_EXPORT` | 私有套件夹具探测 | 显式 fixture 根，workspaceRoot 不猜测 |
@@ -1892,15 +1901,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30588 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31370 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30632 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31414 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:75 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:64 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/release-build.json](../../manifest/release-build.json) | 产品:2099,2104,2454,2459; 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7016 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7025 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |
@@ -1946,7 +1955,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs](../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs) | 产品:152 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs](../../src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs) | 写入/工作区:30 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) | 产品:527 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:45,65; 写入/工作区:66 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:65,85; 写入/工作区:86 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs) | 产品:72; 根定位:48,49,52,57,88 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:219,224 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:37; 写入/工作区:38 | 修改引用并回归 |
@@ -1989,7 +1998,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150,153; 根定位:45,57 | 修改引用并回归 |
 | [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,47 | 修改引用并回归 |
 | [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
-| [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:17 | 修改引用并回归 |
+| [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:18 | 修改引用并回归 |
 | [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/README.md](../../src/Studio/README.md) | 产品:4 | 修改引用并回归 |
 | [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
@@ -1999,7 +2008,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 根定位:205,228 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,79,112,113,204,205,210,215 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,43,79; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16895,36603 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16937,36687 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:161 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,426,442,444,472 | 修改引用并回归 |
@@ -2096,7 +2105,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 任务 | 工具源文件 | 当前注册入口数 |
 |---|---|---|
 | P6-07 | [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[ModelContextProtocol/Tools/McpServer.Exports.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ToolUsageTools.cs](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) | 10 |
-| P6-09 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs)<br>[ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs)<br>[ModelContextProtocol/Tools/TemplateTools.cs](../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[ModelContextProtocol/Tools/XmlBuilderTools.cs](../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs) | 46 |
+| P6-09 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs)<br>[ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs)<br>[ModelContextProtocol/Tools/TemplateTools.cs](../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[ModelContextProtocol/Tools/XmlBuilderTools.cs](../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs) | 48 |
 | P6-10 | [ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[ModelContextProtocol/Tools/McpServer.BlockLogic.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[ModelContextProtocol/Tools/PlcTablesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) | 53 |
 | P6-11 | [ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/ExportTools.cs](../../src/Engine/ModelContextProtocol/Tools/ExportTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[ModelContextProtocol/Tools/NativeExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) | 25 |
 | P6-12 | [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs)<br>[ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[ModelContextProtocol/Tools/HardwareAmlTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs)<br>[ModelContextProtocol/Tools/HardwareManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs)<br>[ModelContextProtocol/Tools/ModulesTools.cs](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs) | 26 |

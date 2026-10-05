@@ -177,16 +177,11 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
     }
 
     [Fact]
-    public void Product_stub_reports_unavailable_and_disconnect_discards_late_atlas_results()
+    public void Disconnect_discards_late_atlas_results()
     {
         wpf.Run(() =>
         {
             using var model = ProjectPageTestSupport.Model();
-            using var stub = new AtlasPresentation(model, new AtlasServiceStub());
-            var completed = stub.GenerateAsync(false);
-            Assert.True(completed.IsCompletedSuccessfully);
-            Assert.True(stub.Failed);
-            Assert.Equal("atlas generation is not connected yet (P6-48)", stub.Detail);
             var service = new AtlasProbe();
             using var atlas = new AtlasPresentation(model, service);
             _ = atlas.GenerateAsync(false);

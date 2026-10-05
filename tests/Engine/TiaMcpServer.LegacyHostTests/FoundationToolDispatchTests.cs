@@ -15,7 +15,7 @@ internal static class FoundationToolDispatchTests
         var fake=new FakeWorker();
         var tools=FoundationTools.Create(fake);
         Check(tools.Select(t=>t.ProtocolTool.Name).Distinct(StringComparer.Ordinal).Count()==tools.Count,"Unique tool names");
-        foreach(var tool in tools)
+        foreach(var tool in tools.OfType<FoundationTool>().Where(t => t.IsNative))
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==tool.ProtocolTool.Name);
             Check(!tool.ProtocolTool.InputSchema.GetProperty("additionalProperties").GetBoolean(),"Closed schema");

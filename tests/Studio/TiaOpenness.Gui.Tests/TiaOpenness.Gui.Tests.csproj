@@ -6,6 +6,7 @@
     <Compile Include="../../../src/Studio/Launcher/Launcher.cs" Link="Launcher.cs" />
     <Compile Include="../../Engine/TiaMcpServer.Tests/DataLocationsTests.cs" Link="DataLocationsTests.cs" />
     <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" />
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" />
     <EmbeddedResource Include="../../../src/Studio/Gui/**/*.xaml;../../../src/Studio/Gui/**/*.cs"
       Exclude="../../../src/Studio/Gui/bin/**;../../../src/Studio/Gui/obj/**" LinkBase="Source" WithCulture="false" />
   </ItemGroup>

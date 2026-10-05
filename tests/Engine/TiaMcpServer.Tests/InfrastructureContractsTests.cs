@@ -167,7 +167,13 @@ namespace TiaMcpServer.Tests
                 Assert.Contains(rows, r => (string?)r!["currentName"] == "PreviewToolCall");
                 Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetSessionState");
             }
-            Assert.Empty(ToolUsageCatalog.ProfileEntries("19"));
+            foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+            {
+                var rows = ToolUsageCatalog.ProfileEntries(release);
+                Assert.Contains(rows, r => (string?)r!["name"] == "RenderPlcBlock");
+                Assert.Contains(rows, r => (string?)r!["name"] == "RenderPlcProgramAtlas");
+                Assert.All(rows, r => Assert.DoesNotContain(r!["profiles"]!.AsArray(), p => (string?)p == "lite"));
+            }
         }
 
         [Fact]

@@ -16548,6 +16548,27 @@
         "typedParameters": {}
       },
       {
+        "name": "RenderPlcBlock",
+        "parameters": {
+          "inputPath": {
+            "type": "string",
+            "default": null,
+            "description": "Existing absolute local SimaticML XML file containing exactly one block."
+          },
+          "outputPath": {
+            "type": "string",
+            "default": null,
+            "description": "New absolute local .html output path in an existing directory; existing files are refused."
+          }
+        },
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports\\Main.xml",
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+        },
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
         "name": "RenderPlcBlockDocument",
         "parameters": {
           "filePath": {
@@ -16588,6 +16609,27 @@
           }
         },
         "arguments": {},
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
+        "name": "RenderPlcProgramAtlas",
+        "parameters": {
+          "inputPath": {
+            "type": "string",
+            "default": null,
+            "description": "Existing absolute local SimaticML XML file or directory containing block exports; at most 256 files and 512 networks."
+          },
+          "outputPath": {
+            "type": "string",
+            "default": null,
+            "description": "New absolute local .html output path in an existing directory; existing files are refused."
+          }
+        },
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports",
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+        },
         "renamedFrom": [],
         "typedParameters": {}
       },
@@ -36256,6 +36298,27 @@
         "typedParameters": {}
       },
       {
+        "name": "RenderPlcBlock",
+        "parameters": {
+          "inputPath": {
+            "type": "string",
+            "default": null,
+            "description": "Existing absolute local SimaticML XML file containing exactly one block."
+          },
+          "outputPath": {
+            "type": "string",
+            "default": null,
+            "description": "New absolute local .html output path in an existing directory; existing files are refused."
+          }
+        },
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports\\Main.xml",
+          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+        },
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
         "name": "RenderPlcBlockDocument",
         "parameters": {
           "filePath": {
@@ -36296,6 +36359,27 @@
           }
         },
         "arguments": {},
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
+        "name": "RenderPlcProgramAtlas",
+        "parameters": {
+          "inputPath": {
+            "type": "string",
+            "default": null,
+            "description": "Existing absolute local SimaticML XML file or directory containing block exports; at most 256 files and 512 networks."
+          },
+          "outputPath": {
+            "type": "string",
+            "default": null,
+            "description": "New absolute local .html output path in an existing directory; existing files are refused."
+          }
+        },
+        "arguments": {
+          "inputPath": "C:\\Examples\\exports",
+          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+        },
         "renamedFrom": [],
         "typedParameters": {}
       },
