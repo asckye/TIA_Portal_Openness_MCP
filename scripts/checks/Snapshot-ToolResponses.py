@@ -198,7 +198,7 @@ DOMAIN_CALLS = {
 # exercised on V20; never execute these target-bound examples on V21.
 V21_ONLY = (
     'ReadCommunicationConnections', 'ManageCommunicationConnection',
-    'ReadSafetyActivationTests', 'ManageSafetyActivationTest',
+    'ListSafetyActivationTests', 'ManageSafetyActivationTest',
     'ManageSafetyActivationTestGroup', 'ManageSafetyFunction',
     'ManageSafetyFunctionCondition', 'ManagePlcBlockWriteProtection',
     'ManageDriveSafetyAcceptanceTest', 'ManageSivarcScreenLayout',

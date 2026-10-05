@@ -88,7 +88,7 @@ namespace TiaMcpServer.Tests
             check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == callsBeforeUnknown, "case-duplicate bridge selectors are rejected before dispatch");
             check(ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"ACTION\":\"read\",\"action\":\"import\"}").Meta?["ok"]?.GetValue<bool?>() == false,
                 "preflight refuses case-duplicate selectors");
-            var safety = ModelContextProtocol.McpServer.CallTool("ReadSafetyActivationTests", "{}");
+            var safety = ModelContextProtocol.McpServer.CallTool("ListSafetyActivationTests", "{}");
             check((safety.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true) != isV20, "whole-tool gate also applies to bridge");
             foreach (var key in new[] { "14", "14sp1", "15", "15.1", "16", "17", "18", "19", "22", "" })
                 check(ToolVersionPolicy.ToolProblem(key, "Connect").Length > 0, key + " tool routing has no implicit adapter");

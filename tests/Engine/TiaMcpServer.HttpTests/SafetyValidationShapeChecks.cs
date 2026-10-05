@@ -14,8 +14,8 @@ internal static class SafetyValidationShapeChecks
         var core=Api("Siemens.Engineering.Base","Siemens.Engineering");
         bool v20=core.GetName().Version!.Major==20;
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ReadSafetyActivationTests","ManageSafetyActivationTest","ManageSafetyActivationTestGroup","ManageSafetyFunction","ManageSafetyFunctionCondition"})
-            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        foreach(var tool in new[]{"ListSafetyActivationTests","ManageSafetyActivationTest","ManageSafetyActivationTestGroup","ManageSafetyFunction","ManageSafetyFunctionCondition"})
+            check(portal.Method(tool == "ListSafetyActivationTests" ? "ReadSafetyActivationTests" : tool)!=null,"Portal."+tool+" exists");
         check(portal.Method("ManageSafetyActivationTest")!.GetParameters().Single(p=>p.Name=="confirmDelete").HasDefaultValue && Equals(portal.Method("ManageSafetyActivationTest")!.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),"ManageSafetyActivationTest delete needs confirmDelete");
         // core option enums shared with the family (Export / Import / DocumentInfo)
         void Enum(Assembly a,string t,params string[] names)

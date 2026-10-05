@@ -240,9 +240,9 @@ CASES = {
         'read createRuntimeGroup deleteRuntimeGroup updateRuntimeGroup updateSettings generateGlobalFIOStatusBlock '
         'cleanSystemGeneratedObjects generateBaseId login logoff setPassword revokePassword', softwarePath=PLC)
         + actions('ManageSafetyGlobalSettings', 'read update')
-        + [('ReadSafetyBlockSignatures', 'read', {'softwarePath': PLC}),
+        + [('GetSafetyBlockSignatures', 'read', {'softwarePath': PLC}),
            ('ExportSafetyPrintout', 'export', {'softwarePath': PLC, 'filePath': 'C:/domain-offline.pdf'})],
-    'SafetyValidation': [('ReadSafetyActivationTests', 'read', {})]
+    'SafetyValidation': [('ListSafetyActivationTests', 'read', {})]
         + actions('ManageSafetyActivationTest',
                   'read create createFromTest createFromMasterCopy rename setAuthor changeEvaluationDevice '
                   'checkValidity generateReport export import delete', name='Test1')
@@ -261,18 +261,18 @@ CASES = {
            ('read', 'createOffline', 'importFromServer', 'rename', 'activate', 'deactivate', 'delete', 'assignRole', 'unassignRole')]
         + [('ManageUmcUsers', 'server/' + action, dict(kind='server', action=action))
            for action in ('read', 'checkConsistency', 'synchronize')],
-    'ProjectSecurity': [('ReadProjectUserManagement', category, {'category': category}) for category in
+    'ProjectSecurity': [('GetProjectUserManagement', category, {'category': category}) for category in
         ('users', 'anonymousUser', 'systemRoles', 'customRoles', 'engineeringRights', 'customDeviceRights',
          'umcUsers', 'umcUserGroups', 'passwordPolicy', 'deviceRights', 'roleDeviceRights')]
         + actions('ManageProjectUserManagement',
                   'createUser deleteUser setUserPassword activateUser deactivateUser assignRole unassignRole '
                   'createRole deleteRole assignEngineeringRight unassignEngineeringRight assignDeviceRight unassignDeviceRight '
                   'createDeviceRight deleteDeviceRight activateAnonymousUser deactivateAnonymousUser', name='User1')
-        + [('ReadProjectProtection', 'read', {})]
+        + [('GetProjectProtection', 'read', {})]
         + actions('ManageMultiuserSession', 'read listServerProjects readLockState listLocalSessions connectServer disconnectServer commit',
                   serverName='Server1', projectName='Project1', host='offline.invalid', port=443, commitComment='Offline preview')
         + [('CompareLibraries', 'read', {'leftLibraryName': 'Library1', 'rightLibraryName': 'Library2'}),
-           ('ReadProjectSettings', 'read', {})]
+           ('GetProjectSettings', 'read', {})]
         + [('CompareProjects', kind, {'kind': kind, 'softwarePath': PLC})
            for kind in ('software', 'softwareToLibrary', 'hardware')],
     'PlcTables': [(name, 'disconnected', {'softwarePath': PLC}) for name in (
@@ -1469,7 +1469,7 @@ def capture(args, exe, harness, profile, isolated):
                                           and 'absent from the supplied V21 SDK' in raw,
                                           f'{name}: missing V21 unsupported response: {raw}')
                         reached_child = True
-                    elif name in ('ManageSafetyGlobalSettings', 'ManageMultiuserSession', 'CompareLibraries', 'ReadProjectSettings'):
+                    elif name in ('ManageSafetyGlobalSettings', 'ManageMultiuserSession', 'CompareLibraries', 'GetProjectSettings'):
                         resources.require(value.get('message', value.get('Message')) == name + ' failed'
                             and meta.get('tool') == name and meta.get('status') == 'InvalidState'
                             and meta.get('operationSuccess') is False

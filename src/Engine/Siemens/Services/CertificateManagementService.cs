@@ -27,6 +27,7 @@ namespace TiaMcpServer.Siemens.Services
             string filePath = "", string usage = "", string propertiesJson = "{}", string assignment = "", bool dryRun = true, string assignmentItemPathJson = "",
             string subjectAlternativeNamesJson = "[]", string password = "")
             => _session.RunHmiStepTool("ManagePlcCertificate", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (!new[] { "list", "read", "template", "create", "import", "export", "delete", "assign", "unassign" }.Contains(action)) throw new ArgumentException("Unsupported certificate action.");
                 var subjectAlternativeNames = SecurityDeepLogic.ParseSubjectAlternativeNames(subjectAlternativeNamesJson);
                 if (subjectAlternativeNames.Length > 0 && action != "create") throw new ArgumentException("subjectAlternativeNamesJson applies to action=create only.");
@@ -71,6 +72,7 @@ namespace TiaMcpServer.Siemens.Services
                     meta["requestedSubjectAlternativeNames"] = new JsonArray(subjectAlternativeNames.Select(s => (JsonNode)new JsonObject { ["type"] = s.Type, ["value"] = s.Value }).ToArray());
                     if (writing)
                     {
+                        meta["mayHaveChanged"] = true;
                         EngineeringScalarProperties.Apply(template, prepared, meta);
                         foreach (var san in subjectAlternativeNames) template.SubjectAlternativeNames.Create((SubjectAlternativeNameType)Enum.Parse(typeof(SubjectAlternativeNameType), san.Type), san.Value);
                         meta["templateApplied"] = TemplateRow(template);
@@ -95,7 +97,7 @@ namespace TiaMcpServer.Siemens.Services
                             else using (var secure = PlcBlockServicesLogic.ToSecureString(password)) certificate = store.Certificates.Import(file, secure);
                             meta["after"] = EngineeringScalarProperties.Read(certificate); meta["certificateId"] = certificate.Id.ToString(); meta["hasPrivateKey"] = certificate.HasPrivateKey;
                         }
-                        else { certificate!.Export(file); file.Refresh(); if (!file.Exists || file.Length == 0) throw new InvalidOperationException("Native export produced no file."); meta["fileBytes"] = file.Length; }
+                        else { meta["mayHaveWrittenFiles"] = true; certificate!.Export(file); file.Refresh(); if (!file.Exists || file.Length == 0) throw new InvalidOperationException("Native export produced no file."); meta["fileBytes"] = file.Length; }
                     }
                 }
                 else if (action == "delete" && writing)

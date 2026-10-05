@@ -45,7 +45,7 @@ internal static class ProjectSecurityShapeChecks
         Service(core,"Siemens.Engineering.AdvancedProtection.ProtectionProviderBase");
         Method(core,"Siemens.Engineering.AdvancedProtection.ProtectionProviderBase","GetInvalidPasswordCharacters",0);
         check(core.GetType("Siemens.Engineering.Umac.UmacConfigurator")!.GetProperty("IsProtected")==null && core.GetType("Siemens.Engineering.ProjectBase")!.GetProperty("IsProtected")==null,"No native project IsProtected scalar; tool must not fabricate one");
-        if(core.GetType("Siemens.Engineering.Online.Security.VerificationCertificate")==null) Console.WriteLine("CAPABILITY Siemens.Engineering.Online.Security.VerificationCertificate absent on this API version; ReadProjectProtection reports it as unreachable on every version (only inside TlsVerificationConfiguration callbacks).");
+        if(core.GetType("Siemens.Engineering.Online.Security.VerificationCertificate")==null) Console.WriteLine("CAPABILITY Siemens.Engineering.Online.Security.VerificationCertificate absent on this API version; GetProjectProtection reports it as unreachable on every version (only inside TlsVerificationConfiguration callbacks).");
         else Property(core,"Siemens.Engineering.Online.Security.VerificationCertificate","Certificate");
 
         // Multiuser
@@ -102,9 +102,9 @@ internal static class ProjectSecurityShapeChecks
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmChange").DefaultValue,false),name+" requires explicit confirmChange");
             check(method.GetParameters().Last().Name=="dryRun",name+" has dryRun as last parameter");
         }
-        foreach(var name in new[]{"ReadProjectUserManagement","ReadProjectProtection","CompareLibraries","CompareProjects","ReadProjectSettings"})
+        foreach(var name in new[]{"GetProjectUserManagement","GetProjectProtection","CompareLibraries","CompareProjects","GetProjectSettings"})
             check(tools.Tool(name)!=null && tools.Tool(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is read-only (no dryRun)");
-        foreach(var name in new[]{"ReadProjectUserManagement","ManageMultiuserSession","CompareLibraries","CompareProjects","ReadProjectSettings"})
+        foreach(var name in new[]{"GetProjectUserManagement","ManageMultiuserSession","CompareLibraries","CompareProjects","GetProjectSettings"})
             check(tools.Tool(name)!.GetParameters().Any(p=>p.Name=="offset") && tools.Tool(name)!.GetParameters().Any(p=>p.Name=="limit"),name+" paginates");
         check(tools.Tool("ManageProjectUserManagement")!.GetParameters().Single(p=>p.Name=="password").ParameterType==typeof(string),"password accepted as plain parameter, converted to SecureString internally");
     }

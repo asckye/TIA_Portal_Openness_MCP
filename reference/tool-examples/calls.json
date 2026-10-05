@@ -8058,7 +8058,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           }
         },
@@ -8264,18 +8266,16 @@
       },
       "ManagePlcCertificate": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
           "action": "list",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
-            "requiresBinding": true
-          },
-          "itemPathJson": {
-            "requiresBinding": true
-          },
           "certificateId": {
             "exampleValue": "<id from ManagePlcCertificate list>",
             "requiresBinding": true
@@ -8286,24 +8286,39 @@
           "usage": {
             "exampleValue": "Tls"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-            "requiresBinding": true
-          },
           "assignment": {
             "exampleValue": "<assignment from this operation's target or user input>",
             "requiresBinding": true
           },
-          "assignmentItemPathJson": {
-            "exampleValue": "<assignmentItemPathJson from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "subjectAlternativeNamesJson": {
-            "exampleValue": "<subjectAlternativeNamesJson from this operation's target or user input>",
-            "requiresBinding": true
-          },
           "password": {
             "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          },
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "assignmentItemPath": {
+            "exampleValue": [
+              "<exact assignment owner device item>"
+            ],
+            "requiresBinding": true
+          },
+          "subjectAlternativeNames": {
+            "exampleValue": [
+              {
+                "type": "Dns",
+                "value": "plc.example.test"
+              }
+            ],
             "requiresBinding": true
           }
         },
@@ -8318,12 +8333,24 @@
           },
           "template": {
             "arguments": {
-              "action": "template"
+              "action": "template",
+              "usage": "Tls"
             }
           },
           "create": {
             "arguments": {
-              "action": "create"
+              "action": "create",
+              "usage": "Tls",
+              "properties": {
+                "SubjectCommonName": "plc.example.test",
+                "Signature": "Sha256RSA"
+              },
+              "subjectAlternativeNames": [
+                {
+                  "type": "Dns",
+                  "value": "plc.example.test"
+                }
+              ]
             }
           },
           "import": {
@@ -8783,13 +8810,17 @@
             "arguments": {
               "action": "updateRuntimeGroup",
               "runtimeGroup": "<runtimeGroup from this operation's target or user input>",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "updateSettings": {
             "arguments": {
               "action": "updateSettings",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "generateGlobalFIOStatusBlock": {
@@ -9426,16 +9457,24 @@
             "arguments": {
               "action": "assignDeviceRight",
               "rightName": "<right name returned by ReadProjectUserManagement>",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           },
           "unassignDeviceRight": {
             "arguments": {
               "action": "unassignDeviceRight",
               "rightName": "<right name returned by ReadProjectUserManagement>",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           },
           "createDeviceRight": {
@@ -9636,18 +9675,11 @@
           "action": "read"
         },
         "parameters": {
-          "groupPathJson": {
-            "exampleValue": "[]"
-          },
           "name": {
             "exampleValue": "Example_1"
           },
           "sourceName": {
             "exampleValue": "<sourceName from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
           "filePath": {
@@ -9663,6 +9695,21 @@
           },
           "importOptions": {
             "exampleValue": "<importOptions from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "groupPath": {
+            "exampleValue": []
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "signals": {
+            "exampleValue": [
+              "<exact trace signal name>"
+            ],
             "requiresBinding": true
           }
         },
@@ -9684,8 +9731,10 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-              "name": "Example_1"
+              "name": "Example_1",
+              "properties": {
+                "testName": "Example_1"
+              }
             }
           },
           "resetTestResult": {
@@ -9700,7 +9749,14 @@
           },
           "setTrace": {
             "arguments": {
-              "action": "setTrace"
+              "action": "setTrace",
+              "name": "Example_1",
+              "properties": {
+                "isTraced": true
+              },
+              "signals": [
+                "<exact trace signal name>"
+              ]
             }
           },
           "checkTraceValidity": {
@@ -9772,7 +9828,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "checkValidity": {
@@ -9806,7 +9864,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           }
         },
@@ -10220,7 +10280,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "name": "Example_1"
             }
           },
@@ -10233,15 +10295,23 @@
           "assignModule": {
             "arguments": {
               "action": "assignModule",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           },
           "unassignModule": {
             "arguments": {
               "action": "unassignModule",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           },
           "createServer": {
@@ -12504,13 +12574,13 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadProjectProtection": {
+      "GetProjectProtection": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadProjectSettings": {
+      "GetProjectSettings": {
         "arguments": {},
         "parameters": {
           "folderPath": {
@@ -12530,7 +12600,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadProjectUserManagement": {
+      "GetProjectUserManagement": {
         "arguments": {},
         "parameters": {
           "category": {
@@ -12557,7 +12627,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadSafetyActivationTests": {
+      "ListSafetyActivationTests": {
         "arguments": {},
         "parameters": {
           "groupPathJson": {
@@ -12582,7 +12652,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadSafetyBlockSignatures": {
+      "GetSafetyBlockSignatures": {
         "arguments": {
           "softwarePath": "PLC_1"
         },

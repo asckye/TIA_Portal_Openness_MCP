@@ -43,7 +43,7 @@ plan = [
     S("SyncVersionControlWorkspace", direction="ProjectToWorkspace", workspaceName="MCP_WS", dryRun=False, changedOnly=False, expect="any", keys=["summary"]),
     S("GetVersionControlStatus", workspaceName="MCP_WS", changedOnly=False, expect="any", keys=["summary"]),
     S("SyncVersionControlWorkspace", direction="WorkspaceToProject", workspaceName="MCP_WS", dryRun=True, changedOnly=True, expect="any"),
-    S("ManagePlcCertificate", devicePathJson=J([P]), itemPathJson=J([P]), action="list", certificateId="", filePath="", usage="", propertiesJson="{}", assignment="", dryRun=True, assignmentItemPathJson="[]", subjectAlternativeNamesJson="[]", password="", expect="any", keys=["records"]),
+    S("ManagePlcCertificate", devicePath=[P], itemPath=[P], action="list", certificateId="", filePath="", usage="", properties={}, assignment="", dryRun=True, assignmentItemPath=[], subjectAlternativeNames=[], password="", expect="any", keys=["records"]),
     S("ManageSyslogServers", scope="plc", action="read", name="", propertiesJson="{}", attributesJson="{}", devicePathJson=J([P]), itemPathJson=J([P]), serverAddress="", serverPort=0, confirmDelete=False, dryRun=True, expect="any", keys=["records"]),
     S("SaveProject"),
 ]

@@ -41,6 +41,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageSyslogServers(string scope = "project", string action = "read", string name = "", string propertiesJson = "{}", string attributesJson = "{}",
             string devicePathJson = "[]", string itemPathJson = "[]", string serverAddress = "", int serverPort = 0, bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageSyslogServers", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson"); var attributes = HardwareNetworkLogic.ParseObject(attributesJson, "attributesJson");
                 SecurityDeepLogic.ValidateSyslogRequest(scope, action, name, properties, devicePathJson, serverAddress, serverPort, confirmDelete, dryRun);
                 if (attributes.Count > 0 && (scope != "plc" || action != "update")) throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies to scope=plc action=update only.");
@@ -172,6 +173,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManagePasswordPolicy(string action = "read", string target = "", string propertiesJson = "{}", bool confirmChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePasswordPolicy", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson");
                 SecurityDeepLogic.ValidatePolicyRequest(action, target, properties, confirmChange, dryRun);
                 bool write = action == "update" && !dryRun;
@@ -220,6 +222,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageUmcUsers(string kind = "user", string action = "read", string name = "", string newName = "", string roleName = "",
             string serverUserName = "", string serverPassword = "", bool confirmChange = false, bool dryRun = true, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("ManageUmcUsers", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var request = SecurityDeepLogic.ValidateUmcRequest(kind, action, name, newName, roleName, serverUserName, serverPassword, confirmChange, dryRun);
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 bool write = request.Writes && !dryRun;

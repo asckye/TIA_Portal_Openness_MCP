@@ -829,7 +829,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareLibraryObjects",
@@ -870,7 +870,7 @@
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareSoftwareToOnline",
@@ -2101,7 +2101,7 @@
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportScadaData",
@@ -2956,23 +2956,23 @@
       },
       {
         "name": "GetProjectProtection",
-        "currentName": "ReadProjectProtection",
+        "currentName": "GetProjectProtection",
         "sourceName": "ReadProjectProtection",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectSettings",
-        "currentName": "ReadProjectSettings",
+        "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectTopology",
@@ -2997,17 +2997,17 @@
       },
       {
         "name": "GetProjectUserManagement",
-        "currentName": "ReadProjectUserManagement",
+        "currentName": "GetProjectUserManagement",
         "sourceName": "ReadProjectUserManagement",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSafetyBlockSignatures",
-        "currentName": "ReadSafetyBlockSignatures",
+        "currentName": "GetSafetyBlockSignatures",
         "sourceName": "ReadSafetyBlockSignatures",
         "profiles": [
           "full"
@@ -3015,7 +3015,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSessionState",
@@ -4802,7 +4802,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageNetworkDomain",
@@ -4879,7 +4879,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcAlarmTextList",
@@ -4934,12 +4934,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
           "action": "list",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcDataBlockSnapshot",
@@ -5032,7 +5036,7 @@
           "confirmSafetyChange": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSimAdvancedInstance",
@@ -5190,7 +5194,7 @@
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyGlobalSettings",
@@ -5203,7 +5207,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSinumerikArchive",
@@ -5330,7 +5334,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterConnection",
@@ -5454,7 +5458,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedCwcPackage",
@@ -7708,7 +7712,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareLibraryObjects",
@@ -7749,7 +7753,7 @@
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareSoftwareToOnline",
@@ -8980,7 +8984,7 @@
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportScadaData",
@@ -9835,23 +9839,23 @@
       },
       {
         "name": "GetProjectProtection",
-        "currentName": "ReadProjectProtection",
+        "currentName": "GetProjectProtection",
         "sourceName": "ReadProjectProtection",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectSettings",
-        "currentName": "ReadProjectSettings",
+        "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectTopology",
@@ -9876,17 +9880,17 @@
       },
       {
         "name": "GetProjectUserManagement",
-        "currentName": "ReadProjectUserManagement",
+        "currentName": "GetProjectUserManagement",
         "sourceName": "ReadProjectUserManagement",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSafetyBlockSignatures",
-        "currentName": "ReadSafetyBlockSignatures",
+        "currentName": "GetSafetyBlockSignatures",
         "sourceName": "ReadSafetyBlockSignatures",
         "profiles": [
           "full"
@@ -9894,7 +9898,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSessionState",
@@ -11074,13 +11078,13 @@
       },
       {
         "name": "ListSafetyActivationTests",
-        "currentName": "ReadSafetyActivationTests",
+        "currentName": "ListSafetyActivationTests",
         "sourceName": "ReadSafetyActivationTests",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListSivarcBlockDefinitions",
@@ -11757,7 +11761,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageNetworkDomain",
@@ -11834,7 +11838,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcAlarmTextList",
@@ -11905,12 +11909,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
           "action": "list",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcDataBlockSnapshot",
@@ -12003,7 +12011,7 @@
           "confirmSafetyChange": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSimAdvancedInstance",
@@ -12161,7 +12169,7 @@
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyActivationTest",
@@ -12176,7 +12184,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyActivationTestGroup",
@@ -12190,7 +12198,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyFunction",
@@ -12205,7 +12213,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyFunctionCondition",
@@ -12220,7 +12228,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSafetyGlobalSettings",
@@ -12233,7 +12241,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSinumerikArchive",
@@ -12376,7 +12384,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterConnection",
@@ -12500,7 +12508,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedCwcPackage",

@@ -5,11 +5,11 @@ def S(tool, note="", expect="ok", keys=None, **args): return {"tool": tool, "arg
 J = json.dumps
 plan = [
     # safety on the F-CPU
-    S("ManageSafetyGlobalSettings", action="read", propertiesJson="{}", dryRun=True, expect="any", keys=["before"]),
-    S("ManagePlcSafety", softwarePath=P, action="read", runtimeGroup="", propertiesJson="{}", dryRun=True, password="", confirmSafetyChange=False, mainSafetyBlockPath="", mainSafetyInstanceDbPath="", expect="any", keys=["before", "settings"]),
-    S("ReadSafetyBlockSignatures", softwarePath=P, blockPath="", includeProgramSignatures=True, offset=0, limit=20, expect="any", keys=["records", "programSignatures"]),
+    S("ManageSafetyGlobalSettings", action="read", properties={}, dryRun=True, expect="any", keys=["before"]),
+    S("ManagePlcSafety", softwarePath=P, action="read", runtimeGroup="", properties={}, dryRun=True, password="", confirmSafetyChange=False, mainSafetyBlockPath="", mainSafetyInstanceDbPath="", expect="any", keys=["before", "settings"]),
+    S("GetSafetyBlockSignatures", softwarePath=P, blockPath="", includeProgramSignatures=True, offset=0, limit=20, expect="any", keys=["records", "programSignatures"]),
     S("ExportSafetyPrintout", softwarePath=P, filePath=D + r"\mcp46_safety.pdf", printer="MicrosoftPrintToPdf", option="Compact", documentLayout="", dryRun=True, expect="any"),
-    S("ReadSafetyActivationTests", groupPathJson="[]", name="", includeSafetyFunctions=True, includeConditions=False, offset=0, limit=20, expect="any", keys=["records"]),
+    S("ListSafetyActivationTests", groupPath=[], name="", includeSafetyFunctions=True, includeConditions=False, offset=0, limit=20, expect="any", keys=["records"]),
     # library
     S("ReadLibraryOverview", libraryName="", includeTypes=True, includeMasterCopies=True, maxDepth=3, maxItems=50, expect="any", keys=["header"]),
     S("ManageLibraryFolder", folderKind="masterCopies", folderPath="MCP_MC", action="create", libraryName="", newName="", dryRun=False, expect="any", keys=["after"]),
@@ -49,14 +49,14 @@ plan = [
     S("ManageLibraryMasterCopy", sourcePath="MCP_MC/MCP_FB", action="delete", libraryName="", destinationLibraryName="", destinationPath="", dryRun=False, expect="any", keys=["verifiedAbsent"]),
     S("ManageLibraryFolder", folderKind="types", folderPath="MCP_Types", action="delete", libraryName="", newName="", dryRun=False, expect="any"),
     # security / protection reads
-    S("ReadProjectProtection", expect="any", keys=["umacAvailable"]),
-    S("ReadProjectUserManagement", category="users", name="", devicePathJson="[]", itemPathJson="[]", offset=0, limit=20, expect="any"),
-    S("ManagePasswordPolicy", action="read", target="", propertiesJson="{}", confirmChange=False, dryRun=True, expect="any", keys=["before"]),
-    S("ManageSyslogServers", scope="project", action="read", name="", propertiesJson="{}", attributesJson="{}", devicePathJson="[]", itemPathJson="[]", serverAddress="", serverPort=0, confirmDelete=False, dryRun=True, expect="any", keys=["records"]),
-    S("ManageSyslogServers", scope="device", action="read", name="", propertiesJson="{}", attributesJson="{}", devicePathJson=J([P]), itemPathJson=J([P]), serverAddress="", serverPort=0, confirmDelete=False, dryRun=True, expect="any", keys=["records"]),
-    S("ManagePlcCertificate", devicePathJson=J([P]), itemPathJson=J([P]), action="list", certificateId=0, filePath="", usage="", propertiesJson="{}", assignment="", dryRun=True, assignmentItemPathJson="[]", subjectAlternativeNamesJson="[]", password="", expect="any", keys=["records"]),
+    S("GetProjectProtection", expect="any", keys=["umacAvailable"]),
+    S("GetProjectUserManagement", category="users", name="", devicePath=[], itemPath=[], offset=0, limit=20, expect="any"),
+    S("ManagePasswordPolicy", action="read", target="", properties={}, confirmChange=False, dryRun=True, expect="any", keys=["before"]),
+    S("ManageSyslogServers", scope="project", action="read", name="", properties={}, attributes={}, devicePath=[], itemPath=[], serverAddress="", serverPort=0, confirmDelete=False, dryRun=True, expect="any", keys=["records"]),
+    S("ManageSyslogServers", scope="device", action="read", name="", properties={}, attributes={}, devicePath=[P], itemPath=[P], serverAddress="", serverPort=0, confirmDelete=False, dryRun=True, expect="any", keys=["records"]),
+    S("ManagePlcCertificate", devicePath=[P], itemPath=[P], action="list", certificateId="", filePath="", usage="", properties={}, assignment="", dryRun=True, assignmentItemPath=[], subjectAlternativeNames=[], password="", expect="any", keys=["records"]),
     S("ManageUmcUsers", kind="user", action="read", name="", newName="", roleName="", serverUserName="", serverPassword="", confirmChange=False, dryRun=True, offset=0, limit=20, expect="any"),
-    S("ManageProjectUserManagement", action="createUser", name="mcp", password="Mcp!2345678", roleName="", rightName="", comment="", group="", devicePathJson="[]", itemPathJson="[]", confirmChange=False, dryRun=True, expect="any", note="unprotected project -> refusal expected"),
+    S("ManageProjectUserManagement", action="createUser", name="mcp", password="Mcp!2345678", roleName="", rightName="", comment="", group="", devicePath=[], itemPath=[], confirmChange=False, dryRun=True, expect="any", note="unprotected project -> refusal expected"),
     # version control
     S("GetVersionControlWorkspaces", expect="any", keys=["records"]),
     S("CreateVersionControlWorkspace", workspaceName="MCP_WS", folderPath=D + r"\mcp46_vci", expect="any", keys=["after"]),

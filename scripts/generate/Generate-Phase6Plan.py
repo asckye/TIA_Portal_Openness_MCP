@@ -297,6 +297,7 @@ PARAM_SHAPES = {
     "settingsJson":"CpuSettings{exactAttributes:AttributeMap<Scalar>}",
 }
 EXACT_SHAPES = {
+    ("ManagePlcCertificate", "subjectAlternativeNamesJson"): "SubjectAlternativeName[]",
     ("CallTool","argumentsJson"): "ToolArguments(target inputSchema)",
     ("PreflightToolCall","argumentsJson"): "ToolArguments(target inputSchema)",
     ("RunPlcCompanionTool","argumentsJson"): "string[]",
@@ -326,6 +327,8 @@ def validate_parameter_transition(name, current, target, actual, expected, v4, t
         if 'json' in expected: assert actual.get('json') in ('string', 'string?'), name
         return
     assert current == target, (name, 'V4 tool has a legacy name', current, target)
+    if name == 'ManageSafetyFunction':
+        assert actual.get('signals') == 'string[]', (name, 'setTrace signals must be a separate typed array')
     for old in expected:
         new = 'spec' if old == 'json' else old[:-4]
         assert old not in actual and new in actual, (name, old, new, actual)
@@ -743,6 +746,12 @@ def self_test():
     validate_parameter_transition("Keep", "Keep", "Keep", {"valuesJson": "string"}, {"valuesJson"}, False, {})
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
+    validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",
+                                  {"subjectAlternativeNames": "SubjectAlternativeName[]"}, {"subjectAlternativeNamesJson"}, True,
+                                  {"subjectAlternativeNamesJson": "SubjectAlternativeName[]"})
+    validate_parameter_transition("ManageSafetyFunction", "ManageSafetyFunction", "ManageSafetyFunction",
+                                  {"properties": "AttributeMap<Scalar>", "signals": "string[]"}, {"propertiesJson"}, True,
+                                  {"propertiesJson": "AttributeMap<Scalar>"})
     for actual, v4 in (({"valuesJson": "string"}, True), ({"values": "string"}, True), ({"values": "AttributeMap<Scalar>"}, False)):
         try: validate_parameter_transition("Keep", "Keep", "Keep", actual, {"valuesJson"}, v4, {"valuesJson": "AttributeMap<Scalar>"})
         except AssertionError: pass

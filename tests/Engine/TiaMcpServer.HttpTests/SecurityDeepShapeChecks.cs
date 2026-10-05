@@ -91,6 +91,6 @@ internal static class SecurityDeepShapeChecks
         Property(sec+"Certificate","HasPrivateKey","Boolean",false); Property(sec+"Certificate","Id","UInt32",false);
         SafetyShapeChecks.CheckDomain(server, check, "SecurityDeep", new[] { "ManageSyslogServers", "ManagePasswordPolicy", "ManageUmcUsers" });
         SafetyShapeChecks.CheckDomain(server, check, "CertificateManagement", new[] { "ManagePlcCertificate" });
-        SafetyShapeChecks.CheckDomain(server, check, "ProjectSecurity", new[] { "ReadProjectUserManagement", "ManageProjectUserManagement", "ReadProjectProtection", "ManageMultiuserSession", "CompareLibraries", "CompareProjects", "ReadProjectSettings" });
+        SafetyShapeChecks.CheckDomain(server, check, "ProjectSecurity", new[] { "GetProjectUserManagement", "ManageProjectUserManagement", "GetProjectProtection", "ManageMultiuserSession", "CompareLibraries", "CompareProjects", "GetProjectSettings" });
     }
 }

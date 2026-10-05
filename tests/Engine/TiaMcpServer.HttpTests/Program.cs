@@ -375,22 +375,24 @@ internal static partial class Program
                 if(args[1] == "engineering-api-only") {
                     Action<bool,string> shapeCheck = (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); };
                     EngineSurfaceChecks.Run(Server, shapeCheck);
+                    SecurityContractChecks.Run(Server, shapeCheck);
+                    ProjectSecurityShapeChecks.Run(Server, shapeCheck);
+                    SafetyShapeChecks.Run(Server, shapeCheck);
+                    SecurityDeepShapeChecks.Run(Server, shapeCheck);
+                    SafetyValidationShapeChecks.Run(Server, shapeCheck);
                     EngineeringApiShapeTests.Run(Server, shapeCheck);
                     BindingAndTagShapeChecks.Run(Server, shapeCheck);
                     DeviceTransferShapeChecks.Run(Server, shapeCheck);
                     PlcBlockServicesShapeChecks.Run(Server, shapeCheck);
                     HardwareServicesShapeChecks.Run(Server, shapeCheck);
-                    ProjectSecurityShapeChecks.Run(Server, shapeCheck);
                     UnifiedUiModelShapeChecks.Run(Server, shapeCheck);
                     MotionProDiagClassicHmiShapeChecks.Run(Server, shapeCheck);
                     RuntimeChannelsShapeChecks.Run(Server, shapeCheck);
                     SimulationDocumentationShapeChecks.Run(Server, shapeCheck);
-                    SafetyShapeChecks.Run(Server, shapeCheck);
                     UnifiedScreenItemShapeChecks.Run(Server, shapeCheck);
                     UnifiedExchangeShapeChecks.Run(Server, shapeCheck);
                     HardwareNetworkShapeChecks.Run(Server, shapeCheck);
                     LibraryDeepShapeChecks.Run(Server, shapeCheck);
-                    SecurityDeepShapeChecks.Run(Server, shapeCheck);
                     SessionAndHardwareShapeChecks.Run(Server, shapeCheck);
                     SoftwareUnitDeepShapeChecks.Run(Server, shapeCheck);
                     PlcDomainShapeChecks.Run(Server, shapeCheck);
@@ -399,7 +401,6 @@ internal static partial class Program
                     SivarcShapeChecks.Run(Server, shapeCheck);
                     StartdriveShapeChecks.Run(Server, shapeCheck);
                     DccShapeChecks.Run(Server, shapeCheck);
-                    SafetyValidationShapeChecks.Run(Server, shapeCheck);
                     TestSuiteShapeChecks.Run(Server, shapeCheck);
                     TeamcenterShapeChecks.Run(Server, shapeCheck);
                     CfcShapeChecks.Run(Server, shapeCheck);

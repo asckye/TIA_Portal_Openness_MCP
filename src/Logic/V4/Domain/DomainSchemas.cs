@@ -38,6 +38,8 @@ namespace TiaMcp.Logic.V4.Domain
         {
             var d = new Dictionary<Type, InputSchema>();
             var text = String(); var name = String(1); var count = Integer(0); var strings = Array(text);
+            d[typeof(SubjectAlternativeName)] = Object(("type", String(0, null, "Dns", "Email", "IP", "Uri")), ("value", String(1, 255)));
+            d[typeof(SubjectAlternativeName[])] = Array(d[typeof(SubjectAlternativeName)], 0, 64);
             d[typeof(Artifact)] = Object(("id", String(1, 512)), ("dependencies?", Array(name, 0, 256)), ("target?", text), ("priority?", Integer()));
             d[typeof(Artifact[])] = Array(d[typeof(Artifact)], 1, 256);
             d[typeof(CpuSettings)] = Object(("exactAttributes", Map(Scalar, 1)));

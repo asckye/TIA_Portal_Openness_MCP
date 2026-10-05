@@ -176,7 +176,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-11 | PLC 文档/原生交换/外部源/补丁工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-11) | 03–07、I | T、V；partial/unknown 和 observation 保全；N 调用不变 | done |
 | P6-12 | 设备/AML/模块/地址工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-12) | 03–07、I | T、V；创建仍披露 current；N 调用不变 | done |
 | P6-13 | 硬件网络/服务工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-13) | 03–07、I | T、V；逐路径/属性限制；N 调用不变 | done |
-| P6-14 | 证书/项目安全/Safety/安全扩展契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-14) | 03–07、I | T、V；权限/版本门禁与脱敏；N 调用不变 | todo |
+| P6-14 | 证书/项目安全/Safety/安全扩展契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-14) | 03–07、I | T、V；权限/版本门禁与脱敏；N 调用不变 | done |
 | P6-15 | 报警/OPC UA/工艺对象/软件单元契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-15) | 03–07、I | T、V；版本 action 与 native 值边界；N 调用不变 | done |
 | P6-16 | Classic HMI 文件夹与 Motion/ProDiag 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-16) | 03–07、I | T、V；目标联合互斥与能力拒绝；N 调用不变 | done |
 | P6-17 | Unified HMI 核心、组、屏幕项、UI 模型契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-17) | 03–07、I | T、V；控件设计 DTO 与旧结果信息等价；N 调用不变 | todo |

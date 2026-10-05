@@ -8,7 +8,7 @@ plan = [
     S("RunCapabilitySelfTest", connectIfNeeded=False, includeProjectTree=False, inspectPortalProcesses=True, expectedPlcSoftwarePath=P, expectedHmiSoftwarePath=H, keys=["ok"]),
     S("ValidateAutomationContext", expectedPlcSoftwarePath=P, expectedHmiSoftwarePath=H, keys=["ok"]),
     S("RunHmiActionScriptRecipeSafetySelfTest"), S("RunOnlineMonitoringSafetySelfTest"),
-    S("GetProject"), S("ReadProjectSettings", folderPath="", customIdentityKey="", offset=0, limit=20, expect="any", keys=["records"]),
+    S("GetProject"), S("GetProjectSettings", folderPath="", customIdentityKey="", offset=0, limit=20, expect="any", keys=["records"]),
     S("ManageProjectLanguage", action="read", culture="", dryRun=True, expect="any", keys=["before", "languages"]),
     S("ManageProjectLanguage", action="activate", culture="en-US", dryRun=False, expect="any", keys=["after"]),
     S("ManageProjectLanguage", action="setEditing", culture="en-US", dryRun=False, expect="any", keys=["after"]),

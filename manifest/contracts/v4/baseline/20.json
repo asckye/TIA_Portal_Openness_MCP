@@ -6553,6 +6553,7 @@
     {
       "descriptionSha256": "0783ae699eb877e5e453782d52769edce9aba8679004fb3e6f6047523e59e10a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "includeIdentical": {
             "default": false,
@@ -6567,6 +6568,7 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "maxDepth": {
@@ -6577,6 +6579,7 @@
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "rightLibraryName": {
@@ -6708,23 +6711,26 @@
       "name": "ComparePlcBlockDocuments"
     },
     {
-      "descriptionSha256": "7ec85885034bb1936741b2a48f9249ae9f91fe2f6c0f8ddbe61cfc1023fc8b9f",
+      "descriptionSha256": "2d1fd64ac2e07e398eb9a33699f25e419806b38880a038f733667325a75f486d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "includeIdentical": {
             "default": false,
             "description": "includeIdentical: true also lists objects that compare equal.",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "kind": {
             "description": "kind: the object kind - the tool description lists the accepted values (case-sensitive).",
@@ -6733,6 +6739,7 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "maxDepth": {
@@ -6743,6 +6750,7 @@
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "softwarePath": {
@@ -6750,15 +6758,19 @@
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           },
-          "targetDevicePathJson": {
-            "default": "[]",
-            "description": "targetDevicePathJson: JSON array naming the target station.",
-            "type": "string"
+          "targetDevicePath": {
+            "description": "targetDevicePath: JSON array naming the target station.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "targetItemPathJson": {
-            "default": "[]",
-            "description": "targetItemPathJson: JSON array of device-item names on the target.",
-            "type": "string"
+          "targetItemPath": {
+            "description": "targetItemPath: array of device-item names on the target.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "targetLibraryName": {
             "default": "",
@@ -9851,6 +9863,7 @@
     {
       "descriptionSha256": "6f96ae476ed5aa3f3abdc58274c3a4fd8cb46ef9d0115aa62398d7006abdfb01",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "documentLayout": {
             "default": "",
@@ -11419,6 +11432,47 @@
       "name": "GetProject"
     },
     {
+      "descriptionSha256": "8c81e375a6ef155a843aa48ffde4b8b79827e7955ff8ed3c4af693fc5680a2a3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetProjectProtection"
+    },
+    {
+      "descriptionSha256": "f2b09d1f57e27f68cbc5886ebb8ca7f29b6bfe4ea7f57895a00814e0e6c8c3cf",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "customIdentityKey": {
+            "default": "",
+            "description": "customIdentityKey: key of the custom identity to read ('' = all).",
+            "type": "string"
+          },
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetProjectSettings"
+    },
+    {
       "descriptionSha256": "61dd94918dea9c703b1f8db41f5243f5db52eb8fb99f55430b04535d19d60ba9",
       "inputSchema": {
         "additionalProperties": false,
@@ -11435,6 +11489,89 @@
         "type": "object"
       },
       "name": "GetProjectTree"
+    },
+    {
+      "descriptionSha256": "8b034310ab40fd3ebd89c4e56ef84c75f0f986ae8921b504fd2e0db9c858338f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "default": "users",
+            "description": "category: the category - the tool description lists the accepted values.",
+            "type": "string"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetProjectUserManagement"
+    },
+    {
+      "descriptionSha256": "85ac938c94b1fb7e4d65f75826a2d758e172ee8cee10369cabb5b4245fb102f5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "default": "",
+            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "type": "string"
+          },
+          "includeProgramSignatures": {
+            "default": true,
+            "description": "includeProgramSignatures: true also returns the F-program signatures (V21).",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetSafetyBlockSignatures"
     },
     {
       "descriptionSha256": "3c6d7a55c9a8638147322fbcdfdbfe5e0e56978a9f94235176566bfa5f72e06b",
@@ -16188,6 +16325,7 @@
     {
       "descriptionSha256": "ae4d2d56173981eb2545824f2ff61d4513cbb502dc040fc4560c02ec618df69f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16226,11 +16364,13 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "port": {
@@ -16585,8 +16725,9 @@
       "name": "ManageOpcUaInterface"
     },
     {
-      "descriptionSha256": "0ad3ee96205b090187eef9ba2ee741391ea4ec48b09d9e86e8a1c1e85b1de771",
+      "descriptionSha256": "6fc71b69dcf72968ae794bafff27cba864c3a550667e8bd2ba53724fe60d83cd",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16607,10 +16748,25 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "target": {
             "default": "",
@@ -16829,8 +16985,9 @@
       "name": "ManagePlcBlockProtection"
     },
     {
-      "descriptionSha256": "225b074ad6ea4d3c7c3b24d198057a73af85eac2ffc9a1fb3d9bd73dbadf6081",
+      "descriptionSha256": "0267f7c1feae40ea58e6c5ea1037db81150a77ca86fda8dd369ef1bb787c1d37",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "list | read | template | create | import | export | delete | assign | unassign. ",
@@ -16852,19 +17009,23 @@
             "description": "assignment: assignment kind as the read action lists it.",
             "type": "string"
           },
-          "assignmentItemPathJson": {
-            "default": "",
-            "description": "assignmentItemPathJson: JSON array of device-item names the certificate is assigned to.",
-            "type": "string"
+          "assignmentItemPath": {
+            "description": "assignmentItemPath: array of exact device-item names; omission uses the selected owner.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "certificateId": {
             "default": "",
             "description": "certificateId: certificate id from the read action.",
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -16876,24 +17037,68 @@
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
             "type": "string"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "password": {
             "default": "",
             "description": "password: password when the object is protected; never logged.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
-          "subjectAlternativeNamesJson": {
-            "default": "[]",
-            "description": "subjectAlternativeNamesJson: JSON array of subject alternative names for the certificate.",
-            "type": "string"
+          "subjectAlternativeNames": {
+            "description": "subjectAlternativeNames: up to 64 closed {type, value} entries; type is Dns, Email, IP or Uri and value has 1..255 characters. Duplicate values of the same type are refused case-insensitively.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "type": {
+                  "enum": [
+                    "Dns",
+                    "Email",
+                    "IP",
+                    "Uri"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "value": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ],
+              "type": "object"
+            },
+            "maxItems": 64,
+            "minItems": 0,
+            "type": "array"
           },
           "usage": {
             "default": "",
@@ -16910,8 +17115,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "action"
         ],
         "type": "object"
@@ -17379,8 +17584,9 @@
       "name": "ManagePlcProtection"
     },
     {
-      "descriptionSha256": "452fe93af97c040a0204779a05b73d1a87a131c12d4aa8e2a214366830b09145",
+      "descriptionSha256": "16cccc187d8d19de5d6d8a8a05b5df69ead1ea6e0590c550c43cb9b5c34f0cfd",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -17426,10 +17632,25 @@
             "description": "password: password when the object is protected; never logged.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "runtimeGroup": {
             "default": "",
@@ -18128,8 +18349,9 @@
       "name": "ManageProjectLanguage"
     },
     {
-      "descriptionSha256": "141290db58690ab7bcdc3bbf92cbf4c938076b37b00d759253d124acd54a8947",
+      "descriptionSha256": "95b4c6f3189b487d3476ba01b98d05347b7e712514194bc36052f82045b8b8b1",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "createUser | deleteUser | setUserPassword | activateUser | deactivateUser | assignRole | unassignRole | createRole | deleteRole | assignEngineeringRight | unassignEngineeringRight | assignDeviceRight | unassignDeviceRight | createDeviceRight | deleteDeviceRight | activateAnonymousUser | deactivateAnonymousUser. ",
@@ -18164,10 +18386,11 @@
             "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -18179,10 +18402,11 @@
             "description": "group: group name.",
             "type": "string"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "name": {
             "description": "name: exact name of the object (case-sensitive).",
@@ -18213,8 +18437,9 @@
       "name": "ManageProjectUserManagement"
     },
     {
-      "descriptionSha256": "1d75b0450b92778b7446c3b5e136d02c43498fc3d9145ed055cbb569aa5e2a07",
+      "descriptionSha256": "6c223f68ca35cc63689cecc9e42c659b99d69e758bbbb2e664261cea331a68f5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -18230,10 +18455,25 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           }
         },
         "type": "object"
@@ -18714,8 +18954,9 @@
       "name": "ManageStartdriveParameter"
     },
     {
-      "descriptionSha256": "a072cbe96745d2b23c2838b8844cfa94eddd995bf9df9eb4840edb78ca4e51db",
+      "descriptionSha256": "0fa525f70fce72d4083bdf5cb2bb99be9a7f20f27d74802a5833d4437bb4f2d2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -18732,40 +18973,72 @@
             ],
             "type": "string"
           },
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "confirmDelete": {
             "default": false,
             "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "name": {
             "default": "",
             "description": "name: exact name of the object (case-sensitive).",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "scope": {
             "default": "project",
@@ -19534,6 +19807,7 @@
     {
       "descriptionSha256": "82901fdbb687aa55d258d3a620a0ed4ccb9a5a6d6a54e38b7591b7fb40f94bce",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -19576,6 +19850,7 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "name": {
@@ -19591,6 +19866,7 @@
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "roleName": {
@@ -21949,118 +22225,6 @@
         "type": "object"
       },
       "name": "ReadPortalInfo"
-    },
-    {
-      "descriptionSha256": "73ebec69f96a1608ee6675368d44d6dba6c72d71e56928e9a78c3f520b9bb89d",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "ReadProjectProtection"
-    },
-    {
-      "descriptionSha256": "3feccec524fd3f27b21abceeac2ceeade72cc332316287ab55d728188610eb45",
-      "inputSchema": {
-        "properties": {
-          "customIdentityKey": {
-            "default": "",
-            "description": "customIdentityKey: key of the custom identity to read ('' = all).",
-            "type": "string"
-          },
-          "folderPath": {
-            "default": "",
-            "description": "folderPath: group / folder path inside the software ('' = root).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadProjectSettings"
-    },
-    {
-      "descriptionSha256": "702ee11d80788208f460fd641471e1537732c3fd7fde9bf8516125c1d9e4028e",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "default": "users",
-            "description": "category: the category - the tool description lists the accepted values.",
-            "type": "string"
-          },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadProjectUserManagement"
-    },
-    {
-      "descriptionSha256": "d86cd265b0a02c73a8cb0f376335c65bbf6abb5796fada9cc42e104f04059265",
-      "inputSchema": {
-        "properties": {
-          "blockPath": {
-            "default": "",
-            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
-            "type": "string"
-          },
-          "includeProgramSignatures": {
-            "default": true,
-            "description": "includeProgramSignatures: true also returns the F-program signatures (V21).",
-            "type": "boolean"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadSafetyBlockSignatures"
     },
     {
       "descriptionSha256": "c9879873e6ce817e7491f1c80daabefdce6a8f70d98e8772d166cedfb21442e0",

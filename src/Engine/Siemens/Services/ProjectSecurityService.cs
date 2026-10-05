@@ -34,7 +34,8 @@ namespace TiaMcpServer.Siemens.Services
             => HardwareService<UmacDevice>(_session.ExactEngineeringHardware(devicePathJson, itemPathJson))
                ?? throw new NotSupportedException("UmacDevice service unavailable on the selected hardware object. On the reference project it lives on the Device (devicePathJson only, itemPathJson=[]), not on the CPU DeviceItem; address the Device or the DeviceItem that owns the UMAC configuration.");
         public ResponseMessage ReadProjectUserManagement(string category = "users", string name = "", string devicePathJson = "[]", string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadProjectUserManagement", meta => {
+            => _session.RunHmiStepTool("GetProjectUserManagement", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 ProjectSecurityLogic.ValidateCategory(category); ProjectSecurityLogic.ValidatePage(offset, limit);
                 if (ProjectSecurityLogic.DeviceCategories.Contains(category)) ProjectSecurityLogic.ValidateDevicePath(devicePathJson);
                 if (category == "roleDeviceRights" && string.IsNullOrWhiteSpace(name)) throw new ArgumentException("roleDeviceRights requires name = exact role name.");
@@ -70,6 +71,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageProjectUserManagement(string action, string name, string password = "", string roleName = "", string rightName = "", string comment = "", string group = "",
             string devicePathJson = "[]", string itemPathJson = "[]", bool confirmChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageProjectUserManagement", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var request = ProjectSecurityLogic.ValidateUserManagement(action, name, password, roleName, rightName, group, devicePathJson);
                 bool writing = !dryRun;
                 if (writing && !confirmChange) throw new ArgumentException("Real UMAC changes require confirmChange=true together with dryRun=false.");
@@ -150,7 +152,8 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadProjectProtection()
-            => _session.RunHmiStepTool("ReadProjectProtection", meta => {
+            => _session.RunHmiStepTool("GetProjectProtection", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var project = _session.CurrentProject!;
                 bool complete = true;
                 var projectRow = EngineeringScalarProperties.Read(project); meta["project"] = projectRow; complete &= projectRow["dataComplete"]!.GetValue<bool>();
@@ -198,6 +201,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageMultiuserSession(string action = "read", string serverName = "", string projectName = "", string protocol = "Https", string host = "", int port = 0,
             string commitComment = "", int offset = 0, int limit = 100, bool confirmChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageMultiuserSession", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 bool mutation = ProjectSecurityLogic.ValidateMultiuser(action, serverName, projectName, protocol, host, port, commitComment, confirmChange, dryRun);
                 ProjectSecurityLogic.ValidatePage(offset, limit);
                 if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
@@ -324,6 +328,7 @@ namespace TiaMcpServer.Siemens.Services
         }
         public ResponseMessage CompareLibraries(string leftLibraryName = "", string rightLibraryName = "", bool includeIdentical = false, int maxDepth = 8, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("CompareLibraries", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 ProjectSecurityLogic.ValidateLibraryPair(leftLibraryName, rightLibraryName); ProjectSecurityLogic.ValidatePage(offset, limit); ProjectSecurityLogic.ValidateDepth(maxDepth);
                 if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 if ((string.IsNullOrEmpty(leftLibraryName) || string.IsNullOrEmpty(rightLibraryName)) && _session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project library requested but no project is bound.");
@@ -366,6 +371,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage CompareProjects(string kind, string softwarePath = "", string devicePathJson = "[]", string itemPathJson = "[]", string targetProjectName = "", string targetSoftwarePath = "",
             string targetDevicePathJson = "[]", string targetItemPathJson = "[]", string targetLibraryName = "", bool includeIdentical = false, int maxDepth = 8, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("CompareProjects", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 ProjectSecurityLogic.ValidateCompareRequest(kind, softwarePath, devicePathJson, targetProjectName, targetSoftwarePath, targetDevicePathJson);
                 ProjectSecurityLogic.ValidatePage(offset, limit); ProjectSecurityLogic.ValidateDepth(maxDepth);
                 meta["kind"] = kind; meta["scope"] = "Offline native comparison (PlcSoftware.CompareTo / HardwareObject.CompareTo / CompareToLibrary target); no online access, nothing modified.";
@@ -396,7 +402,8 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- Settings / custom identity ----
         public ResponseMessage ReadProjectSettings(string folderPath = "", string customIdentityKey = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadProjectSettings", meta => {
+            => _session.RunHmiStepTool("GetProjectSettings", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 ProjectSecurityLogic.ValidatePage(offset, limit);
                 if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 var parts = EngineeringGroupOperations.Parts(folderPath, true);

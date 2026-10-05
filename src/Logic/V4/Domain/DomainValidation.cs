@@ -33,6 +33,9 @@ namespace TiaMcp.Logic.V4.Domain
                     Unique(aliases.Select(r => V4Json.Serialize(r.Destination)), StringComparer.Ordinal); break;
                 case XPathRule[] rules: Unique(rules.Select(r => r.Id), StringComparer.Ordinal); break;
                 case GraphicSelectionPage[] pages: ValidatePages(pages); break;
+                case SubjectAlternativeName[] names:
+                    // Match the certificate parser: same type and case-insensitive value.
+                    Unique(names.Select(n => n.Type + ":" + n.Value), StringComparer.OrdinalIgnoreCase); break;
                 case Dictionary<string, bool> devices:
                     foreach (var key in devices.Keys) Text(key); break;
             }
@@ -41,6 +44,7 @@ namespace TiaMcp.Logic.V4.Domain
         {
             type = DomainSchemas.Concrete(type, json);
             string raw = json.GetRawText();
+            if (type == typeof(SubjectAlternativeName)) Text(json.GetProperty("value").GetString()!);
             if (type == typeof(OpenPipeRequest))
             {
                 // Reuse the expert parser's exact blank-message and subscription rules

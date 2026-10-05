@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [global::ModelContextProtocol.Server.McpServerTool(Name = "ManageDcbLibraries")]
         public static ResponseMessage ProbeVersionedDcb(string action = "read")
         { VersionProbeCalls++; return ProbeResult(true); }
-        [global::ModelContextProtocol.Server.McpServerTool(Name = "ReadSafetyActivationTests")]
+        [global::ModelContextProtocol.Server.McpServerTool(Name = "ListSafetyActivationTests")]
         public static ResponseMessage ProbeVersionedSafety()
         { VersionProbeCalls++; return ProbeResult(true); }
         [global::ModelContextProtocol.Server.McpServerTool]
@@ -136,7 +136,8 @@ namespace TiaMcpServer.Tests
                 typeof(PlcBuildTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
                 typeof(V21EcosystemTools), typeof(XmlBuilderTools), typeof(AlarmsTools), typeof(OpcUaTools),
                 typeof(SoftwareUnitDeepTools), typeof(SoftwareUnitManagementTools), typeof(TechnologyObjectsTools),
-                typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools)
+                typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools),
+                typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools)
             }).Methods, ToolCatalog.Engine.Methods);
         }
 

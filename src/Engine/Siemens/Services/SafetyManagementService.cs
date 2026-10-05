@@ -147,6 +147,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun = true,
             string password = "", bool confirmSafetyChange = false, string mainSafetyBlockPath = "", string mainSafetyInstanceDbPath = "")
             => _session.RunHmiStepTool("ManagePlcSafety", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 bool writing = SafetyLogic.ValidateRequest(action, runtimeGroup, password, confirmSafetyChange, dryRun);
                 bool editsProgram = SafetyProgramEditingActions.Contains(action);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -166,7 +167,7 @@ namespace TiaMcpServer.Siemens.Services
                     meta["runtimeGroups"] = new JsonArray(groups.Select(g => (JsonNode)ReadRuntimeGroup(g)).ToArray());
                     var signatures = ProgramSignatures(administration);
                     meta["programSignatures"] = signatures == null ? null : SignatureRows(signatures);
-                    if (signatures == null) meta["programSignaturesNote"] = "SafetyAdministration.ProgramSignatures is a V21 API; on V20 read per-block signatures with ReadSafetyBlockSignatures.";
+                    if (signatures == null) meta["programSignaturesNote"] = "SafetyAdministration.ProgramSignatures is a V21 API; on V20 read per-block signatures with GetSafetyBlockSignatures.";
                     meta["globalSettings"] = ReadSafetyGlobalSettings();
                     meta["cpu"] = ReadSafetyCpu(softwarePath);
                     meta["apiCallSuccess"] = true;
@@ -283,6 +284,7 @@ namespace TiaMcpServer.Siemens.Services
                         if (administration.IsLoggedOnToSafetyOfflineProgram) throw new InvalidOperationException("Already logged on to the safety offline program.");
                         if (!administration.IsSafetyOfflineProgramPasswordSet) throw new InvalidOperationException("No safety offline program password is set; login is not needed.");
                         if (!writing) return "Login preview; no native call.";
+                        meta["mayHaveChanged"] = true;
                         using (var secure = PlcBlockServicesLogic.ToSecureString(password)) administration.LoginToSafetyOfflineProgram(secure);
                         meta["apiCallSuccess"] = true;
                         if (!administration.IsLoggedOnToSafetyOfflineProgram) throw new InvalidOperationException("Login returned but IsLoggedOnToSafetyOfflineProgram is still false.");
@@ -292,6 +294,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         if (!administration.IsLoggedOnToSafetyOfflineProgram) throw new InvalidOperationException("Not logged on to the safety offline program.");
                         if (!writing) return "Logoff preview; no native call.";
+                        meta["mayHaveChanged"] = true;
                         administration.LogoffFromSafetyOfflineProgram();
                         meta["apiCallSuccess"] = true;
                         if (administration.IsLoggedOnToSafetyOfflineProgram) throw new InvalidOperationException("Logoff returned but IsLoggedOnToSafetyOfflineProgram is still true.");
@@ -345,6 +348,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageSafetyGlobalSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageSafetyGlobalSettings", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (action != "read" && action != "update") throw new ArgumentException("action must be read or update.");
                 if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 bool writing = action == "update" && !dryRun;
@@ -376,7 +380,8 @@ namespace TiaMcpServer.Siemens.Services
             }, requiresProject: false);
 
         public ResponseMessage ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadSafetyBlockSignatures", meta => {
+            => _session.RunHmiStepTool("GetSafetyBlockSignatures", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath;
                 var administration = _session.ResolvePlcService<SafetyAdministration>(softwarePath, plc);
@@ -416,6 +421,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All", string documentLayout = "", bool dryRun = true)
             => _session.RunHmiStepTool("ExportSafetyPrintout", meta => {
+                meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var request = SafetyLogic.ValidatePrintoutRequest(filePath, printer, option, documentLayout);
                 var file = NativeFileOutput.Plan(filePath);
                 _session.ExactPlcForEngineering(softwarePath, false);

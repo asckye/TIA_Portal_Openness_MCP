@@ -98,10 +98,10 @@ internal static class SafetyShapeChecks
         foreach(var name in new[]{"ManagePlcSafety","ManageSafetyGlobalSettings","ExportSafetyPrintout"})
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="confirmSafetyChange").DefaultValue,false),"ManagePlcSafety requires explicit confirmSafetyChange");
-        check(tools.Tool("ReadSafetyBlockSignatures")!.GetParameters().All(p=>p.Name!="dryRun"),"ReadSafetyBlockSignatures is read-only (no dryRun)");
+        check(tools.Tool("GetSafetyBlockSignatures")!.GetParameters().All(p=>p.Name!="dryRun"),"GetSafetyBlockSignatures is read-only (no dryRun)");
         check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="password").DefaultValue,""),"ManagePlcSafety password is optional and empty by default");
-        CheckDomain(server, check, "SafetyManagement", new[] { "ManagePlcSafety", "ManageSafetyGlobalSettings", "ReadSafetyBlockSignatures", "ExportSafetyPrintout" });
-        CheckDomain(server, check, "SafetyValidation", new[] { "ReadSafetyActivationTests", "ManageSafetyActivationTest", "ManageSafetyActivationTestGroup", "ManageSafetyFunction", "ManageSafetyFunctionCondition" });
+        CheckDomain(server, check, "SafetyManagement", new[] { "ManagePlcSafety", "ManageSafetyGlobalSettings", "GetSafetyBlockSignatures", "ExportSafetyPrintout" });
+        CheckDomain(server, check, "SafetyValidation", new[] { "ListSafetyActivationTests", "ManageSafetyActivationTest", "ManageSafetyActivationTestGroup", "ManageSafetyFunction", "ManageSafetyFunctionCondition" });
     }
 
     internal static void CheckDomain(Assembly server, Action<bool, string> check, string domain, string[] names)
@@ -119,7 +119,12 @@ internal static class SafetyShapeChecks
             domain + " resolves the registered Portal singleton");
         foreach (var name in names)
         {
-            var method = surface.Method(name);
+            string serviceName = name == "GetSafetyBlockSignatures" ? "ReadSafetyBlockSignatures"
+                : name == "ListSafetyActivationTests" ? "ReadSafetyActivationTests"
+                : name == "GetProjectUserManagement" ? "ReadProjectUserManagement"
+                : name == "GetProjectProtection" ? "ReadProjectProtection"
+                : name == "GetProjectSettings" ? "ReadProjectSettings" : name;
+            var method = service.GetMethod(serviceName, all)!;
             var tool = surface.Tool(name);
             var target = surface.Target(method);
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
@@ -128,10 +133,22 @@ internal static class SafetyShapeChecks
             check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
                 && ReferenceEquals(tools.GetField("_service", all)!.GetValue(surface.Target(tool)), target),
                 domain + " tool uses the service with the shared session: " + name);
-            var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-            bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            bool callsService = EngineSurface.MethodFamily(tool).Any(member => {
+                var il = member.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
+                return Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            });
             EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
+            {
+                check(tool.ReturnType.FullName == "ModelContextProtocol.Protocol.CallToolResult", name + " returns the V4 envelope");
+                foreach (var parameter in tool.GetParameters())
+                {
+                    check(!parameter.Name!.EndsWith("Json", StringComparison.Ordinal), name + " has no encoded JSON parameter: " + parameter.Name);
+                    if (parameter.Name == "properties" || parameter.Name == "attributes")
+                        check(parameter.ParameterType.FullName!.StartsWith("TiaMcp.Logic.V4.Inputs.AttributeMap`1", StringComparison.Ordinal), name + " has a concrete attribute map");
+                    if (parameter.Name == "groupPath") check(parameter.ParameterType == typeof(string[]), name + " has typed group segments");
+                }
+            }
             check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
                 domain + " tool needs no static CLI forwarder: " + name);
         }

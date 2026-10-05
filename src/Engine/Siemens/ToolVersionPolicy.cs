@@ -14,7 +14,7 @@ namespace TiaMcpServer.Siemens
             {
                 ["ListCommunicationConnections"] = "HW.CommunicationConnections",
                 ["ManageCommunicationConnection"] = "HW.CommunicationConnections",
-                ["ReadSafetyActivationTests"] = "SafetyValidationAssistant",
+                ["ListSafetyActivationTests"] = "SafetyValidationAssistant",
                 ["ManageSafetyActivationTest"] = "SafetyValidationAssistant",
                 ["ManageSafetyActivationTestGroup"] = "SafetyValidationAssistant",
                 ["ManageSafetyFunction"] = "SafetyValidationAssistant",
