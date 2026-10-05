@@ -145,6 +145,17 @@ internal sealed class FoundationTool : McpServerTool
                 unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
         }
     }
+    internal async ValueTask<CallToolResult> InvokeExportCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string tool, string id, CancellationToken cancellationToken)
+    {
+        string Text(string key, string fallback = "") => args.TryGetValue(key, out var value) ? value.GetString()! : fallback;
+        bool Flag(string key) => args.TryGetValue(key, out var value) && value.GetBoolean();
+        var exportRequest = new TiaMcp.Adapters.Contracts.Candidates.PlcExportRequest { SoftwarePath = Text("softwarePath"), OutputPath = Text("exportPath"),
+            ObjectPath = Text(tool == "ExportPlcType" ? "typePath" : tool == "ExportPlcTagTable" ? "tagTableName" : "blockPath"), GroupPath = Text("groupPath"),
+            WorkspaceRoot = Text("workspaceRoot"), RegexName = Text("regexName"), PreservePath = Flag("preservePath"), Recursive = Flag("recursive"), Overwrite = Flag("overwrite"),
+            OnError = Text("onError", "stop"), MaxItems = args.TryGetValue("maxItems", out var maximum) ? maximum.GetInt32() : TiaMcp.Logic.V4.PlcExportContract.Batch(tool) ? 128 : 1 };
+        var result = await Task.Run(() => FoundationCandidateSession.For(worker).Export(release, tool, id, exportRequest, Text("mode", "preview"), Flag("confirm"), Text("expectedPlanHash"), Text("expectedProjectFile"), cancellationToken));
+        return FoundationV4Result.ImportCandidate(result);
+    }
     internal async ValueTask<CallToolResult> InvokeImportCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string tool, string id, CancellationToken cancellationToken)
     {
         var values = new JsonObject();

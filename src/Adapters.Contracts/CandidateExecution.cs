@@ -75,7 +75,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
 
     // No plan, confirmation, envelope or retry state. Callers execute this entire
     // primitive on the owning thread; Foundation invokes it in one worker dispatch.
-    public static class CandidateExecution
+    public static partial class CandidateExecution
     {
         private static CandidateFault Fault(Exception ex) => ex is CandidateObservationException observed ? observed.Fault
             : new CandidateFault { Kind = ex is IOException || ex is UnauthorizedAccessException ? "io" : "preflight" };

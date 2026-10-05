@@ -406,6 +406,76 @@
   "behaviorEntries": [
     {
       "releaseKey": "14sp1",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -491,6 +561,76 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -576,6 +716,76 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -661,6 +871,76 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -742,6 +1022,76 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
       }
     },
     {
@@ -839,6 +1189,76 @@
         "family": "S7-1500",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
       }
     },
     {
@@ -972,6 +1392,104 @@
         "family": "S7-1500",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcBlockDocuments",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcBlocksDocuments",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
       }
     },
     {
@@ -1160,6 +1678,104 @@
         "family": "S7-1500",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcBlock",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcBlockDocuments",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "blockPath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcBlocks",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcBlocksDocuments",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcTagTable",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "tagTableName": "Object_1",
+        "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcType",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "typePath": "Object_1",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcTypes",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "groupPath": "",
+        "exportPath": "C:\\reviewed-exports",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop"
       }
     },
     {

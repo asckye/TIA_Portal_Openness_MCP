@@ -447,6 +447,12 @@ def candidate_example(entry, family):
     if family == 'P6-DEVICE':
         return {"typeIdentifier": "<exact catalog TypeIdentifier>", "deviceName": "Device_1",
                 "family": "GSD" if entry == "CreateGsdDevice" else "S7-1500", "mode": "preview", "confirm": False}
+    if family == 'P6-EXPORT':
+        batch = entry in ('ExportPlcBlocks', 'ExportPlcTypes', 'ExportPlcBlocksDocuments')
+        target = 'groupPath' if batch else 'typePath' if entry == 'ExportPlcType' else 'tagTableName' if entry == 'ExportPlcTagTable' else 'blockPath'
+        return {"softwarePath": "<exact PLC software path>", target: "" if batch else "Object_1",
+                "exportPath": "C:\\reviewed-exports" + ("\\Table_1.xml" if entry == 'ExportPlcTagTable' else ""),
+                "mode": "preview", "confirm": False, "overwrite": False, "onError": "stop"}
     assert family == 'P6-IMPORT', ('missing candidate example', entry, family)
     example = {"softwarePath": "<exact PLC software path>", "mode": "preview", "confirm": False,
                "overwrite": False, "versionPolicy": "exact", "onError": "stop", "compileAfter": False}

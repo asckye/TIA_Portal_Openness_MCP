@@ -82,7 +82,7 @@ namespace TiaOpenness.Shared
         {
             var candidate = TiaMcp.Logic.V4.BehaviorCapabilities.CandidateExample(release, RegisteredName(name, release));
             if (candidate != null) return new JsonObject { ["arguments"] = candidate, ["parameters"] = new JsonObject(),
-                ["note"] = "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
+                ["note"] = candidate.ContainsKey("exportPath") ? "Review the exact export objects and destination identities, then apply that plan once with confirmation and the expected project file." : "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
             var entry = profile == "full-engine" ? ProfileEntry(name, release) : null;
             var source = (string?)entry?["currentName"] ?? name;
             var row = Data.Value["calls"]?["profiles"]?[profile]?[source]?.DeepClone();

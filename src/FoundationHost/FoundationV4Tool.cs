@@ -49,6 +49,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Tool tool;
     private readonly bool deviceCandidate;
     private readonly bool importCandidate;
+    private readonly bool exportCandidate;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -62,6 +63,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
         importCandidate = PlcImportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-IMPORT") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-IMPORT")) == BehaviorPolicy.SafeV4;
+        exportCandidate = PlcExportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+            && (policyForTest?.Invoke("P6-EXPORT") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-EXPORT")) == BehaviorPolicy.SafeV4;
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
         var properties = schema["properties"]!.AsObject();
         JsonElement? typedSchema = null;
@@ -114,8 +117,13 @@ internal sealed class FoundationV4Tool : McpServerTool
             schema = JsonNode.Parse(PlcImportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
             description = "[PLC foundation][WRITE] Same-release PLC import candidate. Preview returns original file hashes, exact target groups, complete inventory, overwrite capability and plan. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Directory importOrder is explicit. One import per item with content readback; stop on first failure, unknown requires session reset. No source rewrite, compile, save, retry or rollback. Test/accepted behaviorPolicy=safe-v4.";
         }
+        if (exportCandidate)
+        {
+            schema = JsonNode.Parse(PlcExportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
+            description = "[PLC foundation][WRITE] Reviewed export candidate. Default preview lists objects and destination identities without writes. Apply requires confirmation, expectedPlanHash and expectedProjectFile. One export per item in synchronous worker dispatch, sibling staging then host publication, content/path readback. Stop and retain staging on failure; unknown requires session reset. No scope expansion. Test/accepted behaviorPolicy=safe-v4.";
+        }
         tool = new Tool { Name = Name(source.Name), Description = description
-            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
+            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
@@ -143,12 +151,14 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
+            if (validation.Error != null && exportCandidate) return Recorded(FoundationV4Result.ImportCandidate(PlcExportSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && importCandidate) return Recorded(FoundationV4Result.ImportCandidate(PlcImportSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
             if (deviceCandidate) return Recorded(await ((FoundationTool)inner).InvokeDeviceCandidateAsync(args, release, id, cancellationToken));
             if (importCandidate) return Recorded(await ((FoundationTool)inner).InvokeImportCandidateAsync(args, release, tool.Name, id, cancellationToken));
+            if (exportCandidate) return Recorded(await ((FoundationTool)inner).InvokeExportCandidateAsync(args, release, tool.Name, id, cancellationToken));
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             if (parameter != null)
             {

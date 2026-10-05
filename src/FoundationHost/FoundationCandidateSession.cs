@@ -14,6 +14,7 @@ internal sealed class FoundationCandidateSession(IFoundationWorker worker)
     private readonly object serial = new();
     private readonly DeviceCreationSession devices = new();
     private readonly PlcImportSession imports = new();
+    private readonly PlcExportSession exports = new();
     private bool poisoned;
 
     internal Envelope Device(string release, string id, string type, string name, string family, string mode, bool confirm, string hash, string project, CancellationToken token)
@@ -34,6 +35,17 @@ internal sealed class FoundationCandidateSession(IFoundationWorker worker)
             if (poisoned) return PlcImportSession.Result(release, tool, id, null,
                 new Error("The import session must be rebuilt.", new SessionResetRequiredDetails("plc-import-unknown")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
             var result = imports.Run(new ImportProxy(worker, release, tool, request, token), release, tool, id, request, mode, confirm, hash, project);
+            poisoned |= result.Meta.RequiresSessionReset;
+            return result;
+        }
+    }
+    internal Envelope Export(string release, string tool, string id, PlcExportRequest request, string mode, bool confirm, string hash, string project, CancellationToken token)
+    {
+        lock (serial)
+        {
+            if (poisoned) return PlcExportSession.Result(release, tool, id, null,
+                new Error("The export session must be rebuilt.", new SessionResetRequiredDetails("plc-export-unknown")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
+            var result = exports.Run(new ExportProxy(worker, tool, request, token), release, tool, id, request, mode, confirm, hash, project);
             poisoned |= result.Meta.RequiresSessionReset;
             return result;
         }
@@ -115,4 +127,36 @@ internal sealed class FoundationCandidateSession(IFoundationWorker worker)
             }
         }
     }
+    private sealed class ExportProxy(IFoundationWorker worker, string tool, PlcExportRequest request, CancellationToken token) : IPlcExportAdapter, IExportCandidateBoundary
+    {
+        private ExportCandidateReply Call(ExportCandidateCall candidate, string mode = "preview")
+        {
+            if (token.IsCancellationRequested) throw NotSent(token);
+            candidate.Tool = tool; candidate.Request = request;
+            var args = new JsonObject { ["candidate"] = JsonSerializer.SerializeToNode(candidate), ["mode"] = mode };
+            var reply = CandidateWire.Export(worker.Call(WorkerOperations.PlcExportCandidate, args, token).GetAwaiter().GetResult(), args);
+            if (reply.Fault != null) throw new CandidateObservationException(reply.Fault);
+            return reply;
+        }
+        public CandidateIdentity ReadIdentity() => Call(new()).Identity!;
+        public IReadOnlyList<PlcExportObject> ReadObjects(string entry, PlcExportRequest input)
+        {
+            if (entry != tool || !ReferenceEquals(input, request)) throw new InvalidOperationException("Export request binding mismatch.");
+            return Call(new() { Action = "objects" }).Objects!;
+        }
+        public bool SupportsOverwrite(string entry) => Call(new() { Action = "overwrite" }).OverwriteSupported;
+        public void BeforeExport(PlcExportObject item) => throw new InvalidOperationException("Use the atomic candidate boundary.");
+        public void Export(PlcExportObject item, string staging, bool documents) => throw new InvalidOperationException("Use the atomic candidate boundary.");
+        public PlcExportAttempt Execute(PlcExportCheck check)
+        {
+            try { return Call(new() { Action = "execute", Check = check }, "apply").Attempt!; }
+            catch (Exception ex)
+            {
+                if (ex is CandidateObservationException observed) return new() { Fault = observed.Fault };
+                bool unknown = Unknown(ex);
+                return new() { Issued = unknown, RequiresSessionReset = unknown, Fault = new() { Kind = "preflight" } };
+            }
+        }
+    }
+
 }

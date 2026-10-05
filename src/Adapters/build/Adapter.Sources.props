@@ -23,6 +23,8 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcImportAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcImportCandidate.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcBlockXmlPolicy.cs" />

@@ -48,4 +48,21 @@ internal static class CandidateWire
             throw new InvalidDataException("Incomplete candidate observation.");
         return reply;
     }
+    internal static ExportCandidateReply Export(JsonNode? body, JsonObject args)
+    {
+        var reply = Read<ExportCandidateReply>(body); string action = Action(args);
+        if (reply.Fault != null)
+        { if (reply.RequiresSessionReset || reply.Attempt != null) throw new InvalidDataException("Conflicting export preflight observation."); return reply; }
+        if (action == "execute")
+        {
+            var attempt = reply.Attempt ?? throw new InvalidDataException("Missing export native outcome.");
+            Attempt(attempt.Issued, attempt.RequiresSessionReset, attempt.Fault != null);
+            if (reply.RequiresSessionReset != attempt.RequiresSessionReset) throw new InvalidDataException("Conflicting export reset state.");
+            if (attempt.Fault == null) TiaMcp.Logic.V4.PlcExportSession.VerifyStaged(Read<ExportCandidateCall>(args["candidate"]).Check!, attempt);
+        }
+        else if (reply.RequiresSessionReset || reply.Attempt != null || action == "identity" && reply.Identity == null || action == "objects" && reply.Objects == null)
+            throw new InvalidDataException("Incomplete export observation.");
+        return reply;
+    }
+
 }
