@@ -116,6 +116,7 @@ namespace TiaMcp.Logic.V4.Construction
 
         internal static ConstructionNode Read(Type type, JsonElement json)
         {
+            if (type == typeof(PlcArtifactSpec)) return PlcArtifactSpec.Read(json);
             if (type == typeof(Member)) return new Member(json);
             if (type == typeof(UdtSpec)) return new UdtSpec(json);
             if (type == typeof(GlobalDbSpec)) return new GlobalDbSpec(json);

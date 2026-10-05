@@ -82,6 +82,7 @@ namespace TiaMcp.Logic.V4.Construction
             schemas.Add(typeof(FcBlockSpec), Object(new[] { "blockName", "blockNumber", "inputs", "outputs", "structuredText" }, common));
             schemas.Add(typeof(FbBlockSpec), Object(new[] { "blockName", "blockNumber", "structuredText" },
                 common.Concat(new[] { ("inouts", Rows(blockMember)), ("statics", Rows(blockMember)), ("temps", Rows(blockMember)) }).ToArray()));
+            schemas.Add(typeof(PlcArtifactSpec), InputSchema.Union(PlcArtifactSpec.MemberTypes.Select(type => schemas[type]).ToArray()));
             var network = Object(new[] { "call" }, ("call", call), ("titleZhCn", Text), ("commentZhCn", Text));
             schemas.Add(typeof(LadNetwork), network);
             schemas.Add(typeof(LadFcBlockSpec), Object(new[] { "blockName", "blockNumber", "networks" },

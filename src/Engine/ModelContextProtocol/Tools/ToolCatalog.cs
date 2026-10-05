@@ -2,6 +2,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -88,8 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     request.Services?.GetService(method.DeclaringType!) ?? EngineServices.Get(method.DeclaringType!);
                 tool = McpServerTool.Create(method, target, options);
             }
-            if (inputs.Length == 0) return tool;
             var protocol = tool.ProtocolTool;
+            if (inputs.Length == 0 && !McpServer.IsInfrastructureV4(protocol.Name)) return tool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var properties = schema["properties"]!.AsObject();
             var required = schema["required"] as JsonArray ?? new JsonArray();
@@ -97,12 +98,15 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 string name = input.Parameter.Name!;
                 var property = JsonNode.Parse(input.Input!.Schema.GetRawText())!;
+                var description = input.Parameter.GetCustomAttribute<DescriptionAttribute>();
+                if (description != null) property["description"] = description.Description;
                 // Type-local recursive references become local to the tool root.
                 RebaseReferences(property, "#/properties/" + name.Replace("~", "~0").Replace("/", "~1"));
                 properties[name] = property;
                 if (!input.Parameter.HasDefaultValue) required.Add(name);
             }
             if (required.Count > 0) schema["required"] = required;
+            McpServer.RemoveV4NullDefaults(protocol.Name, schema);
             return new SchemaHintedTool(tool, new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,

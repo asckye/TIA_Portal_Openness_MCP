@@ -45,6 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static void InfrastructureSchema(string name, JsonObject schema)
         {
             if (!IsInfrastructureV4(name)) return;
+            RemoveV4NullDefaults(name, schema);
             schema["additionalProperties"] = false;
             var properties = schema["properties"]!.AsObject();
             if (name == "CallTool" || name == "PreviewToolCall")
@@ -58,6 +59,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (name == "GetToolUsage") limit["maximum"] = 200;
             }
             if (name == "GetToolUsage") properties["exampleKind"]!["enum"] = new JsonArray("all", "sequence", "language");
+        }
+
+        internal static void RemoveV4NullDefaults(string name, JsonObject schema)
+        {
+            if (!IsInfrastructureV4(name)) return;
+            void Visit(JsonNode? node)
+            {
+                if (!(node is JsonObject value)) return;
+                if (value.TryGetPropertyValue("default", out var fallback) && fallback == null) value.Remove("default");
+                foreach (string key in new[] { "properties", "$defs", "patternProperties", "dependentSchemas" })
+                    if (value[key] is JsonObject map) foreach (var child in map) Visit(child.Value);
+                foreach (string key in new[] { "items", "additionalProperties", "propertyNames", "not", "if", "then", "else", "contains" })
+                    Visit(value[key]);
+                foreach (string key in new[] { "anyOf", "oneOf", "allOf", "prefixItems" })
+                    if (value[key] is JsonArray branches) foreach (var branch in branches) Visit(branch);
+            }
+            Visit(schema);
         }
 
         // Inline shared definitions. Only a back edge retains a root-local definition.

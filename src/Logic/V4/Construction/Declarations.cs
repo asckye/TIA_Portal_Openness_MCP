@@ -32,6 +32,17 @@ namespace TiaMcp.Logic.V4.Construction
     public abstract class PlcArtifactSpec : ConstructionSpec
     {
         internal PlcArtifactSpec(JsonElement json) : base(json) { }
+        internal static readonly IReadOnlyList<Type> MemberTypes = Array.AsReadOnly(new[]
+            { typeof(UdtSpec), typeof(PlcTagTableSpec), typeof(GlobalDbSpec), typeof(FcBlockSpec), typeof(FbBlockSpec) });
+        // Admission checks the union without selecting a member. Only the owning
+        // tool knows the outer kind, including when FC and FB accept the same shape.
+        private sealed class Unresolved : PlcArtifactSpec
+        {
+            internal Unresolved(JsonElement json) : base(json) { }
+        }
+        internal static PlcArtifactSpec Read(JsonElement json) => new Unresolved(json);
+        public PlcArtifactSpec Resolve(string kind) => Deserialize(kind, Json.GetRawText());
+
         public static PlcArtifactSpec Deserialize(string kind, string json) => kind switch
         {
             "udt" => ConstructionJson.Deserialize<UdtSpec>(json),

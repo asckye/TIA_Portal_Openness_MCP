@@ -5,11 +5,52 @@ using System.Linq;
 using System.Reflection;
 using ModelContextProtocol.Protocol;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 internal static class PilotToolChecks
 {
+    internal static void UsageServesEveryMigratedExampleAgainstItsActualSchema(Assembly server, Action<bool, string> check)
+    {
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+        var surface = EngineSurface.For(server);
+        var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        string release = (string)facade.GetProperty("ReleaseKey", all)!.GetValue(null)!;
+        var catalog = Program.FindServerType(server, "TiaOpenness.Shared.ToolUsageCatalog");
+        var entries = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4 })!)
+            .Where(row => (int?)row!["envelopeVersion"] == 4).ToArray();
+        check(entries.Length > 0, "Generated runtime data contains V4 entries");
+        var usage = surface.Tool("GetToolUsage");
+        var schemaType = Program.FindServerType(server, "TiaMcp.Logic.V4.Inputs.InputSchema");
+        foreach (var entry in entries)
+        {
+            string name = (string)entry!["currentName"]!;
+            var method = surface.Tool(name);
+            var tool = (McpServerTool)facade.GetMethod("CreateTool", all)!.Invoke(null, new object[] { name, method })!;
+            var arguments = usage.GetParameters().Select(p => p.Name == "toolName" ? name : p.DefaultValue).ToArray();
+            var result = (CallToolResult)surface.Invoke(usage, arguments)!;
+            var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!;
+            check((bool?)body["ok"] == true, name + " usage retrieval succeeds");
+            var data = body["data"]!;
+            var actual = JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())!;
+            check(JsonNode.DeepEquals(actual, data["inputSchema"]), name + " usage serves its actual registered schema");
+            var example = data["example"]!;
+            check((string?)example["kind"] == "parameterized-call-example", name + " serves a parameterized example");
+            var served = example["request"]!["params"]!["arguments"]!.AsObject();
+            foreach (var value in entry["arguments"]!.AsObject())
+                check(JsonNode.DeepEquals(value.Value, served[value.Key]), name + "." + value.Key + " preserves the generated example");
+            foreach (var value in served.Where(p => !entry["arguments"]!.AsObject().ContainsKey(p.Key)))
+                check(JsonNode.DeepEquals(actual["properties"]![value.Key]!["default"], value.Value), name + "." + value.Key + " uses its declared default");
+            var schema = Activator.CreateInstance(schemaType, new object[] { tool.ProtocolTool.InputSchema })!;
+            foreach (var sample in new[] { entry["arguments"]!, served })
+                check(schemaType.GetMethod("Validate")!.Invoke(schema, new object[] { JsonSerializer.SerializeToElement(sample), "arguments" }) == null,
+                    name + " example satisfies its actual schema");
+        }
+        Console.WriteLine("Checked every generated V4 entry: " + entries.Length);
+    }
+
     internal static void Run(Assembly server, Action<bool, string> check)
     {
+        UsageServesEveryMigratedExampleAgainstItsActualSchema(server, check);
         var surface = EngineSurface.For(server);
         var domains = new Dictionary<string, string[]>
         {

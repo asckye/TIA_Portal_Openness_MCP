@@ -234,11 +234,16 @@ namespace TiaMcpServer.Tests
         {
             var usage = new ToolUsageTools();
             var entries = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey)
-                .Where(r => McpServer.IsInfrastructureV4((string)r!["currentName"]!)).ToArray();
-            Assert.Equal(8, entries.Length);
+                .Where(r => (int?)r!["envelopeVersion"] == 4).ToArray();
+            Assert.NotEmpty(entries);
+            var methods = McpServer.AllToolMethods();
             foreach (var entry in entries)
             {
                 var name = (string)entry!["currentName"]!;
+                Assert.True(McpServer.IsInfrastructureV4(name), name);
+                // This offline assembly links only the shared tools. The full-engine
+                // usage-contracts check covers every generated V4 entry without filtering.
+                if (!methods.ContainsKey(name)) continue;
                 var result = Body(usage.GetToolUsage(toolName: name));
                 Assert.True((bool)result["ok"]!);
                 var data = result["data"]!;

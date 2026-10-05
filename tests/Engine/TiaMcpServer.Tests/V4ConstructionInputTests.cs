@@ -61,6 +61,23 @@ namespace TiaMcpServer.Tests
         }
 
         [Fact]
+        public void ArtifactUnionRetainsFoundationMemberContractsWithoutSelectingAKind()
+        {
+            var contract = new ConstructionInput<PlcArtifactSpec>(ConstructionProfile.Foundation);
+            Invalid(contract.Read("{\"members\":[]}", Parameter).Error!);
+            const string udt = "{\"name\":\"U\",\"members\":[{\"name\":\"x\",\"datatype\":\"Bool\"}]}";
+            var value = contract.Read(udt, Parameter).Value!;
+            Assert.IsType<UdtSpec>(value.Resolve("udt"));
+            Assert.Equal(udt, V4Json.Serialize(value));
+            Assert.True(contract.Validate(value, Parameter).IsValid);
+            var block = new { blockName = "B", blockNumber = 1,
+                inputs = Enumerable.Range(0, 600).Select(i => new { name = "a" + i, datatype = "Bool" }).ToArray(),
+                outputs = Enumerable.Range(0, 401).Select(i => new { name = "b" + i, datatype = "Bool" }).ToArray(),
+                structuredText = new { operations = new[] { new { op = "newline" } } } };
+            Limit(contract.Read(V4Json.Serialize(block), Parameter).Error!, 1000, 1001);
+        }
+
+        [Fact]
         public void SharedPresenceAndTypedValidationPreserveOmission()
         {
             var contract = new ConstructionInput<UdtSpec>();

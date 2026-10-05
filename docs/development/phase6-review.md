@@ -237,6 +237,15 @@ Foundation 按实际宿主包装及六版准入生成名册。响应快照按同
 及参数、预算详情；拒绝为 `rejected-before-operation` / `not-started`。桥接派发前失败仍使用桥接工具身份，
 成功派发后保留目标信封。领域依赖的属性白名单、版本/action 与原生能力校验仍归领域入口；共享边界不调用 Siemens API。
 
+P6-07c 补齐外层参数选择的闭合联合：`PlcArtifactSpec` 广告 UdtSpec、PlcTagTableSpec、GlobalDbSpec、FcBlockSpec、FbBlockSpec
+五个成员 schema 的内联 `anyOf`，共享准入接受至少一个成员契约成立的对象，并保留族预算、重复字段与错误详情。
+绑定得到已验证但未选择成员的 `PlcArtifactSpec`；领域入口调用 `spec.Resolve(kind)`（或 `PlcArtifactSpec.Deserialize`）按外层 `kind`
+解析具体成员。FC/FB 结构重叠时不猜测类型，kind/member 匹配仍是领域检查；线上的 spec 保持对象，不引入 JSON 字符串或擦除参数类型。
+
+V4 schema 在 SDK 推断后及提示增强后移除 null 默认值，覆盖可选 `string[]` 等 SDK 推断参数及嵌套属性；
+仅 `envelopeVersion=4` 启用，未迁移工具的 schema 保持原样。省略参数仍绑定其声明的默认值，不自动创建空集合；
+显式 null 按类型契约判断。嵌入的 typed 参数 schema 保留参数自身 `[Description]` 文本，提示增强不得覆盖其类型约束或描述。
+
 直接调用的 V4 入口在版本包装器之前执行与 CallTool、批次相同的 `BindV4Call` 准入（大小写重复、版本、类型契约、绑定），
 因此 P6-07 的 8 个基础设施入口对大小写重复参数也返回 V4 拒绝；P6-07b 据此刷新了这些直接拒绝的响应基线。
 

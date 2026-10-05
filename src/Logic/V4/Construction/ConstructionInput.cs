@@ -25,8 +25,11 @@ namespace TiaMcp.Logic.V4.Construction
                 {
                     ConstructionJson.XmlCharacters(json);
                     var value = ConstructionJson.Read(typeof(T), json);
-                    if (profile == ConstructionProfile.Foundation && value is ConstructionSpec spec)
-                        FoundationConstructionValidation.Validate(spec);
+                    if (profile == ConstructionProfile.Foundation)
+                    {
+                        if (typeof(T) == typeof(PlcArtifactSpec)) ValidateFoundationUnion(json);
+                        else if (value is ConstructionSpec spec) FoundationConstructionValidation.Validate(spec);
+                    }
                     return json;
                 }
                 catch (ArgumentException error) when (error.InnerException is InputRejection rejection) { throw rejection; }
@@ -38,6 +41,24 @@ namespace TiaMcp.Logic.V4.Construction
         public InputResult<T> Read(string? json, string parameter, bool optional = false) => Map(contract.Read(json, parameter, optional));
         public InputResult<T> Read(JsonElement json, string parameter, bool optional = false) => Map(contract.Read(json, parameter, optional));
         public InputResult<T> Validate(T value, string parameter) => Read(value == null ? V4Json.ParseInput("null") : value.Json, parameter);
+
+        private static void ValidateFoundationUnion(JsonElement json)
+        {
+            InputRejection? budgetFailure = null;
+            foreach (var member in PlcArtifactSpec.MemberTypes)
+            {
+                try
+                {
+                    ConstructionSchemas.For(member).Check(json);
+                    FoundationConstructionValidation.Validate((ConstructionSpec)ConstructionJson.Read(member, json));
+                    return;
+                }
+                catch (InputRejection rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
+                catch (ArgumentException error) when (error.InnerException is InputRejection rejection)
+                { if (rejection.IsLimit) budgetFailure = rejection; }
+            }
+            throw budgetFailure ?? new InputRejection();
+        }
 
         private static InputResult<T> Map(InputResult<JsonElement> result) => new InputResult<T>(result.Presence,
             result.IsValid && result.Presence == InputPresence.Value ? (T)ConstructionJson.Read(typeof(T), result.Value) : null, result.Error);
