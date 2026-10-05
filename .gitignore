@@ -37,7 +37,8 @@ __pycache__/
 *.sha256
 RELEASE_STATUS.txt
 
-# Siemens PublicAPI 副本（授权组件，不可分发）应放在仓库之外，如 D:\TIA_PublicAPI\；此处仅作误放时的防护
+# Siemens PublicAPI 副本（授权组件，不可分发）：本机放在 sdk/（或仓库之外，用 TiaPublicApiRoot 指定）；以下规则防止误提交
+/sdk/
 TIA_V20_PublicAPI/
 TIA_V21_PublicAPI/
 /TIA_V*_PublicAPI/

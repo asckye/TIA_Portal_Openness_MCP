@@ -35,7 +35,7 @@ def capture(args):
     spec.loader.exec_module(resources)
     snapshots = {}
     root = args.repo_root.resolve()
-    public_api_root = (args.public_api_root or root).resolve()
+    public_api_root = (args.public_api_root or (root / 'sdk' if (root / 'sdk').is_dir() else root)).resolve()
     executables = {}
     for override in args.exe:
         release, separator, path = override.partition('=')
@@ -221,7 +221,7 @@ def main():
     capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH',
                                 help='Override a release executable; repeat for multiple releases')
     capture_parser.add_argument('--public-api-root', type=Path,
-                                help='Root containing TIA_V20_PublicAPI and TIA_V21_PublicAPI (default: repo root)')
+                                help='Root containing TIA_V20_PublicAPI and TIA_V21_PublicAPI (default: <repo>/sdk, else the repo root)')
     capture_parser.set_defaults(run=capture)
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)

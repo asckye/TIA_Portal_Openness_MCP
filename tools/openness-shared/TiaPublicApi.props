@@ -1,6 +1,8 @@
 <Project>
   <!-- Imported only by projects that require an exact Siemens PublicAPI release. -->
   <PropertyGroup>
+    <!-- Local, never committed SDK copies live in <repo>/sdk; the repository root remains a fallback. -->
+    <TiaPublicApiRoot Condition="'$(TiaPublicApiRoot)' == '' and Exists('$(MSBuildThisFileDirectory)../../sdk')">$(MSBuildThisFileDirectory)../../sdk/</TiaPublicApiRoot>
     <TiaPublicApiRoot Condition="'$(TiaPublicApiRoot)' == ''">$(MSBuildThisFileDirectory)../../</TiaPublicApiRoot>
     <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '14sp1'">TIA_V14SP1_PublicAPI/V14 SP1</_TiaPublicApiRelativePath>
     <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '15.1'">TIA_V15.1_PublicAPI/V15.1</_TiaPublicApiRelativePath>

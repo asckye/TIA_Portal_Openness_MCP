@@ -195,6 +195,8 @@ $probes = @(
 )
 if (-not $PublicApiRoot) {
     if ($V20ReferenceRoot) { $PublicApiRoot = Split-Path (Split-Path $V20ReferenceRoot -Parent) -Parent }
+    elseif (Test-Path -LiteralPath (Join-Path $RepoRoot 'sdk')) { $PublicApiRoot = Join-Path $RepoRoot 'sdk' }
+    elseif (Test-Path -LiteralPath (Join-Path $RepoRoot 'TIA_V21_PublicAPI')) { $PublicApiRoot = $RepoRoot }
     else { $PublicApiRoot = Split-Path $RepoRoot -Parent }
 }
 $settings.PublicApiRoot = [IO.Path]::GetFullPath($PublicApiRoot)

@@ -6,7 +6,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <SiemensEngineeringDirectory Condition="'$(SiemensEngineeringDirectory)' == ''">$(MSBuildThisFileDirectory)..\..\..\TIA_V21_PublicAPI\V21\net48</SiemensEngineeringDirectory>
+    <SiemensEngineeringDirectory Condition="'$(SiemensEngineeringDirectory)' == ''">$(MSBuildThisFileDirectory)..\..\..\sdk\TIA_V21_PublicAPI\V21\net48</SiemensEngineeringDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Web.Extensions" />

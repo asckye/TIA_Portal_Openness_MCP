@@ -62,7 +62,7 @@ Offline 指不需要 Siemens 程序集；NuGet 依赖仍须已缓存或可还原
 `dotnet run --project <csproj> -c Release`。HttpTests、DiagnosticsTests 和 transport 夹具
 需由对应验证脚本提供参数；PromptRegistration 的两个依赖夹具不执行测试，直接 `dotnet test` 会明确拒绝。
 
-完整方案默认使用仓库根目录下 `TIA_V14SP1_PublicAPI/V14 SP1`、
+完整方案默认使用仓库内不入 Git 的 `sdk/` 目录（不存在时为仓库根目录）下的 `TIA_V14SP1_PublicAPI/V14 SP1`、
 `TIA_V15.1_PublicAPI/V15.1`、`TIA_V16_PublicAPI/V16` 至 `TIA_V20_PublicAPI/V20`、
 `TIA_V21_PublicAPI/V21/net48`。可用 `-p:TiaPublicApiRoot=<SDK-root>` 改变父目录；
 单工程的 `-p:SiemensEngineeringDirectory=<绝对路径>` 始终优先，不要将同一版本的该参数传给完整方案。
@@ -432,7 +432,7 @@ compare 报告每版 changed/added/removed 数及变化调用的首个差异路�
 实际范围和结果由完整构建记录保存。
 
 ```powershell
-python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcpServer.exe --major 21 --public-api TIA_V21_PublicAPI/V21/net48 --host-harness tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcpServer.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
 ```
 
 输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
