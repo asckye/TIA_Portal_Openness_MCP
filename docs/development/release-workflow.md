@@ -106,3 +106,13 @@ powershell -NoProfile -File scripts/build/Release.ps1 -Version X.Y.Z -EarlyGates
 托管 runner 无法取得全部 Siemens SDK 重建引擎，因此由本机构建上传。推送 CI 检查源码、构建记录、Studio/WPF 及无 Siemens 依赖的基础引擎协议；发布工作流下载实际 ZIP，核对 tag、提交、文件集合和运行文件哈希，再在解包目录执行严格验证。
 
 真实 TIA 工程导入、生成、编译、读回与设备操作须在明确指定的版本和工程上单独验收。构建、XSD、离线功能与公开资产验证不能代替原生验收。
+
+## P6-24b 审查复跑
+
+`bin-build/P6-24b/run-release-build.ps1` 在具备全部 SDK、伴随 Python 依赖及本地 HTTP 能力的审查环境执行完整 Build-Release、Build-MultiVersion -Test、本地打包和含二进制的严格交付验证。每步保存独立日志，并在 `finally` 中逐字节恢复全部已跟踪的 manifest 与版本工具文档。后续步骤只在执行期间使用上一构建步骤保存的记录；失败时也恢复 worktree 原记录。
+
+```powershell
+powershell -NoProfile -File bin-build/P6-24b/run-release-build.ps1 -PublicApiRoot <SDK-root> -OutputDirectory <outside-repository-new-output> -CompanionPython <prepared-python.exe>
+```
+
+`-NuGetConfig`、`-Dotnet` 和 `-Python` 可指定已准备的离线环境。默认生成清空 package feeds 的 NuGet 配置；显式配置也必须清除继承的 feeds，且不得指定网络源。运行前须准备 NuGet 包缓存，以及 `bundled-dotnet.json` 对应的 `bin-build/cache/dotnet-<version>` 归档；缺失时停止，不下载。本命令不提交或发布资产，不请求 live 测试。交付目录使用 `Validate-Bundle.ps1 -Strict -PackageMode`，保留二进制检查；`-PackageMode` 对应交付集合不包含源码和本机构建记录的布局。

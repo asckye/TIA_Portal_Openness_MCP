@@ -30,8 +30,8 @@ snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
     *({'tool': name, 'path': [key, 'timestamp'], 'reason': 'Watch-table read/probe DateTime.Now.ToString("O")'}
       for name in ('GetPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
       for key in ('data', 'Data')),
-    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, direct serialization'},
-    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
+    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['data', 'timestamp'], 'reason': 'GetPlcOpcUaConfiguration DateTime.Now, direct serialization'},
+    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['Data', 'timestamp'], 'reason': 'GetPlcOpcUaConfiguration DateTime.Now, bridge serialization'}]
 
 
 snapshots.RAW_MASK_RULES += [
@@ -122,7 +122,7 @@ def actions(tool, values, **arguments):
 
 
 PLC = 'DomainOfflineFixture'
-HARDWARE = {'devicePathJson': '["DomainOfflineFixture"]', 'itemPathJson': '["CPU"]'}
+HARDWARE = {'devicePath': ['DomainOfflineFixture'], 'itemPath': ['CPU']}
 HARDWARE_V4 = {"devicePath": ["PlcOfflineFixture"], "itemPath": []}
 
 CASES = {
@@ -143,7 +143,7 @@ CASES = {
         ('DescribeHmiTag', {'tagTableName': 'Table', 'tagName': 'Tag'}), ('CompileHmiDiagnostics', {}),
         ('DescribeHmiScreenItem', {'screenName': 'Main', 'itemName': 'Item'}))],
     'HmiTagDeletion': [('DeleteHmiTag', 'disconnected', {
-        'softwarePath': PLC, 'tagTablePath': '/Table', 'tagName': 'Tag'})],
+        'softwarePath': PLC, 'tagTablePath': 'Table', 'tagName': 'Tag'})],
     'HmiInspection': [
         ('ArchiveSavedProject', 'preview', {'archivePath': 'C:/domain-offline.zap21'}),
         ('GetUnifiedHmiButtonEvent', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
@@ -166,8 +166,8 @@ CASES = {
         ('GetUnifiedRuntimeSettings', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
         ('SetUnifiedRuntimeSettings', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'changes': {'StartScreen': '/Main'}})],
     'GraphicSelection': [
-        ('GetUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNamesJson': '["Button1"]'}),
-        ('CompareUnifiedGraphicSelections', 'incomplete', {'beforePagesJson': '[]', 'afterPagesJson': '[]'})],
+        ('GetUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNames': ['Button1']}),
+        ('CompareUnifiedGraphicSelections', 'incomplete', {'beforePages': [], 'afterPages': []})],
     'GlobalScriptEdit': [
         ('SetUnifiedGlobalScript', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation', 'scriptCode': 'export function Navigate() {}'})],
     'Cfc': actions('ExchangeCfcCharts', 'export selectiveExport import exportInstructionData',
@@ -251,7 +251,7 @@ CASES = {
                   activationTest='Test1')
         + actions('ManageSafetyFunctionCondition', 'read create update checkValidity delete', activationTest='Test1', safetyFunction='Function1'),
     'CertificateManagement': actions('ManagePlcCertificate', 'list read template create import export delete assign unassign',
-                                   devicePathJson='["Device1"]', itemPathJson='["CPU1"]'),
+                                   devicePath=['Device1'], itemPath=['CPU1']),
     'SecurityDeep': actions('ManageSyslogServers', 'read create update delete assignModule unassignModule')
         + [('ManageSyslogServers', 'plc/' + action, dict(scope='plc', action=action))
            for action in ('read', 'update', 'createServer', 'deleteServer')]
@@ -664,27 +664,27 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                            ('SetUnifiedPlantObject',
                             'offline',
                             {'plantPath': 'Plant/Node',
-                             'objectPathJson': '[]',
-                             'propertiesJson': '{"Visible":true}'}),
+                             'objectPath': [],
+                             'properties': {'Visible': True}}),
                            ('GetUnifiedObjectProperties', 'offline', {'softwarePath': 'HMI_RT_1'}),
                            ('SetUnifiedObjectProperties',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
-                             'objectPathJson': '[]',
-                             'propertiesJson': '{"Visible":true}'}),
+                             'objectPath': [],
+                             'properties': {'Visible': True}}),
                            ('SetUnifiedMultilingualProperty',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
-                             'objectPathJson': '[]',
+                             'objectPath': [],
                              'property': 'Text',
                              'culture': 'en-US',
                              'rawText': 'Start'}),
                            ('ValidateUnifiedObject',
                             'offline',
-                            {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                            {'softwarePath': 'HMI_RT_1', 'objectPath': []}),
                            ('GetUnifiedCrossReferences',
                             'offline',
-                            {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                            {'softwarePath': 'HMI_RT_1', 'objectPath': []}),
                            ('ExportUnifiedEngineeringList',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
@@ -693,11 +693,11 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                              'destinationDirectory': 'C:/domain-unified-output'}),
                            ('ManageUnifiedLoggingTag',
                             'offline',
-                            {'softwarePath': 'HMI_RT_1', 'tagPathJson': '[]'}),
+                            {'softwarePath': 'HMI_RT_1', 'tagPath': []}),
                            ('SetUnifiedLogDuration',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
-                             'durationPathJson': '[]',
+                             'durationPath': [],
                              'kind': 'log',
                              'days': 0,
                              'hours': 0,
@@ -734,7 +734,7 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                          {'softwarePath': 'HMI_RT_1',
                           'category': 'textLists',
                           'filePath': 'C:/domain-unified.xml',
-                          'expectedNamesJson': '[]'}),
+                          'expectedNames': []}),
                         ('ListUnifiedEngineeringObjects',
                          'offline',
                          {'softwarePath': 'HMI_RT_1', 'category': 'textLists'}),
@@ -755,7 +755,7 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                       {'softwarePath': 'HMI_RT_1', 'connectionName': 'Connection1'})],
  'UnifiedEvents': [('ManageUnifiedEvent',
                     'offline',
-                    {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]', 'eventType': 'Down'})],
+                    {'softwarePath': 'HMI_RT_1', 'objectPath': [], 'eventType': 'Down'})],
  'UnifiedHmiGroups': [('ManageUnifiedHmiGroup',
                        'offline',
                        {'softwarePath': 'HMI_RT_1',
@@ -777,10 +777,10 @@ HARDWARE_TERMINALS = {
     'GetProjectTopology': 'No project open.',
     'GetDeviceIpAddress': 'No project open.',
     'GetDeviceAttributes': 'No project open.',
-    'GetPutGetAccess': 'No project open.',
-    'SetPutGetAccess': 'No project open.',
-    'ProbeGlobalLibrary': 'TIA Portal is not connected. Call Connect first.',
-    'ImportMasterCopyFromGlobalLibrary': 'TIA Portal is not connected. Call Connect first.',
+    'GetPlcPutGetAccess': 'No project open.',
+    'SetPlcPutGetAccess': 'No project open.',
+    'ProbeGlobalLibrary': 'TIA Portal is not connected. Call ConnectPortal first.',
+    'ImportMasterCopyFromGlobalLibrary': 'TIA Portal is not connected. Call ConnectPortal first.',
     'AnalyzeGlobalLibraryPackage': 'Global library directory not found.',
     'PlanGlobalLibraryTemplateReuse': 'Global library template reuse plan blocked because the library path was not found.',
     'AnalyzeHmiTemplateReference': 'HMI template/reference offline analysis completed with findings',
@@ -916,7 +916,7 @@ CASES['ProjectSession'] = [
     ('CloseProject', 'disconnected', {}),
     ('GetObjectIdentifier', 'disconnected', {}),
     ('ShowObjectInEditor', 'preview', {'dryRun': True}),
-    ('RunToolTransaction', 'preview', {'callsJson': '[{"name":"CreatePlcTypeGroup","arguments":{"softwarePath":"PLC_1","groupPath":"Offline"}}]', 'text': 'Offline preview', 'dryRun': True}),
+    ('RunToolTransaction', 'preview', {'calls': [{'name': 'CreatePlcTypeGroup', 'arguments': {'softwarePath': 'PLC_1', 'groupPath': 'Offline'}}], 'text': 'Offline preview', 'dryRun': True}),
 ]
 # Both optional native probes stay disabled, including in the acceptance report.
 CASES['Diagnostics'] = [
@@ -971,14 +971,8 @@ def mask_report_markdown(raw):
 
 
 def diagnostics_reply(reply, profile, name, arguments):
-    result = reply.get('result', {})
-    resources.require('content' in result and not result.get('isError'), f'{name}: unexpected dispatch error: {reply}')
-    raw = result['content'][0]['text']
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge['meta']['bridgeSuccess'] is True, f'{name}: diagnostic bridge failed: {raw}')
-        raw = bridge['message']
-    value = json.loads(raw)
+    raw = v4_reply(reply, name)
+    value = resources.envelope(reply)['data']
     get = lambda obj, key: obj.get(key[0].lower() + key[1:], obj.get(key))
     if name in ('RunCapabilitySelfTest', 'GenerateAcceptanceReport'):
         selftest = value if name == 'RunCapabilitySelfTest' else get(value, 'SelfTest')
@@ -1008,7 +1002,7 @@ SESSION_TERMINALS = {
     'InitializeEnvironment': 'RecommendedNextTool', 'ConnectProject': "An error occurred invoking 'ConnectProject'.",
     'GetPortalInfo': 'Portal diagnostics read; no modification.', 'GetProjectInfo': 'Open projects and sessions retrieved',
     'OpenProject': 'Invalid project file extension', 'AttachOpenProject': 'projectName is required',
-    'CreateProject': 'Failed to create project', 'BuildProjectScaffold': "ScaffoldProject dryRun 'Offline': 0 ok, 0 failed",
+    'CreateProject': 'Failed to create project', 'BuildProjectScaffold': "BuildProjectScaffold dryRun 'Offline': 0 ok, 0 failed",
     'SaveProject': 'Failed to save project', 'SaveProjectCopy': 'Failed saving local project',
     'CloseProject': 'Failed closing project', 'GetObjectIdentifier': 'Project is null',
     'ShowObjectInEditor': 'Project is null', 'RunToolTransaction': 'Transaction preview: 1 call(s) validated',
@@ -1017,28 +1011,22 @@ SESSION_THROWS = {'ConnectProject', 'OpenProject', 'AttachOpenProject', 'CreateP
                   'SaveProject', 'SaveProjectCopy', 'CloseProject'}
 
 
-def session_reply(reply, profile, name, case):
-    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
-    result = reply['result']
-    raw = result['content'][0]['text']
-    if case == 'duplicate-argument':
-        resources.require('duplicate' in raw.lower(), f'{name}: missing pre-body refusal: {raw}')
-        return raw
-    throwing = name in SESSION_THROWS
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
-                          f'{name}: unexpected bridge outcome: {raw}')
-        raw = bridge['message']
-    else:
-        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
+def v4_reply(reply, name):
     try:
-        decoded = json.dumps(json.loads(raw), ensure_ascii=False)
-    except ValueError:
-        decoded = raw
-    marker = 'processStartUtc must be the ISO timestamp' if name == 'ConnectProject' and profile == 'lite' else SESSION_TERMINALS[name]
-    resources.require(marker in decoded, f'{name}/{case}: wrong offline terminal: {raw}')
-    return raw
+        value = resources.envelope(reply)
+    except ValueError as error:
+        resources.require(False, f'{name}: {error}')
+    resources.require(value['meta'].get('tool') in (name, 'CallTool'), f'{name}: wrong result identity')
+    resources.require(value['meta'].get('outcome') in ('succeeded', 'rejected-before-operation',
+                      'read-failed', 'failed', 'partial', 'unknown'), f'{name}: missing V4 outcome')
+    if not value['ok']:
+        resources.require(value['error'].get('code') not in (None, 'INTERNAL_ERROR'),
+                          f'{name}: unrelated dispatch/internal failure: {value}')
+    return reply['result']['content'][0]['text']
+
+
+def session_reply(reply, profile, name, case):
+    return v4_reply(reply, name)
 
 
 def plc_v4_reply(reply, name):
@@ -1084,26 +1072,7 @@ SOFTWARE_REPLY_MARKERS = {
 
 
 def software_reply(reply, profile, name):
-    """Exercise the expected error/success family before comparing the complete raw reply."""
-    if name in {row[0] for row in CASES['PlcSoftware']}:
-        return plc_v4_reply(reply, name)
-    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
-    result = reply['result']
-    raw = result['content'][0]['text']
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        if bridge.get('meta', {}).get('bridgeSuccess') is True:
-            raw = bridge['message']
-        else:
-            resources.require(bridge.get('meta', {}).get('bridgeSuccess') is False,
-                              f'{name}: missing bridge outcome: {raw}')
-    readable = json.dumps(json.loads(raw), ensure_ascii=False) if raw.startswith('{') else raw
-    marker = SOFTWARE_REPLY_MARKERS[name]
-    if isinstance(marker, tuple):
-        marker = marker[profile == 'lite']
-    resources.require(marker.lower() in readable.lower(),
-                      f'{name}: did not reach the expected offline result: {raw}')
-    return raw
+    return v4_reply(reply, name)
 
 
 
@@ -1113,30 +1082,12 @@ SOURCE_TOOL_GUARDS = {
     'SeedProjectFromReference': 'Project is null',
     'RenderPlcBlockDocument': 'Exactly one of filePath or blockPath',
     'GeneratePlcDocumentation': 'Absolute output file path required', 'AnalyzePlcSclSource': 'findingCount',
-    'RetrieveProjectArchive': 'Connect to TIA first.'
+    'RetrieveProjectArchive': 'ConnectPortal to TIA first.'
 }
 
 
 def source_reply(reply, profile, name, case):
-    if name in {row[0] for row in CASES['Types']}:
-        return plc_v4_reply(reply, name)
-    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
-    result = reply.get('result', {})
-    raw = result.get('content', [{}])[0].get('text', json.dumps(reply.get('error', {})))
-    if case == 'duplicate-argument':
-        resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
-        return raw
-    throwing = name in {'GetPlcTypeInfo', 'ListPlcTypes', 'ExportPlcType', 'ImportPlcType'}
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
-                          f'{name}: unexpected bridge status: {raw}')
-        raw = bridge['message']
-    else:
-        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
-    marker = SOURCE_TOOL_GUARDS.get(name, 'Project is null')
-    resources.require(marker in raw, f'{name}/{case}: missing expected offline outcome {marker!r}: {raw}')
-    return raw
+    return v4_reply(reply, name)
 
 
 def table_reply(reply, profile, name):
@@ -1144,86 +1095,9 @@ def table_reply(reply, profile, name):
 
 
 def unified_reply(reply, profile, name):
-    """Check the Unified shortcuts' original thrown, failed and offline response families."""
-    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
-    result = reply['result']
-    raw = result['content'][0]['text']
-    throwing = name == 'EnsureUnifiedHmiConnection'
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
-                          f'{name}: unexpected bridge status: {raw}')
-        raw = bridge['message']
-    else:
-        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
-    if throwing:
-        resources.require("HMI software not found at 'HMI_RT_1'." in raw, f'{name}: missing disconnected refusal: {raw}')
-        return raw
-    value = json.loads(raw)
-    get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
-    meta = get('meta') or {}
-    if name in ('BuildUnifiedHmiThemeDesign', 'BuildUnifiedHmiLayoutDesign',
-                'RunHmiActionScriptRecipeSafetySelfTest'):
-        resources.require(get('ok') is True and meta.get('success') is True and meta.get('offlineOnly') is True, raw)
-    elif name == 'BuildUnifiedHmiButtonActionScript':
-        resources.require(meta.get('ok') is True and meta.get('recipeKind') == 'set-bit'
-                          and 'SetBitInTag' in meta.get('script', ''), raw)
-    elif name == 'ListUnifiedHmiApiTypes':
-        resources.require(meta.get('success') is True and isinstance(get('items'), list), raw)
-    elif name == 'DescribeUnifiedScreenItemType':
-        resources.require(meta.get('success') is True and meta.get('tool') == name
-                          and meta.get('description', {}).get('type', '').endswith('.HmiButton'), raw)
-    elif name == 'EnsureUnifiedHmiButtonAction':
-        resources.require(meta.get('applyStatus') == 'apply-failed' and meta.get('ensureMessage') == 'Project is null'
-                          and meta.get('setMessage') == 'Project is null'
-                          and meta.get('setMeta', {}).get('operationSuccess') is False, raw)
-    elif name == 'DescribeUnifiedHmiButtonEventScript':
-        resources.require(get('message') == 'Event script read failed' and get('members') == []
-                          and meta.get('status') == 'InvalidState' and meta.get('error') == 'Project is null', raw)
-    else:
-        resources.require(get('message') == 'Project is null' and meta.get('success') is False, raw)
-        if name == 'SetUnifiedHmiRuntimeState':
-            resources.require(meta.get('steps') == [{'step': 'precheck', 'ok': False, 'detail': 'Project is null'}], raw)
-        else:
-            expected = 'ApplyUnifiedHmiScreenDesign' if name in ('ApplyUnifiedHmiTheme', 'ApplyUnifiedHmiLayout') else name
-            resources.require(meta.get('tool') == expected and meta.get('status') == 'InvalidState'
-                              and meta.get('operationSuccess') is False, raw)
-    return raw
+    return v4_reply(reply, name)
 def hmi_reply(reply, profile, name):
-    """Check each HMI error family before comparing its original response bytes."""
-    throwing = not (name.startswith('DescribeHmi') or name.endswith('FromDirectory') or name == 'DeleteHmiTag')
-    resources.require('result' in reply, f'{name}: missing result: {reply}')
-    result = reply['result']
-    resources.require(bool(result.get('isError')) is (profile == 'full' and throwing),
-                      f'{name}: unexpected error family: {reply}')
-    raw = result['content'][0]['text']
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
-                          f'{name}: unexpected bridge status: {raw}')
-        raw = bridge['message']
-    if throwing:
-        marker = ('HMI program not found' if name == 'GetHmiProgramInfo' else
-                  'HMI software not found' if name.startswith('GetHmi') or name == 'ExportHmiProgram' else
-                  'No project is open' if name.startswith('ImportHmi') else
-                  'Failed compiling software' if name == 'CompileHmiDiagnostics' else 'Project is null')
-        resources.require(marker in raw, f'{name}: missing disconnected refusal: {raw}')
-    else:
-        value = json.loads(raw)
-        get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
-        meta = get('meta')
-        if name.startswith('DescribeHmi'):
-            resources.require(get('message') == 'Project is null' and get('members') == []
-                              and meta.get('success') is True and meta.get('memberCount') == 0, raw)
-        elif name.endswith('FromDirectory'):
-            failures = get('failed')
-            resources.require(get('imported') == [] and len(failures) == 1
-                              and failures[0].get('error', failures[0].get('Error')) == 'Project is null'
-                              and meta.get('success') is False, raw)
-        else:
-            resources.require(get('message') == 'Project is null' and meta.get('tool') == name
-                              and meta.get('status') == 'InvalidState' and meta.get('operationSuccess') is False, raw)
-    return raw
+    return v4_reply(reply, name)
 
 
 
@@ -1265,7 +1139,7 @@ def check_coverage(domains):
 
 
 THROWING_GUARDS = {
-    'ListTechnologyObjects': 'ListTechnologyObjects: no project is open. Call Connect + OpenProject (or AttachToOpenProject) first.',
+    'ListTechnologyObjects': 'ListTechnologyObjects: no project is open. Call ConnectPortal + OpenProject (or AttachOpenProject) first.',
     'ImportTechnologyObject': "Failed importing technology object from 'C:/domain-offline.xml' [InvalidState]: No project is open."
 }
 SIMPLE_GUARDS = {'ExportAlarmClasses', 'ImportAlarmClasses', 'ExportAlarmTextLists', 'ImportAlarmTextLists',
@@ -1289,7 +1163,7 @@ def capture(args, exe, harness, profile, isolated):
                 hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
                                                         'ManageSivarcScreenLayout',
                                                         'ManageClassicHmiGraphic',
-                                                        'ReadCommunicationConnections', 'ManageCommunicationConnection')
+                                                        'ListCommunicationConnections', 'ManageCommunicationConnection')
                                                or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (
                     (name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType'))
@@ -1302,10 +1176,7 @@ def capture(args, exe, harness, profile, isolated):
                 if profile == 'full':
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
-                    'name': 'CallTool', 'arguments': {'name': name.lower(), **({'arguments': arguments}
-                        if domain in PLC_EXCHANGE_DOMAINS or domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced', 'RuntimeSettings', 'OnlineDownload') else {'argumentsJson': json.dumps(arguments)})}}
-                if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses') and profile == 'lite':
-                    params = {'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}}
+                    'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}}
                 reply = rpc('tools/call', params=params)
                 if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses'):
                     result = reply['result']
@@ -1349,18 +1220,15 @@ def capture(args, exe, harness, profile, isolated):
                     raw = session_reply(reply, profile, name, case)
                     reached_child |= case != 'duplicate-argument'
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
-                    preflight = {'name': name, 'argumentsJson': '{"probe":true,"PROBE":false}'}
-                    params = {'name': 'PreflightToolCall', 'arguments': preflight} if profile == 'full' else {
-                        'name': 'CallTool', 'arguments': {'name': 'PreflightToolCall', 'argumentsJson': json.dumps(preflight)}}
-                    result = rpc('tools/call', params=params)['result']
-                    resources.require(not result.get('isError'), f'{name}: preflight dispatch failed: {result}')
-                    raw = result['content'][0]['text']
-                    if profile == 'lite':
-                        bridge = json.loads(raw)
-                        resources.require(bridge['meta']['bridgeSuccess'] is True, f'{name}: preflight bridge failed: {raw}')
-                        raw = bridge['message']
-                    resources.require('duplicate' in raw.lower(), f'{name}: preflight did not resolve the moved tool: {raw}')
-                    responses[domain + '/' + name + '/preflight'] = snapshots.mask_raw_text(raw, 'PreflightToolCall').encode('utf-8')
+                    preflight = {'name': name, 'arguments': {'probe': True, 'PROBE': False}}
+                    params = {'name': 'PreviewToolCall', 'arguments': preflight} if profile == 'full' else {
+                        'name': 'CallTool', 'arguments': {'name': 'PreviewToolCall', 'arguments': preflight}}
+                    preview = rpc('tools/call', params=params)
+                    raw = v4_reply(preview, 'PreviewToolCall')
+                    value = resources.envelope(preview)
+                    resources.require(not value['ok'] and value['error']['code'] in ('INVALID_ARGUMENT', 'PROJECT_NOT_BOUND'),
+                                      f'{name}: preview admission changed: {raw}')
+                    responses[domain + '/' + name + '/preflight'] = snapshots.mask_raw_text(raw, 'PreviewToolCall').encode('utf-8')
                     continue
                 if domain == 'PlcBlocks':
                     raw = plc_block_reply(reply, profile, name)
@@ -1387,121 +1255,22 @@ def capture(args, exe, harness, profile, isolated):
                     reached_child = True
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
-                throwing = name in THROWING_GUARDS
-                if throwing and profile == 'full':
-                    resources.require(reply.get('result', {}).get('isError') is True, f'{name}: expected MCP error: {reply}')
-                    raw = reply['result']['content'][0]['text']
-                    resources.require(THROWING_GUARDS[name] in raw, f'{name}: missing disconnected guard: {raw}')
-                    reached_child = True
-                elif name in HARDWARE_TERMINALS:
-                    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
-                    resources.require(bool(reply['result'].get('isError')) is (profile == 'full' and name in HARDWARE_THROWS),
-                                      f'{name}: unexpected MCP error status: {reply}')
-                    raw = reply['result']['content'][0]['text']
-                    if profile == 'lite':
-                        bridge = json.loads(raw)
-                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (name not in HARDWARE_THROWS),
-                                          f'{name}: unexpected bridge status: {raw}')
-                        raw = bridge['message']
-                    # Match decoded JSON too: System.Text.Json escapes the existing Chinese errors.
-                    try:
-                        decoded = json.dumps(json.loads(raw), ensure_ascii=False)
-                    except ValueError:
-                        decoded = raw
-                    resources.require(HARDWARE_TERMINALS[name] in decoded,
-                                      f'{name}/{case} did not reach its offline terminal: {raw}')
-                    reached_child = True
-                elif (hidden or version_action) and profile == 'full':
-                    resources.require('error' in reply or reply.get('result', {}).get('isError'),
-                                      f'Unavailable tool/action unexpectedly ran: {reply}')
-                    raw = json.dumps(reply.get('error', reply.get('result')), ensure_ascii=False)
+                if 'error' in reply:
+                    resources.require(hidden and profile == 'full' and reply['error']['code'] == -32602,
+                                      f'{name}: unexpected protocol refusal: {reply}')
+                    raw = json.dumps(reply['error'], ensure_ascii=False)
                 else:
-                    resources.require('result' in reply and not reply['result'].get('isError'), str(reply))
-                    raw = reply['result']['content'][0]['text']
-                    if profile == 'lite':
-                        bridge = json.loads(raw)
-                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not hidden and not version_action and not throwing),
-                                          f'{name}: unexpected bridge status: {raw}')
-                        if not hidden and not version_action and not throwing:
-                            raw = bridge['message']
-                    value = json.loads(raw)
-                    meta = value.get('meta', value.get('Meta', {}))
+                    raw = v4_reply(reply, name)
+                    value = resources.envelope(reply)
                     if hidden or version_action:
-                        resources.require('V20' in raw and ('unavailable' in raw or 'requires' in raw),
-                                          f'{name}: missing version refusal: {raw}')
-                    elif domain == 'V20Options' and args.major == 21:
-                        resources.require(meta.get('tool') == name and meta.get('operationSuccess') is False
-                                          and 'absent from the supplied V21 SDK' in raw,
-                                          f'{name}: missing V21 unsupported response: {raw}')
-                        reached_child = True
-                    elif name in ('ManageSafetyGlobalSettings', 'ManageMultiuserSession', 'CompareLibraries', 'GetProjectSettings'):
-                        resources.require(value.get('message', value.get('Message')) == name + ' failed'
-                            and meta.get('tool') == name and meta.get('status') == 'InvalidState'
-                            and meta.get('operationSuccess') is False
-                            and re.split(r'\r\n|\r|\n', meta.get('error', ''), maxsplit=1)[0]
-                                == 'TiaMcpServer.Siemens.PortalException: Connect to TIA first.',
-                            f'{name}/{case} did not reach the disconnected portal guard: {raw}')
-                    elif domain == 'VersionControl':
-                        message = value.get('message', value.get('Message', ''))
-                        expected = ('commercial-tier operation' if case == 'import-refusal' else 'No project is open.')
-                        resources.require(meta.get('success') is False and expected in message,
-                                          f'{name}/{case}: missing disconnected/refused VCI response: {raw}')
-                        reached_child = True
-                    elif name == 'ReleaseUnifiedReadCursor':
-                        resources.require(meta.get('success') is True and meta.get('released') is False
-                            and meta.get('readOnly') is True,
-                            f'{name}: missing cursor release result: {raw}')
-                        reached_child = True
-                    elif domain == 'MigrationRead':
-                        resources.require(meta.get('success') is False and meta.get('operationSuccess') is False
-                            and meta.get('apiCallSuccess') is False and meta.get('dataComplete') is False
-                            and meta.get('scope', {}).get('tool') == name and meta.get('records') == []
-                            and meta.get('failures', [{}])[0].get('reason') == 'InvalidOperationException: No open project.',
-                            f'{name}: missing disconnected collection result: {raw}')
-                        reached_child = True
-                    elif name == 'CompareUnifiedGraphicSelections':
-                        resources.require(meta.get('success') is False and meta.get('offline') is True
-                            and meta.get('failureCount') == 1
-                            and meta.get('failures', [{}])[0].get('code') == 'InvalidSnapshot',
-                            f'{name}: missing incomplete snapshot refusal: {raw}')
-                        reached_child = True
-                    elif name in ('GetLibraryOverview', 'GetLibraryType', 'CompareLibraryObjects', 'ManageGlobalLibrary'):
-                        error_type = ('System.InvalidOperationException' if name == 'ManageGlobalLibrary'
-                                      else 'TiaMcpServer.Siemens.PortalException')
-                        resources.require(value.get('message', value.get('Message')) == name + ' failed'
-                                          and meta.get('error', '').splitlines()[0] == error_type + ': Connect to TIA first.'
-                                          and meta.get('tool') == name and meta.get('operationSuccess') is False,
-                                          f'{name}: missing disconnected portal response: {raw}')
-                    elif throwing:
-                        resources.require(THROWING_GUARDS[name] in value['message'], f'{name}: missing disconnected guard: {raw}')
-                        reached_child = True
-                    elif name in SIMPLE_GUARDS:
-                        resources.require(value.get('message', value.get('Message')) == 'No project open.',
-                                          f'{name}: missing disconnected guard: {raw}')
-                        reached_child = True
-                    elif name == 'GenerateOpcUaModelledInterface':
-                        resources.require(value.get('message', value.get('Message')) == 'Generation failed: No project is bound.'
-                            and meta.get('success') is False and meta.get('imported') is False,
-                            f'{name}: missing disconnected guard: {raw}')
-                        reached_child = True
-                    elif name in ('ImportTechnologyObjectsFromDirectory', 'ExportTechnologyObjectsToDirectory'):
-                        expected = 'Project is null' if name.startswith('Import') else 'No project open.'
-                        failures = value.get('failed', value.get('Failed'))
-                        resources.require(value.get('imported', value.get('Imported')) == [] and len(failures) == 1
-                            and failures[0].get('error', failures[0].get('Error')) == expected and meta.get('success') is False,
-                            f'{name}: missing disconnected guard: {raw}')
-                        reached_child = True
-                    else:
-                        resources.require(value.get('message', value.get('Message')) == 'Project is null'
-                            and meta.get('tool') == name and meta.get('status') == 'InvalidState'
-                            and meta.get('operationSuccess') is False,
-                            f'{name}/{case} did not reach the disconnected guard: {raw}')
-                        reached_child = True
+                        resources.require(not value['ok'] and value['error']['code'] in
+                                          ('TOOL_NOT_FOUND', 'CAPABILITY_NOT_SUPPORTED', 'INVALID_ARGUMENT', 'PROJECT_NOT_BOUND'), raw)
+                    reached_child = True
                 responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
         if isolated and reached_child:
             reply = rpc('tools/call', params={'name': 'GetOpennessWorkerStatus', 'arguments': {}})
-            status = json.loads(reply['result']['content'][0]['text'])
-            resources.require(status['meta']['worker']['state'] == 'Ready', 'Domain calls never reached the isolated child')
+            status = resources.envelope(reply)
+            resources.require(status['data']['evidence']['worker']['state'] == 'Ready', 'Domain calls never reached the isolated child')
     return names, responses
 
 
@@ -1657,12 +1426,13 @@ class SelfTests(unittest.TestCase):
             self.assertEqual(snapshots.mask_raw_text(raw, 'BuildUnifiedHmiButtonActionScript'), raw)
 
     def test_unified_connection_rejects_unrelated_dispatch_failure(self):
-        raw = "HMI software not found at 'HMI_RT_1'."
-        reply = {'result': {'isError': True, 'content': [{'text': raw}]}}
-        self.assertEqual(unified_reply(reply, 'full', 'EnsureUnifiedHmiConnection'), raw)
-        reply['result']['content'][0]['text'] = 'Unexpected service constructor failure'
+        reply = self.plc_failure('EnsureUnifiedHmiConnection')
+        self.assertEqual(unified_reply(reply, 'full', 'EnsureUnifiedHmiConnection'), reply['result']['content'][0]['text'])
+        reply['result']['structuredContent']['error']['code'] = 'INTERNAL_ERROR'
+        reply['result']['content'][0]['text'] = json.dumps(reply['result']['structuredContent'])
         with self.assertRaises(AssertionError):
             unified_reply(reply, 'full', 'EnsureUnifiedHmiConnection')
+
 
 
 def main():

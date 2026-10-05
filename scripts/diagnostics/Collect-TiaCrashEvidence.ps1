@@ -32,6 +32,12 @@ $processes=@()
 try { $processes=@(Get-Process -Name 'Siemens.Automation.Portal','TiaMcp.Engine.V20','TiaMcp.Engine.V21','TiaMcp.FoundationHost' -ErrorAction SilentlyContinue | ForEach-Object {
     try { [ordered]@{pid=$_.Id; name=$_.ProcessName; startUtc=$_.StartTime.ToUniversalTime().ToString('o')} } catch { $errors.Add('Process metadata: '+$_.Exception.Message) }
 }) } catch { $errors.Add('Processes: '+$_.Exception.Message) }
+function Get-JournalHash([string]$Path) {
+    $hash=[Security.Cryptography.SHA256]::Create()
+    $stream=[IO.File]::OpenRead($Path)
+    try { return [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-','').ToLowerInvariant() }
+    finally { $stream.Dispose(); $hash.Dispose() }
+}
 $journals=@()
 try {
     if (Test-Path -LiteralPath $JournalDirectory -PathType Container) {
@@ -40,7 +46,7 @@ try {
             if (($file.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or $file.Length -gt 12MB) { $errors.Add('Skipped oversized/reparse journal: '+$file.Name); continue }
             $target=Join-Path $destination $file.Name
             Copy-Item -LiteralPath $file.FullName -Destination $target
-            $journals+=@{name=$file.Name; bytes=(Get-Item -LiteralPath $target).Length; sha256=(Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()}
+            $journals+=@{name=$file.Name; bytes=(Get-Item -LiteralPath $target).Length; sha256=(Get-JournalHash $target)}
         }
     } else { $errors.Add('Journal directory absent; no invocation evidence was collected') }
 } catch { $errors.Add('Journal capture: '+$_.Exception.Message) }

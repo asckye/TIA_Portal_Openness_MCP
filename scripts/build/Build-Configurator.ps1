@@ -55,7 +55,7 @@ if ($Test) {
         Get-Item (Join-Path $root 'src/Shared/LocalProcess.cs')
     ) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-Item $bundleLayout) + @(Get-ChildItem $fonts -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
-        $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
+        $bytes = if ($_.Extension -in ".ttf", ".otf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()
         try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','').ToLowerInvariant() }
         finally { $algorithm.Dispose() }

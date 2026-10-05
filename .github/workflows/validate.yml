@@ -58,6 +58,17 @@ jobs:
           if ($LASTEXITCODE) { throw 'Write guard tests failed' }
           & ./scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
           if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
+      - name: Script calls must use registered V4 tools
+        shell: pwsh
+        run: |
+          python scripts/checks/Check-ScriptToolCalls.py --self-test
+          if ($LASTEXITCODE) { throw 'Script tool checker self-tests failed' }
+          python scripts/checks/Check-ScriptToolCalls.py
+          if ($LASTEXITCODE) { throw 'Unregistered script tool calls' }
+          python scripts/mcp_results.py
+          if ($LASTEXITCODE) { throw 'V4 result decoder tests failed' }
+          python scripts/checks/Test-ScriptClients.py
+          if ($LASTEXITCODE) { throw 'Script client tests failed' }
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py
       - name: Supplementary read and worker dispatch source contracts

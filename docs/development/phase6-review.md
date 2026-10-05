@@ -1901,7 +1901,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 |---|---|---|
 | [.claude-plugin/plugin.json](../../.claude-plugin/plugin.json) | 产品:12 | 修改引用并回归 |
 | [.github/SUPPORT.md](../../.github/SUPPORT.md) | 产品:10 | 修改引用并回归 |
-| [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:52 | 修改引用并回归 |
+| [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:58 | 修改引用并回归 |
 | [.github/workflows/validate.yml](../../.github/workflows/validate.yml) | 产品:8 | 修改引用并回归 |
 | [README.md](../../README.md) | 产品:17,18,19 | 修改引用并回归 |
 | [README.zh-CN.md](../../README.zh-CN.md) | 产品:17,18,19 | 修改引用并回归 |
@@ -1914,7 +1914,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:30; 根定位:49,52 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:57,69; 根定位:17,52,53,56,64,154,164,166,167,168,187,251; 写入/工作区:54,73,120,126,148 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/validation.md](../../docs/development/validation.md) | 产品:413,414,435; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/validation.md](../../docs/development/validation.md) | 产品:413,414,435,464; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138 | 修改引用并回归 |
 | [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:21,24,25,26,27; 写入/工作区:9,16 | 修改引用并回归 |
 | [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5,17,18 | 修改引用并回归 |
@@ -1950,9 +1950,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:18,58,357,359,360,493; 根定位:253 | 修改引用并回归 |
 | [scripts/build/Test-ReleasePrerequisites.ps1](../../scripts/build/Test-ReleasePrerequisites.ps1) | 产品:119; 写入/工作区:187,188 | 修改引用并回归 |
 | [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 产品:166,195,197,198; 根定位:14,100,104 | 修改引用并回归 |
-| [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,24 | 修改引用并回归 |
+| [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,27 | 修改引用并回归 |
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:365 | 修改引用并回归 |
-| [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:83,84,241; 根定位:13,182,183,184,228 | 修改引用并回归 |
+| [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:83,84,242; 根定位:13,182,183,184,229 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:658 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22 | 修改引用并回归 |
@@ -1960,12 +1960,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
 | [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:156,181 | 修改引用并回归 |
 | [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:13 | 修改引用并回归 |
-| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:110 | 修改引用并回归 |
-| [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,114,128,155,182,238,241,257,429,470,476; 根定位:129,147,148,149 | 修改引用并回归 |
+| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:115 | 修改引用并回归 |
+| [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,114,128,155,186,246,249,265,437,478,484; 根定位:129,147,148,149 | 修改引用并回归 |
 | [scripts/checks/Verify-ReleaseAsset.py](../../scripts/checks/Verify-ReleaseAsset.py) | 产品:129,169,172,179,223,225; 根定位:27 | 修改引用并回归 |
 | [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 写入/工作区:610,620,630,640,650,660,840,1786,1796,1806,1816,1826,1836,2096,2256,2412 | 修改引用并回归 |
 | [scripts/diagnostics/Collect-TiaCrashEvidence.ps1](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) | 产品:32 | 修改引用并回归 |
-| [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:35 | 修改引用并回归 |
+| [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:112 | 修改引用并回归 |
 | [scripts/ecosystem/Install-PlcTools.ps1](../../scripts/ecosystem/Install-PlcTools.ps1) | 根定位:23; 写入/工作区:5,6 | 修改引用并回归 |
 | [scripts/operations/Update-Engine.ps1](../../scripts/operations/Update-Engine.ps1) | 产品:7,11,29,57,173,237,392,438,439 | 修改引用并回归 |
 | [scripts/operations/delivery-files.json](../../scripts/operations/delivery-files.json) | 产品:5 | 修改引用并回归 |

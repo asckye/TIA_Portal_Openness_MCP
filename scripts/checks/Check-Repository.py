@@ -185,8 +185,8 @@ def check(root, no_binaries=False, package_mode=False):
     for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json'):
         required('src/WorkerChannel/' + name, 'worker channel source')
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
-        for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll'):
-            required(f'runtime/v{key}/' + name, 'worker channel host')
+        # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
+        required(f'runtime/v{key}/TiaMcp.WorkerChannel.dll', 'worker channel host')
         for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
             required(f'runtime/v{key}/worker/' + name, 'worker channel dependency')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles'] + contract_required_paths():
@@ -201,7 +201,8 @@ def check(root, no_binaries=False, package_mode=False):
                  'Fonts/Manrope-Regular.ttf', 'Fonts/Manrope-Medium.ttf',
                  'Fonts/Manrope-SemiBold.ttf', 'Fonts/Manrope-Bold.ttf', 'Fonts/Manrope-OFL.txt',
                  'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf',
-                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/SOURCES.txt'):
+                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/NotoSansSC-Regular.otf', 'Fonts/NotoSansSC-Medium.otf',
+                 'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt', 'Fonts/SOURCES.txt'):
         required(studio + 'Gui/' + name, 'GUI entry')
     roster = read('manifest/tools-list.json')
     names = [row['name'] for row in roster['tools']]

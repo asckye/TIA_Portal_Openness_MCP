@@ -28,7 +28,7 @@ try {
     $null=& $collector -OutputDirectory $output -JournalDirectory $journals
     $evidence=Get-Content -LiteralPath (Join-Path $output 'evidence.json') -Raw | ConvertFrom-Json
     Check ($evidence.complete -and $evidenceFixture.queries -eq 3 -and $evidence.events.Count -eq 3) ('Event query evidence incomplete: '+($evidence | ConvertTo-Json -Depth 8)+' queries='+$evidenceFixture.queries)
-    Check ($evidence.journals.Count -eq 1 -and $evidence.journals[0].sha256.Length -eq 64) 'Journal not copied and hashed'
+    Check ($evidence.journals.Count -eq 1 -and $evidence.journals[0].sha256 -ceq 'd7adfb95a9e84a64668941ac83cba05fc8834a20b69df9b3d74766261b24e135') 'Journal not copied and hashed'
     Check ($evidence.dumpInventory.Count -eq 3 -and @($dumpNames | Where-Object {Test-Path -LiteralPath (Join-Path $output $_)}).Count -eq 0) 'Product dump inventory incomplete or dump content was copied'
     $refused=$false
     try { & $collector -OutputDirectory $output -JournalDirectory $journals } catch {$refused=$true}

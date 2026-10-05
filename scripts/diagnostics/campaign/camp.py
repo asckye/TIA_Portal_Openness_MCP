@@ -9,53 +9,65 @@
   camp.py run <plan.json> [startIndex]            run a plan, append to ledger/<plan>.jsonl, stop when TIA dies
   camp.py raw <Tool> '<json>'                     print the raw text of the tool result (first 6000 chars)
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from mcp_results import envelope, successful
+
 import sys, json, importlib.util, os, time, io
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))   # scripts/diagnostics/campaign -> repo root
 spec = importlib.util.spec_from_file_location("probe", os.path.join(REPO, "scripts/diagnostics/Probe-McpServer.py"))
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-e = m.find_claude_entry(); p = m.Probe(e["url"], e["headers"]["Authorization"], 900); p.initialize()
-LITE = {t["name"] for t in p.rpc("tools/list", {})["result"]["tools"]}
+p = None
+LITE = set()
+
+def connect():
+    global p, LITE
+    if p is None:
+        e = m.find_claude_entry()
+        if not e: raise RuntimeError('No tia-portal-vm connection configured')
+        p = m.Probe(e['url'], e['headers']['Authorization'], 900)
+        p.initialize()
+        LITE = {t['name'] for t in p.rpc('tools/list', {})['result']['tools']}
 
 def call_raw(name, args):
-    if name in LITE:
-        r = p.rpc("tools/call", {"name": name, "arguments": args})
-    else:
-        r = p.rpc("tools/call", {"name": "CallTool", "arguments": {"name": name, "argumentsJson": json.dumps(args, ensure_ascii=False)}})
-    if "error" in r: return {"rpcError": r["error"]}, ""
-    txt = r["result"]["content"][0]["text"]
-    try: d = json.loads(txt)
-    except ValueError: return {"raw": txt}, txt
-    if name not in LITE:
-        msg = d.get("message")
-        if isinstance(msg, str):
-            try: msg = json.loads(msg)
-            except ValueError: pass
-        if isinstance(msg, dict) and ("Message" in msg or "Meta" in msg or "message" in msg):
-            inner = msg
-            d = {"message": inner.get("Message", inner.get("message")), "meta": inner.get("Meta", inner.get("meta", {})), "_outer": d.get("meta", {})}
-        else:
-            d = {"message": msg, "meta": d.get("meta", {})}
-    return d, txt
+    connect()
+    request = {'name': name, 'arguments': args} if name in LITE else {
+        'name': 'CallTool', 'arguments': {'name': name, 'arguments': args}}
+    r = p.rpc('tools/call', request)
+    d = envelope(r)
+    return d, json.dumps(d, ensure_ascii=False)
+
+
+def result_fields(d):
+    data = d.get('data') or {}
+    fields = dict(data.get('evidence') or {})
+    fields.update(data)
+    fields.update(d.get('meta') or {})
+    if data.get('export'): fields['exportId'] = data['export']['id']
+    return fields
 
 def alive():
-    d, _ = call_raw("GetState", {})
+    d, _ = call_raw("GetSessionState", {})
     try:
-        h = d["meta"]["hmiReadHealth"]; pp = h["portalProcess"]
-        return {"pid": pp.get("boundProcessId"), "alive": pp.get("processAlive"), "blocked": h.get("snapshotReadsBlocked"), "connected": d.get("isConnected"), "project": d.get("project")}
+        data = d["data"]; h = data["evidence"]["hmiReadHealth"]; pp = h["portalProcess"]
+        return {"pid": pp.get("boundProcessId"), "alive": pp.get("processAlive"), "blocked": h.get("snapshotReadsBlocked"), "connected": data.get("isConnected"), "project": data.get("project")}
     except Exception:
         return {"raw": json.dumps(d, ensure_ascii=False)[:200]}
 
 def classify(d):
-    meta = d.get("meta") or {}
-    if "rpcError" in d: return False, "rpc:" + str(d["rpcError"])[:300]
-    if "raw" in d: return None, d["raw"][:300]
-    err = meta.get("error") or meta.get("errorCode") or d.get("error")
-    ok = meta.get("success")
-    if ok is None: ok = err is None
-    text = str(d.get("message") or "")
-    if err: text = str(err).split("\n")[0][:400]
-    return bool(ok) and not err, text
+    if 'rpcError' in d: return False, 'rpc:' + str(d['rpcError'])[:300]
+    value = envelope(d)
+    error = value['error']
+    return value['ok'], (error['code'] + ': ' + error['message'] if error else
+                          str((value['data'] or {}).get('summary') or ''))
+
+def step_verdict(d, expect):
+    value = envelope(d)
+    meta = value['meta']
+    if meta.get('requiresSessionReset') or meta.get('outcome') == 'unknown': return 'UNCONFIRMED'
+    return 'PASS' if (value['ok'] and expect in ('ok', 'any')) or (not value['ok'] and expect in ('error', 'any')) else 'FAIL'
 
 def trim(v, n=900):
     s = json.dumps(v, ensure_ascii=False, default=str)
@@ -71,7 +83,7 @@ if __name__ == "__main__":
         ok, text = classify(d)
         print("==", tool, "ok" if ok else "FAIL", "::", text[:400])
         keys = sys.argv[4].split(",") if len(sys.argv) > 4 else []
-        meta = d.get("meta") or {}
+        meta = result_fields(d)
         for k in keys:
             if k == "*": print("    meta =", trim(meta, 4000))
             elif k in meta: print("   ", k, "=", trim(meta[k], 1500))
@@ -89,15 +101,18 @@ if __name__ == "__main__":
                 if v == "LAST": args[k] = globals().get("LAST_EXPORT", "")
             t0 = time.time(); d, txt = call_raw(tool, args); dt = time.time() - t0
             ok, text = classify(d)
-            meta = d.get("meta") or {}
+            meta = result_fields(d)
             if isinstance(meta.get("exportId"), str): globals()["LAST_EXPORT"] = meta["exportId"]
             state = alive()
-            verdict = "PASS" if (ok and expect in ("ok", "any")) or (not ok and expect in ("error", "any")) else "FAIL"
+            verdict = step_verdict(d, expect)
             rec = {"i": i, "tool": tool, "args": args, "expect": expect, "ok": ok, "verdict": verdict, "text": text[:600], "secs": round(dt, 1), "note": step.get("note", ""),
+                   "contract": "v4", "outcome": (d.get("meta") or {}).get("outcome"), "execution": (d.get("meta") or {}).get("execution"),
                    "keys": {k: meta.get(k) for k in step.get("keys", []) if k in meta}, "tia": state}
             led.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n"); led.flush()
             print("%3d %-4s %-36s %5.1fs %s" % (i, verdict, tool, dt, text[:150].replace("\n", " ")))
             for k, v in rec["keys"].items(): print("        ", k, "=", trim(v, 500))
+            if (d.get("meta") or {}).get("requiresSessionReset") or (d.get("meta") or {}).get("outcome") == "unknown":
+                print("!!! Unconfirmed outcome; stop without retry or cleanup"); break
             if state.get("alive") is False or state.get("connected") is False:
                 print("!!! TIA / binding lost after step", i, state); break
         led.close()

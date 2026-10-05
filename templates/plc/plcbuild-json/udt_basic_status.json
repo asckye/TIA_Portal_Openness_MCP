@@ -28,31 +28,26 @@
       {
         "name": "State",
         "datatype": "Int",
-        "startValue": "0",
         "commentZhCn": "状态码（0=空闲，>0=各工作状态）"
       },
       {
         "name": "ErrorCode",
         "datatype": "Int",
-        "startValue": "0",
         "commentZhCn": "故障代码（0=无故障）"
       },
       {
         "name": "Setpoint",
         "datatype": "Real",
-        "startValue": "0.0",
         "commentZhCn": "设定值"
       },
       {
         "name": "Actual",
         "datatype": "Real",
-        "startValue": "0.0",
         "commentZhCn": "实际值"
       },
       {
         "name": "Output",
         "datatype": "Real",
-        "startValue": "0.0",
         "commentZhCn": "输出值"
       }
     ]

@@ -195,7 +195,7 @@ DOMAIN_CALLS = {
 # ToolVersionPolicy.V21Only. Both direct admission and bridge admission are
 # exercised on V20; never execute these target-bound examples on V21.
 V21_ONLY = (
-    'ReadCommunicationConnections', 'ManageCommunicationConnection',
+    'ListCommunicationConnections', 'ManageCommunicationConnection',
     'ListSafetyActivationTests', 'ManageSafetyActivationTest',
     'ManageSafetyActivationTestGroup', 'ManageSafetyFunction',
     'ManageSafetyFunctionCondition', 'ManagePlcBlockWriteProtection',
@@ -495,8 +495,8 @@ def capture_release(args, release, exe, public_api):
             decoded('ListToolCategories', {})
             decoded('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
             decoded('FindTools', {'query': 'no-such-snapshot-tool', 'limit': 3})
-            decoded('PreviewToolCall', {'name': 'GetDevices', 'arguments': {}})
-            decoded('PreviewToolCall', {'name': 'GetBlocks', 'arguments': {}})
+            decoded('PreviewToolCall', {'name': 'ListDevices', 'arguments': {}})
+            decoded('PreviewToolCall', {'name': 'ListPlcBlocks', 'arguments': {}})
 
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
                 result = decoded(name, arguments)

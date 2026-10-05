@@ -87,7 +87,8 @@ internal static class AdapterIntegrationChecks
             Thread.Sleep(1100);
             var diagnostics = adapter.GetType("TiaMcpServer.ModelContextProtocol.NativeCallDiagnostics", true)!;
             var wrapper = engine.GetType("TiaMcpServer.ModelContextProtocol.SerializedCallTool", true)!;
-            var tool = (McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { new JournalTool(diagnostics) }, null)!;
+            var tool = (McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { new JournalTool(diagnostics,
+                engine.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!) }, null)!;
             for (int i = 0; i < 2; i++) tool.InvokeAsync(null!, CancellationToken.None).AsTask().GetAwaiter().GetResult();
             var files = Directory.GetFiles(scratch, "calls-*.jsonl");
             check(files.Length == 1, "Engine tool and adapter native span share exactly one journal file");
@@ -121,7 +122,8 @@ internal static class AdapterIntegrationChecks
     private sealed class JournalTool : McpServerTool
     {
         private readonly Type diagnostics;
-        internal JournalTool(Type diagnostics) { this.diagnostics = diagnostics; }
+        private readonly Type facade;
+        internal JournalTool(Type diagnostics, Type facade) { this.diagnostics = diagnostics; this.facade = facade; }
         public override Tool ProtocolTool => new Tool { Name = "AdapterJournalFixture" };
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
@@ -131,7 +133,8 @@ internal static class AdapterIntegrationChecks
             var span = diagnostics.GetMethod("Enter", All)!.Invoke(null,
                 new object?[] { "adapter-fixture-site", "adapter-fixture", "direct", null, null, null });
             diagnostics.GetMethod("Returned", All)!.Invoke(null, new object?[] { span, null });
-            return new CallToolResult();
+            var result = facade.GetMethods(All).Single(m => m.Name == "V4Result" && m.GetParameters().Length == 5);
+            return (CallToolResult)result.Invoke(null, new object?[] { "AdapterJournalFixture", new JsonObject(), null, false, false })!;
         }
     }
 }

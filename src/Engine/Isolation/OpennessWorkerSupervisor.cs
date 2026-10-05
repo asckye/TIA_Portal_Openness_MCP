@@ -10,13 +10,16 @@ using System.Threading.Tasks;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.Isolation
 {
     internal sealed class WorkerCallException : Exception
     {
         internal bool OutcomeUnknown { get; }
-        internal WorkerCallException(string reason, bool unknown) : base(reason) { OutcomeUnknown = unknown; }
+        internal ErrorDetails Details { get; }
+        internal WorkerCallException(string reason, bool unknown, ErrorDetails? details = null) : base(reason)
+        { OutcomeUnknown = unknown; Details = details ?? new ResourceUnavailableDetails("openness-worker"); }
     }
 
     internal sealed class OpennessWorkerSupervisor : IDisposable
@@ -90,13 +93,20 @@ namespace TiaMcpServer.Isolation
 
         internal async Task<JsonObject> CallAsync(JsonObject parameters, Action<JsonObject>? progress, CancellationToken cancellation)
         {
-            string effectiveName = parameters["name"]?.GetValue<string>() ?? "";
+            string effectiveName;
             JsonObject? effectiveArguments = parameters["arguments"] as JsonObject;
-            if (string.Equals(effectiveName, "CallTool", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                effectiveName = effectiveArguments?["name"]?.GetValue<string>()?.Trim() ?? "";
-                effectiveArguments = effectiveArguments?["arguments"] as JsonObject;
+                effectiveName = parameters["name"]?.GetValue<string>() ?? "";
+                if (string.Equals(effectiveName, "CallTool", StringComparison.OrdinalIgnoreCase))
+                {
+                    effectiveName = effectiveArguments?["name"]?.GetValue<string>()?.Trim() ?? "";
+                    effectiveArguments = effectiveArguments?["arguments"] as JsonObject;
+                }
             }
+            catch (InvalidOperationException)
+            { throw new WorkerCallException("Worker request arguments are invalid; no operation was dispatched.", false,
+                new InvalidArgumentDetails("arguments", Array.Empty<string>())); }
             bool binding = string.Equals(effectiveName, "ConnectProject", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "ConnectIsolatedPortal", StringComparison.OrdinalIgnoreCase) ||
                 ((string.Equals(effectiveName, "ConnectPortal", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "AttachOpenProject", StringComparison.OrdinalIgnoreCase)) &&
                     !string.IsNullOrWhiteSpace(effectiveArguments?["projectName"]?.ToString()));
@@ -105,9 +115,13 @@ namespace TiaMcpServer.Isolation
             long ticket;
             lock (sync)
             {
-                if (disposed || state == "Faulted") throw new WorkerCallException("Worker unavailable; explicit restart and project rebind required.", false);
-                if (bindingRequired && !binding && !diagnostic) throw new WorkerCallException("Recovery requires an explicit ConnectProject, named ConnectPortal/AttachOpenProject or ConnectIsolatedPortal before other tools. No call was dispatched.", false);
-                if (admitted >= QueueLimit) throw new WorkerCallException("Worker queue is full; request was not dispatched.", false);
+                if (disposed) throw new WorkerCallException("Worker is stopped; no operation was dispatched.", false);
+                if (state == "Faulted") throw new WorkerCallException("Worker unavailable; explicit restart and project rebind required.", false,
+                    new SessionResetRequiredDetails("openness-worker-fault"));
+                if (bindingRequired && !binding && !diagnostic) throw new WorkerCallException("Recovery requires an explicit ConnectProject, named ConnectPortal/AttachOpenProject or ConnectIsolatedPortal before other tools. No call was dispatched.", false,
+                    new ProjectNotBoundDetails());
+                if (admitted >= QueueLimit) throw new WorkerCallException("Worker queue is full; request was not dispatched.", false,
+                    new LimitExceededDetails("workerQueue", QueueLimit, admitted));
                 admitted++; ticket = epoch;
             }
             bool entered = false, dispatched = false;
@@ -117,16 +131,17 @@ namespace TiaMcpServer.Isolation
             try
             {
                 entered = await gate.WaitAsync(deadline, cancellation).ConfigureAwait(false);
-                if (!entered) throw new WorkerCallException("Request expired while queued; not dispatched.", false);
+                if (!entered) throw new WorkerCallException("Request expired while queued; not dispatched.", false, new TimeoutDetails("worker-queue"));
                 lock (sync)
                 {
-                    if (disposed || state == "Faulted" || ticket != epoch) throw new WorkerCallException("Worker generation changed while queued; not dispatched.", false);
+                    if (disposed || state == "Faulted" || ticket != epoch) throw new WorkerCallException("Worker generation changed while queued; not dispatched.", false,
+                        new SessionResetRequiredDetails("openness-worker-generation"));
                     activeTool = name;
                 }
                 cancellation.ThrowIfCancellationRequested();
                 await EnsureStarted(elapsed, cancellation).ConfigureAwait(false);
                 cancellation.ThrowIfCancellationRequested();
-                if (elapsed.Elapsed >= deadline) throw new WorkerCallException("Request expired before dispatch.", false);
+                if (elapsed.Elapsed >= deadline) throw new WorkerCallException("Request expired before dispatch.", false, new TimeoutDetails("worker-dispatch"));
                 WorkerConnection worker;
                 lock (sync)
                 {
@@ -134,7 +149,8 @@ namespace TiaMcpServer.Isolation
                     worker = connection!;
                 }
                 if (parameters.ToJsonString().Length > WorkerConnection.MaxFrameChars - 1024)
-                    throw new WorkerCallException("Request exceeds the worker frame limit; not dispatched.", false);
+                    throw new WorkerCallException("Request exceeds the worker frame limit; not dispatched.", false,
+                        new LimitExceededDetails("workerFrame", WorkerConnection.MaxFrameChars - 1024, parameters.ToJsonString().Length));
                 // Own correlation data; never rely on caller-supplied metadata for the dispatch record.
                 var meta = parameters["_meta"] as JsonObject;
                 if (meta == null) parameters["_meta"] = meta = new JsonObject();
@@ -147,9 +163,9 @@ namespace TiaMcpServer.Isolation
                     throw new IOException("Malformed worker tool result.");
                 // Validate SDK content before releasing the gate. A malformed typed result
                 // must invalidate this generation before another queued call can execute.
-                if (result["error"] == null && JsonSerializer.Deserialize<CallToolResult>(
-                    result["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions) == null)
-                    throw new IOException("Missing worker tool result.");
+                if (result["error"] == null) ValidateResult(result);
+                else if (result["error"]?["code"]?.GetValue<int>() != -32602 && result["error"]?["code"]?.GetValue<int>() != -32601)
+                    throw new IOException("Worker failed without a tool outcome.");
                 lock (sync)
                     if (state != "Ready" || epoch != ticket) throw new IOException("Worker failed before the result was accepted.");
                 InvocationJournal.Write(id, "worker:" + name, "RETURNED");
@@ -161,12 +177,14 @@ namespace TiaMcpServer.Isolation
             {
                 if (dispatched) Fault("CancelledAfterDispatch");
                 else if (entered && state == "Starting") Fault("StartupCancelled");
-                throw new WorkerCallException(dispatched ? "Caller cancelled after dispatch; native outcome unknown. No replay." : "Cancelled before dispatch.", dispatched);
+                throw new WorkerCallException(dispatched ? "Caller cancelled after dispatch; native outcome unknown. No replay." : "Cancelled before dispatch.", dispatched,
+                    new CancelledDetails("worker-dispatch"));
             }
             catch (Exception ex)
             {
                 Fault(ex is TimeoutException ? "DeadlineExceeded" : "WorkerFailure");
-                throw new WorkerCallException(dispatched ? "Worker failed or exceeded its deadline after dispatch; native outcome unknown. No replay." : "Worker could not start/validate; tool was not dispatched.", dispatched);
+                throw new WorkerCallException(dispatched ? "Worker failed or exceeded its deadline after dispatch; native outcome unknown. No replay." : "Worker could not start/validate; tool was not dispatched.", dispatched,
+                    ex is TimeoutException ? (ErrorDetails)new TimeoutDetails("worker-startup") : new ResourceUnavailableDetails("openness-worker"));
             }
             finally
             {
@@ -232,19 +250,23 @@ namespace TiaMcpServer.Isolation
         }
 
         private static async Task<bool> AsResult(Task task) { await task.ConfigureAwait(false); return true; }
+        private static Envelope ValidateResult(JsonObject reply)
+        {
+            var result = JsonSerializer.Deserialize<CallToolResult>(reply["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
+                ?? throw new IOException("Missing worker tool result.");
+            if (result.Content.Count != 1 || result.Content[0] is not TextContentBlock text || result.StructuredContent == null
+                || !JsonNode.DeepEquals(JsonNode.Parse(text.Text), result.StructuredContent))
+                throw new IOException("Worker did not return matching V4 content.");
+            var envelope = V4Json.Deserialize<Envelope>(text.Text);
+            if (result.IsError != !envelope.Ok) throw new IOException("Worker tool status disagrees with its V4 envelope.");
+            return envelope;
+        }
         private static bool SuccessfulBinding(JsonObject envelope)
         {
             try
             {
-                if (envelope["error"] != null || envelope["result"]?["isError"]?.GetValue<bool>() == true) return false;
-                var content = envelope["result"]?["content"] as JsonArray;
-                if (content == null || content.Count != 1) return false;
-                var payload = JsonNode.Parse(content[0]!["text"]!.GetValue<string>()) as JsonObject;
-                var meta = payload?["meta"] ?? payload?["Meta"];
                 // CallTool returns the target's own result, just like a direct call.
-                return payload?["schemaVersion"]?.GetValue<int?>() == 4
-                    ? payload["ok"]?.GetValue<bool>() == true
-                    : meta?["success"]?.GetValue<bool>() == true;
+                return envelope["error"] == null && ValidateResult(envelope).Ok;
             }
             catch /* swallow(parse-fallback): an unreadable binding response cannot establish successful project binding */ { return false; }
         }

@@ -19,7 +19,7 @@
     5. Backs up the current install to <root>\.previous\<package>\ (last two kept), replaces runtime\ and manifest\
        using recorded file ownership, removes retired development files and overlays the new package.
        Rollback restores the prior layout; data\ and unknown user files are preserved.
-    6. Prints the new version. Start the engine again and call Bootstrap to confirm serverVersion.
+    6. Prints the new version. Start the engine again and call InitializeEnvironment to confirm serverVersion.
 
   -Check only reports the installed and latest versions. -Rollback restores the newest backup (engine stopped as well).
   Nothing here touches TIA Portal, projects or client configurations.
@@ -290,7 +290,7 @@ if ($Rollback) {
     }
     CopyTree $backup.FullName $root @((Join-Path $backup.FullName 'data'))
     $now = [string]((Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json).release)
-    Say ("DONE: installed version is now " + $now + ". Start the engine and call Bootstrap to confirm serverVersion.")
+    Say ("DONE: installed version is now " + $now + ". Start the engine and call InitializeEnvironment to confirm serverVersion.")
     Relaunch
     exit 0
 }
@@ -436,5 +436,5 @@ RemoveTree $extract
 
 $now = Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json
 $exeVersion = (Get-Item -LiteralPath (Join-Path $root 'runtime\v21\TiaMcp.Engine.V21.exe')).VersionInfo.FileVersion
-Say ("DONE: " + $installed + " -> " + $now.release + " (runtime\v21\TiaMcp.Engine.V21.exe " + $exeVersion + "). Start the engine and call Bootstrap to confirm serverVersion; -Rollback restores " + $installedPackage + ".")
+Say ("DONE: " + $installed + " -> " + $now.release + " (runtime\v21\TiaMcp.Engine.V21.exe " + $exeVersion + "). Start the engine and call InitializeEnvironment to confirm serverVersion; -Rollback restores " + $installedPackage + ".")
 Relaunch

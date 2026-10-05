@@ -218,7 +218,7 @@ def main():
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:
         data = files[row['path']]
-        if not row['path'].endswith('.ttf'):
+        if not row['path'].lower().endswith(('.ttf', '.otf')):
             data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
@@ -240,6 +240,10 @@ def main():
                 'src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf',
                 'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
                 'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
+                'src/Studio/Gui/Fonts/NotoSansSC-Regular.otf',
+                'src/Studio/Gui/Fonts/NotoSansSC-Medium.otf',
+                'src/Studio/Gui/Fonts/NotoSansSC-Bold.otf',
+                'src/Studio/Gui/Fonts/NotoSansSC-OFL.txt',
                 'src/Studio/Gui/Fonts/SOURCES.txt',
                 'src/Studio/Gui/TiaOpenness.Gui.csproj',
                 'src/Studio/Gui/Configuration/ConfigurationView.xaml',
@@ -268,7 +272,8 @@ def main():
     required += ['src/Studio/Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
-        required += [f'runtime/v{key}/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll')]
+        # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
+        required += [f'runtime/v{key}/TiaMcp.WorkerChannel.dll']
         required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     required += ['manifest/history/contracts-v3/README.md', 'manifest/history/contracts-v3/provenance.json']
     required += [f'{directory}/{category}/{key}.json'

@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--host-harness', type=Path, required=True)
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--transport', choices=('both', 'stdio', 'http'), default='both')
     args = parser.parse_args()
     for key in ('exe', 'public_api', 'host_harness', 'output'):
         setattr(args, key, getattr(args, key).resolve())
@@ -40,7 +41,7 @@ def main():
         passed += 1
 
     for isolated in (False, True):
-        for transport in ('stdio', 'http'):
+        for transport in (('stdio', 'http') if args.transport == 'both' else (args.transport,)):
             for profile in ('full', 'lite'):
                 label = f'v{args.major}-{transport}-{profile}-isolated-{isolated}'
                 case = root / label
@@ -66,56 +67,49 @@ def main():
                         nonlocal number
                         number += 1
                         if profile == 'lite':
-                            arguments = {'name': name, 'argumentsJson': json.dumps(arguments)}
+                            arguments = {'name': name, 'arguments': arguments}
                             name = 'CallTool'
                         reply = rpc('tools/call', str(number), {'name': name, 'arguments': arguments})
                         resources.require('error' not in reply, str(reply.get('error')))
-                        content = reply['result']['content']
-                        resources.require(len(content) == 1 and content[0]['type'] == 'text', 'Unexpected envelope')
-                        payload = json.loads(content[0]['text'])
+                        payload = resources.envelope(reply)
                         (case / f'response-{number:02}.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
-                        if profile == 'lite':
-                            resources.require(payload['meta']['bridgeSuccess'], 'CallTool bridge failed')
-                            inner = json.loads(payload['message'])
-                            meta = inner.get('Meta', inner.get('meta'))
-                            resources.require(payload['meta']['operationSuccess'] == meta['success'], 'Bridge hid operation failure')
-                            return meta
-                        return payload['meta']
+                        return payload
 
-                    cap = call('ReadPlcBlockEditCapabilities', {'filePath': str(source)})
-                    check(cap['success'] and cap['offlineOnly'] and not cap['data']['nativeImportValidated'], 'Capability status incorrect')
-                    fingerprint = cap['data']['documentFingerprint']
+                    cap = call('GetPlcBlockEditCapabilities', {'filePath': str(source)})
+                    check(cap['ok'] and cap['data']['evidence']['offlineOnly'] and not cap['data']['evidence']['data']['nativeImportValidated'], 'Capability status incorrect')
+                    fingerprint = cap['data']['evidence']['data']['documentFingerprint']
                     edits = {'filePath': str(source), 'outputPath': str(output), 'expectedFingerprint': fingerprint,
-                             'changesJson': json.dumps([{'action': 'setNetworkText', 'networkIndex': 0, 'field': 'Title',
-                                                         'culture': 'zh-CN', 'expectedValue': 'Original', 'value': 'Updated & <safe>'}])}
+                             'changes': [{'action': 'setNetworkText', 'networkIndex': 0, 'field': 'Title',
+                                                         'culture': 'zh-CN', 'expectedValue': 'Original', 'value': 'Updated & <safe>'}]}
                     preview = call('PatchPlcBlockDocument', edits)
-                    check(preview['success'] and not output.exists(), 'Patch preview changed filesystem')
+                    check(preview['ok'] and not output.exists(), 'Patch preview changed filesystem')
                     stale = call('PatchPlcBlockDocument', dict(edits, dryRun=False, expectedFingerprint='stale'))
-                    check(not stale['success'] and not output.exists(), 'Stale document was written')
+                    check(not stale['ok'] and not output.exists(), 'Stale document was written')
                     apply = call('PatchPlcBlockDocument', dict(edits, dryRun=False))
-                    check(apply['success'] and output.exists() and source.read_bytes() == original_bytes, 'Patch did not preserve source')
+                    check(apply['ok'] and output.exists() and source.read_bytes() == original_bytes, 'Patch did not preserve source')
                     check(ET.parse(output).find('.//Text').text == 'Updated & <safe>', 'Patch result lost literal text')
                     saved = output.read_bytes()
                     repeat = call('PatchPlcBlockDocument', dict(edits, dryRun=False))
-                    check(not repeat['success'] and output.read_bytes() == saved, 'Existing output was overwritten')
+                    check(not repeat['ok'] and output.read_bytes() == saved, 'Existing output was overwritten')
                     references = call('AnalyzePlcReferences', {'directory': str(exports), 'action': 'callers', 'target': 'Helper'})
-                    data = references['data']
-                    check(references['success'] and data['rowCount'] == 2, 'Explicit call graph incorrect')
+                    data = references['data']['evidence']['data']
+                    check(references['ok'] and data['rowCount'] == 2, 'Explicit call graph incorrect')
                     check(not data['coverageComplete'] and not data['safeToDelete'] and not data['nativeCrossReferencesQueried']
                           and not data['inputParsedCompletely'] and len(data['failures']) == 1, 'Partial scope was hidden')
                     evidence = case / 'native-evidence'
                     refused = call('ImportPlcBlockVerified', {'softwarePath': 'PLC', 'blockPath': 'Main',
                                    'importPath': str(output), 'evidenceDirectory': str(evidence), 'dryRun': False})
-                    check(not refused['success'] and not refused.get('mayHaveChanged', False)
+                    check(not refused['ok'] and not (refused['meta']['execution'] != 'not-started')
                           and not evidence.exists(), 'Disconnected import was not refused before effects')
-                    check(call('ReadPlcBlockEditCapabilities', {'filePath': str(source)})['success'], 'Refused import broke later local calls')
+                    check(call('GetPlcBlockEditCapabilities', {'filePath': str(source)})['ok'], 'Refused import broke later local calls')
                 runs.append({'label': label, 'checks': passed - start_checks, 'status': 'passed'})
                 print('PASS ' + label, flush=True)
     result = {'status': 'passed', 'major': args.major, 'checks': passed, 'runs': runs,
               'runtimeSha256': hashlib.sha256(args.exe.read_bytes()).hexdigest(),
               'scriptSha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
               'nativeTiaExecuted': False,
-              'scope': 'Real SDK dispatch, STDIO/HTTP, full/lite, direct/isolated offline hosts. Synthetic XML only; no native import or TIA connection.'}
+              'transport': args.transport,
+              'scope': 'Real SDK dispatch, selected transports, full/lite, direct/isolated offline hosts. Synthetic XML only; no native import or TIA connection.'}
     (root / 'result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(f'COMPLETE: {passed} PLC editing MCP checks passed; no TIA connection attempted; evidence: {root}', flush=True)
 

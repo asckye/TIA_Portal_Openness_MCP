@@ -6,12 +6,17 @@
 
 铁律（改这个脚本前先读完）：
 1. **绝不打开博途、绝不打开工程**。博途没在跑，或跑着但没开工程 → 直接安静退出。
-   工程师的工程只能 Attach，这条是红线（历史上因为 Connect+CreateProject 关过用户工程）。
+   工程师的工程只能 Attach，这条是红线（历史上因为 ConnectPortal+CreateProject 关过用户工程）。
 2. **绝不往工程里写**。只做 ProjectToWorkspace 方向的同步（写文本文件），
    永远不调 WorkspaceToProject，也不调 SaveProject —— 存不存盘是工程师的决定。
 3. **只提交有实质变更的**。没有变更就一个字都不输出、不产生空提交。
 4. 日志落 log/，每轮追加；失败不抛给用户，写日志并以非 0 退出码结束。
 """
+
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from mcp_results import envelope
 
 import datetime
 import io
@@ -197,12 +202,7 @@ class Engine(object):
         r = self._send("tools/call", {"name": name, "arguments": kwargs})
         if "error" in r:
             raise RuntimeError("%s: %s" % (name, json.dumps(r["error"], ensure_ascii=False)))
-        texts = [c["text"] for c in r.get("result", {}).get("content", []) if c.get("type") == "text"]
-        raw = "\n".join(texts)
-        try:
-            return json.loads(raw)
-        except ValueError:
-            return {"message": raw, "items": []}
+        return envelope(r)
 
     def close(self):
         try:
@@ -243,18 +243,18 @@ def user_tia_sessions():
 
 
 def has_open_project(eng):
-    """在 Connect 之前问一句：现在有没有哪个博途进程真开着工程。
+    """在 ConnectPortal 之前问一句：现在有没有哪个博途进程真开着工程。
 
-    ListPortalProcessProjects 只探测已在跑的进程，自己不会拉起博途；Connect 会。
-    没工程就直接收工，别让 Connect 去"帮忙"开一个 —— 那正是无头残留的来源。
+    ListPortalProcessProjects 只探测已在跑的进程，自己不会拉起博途；ConnectPortal 会。
+    没工程就直接收工，别让 ConnectPortal 去"帮忙"开一个 —— 那正是无头残留的来源。
     行形如 `PID=49452 project=MyProject_V21` / `PID=48004 projects=<empty>`，
     所以要匹配单数 ` project=`，`projects=` 是"没有"。
     """
     try:
         r = eng.call("ListPortalProcessProjects")
     except Exception:
-        return True                   # 探测不了就别拦，交给后面的 Attach 判
-    return any(" project=" in it for it in (r.get("items") or []))
+        return False                  # 探测失败不继续连接
+    return r["ok"] and any(" project=" in it for it in ((r["data"] or {}).get("items") or []))
 
 
 def block_names(items):
@@ -386,31 +386,35 @@ def main():
         _st = read_state()
         _st.update({"enginePid": eng.p.pid, "startedAt": time.time()})
         write_state(_st)
-        # Connect 之前先确认真有工程可搭 —— 见 has_open_project()
+        # ConnectPortal 之前先确认真有工程可搭 —— 见 has_open_project()
         if not has_open_project(eng):
             return 0
 
-        eng.call("Connect")
+        if not eng.call("ConnectPortal")["ok"]: return 1
         # 只 Attach，绝不 Open：工程是工程师开的，我们只是搭个车
-        att = eng.call("AttachToOpenProject")
-        if not att.get("meta", {}).get("success", True):
-            log("没有已打开的工程可附着：%s" % att.get("message", ""))
+        att = eng.call("AttachOpenProject")
+        if not att["ok"]:
+            log("没有已打开的工程可附着：%s" % str(att["error"]))
             return 0
 
         st = eng.call("GetVersionControlStatus", changedOnly=True, workspaceName=ws_name)
-        items = st.get("items") or []
+        if not st["ok"]: raise RuntimeError(str(st["error"]))
+        items = (st["data"] or {}).get("items") or []
         if not items:
             return 0                  # 无变更 —— 不出声、不产生空提交
 
         _did_something[0] = True
         log("检测到 %d 个对象有变更：%s" % (len(items), "、".join(block_names(items)[:8])))
 
-        syn = eng.call("SyncVersionControlWorkspace", direction="ProjectToWorkspace",
+        syn = eng.call("SynchronizeVersionControlWorkspace", direction="ProjectToWorkspace",
                        dryRun=False, workspaceName=ws_name)
+
+        if syn["meta"]["outcome"] == "unknown" or syn["meta"]["requiresSessionReset"]:
+            raise RuntimeError(str(syn["error"]))
 
         # 失败分两类。"块不一致 → 先编译"是常态而非故障：工程师刚在博途里改完、还没编译时
         # 必然是这个状态，VCI 明确拒绝导出（The block is inconsistent. Compile the block prior to export.）
-        fails = [it for it in (syn.get("items") or []) if "FAILED" in it]
+        fails = [it for it in ((syn["data"] or {}).get("items") or []) if "FAILED" in it]
         need_compile = [it for it in fails if "inconsistent" in it]
         hard_fails = [it for it in fails if it not in need_compile]
 
@@ -419,11 +423,13 @@ def main():
             if cfg.get("autoCompile", False):
                 log("%d 个块改了但未编译，按配置自动编译：%s" % (len(need_compile), names))
                 for sw in cfg.get("compileSoftwarePaths", []):
-                    r = eng.call("CompileSoftware", softwarePath=sw)
-                    log("  编译 %s → %s" % (sw, r.get("message", "")))
-                syn = eng.call("SyncVersionControlWorkspace", direction="ProjectToWorkspace",
+                    r = eng.call("CompilePlcSoftware", softwarePath=sw)
+                    log("  编译 %s → %s" % (sw, (r["data"] or {}).get("summary") or str(r["error"])))
+                    if not r["ok"]: raise RuntimeError(str(r["error"]))
+                syn = eng.call("SynchronizeVersionControlWorkspace", direction="ProjectToWorkspace",
                                dryRun=False, workspaceName=ws_name)
-                fails = [it for it in (syn.get("items") or []) if "FAILED" in it]
+                if not syn["ok"]: raise RuntimeError(str(syn["error"]))
+                fails = [it for it in ((syn["data"] or {}).get("items") or []) if "FAILED" in it]
                 need_compile = [it for it in fails if "inconsistent" in it]
                 hard_fails = [it for it in fails if it not in need_compile]
             else:
@@ -433,10 +439,10 @@ def main():
                 log("%d 个块改了但**尚未编译**，VCI 导不出：%s" % (len(need_compile), names))
                 log("  → 在博途里编译一次即可；在那之前暂停重试 %d 分钟，避免反复连博途" % cool)
 
-        log("导出：%s" % syn.get("message", ""))
+        log("导出：%s" % (syn["data"] or {}).get("summary") or str(syn["error"]))
         for it in hard_fails:
             log("  失败明细：%s" % it.replace("\r", " ").replace("\n", " "))
-        if hard_fails:
+        if hard_fails or not syn["ok"]:
             log("有非「待编译」的失败项，本轮不提交，留给人看")
             return 1
 

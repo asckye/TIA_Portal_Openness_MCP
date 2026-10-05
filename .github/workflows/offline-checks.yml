@@ -43,6 +43,12 @@ jobs:
         run: |
           python3 scripts/checks/Check-ToolsList.py --self-test
           python3 scripts/checks/Check-ToolsList.py
+      - name: Script calls must use registered V4 tools
+        run: |
+          python scripts/checks/Check-ScriptToolCalls.py --self-test
+          python scripts/checks/Check-ScriptToolCalls.py
+          python scripts/mcp_results.py
+          python scripts/checks/Test-ScriptClients.py
       - name: Descriptions must not name unregistered tools
         run: python3 scripts/checks/Check-DeadToolReferences.py
       - name: Repository, layout, exception, comment, MCP text and response-envelope contracts

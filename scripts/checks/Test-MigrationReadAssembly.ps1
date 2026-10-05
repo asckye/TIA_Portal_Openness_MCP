@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$Exe,
     [Parameter(Mandatory=$true)][string]$PublicApiDirectory
 )
@@ -20,7 +20,7 @@ try {
     $catalogType=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolCatalog',$true)
     $catalog=$catalogType.GetProperty('Engine',[Reflection.BindingFlags]'NonPublic,Static').GetValue($null)
     $methods=$catalogType.GetProperty('Methods',[Reflection.BindingFlags]'NonPublic,Instance').GetValue($catalog)
-    $names=@('ListUnifiedGlobalScripts','ReadUnifiedGlobalScript','ReadUnifiedTagDefinitions','ReadUnifiedScreenBranch','ReadUnifiedLibraryType','ReadUnifiedFaceplateInstance','ListUnifiedLibraryFolder','ReleaseUnifiedReadCursor')
+    $names=@('ListUnifiedGlobalScripts','GetUnifiedGlobalScript','ListUnifiedTagDefinitions','GetUnifiedScreenBranch','GetUnifiedLibraryType','GetUnifiedFaceplateInstance','ListUnifiedLibraryFolderEntries','ReleaseUnifiedReadCursor')
     foreach($name in $names){
         $method=@($methods | Where-Object {$_.Key -ceq $name} | ForEach-Object {$_.Value})
         if($method.Count -ne 1){throw "Missing or duplicate tool: $name"}

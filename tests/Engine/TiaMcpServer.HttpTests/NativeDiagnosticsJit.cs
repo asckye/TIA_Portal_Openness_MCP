@@ -12,6 +12,7 @@ internal static partial class Program
             string path = Path.Combine(Path.GetFullPath(apiDirectory), new AssemblyName(args.Name).Name + ".dll");
             return File.Exists(path) ? Assembly.LoadFrom(path) : null;
         };
+        SerializedCallGuardTests().GetAwaiter().GetResult();
         var type = Server.GetType("TiaMcpServer.Diagnostics.GeneratedNativeCalls", true)!;
         int prepared = 0, open = 0;
         foreach (var method in Server.GetTypes().Where(t => t.Name.StartsWith("__TiaMcpNativeCall_", StringComparison.Ordinal)).SelectMany(t => t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)))

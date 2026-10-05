@@ -287,8 +287,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")));
             try { return AuditBridgeResult(audit, ToolResult(InvokeToolMethod(method!, call!))); }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            { return AuditBridgeResult(audit, TargetFailure(ex.InnerException)); }
+            catch (Exception ex)
+            { return AuditBridgeResult(audit, TargetFailure(name, ex, true)); }
         }
 
         private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result)
@@ -297,11 +297,28 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
 
-        private static CallToolResult TargetFailure(Exception error)
+        internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
         {
-            // The target's exception remains a target failure, as for SDK direct calls.
-            return new CallToolResult { IsError = true,
-                Content = new[] { new TextContentBlock { Text = error.Message } } };
+            if (error is TargetInvocationException invocation && invocation.InnerException != null) error = invocation.InnerException;
+            var evidence = new JsonObject { ["exceptionType"] = error.GetType().Name };
+            var data = new JsonObject { ["evidence"] = evidence };
+            if (!issued) return V4Reject(tool, new Error("The tool was rejected before dispatch.",
+                error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams
+                    ? (ErrorDetails)new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : new PreconditionFailedDetails("tool-dispatch", tool)), data);
+            // A thrown state-changing call does not establish its post-state. Retain only typed
+            // evidence, never exception text that may contain arguments or credentials.
+            var classification = AllToolMethods(includeUnavailable: true).TryGetValue(tool, out var method)
+                ? ClassificationOf(method) : ToolMetadata.Find(tool);
+            string operation = classification?.Operation ?? ToolTaxonomy.OperationOf(tool, null).Operation;
+            bool readOnly = operation is "READ" or "OFFLINE" || operation == "SESSION" && classification?.BatchRead == true;
+            if (!readOnly) return V4Result(tool, data,
+                new Error("The issued tool outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
+                    new OutcomeUnknownDetails("tool-call", evidence.ToDictionary(pair => pair.Key,
+                        pair => JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal))),
+                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true);
+            return V4Result(tool, data, new Error("The tool read could not be completed.", new InternalErrorDetails(null)),
+                Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
         }
 
         internal static Error? BindV4Call(string name, ToolArguments arguments, out MethodInfo? method, out object?[]? call)
@@ -360,7 +377,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, policy) == BehaviorPolicy.SafeV4)
             { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown, policy, completeness, paging, warnings);
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, policy, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
@@ -376,9 +393,19 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult ToolResult(object? result)
         {
-            if (result is CallToolResult protocol) return protocol;
+            if (result is CallToolResult protocol)
+            {
+                if (protocol.Content.Count != 1 || protocol.Content[0] is not TextContentBlock text || protocol.StructuredContent == null
+                    || !JsonNode.DeepEquals(JsonNode.Parse(text.Text), protocol.StructuredContent))
+                    throw new System.IO.InvalidDataException("Tool did not return matching V4 content.");
+                var envelope = V4Json.Deserialize<Envelope>(text.Text);
+                if (protocol.IsError != !envelope.Ok) throw new System.IO.InvalidDataException("Tool status disagrees with its V4 envelope.");
+                return protocol;
+            }
             string json = JsonSerializer.Serialize(result, result?.GetType() ?? typeof(object), V4BindingJson);
-            return new CallToolResult { Content = new[] { new TextContentBlock { Text = json } } };
+            var mapped = McpResult.From(V4Json.Deserialize<Envelope>(json));
+            return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }
         internal static JsonNode? ResultBody(CallToolResult result)
         {
@@ -642,10 +669,11 @@ namespace TiaMcpServer.ModelContextProtocol
             RecordBridgeEvent(id, method.Name, "BEFORE");
             IDisposable? observation = null;
             StartCallProjection(id, method, call, ref observation);
+            bool issued = false;
+            string toolName = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
             try
             {
                 var parameters = method.GetParameters();
-                var toolName = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
                 var problem = VersionCallProblem(toolName, key =>
                 {
                     int index = Array.FindIndex(parameters, p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
@@ -653,7 +681,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 });
                 if (problem.Length != 0) throw new NotSupportedException(problem);
                 ValidateRuntimeBinding(method);
-                object? result = method.Invoke(method.IsStatic ? null : EngineServices.Get(method.DeclaringType!), call);
+                object? target = method.IsStatic ? null : EngineServices.Get(method.DeclaringType!);
+                issued = true;
+                object? result = method.Invoke(target, call);
                 if (result is Task task)
                 {
                     task.GetAwaiter().GetResult();
@@ -664,7 +694,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 EndCallProjection(observation, result);
                 return result;
             }
-            catch { RecordBridgeEvent(id, method.Name, "THREW"); throw; }
+            catch (Exception ex)
+            {
+                RecordBridgeEvent(id, method.Name, "THREW");
+                var result = TargetFailure(toolName, ex, issued);
+                EndCallProjection(observation, result);
+                return result;
+            }
             finally { observation?.Dispose(); }
         }
 

@@ -225,8 +225,17 @@ def run_profile(args, transport, profile, run_dir):
             require(max(s['privateBytes'] for s in worker_samples) < args.max_private_mib * 1024 * 1024, 'Worker exceeded private memory bound')
             require(max(s['handleCount'] for s in worker_samples) - worker_samples[0]['handleCount'] <= args.max_handle_growth, 'Worker handles exceeded growth bound')
     # The context shuts down only this owned test host. It never stops a TIA process.
-    entries = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
+    rows = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
+    # Call-projection rows (Workbench call panel) are written at the transport boundary, outside the serialized gate.
+    entries = [(name, row) for name, row in rows if not row.get('callProjection')]
+    projections = [(name, row) for name, row in rows if row.get('callProjection')]
     require(entries, 'Invocation journal was not written')
+    require(projections, 'Call-projection rows were not written')
+    projection_phases = {}
+    for name, row in projections:
+        projection_phases.setdefault((name, row['id'], row['tool']), []).append(row['phase'])
+    require(all(phases[0] == 'BEFORE' and phases[-1] in ('RETURNED', 'INTERRUPTED') and len(phases) == 2
+                for phases in projection_phases.values()), 'Every call projection pairs one BEFORE with one terminal row')
     outstanding = Counter()
     stacks = {}
     forwarded, executed = set(), set()

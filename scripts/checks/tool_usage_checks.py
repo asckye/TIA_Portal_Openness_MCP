@@ -1,22 +1,22 @@
 """Usage retrieval and allowlisted in-memory example execution; no native TIA calls."""
 import hashlib
 import json
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import successful
 import xml.etree.ElementTree as ET
 
 
 def unwrap_usage(reply):
-    if reply.get('schemaVersion') == 4:
-        assert reply['ok'] and reply['error'] is None, reply
-        body = dict(reply['data'])
-        paging = reply['meta']['paging']
-        if paging:
-            following = paging['offset'] + paging['limit']
-            body['nextOffset'] = following if following < body.get('totalLines', body.get('totalMatches', 0)) else None
-            body['nextToolOffset'] = following if following < body.get('toolCount', 0) else None
-        return body
-    body = reply.get('meta', reply)
-    assert body.get('success'), reply
-    return body['usage']
+    reply = successful(reply)
+    body = dict(reply['data'])
+    paging = reply['meta']['paging']
+    if paging:
+        following = paging['offset'] + paging['limit']
+        body['nextOffset'] = following if following < body.get('totalLines', body.get('totalMatches', 0)) else None
+        body['nextToolOffset'] = following if following < body.get('toolCount', 0) else None
+    return body
 
 
 def check_usage(call, tools, release, exhaustive=True, verify_documents=False):

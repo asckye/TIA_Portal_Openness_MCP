@@ -451,3 +451,21 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 真实写入边界见[能力说明](../reference/capabilities.md)；尚未解决的原生事件见
 [Openness 限制](../troubleshooting/openness-limitations.md)。工程、密钥、现场原始日志及未脱敏截图不进入公开仓库。
+
+## V4 脚本调用与 campaign 输入
+
+CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 `McpResults.ps1` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+
+```powershell
+python scripts/checks/Check-ScriptToolCalls.py --self-test
+python scripts/checks/Check-ScriptToolCalls.py
+python scripts/mcp_results.py
+python scripts/checks/Test-ScriptClients.py
+python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe --public-api <V21-net48-SDK> --host-harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --major 21 --output bin-build/campaign-inputs
+```
+
+最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 校验全部 campaign 输入，不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
+
+沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`Test-EcosystemAssembly.ps1 -SkipPdf -SkipCompanion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
+
+原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。

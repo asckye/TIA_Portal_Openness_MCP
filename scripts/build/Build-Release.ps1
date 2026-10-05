@@ -401,12 +401,12 @@ $manifest.capabilities.mcpToolCount=$roster.toolCount
 $layers=[ordered]@{}
 $roster.tools | Group-Object layer | ForEach-Object {$layers[$_.Name]=$_.Count}
 $manifest.capabilities.mcpToolLayers=$layers
-# Derive lite count from the explicit source roster, and reject missing/duplicate registrations.
-$profile=Get-Content (Join-Path $source 'ModelContextProtocol/Tools/McpServer.Profile.cs') -Raw -Encoding UTF8
-$liteBody=[regex]::Match($profile,'(?s)LiteToolNames\s*=.*?\{(.*?)\};').Groups[1].Value
-if(!$liteBody){throw 'Could not locate the explicit lite tool roster'}
-$liteBody=[regex]::Replace($liteBody,'(?m)//[^\r\n]*','')
-$liteNames=@([regex]::Matches($liteBody,'"([^"]+)"') | ForEach-Object {$_.Groups[1].Value})
+# Derive lite count from the generated V4 catalog (the single source of the profiles), and reject missing/duplicate registrations.
+[xml]$toolProfiles=Get-Content (Join-Path $repo 'src/Logic/ModelContextProtocol/ToolProfiles.resx') -Raw -Encoding UTF8
+$catalogJson=@($toolProfiles.root.data | Where-Object {$_.name -eq 'Catalog'})[0].value
+if(!$catalogJson){throw 'Could not locate the generated tool catalog'}
+$liteNames=@(($catalogJson | ConvertFrom-Json).releases.'21' | Where-Object {$_.profiles -contains 'lite'} | ForEach-Object {$_.currentName})
+if(!$liteNames){throw 'Could not locate the generated lite tool roster'}
 if(($liteNames | Select-Object -Unique).Count -ne $liteNames.Count){throw 'Duplicate lite tool names'}
 foreach($name in $liteNames){if($name -notin $roster.tools.name){throw "Lite tool missing from compiled roster: $name"}}
 $manifest.capabilities.liteProfile.toolCount=$liteNames.Count

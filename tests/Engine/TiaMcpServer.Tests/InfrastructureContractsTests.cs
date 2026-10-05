@@ -41,7 +41,10 @@ namespace TiaMcpServer.Tests
         {
             internal static readonly List<string> Calls = new List<string>();
             [McpServerTool(Name = "ReadFixture"), ToolClassification("L0", "Meta", "READ", batchRead: true), System.ComponentModel.Description("Read a fixture; arbitrary translated text.")]
-            public static ResponseMessage Read(bool success = true) => new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = success } };
+            public static CallToolResult Read(bool success = true) => success
+                ? McpServer.V4Result("ReadFixture", new JsonObject { ["summary"] = "fixture" })
+                : McpServer.V4Result("ReadFixture", new JsonObject { ["summary"] = "fixture" },
+                    new Error("Fixture read failed.", new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
             [McpServerTool(Name = "WriteFixture"), ToolClassification("L2", "Meta", "WRITE", batchWrite: true), System.ComponentModel.Description("Write a fixture; arbitrary translated text.")]
             public static CallToolResult Write(string target, bool dryRun = true, string verdict = "success")
             {
@@ -73,14 +76,21 @@ namespace TiaMcpServer.Tests
             { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } };
 
         [Fact]
-        public async Task BridgePreservesTheSdkLegacyResult()
+        public async Task BridgePreservesTheSdkV4Result()
         {
             var tool = ToolCatalog.CreateTool(typeof(BatchProbes).GetMethod("Read")!);
             var direct = await tool.InvokeAsync(Request("ReadFixture", "{\"success\":false}"));
             var bridged = McpServer.CallTool("ReadFixture", Args("{\"success\":false}"));
-            Assert.Equal(((TextContentBlock)direct.Content.Single()).Text, ((TextContentBlock)bridged.Content.Single()).Text);
+            foreach (var result in new[] { direct, bridged })
+            {
+                Assert.Equal(4, (int)Body(result)["schemaVersion"]!);
+                Assert.True(JsonNode.DeepEquals(Body(result), result.StructuredContent));
+                Assert.True(result.IsError);
+            }
+            Assert.Equal(Body(direct)["data"]!.ToJsonString(), Body(bridged)["data"]!.ToJsonString());
+            Assert.Equal(Body(direct)["error"]!.ToJsonString(), Body(bridged)["error"]!.ToJsonString());
+            Assert.Equal((string?)Body(direct)["meta"]!["outcome"], (string?)Body(bridged)["meta"]!["outcome"]);
             Assert.Equal(direct.IsError, bridged.IsError);
-            Assert.Null(Body(bridged)["schemaVersion"]);
         }
 
         [Fact]

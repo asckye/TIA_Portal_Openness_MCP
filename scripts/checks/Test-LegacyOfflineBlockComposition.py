@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """Real stdio MCP checks; .NET host only, no worker/TIA process or SDK assembly."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope
+
 import argparse
 import json
 import pathlib
@@ -54,21 +59,20 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
         discovered = call("tools/list", {})["result"]["tools"]
         names = [tool["name"] for tool in discovered]
         assert len(names) == len(set(names))
-        for name, parameter, kind in (("ComposePlcFcBlockXml", "fcBlockJson", "FC"), ("ComposePlcFbBlockXml", "fbBlockJson", "FB")):
+        for name, parameter, kind in (("BuildPlcFcBlock", "fcBlock", "FC"), ("BuildPlcFbBlock", "fbBlock", "FB")):
             tool = next(tool for tool in discovered if tool["name"] == name)
             assert set(tool["inputSchema"]["required"]) == {parameter, "outputReleaseKey"}
-            value = {"blockName": "Sample" + kind, "blockNumber": 42, "inputs": [{"name": "Ready", "datatype": "Bool"}], "outputs": [], "structuredText": {"operations": [{"op": "assignment", "target": "#Ready", "value": "TRUE"}]}}
+            value = {"blockName": "Sample" + kind, "blockNumber": 42, "inputs": [{"name": "Ready", "datatype": "Bool"}], "outputs": [], "structuredText": {"operations": [{"op": "assign", "target": "#Ready", "literalValue": "TRUE"}]}}
             def invoke(value, output="21"):
-                return call("tools/call", {"name": name, "arguments": {parameter: json.dumps(value), "outputReleaseKey": output}})
+                return call("tools/call", {"name": name, "arguments": {parameter: value, "outputReleaseKey": output}})
             result = invoke(value)["result"]
             assert not result.get("isError"), result
-            payload = json.loads(result["content"][0]["text"])
-            payload = {key[0].lower() + key[1:]: item for key, item in payload.items()}
-            assert payload["ok"] and payload["meta"]["offlineOnly"]
-            assert payload["meta"]["outputReleaseKey"] == "21"
-            assert all(payload["meta"][flag] is False and payload["data"][flag] is False for flag in ("schemaValidated", "importValidated", "programSemanticsValidated"))
-            assert payload["outputPath"] is None and payload["outputFiles"] is None
-            root = ET.fromstring(payload["xml"])
+            payload = envelope(result)
+            assert payload["ok"] and payload["data"]["offlineOnly"]
+            assert payload["data"]["outputReleaseKey"] == "21"
+            assert all(payload["data"][flag] is False for flag in ("schemaValidated", "importValidated", "programSemanticsValidated"))
+            assert payload["data"]["outputPath"] is None and payload["data"]["outputFiles"] is None
+            root = ET.fromstring(payload["data"]["xml"])
             assert root.find("Engineering").attrib["version"] == "V21"
             assert root.find("SW.Blocks." + kind) is not None
             ns = "{http://www.siemens.com/automation/Openness/SW/Interface/v5}"
@@ -77,22 +81,21 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
             passed += 1
             fidelity = dict(value, blockName="a\r\n\t<&中文", commentZhCn="b\r\n\t<&中文")
             exact = invoke(fidelity)["result"]
-            exact = json.loads(exact["content"][0]["text"])
-            exact = {key[0].lower() + key[1:]: item for key, item in exact.items()}
-            exact_xml = ET.fromstring(exact["xml"])
+            exact = envelope(exact)
+            exact_xml = ET.fromstring(exact["data"]["xml"])
             assert exact_xml.find(".//SW.Blocks." + kind + "/AttributeList/Name").text == fidelity["blockName"]
             passed += 1
             for invalid in (dict(value, structuredTextInnerXml="<!DOCTYPE SECRET_CANARY>"), dict(value, name="SECRET_CANARY"), dict(value, inputs=None), dict(value, structuredText={"operations": [{"op":"token", "text":"SECRET_CANARY\n"}]})):
                 rejected = invoke(invalid)
-                assert rejected.get("error", {}).get("code") == -32602, rejected
+                assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
                 assert "SECRET_CANARY" not in json.dumps(rejected), rejected
                 passed += 1
             rejected = invoke(value, "17")
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             passed += 1
             if release == "21":
                 sample = evidence_dir / (name + ".xml")
-                sample.write_text(payload["xml"], encoding="utf-8")
+                sample.write_text(payload["data"]["xml"], encoding="utf-8")
                 print(name + " sample SHA-256 " + hashlib.sha256(sample.read_bytes()).hexdigest())
         print(f"{release}: both SCL block composers, fidelity, unsupported-output rejection and sanitized errors passed")
     finally:

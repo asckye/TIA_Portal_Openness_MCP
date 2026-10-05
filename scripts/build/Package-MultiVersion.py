@@ -33,7 +33,7 @@ def main():
     for record in records.values():
         for row in record['sourceFiles']:
             actual = files[row['path']]
-            if not row['path'].lower().endswith('.ttf'):
+            if not row['path'].lower().endswith(('.ttf', '.otf')):
                 actual = actual.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
             assert sha(actual) == row['sha256'], 'Source changed after testing: ' + row['path']
     binaries = multi['files'] + records['release-build']['runtimeFiles'] + [records['configurator-build']['executable']]

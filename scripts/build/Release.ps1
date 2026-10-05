@@ -153,7 +153,7 @@ function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi
     if ($Kind -eq 'multi') { $roots += @('src/Studio','tests/Studio','third_party/tia-openness-studio') }
     $files = @((Get-Item -LiteralPath (Join-Path $Root 'Version.props')))
     $files += Get-ChildItem ($roots | ForEach-Object { Join-Path $Root $_ }) -Recurse -File | Where-Object {
-        $_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json','.xaml','.ps1','.py','.toml','.xsd','.ttf' -and
+        $_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json','.xaml','.ps1','.py','.toml','.xsd','.ttf','.otf' -and
         $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20|__pycache__|\.venv)[\\/]'
     }
     foreach ($file in ($files | Sort-Object FullName -Unique)) {
@@ -161,7 +161,7 @@ function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi
     }
 }
 function Get-ReleaseSourceHash([string]$Path) {
-    if ([IO.Path]::GetExtension($Path) -eq '.ttf') { $bytes = [IO.File]::ReadAllBytes($Path) }
+    if ([IO.Path]::GetExtension($Path) -in '.ttf','.otf') { $bytes = [IO.File]::ReadAllBytes($Path) }
     else { $bytes = [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($Path).Replace("`r`n","`n")) }
     $sha = [Security.Cryptography.SHA256]::Create()
     try { return [BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('-','').ToLowerInvariant() }

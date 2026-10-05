@@ -48,16 +48,15 @@ def main():
 
     with scratch_directory() as directory:
         calls = {
-            'ReadOpennessGuidance': {'query': 'Openness', 'limit': 1},
-            'ReadV21EcosystemCatalog': {'limit': 1},
+            'GetOpennessGuidance': {'query': 'Openness', 'limit': 1},
+            'GetV21EcosystemCatalog': {'limit': 1},
             'ManagePlcGitRepository': {'repositoryPath': str(root), 'action': 'status'},
-            'ComposePlcAliasAlarmLad': {'blockName': 'Pilot', 'blockNumber': 1,
-                'rowsJson': '[{"source":["InputTag"],"destination":["OutputTag"]}]'},
+            'BuildPlcAliasAlarmLad': {'blockName': 'Pilot', 'blockNumber': 1,
+                'rows': [{'source': ['InputTag'], 'destination': ['OutputTag']}]},
             'AuditEngineeringExports': {'directoryPath': directory},
-            'PlanArtifactImportOrder': {'artifactsJson': '[{"Id":"A"}]'},
-            'GetAuthoringGuide': {'topic': 'workflow'},
-            'GetToolUsage': {'toolName': 'PlanArtifactImportOrder'},
-            'BuildClassicHmiTagTableXml': {'tableJson': '{"Name":"Pilot","Tags":[{"Name":"Ready","DataType":"Bool"}]}'},
+            'PlanArtifactImportOrder': {'artifacts': [{'id': 'A'}]},
+            'GetToolUsage': {'toolName': 'PlanArtifactImportOrder', 'exampleKind': 'sequence'},
+            'BuildClassicHmiTagTable': {'table': {'name': 'Pilot', 'tags': [{'name': 'Ready', 'dataType': 'Bool'}]}},
         }
         for isolated in (False, True):
             for profile in ('full', 'lite'):
@@ -83,42 +82,34 @@ def main():
                     def call(name, arguments):
                         reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
                         resources.require('result' in reply, str(reply))
-                        text = reply['result']['content'][0]['text']
-                        try:
-                            value = json.loads(text)
-                        except json.JSONDecodeError:
-                            resources.require(reply['result'].get('isError') is True, 'Successful result was not JSON')
-                            value = {'message': text}
-                        return reply['result'], value
+                        return reply['result'], resources.envelope(reply)
 
                     for name, arguments in calls.items():
                         if profile == 'full':
                             result, value = call(name, arguments)
                         else:
-                            result, bridge = call('CallTool', {'name': name.lower(), 'argumentsJson': json.dumps(arguments)})
-                            resources.require(bridge.get('meta', {}).get('bridgeSuccess') is True, str(bridge))
-                            value = json.loads(bridge['message'])
-                        check(not result.get('isError') and value.get('meta', value.get('Meta', {})).get('success') is True,
+                            result, value = call('CallTool', {'name': name, 'arguments': arguments})
+                        check(not result.get('isError') and value['ok'],
                               f'{profile} isolated={isolated} {name}: {value}')
 
-                    _, preflight = call('PreflightToolCall', {'name': 'PlanArtifactImportOrder',
-                        'argumentsJson': json.dumps(calls['PlanArtifactImportOrder'])})
-                    check(preflight['meta']['toolFound'] is True, 'Preflight lost the instance method')
-                    _, missing = call('CallTool', {'name': 'PlanArtifactImportOrder', 'argumentsJson': '{}'})
-                    check(missing['meta']['bridgeSuccess'] is False and 'artifactsJson' in missing['message'],
+                    _, preflight = call('PreviewToolCall', {'name': 'PlanArtifactImportOrder',
+                        'arguments': calls['PlanArtifactImportOrder']})
+                    check(not preflight['ok'] and preflight['error']['code'] == 'PROJECT_NOT_BOUND', 'Preview did not resolve the tool before the disconnected guard')
+                    _, missing = call('CallTool', {'name': 'PlanArtifactImportOrder', 'arguments': {}})
+                    check(not missing['ok'] and missing['error']['code'] == 'INVALID_ARGUMENT',
                           'Bridge lost required parameter diagnostics')
                     _, duplicate = call('CallTool', {'name': 'PlanArtifactImportOrder',
-                        'argumentsJson': '{"artifactsJson":"[]","ArtifactsJson":"[]"}'})
-                    check(duplicate['meta']['bridgeSuccess'] is False and 'Duplicate argument' in duplicate['message'],
+                        'arguments': {'artifacts': [], 'Artifacts': []}})
+                    check(not duplicate['ok'] and duplicate['error']['code'] == 'INVALID_ARGUMENT',
                           'Bridge lost duplicate argument admission')
                     if profile == 'full':
                         result, missing = call('PlanArtifactImportOrder', {})
-                        check(result.get('isError') is True and 'artifactsJson' in str(missing),
+                        check(result.get('isError') is True and missing['error']['code'] == 'INVALID_ARGUMENT',
                               'Direct instance call lost argument diagnostics')
                     if isolated:
-                        _, status = call('ReadOpennessWorkerStatus', {})
-                        check(status['meta']['worker']['state'] == 'Ready', 'Pilot tool never reached the isolated child')
-                print(f'PASS V{args.major} {profile} isolated={isolated}: nine pilot domains and admission checks', flush=True)
+                        _, status = call('GetOpennessWorkerStatus', {})
+                        check(status['data']['evidence']['worker']['state'] == 'Ready', 'Pilot tool never reached the isolated child')
+                print(f'PASS V{args.major} {profile} isolated={isolated}: eight pilot domains and admission checks', flush=True)
     print(f'COMPLETE: {passed} pilot dispatch checks passed; no native calls or network transport')
     return 0
 

@@ -9,7 +9,6 @@ import argparse
 import json
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -98,7 +97,8 @@ def supervise(command: list[str], output: Path, timeout: float, major: int, iter
 def self_test() -> int:
     # Fake child processes only: exercise failure/timeout handling without Siemens DLLs.
     count = 0
-    with tempfile.TemporaryDirectory(prefix="tia-native-supervisor-selftest-") as temp:
+    from offline_fixtures import fixture_directory
+    with fixture_directory('native-supervisor-selftest-') as temp:
         root = Path(temp)
         for name, code, expected, timeout in (
             ("nonzero", "raise SystemExit(7)", "FAILED", 5),

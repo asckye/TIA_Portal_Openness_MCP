@@ -102,7 +102,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public override Tool ProtocolTool => _inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
-            await Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try { await Gate.WaitAsync(cancellationToken).ConfigureAwait(false); }
+            catch (System.OperationCanceledException) /* swallow(privacy): report typed cancellation before dispatch without exposing exception text */
+            { return McpServer.V4Reject(ProtocolTool.Name, new TiaMcp.Logic.V4.Error("The request was cancelled before dispatch.", new TiaMcp.Logic.V4.CancelledDetails("tool-queue"))); }
             string? correlation = null;
             if (Isolation.IsolatedWorkerHost.IsChild)
             {
@@ -117,10 +119,12 @@ namespace TiaMcpServer.ModelContextProtocol
             using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, "engine", McpServer.ReleaseKey,
                 McpServer.IsWriteTool(ProtocolTool.Name),
                 () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+            bool issued = false;
             try
             {
                 McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
-                var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+                issued = true;
+                var result = McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false));
                 ExitFaultedWorker(id);
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
@@ -131,7 +135,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 _ = PortalFailureClassifier.IsPortalProcessLost(ex);
                 InvocationJournal.Write(id, ProtocolTool.Name, "THREW");
                 ExitFaultedWorker(id);
-                throw;
+                var result = McpServer.TargetFailure(ProtocolTool.Name, ex, issued);
+                journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+                return result;
             }
             finally { Gate.Release(); }
         }

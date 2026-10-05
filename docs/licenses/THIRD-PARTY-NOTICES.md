@@ -80,7 +80,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The original [Manrope license](Manrope-OFL.txt) and [JetBrains Mono license](JetBrainsMono-OFL.txt) are included here; font source URLs and hashes remain in the source repository. Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
 
-Noto Sans SC Regular, Medium and Bold are embedded as the desktop's Chinese fallback under SIL Open Font License 1.1. The original [license](../../src/Studio/Gui/Fonts/NotoSansSC-OFL.txt) is copied to the application output. The unmodified OTFs come from [notofonts/noto-cjk, Sans/SubsetOTF/SC](https://github.com/notofonts/noto-cjk/tree/main/Sans/SubsetOTF/SC), downloaded 2026-10-05; [SOURCES.txt](../../src/Studio/Gui/Fonts/SOURCES.txt) records all three SHA-256 values. No system-wide font installation is performed.
+Noto Sans SC Regular, Medium and Bold are embedded as the desktop's Chinese fallback under SIL Open Font License 1.1. The original [Noto Sans SC license](NotoSansSC-OFL.txt) is included here and copied to the application output. The unmodified OTFs come from [notofonts/noto-cjk, Sans/SubsetOTF/SC](https://github.com/notofonts/noto-cjk/tree/main/Sans/SubsetOTF/SC), downloaded 2026-10-05; their SHA-256 values remain in the source repository. No system-wide font installation is performed.
 
 ## Eido import dependency planner
 

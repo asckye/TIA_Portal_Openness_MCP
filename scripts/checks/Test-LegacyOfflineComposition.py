@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """Real stdio MCP checks; .NET host only, no worker/TIA process or SDK assembly."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope
+
 import argparse
 import json
 import pathlib
@@ -55,24 +60,22 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
         names = [tool["name"] for tool in discovered]
         assert len(names) == len(set(names))
         for name, parameter, value in (
-            ("BuildPlcGlobalDbXml", "globalDbJson", {"dbName": "SampleDb", "dbNumber": 42, "staticMembers": [{"name": "Ready", "datatype": "Bool", "externalWritable": False, "startValue": "TRUE", "commentZhCn": "Combined ordering sample"}]}),
-            ("BuildStructuredTextXml", "structuredTextJson", {"operations": [{"op": "assignment", "target": "#Count", "value": "1"}]}),
+            ("BuildPlcGlobalDb", "globalDb", {"dbName": "SampleDb", "dbNumber": 42, "staticMembers": [{"name": "Ready", "datatype": "Bool", "externalWritable": False, "startValue": "TRUE", "commentZhCn": "Combined ordering sample"}]}),
+            ("BuildStructuredText", "structuredText", {"operations": [{"op": "assign", "target": "#Count", "literalValue": "1"}]}),
         ):
             tool = next(tool for tool in discovered if tool["name"] == name)
             assert set(tool["inputSchema"]["required"]) == {parameter, "outputReleaseKey"}
-            arguments = {parameter: json.dumps(value), "outputReleaseKey": "21"}
+            arguments = {parameter: value, "outputReleaseKey": "21"}
             result = call("tools/call", {"name": name, "arguments": arguments})["result"]
             assert not result.get("isError"), result
-            payload = json.loads(result["content"][0]["text"])
-            # The SDK currently uses camelCase. Accept the configured policy, not a separate envelope.
-            payload = {key[0].lower() + key[1:]: value for key, value in payload.items()}
-            assert payload["ok"] and payload["meta"]["offlineOnly"]
-            assert payload["meta"]["outputReleaseKey"] == "21"
-            assert payload["meta"]["schemaValidated"] is False
-            assert payload["meta"]["importValidated"] is False
-            root = ET.fromstring(payload["xml"])
-            assert payload["meta"]["programSemanticsValidated"] is False
-            if name == "BuildPlcGlobalDbXml":
+            payload = envelope(result)
+            assert payload["ok"] and payload["data"]["offlineOnly"]
+            assert payload["data"]["outputReleaseKey"] == "21"
+            assert payload["data"]["schemaValidated"] is False
+            assert payload["data"]["importValidated"] is False
+            root = ET.fromstring(payload["data"]["xml"])
+            assert payload["data"]["programSemanticsValidated"] is False
+            if name == "BuildPlcGlobalDb":
                 assert root.find("Engineering").attrib["version"] == "V21"
                 ns = "{http://www.siemens.com/automation/Openness/SW/Interface/v5}"
                 member = root.find(".//" + ns + "Member")
@@ -82,12 +85,11 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
                 inner_args = dict(arguments, innerOnly=True)
                 inner_result = call("tools/call", {"name": name, "arguments": inner_args})["result"]
                 assert not inner_result.get("isError"), inner_result
-                inner = json.loads(inner_result["content"][0]["text"])
-                inner = {key[0].lower() + key[1:]: item for key, item in inner.items()}
-                wrapped = ET.fromstring('<StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4">' + inner["xml"] + '</StructuredText>')
+                inner = envelope(inner_result)
+                wrapped = ET.fromstring('<StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4">' + inner["data"]["xml"] + '</StructuredText>')
                 assert [ET.tostring(x) for x in root] == [ET.tostring(x) for x in wrapped]
                 passed += 1
-            if name == "BuildStructuredTextXml":
+            if name == "BuildStructuredText":
                 fidelity_negatives = [
                     {"operations": [{"op": "token", "text": "SECRET_CANARY\nvalue"}]},
                     {"operations": [{"op": "global", "name": "SECRET_CANARY\tvalue"}]},
@@ -103,39 +105,38 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
                 ]
                 fidelity_positive = dict(value, dbName="a\n\t<& value")
             for invalid in fidelity_negatives:
-                rejected = call("tools/call", {"name": name, "arguments": {parameter: json.dumps(invalid), "outputReleaseKey": "21"}})
-                assert rejected.get("error", {}).get("code") == -32602, rejected
+                rejected = call("tools/call", {"name": name, "arguments": {parameter: invalid, "outputReleaseKey": "21"}})
+                assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
                 assert "SECRET_CANARY" not in json.dumps(rejected), rejected
                 passed += 1
-            exact_result = call("tools/call", {"name": name, "arguments": {parameter: json.dumps(fidelity_positive), "outputReleaseKey": "21"}})["result"]
+            exact_result = call("tools/call", {"name": name, "arguments": {parameter: fidelity_positive, "outputReleaseKey": "21"}})["result"]
             assert not exact_result.get("isError"), exact_result
-            exact_payload = json.loads(exact_result["content"][0]["text"])
-            exact_payload = {key[0].lower() + key[1:]: item for key, item in exact_payload.items()}
-            exact_xml = ET.fromstring(exact_payload["xml"])
-            if name == "BuildStructuredTextXml":
+            exact_payload = envelope(exact_result)
+            exact_xml = ET.fromstring(exact_payload["data"]["xml"])
+            if name == "BuildStructuredText":
                 assert exact_xml.find(".//{http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4}ConstantValue").text == "a\n\t<& value"
             else:
                 assert exact_xml.find(".//SW.Blocks.GlobalDB/AttributeList/Name").text == "a\n\t<& value"
             passed += 1
             if release == "21":
                 sample = evidence_dir / (name + ".xml")
-                sample.write_text(payload["xml"], encoding="utf-8")
-                if name == "BuildPlcGlobalDbXml":
+                sample.write_text(payload["data"]["xml"], encoding="utf-8")
+                if name == "BuildPlcGlobalDb":
                     fragment = evidence_dir / "GlobalDbSections.xml"
                     # Extract without namespace removal; XML prefix choice has no semantic effect.
                     fragment.write_bytes(ET.tostring(root.find(".//" + ns + "Sections"), encoding="utf-8"))
                 print(name + " sample SHA-256 " + hashlib.sha256(sample.read_bytes()).hexdigest())
             passed += 1
-            arguments["outputReleaseKey"] = "17"
+            arguments["outputReleaseKey"] = "99" if name == "BuildPlcGlobalDb" else "17"
             rejected = call("tools/call", {"name": name, "arguments": arguments})
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             passed += 1
             secret = "SECRET-example-token-9f781"
-            arguments = {parameter: json.dumps({secret: True}), "outputReleaseKey": "21"}
+            arguments = {parameter: {secret: True}, "outputReleaseKey": "21"}
             rejected = call("tools/call", {"name": name, "arguments": arguments})
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             assert secret not in json.dumps(rejected), rejected
-            assert len(rejected["error"]["message"]) < 256, rejected
+            assert len(envelope(rejected)["error"]["message"]) < 256, rejected
             passed += 1
         print(f"{release}: both composition builders, unsupported-output rejection and sanitized errors passed")
     finally:

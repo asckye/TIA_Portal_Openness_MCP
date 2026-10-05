@@ -1,48 +1,54 @@
 # -*- coding: utf-8 -*-
 """Assert that the DEFAULT (lite) profile is a USABLE profile, and that full still differs.
 
-lite is now the default roster for every host, so a model restricted to it must still be able
-to walk the golden path end to end, and to reach everything outside it. It could not: ImportFromDocuments / ExportAsDocuments / GetBlocks / GetBlockInfo /
-GetCrossReferences were all [L2], so a lite session could open a project and see the tree but
-could neither list a block nor use the PREFERRED document import path. Nothing caught that,
-because nothing checked it. This does.
+lite is the default roster for every host. Orientation and the discovery/dispatch bridge
+must be exposed directly; each golden-path tool must be registered and discoverable by
+its exact name. V4 puts several read and authoring tools behind FindTools/CallTool, so
+checking only the advertised lite names would reject a usable profile. This check proves
+that route without dispatching native workflow operations.
 
 It also guards the check itself. When lite became the default, "full" was still being requested
 by *unsetting* the env var — so both probes returned the same ~48 tools and every assertion here
 passed vacuously. full must now be requested explicitly AND come back strictly larger.
 
 Usage:  python scripts/checks/Check-LiteProfile.py [path-to-TiaMcp.Engine.V21.exe]
-Exit 0 = lite is self-sufficient, fits the host cap, and can reach everything else.
+Exit 0 = lite resolves its workflow tools, fits the host cap, and can reach everything else.
 """
+import argparse
 import json
 import os
 import pathlib
 import subprocess
 import sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from mcp_results import successful
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-EXE = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "runtime" / "v21" / "TiaMcp.Engine.V21.exe"
+EXE = ROOT / "runtime" / "v21" / "TiaMcp.Engine.V21.exe"
+HOST = None
+PUBLIC_API = None
+MAJOR = 21
 
 # The documented golden path: orientation -> connect/open -> read -> author -> compile -> save.
-# Every name here is referenced by the server instructions, README or GetAuthoringGuide, so a
-# profile that omits one is advertising a workflow it cannot perform.
+# Every name here is referenced by the server instructions, README or GetToolUsage, so a
+# profile that cannot resolve one is advertising a workflow it cannot perform.
 REQUIRED = [
     # orientation / diagnostics
-    "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetAuthoringGuide", "GetSessionState",
+    "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetToolUsage", "GetSessionState",
     # session + project
     "ConnectPortal", "DisconnectPortal", "OpenProject", "CreateProject", "AttachOpenProject",
     "CloseProject", "SaveProject", "GetProjectInfo", "GetProjectTree", "GetSoftwareTree",
     # read / understand
-    "GetBlocks", "GetBlocksWithHierarchy", "GetBlockInfo", "DescribeBlockLogic",
-    "GetCrossReferences", "GetPlcTagTables",
+    "ListPlcBlocks", "GetPlcBlockHierarchy", "GetPlcBlockInfo", "DescribePlcBlockLogic",
+    "GetPlcCrossReferences", "ListPlcTagTables",
     # author (golden path: SD documents preferred, SCL external source alternative)
     "BuildProjectScaffold", "BuildAndImportPlcArtifact", "WritePlcSclSourceFile",
-    "ImportFromDocuments", "ExportAsDocuments",
-    "ImportBlocksFromDocuments", "ExportBlocksAsDocuments",
+    "ImportPlcBlockDocuments", "ExportPlcBlockDocuments",
+    "ImportPlcBlocksDocuments", "ExportPlcBlocksDocuments",
     "GenerateBlocksFromExternalSource",
     # verify
-    "CompileSoftware", "CompileAndDiagnosePlc",
-    # the bridge out of lite — without these two, lite is a dead end for the other ~155 tools
+    "CompilePlcSoftware", "CompilePlcDiagnostics",
+    # the bridge out of lite — these expose the remaining registered tools
     "FindTools", "CallTool",
 ]
 
@@ -56,7 +62,8 @@ def tools_for_profile(profile):
     # "unset the env var" silently stopped meaning "full" the day lite became the default.
     env = dict(os.environ)
     env.pop("TIA_MCP_PROFILE", None)
-    args = [str(EXE), "--logging", "0"]
+    args = ([str(HOST), str(EXE), 'protocol-host', str(PUBLIC_API), '--tia-major-version', str(MAJOR), '--transport', 'stdio']
+            if HOST else [str(EXE)]) + ['--logging', '0']
     if profile:
         args += ["--profile", profile]
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -93,7 +100,14 @@ def tools_for_profile(profile):
         send("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},
                             "clientInfo": {"name": "lite-check", "version": "1"}})
         send("notifications/initialized", {}, notify=True)
-        return [t["name"] for t in send("tools/list", {})["result"]["tools"]]
+        names = [t['name'] for t in send('tools/list', {})['result']['tools']]
+        if profile == 'lite':
+            for name in REQUIRED:
+                if name in names: continue
+                found = successful(send('tools/call', {'name': 'FindTools', 'arguments': {'query': name, 'limit': 1}}))
+                if not any(line.startswith(name + '(') for line in found['data']['items']):
+                    raise SystemExit('lite discovery cannot resolve required tool: ' + name)
+        return names
     finally:
         try:
             p.stdin.close()
@@ -103,6 +117,16 @@ def tools_for_profile(profile):
 
 
 def main():
+    global EXE, HOST, PUBLIC_API, MAJOR
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('exe', nargs='?', type=pathlib.Path, default=EXE)
+    parser.add_argument('--host-harness', type=pathlib.Path)
+    parser.add_argument('--public-api', type=pathlib.Path)
+    parser.add_argument('--major', type=int, choices=(20, 21), default=21)
+    options = parser.parse_args()
+    EXE, HOST, PUBLIC_API, MAJOR = options.exe.resolve(), options.host_harness, options.public_api, options.major
+    if HOST and not PUBLIC_API: parser.error('--public-api is required with --host-harness')
+    if HOST: HOST, PUBLIC_API = HOST.resolve(), PUBLIC_API.resolve()
     if not EXE.exists():
         print("[FAIL] engine not found:", EXE)
         return 1
@@ -116,9 +140,9 @@ def main():
     print("default profile: %d tools" % len(default))
 
     failures = []
-    missing = [n for n in REQUIRED if n not in lite]
+    missing = [n for n in ('GetToolUsage', 'GetSessionState', 'FindTools', 'CallTool') if n not in lite]
     if missing:
-        failures.append("lite is missing golden-path tools: " + ", ".join(missing))
+        failures.append("lite is missing discovery/session tools: " + ", ".join(missing))
 
     unknown = [n for n in REQUIRED if n not in full]
     if unknown:
@@ -148,7 +172,7 @@ def main():
         print("[FAIL]", f)
     if failures:
         return 1
-    print("[ ok ] default is lite; lite covers all %d golden-path tools, stays under the %d cap, "
+    print("[ ok ] default is lite; lite resolves all %d golden-path tools directly or through FindTools/CallTool, stays under the %d cap, "
           "and the other %d tools stay reachable via FindTools/CallTool"
           % (len(REQUIRED), HOST_TOOL_CAP, len(full) - len(lite)))
     return 0

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """Real stdio MCP checks; .NET host only, no worker/TIA process or SDK assembly."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope
+
 import argparse
 import json
 import queue
@@ -50,34 +55,32 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
         names = [tool["name"] for tool in discovered]
         assert len(names) == len(set(names))
         for name, parameter, value in (
-            ("BuildPlcUdtXml", "udtJson", {"name": "Sample", "members": [{"name": "Ready", "datatype": "Bool"}]}),
-            ("BuildPlcTagTableXml", "tagTableJson", {"tableName": "Sample", "tags": [{"name": "Ready", "datatype": "Bool", "address": "%I0.0"}]}),
+            ("BuildPlcUdt", "udt", {"name": "Sample", "members": [{"name": "Ready", "datatype": "Bool"}]}),
+            ("BuildPlcTagTable", "tagTable", {"tableName": "Sample", "tags": [{"name": "Ready", "dataTypeName": "Bool", "logicalAddress": "%I0.0"}]}),
         ):
             tool = next(tool for tool in discovered if tool["name"] == name)
             assert set(tool["inputSchema"]["required"]) == {parameter, "outputReleaseKey"}
-            arguments = {parameter: json.dumps(value), "outputReleaseKey": "21"}
+            arguments = {parameter: value, "outputReleaseKey": "21"}
             result = call("tools/call", {"name": name, "arguments": arguments})["result"]
             assert not result.get("isError"), result
-            payload = json.loads(result["content"][0]["text"])
-            # The SDK currently uses camelCase. Accept the configured policy, not a separate envelope.
-            payload = {key[0].lower() + key[1:]: value for key, value in payload.items()}
-            assert payload["ok"] and payload["meta"]["offlineOnly"]
-            assert payload["meta"]["outputReleaseKey"] == "21"
-            assert payload["meta"]["schemaValidated"] is False
-            assert payload["meta"]["importValidated"] is False
-            root = ET.fromstring(payload["xml"])
+            payload = envelope(result)
+            assert payload["ok"] and payload["data"]["offlineOnly"]
+            assert payload["data"]["outputReleaseKey"] == "21"
+            assert payload["data"]["schemaValidated"] is False
+            assert payload["data"]["importValidated"] is False
+            root = ET.fromstring(payload["data"]["xml"])
             assert root.find("Engineering").attrib["version"] == "V21"
             passed += 1
-            arguments["outputReleaseKey"] = "17"
+            arguments["outputReleaseKey"] = "99"
             rejected = call("tools/call", {"name": name, "arguments": arguments})
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             passed += 1
             secret = "SECRET-example-token-9f781"
-            arguments = {parameter: json.dumps({secret: True}), "outputReleaseKey": "21"}
+            arguments = {parameter: {secret: True}, "outputReleaseKey": "21"}
             rejected = call("tools/call", {"name": name, "arguments": arguments})
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             assert secret not in json.dumps(rejected), rejected
-            assert len(rejected["error"]["message"]) < 256, rejected
+            assert len(envelope(rejected)["error"]["message"]) < 256, rejected
             passed += 1
         print(f"{release}: both pure-memory builders, unsupported-output rejection and sanitized errors passed")
     finally:

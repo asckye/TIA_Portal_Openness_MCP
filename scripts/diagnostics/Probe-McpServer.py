@@ -3,14 +3,19 @@ from a machine whose MCP client cannot reach the server (e.g. a system HTTP_PROX
 
     python scripts/diagnostics/Probe-McpServer.py tools [filter ...]          list the advertised (lite) tools
     python scripts/diagnostics/Probe-McpServer.py call   <Tool> [json|@file]  call a tool that is in the lite roster
-    python scripts/diagnostics/Probe-McpServer.py bridge <Tool> [json|@file]  call ANY tool through CallTool(name, argumentsJson)
+    python scripts/diagnostics/Probe-McpServer.py bridge <Tool> [json|@file]  call ANY tool through CallTool(name, arguments)
 
 Connection: --url / --token, or the environment (TIA_MCP_URL / TIA_MCP_TOKEN), or - by default - the `tia-portal-vm`
 entry of ~/.claude.json (url + Authorization header). The proxy is bypassed. The bearer token is never printed.
 Arguments given as @file.json avoid shell backslash mangling on Windows. Responses larger than the server's page size
-come back as a GetExport handle (see the engine's export paging); pass small `limit` values instead of paging here.
+come back as a GetExportContent handle (see the engine's export paging); pass small `limit` values instead of paging here.
 Every call opens its own MCP session; the engine keeps its Portal state across sessions.
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope, successful
+
 import argparse, json, os, sys, urllib.request
 
 
@@ -108,23 +113,10 @@ def print_result(r, bridge):
     if isinstance(r, dict) and "error" in r:  # JSON-RPC error (unknown tool, lite roster refusal ...): show it instead of silence
         print("** rpc error:", json.dumps(r["error"], ensure_ascii=False))
         return
-    res = r.get("result") or r
-    for c in res.get("content", []):
-        if c.get("type") != "text":
-            print(c); continue
-        txt = c["text"]
-        try:
-            obj = json.loads(txt)
-            if bridge and isinstance(obj.get("message"), str):
-                try:
-                    obj["message"] = json.loads(obj["message"])  # CallTool wraps the inner tool JSON as a string
-                except ValueError:
-                    pass
-            print(json.dumps(obj, ensure_ascii=False, indent=2))
-        except ValueError:
-            print(txt)
-    if res.get("isError"):
-        print("** isError=true **")
+    obj = envelope(r)
+    print(json.dumps(obj, ensure_ascii=False, indent=2))
+    if not obj['ok']:
+        print('** error=' + obj['error']['code'] + ' **')
 
 
 def main():
@@ -161,7 +153,7 @@ def main():
         sys.exit("tool name required")
     name, args = a.rest[0], load_args(a.rest[1] if len(a.rest) > 1 else "")
     if a.mode == "bridge":
-        args = {"name": name, "argumentsJson": json.dumps(args, ensure_ascii=False)}
+        args = {"name": name, "arguments": args}
         name = "CallTool"
     print_result(probe.rpc("tools/call", {"name": name, "arguments": args}), a.mode == "bridge")
 

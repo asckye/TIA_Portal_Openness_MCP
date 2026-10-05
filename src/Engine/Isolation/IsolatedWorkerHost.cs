@@ -14,6 +14,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
+using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.Isolation
 {
@@ -91,6 +92,20 @@ namespace TiaMcpServer.Isolation
             || string.Equals(name, "RestartOpennessWorker", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "GetNativeInvocationLog", StringComparison.OrdinalIgnoreCase);
 
+        internal static CallToolResult Error(string tool, WorkerCallException exception, OpennessWorkerSupervisor? supervisor)
+        {
+            var evidence = new JsonObject { ["nativeOutcomeUnknown"] = exception.OutcomeUnknown,
+                ["automaticReplay"] = false, ["worker"] = supervisor?.Snapshot() };
+            var details = exception.OutcomeUnknown
+                ? (ErrorDetails)new OutcomeUnknownDetails("worker-call", evidence.ToDictionary(
+                    pair => pair.Key, pair => JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal))
+                : exception.Details;
+            return McpServer.V4Result(tool, new JsonObject { ["evidence"] = evidence }, new Error(exception.Message, details),
+                exception.OutcomeUnknown ? Outcome.Unknown : Outcome.RejectedBeforeOperation,
+                exception.OutcomeUnknown ? Execution.Unknown : Execution.NotStarted,
+                exception.OutcomeUnknown ? Completeness.Unknown : Completeness.None);
+        }
+
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
         {
             var result = new List<McpServerTool>();
@@ -125,7 +140,9 @@ namespace TiaMcpServer.Isolation
                     journal.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
                     return result;
                 }
-                var supervisor = Current ?? throw new InvalidOperationException("Worker host stopped.");
+                var supervisor = Current;
+                if (supervisor == null) return Recorded(Error(tool.Name,
+                    new WorkerCallException("Worker host is stopped; no operation was dispatched.", false), null));
                 try
                 {
                     var parameters = JsonNode.Parse(JsonSerializer.Serialize(request.Params, McpJsonUtilities.DefaultOptions)) as JsonObject
@@ -141,17 +158,18 @@ namespace TiaMcpServer.Isolation
                         catch /* swallow(fail-open-guard): optional progress delivery must not interrupt the worker response reader */ { }
                     };
                     var envelope = await supervisor.CallAsync(parameters, progress, cancellationToken).ConfigureAwait(false);
-                    if (envelope["error"] != null) return Recorded(Error("Worker rejected the request: " + envelope["error"]!.ToJsonString(), false, supervisor));
+                    if (envelope["error"] != null) return Recorded(Error(tool.Name,
+                        new WorkerCallException("Worker rejected the request before execution.", false,
+                            envelope["error"]?["code"]?.GetValue<int>() == -32601
+                                ? (ErrorDetails)new ToolNotFoundDetails(request.Params?.Name)
+                                : new InvalidArgumentDetails("arguments", Array.Empty<string>())), supervisor));
                     return Recorded(JsonSerializer.Deserialize<CallToolResult>(envelope["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
                         ?? throw new InvalidDataException("Worker returned no tool result."));
                 }
-                catch (WorkerCallException ex) { return Recorded(Error(ex.Message, ex.OutcomeUnknown, supervisor)); }
+                catch (WorkerCallException ex) { return Recorded(Error(tool.Name, ex, supervisor)); }
+                catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
+                { return Recorded(McpServer.V4Reject(tool.Name, McpServer.InvalidInput("arguments"))); }
             }
-            private static CallToolResult Error(string message, bool unknown, OpennessWorkerSupervisor supervisor) => new CallToolResult {
-                IsError = true,
-                Content = new[] { new TextContentBlock { Text = new JsonObject { ["message"] = message,
-                    ["meta"] = new JsonObject { ["success"] = false, ["nativeOutcomeUnknown"] = unknown, ["automaticReplay"] = false, ["worker"] = supervisor.Snapshot() } }.ToJsonString() } }
-            };
         }
     }
 }

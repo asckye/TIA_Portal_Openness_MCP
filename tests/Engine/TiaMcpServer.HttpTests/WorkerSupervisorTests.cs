@@ -71,6 +71,7 @@ internal static partial class Program
             if (args.Length > 2) File.AppendAllText(args[2], calls + "\n");
             if (mode == "hang") { Thread.Sleep(30000); return 0; }
             if (mode == "crash") Environment.Exit(23);
+            if (mode == "fault-after-call") { File.AppendAllText(args[2] + ".completed", "simulated operation completed\n"); return 23; }
             if (mode == "partial") { Console.Write("{\"jsonrpc\":"); Console.Out.Flush(); return 0; }
             if (mode == "malformed") { Console.WriteLine("garbage"); continue; }
             if (mode == "missing-content") { Console.WriteLine(Reply(id, new { isError = false })); continue; }
@@ -78,12 +79,25 @@ internal static partial class Program
             if (mode == "oversize") { Console.WriteLine(new string('x', 16 * 1024 * 1024 + 1)); continue; }
             if (mode == "slow") Thread.Sleep(350);
             if (mode == "logical-error") { Console.WriteLine(Json.Serialize(new { jsonrpc = "2.0", id, error = new { code = -32602, message = "Invalid test argument" } })); continue; }
+            if (mode == "internal-error") { Console.WriteLine(Json.Serialize(new { jsonrpc = "2.0", id, error = new { code = -32603, message = "Unconfirmed test call" } })); continue; }
             if (mode == "progress") Console.WriteLine(Json.Serialize(new { jsonrpc = "2.0", method = "notifications/progress", @params = new { progressToken = "test", progress = 1 } }));
-            if (mode == "stdin-utf8") {
-                Console.WriteLine(Reply(id, new { content = new[] { new { type = "text", text = Json.Serialize(new { frames = inputFrames }) } }, isError = false }));
-                continue;
-            }
-            Console.WriteLine(Reply(mode == "wrong-id" ? "wrong" : id, new { content = new[] { new { type = "text", text = Json.Serialize(new { Meta = new { success = mode != "binding-fails" }, value = "中文🟦", call = calls }) } }, isError = false }));
+            if (mode == "old-envelope") { Console.WriteLine(Reply(id, new { content = new[] { new { type = "text", text = "{\"message\":\"old\",\"meta\":{\"success\":true}}" } }, isError = false })); continue; }
+            var parameters = (Dictionary<string, object>)request["params"];
+            string tool = (string)parameters["name"];
+            if (tool == "CallTool") tool = (string)((Dictionary<string, object>)parameters["arguments"])["name"];
+            bool ok = mode != "binding-fails";
+            var payload = new {
+                schemaVersion = 4, ok,
+                data = mode == "stdin-utf8" ? (object)new { frames = inputFrames } : new { value = "中文🟦", call = calls },
+                error = ok ? null : new { code = "PROJECT_NOT_BOUND", message = "Fixture is not bound.", details = new { } },
+                meta = new { timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'"), releaseKey = major.ToString(), tool,
+                    requestId = "fixture-request", outcome = ok ? "succeeded" : "rejected-before-operation", execution = ok ? "read-only" : "not-started",
+                    requiresSessionReset = false, behaviorPolicy = "not-applicable", completeness = ok ? "complete" : "none", paging = (object?)null, warnings = new object[0] }
+            };
+            Console.WriteLine(Reply(mode == "wrong-id" ? "wrong" : id, new {
+                content = new[] { new { type = "text", text = Json.Serialize(payload) } },
+                structuredContent = mode == "mismatched-envelope" ? (object)new { schemaVersion = 4 } : payload,
+                isError = mode == "wrong-is-error" ? ok : !ok }));
             if (mode == "duplicate") Console.WriteLine(Reply(id, new { }));
         }
         return 0;
@@ -129,7 +143,7 @@ internal static partial class Program
                         var response = await f.Call(arguments: "{\"value\":\"中文🟦\"}");
                         var result = (Dictionary<string, object>)response["result"];
                         string text = (string)((Dictionary<string, object>)((IList)result["content"])[0]!)["text"];
-                        var frames = ((IList)Parse(text)["frames"]).Cast<string>().ToArray();
+                        var frames = ((IList)((Dictionary<string, object>)Parse(text)["data"])["frames"]).Cast<string>().ToArray();
                         Check(frames.Length == 4 + call, "Worker framing/order changed");
                         var methods = new[] { "initialize", "notifications/initialized", "tools/list", "tools/call", "tools/call" };
                         for (int i = 0; i < frames.Length; i++) {
@@ -214,16 +228,90 @@ internal static partial class Program
         internal int Dispatches => File.Exists(Log) ? File.ReadAllLines(Log).Length : 0;
     }
 
-    private static async Task WorkerFailure(Task task, bool unknown)
+    private static async Task WorkerFailure(Task task, bool unknown, WorkerFixture? fixture = null, string? code = null)
     {
         try { await task; }
         catch (Exception ex)
         {
             Check(ex.GetType().Name == "WorkerCallException", "Wrong failure type: " + ex.GetType().Name);
             Check((bool)ex.GetType().GetProperty("OutcomeUnknown", All)!.GetValue(ex)! == unknown, "Wrong native outcome certainty");
+            var host = Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost", true)!;
+            object response = host.GetMethod("Error", All)!.Invoke(null, new object?[] { "GetSessionState", ex, fixture?.Supervisor })!;
+            var envelope = CheckWorkerEnvelope(response, unknown);
+            if (code != null) Check((string)((Dictionary<string, object>)envelope["error"])["code"] == code, "Wrong section-3 guard code");
+            if (fixture != null) {
+                var evidence = (Dictionary<string, object>)((Dictionary<string, object>)envelope["data"])["evidence"];
+                Check((string)((Dictionary<string, object>)evidence["worker"])["state"] == (string)fixture.State["state"], "Guard lost worker state evidence");
+            }
             return;
         }
         throw new Exception("Expected worker rejection");
+    }
+
+    private static Dictionary<string, object> CheckWorkerEnvelope(object response, bool unknown)
+    {
+        var blocks = ((IEnumerable)response.GetType().GetProperty("Content")!.GetValue(response)!).Cast<object>().ToArray();
+        Check(blocks.Length == 1, "Guard returned more than one content block");
+        string text = (string)blocks[0].GetType().GetProperty("Text")!.GetValue(blocks[0])!;
+        var value = Parse(text);
+        string structured = response.GetType().GetProperty("StructuredContent")!.GetValue(response)!.ToString()!;
+        Check(Json.Serialize(Parse(structured)) == Json.Serialize(value), "Guard structuredContent/text mismatch");
+        Check((int)value["schemaVersion"] == 4 && !(bool)value["ok"] && (bool)response.GetType().GetProperty("IsError")!.GetValue(response)!, "Guard status is not V4");
+        var meta = (Dictionary<string, object>)value["meta"];
+        var error = (Dictionary<string, object>)value["error"];
+        Check(!value.ContainsKey("message") && !meta.ContainsKey("success"), "Guard retained a 3.x verdict");
+        Check((string)meta["outcome"] == (unknown ? "unknown" : "rejected-before-operation")
+            && (string)meta["execution"] == (unknown ? "unknown" : "not-started"), "Guard lost its dispatch boundary");
+        Check((bool)meta["requiresSessionReset"] == (unknown || (string)error["code"] == "SESSION_RESET_REQUIRED"), "Guard lost reset requirement");
+        Check(error.ContainsKey("details") && (!unknown || (string)error["code"] == "OUTCOME_UNKNOWN"), "Guard lost code-specific details");
+        var data = (Dictionary<string, object>)value["data"];
+        Check(!((bool)((Dictionary<string, object>)data["evidence"])["automaticReplay"]), "Guard enabled replay");
+        return value;
+    }
+
+    private sealed class SdkGuardFixture : ModelContextProtocol.Server.McpServerTool
+    {
+        private readonly bool write;
+        private readonly bool legacy;
+        internal int Calls;
+        internal SdkGuardFixture(bool write, bool legacy = false) { this.write = write; this.legacy = legacy; }
+        public override ModelContextProtocol.Protocol.Tool ProtocolTool => new ModelContextProtocol.Protocol.Tool {
+            Name = write ? "RestartOpennessWorker" : "GetSessionState" };
+        public override ValueTask<ModelContextProtocol.Protocol.CallToolResult> InvokeAsync(
+            ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            if (legacy) return new ValueTask<ModelContextProtocol.Protocol.CallToolResult>(new ModelContextProtocol.Protocol.CallToolResult {
+                Content = new[] { new ModelContextProtocol.Protocol.TextContentBlock { Text = "{\"message\":\"old\",\"meta\":{\"success\":true}}" } } });
+            throw new ModelContextProtocol.McpException("SECRET-fixture-argument", ModelContextProtocol.McpErrorCode.InternalError);
+        }
+    }
+
+    private static async Task SerializedCallGuardTests()
+    {
+        int before = Passed;
+        foreach (var scenario in new[] { "read-exception", "write-exception", "legacy-result", "cancel-before-call" })
+            await Test("direct SDK dispatch guard returns V4: " + scenario, async () => {
+                var fixture = new SdkGuardFixture(scenario == "write-exception", scenario == "legacy-result");
+                var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.SerializedCallTool", true)!;
+                var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { fixture }, null)!;
+                using var cancellation = new CancellationTokenSource();
+                if (scenario == "cancel-before-call") cancellation.Cancel();
+                var result = await tool.InvokeAsync(null!, cancellation.Token);
+                var text = result.Content.Cast<ModelContextProtocol.Protocol.TextContentBlock>().Single().Text;
+                var body = Parse(text);
+                Check(Json.Serialize(Parse(result.StructuredContent!.ToString())) == Json.Serialize(body)
+                    && (int)body["schemaVersion"] == 4 && !(bool)body["ok"] && result.IsError == true, "SDK guard is not a matching V4 error");
+                var error = (Dictionary<string, object>)body["error"];
+                var meta = (Dictionary<string, object>)body["meta"];
+                bool unknown = scenario == "write-exception", cancelled = scenario == "cancel-before-call";
+                Check((string)error["code"] == (unknown ? "OUTCOME_UNKNOWN" : cancelled ? "CANCELLED" : "INTERNAL_ERROR")
+                    && (string)meta["outcome"] == (unknown ? "unknown" : cancelled ? "rejected-before-operation" : "read-failed")
+                    && (string)meta["execution"] == (unknown ? "unknown" : cancelled ? "not-started" : "read-only")
+                    && (bool)meta["requiresSessionReset"] == unknown, "SDK guard lost typed outcome details: " + scenario + " " + text);
+                Check(fixture.Calls == (cancelled ? 0 : 1) && !text.Contains("SECRET") && !body.ContainsKey("message"), "SDK guard leaked arguments or dispatched cancellation");
+            });
+        Console.WriteLine("COMPLETE: " + (Passed-before) + " direct SDK guard checks passed; no native call executed");
     }
 
     private static async Task WorkerSupervisorTests()
@@ -247,24 +335,30 @@ internal static partial class Program
                 var response=await f.Call(); Check(response.ContainsKey("result"), "Missing result");
                 var result=(Dictionary<string,object>)response["result"];
                 var text=(string)((Dictionary<string,object>)((IList)result["content"])[0]!)["text"];
-                Check((string)Parse(text)["value"]=="中文🟦","Unicode response corrupted");
+                Check((string)((Dictionary<string, object>)Parse(text)["data"])["value"]=="中文🟦","Unicode response corrupted");
             }
             Check(f.Starts == 1 && f.Dispatches == 20 && (string)f.State["state"] == "Ready", "Worker state drift");
+        });
+        await Test("disconnected worker rejects before the operation with a V4 envelope", async () => {
+            using var f = new WorkerFixture(); f.Dispose();
+            await WorkerFailure(f.Call(), false, f, "RESOURCE_UNAVAILABLE");
+            Check(f.Starts == 0 && f.Dispatches == 0, "Disconnected worker dispatched an operation");
         });
         foreach (var mode in new[] { "hello-hang", "hello-crash", "bad-protocol", "wrong-major", "wrong-hash", "wrong-tools" })
             await Test("reject startup " + mode + " without dispatch", async () => {
                 using var f = new WorkerFixture(mode, .7);
-                await WorkerFailure(f.Call(), false);
+                await WorkerFailure(f.Call(), false, f, mode == "hello-hang" ? "TIMEOUT" : "RESOURCE_UNAVAILABLE");
                 Check((string)f.State["state"] == "Faulted" && f.Dispatches == 0, "Startup fault dispatched tool");
-                await WorkerFailure(f.Call(), false);
+                await WorkerFailure(f.Call(), false, f, "SESSION_RESET_REQUIRED");
                 Check(f.Starts == 1, "Fault silently restarted worker");
             });
-        foreach (var mode in new[] { "hang", "crash", "partial", "malformed", "missing-content", "invalid-content", "wrong-id", "oversize" })
+        foreach (var mode in new[] { "hang", "crash", "fault-after-call", "partial", "malformed", "missing-content", "invalid-content", "old-envelope", "mismatched-envelope", "wrong-is-error", "internal-error", "wrong-id", "oversize" })
             await Test("fault " + mode + " invalidates channel with no replay", async () => {
                 using var f = new WorkerFixture(mode, mode=="oversize"?10:1.5);
-                await WorkerFailure(f.Call(), true);
+                await WorkerFailure(f.Call(), true, f, "OUTCOME_UNKNOWN");
                 Check((string)f.State["state"] == "Faulted" && f.Dispatches == 1, "Fault was not latched");
-                await WorkerFailure(f.Call(), false);
+                if (mode == "fault-after-call") Check(File.Exists(f.Log + ".completed"), "After-call fixture did not reach simulated completion");
+                await WorkerFailure(f.Call(), false, f, "SESSION_RESET_REQUIRED");
                 Check(f.Starts == 1 && f.Dispatches == 1, "Operation replayed");
             });
         await Test("duplicate response invalidates worker", async () => {
@@ -283,7 +377,7 @@ internal static partial class Program
             using var f = new WorkerFixture(); await f.Call();
             Check((bool)f.Restart(false)["dryRun"] && f.Starts == 1, "Preview reset mutated state");
             f.Restart(true);
-            await WorkerFailure(f.Call("SaveProject"), false);
+            await WorkerFailure(f.Call("SaveProject"), false, f, "PROJECT_NOT_BOUND");
             await WorkerFailure(f.Call("ConnectPortal"), false);
             Check(f.Starts==1, "Blocked operation launched worker");
             await f.Call("ConnectPortal", "{\"projectName\":\"scratch\"}");

@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Exercise real host MCP stdio only; never launch a worker/TIA. Requires built net10 host."""
-import argparse, json, os, pathlib, select, subprocess, tempfile
+import argparse, json, os, pathlib, queue, subprocess, tempfile, threading, sys
+from contextlib import nullcontext
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from mcp_results import envelope
 
 p = argparse.ArgumentParser()
 p.add_argument('--dotnet', required=True)
 p.add_argument('--host', required=True)
+p.add_argument('--temp-root', type=pathlib.Path)
 a = p.parse_args()
 checks = 0
-with tempfile.TemporaryDirectory(prefix='passive-host-') as directory:
+if a.temp_root: a.temp_root.mkdir(parents=True, exist_ok=False)
+with (nullcontext(str(a.temp_root.resolve())) if a.temp_root else tempfile.TemporaryDirectory(prefix='passive-host-')) as directory:
     root = pathlib.Path(directory)
     marker = root / 'FORBIDDEN_WORKER_LAUNCH'
     worker = root / 'worker-sentinel'
@@ -16,19 +21,25 @@ with tempfile.TemporaryDirectory(prefix='passive-host-') as directory:
     for release in ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']:
         for enabled in [False, True]:
             cmd = [a.dotnet, a.host, '--release-key', release, '--worker-exe', str(worker), '--public-api', directory]
-            if enabled:
-                cmd.append('--native-session')
+            if not enabled:
+                cmd.append('--offline')
             env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false')
             with tempfile.TemporaryFile(mode='w+') as errors:
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors, text=True, env=env)
+                lines = queue.Queue()
+                def pump():
+                    for line in proc.stdout: lines.put(line)
+                    lines.put(None)
+                threading.Thread(target=pump, daemon=True).start()
                 sequence = 0
                 def rpc(method, params):
                     global sequence, checks
                     sequence += 1
                     proc.stdin.write(json.dumps(dict(jsonrpc='2.0', id=sequence, method=method, params=params)) + '\n')
                     proc.stdin.flush()
-                    assert select.select([proc.stdout], [], [], 15)[0], 'host response timeout'
-                    response = json.loads(proc.stdout.readline())
+                    line = lines.get(timeout=15)
+                    assert line is not None, 'host exited'
+                    response = json.loads(line)
                     assert response.get('id') == sequence, response
                     checks += 1
                     return response
@@ -36,10 +47,12 @@ with tempfile.TemporaryDirectory(prefix='passive-host-') as directory:
                     assert 'result' in rpc('initialize', dict(protocolVersion='2025-03-26', capabilities={}, clientInfo=dict(name='passive-host-test', version='1')))
                     proc.stdin.write(json.dumps(dict(jsonrpc='2.0', method='notifications/initialized')) + '\n'); proc.stdin.flush()
                     roster = rpc('tools/list', {})['result']['tools']
-                    for name in ['Bootstrap', 'RunCapabilitySelfTest']:
+                    for name in ['InitializeEnvironment', 'RunCapabilitySelfTest']:
                         reply = rpc('tools/call', dict(name=name, arguments={}))['result']
                         assert not reply.get('isError', False), reply
-                        result = json.loads(reply['content'][0]['text'])
+                        value = envelope(reply)
+                        assert value['ok'], value
+                        result = value['data']
                         assert result['selectedRelease']['key'] == release
                         assert result['registeredToolCount'] == len(roster)
                         assert {x['name'] for x in result['registeredTools']} == {x['name'] for x in roster}

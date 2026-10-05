@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """Real stdio MCP checks; .NET host only, no worker/TIA process or SDK assembly."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope
+
 import argparse
 import json
 import pathlib
@@ -54,22 +59,21 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
         discovered = call("tools/list", {})["result"]["tools"]
         names = [tool["name"] for tool in discovered]
         assert len(names) == len(set(names))
-        for name, parameter, kind in (("BuildFlgNetCallXml", "flgNetJson", "Call"), ("ComposePlcLadFcBlockXml", "ladFcBlockJson", "FC")):
+        for name, parameter, kind in (("BuildFlgNetCall", "flgNet", "Call"), ("BuildPlcLadFcBlock", "ladFcBlock", "FC")):
             tool = next(tool for tool in discovered if tool["name"] == name)
             assert set(tool["inputSchema"]["required"]) == {parameter, "outputReleaseKey"}
-            call_value = {"callName": "SampleFC", "parameters": [{"name": "InputA", "section": "Input", "dataType": "Int", "sourceKind": "constant", "value": "42"}, {"name": "OutputB", "section": "Output", "dataType": "Bool", "symbolPath": ["数据", "Ready"]}]}
-            value = call_value if kind == "Call" else {"blockName": "Caller", "blockNumber": 42, "networks": [{"callJson": call_value}, {"callJson": call_value}]}
+            call_value = {"callName": "SampleFC", "parameters": [{"name": "InputA", "section": "Input", "dataType": "Int", "sourceKind": "constant", "constantValue": "42"}, {"name": "OutputB", "section": "Output", "dataType": "Bool", "symbolPath": ["数据", "Ready"]}]}
+            value = call_value if kind == "Call" else {"blockName": "Caller", "blockNumber": 42, "networks": [{"call": call_value}, {"call": call_value}]}
             def invoke(value, output="21"):
-                return call("tools/call", {"name": name, "arguments": {parameter: json.dumps(value), "outputReleaseKey": output}})
+                return call("tools/call", {"name": name, "arguments": {parameter: value, "outputReleaseKey": output}})
             result = invoke(value)["result"]
             assert not result.get("isError"), result
-            payload = json.loads(result["content"][0]["text"])
-            payload = {key[0].lower() + key[1:]: item for key, item in payload.items()}
-            assert payload["ok"] and payload["meta"]["offlineOnly"]
-            assert payload["meta"]["outputReleaseKey"] == "21"
-            assert all(payload["meta"][flag] is False and payload["data"][flag] is False for flag in ("schemaValidated", "importValidated", "programSemanticsValidated"))
-            assert payload["outputPath"] is None and payload["outputFiles"] is None
-            root = ET.fromstring(payload["xml"])
+            payload = envelope(result)
+            assert payload["ok"] and payload["data"]["offlineOnly"]
+            assert payload["data"]["outputReleaseKey"] == "21"
+            assert all(payload["data"][flag] is False for flag in ("schemaValidated", "importValidated", "programSemanticsValidated"))
+            assert payload["data"]["outputPath"] is None and payload["data"]["outputFiles"] is None
+            root = ET.fromstring(payload["data"]["xml"])
             ns = "{http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5}"
             if kind == "Call":
                 assert root.tag == ns + "FlgNet"
@@ -89,33 +93,32 @@ for release in ("14sp1", "15.1", "16", "17", "18", "19", "20", "21"):
                 assert len(ids) == len(set(ids))
             passed += 1
             fidelity = json.loads(json.dumps(value))
-            fidelity_call = fidelity if kind == "Call" else fidelity["networks"][0]["callJson"]
+            fidelity_call = fidelity if kind == "Call" else fidelity["networks"][0]["call"]
             exact_text = "</ConstantValue><Injected/>\r\n\t<&中文😀 C:\\private"
-            fidelity_call["parameters"][0]["value"] = exact_text
+            fidelity_call["parameters"][0]["constantValue"] = exact_text
             exact = invoke(fidelity)["result"]
-            exact = json.loads(exact["content"][0]["text"])
-            exact = {key[0].lower() + key[1:]: item for key, item in exact.items()}
-            exact_xml = ET.fromstring(exact["xml"])
+            exact = envelope(exact)
+            exact_xml = ET.fromstring(exact["data"]["xml"])
             assert exact_xml.find(".//" + ns + "ConstantValue").text == exact_text
             assert not any(e.tag == "Injected" for e in exact_xml.iter())
             passed += 1
             invalids = [dict(value, rawXml="<!DOCTYPE SECRET_CANARY>"), dict(value, path="SECRET_CANARY")]
             for field, text in (("section", "InOut"), ("dataType", "Unknown"), ("name", "EN"), ("sourceKind", "Unknown")):
                 invalid = json.loads(json.dumps(value))
-                invalid_call = invalid if kind == "Call" else invalid["networks"][0]["callJson"]
+                invalid_call = invalid if kind == "Call" else invalid["networks"][0]["call"]
                 invalid_call["parameters"][0][field] = text
                 invalids.append(invalid)
             for invalid in invalids:
                 rejected = invoke(invalid)
-                assert rejected.get("error", {}).get("code") == -32602, rejected
+                assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
                 assert "SECRET_CANARY" not in json.dumps(rejected), rejected
                 passed += 1
             rejected = invoke(value, "17")
-            assert rejected.get("error", {}).get("code") == -32602, rejected
+            assert envelope(rejected)["error"]["code"] == "INVALID_ARGUMENT", rejected
             passed += 1
             if release == "21":
                 sample = evidence_dir / (name + ".xml")
-                sample.write_text(payload["xml"], encoding="utf-8")
+                sample.write_text(payload["data"]["xml"], encoding="utf-8")
                 print(name + " sample SHA-256 " + hashlib.sha256(sample.read_bytes()).hexdigest())
         print(f"{release}: both LAD call candidates, fidelity, unsupported-output rejection and sanitized errors passed")
     finally:

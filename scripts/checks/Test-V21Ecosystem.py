@@ -73,28 +73,26 @@ def main():
                         def call(name,arguments):
                             nonlocal number
                             number+=1
-                            if profile=='lite': arguments={'name':name,'argumentsJson':json.dumps(arguments)};name='CallTool'
+                            if profile=='lite': arguments={'name':name,'arguments':arguments};name='CallTool'
                             response=rpc('tools/call',str(number),{'name':name,'arguments':arguments})
-                            payload=json.loads(response['result']['content'][0]['text'])
+                            payload=resources.envelope(response)
                             (case/f'{number:02}.json').write_text(json.dumps(payload,indent=2),encoding='utf-8')
-                            if profile=='lite':
-                                inner=json.loads(payload['message']);return inner.get('Meta',inner.get('meta'))
-                            return payload['meta']
-                        cat=call('ReadV21EcosystemCatalog',{'query':'CWC','source':'official','limit':1})
-                        check(cat['success'] and len(cat['rows'])==1 and cat['hasMore'],'Catalog query/pagination failed')
+                            return payload
+                        cat=call('GetV21EcosystemCatalog',{'query':'CWC','source':'official','limit':1})
+                        check(cat['ok'] and len(cat['data']['rows'])==1 and (cat['meta']['paging']['nextOffset'] is not None),'Catalog query/pagination failed')
                         result=call('DecodePlcSimaticMl',{'filePath':str(source)})
-                        check(result['success'] and result['data']['analysisOnly'],'MCP decoder failed: '+str(result))
-                        result=call('ValidatePlcXmlSchemas',{'filePath':str(source),'schemaDirectory':str(args.schema_root)})
-                        check(result['success'] and result['data']['fragmentSchemasPassed'] and not result['data']['wholeDocumentValidated'],'Installed Siemens schema validation failed: '+str(result))
+                        check(result['ok'] and result['data']['data']['analysisOnly'],'MCP decoder failed: '+str(result))
+                        result=call('ValidatePlcDocumentSchemas',{'filePath':str(source),'schemaDirectory':str(args.schema_root)})
+                        check(result['ok'] and result['data']['data']['fragmentSchemasPassed'] and not result['data']['data']['wholeDocumentValidated'],'Installed Siemens schema validation failed: '+str(result))
                         preview=call('ManageUnifiedCwcPackage',{'directory':str(cwc)})
-                        check(preview['success'] and not preview['data']['written'],'CWC inspection failed')
-                        output=case/preview['data']['suggestedFileName']
-                        params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedFingerprint':preview['data']['packageFingerprint']}
-                        check(call('ManageUnifiedCwcPackage',dict(params,expectedFingerprint='stale'))['success'] is False and not output.exists(),'Stale CWC built')
+                        check(preview['ok'] and not preview['data']['data']['written'],'CWC inspection failed')
+                        output=case/preview['data']['data']['suggestedFileName']
+                        params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedFingerprint':preview['data']['data']['packageFingerprint']}
+                        check(call('ManageUnifiedCwcPackage',dict(params,expectedFingerprint='stale'))['ok'] is False and not output.exists(),'Stale CWC built')
                         applied=call('ManageUnifiedCwcPackage',params)
-                        check(applied['success'] and output.exists(),'CWC build failed')
+                        check(applied['ok'] and output.exists(),'CWC build failed')
                         with zipfile.ZipFile(output) as z: check(set(z.namelist())=={'manifest.json','control/index.html'},'CWC root layout wrong')
-                        check(call('ManageUnifiedCwcPackage',params)['success'] is False,'Existing ZIP overwritten')
+                        check(call('ManageUnifiedCwcPackage',params)['ok'] is False,'Existing ZIP overwritten')
                     print(f'PASS V{args.major} {transport} {profile} isolated={isolated}',flush=True)
     result={'status':'passed','checks':checks,'major':args.major,'nativeTiaExecuted':False,'selfTestOnly':args.self_test,
             'runtimeSha256':hashlib.sha256(args.exe.read_bytes()).hexdigest() if args.exe else None,

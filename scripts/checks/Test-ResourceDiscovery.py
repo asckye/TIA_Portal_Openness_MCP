@@ -12,6 +12,9 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope, successful
 from tool_usage_checks import check_usage, unwrap_usage
 
 
@@ -161,7 +164,7 @@ def main():
                 passed += 1
                 for method, field in (('resources/list', 'resources'),
                                       ('resources/templates/list', 'resourceTemplates')):
-                    for number, request_id in enumerate((7, '资源发现', 7)):
+                    for number, request_id in enumerate((7, '璧勬簮鍙戠幇', 7)):
                         response = rpc(method, request_id, include_params=number != 0)
                         require('error' not in response, f'{method}: {response.get("error")}')
                         require(response.get('result') == {field: []},
@@ -177,7 +180,7 @@ def main():
                 def call_guide_tool(name, arguments):
                     reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
                     require('result' in reply and not reply['result'].get('isError'), str(reply))
-                    decoded = json.loads(reply['result']['content'][0]['text'])
+                    decoded = envelope(reply)
                     require(reply['result'].get('structuredContent') == decoded and decoded.get('schemaVersion') == 4 and decoded.get('ok'),
                             'Usage retrieval must return the matching V4 envelope')
                     if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export') and 'content' in decoded['data']:
@@ -219,7 +222,7 @@ def main():
                 unknown = rpc('unknown/resource-discovery-test')
                 if profile == 'full':
                     planned = rpc('tools/call', params={'name': 'PlanArtifactImportOrder', 'arguments': {'artifacts': [{'id': 'FB', 'dependencies': ['UDT']}, {'id': 'UDT'}]}})
-                    plan = json.loads(planned['result']['content'][0]['text'])['data']['plan']
+                    plan = envelope(planned)['data']['plan']
                     require(plan['Valid'] and plan['Order'] == ['UDT', 'FB'], 'Shared dependency planner failed through real MCP transport')
                     passed += 1
                 require(unknown.get('error', {}).get('code') == -32601,

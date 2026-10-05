@@ -226,8 +226,14 @@ internal sealed class ResponseGoldenTests
 
     private void CaptureBatch(string name, object target, bool succeeded, Action<bool, string> check)
     {
-        var legacy = surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target })!;
-        var data = (JsonObject)surface.Invoke(surface.ToolMethod("ResultBody"), new[] { legacy })!;
+        bool rejected = false;
+        try { surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target }); }
+        catch (TargetInvocationException ex) when (ex.InnerException is JsonException || ex.InnerException is InvalidDataException)
+        { rejected = true; }
+        check(rejected, "batch/" + name + " cannot dispatch a legacy executor result as a tool envelope");
+        // Legacy executor DTOs remain internal evidence. They cannot cross the
+        // tool boundary; construct the synthetic V4 child before aggregation.
+        var data = JsonNode.Parse(Serialize(target, bridge))!.AsObject();
         check(surface.Invoke(surface.ToolMethod("ResultSucceeded"), new object[] { data }) == null,
             "batch/" + name + " does not infer a verdict from a V3 result");
         // Use the current envelope factory and real aggregate; target bodies are

@@ -164,6 +164,10 @@ foreach ($guiFile in @(
     'src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf',
     'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
     'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
+    'src/Studio/Gui/Fonts/NotoSansSC-Regular.otf',
+    'src/Studio/Gui/Fonts/NotoSansSC-Medium.otf',
+    'src/Studio/Gui/Fonts/NotoSansSC-Bold.otf',
+    'src/Studio/Gui/Fonts/NotoSansSC-OFL.txt',
     'src/Studio/Gui/Fonts/SOURCES.txt',
     'src/Studio/Gui/TiaOpenness.Gui.csproj',
     'src/Studio/Gui/Configuration/ConfigurationView.xaml',
@@ -223,8 +227,12 @@ if (!$NoBinaries) {
     foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
         if (!(Test-Path -LiteralPath (Join-Path $root "runtime/studio/bridge/$name"))) { Fail "Missing Studio bridge channel dependency: $name" }
     }
+    # The .NET 10 Foundation hosts load System.Text.Json, System.Text.Encodings.Web and System.IO.Pipelines from the bundled shared framework.
+    foreach ($name in @('System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll')) {
+        if (!(Test-Path -Path (Join-Path $root "runtime/dotnet/shared/Microsoft.NETCore.App/*/$name"))) { Fail "Missing bundled framework assembly for the Foundation hosts: $name" }
+    }
     foreach ($key in @('14sp1','15.1','16','17','18','19')) {
-        foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll')) {
+        foreach ($name in @('TiaMcp.WorkerChannel.dll')) {
             if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$key/$name"))) { Fail "Missing worker channel host dependency: v$key/$name" }
         }
         foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
@@ -497,7 +505,7 @@ if ($Strict -and -not $PendingRelease -and (Test-Path -LiteralPath (Join-Path $r
             if ($null -eq $row) { continue }
             $file = Join-Path $root $row.path
             if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
-            if ([IO.Path]::GetExtension($file) -eq ".ttf") { $bytes = [IO.File]::ReadAllBytes($file) }
+            if ([IO.Path]::GetExtension($file) -in ".ttf", ".otf") { $bytes = [IO.File]::ReadAllBytes($file) }
             else { $bytes = [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
             $algorithm = [Security.Cryptography.SHA256]::Create()
             try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','') }

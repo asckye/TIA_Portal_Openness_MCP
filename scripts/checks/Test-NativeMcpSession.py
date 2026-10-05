@@ -3,6 +3,11 @@
 Creates its own headless TIA and new scratch project, never attaches to an existing
 instance. Keep artifacts on success/failure. No GUI automation or PLC/HMI download.
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mcp_results import envelope, successful
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -35,38 +40,32 @@ def parse(argv):
 
 
 def payload(reply):
-    require('error' not in reply, 'JSON-RPC error: ' + str(reply.get('error')))
-    result = reply['result']
-    require(not result.get('isError'), 'MCP operation failed: ' + str(result))
-    value = result.get('structuredContent')
-    if value is None:
-        texts = [row['text'] for row in result.get('content', []) if row.get('type') == 'text']
-        require(len(texts) == 1, 'Expected one structured tool result')
-        value = json.loads(texts[0])
-    require(value.get('meta', value.get('Meta', {})).get('success') is True, 'Tool did not confirm success: ' + str(value))
-    return value
+    try:
+        return successful(reply)
+    except ValueError as error:
+        raise RuntimeError(str(error)) from error
 
 
 def sequence(call, output, major):
     name = 'McpNative_' + uuid.uuid4().hex[:12]
-    call('ConnectIsolated')
+    call('ConnectIsolatedPortal')
     call('CreateProject', directoryPath=str(output), projectName=name)
-    state = call('GetState')
-    binding = state['meta']['binding']['identity']
+    state = call('GetSessionState')
+    binding = state['data']['evidence']['binding']['identity']
     project = Path(binding['projectPath'])
-    require(state['project'] == name and project.resolve().is_relative_to(output.resolve()), 'Created project escaped owned scratch directory')
+    require(state['data']['project'] == name and project.resolve().is_relative_to(output.resolve()), 'Created project escaped owned scratch directory')
     require(project.suffix.lower() == f'.ap{major}' and binding['tiaMajorVersion'] == major, 'Native engine/project version mismatch')
     require(binding['processId'] > 0 and binding['processStartUtc'] and binding['generation'], 'Incomplete binding identity')
     call('SaveProject')
     call('CloseProject')
-    require(call('GetState')['project'] == '-', 'Closed project remained bound')
+    require(call('GetSessionState')['data']['project'] == '-', 'Closed project remained bound')
     call('OpenProject', path=str(project))
-    rebound = call('GetState')['meta']['binding']['identity']
+    rebound = call('GetSessionState')['data']['evidence']['binding']['identity']
     require(rebound['projectPath'] == binding['projectPath'] and rebound['processId'] == binding['processId'], 'Reopen selected another TIA/project')
     require(rebound['generation'] != binding['generation'], 'Reopen reused old binding generation')
     call('CloseProject')
-    call('Disconnect')
-    require(call('GetState')['isConnected'] is False, 'Disconnect retained a live session')
+    call('DisconnectPortal')
+    require(call('GetSessionState')['data']['isConnected'] is False, 'DisconnectPortal retained a live session')
 
 
 def run(args):
@@ -134,8 +133,8 @@ def run(args):
 
 
 def self_test():
-    import tempfile
-    with tempfile.TemporaryDirectory() as root:
+    from offline_fixtures import fixture_directory
+    with fixture_directory('native-mcp-selftest-') as root:
         output = Path(root) / 'new'
         common = ['--exe', str(Path(sys.executable).resolve()), '--major', '21', '--output', str(output)]
         require(not parse(common).run_live and not output.exists(), 'Plan changed filesystem')
@@ -147,8 +146,9 @@ def self_test():
             else:
                 raise AssertionError('One flag enabled native execution')
         require(parse(common + ['--run-live', '--confirm-new-portal']).run_live, 'Explicit opt-in refused')
-        require(payload({'result': {'structuredContent': {'meta': {'success': True}}}})['meta']['success'], 'Structured result parsing')
-        for reply in ({'error': {}}, {'result': {'isError': True}}, {'result': {'structuredContent': {'meta': {'success': False}}}}):
+        good = {'schemaVersion': 4, 'ok': True, 'data': {}, 'error': None, 'meta': {}}
+        require(payload({'result': {'structuredContent': good}})['ok'], 'Structured result parsing')
+        for reply in ({'error': {}}, {'result': {'isError': True}}, {'result': {'isError': True, 'structuredContent': dict(good, ok=False, error={'code': 'OUTCOME_UNKNOWN'})}}):
             try:
                 payload(reply)
             except RuntimeError:

@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcp.Logic.V4;
 using Xunit;
 
 namespace TiaMcpServer.Siemens
@@ -35,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class DcbVersionProbe
     {
         [McpServerTool(Name = "ManageDcbLibraries")]
-        public static ResponseMessage ProbeVersionedDcb(string action = "read", string[] devicePath = null!,
+        public static CallToolResult ProbeVersionedDcb(string action = "read", string[] devicePath = null!,
             string[] itemPath = null!, ushort driveObjectNumber = 0, int driveObjectIndex = -1,
             string filePath = "", bool dryRun = true)
         { ToolBridgeProbes.VersionProbeCalls++; return ToolBridgeProbes.ProbeResult(true); }
@@ -46,12 +47,26 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static int VersionProbeCalls;
         // Application-boundary fixtures, not fabricated Siemens SDK classes.
         [global::ModelContextProtocol.Server.McpServerTool(Name = "ListSafetyActivationTests")]
-        public static ResponseMessage ProbeVersionedSafety()
+        public static CallToolResult ProbeVersionedSafety()
         { VersionProbeCalls++; return ProbeResult(true); }
         [global::ModelContextProtocol.Server.McpServerTool]
-        public static ResponseMessage ProbeResult(bool success) => new ResponseMessage { Message = "probe", Meta = new JsonObject { ["success"] = success } };
+        public static CallToolResult ProbeResult(bool success) => success
+            ? McpServer.V4Result("ProbeResult", new JsonObject { ["summary"] = "probe" })
+            : McpServer.V4Reject("ProbeResult", new Error("Fixture rejected the request.", new PreconditionFailedDetails("fixture", null)));
         [global::ModelContextProtocol.Server.McpServerTool]
         public static ResponseMessage ProbeThrow() => throw new InvalidOperationException("probe exception");
+        [McpServerTool(Name = "ProbeMcpThrow"), ToolClassification("L2", "Diagnostics", "READ", batchRead: true), Description("[L2][Diagnostics][READ] Offline throwing read fixture.")]
+        public static CallToolResult ProbeMcpThrow() => throw new global::ModelContextProtocol.McpException("SECRET-probe-argument", global::ModelContextProtocol.McpErrorCode.InternalError);
+        [McpServerTool(Name = "ProbeWriteThrow"), ToolClassification("L2", "Diagnostics", "WRITE", batchWrite: true), Description("[L2][Diagnostics][WRITE] Offline throwing write fixture.")]
+        public static CallToolResult ProbeWriteThrow() => throw new InvalidOperationException("SECRET-probe-argument");
+        [McpServerTool, ToolClassification("L0", "Portal", "SESSION")]
+        public static CallToolResult ProbeSessionThrow() => throw new global::ModelContextProtocol.McpException("SECRET-probe-argument", global::ModelContextProtocol.McpErrorCode.InternalError);
+        [McpServerTool, ToolClassification("L2", "Hardware", "EXECUTE")]
+        public static CallToolResult ProbeExecuteThrow() => throw new InvalidOperationException("SECRET-probe-argument");
+        [McpServerTool, ToolClassification("L2", "Exports", "FILE")]
+        public static CallToolResult ProbeFileThrow() => throw new InvalidOperationException("SECRET-probe-argument");
+        [McpServerTool, ToolClassification("L1", "PLC-Online", "ONLINE")]
+        public static CallToolResult ProbeOnlineThrow() => throw new InvalidOperationException("SECRET-probe-argument");
         public sealed class Cycle { public Cycle Self => this; }
         [global::ModelContextProtocol.Server.McpServerTool]
         public static Cycle ProbeCycle() => new Cycle();
@@ -94,16 +109,108 @@ namespace TiaMcpServer.Tests
         public InstanceProbeTools(ProbeDependency dependency) { this.dependency = dependency; }
 
         [McpServerTool(Name = "InstanceProbe"), Description("[L0][Meta][READ] Read the injected probe dependency.")]
-        public ResponseMessage Read(string suffix = "default")
+        public CallToolResult Read(string suffix = "default")
         {
             Calls++;
-            return new ResponseMessage { Message = dependency.Value + ":" + suffix, Meta = new JsonObject { ["success"] = true } };
+            return McpServer.V4Result("InstanceProbe", new JsonObject { ["summary"] = dependency.Value + ":" + suffix });
         }
     }
 
     public class ToolCatalogServerProxy : DispatchProxy
     {
         protected override object? Invoke(MethodInfo? method, object?[]? args) => null;
+    }
+
+    public sealed class ToolFailureTests
+    {
+        private static Envelope Envelope(CallToolResult result)
+        {
+            string text = result.Content.OfType<TextContentBlock>().Single().Text;
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse(text), result.StructuredContent));
+            var envelope = V4Json.Deserialize<Envelope>(text);
+            Assert.Equal(!envelope.Ok, result.IsError);
+            Assert.DoesNotContain("SECRET", text);
+            return envelope;
+        }
+
+        [Theory]
+        [InlineData("ProbeMcpThrow", "INTERNAL_ERROR", "read-failed", false)]
+        [InlineData("ProbeWriteThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        [InlineData("ProbeSessionThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        [InlineData("ProbeExecuteThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        [InlineData("ProbeFileThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        [InlineData("ProbeOnlineThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        public void BridgeExceptionsReturnTypedV4Results(string tool, string code, string outcome, bool reset)
+        {
+            ToolBridgeFixture.Configure();
+            var result = McpServer.CallTool(tool);
+            var envelope = Envelope(result);
+            var json = McpServer.ResultBody(result)!;
+            Assert.Equal(code, (string)json["error"]!["code"]!);
+            Assert.Equal(outcome, (string)json["meta"]!["outcome"]!);
+            Assert.Equal(reset, envelope.Meta.RequiresSessionReset);
+            Assert.Equal(tool, envelope.Meta.Tool);
+        }
+
+        [Fact]
+        public void AdmissionFailureDoesNotClaimAnIssuedWrite()
+        {
+            var envelope = Envelope(McpServer.TargetFailure("ProbeWriteThrow", new InvalidOperationException("SECRET"), false));
+            Assert.Equal(Outcome.RejectedBeforeOperation, envelope.Meta.Outcome);
+            Assert.Equal(Execution.NotStarted, envelope.Meta.Execution);
+            Assert.False(envelope.Meta.RequiresSessionReset);
+            Assert.IsType<PreconditionFailedDetails>(envelope.Error!.Details);
+        }
+
+        [Fact]
+        public void InstanceResolutionFailureIsRejectedBeforeTheOperation()
+        {
+            ToolBridgeFixture.Configure();
+            EngineServices.SetServiceProvider(new ServiceCollection().BuildServiceProvider());
+            try
+            {
+                var envelope = Envelope(McpServer.CallTool("InstanceProbe"));
+                Assert.Equal(Outcome.RejectedBeforeOperation, envelope.Meta.Outcome);
+                Assert.Equal(Execution.NotStarted, envelope.Meta.Execution);
+                Assert.False(envelope.Meta.RequiresSessionReset);
+                Assert.IsType<PreconditionFailedDetails>(envelope.Error!.Details);
+            }
+            finally { ToolBridgeFixture.Configure(); }
+        }
+
+        [Fact]
+        public void ResetRequiredRejectionCarriesItsResetFlag()
+        {
+            var envelope = Envelope(McpServer.V4Reject("SaveProject", new Error("Reset is required.", new SessionResetRequiredDetails("worker-fault"))));
+            Assert.Equal(Outcome.RejectedBeforeOperation, envelope.Meta.Outcome);
+            Assert.Equal(Execution.NotStarted, envelope.Meta.Execution);
+            Assert.True(envelope.Meta.RequiresSessionReset);
+        }
+
+        [Fact]
+        public void LegacyOrCyclicReturnValuesCannotBecomeSuccessfulToolResults()
+        {
+            Assert.ThrowsAny<Exception>(() => McpServer.ToolResult(new ResponseMessage { Message = "old", Meta = new JsonObject { ["success"] = true } }));
+            Assert.ThrowsAny<Exception>(() => McpServer.ToolResult(new CallToolResult {
+                Content = new[] { new TextContentBlock { Text = "{\"message\":\"old\",\"meta\":{\"success\":true}}" } } }));
+            ToolBridgeFixture.Configure();
+            var envelope = Envelope(McpServer.CallTool("ProbeCycle"));
+            Assert.Equal(Outcome.ReadFailed, envelope.Meta.Outcome);
+            Assert.IsType<InternalErrorDetails>(envelope.Error!.Details);
+        }
+
+        [Fact]
+        public void ReadBatchKeepsTheThrowingTargetsV4Envelope()
+        {
+            ToolBridgeFixture.Configure();
+            var result = McpServer.ReadToolBatch(new[] { new TiaMcp.Logic.V4.Inputs.ToolCall("ProbeMcpThrow", McpServer.EmptyArguments()) });
+            var envelope = Envelope(result);
+            var items = McpServer.ResultBody(result)!["data"]!["items"]!.AsArray();
+            Assert.Single(items);
+            var child = V4Json.Deserialize<Envelope>(items[0]!["result"]!.ToJsonString());
+            Assert.Equal(Outcome.ReadFailed, child.Meta.Outcome);
+            Assert.IsType<InternalErrorDetails>(child.Error!.Details);
+        }
     }
 
     public sealed class ToolCatalogTests
