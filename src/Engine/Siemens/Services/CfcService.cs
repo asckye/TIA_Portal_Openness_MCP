@@ -60,6 +60,8 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ExchangeCfcCharts(string softwarePath, string action, string filePath, string modelVersion = "", long filter = 0, bool unattended = true, bool deleteAtTarget = false, bool dryRun = true, string chartNamesJson = "[]", bool skipChartPreflight = false)
             => _session.RunHmiStepTool("ExchangeCfcCharts", meta =>
             {
+                try
+                {
                 var r = Logic.ValidateExchangeRequest(action, filePath, modelVersion, filter, chartNamesJson, deleteAtTarget, dryRun);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
@@ -84,11 +86,15 @@ namespace TiaMcpServer.Siemens.Services
                 meta["file"] = NativeFileOutput.Verify(file);
                 if (action == "export") Safe(meta, "inventory", () => CfcInventoryRow(Logic.InspectExport(file.FullName)));
                 return "CFC " + action + " written and verified by size / SHA-256 (content semantics not asserted; password-protected charts are skipped natively). Project unchanged.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
 
         public ResponseMessage ManageCfcChartProtection(string softwarePath, string chartName, string action = "read", string currentPassword = "", string newHashedPassword = "", bool dryRun = true, string modelVersion = "V2.0", bool skipChartPreflight = false)
             => _session.RunHmiStepTool("ManageCfcChartProtection", meta =>
             {
+                try
+                {
                 var r = Logic.ValidateProtectionRequest(action, chartName, currentPassword, newHashedPassword, dryRun);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
@@ -110,6 +116,8 @@ namespace TiaMcpServer.Siemens.Services
                 meta["nativeResult"] = accepted; if (!accepted) meta["operationSuccess"] = false;
                 Safe(meta, "after", () => { var hash = provider.GetChartProtection(chartName); return new JsonObject { ["protected"] = !string.IsNullOrEmpty(hash), ["passwordHash"] = hash }; });
                 return "CFC chart protection " + action + " returned " + accepted + " and was read back; no automatic save.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
     }
 }

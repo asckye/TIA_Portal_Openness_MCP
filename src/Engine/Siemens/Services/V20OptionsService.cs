@@ -39,6 +39,8 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageSinumerikArchive(string action, string filePath, string devicePathJson = "[]", string itemPathJson = "[]",
             string modifiedDevicePathJson = "[]", string modifiedItemPathJson = "[]", string mode = "HardwareAndAllProgramBlocks", string comment = "", string author = "", string password = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageSinumerikArchive", meta => {
+                try
+                {
 #if !TIA_V20
                 throw new NotSupportedException("SinumerikArchiveProvider is absent from the supplied V21 SDK; use the V20 engine with the appropriate SINUMERIK option.");
 #else
@@ -74,10 +76,14 @@ namespace TiaMcpServer.Siemens.Services
                 VerifyOptionOutput(file, meta);
                 return "SINUMERIK archive written and hashed; archive content has not been deployed or validated on a controller.";
 #endif
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ImportSinumerikAlarmTexts(string devicePathJson, string filesJson, bool dryRun = true)
             => _session.RunHmiStepTool("ImportSinumerikAlarmTexts", meta => {
+                try
+                {
 #if !TIA_V20
                 throw new NotSupportedException("SinumerikAlarmTextProvider is absent from the supplied V21 SDK.");
 #else
@@ -99,10 +105,14 @@ namespace TiaMcpServer.Siemens.Services
                 meta["apiCallSuccess"] = true; meta["contentVerified"] = null;
                 return "Native alarm-text import returned; text contents require project readback/acceptance. Project not saved.";
 #endif
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ManageSinumerikSafetyMode(string devicePathJson, string action = "read", string mode = "", bool dryRun = true, bool confirmSafetyChange = false)
             => _session.RunHmiStepTool("ManageSinumerikSafetyMode", meta => {
+                try
+                {
 #if !TIA_V20
                 throw new NotSupportedException("SafetyModeProvider is absent from the supplied V21 SDK.");
 #else
@@ -124,24 +134,33 @@ namespace TiaMcpServer.Siemens.Services
                 if (after != requested) throw new InvalidOperationException("Safety mode readback differs; do not retry blindly.");
                 return "SINUMERIK safety mode changed and read back; project not saved, compiled or downloaded.";
 #endif
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage InitializeSimotionScripting(bool dryRun = true)
             => _session.RunHmiStepTool("InitializeSimotionScripting", meta => {
+                try
+                {
 #if !TIA_V20
                 throw new NotSupportedException("SimotionProvider is absent from the supplied V21 SDK.");
 #else
                 var provider = InvocationJournal.Native("Simotion.GetService", () => _session.CurrentProject!.GetService<SimotionProvider>()) ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (dryRun) return "SIMOTION scripting initialization preview; no Initialize call.";
+                meta["operationStarted"] = true;
                 var result = InvocationJournal.Native("Simotion.Initialize", () => provider.Initialize());
                 meta["initializationResult"] = result; meta["apiCallSuccess"] = true;
                 return "SIMOTION scripting initialized; the returned string is passed through, never executed. External SCOUT scripting is outside this tool.";
 #endif
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ExportScadaData(string filePath, string softwarePath = "", bool dryRun = true)
             => _session.RunHmiStepTool("ExportScadaData", meta => {
+                try
+                {
 #if !TIA_V20
                 throw new NotSupportedException("ScadaExportProvider is absent from the supplied V21 SDK.");
 #else
@@ -155,6 +174,8 @@ namespace TiaMcpServer.Siemens.Services
                 VerifyOptionOutput(file, meta);
                 return "PLC configuration exported to SCADA ZIP and hashed; no runtime deployment.";
 #endif
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             }, requiresProject: Engineering.TiaMajorVersion == 20);
     }
 }

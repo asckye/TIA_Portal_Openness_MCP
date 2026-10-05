@@ -62,9 +62,12 @@ internal static class CfcShapeChecks
             check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
                 && ReferenceEquals(tools.GetField("_cfc", all)!.GetValue(portal.Target(tool)), target),
                 "CFC tool uses the service with the shared session: " + name);
-            var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-            bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            bool callsService = EngineSurface.MethodFamily(tool).Where(callback =>
+                callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal)).Any(callback => {
+                    var il = callback.GetMethodBody()!.GetILAsByteArray()!;
+                    return Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                        (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                });
             EngineSurface.CheckIl(check, callsService, "CfcTools calls CfcService: " + name, tool, method);
             check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
                 "CFC tool needs no static CLI forwarder: " + name);

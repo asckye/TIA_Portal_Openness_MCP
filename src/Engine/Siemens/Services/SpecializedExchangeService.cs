@@ -14,6 +14,8 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExchangePlcSupervisions(string softwarePath,string action,string filePath,string importOptions="None",bool dryRun=true)
             =>_session.RunHmiStepTool("ExchangePlcSupervisions",meta=>{
+                try
+                {
                 var method=action switch {"export"=>"ExportSupervisionsToXlsx","import"=>"ImportSupervisionsFromXlsx","importSettings"=>"ImportSupervisionSettingsFromXlsx",_=>throw new ArgumentException("action must be export/import/importSettings.")};
                 bool write=action!="export"; using var access=!dryRun&&write ? _session.AcquireHmiEditAccess() : null;
                 var plc=_session.ExactPlcForEngineering(softwarePath,!dryRun&&write);
@@ -35,6 +37,8 @@ namespace TiaMcpServer.Siemens.Services
                 if(state=="Error" || state=="Failed" || state=="Failure") meta["operationSuccess"]=false;
                 if(!write)meta["file"]=NativeFileOutput.Verify(file);
                 return "Native ProDiag exchange returned; inspect native state and diagnostics. No save/compile/download.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
     }
 }

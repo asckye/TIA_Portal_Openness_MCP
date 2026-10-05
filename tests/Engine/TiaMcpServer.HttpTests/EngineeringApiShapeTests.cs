@@ -96,7 +96,7 @@ internal static class EngineeringApiShapeTests
             var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         }
-        foreach(var name in new[]{"ExchangePlcSupervisions","ExchangeCfcCharts","ExchangeTestSuiteCase","RunTestSuiteCase","ExchangeMotionCamData","ConfigureMotionHardwareConnection","ManageUnifiedEvent","ManageStartdriveParameter","ManageSiVArcRule","GenerateSivarc","ManageLibraryMasterCopy","ImportLibraryTypeDocuments","ManageDccChart"}) {
+        foreach(var name in new[]{"ExchangePlcSupervisions","ExchangeCfcCharts","ExchangeTestSuiteCase","RunTestSuiteCase","ExchangeMotionCamData","ConfigureMotionHardwareConnection","ManageUnifiedEvent","ManageStartdriveParameter","ManageSivarcRule","GenerateSivarc","ManageLibraryMasterCopy","ImportLibraryTypeDocuments","ManageDccChart"}) {
             var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         }

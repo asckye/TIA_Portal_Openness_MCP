@@ -3782,7 +3782,8 @@
           "softwarePath": "PLC_1",
           "action": "export",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
-          "dryRun": true
+          "dryRun": true,
+          "modelVersion": "V2.0"
         },
         "parameters": {
           "modelVersion": {
@@ -3798,8 +3799,10 @@
           "deleteAtTarget": {
             "exampleValue": false
           },
-          "chartNamesJson": {
-            "exampleValue": "<chartNamesJson from this operation's target or user input>",
+          "chartNames": {
+            "exampleValue": [
+              "<chartNames from this operation's target or user input>"
+            ],
             "requiresBinding": true
           },
           "skipChartPreflight": {
@@ -3812,7 +3815,10 @@
           },
           "selectiveExport": {
             "arguments": {
-              "action": "selectiveExport"
+              "action": "selectiveExport",
+              "chartNames": [
+                "<exact chart name from the CFC inventory>"
+              ]
             }
           },
           "import": {
@@ -3822,7 +3828,8 @@
           },
           "exportInstructionData": {
             "arguments": {
-              "action": "exportInstructionData"
+              "action": "exportInstructionData",
+              "modelVersion": ""
             }
           }
         },
@@ -5399,12 +5406,16 @@
       },
       "ImportSinumerikAlarmTexts": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "filesJson": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "files": [
+            "C:\\Examples\\AlarmTexts.csv"
+          ],
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           }
         },
@@ -10055,20 +10066,34 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ManageSiVArcRule": {
+      "ManageSivarcRule": {
         "arguments": {
           "category": "screens",
-          "collectionPathJson": "[{\"property\":\"Tables\"}]",
           "name": "Example_1",
           "action": "create",
-          "dryRun": true
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
         },
         "parameters": {
           "category": {
             "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -10079,7 +10104,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "delete": {
@@ -10094,23 +10121,37 @@
         "arguments": {
           "action": "archive",
           "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "<exact SINUMERIK device from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact NCU PLC item>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "modifiedDevicePathJson": {
-            "exampleValue": "<modifiedDevicePathJson from this operation's target or user input>",
+          "modifiedDevicePath": {
+            "exampleValue": [
+              "<modifiedDevicePath from this operation's target or user input>"
+            ],
             "requiresBinding": true
           },
-          "modifiedItemPathJson": {
-            "exampleValue": "<modifiedItemPathJson from this operation's target or user input>",
+          "modifiedItemPath": {
+            "exampleValue": [
+              "<modifiedItemPath from this operation's target or user input>"
+            ],
             "requiresBinding": true
           },
           "mode": {
@@ -10135,12 +10176,20 @@
           },
           "retrieve": {
             "arguments": {
-              "action": "retrieve"
+              "action": "retrieve",
+              "devicePath": [],
+              "itemPath": []
             }
           },
           "fAddressArchive": {
             "arguments": {
-              "action": "fAddressArchive"
+              "action": "fAddressArchive",
+              "modifiedDevicePath": [
+                "<exact modified SINUMERIK device>"
+              ],
+              "modifiedItemPath": [
+                "<exact modified NCU PLC item>"
+              ]
             }
           }
         },
@@ -10148,13 +10197,15 @@
       },
       "ManageSinumerikSafetyMode": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
           "mode": {
@@ -10953,8 +11004,14 @@
             "exampleValue": "<updateOptions from this operation's target or user input>",
             "requiresBinding": true
           },
-          "scopeJson": {
-            "exampleValue": "[{\"kind\":\"blocks\",\"softwarePath\":\"PLC_1\",\"groupPath\":\"\"}]"
+          "scope": {
+            "exampleValue": [
+              {
+                "kind": "blocks",
+                "softwarePath": "PLC_1",
+                "groupPath": ""
+              }
+            ]
           },
           "targetName": {
             "exampleValue": "Example_2"
@@ -10979,8 +11036,13 @@
           "setScope": {
             "arguments": {
               "action": "setScope",
-              "softwarePath": "PLC_1",
-              "scopeJson": "[{\"kind\":\"blocks\",\"softwarePath\":\"PLC_1\",\"groupPath\":\"\"}]"
+              "scope": [
+                {
+                  "kind": "blocks",
+                  "softwarePath": "PLC_1",
+                  "groupPath": ""
+                }
+              ]
             }
           },
           "copyScope": {
@@ -12991,7 +13053,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadSiVArcRules": {
+      "ListSivarcRules": {
         "arguments": {
           "category": "screens"
         },
@@ -12999,9 +13061,21 @@
           "category": {
             "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
           },
-          "objectPathJson": {
-            "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
+          "objectPath": {
+            "exampleValue": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "StartButton"
+              }
+            ],
+            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
           },
           "offset": {
             "exampleValue": 0
@@ -13077,7 +13151,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadTestSuiteCases": {
+      "ListTestSuiteCases": {
         "arguments": {
           "category": "styleGuide"
         },
@@ -13745,14 +13819,19 @@
         "arguments": {
           "category": "styleGuide",
           "confirmExternalExecution": false,
-          "dryRun": true
+          "dryRun": true,
+          "names": [
+            "<exact test name from ListTestSuiteCases>"
+          ]
         },
         "parameters": {
           "name": {
             "exampleValue": "Example_1"
           },
-          "namesJson": {
-            "exampleValue": "<namesJson from this operation's target or user input>",
+          "names": {
+            "exampleValue": [
+              "<names from this operation's target or user input>"
+            ],
             "requiresBinding": true
           },
           "runAll": {

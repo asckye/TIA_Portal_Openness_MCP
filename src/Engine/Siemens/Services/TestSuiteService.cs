@@ -94,7 +94,7 @@ namespace TiaMcpServer.Siemens.Services
         private static JsonArray TestResultMessageRows(TestResultsMessageComposition messages, int depth, int[] visited)
         {
             var rows = new JsonArray();
-            if (depth > 12) return rows;
+            if (depth > 12) { rows.Add(new JsonObject { ["truncated"] = true }); return rows; }
             foreach (TestResultsMessage m in messages)
             {
                 if (++visited[0] > 2000) { rows.Add(new JsonObject { ["truncated"] = true }); break; }
@@ -116,8 +116,10 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadTestSuiteCases(string category, string name = "", int offset = 0, int limit = 100, string kind = "case")
-            => _session.RunHmiStepTool("ReadTestSuiteCases", meta =>
+            => _session.RunHmiStepTool("ListTestSuiteCases", meta =>
             {
+                try
+                {
                 var k = Logic.ValidateReadRequest(category, kind, offset, limit);
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, k);
@@ -132,11 +134,15 @@ namespace TiaMcpServer.Siemens.Services
                 var all = EngineeringGroupOperations.Items(collection).Cast<IEngineeringObject>().Select(x => (JsonNode)TestSuiteRow(x)).ToArray();
                 Page(all, offset, limit, meta);
                 return "Test Suite " + (k == "testSet" ? "application test sets" : Logic.CategoryLabel(category) + "s") + " read; no test executed.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
 
         public ResponseMessage ExchangeTestSuiteCase(string category, string action, string name, string filePath = "", string importOptions = "None", string loadOptions = "", bool dryRun = true, string kind = "case")
             => _session.RunHmiStepTool("ExchangeTestSuiteCase", meta =>
             {
+                try
+                {
                 var r = Logic.ValidateExchangeRequest(category, action, name, filePath, importOptions, loadOptions, kind, dryRun);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var service = RequireTestSuite();
@@ -182,11 +188,15 @@ namespace TiaMcpServer.Siemens.Services
                         meta["expectedPresenceVerified"] = true; meta["verifiedAbsent"] = true;
                         return "Test Suite definition deleted and verified absent; no automatic save.";
                 }
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
 
         public ResponseMessage RunTestSuiteCase(string category, string name = "", bool confirmExternalExecution = false, bool dryRun = true, string namesJson = "[]", bool runAll = false, string kind = "case")
             => _session.RunHmiStepTool("RunTestSuiteCase", meta =>
             {
+                try
+                {
                 var r = Logic.ValidateRunRequest(category, name, namesJson, runAll, kind, confirmExternalExecution, dryRun);
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, r.Kind);
@@ -207,33 +217,37 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     case "styleGuide":
                         var ruleExecutor = service.StyleGuideGroup.GetService<RuleSetExecutor>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "RuleSetExecutor service not provided by StyleGuideGroup.");
-                        if (runAll) { meta["nativeSignature"] = "RuleSetExecutor.Run(StyleGuideSystemGroup)"; results = ruleExecutor.Run(service.StyleGuideGroup); }
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "RuleSetExecutor.Run(RuleSet)"; results = ruleExecutor.Run((RuleSet)targets[0]); }
-                        else { meta["nativeSignature"] = "RuleSetExecutor.Run(IEnumerable<RuleSet>)"; results = ruleExecutor.Run(targets.Cast<RuleSet>().ToList()); }
+                        if (runAll) { meta["nativeSignature"] = "RuleSetExecutor.Run(StyleGuideSystemGroup)"; meta["operationStarted"] = true; results = ruleExecutor.Run(service.StyleGuideGroup); }
+                        else if (targets.Length == 1) { meta["nativeSignature"] = "RuleSetExecutor.Run(RuleSet)"; meta["operationStarted"] = true; results = ruleExecutor.Run((RuleSet)targets[0]); }
+                        else { meta["nativeSignature"] = "RuleSetExecutor.Run(IEnumerable<RuleSet>)"; meta["operationStarted"] = true; results = ruleExecutor.Run(targets.Cast<RuleSet>().ToList()); }
                         break;
                     case "application":
                         var caseExecutor = service.ApplicationTestGroup.GetService<TestCaseExecutor>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TestCaseExecutor service not provided by ApplicationTestGroup.");
-                        if (runAll) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSystemGroup)"; results = caseExecutor.Run(service.ApplicationTestGroup); }
-                        else if (r.Kind == "testSet") { if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSet)"; results = caseExecutor.Run((ApplicationTestSet)targets[0]); } else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<ApplicationTestSet>)"; results = caseExecutor.Run(targets.Cast<ApplicationTestSet>().ToList()); } }
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(TestCase)"; results = caseExecutor.Run((TestCase)targets[0]); }
-                        else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<TestCase>)"; results = caseExecutor.Run(targets.Cast<TestCase>().ToList()); }
+                        if (runAll) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSystemGroup)"; meta["operationStarted"] = true; results = caseExecutor.Run(service.ApplicationTestGroup); }
+                        else if (r.Kind == "testSet") { if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(ApplicationTestSet)"; meta["operationStarted"] = true; results = caseExecutor.Run((ApplicationTestSet)targets[0]); } else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<ApplicationTestSet>)"; meta["operationStarted"] = true; results = caseExecutor.Run(targets.Cast<ApplicationTestSet>().ToList()); } }
+                        else if (targets.Length == 1) { meta["nativeSignature"] = "TestCaseExecutor.Run(TestCase)"; meta["operationStarted"] = true; results = caseExecutor.Run((TestCase)targets[0]); }
+                        else { meta["nativeSignature"] = "TestCaseExecutor.Run(IEnumerable<TestCase>)"; meta["operationStarted"] = true; results = caseExecutor.Run(targets.Cast<TestCase>().ToList()); }
                         break;
                     default:
                         var systemExecutor = service.SystemTestGroup.GetService<SystemTestCaseExecutor>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SystemTestCaseExecutor service not provided by SystemTestGroup.");
-                        if (runAll) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestSystemGroup)"; results = systemExecutor.Run(service.SystemTestGroup); }
-                        else if (targets.Length == 1) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestCase)"; results = systemExecutor.Run((SystemTestCase)targets[0]); }
-                        else { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(IEnumerable<SystemTestCase>)"; results = systemExecutor.Run(targets.Cast<SystemTestCase>().ToList()); }
+                        if (runAll) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestSystemGroup)"; meta["operationStarted"] = true; results = systemExecutor.Run(service.SystemTestGroup); }
+                        else if (targets.Length == 1) { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(SystemTestCase)"; meta["operationStarted"] = true; results = systemExecutor.Run((SystemTestCase)targets[0]); }
+                        else { meta["nativeSignature"] = "SystemTestCaseExecutor.Run(IEnumerable<SystemTestCase>)"; meta["operationStarted"] = true; results = systemExecutor.Run(targets.Cast<SystemTestCase>().ToList()); }
                         break;
                 }
                 var row = TestResultsRow(results); meta["result"] = row; meta["apiCallSuccess"] = true;
                 var state = results.State.ToString(); meta["nativeState"] = state;
                 bool passed = state == "Success" || state == "Information"; meta["testPassed"] = passed; meta["operationSuccess"] = passed;
                 return "Native Test Suite execution returned TestResults (state " + state + ", " + results.ErrorCount + " error(s), " + results.WarningCount + " warning(s)); testPassed reflects the native state only. No automatic project save or Portal close.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
 
         public ResponseMessage ManageTestSuiteCase(string category, string name, string action = "read", string kind = "case", string newName = "", string softwarePath = "", string instanceName = "", string executionMode = "", string opcUaServerAddress = "", string serverInterfaceType = "", string interfaceFolderPath = "", string updateOptions = "", string scopeJson = "[]", string targetName = "", string masterCopyPath = "", string libraryName = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageTestSuiteCase", meta =>
             {
+                try
+                {
                 var r = Logic.ValidateManageRequest(category, name, action, kind, newName, softwarePath, instanceName, executionMode, opcUaServerAddress, serverInterfaceType, interfaceFolderPath, updateOptions, scopeJson, targetName, masterCopyPath, dryRun);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var service = RequireTestSuite();
@@ -253,6 +267,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (folder != null && !folder.Exists) throw new DirectoryNotFoundException("interfaceFolderPath does not exist: " + interfaceFolderPath);
                 if (action == "showInEditor")
                 {
+                    meta["operationStarted"] = true;
                     switch (target) { case RuleSet rs: rs.ShowInEditor(); break; case TestCase tc: tc.ShowInEditor(); break; case ApplicationTestSet set: set.ShowInEditor(); break; default: throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "ShowInEditor is not available on " + target!.GetType().Name + "."); }
                     meta["nativeSignature"] = target!.GetType().Name + ".ShowInEditor()";
                     return "Opened in the TIA Portal editor (WithUserInterface sessions only); project unchanged.";
@@ -299,6 +314,8 @@ namespace TiaMcpServer.Siemens.Services
                 var after = FindTestSuiteItem(collection, name) ?? target;
                 meta["after"] = TestSuiteRow(after!);
                 return "Test Suite " + action + " executed and read back; no test run or automatic save.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
     }
 }

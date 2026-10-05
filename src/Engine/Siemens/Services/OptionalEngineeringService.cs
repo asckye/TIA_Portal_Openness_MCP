@@ -12,7 +12,9 @@ namespace TiaMcpServer.Siemens.Services
         public OptionalEngineeringService(IEngineeringSession session) => _session = session;
 
         public ResponseMessage ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
-            =>_session.RunHmiStepTool("ReadSiVArcRules",meta=>{
+            =>_session.RunHmiStepTool("ListSivarcRules",meta=>{
+                try
+                {
                 if(offset<0||limit<1||limit>500)throw new ArgumentException("Invalid pagination.");
                 var target=EngineeringObjectAddress.Resolve(_session.ExactSiVArcRoot(category),objectPathJson);
                 var items=target is IEnumerable&&target is not string ? EngineeringGroupOperations.Items(target).ToArray() : new[]{target};
@@ -20,9 +22,13 @@ namespace TiaMcpServer.Siemens.Services
                 meta["records"]=new JsonArray(rows);meta["expectedCount"]=items.Length;meta["actualCount"]=rows.Length;
                 meta["nextOffset"]=offset+rows.Length<items.Length ? offset+rows.Length : (int?)null;meta["truncated"]=offset+rows.Length<items.Length;meta["dataComplete"]=false;
                 return "SiVArc rule scalar properties and schema read; exact child paths required for complex collections. No generation performed.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
         public ResponseMessage ManageSiVArcRule(string category,string collectionPathJson,string name,string action,string propertiesJson="{}",bool dryRun=true)
-            =>_session.RunHmiStepTool("ManageSiVArcRule",meta=>{
+            =>_session.RunHmiStepTool("ManageSivarcRule",meta=>{
+                try
+                {
                 if(!new[]{"create","update","delete"}.Contains(action)||string.IsNullOrWhiteSpace(name))throw new ArgumentException("Exact name and create/update/delete required.");
                 using var access=dryRun ? null : _session.AcquireHmiEditAccess();
                 var collection=EngineeringObjectAddress.Resolve(_session.ExactSiVArcRoot(category),collectionPathJson);
@@ -49,6 +55,8 @@ namespace TiaMcpServer.Siemens.Services
                     if(EngineeringGroupOperations.Find(fresh,name)!=null)throw new InvalidOperationException("Rule remains after deletion.");meta["verifiedAbsent"]=true;meta["verifiedOnFreshNavigation"]=true;
                 }else {EngineeringScalarProperties.Apply(target!,prepared,meta);meta["after"]=EngineeringObjectAddress.Read(target!);}
                 return "SiVArc native rule operation completed; no generation, save, compile or download.";
+                }
+                catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }
             });
     }
 }

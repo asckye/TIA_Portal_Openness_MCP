@@ -9853,8 +9853,9 @@
       "name": "EnsureUnifiedHmiTagTable"
     },
     {
-      "descriptionSha256": "20b8f791493e8f1acfc875577e004daf5deaccca52c25dddd621e14d0a4fc736",
+      "descriptionSha256": "6d17339213b1f294eadf54ccab39382f836669d69510668580a28940f41d836b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - export | selectiveExport | import | exportInstructionData.",
@@ -9866,10 +9867,12 @@
             ],
             "type": "string"
           },
-          "chartNamesJson": {
-            "default": "[]",
-            "description": "chartNamesJson: JSON array of chart paths.",
-            "type": "string"
+          "chartNames": {
+            "description": "chartNames: Array of chart paths.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "deleteAtTarget": {
             "default": false,
@@ -10068,8 +10071,9 @@
       "name": "ExchangePlcAlarmTextLists"
     },
     {
-      "descriptionSha256": "5eb1bcca7b1c13bdfaec916c17625c7c0b8290c9710d5a469d764e3851409a15",
+      "descriptionSha256": "2356b2453a0b91d3b534463ad08b1e6b8d6e8d122a3cd0a97306bee43a665f91",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - export | import | importSettings.",
@@ -10157,8 +10161,9 @@
       "name": "ExchangeSystemDiagnosticsSettings"
     },
     {
-      "descriptionSha256": "d3c04f4e437c8dcc7998c5314cd331fdfc546bc13ed31b3bc97a49349b95cd99",
+      "descriptionSha256": "aecbbab08befd51a6b77efd47924adfae4ef5a738d52fb8bff4adf633c5956b2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - import | export | delete | importTestSets.",
@@ -11031,8 +11036,9 @@
       "name": "ExportSafetyPrintout"
     },
     {
-      "descriptionSha256": "03c71bc354c2c709391953b428d5b1876da51ebc859fa7660121bf6ebcd9a9b3",
+      "descriptionSha256": "da4ab185a19870cce8054291f9d25e5fe161c7e0c613cc35be6d4c1be013e56d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -14586,26 +14592,33 @@
       "name": "ImportProjectTexts"
     },
     {
-      "descriptionSha256": "d32e7dbcf396b6702776a1e7a5a326ff89e5ee80cdbf7b8bf74bccb1e2a74a07",
+      "descriptionSha256": "78df9545d1bb28965809f4126c53307dcca71b41e574afb4db60c4c82ae7d903",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "devicePathJson": {
-            "description": "JSON array of exact device-group/device names.",
-            "type": "string"
+          "devicePath": {
+            "description": "Array of exact device-group/device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
             "description": "true previews without invoking the native mutation/export; false executes.",
             "type": "boolean"
           },
-          "filesJson": {
-            "description": "JSON array of 1..200 existing absolute .ts/.csv alarm-text files.",
-            "type": "string"
+          "files": {
+            "description": "Array of 1..200 existing absolute .ts/.csv alarm-text files.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
-          "devicePathJson",
-          "filesJson"
+          "devicePath",
+          "files"
         ],
         "type": "object"
       },
@@ -14758,8 +14771,9 @@
       "name": "ImportUnifiedOpcUaAlarms"
     },
     {
-      "descriptionSha256": "a3ace89e4a60ac481d407d710740dd9abed38d0f5a86ce57cba0052a2633ef6a",
+      "descriptionSha256": "a3ab52caab228cd59902bfc59ca7f18e789aa67b6b5ed81c3cf08ce20453aac1",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -15847,6 +15861,68 @@
       "name": "ListSivarcBlockDefinitions"
     },
     {
+      "descriptionSha256": "d8612b668bd6f952aba2411745b5a153a324047b7a6995cc142ef3ba884cbe10",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "description": "category: the category - the tool description lists the accepted values.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "ListSivarcRules"
+    },
+    {
       "descriptionSha256": "16aaa787cd08d069f71f76c28f6d65f757a576df52d7821db1ea7d03dd293518",
       "inputSchema": {
         "additionalProperties": false,
@@ -15862,6 +15938,50 @@
         "type": "object"
       },
       "name": "ListTechnologyObjects"
+    },
+    {
+      "descriptionSha256": "d87bee69eb4f689606c52fd312447c3f8f3c7607da01a79cccbd2c7d50ada433",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "description": "category: styleGuide | application | system.",
+            "enum": [
+              "styleGuide",
+              "application",
+              "system"
+            ],
+            "type": "string"
+          },
+          "kind": {
+            "default": "case",
+            "description": "kind: the object kind - the tool description lists the accepted values (case-sensitive).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "ListTestSuiteCases"
     },
     {
       "descriptionSha256": "e455a827c65327b29ef392d5933f2afaeaf698cdc4e7c4f5e47995361fde6e90",
@@ -16028,8 +16148,9 @@
       "name": "ListVersionControlWorkspaces"
     },
     {
-      "descriptionSha256": "5610c61ac39fb03af48deb975ef8f01307446943f5caef9c41e66cab7bbb2b5e",
+      "descriptionSha256": "e7eac768311052f3a4f2425e822cf92c8d0b2608c410e653376d6728bbfc315d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -21387,54 +21508,9 @@
       "name": "ManageSafetyGlobalSettings"
     },
     {
-      "descriptionSha256": "54e2edd8f9e35aa0bb0f44878b3ba8e75cd94823a25ff18b199febe2eaf28a2c",
+      "descriptionSha256": "c1cc6dd8e503eeb9bf76984b8a86978cc991b1d8a56d564e8946471e65104f40",
       "inputSchema": {
-        "properties": {
-          "action": {
-            "description": "create | update | delete. ",
-            "enum": [
-              "create",
-              "update",
-              "delete"
-            ],
-            "type": "string"
-          },
-          "category": {
-            "description": "category: the category - the tool description lists the accepted values.",
-            "type": "string"
-          },
-          "collectionPathJson": {
-            "description": "collectionPathJson: JSON array path of the rule collection.",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "name": {
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "category",
-          "collectionPathJson",
-          "name",
-          "action"
-        ],
-        "type": "object"
-      },
-      "name": "ManageSiVArcRule"
-    },
-    {
-      "descriptionSha256": "c17066751065ba12fca165d79e471b7ea3b2331db25fd477c4e663cf9279e485",
-      "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "archive | retrieve | fAddressArchive. Operation name from the supported actions in the tool description.",
@@ -21455,10 +21531,12 @@
             "description": "Optional archive comment.",
             "type": "string"
           },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "JSON array of exact device-group/device names.",
-            "type": "string"
+          "devicePath": {
+            "description": "Array of exact device-group/device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -21469,10 +21547,12 @@
             "description": "Absolute input/output path on the MCP server, with the documented extension.",
             "type": "string"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "JSON array of exact PLC device-item names below the selected device.",
-            "type": "string"
+          "itemPath": {
+            "description": "Array of exact PLC device-item names below the selected device.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "mode": {
             "default": "HardwareAndAllProgramBlocks",
@@ -21483,15 +21563,19 @@
             ],
             "type": "string"
           },
-          "modifiedDevicePathJson": {
-            "default": "[]",
-            "description": "JSON array of exact modified PLC device-group/device names.",
-            "type": "string"
+          "modifiedDevicePath": {
+            "description": "Array of exact modified PLC device-group/device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "modifiedItemPathJson": {
-            "default": "[]",
-            "description": "JSON array selecting the modified PLC item for F-address archive.",
-            "type": "string"
+          "modifiedItemPath": {
+            "description": "Array selecting the modified PLC item for F-address archive.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "password": {
             "default": "",
@@ -21508,8 +21592,9 @@
       "name": "ManageSinumerikArchive"
     },
     {
-      "descriptionSha256": "919787a980d759618a5b98cc1f84505713b1291424c04376acc02c67ead772a0",
+      "descriptionSha256": "f02bd73ea60f5cf76cbd375bc32ee8afe0e5298ee411c7822cae0619b41fd390",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -21525,9 +21610,12 @@
             "description": "Must be true with dryRun=false for a safety-mode write.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "JSON array of exact device-group/device names.",
-            "type": "string"
+          "devicePath": {
+            "description": "Array of exact device-group/device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -21546,7 +21634,7 @@
           }
         },
         "required": [
-          "devicePathJson"
+          "devicePath"
         ],
         "type": "object"
       },
@@ -21639,6 +21727,98 @@
         "type": "object"
       },
       "name": "ManageSivarcBlockDefinition"
+    },
+    {
+      "descriptionSha256": "ccbee338b2277a62eb4deee4a75540a3b9cfde3911648328797981b0815501c9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "create | update | delete. ",
+            "enum": [
+              "create",
+              "update",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "category": {
+            "description": "category: the category - the tool description lists the accepted values.",
+            "type": "string"
+          },
+          "collectionPath": {
+            "description": "Exact property/name steps to the rule collection; index selection is not supported.",
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "name",
+          "action",
+          "collectionPath"
+        ],
+        "type": "object"
+      },
+      "name": "ManageSivarcRule"
     },
     {
       "descriptionSha256": "adbe453d3877c15c7ac0bc6aba7096544b6337f701b0cf063504a0bd3bb1ed04",
@@ -21749,7 +21929,7 @@
       "name": "ManageSivarcScreenLayout"
     },
     {
-      "descriptionSha256": "8079832ab4fbb56547802b9a0420f07214ee9bf296f795feba5fbba2cd0e8f9b",
+      "descriptionSha256": "6b2a6658a826416ebf51d81300f30fb1ececc9845fc1efc4c376ee71019f6e67",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -22700,8 +22880,9 @@
       "name": "ManageTechnologyObject"
     },
     {
-      "descriptionSha256": "3fe1d4d0502cdd1e80476c27fddcd093be61a139d93c07bdf24d86a8bcef3a7b",
+      "descriptionSha256": "d46f86b1dcd4b96025c4fa74879ca4b2dcd4b71ceb092d7aa9620708b8dc4c80",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -22779,10 +22960,107 @@
             "description": "opcUaServerAddress: OPC UA server endpoint URL.",
             "type": "string"
           },
-          "scopeJson": {
-            "default": "[]",
-            "description": "scopeJson: JSON object describing the test scope (see the tool description).",
-            "type": "string"
+          "scope": {
+            "description": "scope: Array of typed test scopes (see the tool description).",
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "project"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "deviceGroup"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 256,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "plc",
+                        "units"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "softwarePath": {
+                      "maxLength": 1024,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "softwarePath"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "groupPath": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "kind": {
+                      "enum": [
+                        "blocks",
+                        "tags",
+                        "types"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "softwarePath": {
+                      "maxLength": 1024,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "softwarePath"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
           },
           "serverInterfaceType": {
             "default": "",
@@ -25302,78 +25580,6 @@
       "name": "ReadPortalInfo"
     },
     {
-      "descriptionSha256": "c9879873e6ce817e7491f1c80daabefdce6a8f70d98e8772d166cedfb21442e0",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "description": "category: the category - the tool description lists the accepted values.",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "objectPathJson": {
-            "default": "[]",
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "category"
-        ],
-        "type": "object"
-      },
-      "name": "ReadSiVArcRules"
-    },
-    {
-      "descriptionSha256": "92e3ded96c2a6a51adf5dfe4aeecc4bef94a714dcab585c091f1c28e966b200b",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "description": "category: styleGuide | application | system.",
-            "enum": [
-              "styleGuide",
-              "application",
-              "system"
-            ],
-            "type": "string"
-          },
-          "kind": {
-            "default": "case",
-            "description": "kind: the object kind - the tool description lists the accepted values (case-sensitive).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "category"
-        ],
-        "type": "object"
-      },
-      "name": "ReadTestSuiteCases"
-    },
-    {
       "descriptionSha256": "ae1b714e6cd01274a8d1d298e8b678bd6f9ecb711378a11217f13d5cdcfd5875",
       "inputSchema": {
         "properties": {
@@ -26426,8 +26632,9 @@
       "name": "RunReadOnlyToolBatch"
     },
     {
-      "descriptionSha256": "0ebc72d3f1a41d67789d289990688acb8d34a93c3ad06489dbc6177a639a3f38",
+      "descriptionSha256": "25e0d4a3bc11061ee73ca55eaadbbfafb3b456c8c10caa61e39af4d716832312",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "category": {
             "description": "category: styleGuide | application | system.",
@@ -26458,10 +26665,12 @@
             "description": "name: exact name of the object (case-sensitive).",
             "type": "string"
           },
-          "namesJson": {
-            "default": "[]",
-            "description": "namesJson: JSON array of exact names (or a comma-separated list where the tool says so).",
-            "type": "string"
+          "names": {
+            "description": "names: Array of exact names (or a comma-separated list where the tool says so).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "runAll": {
             "default": false,

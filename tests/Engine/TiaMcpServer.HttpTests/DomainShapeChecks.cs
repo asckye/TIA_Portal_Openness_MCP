@@ -82,7 +82,7 @@ internal static class DomainShapeChecks
                     continue;
                 }
                 var implementation = tool;
-                var serviceName = name;
+                var serviceName = name == "ListTestSuiteCases" ? "ReadTestSuiteCases" : name == "ListSivarcRules" ? "ReadSiVArcRules" : name == "ManageSivarcRule" ? "ManageSiVArcRule" : name;
                 var driveContract = domain.Name == "Dcc" || domain.Name == "Startdrive" || domain.Name == "Teamcenter";
                 if (driveContract)
                 {
@@ -136,6 +136,15 @@ internal static class DomainShapeChecks
                 var il = implementation.GetMethodBody()!.GetILAsByteArray()!;
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                if (new[] { "TestSuite", "V20Options", "OptionalEngineering", "SpecializedExchange" }.Contains(domain.Name) && tool.ReturnType.Name == "CallToolResult")
+                {
+                    callsService = EngineSurface.MethodFamily(tool).Where(callback => callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal))
+                        .Any(callback => {
+                            var body = callback.GetMethodBody()!.GetILAsByteArray()!;
+                            return Enumerable.Range(0, Math.Max(0, body.Length - 4)).Any(index =>
+                                (body[index] == 0x28 || body[index] == 0x6f) && BitConverter.ToInt32(body, index + 1) == method.MetadataToken);
+                        });
+                }
                 EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls service: " + name, implementation, method);
                 var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
                 check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tool.DeclaringType!)),

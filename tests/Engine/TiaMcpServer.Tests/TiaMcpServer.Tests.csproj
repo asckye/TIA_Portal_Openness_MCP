@@ -16,6 +16,11 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs" Link="CfcTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs" Link="LibraryTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />

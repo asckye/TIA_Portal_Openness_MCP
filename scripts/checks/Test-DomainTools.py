@@ -171,10 +171,10 @@ CASES = {
     'GlobalScriptEdit': [
         ('UpdateUnifiedGlobalScript', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation', 'scriptCode': 'export function Navigate() {}'})],
     'Cfc': actions('ExchangeCfcCharts', 'export selectiveExport import exportInstructionData',
-        softwarePath=PLC, filePath='C:/cfc-offline-fixture.xml.zip', modelVersion='V2.0', chartNamesJson='["Chart1"]')
+        softwarePath=PLC, filePath='C:/cfc-offline-fixture.xml.zip', modelVersion='V2.0', chartNames=['Chart1'])
         + actions('ManageCfcChartProtection', 'read add change remove', softwarePath=PLC,
                   chartName='Chart1', currentPassword='offline', newHashedPassword='offline'),
-    'TestSuite': [('ReadTestSuiteCases', category, {'category': category})
+    'TestSuite': [('ListTestSuiteCases', category, {'category': category})
                   for category in ('styleGuide', 'application', 'system')]
         + actions('ExchangeTestSuiteCase', 'export import importTestSets delete',
                   category='application', name='Case1', filePath='C:/domain-offline.tst')
@@ -183,11 +183,11 @@ CASES = {
         + actions('ManageTestSuiteCase', 'read rename setScope copyScope createFromMasterCopy showInEditor',
                   category='styleGuide', name='Case1'),
     'V20Options': actions('ManageSinumerikArchive', 'archive retrieve fAddressArchive', filePath='C:/domain-offline.dsf')
-        + [('ImportSinumerikAlarmTexts', 'import', {'devicePathJson': '[]', 'filesJson': '["C:/domain-offline.ts"]'})]
-        + actions('ManageSinumerikSafetyMode', 'read set', devicePathJson='[]')
+        + [('ImportSinumerikAlarmTexts', 'import', {'devicePath': [], 'files': ['C:/domain-offline.ts']})]
+        + actions('ManageSinumerikSafetyMode', 'read set', devicePath=[])
         + [('InitializeSimotionScripting', 'initialize', {}), ('ExportScadaData', 'export', {'filePath': 'C:/domain-offline.zip'})],
-    'OptionalEngineering': [('ReadSiVArcRules', 'read', {'category': 'screens'})]
-        + actions('ManageSiVArcRule', 'create update delete', category='screens', collectionPathJson='[]', name='Rule1'),
+    'OptionalEngineering': [('ListSivarcRules', 'read', {'category': 'screens'})]
+        + actions('ManageSivarcRule', 'create update delete', category='screens', collectionPath=[{'property': 'Tables', 'name': 'Table1'}, {'property': 'RuleGroups', 'name': 'Group1'}, {'property': 'Rules'}], name='Rule1'),
     'SpecializedExchange': actions('ExchangePlcSupervisions', 'export import importSettings',
                                   softwarePath=PLC, filePath='C:/domain-offline.xlsx'),
     'SoftwareUnitDeep': [('ListPlcSoftwareUnits', 'read', {'softwarePath': PLC})]

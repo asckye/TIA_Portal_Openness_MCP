@@ -1754,9 +1754,10 @@
           "softwarePath": "PLC_1",
           "action": "export",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
-          "dryRun": true
+          "dryRun": true,
+          "modelVersion": "V2.0"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeMotionCamData",
@@ -1805,7 +1806,7 @@
           "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeSystemDiagnosticsSettings",
@@ -1836,7 +1837,7 @@
           "filePath": "C:\\Examples\\exports\\RuleSet.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeUnifiedScriptModules",
@@ -2173,7 +2174,7 @@
           "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportTechnologyObject",
@@ -3785,11 +3786,15 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "filesJson": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "files": [
+            "C:\\Examples\\AlarmTexts.csv"
+          ],
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportTechnologyObject",
@@ -3871,7 +3876,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InspectSimaticSdCompatibility",
@@ -4289,7 +4294,7 @@
       },
       {
         "name": "ListSivarcRules",
-        "currentName": "ReadSiVArcRules",
+        "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
         "profiles": [
           "full"
@@ -4297,7 +4302,7 @@
         "arguments": {
           "category": "screens"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTechnologyObjects",
@@ -4313,7 +4318,7 @@
       },
       {
         "name": "ListTestSuiteCases",
-        "currentName": "ReadTestSuiteCases",
+        "currentName": "ListTestSuiteCases",
         "sourceName": "ReadTestSuiteCases",
         "profiles": [
           "full"
@@ -4321,7 +4326,7 @@
         "arguments": {
           "category": "styleGuide"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListToolCategories",
@@ -4448,7 +4453,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiCycle",
@@ -5361,9 +5366,15 @@
         "arguments": {
           "action": "archive",
           "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSinumerikSafetyMode",
@@ -5373,12 +5384,14 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcBlockDefinition",
@@ -5400,19 +5413,31 @@
       },
       {
         "name": "ManageSivarcRule",
-        "currentName": "ManageSiVArcRule",
+        "currentName": "ManageSivarcRule",
         "sourceName": "ManageSiVArcRule",
         "profiles": [
           "full"
         ],
         "arguments": {
           "category": "screens",
-          "collectionPathJson": "[{\"property\":\"Tables\"}]",
           "name": "Example_1",
           "action": "create",
-          "dryRun": true
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcRuleContainer",
@@ -5574,7 +5599,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTransferArea",
@@ -6368,9 +6393,12 @@
         "arguments": {
           "category": "styleGuide",
           "confirmExternalExecution": false,
-          "dryRun": true
+          "dryRun": true,
+          "names": [
+            "&lt;exact test name from ListTestSuiteCases&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunToolTransaction",
@@ -8831,9 +8859,10 @@
           "softwarePath": "PLC_1",
           "action": "export",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
-          "dryRun": true
+          "dryRun": true,
+          "modelVersion": "V2.0"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeMotionCamData",
@@ -8882,7 +8911,7 @@
           "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeSystemDiagnosticsSettings",
@@ -8913,7 +8942,7 @@
           "filePath": "C:\\Examples\\exports\\RuleSet.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeUnifiedScriptModules",
@@ -9250,7 +9279,7 @@
           "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportTechnologyObject",
@@ -10862,11 +10891,15 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "filesJson": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "files": [
+            "C:\\Examples\\AlarmTexts.csv"
+          ],
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportTechnologyObject",
@@ -10948,7 +10981,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InspectSimaticSdCompatibility",
@@ -11390,7 +11423,7 @@
       },
       {
         "name": "ListSivarcRules",
-        "currentName": "ReadSiVArcRules",
+        "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
         "profiles": [
           "full"
@@ -11398,7 +11431,7 @@
         "arguments": {
           "category": "screens"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTechnologyObjects",
@@ -11414,7 +11447,7 @@
       },
       {
         "name": "ListTestSuiteCases",
-        "currentName": "ReadTestSuiteCases",
+        "currentName": "ListTestSuiteCases",
         "sourceName": "ReadTestSuiteCases",
         "profiles": [
           "full"
@@ -11422,7 +11455,7 @@
         "arguments": {
           "category": "styleGuide"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListToolCategories",
@@ -11549,7 +11582,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiCycle",
@@ -12593,9 +12626,15 @@
         "arguments": {
           "action": "archive",
           "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSinumerikSafetyMode",
@@ -12605,12 +12644,14 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcBlockDefinition",
@@ -12632,19 +12673,31 @@
       },
       {
         "name": "ManageSivarcRule",
-        "currentName": "ManageSiVArcRule",
+        "currentName": "ManageSivarcRule",
         "sourceName": "ManageSiVArcRule",
         "profiles": [
           "full"
         ],
         "arguments": {
           "category": "screens",
-          "collectionPathJson": "[{\"property\":\"Tables\"}]",
           "name": "Example_1",
           "action": "create",
-          "dryRun": true
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcRuleContainer",
@@ -12822,7 +12875,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTransferArea",
@@ -13616,9 +13669,12 @@
         "arguments": {
           "category": "styleGuide",
           "confirmExternalExecution": false,
-          "dryRun": true
+          "dryRun": true,
+          "names": [
+            "&lt;exact test name from ListTestSuiteCases&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunToolTransaction",

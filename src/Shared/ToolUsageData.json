@@ -6644,12 +6644,48 @@
         }
       ]
     },
+    "ListSivarcRules": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "sivarc-21",
+          "topic": "sivarc",
+          "releaseKey": "21",
+          "title": "SiVArc generation",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
+          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "sivarc-rules-21",
+          "topic": "sivarc-rules",
+          "releaseKey": "21",
+          "title": "Rule objects and groups",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
+          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "ListTechnologyObjects": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
         "guides/skills/technology-objects/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListTestSuiteCases": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -7531,7 +7567,30 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ManageSiVArcRule": {
+    "ManageSinumerikArchive": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ManageSinumerikSafetyMode": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/plc-safety-administration/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ManageSivarcBlockDefinition": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -7557,30 +7616,7 @@
         }
       ]
     },
-    "ManageSinumerikArchive": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ManageSinumerikSafetyMode": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/plc-safety-administration/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ManageSivarcBlockDefinition": {
+    "ManageSivarcRule": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -8475,42 +8511,6 @@
       "manualReferences": []
     },
     "ReadPortalInfo": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/session-and-project/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadSiVArcRules": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "sivarc-21",
-          "topic": "sivarc",
-          "releaseKey": "21",
-          "title": "SiVArc generation",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
-          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "sivarc-rules-21",
-          "topic": "sivarc-rules",
-          "releaseKey": "21",
-          "title": "Rule objects and groups",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
-          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadTestSuiteCases": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
@@ -14808,7 +14808,8 @@
             "softwarePath": "PLC_1",
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
-            "dryRun": true
+            "dryRun": true,
+            "modelVersion": "V2.0"
           },
           "parameters": {
             "modelVersion": {
@@ -14824,8 +14825,10 @@
             "deleteAtTarget": {
               "exampleValue": false
             },
-            "chartNamesJson": {
-              "exampleValue": "<chartNamesJson from this operation's target or user input>",
+            "chartNames": {
+              "exampleValue": [
+                "<chartNames from this operation's target or user input>"
+              ],
               "requiresBinding": true
             },
             "skipChartPreflight": {
@@ -14838,7 +14841,10 @@
             },
             "selectiveExport": {
               "arguments": {
-                "action": "selectiveExport"
+                "action": "selectiveExport",
+                "chartNames": [
+                  "<exact chart name from the CFC inventory>"
+                ]
               }
             },
             "import": {
@@ -14848,7 +14854,8 @@
             },
             "exportInstructionData": {
               "arguments": {
-                "action": "exportInstructionData"
+                "action": "exportInstructionData",
+                "modelVersion": ""
               }
             }
           },
@@ -16425,12 +16432,16 @@
         },
         "ImportSinumerikAlarmTexts": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "filesJson": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "files": [
+              "C:\\Examples\\AlarmTexts.csv"
+            ],
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             }
           },
@@ -21081,20 +21092,34 @@
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ManageSiVArcRule": {
+        "ManageSivarcRule": {
           "arguments": {
             "category": "screens",
-            "collectionPathJson": "[{\"property\":\"Tables\"}]",
             "name": "Example_1",
             "action": "create",
-            "dryRun": true
+            "dryRun": true,
+            "collectionPath": [
+              {
+                "property": "Tables",
+                "name": "ExampleTable"
+              },
+              {
+                "property": "RuleGroups",
+                "name": "ExampleGroup"
+              },
+              {
+                "property": "Rules"
+              }
+            ]
           },
           "parameters": {
             "category": {
               "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -21105,7 +21130,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "delete": {
@@ -21120,23 +21147,37 @@
           "arguments": {
             "action": "archive",
             "filePath": "C:\\Examples\\exports\\Example.dsf",
-            "dryRun": true
+            "dryRun": true,
+            "devicePath": [
+              "<exact SINUMERIK device from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact NCU PLC item>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "devicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "modifiedDevicePathJson": {
-              "exampleValue": "<modifiedDevicePathJson from this operation's target or user input>",
+            "modifiedDevicePath": {
+              "exampleValue": [
+                "<modifiedDevicePath from this operation's target or user input>"
+              ],
               "requiresBinding": true
             },
-            "modifiedItemPathJson": {
-              "exampleValue": "<modifiedItemPathJson from this operation's target or user input>",
+            "modifiedItemPath": {
+              "exampleValue": [
+                "<modifiedItemPath from this operation's target or user input>"
+              ],
               "requiresBinding": true
             },
             "mode": {
@@ -21161,12 +21202,20 @@
             },
             "retrieve": {
               "arguments": {
-                "action": "retrieve"
+                "action": "retrieve",
+                "devicePath": [],
+                "itemPath": []
               }
             },
             "fAddressArchive": {
               "arguments": {
-                "action": "fAddressArchive"
+                "action": "fAddressArchive",
+                "modifiedDevicePath": [
+                  "<exact modified SINUMERIK device>"
+                ],
+                "modifiedItemPath": [
+                  "<exact modified NCU PLC item>"
+                ]
               }
             }
           },
@@ -21174,13 +21223,15 @@
         },
         "ManageSinumerikSafetyMode": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
             "dryRun": true,
             "confirmSafetyChange": false,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
             "mode": {
@@ -21979,8 +22030,14 @@
               "exampleValue": "<updateOptions from this operation's target or user input>",
               "requiresBinding": true
             },
-            "scopeJson": {
-              "exampleValue": "[{\"kind\":\"blocks\",\"softwarePath\":\"PLC_1\",\"groupPath\":\"\"}]"
+            "scope": {
+              "exampleValue": [
+                {
+                  "kind": "blocks",
+                  "softwarePath": "PLC_1",
+                  "groupPath": ""
+                }
+              ]
             },
             "targetName": {
               "exampleValue": "Example_2"
@@ -22005,8 +22062,13 @@
             "setScope": {
               "arguments": {
                 "action": "setScope",
-                "softwarePath": "PLC_1",
-                "scopeJson": "[{\"kind\":\"blocks\",\"softwarePath\":\"PLC_1\",\"groupPath\":\"\"}]"
+                "scope": [
+                  {
+                    "kind": "blocks",
+                    "softwarePath": "PLC_1",
+                    "groupPath": ""
+                  }
+                ]
               }
             },
             "copyScope": {
@@ -24017,7 +24079,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadSiVArcRules": {
+        "ListSivarcRules": {
           "arguments": {
             "category": "screens"
           },
@@ -24025,9 +24087,21 @@
             "category": {
               "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
             },
-            "objectPathJson": {
-              "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-              "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
+            "objectPath": {
+              "exampleValue": [
+                {
+                  "property": "ScreenFolder"
+                },
+                {
+                  "property": "Screens",
+                  "name": "Overview"
+                },
+                {
+                  "property": "ScreenItems",
+                  "name": "StartButton"
+                }
+              ],
+              "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
             },
             "offset": {
               "exampleValue": 0
@@ -24103,7 +24177,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadTestSuiteCases": {
+        "ListTestSuiteCases": {
           "arguments": {
             "category": "styleGuide"
           },
@@ -24771,14 +24845,19 @@
           "arguments": {
             "category": "styleGuide",
             "confirmExternalExecution": false,
-            "dryRun": true
+            "dryRun": true,
+            "names": [
+              "<exact test name from ListTestSuiteCases>"
+            ]
           },
           "parameters": {
             "name": {
               "exampleValue": "Example_1"
             },
-            "namesJson": {
-              "exampleValue": "<namesJson from this operation's target or user input>",
+            "names": {
+              "exampleValue": [
+                "<names from this operation's target or user input>"
+              ],
               "requiresBinding": true
             },
             "runAll": {

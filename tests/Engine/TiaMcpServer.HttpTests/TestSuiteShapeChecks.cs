@@ -94,8 +94,8 @@ internal static class TestSuiteShapeChecks
 
         // ---- server side ----
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ReadTestSuiteCases","ExchangeTestSuiteCase","RunTestSuiteCase","ManageTestSuiteCase"}) check(portal.Method(tool)!=null,"Portal."+tool+" exists");
-        check(portal.Method("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="namesJson") && portal.Method("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="runAll") && portal.Method("ReadTestSuiteCases")!.GetParameters().Any(p=>p.Name=="kind"),"Test Suite tools take namesJson / runAll / kind (2.7.42 typed retrofit)");
+        foreach(var tool in new[]{"ListTestSuiteCases","ExchangeTestSuiteCase","RunTestSuiteCase","ManageTestSuiteCase"}) check(portal.Tool(tool)?.ReturnType.Name=="CallToolResult", tool+" has one V4 entry");
+        check(portal.Tool("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="names" && p.ParameterType==typeof(string[])) && portal.Tool("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="runAll") && portal.Tool("ListTestSuiteCases")!.GetParameters().Any(p=>p.Name=="kind"),"Test Suite tools take typed names / runAll / kind");
         check(T(ts,at+"SupportSimulationNotEnabledException")!=null && T(core,"Siemens.Engineering.EngineeringTargetInvocationException")!=null,"empty-group Run failures are EngineeringTargetInvocationException (2.7.42 real project: application executor NRE, system executor 'No test case(s)') - runAll on an empty group is refused by the tool");
     }
 }
