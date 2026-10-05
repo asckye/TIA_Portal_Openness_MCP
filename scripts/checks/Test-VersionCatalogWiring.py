@@ -40,8 +40,11 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertEqual(len(excluded), 11)
         registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources.all_text()))
         self.assertFalse(set(excluded) - registered)
-        for script in ['Test-WorkerIsolation.py', 'Test-LocalStability.py']:
-            self.assertIn('477 if args.major == 20 else 488', read(ROOT / 'scripts/checks' / script))
+        self.assertIn('477 if args.major == 20 else 488', read(ROOT / 'scripts/checks/Test-WorkerIsolation.py'))
+        stability = read(ROOT / 'scripts/checks/Test-LocalStability.py')
+        self.assertIn('ToolProfiles.resx', stability)
+        self.assertIn('args.full_tool_count = len(roster)', stability)
+        self.assertIn("sum('lite' in row['profiles'] for row in roster)", stability)
 
     def test_legacy_contract_remains_unbound(self):
         source = sources.type_text('OpennessReleaseContract')

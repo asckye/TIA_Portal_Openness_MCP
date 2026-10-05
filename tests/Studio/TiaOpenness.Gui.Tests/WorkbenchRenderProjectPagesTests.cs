@@ -60,11 +60,12 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                 ThemeManager.Current.Theme = state.Item6;
                 var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, state.Item1 != "vc-empty-zh-light");
                 if (state.Item2 == "Log")
-                    typeof(Services.WorkbenchActivity).GetProperty("Log")!.SetValue(model.Activity, model.Activity.Log
-                        + "20:45:00  [INFO] 工程已加载 · Project loaded\n"
-                        + "20:45:01  Warning: 程序块需要重新编译\n"
-                        + "20:45:02  [ERROR] 导入失败 · Import failed\n"
-                        + "20:45:03  [DEBUG] 读取程序块列表 · Reading blocks\n");
+                {
+                    model.Activity.Append("[INFO] 工程已加载 · Project loaded", Services.WorkbenchActivity.Severity.Info);
+                    model.Activity.Append("Warning: 程序块需要重新编译", Services.WorkbenchActivity.Severity.Warning);
+                    model.Activity.Append("[ERROR] 导入失败 · Import failed", Services.WorkbenchActivity.Severity.Error);
+                    model.Activity.Append("[DEBUG] 读取程序块列表 · Reading blocks", Services.WorkbenchActivity.Severity.Debug);
+                }
                 var window = new MainWindow(model, false, preview: new TiaMcpConfigurator.ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14", "192.168.86.131", false, false, false, "", "", [] ));
                 try
                 {

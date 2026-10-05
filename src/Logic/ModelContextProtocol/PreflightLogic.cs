@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -22,8 +21,10 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Description { get; }
             /// <summary>True when the description came from ParameterVocabulary because the parameter has no [Description] of its own.</summary>
             public bool Synthesized { get; }
-            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false)
-            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; }
+            public IReadOnlyList<string> AllowedValues { get; }
+            public string? ExampleJson { get; }
+            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false, IReadOnlyList<string>? allowedValues = null, string? exampleJson = null)
+            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; AllowedValues = allowedValues ?? Array.Empty<string>(); ExampleJson = exampleJson; }
         }
 
         public sealed class Report
@@ -132,40 +133,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private const string Word = @"[A-Za-z][A-Za-z0-9_+-]*";
-        private const string Identifier = @"[A-Za-z][A-Za-z0-9_]*";
-        // A list is an enumeration only when it stands on its own: not glued to "=" / a quote / a word before it ("kind=globaldb|fc",
-        // the regex example 'FC|Main'), and followed by punctuation or the end rather than a noun ("group/folder path", "PG/PC interface").
-        private const string ListEnd = @"(?=\s*(?:[.;,)(]|$))";
-        private static readonly Regex PipeList = new Regex(@"(?<![=\w'""])(?<list>" + Word + @"(?:\s*\|\s*" + Word + @")+)" + ListEnd, RegexOptions.Compiled);
-        private static readonly Regex SlashList = new Regex(@"(?:one of:?|:)\s*\(?\s*(?<list>" + Word + @"(?:\s*/\s*" + Word + @")+)" + ListEnd, RegexOptions.Compiled);
-        // "(a, b, c)" as a bare parenthesised list of plain identifiers: "(substring, case-insensitive)" is prose, "(None, Override, SkipInactiveCultures)" is a list.
-        private static readonly Regex CommaList = new Regex(@"\(\s*(?<list>" + Identifier + @"(?:\s*,\s*" + Identifier + @")+)\s*\)", RegexOptions.Compiled);
-
-        /// <summary>The documented alternatives of an enum-like parameter ("action: read | create | delete", "kind: udt|tagtable|fc", "(None, Override)"), or empty.</summary>
-        public static IReadOnlyList<string> Alternatives(string? description)
-        {
-            if (string.IsNullOrEmpty(description)) return Array.Empty<string>();
-            foreach (var pair in new[] { (PipeList, '|'), (SlashList, '/'), (CommaList, ',') })
-            {
-                var m = pair.Item1.Match(description!);
-                if (!m.Success) continue;
-                var before = description!.Substring(0, m.Index);
-                // The list belongs to the parameter's own (first) sentence: a period before it means another sentence, e.g. the prompt names DownloadPlc mentions later on.
-                if (before.IndexOf('.') >= 0) continue;   // also skips "e.g." lists, which are examples, not the full set
-                var list = m.Groups["list"].Value.Split(pair.Item2).Select(x => x.Trim()).Where(x => x.Length > 0).Distinct(StringComparer.Ordinal).ToList();
-                if (list.Count < 2 || list.Any(x => x.Length > 40)) continue;
-                // A two-item comma list in parentheses is usually a reference ("the password to set (setAccessPassword, protectMasterSecret)"),
-                // not a value list; it counts only when the words before it say so ("value (None, Override)").
-                if (pair.Item2 == ',' && list.Count < 3 && !Regex.IsMatch(before.TrimEnd(), @"(?i)(one of|values?|options?|names?|kinds?|modes?)\s*$")) continue;
-                return list;
-            }
-            return Array.Empty<string>();
-        }
-
         private static void CheckAlternatives(ParameterSpec spec, string text, Report report)
         {
             if (text.Length == 0) return;
-            var alternatives = Alternatives(spec.Description);
+            var alternatives = spec.AllowedValues;
             if (alternatives.Count == 0) return;
             if (alternatives.Any(a => string.Equals(a, text, StringComparison.Ordinal))) return;
             var ci = alternatives.FirstOrDefault(a => string.Equals(a, text, StringComparison.OrdinalIgnoreCase));

@@ -451,10 +451,10 @@ namespace TiaMcpServer.Siemens.Services
 
             var warnings = new JsonArray
             {
-                "删除后这张表里全部 " + tagCount + " 个变量的符号一并消失。"
-                + "HMI 按符号名绑定 PLC 变量，PLC 侧编译不一定报错，断链要到画面上才暴露。",
-                "被删的变量若在程序里以绝对地址（%I/%Q/%M）使用，程序仍能编译通过，"
-                + "但注释和符号全丢，事后无法还原。"
+                "Deletion removes all " + tagCount + " tag symbols from this table."
+                + "HMI binds PLC tags by symbolic name. PLC compilation may report no error; the broken binding may only become visible on the screen.",
+                "If the deleted tags are used by absolute address (%I/%Q/%M), the program can still compile, "
+                + "but all comments and symbols are lost and cannot be restored afterwards."
             };
 
             var result = new JsonObject
@@ -571,8 +571,8 @@ namespace TiaMcpServer.Siemens.Services
 
             var warnings = new JsonArray
             {
-                "UDT 被删后，所有以它为数据类型的 DB / 块接口全部失去类型定义，"
-                + "必须重新编译整个 PLC 才能看出影响面。"
+                "Deleting the UDT removes the type definition from every DB/block interface that uses it; "
+                + "recompile the entire PLC to see the full impact."
             };
 
             // 仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
@@ -595,7 +595,7 @@ namespace TiaMcpServer.Siemens.Services
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
                     + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
-                else warnings.Add("⚠️ 取不到这个 UDT 的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人用它。"
+                else warnings.Add("⚠️ Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason") + "); this **does not mean** the UDT is unused."
                     + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }
             result["warnings"] = warnings;

@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public StructuredTextXmlBuilder LocalVariable(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("SCL 局部变量名不能为空。", nameof(name));
+                throw new ArgumentException("An SCL local-variable name must not be empty.", nameof(name));
             return LocalVariable(new[] { name });
         }
 
@@ -58,11 +58,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public StructuredTextXmlBuilder LocalVariable(params string[] components)
         {
             if (components == null || components.Length == 0)
-                throw new ArgumentException("SCL 局部变量名不能为空。", nameof(components));
+                throw new ArgumentException("An SCL local-variable name must not be empty.", nameof(components));
             foreach (var c in components)
             {
                 if (string.IsNullOrWhiteSpace(c))
-                    throw new ArgumentException("SCL 局部变量路径段不能为空。", nameof(components));
+                    throw new ArgumentException("An SCL local-variable path segment must not be empty.", nameof(components));
                 EnsureLocalSymbolSegment(c);
             }
 
@@ -85,10 +85,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public StructuredTextXmlBuilder GlobalVariable(params string[] components)
         {
             if (components == null || components.Length == 0)
-                throw new ArgumentException("SCL 全局变量名不能为空。", nameof(components));
+                throw new ArgumentException("An SCL global-variable name must not be empty.", nameof(components));
             foreach (var c in components)
                 if (string.IsNullOrWhiteSpace(c))
-                    throw new ArgumentException("SCL 全局变量路径段不能为空。", nameof(components));
+                    throw new ArgumentException("An SCL global-variable path segment must not be empty.", nameof(components));
 
             _xml.Append("<Access Scope=\"GlobalVariable\" UId=\"").Append(Next()).AppendLine("\">");
             _xml.Append("<Symbol UId=\"").Append(Next()).AppendLine("\">");
@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public StructuredTextXmlBuilder Symbol(string nameSpec)
         {
             if (string.IsNullOrWhiteSpace(nameSpec))
-                throw new ArgumentException("SCL 变量名不能为空。", nameof(nameSpec));
+                throw new ArgumentException("An SCL variable name must not be empty.", nameof(nameSpec));
             var trimmed = nameSpec.Trim();
             if (trimmed.StartsWith("#")) trimmed = trimmed.Substring(1);
             var hasQuote = trimmed.Contains('"');
@@ -149,22 +149,22 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (!valid)
                 throw new ArgumentException(
-                    "SCL 局部符号非法：\"" + segment + "\"。它含运算符/空格/括号，看起来是表达式而非单个变量名。" +
-                    "condition / source / {sym} 只接受单个变量名；复杂表达式请用 op:\"line\" + items[]，" +
-                    "CASE/FOR/WHILE 或函数调用（ABS/LIMIT/TON 等）请走外部 SCL（ImportPlcExternalSource + GenerateBlocksFromExternalSource）。",
+                    "Invalid SCL local symbol: \"" + segment + "\". It contains operators/whitespace/parentheses and appears to be an expression rather than a single variable name." +
+                    "condition / source / {sym} accept only a single variable name; for complex expressions use op:\"line\" + items[], " +
+                    "For CASE/FOR/WHILE or function calls (ABS/LIMIT/TON, etc.), use external SCL (ImportPlcExternalSource + GenerateBlocksFromExternalSource).",
                     nameof(segment));
 
             if (string.Equals(s, "TRUE", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(s, "FALSE", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException(
-                    "SCL 布尔字面量 \"" + segment + "\" 不能作为符号。赋值请用 literalValue/value，行内请用 {lit:\"" + s.ToUpperInvariant() + "\"}。",
+                    "SCL Boolean literal \"" + segment + "\" cannot be used as a symbol. For assignments use literalValue/value; inline use {lit:\"" + s.ToUpperInvariant() + "\"}.",
                     nameof(segment));
         }
 
         public StructuredTextXmlBuilder LiteralConstant(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("SCL 常量不能为空。", nameof(value));
+                throw new ArgumentException("An SCL constant must not be empty.", nameof(value));
 
             _xml.Append("<Access Scope=\"LiteralConstant\" UId=\"").Append(Next()).AppendLine("\">");
             _xml.Append("<Constant UId=\"").Append(Next()).AppendLine("\">");
@@ -299,7 +299,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!File.Exists(path))
             {
                 root["ok"] = false;
-                root["error"] = "文件不存在。";
+                root["error"] = "The file does not exist.";
                 return root;
             }
 

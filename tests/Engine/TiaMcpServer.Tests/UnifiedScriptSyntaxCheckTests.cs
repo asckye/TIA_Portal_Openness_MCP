@@ -33,11 +33,11 @@ namespace TiaMcpServer.Tests
                         new FakeNonRecoverableException("inner"))),
                 "包在 InnerException 里的 NonRecoverable 也要认出来");
 
-            // 反射路径上真正的类型名常常只出现在消息里，类型本身还是 TargetInvocationException。
-            check(PortalFailureClassifier.IsPortalProcessLost(
+            // A type name quoted in prose is not evidence that the process was lost.
+            check(!PortalFailureClassifier.IsPortalProcessLost(
                     new InvalidOperationException(
                         "Siemens.Engineering.NonRecoverableException: the engineering process has exited")),
-                "类型名只出现在消息里时也要认出来");
+                "A quoted native type name must not invalidate the session");
 
             check(PortalFailureClassifier.IsPortalProcessLost(
                     new System.Runtime.InteropServices.COMException("RPC server unavailable")),

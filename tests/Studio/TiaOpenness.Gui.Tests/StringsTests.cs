@@ -260,12 +260,13 @@ public class StringsTests(WpfContext wpf)
         {
             using var model = new MainViewModel(new FakeStudioClient(), new FakeDialogService());
             using var results = new GlassResults(model);
-            string history = Loc.Current.T("Status.CompileResult", "Warning", 0, 2, "1.4") + "\n"
-                + Loc.Current.T("Log.InspectionHeader", "PLC_1") + "\nNAMING-001 (1)\n"
-                + Loc.Current.T("Status.InspectResult", 1, 5) + "\n"
-                + Loc.Current.T("Status.VcMapApplied", 3, 0, 2, 1) + "\n"
-                + Loc.Current.T("Status.VcSyncApplied", 2, 1, 3) + "\n";
-            typeof(TiaOpenness.Gui.Services.WorkbenchActivity).GetProperty("Log")!.SetValue(model.Activity, history);
+            model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 2, "1.4");
+            model.Activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
+            model.Activity.AppendRule("NAMING-001", 1);
+            model.Activity.AppendLocalized("Status.InspectResult", 1, 5);
+            model.Activity.AppendLocalized("Status.VcMapApplied", 3, 0, 2, 1);
+            model.Activity.AppendLocalized("Status.VcSyncApplied", 2, 1, 3);
+            string history = model.Activity.Log;
             foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
             {
                 Loc.Current.Language = language;

@@ -145,7 +145,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         if (!VcSupported)
         {
             _activity.SetStatus("Status.VcUnsupported");
-            _activity.Append(_activity.Status);
+            _activity.AppendStatus();
             return;
         }
 
@@ -225,7 +225,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private async Task VcCreateAsync() => await _activity.Guarded("Status.CreatingWorkspace", async () =>
     {
         var workspace = await _client.VcCreateWorkspaceAsync(NewWorkspaceName, NewWorkspaceFolder);
-        _activity.Append(Loc.Current.T("Log.WorkspaceCreated", workspace.Name, workspace.RootPath));
+        _activity.AppendLocalized("Log.WorkspaceCreated", workspace.Name, workspace.RootPath);
         await VcRefreshAsync();
         SelectedWorkspace = Workspaces.FirstOrDefault(w => w.Name == workspace.Name);
         _activity.SetStatus("Status.VcCreated");
@@ -250,14 +250,14 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
                 result.Mapped, result.AlreadyMapped, result.Unsupported, result.Failed);
         }
 
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
         if (!result.DryRun) await VcStatusAsync();
     });
 
     private async Task VcStatusAsync() => await _activity.Guarded("Status.ComparingWorkspace", async () =>
     {
         await LoadVcStatusAsync();
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
     });
 
     private async Task VcPushAsync() => await VcSyncAsync(SyncDirection.ProjectToWorkspace);
@@ -279,7 +279,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         foreach (var item in result.Items.Where(i => i.Error is not null))
         {
-            _activity.Append(Loc.Current.T("Log.Failed", item.Name, item.Error));
+            _activity.AppendLocalized("Log.Failed", item.Name, item.Error);
         }
 
         if (result.DryRun)
@@ -291,7 +291,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             _activity.SetStatus("Status.VcSyncApplied", result.Synchronized, result.Failed, result.SkippedEqual);
         }
 
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
 
         if (!result.DryRun)
         {

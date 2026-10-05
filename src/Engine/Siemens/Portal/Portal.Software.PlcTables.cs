@@ -154,7 +154,7 @@ namespace TiaMcpServer.Siemens
                     BindingFlags.Public | BindingFlags.Instance);
                 if (prop == null)
                 {
-                    diag.Notes.Add("根组上没有 TagTables 属性（type=" + group.GetType().Name + "）");
+                    diag.Notes.Add("The root group has no TagTables property (type=" + group.GetType().Name + ")");
                 }
                 else
                 {
@@ -163,10 +163,10 @@ namespace TiaMcpServer.Siemens
                     catch (Exception ex)
                     {
                         diag.TagTablesPropertyError = ex.GetBaseException().Message;
-                        diag.Notes.Add("读 TagTables 抛异常：" + diag.TagTablesPropertyError);
+                        diag.Notes.Add("Reading TagTables threw an exception: " + diag.TagTablesPropertyError);
                     }
                     if (tables == null && diag.TagTablesPropertyError == null)
-                        diag.Notes.Add("TagTables 属性存在但取到 null");
+                        diag.Notes.Add("The TagTables property exists but returned null");
                 }
             }
             else

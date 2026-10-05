@@ -13,14 +13,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             // The bridge has already selected an attributed overload. Looking it up
             // again by name is ambiguous for compatibility overloads (InvokeObject).
-            var description = method.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
-            ValidateRuntimeTool(method.Name, description.Length > 0 ? ((System.ComponentModel.DescriptionAttribute)description[0]).Description : "");
+            ValidateRuntimeTool(method.Name, null, ToolMetadata.RuntimeOperation(method.Name));
         }
-        internal static void ValidateRuntimeTool(string name, string? description)
+        internal static void ValidateRuntimeTool(string name, string? description, string? operation = null)
         {
             // Never create a Portal for an offline request; inspection stays available after a fault.
             var portal = EngineServices.GetIfInitialized(typeof(Siemens.Portal)) as Siemens.Portal;
-            if (portal != null && PreflightLogic.NeedsProject(ToolTaxonomy.OperationOf(name, description).Operation, name))
+            if (portal != null && PreflightLogic.NeedsProject(operation ?? ToolTaxonomy.OperationOf(name, null).Operation, name))
                 portal.VerifyBinding(name);
         }
         internal static IList<McpServerTool> WrapWithSerializedCalls(IList<McpServerTool> tools)

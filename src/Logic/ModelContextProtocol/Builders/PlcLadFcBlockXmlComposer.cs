@@ -38,15 +38,15 @@ namespace TiaMcpServer.ModelContextProtocol
             string blockTitleZhCn = "")
         {
             if (string.IsNullOrWhiteSpace(blockName))
-                throw new ArgumentException("LAD FC 块名称不能为空。", nameof(blockName));
+                throw new ArgumentException("LAD FC block name must not be empty.", nameof(blockName));
             if (blockNumber <= 0)
-                throw new ArgumentException("LAD FC 块编号必须大于 0。", nameof(blockNumber));
+                throw new ArgumentException("LAD FC block number must be greater than zero.", nameof(blockNumber));
 
             var inputs = inputMembers?.ToArray() ?? Array.Empty<PlcBlockMemberDefinition>();
             var outputs = outputMembers?.ToArray() ?? Array.Empty<PlcBlockMemberDefinition>();
             var nets = networks?.ToArray() ?? throw new ArgumentNullException(nameof(networks));
             if (nets.Length == 0)
-                throw new ArgumentException("LAD FC 至少需要 1 个网络。", nameof(networks));
+                throw new ArgumentException("A LAD FC requires at least one network.", nameof(networks));
 
             // ID 分配：1=Comment, 2=Title-Item, 3..=CompileUnits（每个 +3 ID 给 Comment/Title 子项），
             //         最后块级 Title。简化为单调递增的字符串 ID（hex 让 TIA 习惯）

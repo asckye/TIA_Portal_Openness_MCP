@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Data;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Localization;
@@ -91,31 +90,9 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public double InspectionCardHeight => HasInspection ? 148 : 85;
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
-    public sealed record LogRow(string Time, string Message)
-    {
-        // The activity source is plain text. Only explicit leading severity labels
-        // affect presentation; words inside paths/messages must not change the tone.
-        public LogLevel Level
-        {
-            get
-            {
-                var match = Regex.Match(Message,
-                    @"^\s*(?:\[(?<level>INFO|INFORMATION|WARN|WARNING|ERROR|DEBUG|信息|警告|错误|调试)\]|(?<level>INFO|INFORMATION|WARN|WARNING|ERROR|FAILED|DEBUG|信息|警告|错误|失败|调试)(?:\s*[:：]|\s|$))",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-                return match.Groups["level"].Value.ToUpperInvariant() switch
-                {
-                    "INFO" or "INFORMATION" or "信息" => LogLevel.Info,
-                    "WARN" or "WARNING" or "警告" => LogLevel.Warning,
-                    "ERROR" or "FAILED" or "错误" or "失败" => LogLevel.Error,
-                    "DEBUG" or "调试" => LogLevel.Debug,
-                    _ => LogLevel.Default,
-                };
-            }
-        }
-    }
-    public IReadOnlyList<LogRow> LogRows => model.Activity.Log.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))
-        .Select(line => line.TrimEnd('\r')).Select(line => line.Length > 8 && line[2] == ':' && line[5] == ':'
-            ? new LogRow(line[..8], line[8..].TrimStart()) : new LogRow("", line)).ToArray();
+    public sealed record LogRow(string Time, string Message, LogLevel Level = LogLevel.Default);
+    public IReadOnlyList<LogRow> LogRows => model.Activity.Entries.SelectMany(entry => entry.Message.Split('\n')
+        .Where(line => !string.IsNullOrWhiteSpace(line)).Select((line, index) => new LogRow(index == 0 ? entry.Time : "", line.TrimEnd('\r'), (LogLevel)entry.Level))).ToArray();
     public IReadOnlyList<LogRow> LogTail => LogRows.TakeLast(12).ToArray();
     public bool HasCompile => Errors != "—";
     public bool HasInspection => InspectionTime.Length > 0;
@@ -162,7 +139,7 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     {
         if (sender == model.Session && e.PropertyName == nameof(SessionViewModel.IsConnected) && !model.Session.IsConnected)
         {
-            _resultLogStart = model.Activity.Log.Length;
+            _resultLogStart = model.Activity.Entries.Count;
             Refresh();
         }
         else if (e.PropertyName is nameof(WorkbenchActivity.Log) or nameof(SessionViewModel.ProjectPath)) Refresh();
@@ -171,18 +148,6 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void OperationChanged(object? sender, EventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void LanguageChanged(object? sender, EventArgs e) => Refresh();
-
-    private static Match Outcome(string line, string key)
-    {
-        foreach (var table in new[] { Strings.English, Strings.Chinese })
-        {
-            string pattern = Regex.Escape(table[key]);
-            pattern = Regex.Replace(pattern, @"\\\{(\d+)}", m => "(?<p" + m.Groups[1].Value + ">.*?)");
-            var match = Regex.Match(line, "^" + pattern + "$", RegexOptions.CultureInvariant);
-            if (match.Success) return match;
-        }
-        return Match.Empty;
-    }
 
     private static string RuleLabel(string id) => id switch
     {
@@ -204,51 +169,49 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         var pendingDiagnostics = new List<Diagnostic>();
         var rules = new List<string>();
         bool inspection = false;
-        if (model.Activity.Log.Length < _resultLogStart) _resultLogStart = 0;
-        foreach (string raw in model.Activity.Log[_resultLogStart..].Split('\n'))
+        bool protectionRule = false;
+        if (model.Activity.Entries.Count < _resultLogStart) _resultLogStart = 0;
+        foreach (var entry in model.Activity.Entries.Skip(_resultLogStart))
         {
-            string line = Regex.Replace(raw.TrimEnd('\r'), @"^\d{2}:\d{2}:\d{2}\s+", "");
-            var compile = Outcome(line, "Status.CompileResult");
-            if (compile.Success)
+            string Arg(int index) => Convert.ToString(entry.Arguments[index], CultureInfo.CurrentCulture) ?? "";
+            switch (entry.Key)
             {
-                Errors = compile.Groups["p1"].Value;
-                Warnings = compile.Groups["p2"].Value;
-                CompileState = Errors != "0" ? Loc.Current["Glass.CompileErrors"]
-                    : Warnings != "0" ? Loc.Current["Glass.CompileWarnings"]
-                    : Loc.Current["Glass.CompileCompleted"];
-                diagnostics = [.. pendingDiagnostics];
-                pendingDiagnostics.Clear();
+                case "Status.CompileResult":
+                    Errors = Arg(1); Warnings = Arg(2);
+                    CompileState = Convert.ToInt32(entry.Arguments[1], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Glass.CompileErrors"]
+                        : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Glass.CompileWarnings"] : Loc.Current["Glass.CompileCompleted"];
+                    diagnostics = [.. pendingDiagnostics];
+                    pendingDiagnostics.Clear();
+                    break;
+                case "compile-diagnostic":
+                    pendingDiagnostics.Add(new(Arg(0), Arg(1)));
+                    break;
+                case "Log.InspectionHeader":
+                    inspection = true; protectionRule = false; rules.Clear();
+                    break;
+                case "inspection-rule" when inspection:
+                    protectionRule |= Arg(0) == "PROT-001";
+                    rules.Add(RuleLabel(Arg(0)) + " · " + Arg(1));
+                    break;
+                case "Status.InspectResult":
+                    InspectionTime = entry.Time;
+                    InspectionSummary = Loc.Current.T("Glass.InspectionSummary", Arg(1), Arg(0));
+                    if (!protectionRule) rules.Add(Loc.Current["Glass.RuleKnowHow"] + " · 0");
+                    inspection = false;
+                    break;
+                case "Status.VcMapApplied":
+                case "Status.VcMapDry":
+                    MappingSummary = Loc.Current.T(entry.Key, entry.Arguments);
+                    Mapped = Arg(0); Unsupported = Arg(2);
+                    Failed = entry.Key == "Status.VcMapApplied" ? Arg(3) : "—";
+                    break;
+                case "Status.VcSyncDry":
+                    SyncSummary = Loc.Current.T("Glass.SyncPreview", Arg(0), Arg(2));
+                    break;
+                case "Status.VcSyncApplied":
+                    SyncSummary = Loc.Current.T(entry.Key, entry.Arguments);
+                    break;
             }
-            var diagnostic = Regex.Match(line, @"^(?:Warning|Error): (.*?) - (.*)$");
-            if (diagnostic.Success) pendingDiagnostics.Add(new(diagnostic.Groups[1].Value, diagnostic.Groups[2].Value));
-            if (Outcome(line, "Log.InspectionHeader").Success) { inspection = true; rules.Clear(); }
-            var inspected = Outcome(line, "Status.InspectResult");
-            if (inspected.Success)
-            {
-                InspectionTime = Regex.IsMatch(raw, @"^\d{2}:\d{2}:\d{2}") ? raw[..8] : "";
-                InspectionSummary = Loc.Current.T("Glass.InspectionSummary", inspected.Groups["p1"].Value, inspected.Groups["p0"].Value);
-                if (!rules.Any(r => r.StartsWith(Loc.Current["Glass.RuleKnowHow"], StringComparison.Ordinal)))
-                    rules.Add(Loc.Current["Glass.RuleKnowHow"] + " · 0");
-                inspection = false;
-            }
-            var rule = Regex.Match(line, @"^([^\s]+) \((\d+)\)$");
-            if (inspection && rule.Success) rules.Add(RuleLabel(rule.Groups[1].Value) + " · " + rule.Groups[2].Value);
-            var mapped = Outcome(line, "Status.VcMapApplied");
-            var preview = Outcome(line, "Status.VcMapDry");
-            if (mapped.Success || preview.Success)
-            {
-                var result = mapped.Success ? mapped : preview;
-                MappingSummary = mapped.Success
-                    ? Loc.Current.T("Status.VcMapApplied", result.Groups["p0"].Value, result.Groups["p1"].Value, result.Groups["p2"].Value, result.Groups["p3"].Value)
-                    : Loc.Current.T("Status.VcMapDry", result.Groups["p0"].Value, result.Groups["p1"].Value, result.Groups["p2"].Value);
-                Mapped = result.Groups["p0"].Value;
-                Unsupported = result.Groups["p2"].Value;
-                Failed = mapped.Success ? result.Groups["p3"].Value : "—";
-            }
-            var sync = Outcome(line, "Status.VcSyncDry");
-            if (sync.Success) SyncSummary = Loc.Current.T("Glass.SyncPreview", sync.Groups["p0"].Value, sync.Groups["p2"].Value);
-            var synced = Outcome(line, "Status.VcSyncApplied");
-            if (synced.Success) SyncSummary = Loc.Current.T("Status.VcSyncApplied", synced.Groups["p0"].Value, synced.Groups["p1"].Value, synced.Groups["p2"].Value);
         }
         Diagnostics = diagnostics;
         Rules = rules;

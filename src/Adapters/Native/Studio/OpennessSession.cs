@@ -16,8 +16,10 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using TiaMcp.Adapters.Contracts.Studio;
+using TiaMcp.Adapters.Contracts.Studio.Errors;
 #else
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 #endif
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
@@ -380,56 +382,12 @@ namespace TiaOpenness.Openness
             return file.FullName;
         }
 
-        /// <summary>Turns the two failures engineers actually hit into instructions.</summary>
-        /// <summary>
-        /// Says why the export failed, taken from what TIA reported rather than from what the
-        /// block's flags suggested. Leading with "block is inconsistent" because the flag said so,
-        /// while TIA had actually rejected the file path, sent people off to compile a block that
-        /// compiled perfectly well.
-        /// </summary>
         private static string Explain(Exception ex, ExportTarget target)
         {
-            var reported = Flatten(ex.Message);
-
-            if (reported.IndexOf("not permitted", StringComparison.OrdinalIgnoreCase) >= 0
-                || target.KnowHowProtected && reported.IndexOf("know-how", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return "Know-how protected: TIA does not permit exporting this block. Remove the protection first. "
-                       + "(" + reported + ")";
-            }
-
-            if (reported.IndexOf("Inconsistent", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return "Inconsistent: TIA can only export a block that compiles. Compile the device first. "
-                       + "(" + reported + ")";
-            }
-
-            // ProDiag and ProDiag_OB blocks are generated from the device's own diagnostic
-            // configuration; TIA has no text or SimaticML form for them at all. Left as TIA's own
-            // wording this reads like a fault to chase, when the only answer is that these blocks
-            // are not exportable and the rest of the export is unaffected.
-            if (reported.IndexOf("ProDiag", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return "ProDiag: TIA cannot export this block in any format. It is generated from the "
-                       + "device's diagnostic settings, so there is nothing to version. Deselect it. "
-                       + "(" + reported + ")";
-            }
-
-            if (reported.IndexOf("not supported during import and export", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return "TIA does not support exporting this block's programming language. "
-                       + "(" + reported + ")";
-            }
-
-            if (reported.IndexOf("white-space", StringComparison.OrdinalIgnoreCase) >= 0
-                || reported.IndexOf("path", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return "TIA rejected the file path built from this block's name. Please report it with the name. "
-                       + "(" + reported + ")";
-            }
-
-            return reported;
+            // Native wording is diagnostic data, not permission to compile or remove protection.
+            return Flatten(ex.Message);
         }
+
 
         private static string Flatten(string message)
         {
@@ -783,13 +741,13 @@ namespace TiaOpenness.Openness
 
         private void RequireConnected()
         {
-            if (_portal == null) throw new InvalidOperationException("Not connected. Call session.connect first.");
+            if (_portal == null) throw new SessionPreconditionException(SessionFailureReason.NotConnected, "Not connected. Call session.connect first.");
         }
 
         private void RequireProject()
         {
             RequireConnected();
-            if (_project == null) throw new InvalidOperationException("No project is open. Call project.open first.");
+            if (_project == null) throw new SessionPreconditionException(SessionFailureReason.NoProjectOpen, "No project is open. Call project.open first.");
         }
 
         /// <summary>

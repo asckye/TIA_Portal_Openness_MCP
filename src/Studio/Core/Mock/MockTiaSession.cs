@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using TiaOpenness.Core.Inspection;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 using TiaOpenness.Core.Abstractions;
 
 namespace TiaOpenness.Core.Mock
@@ -574,13 +575,13 @@ namespace TiaOpenness.Core.Mock
 
         private void RequireConnected()
         {
-            if (!_connected) throw new InvalidOperationException("Not connected. Call session.connect first.");
+            if (!_connected) throw new SessionPreconditionException(SessionFailureReason.NotConnected, "Not connected. Call session.connect first.");
         }
 
         private void RequireProject()
         {
             RequireConnected();
-            if (_project == null) throw new InvalidOperationException("No project is open. Call project.open first.");
+            if (_project == null) throw new SessionPreconditionException(SessionFailureReason.NoProjectOpen, "No project is open. Call project.open first.");
         }
 
         private MockDevice RequireDevice(string deviceId)

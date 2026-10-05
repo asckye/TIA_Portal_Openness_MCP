@@ -21,10 +21,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
             var interfaceNs = format.InterfaceNamespace;
             if (string.IsNullOrWhiteSpace(udtName))
-                throw new ArgumentException("UDT 名称不能为空。", nameof(udtName));
+                throw new ArgumentException("UDT name must not be empty.", nameof(udtName));
             var normalizedMembers = members?.ToList() ?? throw new ArgumentNullException(nameof(members));
             if (normalizedMembers.Count == 0)
-                throw new ArgumentException("UDT 至少需要 1 个成员。", nameof(members));
+                throw new ArgumentException("A UDT requires at least one member.", nameof(members));
 
             ValidateMembers(normalizedMembers);
 
@@ -127,7 +127,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!File.Exists(path))
             {
                 root["ok"] = false;
-                root["error"] = "文件不存在。";
+                root["error"] = "The file does not exist.";
                 return root;
             }
 
@@ -256,14 +256,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Select(x => x.Key)
                 .ToArray();
             if (duplicates.Length > 0)
-                throw new ArgumentException("UDT 成员名重复: " + string.Join(", ", duplicates));
+                throw new ArgumentException("Duplicate UDT member names: " + string.Join(", ", duplicates));
 
             foreach (var member in members)
             {
                 if (string.IsNullOrWhiteSpace(member.Name))
-                    throw new ArgumentException("UDT 成员名不能为空。");
+                    throw new ArgumentException("UDT member name must not be empty.");
                 if (string.IsNullOrWhiteSpace(member.Datatype))
-                    throw new ArgumentException("UDT 成员数据类型不能为空: " + member.Name);
+                    throw new ArgumentException("UDT member data type must not be empty: " + member.Name);
             }
         }
 

@@ -50,3 +50,14 @@ namespace TiaOpenness.Contracts.Models
         Mock = 1,
     }
 }
+
+namespace TiaOpenness.Contracts.Models.Errors
+{
+    public enum SessionFailureReason { NotConnected, NoProjectOpen }
+
+    public sealed class SessionPreconditionException : System.InvalidOperationException
+    {
+        public SessionFailureReason Reason { get; }
+        public SessionPreconditionException(SessionFailureReason reason, string message) : base(message) { Reason = reason; }
+    }
+}

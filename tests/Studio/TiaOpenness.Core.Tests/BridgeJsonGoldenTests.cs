@@ -63,7 +63,7 @@ public sealed class BridgeJsonGoldenTests
     public void Golden_inventory_includes_every_contract_DTO()
     {
         var types = typeof(ProjectInfo).Assembly.GetExportedTypes()
-            .Where(t => t.IsClass && !t.IsAbstract).Select(t => t.Name).OrderBy(n => n);
+            .Where(t => t.IsClass && !t.IsAbstract && !typeof(Exception).IsAssignableFrom(t)).Select(t => t.Name).OrderBy(n => n);
         Assert.Equal(types, ReadGolden().Properties().Select(p => p.Name).OrderBy(n => n));
     }
 

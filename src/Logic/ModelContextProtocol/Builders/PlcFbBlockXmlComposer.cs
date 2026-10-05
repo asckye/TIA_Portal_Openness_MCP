@@ -31,15 +31,15 @@ namespace TiaMcpServer.ModelContextProtocol
             string networkTitleZhCn = "")
         {
             if (string.IsNullOrWhiteSpace(blockName))
-                throw new ArgumentException("FB 块名称不能为空。", nameof(blockName));
+                throw new ArgumentException("FB block name must not be empty.", nameof(blockName));
             if (blockNumber <= 0)
-                throw new ArgumentException("FB 块编号必须大于 0。", nameof(blockNumber));
+                throw new ArgumentException("FB block number must be greater than zero.", nameof(blockNumber));
             if (string.IsNullOrWhiteSpace(structuredTextInnerXml))
                 throw new ArgumentException(
-                    "StructuredText 内容不能为空：JSON 里的 $.structuredText.operations 是空数组，"
-                    + "$.structuredTextInnerXml 也没给。至少给一条操作，例如 "
+                    "StructuredText content must not be empty: $.structuredText.operations is an empty array in the JSON, "
+                    + "and $.structuredTextInnerXml was not supplied. Provide at least one operation, for example "
                     + "{\"op\":\"line\",\"text\":\"MyTemp := TRUE;\"}。"
-                    + "（报错里的参数名是构建器内部的形参，不是你要填的 JSON 字段名。）",
+                    + "(the parameter name in this error is an internal builder parameter, not the JSON field to supply).",
                     nameof(structuredTextInnerXml));
 
             var inputs = inputMembers?.ToArray() ?? throw new ArgumentNullException(nameof(inputMembers));
@@ -128,14 +128,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Select(x => x.Key)
                 .ToArray();
             if (duplicates.Length > 0)
-                throw new ArgumentException("FB 接口成员名重复: " + string.Join(", ", duplicates));
+                throw new ArgumentException("Duplicate FB interface member names: " + string.Join(", ", duplicates));
 
             foreach (var member in members)
             {
                 if (string.IsNullOrWhiteSpace(member.Name))
-                    throw new ArgumentException("FB 接口成员名不能为空。");
+                    throw new ArgumentException("FB interface member name must not be empty.");
                 if (string.IsNullOrWhiteSpace(member.Datatype))
-                    throw new ArgumentException("FB 接口成员数据类型不能为空: " + member.Name);
+                    throw new ArgumentException("FB interface member data type must not be empty: " + member.Name);
             }
         }
 

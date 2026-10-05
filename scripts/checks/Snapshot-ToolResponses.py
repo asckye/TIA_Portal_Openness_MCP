@@ -368,9 +368,12 @@ def shape(value):
     return {key: json_type(item) for key, item in value.items()} if isinstance(value, dict) else json_type(value)
 
 
-def compact(call):
+def compact(call, include_text_evidence=False):
     call = normalize(call)
     response = call['response']
+    raw_evidence = call.pop('rawTextEvidence', None)
+    if include_text_evidence:
+        call['textEvidence'] = {'response': response, 'rawText': raw_evidence}
     raw = canonical(response).encode('utf-8')
     if call['tool'] == 'GetToolUsage' or len(raw) > RESPONSE_LIMIT or call['profile'] == 'lite':
         call.pop('response')
@@ -420,16 +423,6 @@ def v4_rejection(response, name):
                       name + ': missing V4 admission marker: ' + canonical(reply))
 
 
-def rejection(response, marker):
-    result = response.get('result', {})
-    error = response.get('error', {})
-    text = '\n'.join(block['text'] for block in result.get('content', [])
-                     if isinstance(block.get('text'), str))
-    resources.require((result.get('isError') is True or error.get('code') == -32602)
-                      and marker in (text + error.get('message', '')),
-                      'Missing pre-invocation rejection marker: ' + canonical(response))
-
-
 def initialize(rpc):
     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
         'capabilities': {}, 'clientInfo': {'name': 'response-snapshot', 'version': '2'}})
@@ -454,9 +447,12 @@ def recorder(rpc, entries, profile):
         if key not in entries:
             reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
             raw_blocks = raw_text_blocks(reply, name)
+            raw_evidence = [dict(contentIndex=index, text=mask_raw_text(block['text'], name))
+                            for index, block in enumerate(reply.get('result', {}).get('content', []))
+                            if block.get('type') == 'text']
             response = decode_reply(reply)
             entries[key] = {'profile': profile, 'tool': name, 'arguments': arguments,
-                            'response': response, 'rawTextBlocks': raw_blocks}
+                            'response': response, 'rawTextBlocks': raw_blocks, 'rawTextEvidence': raw_evidence}
         return entries[key]['response']
     return call
 
@@ -585,7 +581,7 @@ def capture_release(args, release, exe, public_api):
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during bridge capture')
-        snapshot['calls'] = [compact(entries[key]) for key in sorted(entries)]
+        snapshot['calls'] = [compact(entries[key], args.include_text_evidence) for key in sorted(entries)]
         return snapshot
 
 
@@ -645,7 +641,7 @@ def capture_foundation(args, release, exe):
                     'passiveSkipped': {'GetSessionState': 'Requires worker ReadState; no worker is started by this capture.'},
                     'bridgeRejectedTools': [],
                     'bridgeSkipped': {name: 'Foundation does not advertise CallTool or a lite bridge.' for name in names}},
-                'calls': [compact(entries[key]) for key in sorted(entries)]}
+                'calls': [compact(entries[key], args.include_text_evidence) for key in sorted(entries)]}
 
 
 def capture(args):
@@ -742,7 +738,7 @@ def response_length(call):
 
 def compare(args):
     if getattr(args, 'migration', None):
-        return compare_migration(args)
+        return compare_text_migration(args) if args.migration == 'P6-26' else compare_migration(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -792,6 +788,105 @@ def compare(args):
         print('Normalized comparison only; raw-byte evidence and format metadata were NOT compared.')
     # Additions also fail: migration acceptance requires exactly zero differences.
     return int(any(total.values()))
+
+
+def raw_string_spans(text):
+    tokens = list(RAW_TOKEN.finditer(text))
+    spans, index = {}, 0
+
+    def take(expected=None):
+        nonlocal index
+        token = tokens[index]
+        index += 1
+        if expected is not None and token.group() != expected:
+            raise ValueError('Invalid raw text evidence')
+        return token
+
+    def value(path):
+        token = take()
+        raw = token.group()
+        if raw == '{':
+            if tokens[index].group() != '}':
+                while True:
+                    key = json.loads(take().group())
+                    take(':')
+                    value(path + (key,))
+                    if tokens[index].group() != ',': break
+                    take(',')
+            take('}')
+        elif raw == '[':
+            item = 0
+            if tokens[index].group() != ']':
+                while True:
+                    value(path + (item,))
+                    item += 1
+                    if tokens[index].group() != ',': break
+                    take(',')
+            take(']')
+        elif raw.startswith('"'):
+            spans[path] = (token.start(), token.end(), raw)
+    value(())
+    if index != len(tokens): raise ValueError('Trailing raw text evidence')
+    return spans
+
+
+def validated_evidence(call):
+    evidence = call.get('textEvidence')
+    if not isinstance(evidence, dict): raise ValueError('P6-26 requires --include-text-evidence captures')
+    rebuilt = compact(dict(profile=call['profile'], tool=call['tool'], arguments=call['arguments'],
+                           response=evidence['response'], rawTextBlocks=call['rawTextBlocks']))
+    if rebuilt != {k: v for k, v in call.items() if k != 'textEvidence'}:
+        raise ValueError('Response evidence does not match the frozen digest/content')
+    hashes = [dict(contentIndex=b['contentIndex'], sha256=hashlib.sha256(b['text'].encode('utf-8')).hexdigest())
+              for b in evidence['rawText']]
+    if hashes != call['rawTextBlocks']: raise ValueError('Raw text evidence hash mismatch')
+    return evidence
+
+
+def compare_text_migration(args):
+    from snapshot_text_migration import differences, response_text
+    if args.normalized_only: raise ValueError('P6-26 requires raw-byte evidence')
+    if args.text_baseline is None: raise ValueError('P6-26 requires --text-baseline captured before editing')
+    frozen, before, current = (load_snapshots(p) for p in (args.baseline, args.text_baseline, args.current))
+    failures = 0
+    for release in args.releases or sorted(frozen.keys() | current.keys()):
+        old, original, new = frozen[release], before[release], current[release]
+        a, anchor, b = ({identity(c): c for c in s['calls']} for s in (old, original, new))
+        problems, counts = [], Counter()
+        if a.keys() != anchor.keys() or a.keys() != b.keys(): problems.append('call roster changed')
+        for key in a.keys() & anchor.keys() & b.keys():
+            label = key[0] + ' ' + key[1] + '(' + key[2] + ')'
+            if a[key] != {k: v for k, v in anchor[key].items() if k != 'textEvidence'}:
+                problems.append(label + ': before evidence differs from frozen baseline')
+                continue
+            x, y = validated_evidence(anchor[key]), validated_evidence(b[key])
+            allowed = lambda path: response_text(key[1], path)
+            c, p = differences(x['response'], y['response'], allowed)
+            counts.update(c)
+            problems.extend(label + ': ' + problem for problem in p)
+            if len(x['rawText']) != len(y['rawText']):
+                problems.append(label + ': raw block count changed')
+                continue
+            for raw_old, raw_new in zip(x['rawText'], y['rawText']):
+                if raw_old['contentIndex'] != raw_new['contentIndex']:
+                    problems.append(label + ': raw content index changed')
+                left, right = raw_old['text'], raw_new['text']
+                if left == right: continue
+                c, p = differences(json.loads(left), json.loads(right), allowed)
+                problems.extend(label + ': raw ' + problem for problem in p)
+                ls, rs = raw_string_spans(left), raw_string_spans(right)
+                replacements = [(start, end, ls[path][2]) for path, (start, end, raw) in rs.items()
+                                if path in ls and raw != ls[path][2] and allowed(path)]
+                for start, end, replacement in sorted(replacements, reverse=True):
+                    right = right[:start] + replacement + right[end:]
+                if left != right: problems.append(label + ': raw bytes outside allowed prose changed')
+        for snapshot in (original, new):
+            if {k: v for k, v in old.items() if k != 'calls'} != {k: v for k, v in snapshot.items() if k != 'calls'}:
+                problems.append('capture metadata changed')
+        print(f'V{release} P6-26: changed-text={dict(sorted(counts.items()))}; unexpected={len(problems)}')
+        for problem in problems: print('  unexpected: ' + problem)
+        failures += len(problems)
+    return int(failures != 0)
 
 
 def compare_migration(args):
@@ -866,6 +961,34 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_text_migration_rejects_schema_code_outcome_and_data_changes(self):
+        from snapshot_text_migration import differences, response_text, contract_text
+        allowed = lambda path: response_text('Probe', path)
+        old = {'error': {'code': 'INVALID_ARGUMENT', 'message': '旧说明'}, 'meta': {'outcome': 'rejected-before-operation'}, 'data': {'name': '原名称'}}
+        new = json.loads(json.dumps(old))
+        new['error']['message'] = 'Translated explanation'
+        counts, problems = differences(old, new, allowed)
+        self.assertEqual({'error-message': 1}, counts)
+        self.assertEqual([], problems)
+        for path, replacement in [(('error', 'code'), 'INTERNAL_ERROR'), (('meta', 'outcome'), 'unknown'), (('data', 'name'), 'changed')]:
+            changed = json.loads(json.dumps(new))
+            changed[path[0]][path[1]] = replacement
+            self.assertTrue(differences(old, changed, allowed)[1])
+        schema = {'inputSchema': {'type': 'object', 'properties': {'x': {'type': 'string', 'description': '旧说明'}}}}
+        translated = json.loads(json.dumps(schema))
+        translated['inputSchema']['properties']['x']['description'] = 'Explanation'
+        self.assertEqual([], differences(schema, translated, contract_text)[1])
+        translated['inputSchema']['properties']['x']['type'] = 'integer'
+        self.assertTrue(differences(schema, translated, contract_text)[1])
+
+    def test_text_evidence_must_match_digest_and_raw_hash(self):
+        entries = {}
+        recorder(lambda *a, **kw: self.reply('{"error":{"code":"INVALID_ARGUMENT","message":"Explanation"}}'), entries, 'lite')('GetSessionState', {})
+        call = compact(next(iter(entries.values())), True)
+        validated_evidence(call)
+        call['textEvidence']['response']['result']['content'][0]['text']['error']['code'] = 'INTERNAL_ERROR'
+        with self.assertRaises(ValueError): validated_evidence(call)
+
     def test_classic_hmi_structured_timestamps(self):
         first, second = '2026-10-03T11:12:13Z', '2026-10-04T11:12:13Z'
         for tool, data in (
@@ -1026,13 +1149,16 @@ def main():
     capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--releases', nargs='+', choices=RELEASES, default=RELEASES)
     capture_parser.add_argument('--output', required=True, type=Path)
+    capture_parser.add_argument('--include-text-evidence', action='store_true',
+                                help='Keep complete normalized and masked raw responses for a text-only migration proof')
     capture_parser.add_argument('--temp-root', type=Path, default=Path(tempfile.gettempdir()),
                                 help='Parent for disposable host journals (use a writable worktree directory in a sandbox)')
     capture_parser.set_defaults(run=capture)
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
-    compare_parser.add_argument('--migration', choices=list(__import__('phase6_groups').TASKS), help='Verify one phase-6 group migration; every call outside the group (and its bridge calls) must match')
+    compare_parser.add_argument('--migration', choices=[*__import__('phase6_groups').TASKS, 'P6-26'], help='Verify a phase-6 migration; P6-26 permits only explicit prose fields')
+    compare_parser.add_argument('--text-baseline', type=Path, help='Before capture with complete evidence anchored to the frozen baseline (P6-26)')
     compare_parser.add_argument('--normalized-only', action='store_true',
                                 help='Migration check against format 2 only; does not prove raw-byte compatibility')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,

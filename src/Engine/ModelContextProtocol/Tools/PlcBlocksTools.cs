@@ -387,7 +387,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = verified
                         ? $"Block imported from '{importPath}' to '{groupPath}' (verified)"
-                        : $"⚠ 未验证：block imported from '{importPath}' to '{groupPath}', but the read-back "
+                        : $"⚠ UNVERIFIED: block imported from '{importPath}' to '{groupPath}', but the read-back "
                           + $"could not confirm it ({outcome.Detail}). Confirm with ListPlcBlocks / GetPlcBlockInfo "
                           + "before treating this as done.",
                     // envelope: legacy-multiple-dynamic-fields
@@ -1426,28 +1426,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 「不删、直接对已有块重新生成」是安全的，编号原样保留 —— 所以这里要说的不是
                 // 「别删」，而是「删了就拿不回来，想保号就别删」。
                 string? pinnedWarning = pinned == null ? null
-                    : $"该块钉着显式块号 {pinned}（AutoNumber=false）。"
-                      + (dryRun ? "一旦真的删除，这个号就没了 —— " : "这个号已经随块一起没了 —— ")
-                      + "从外部源重建时新块会拿到自动分配的号，依赖原块号的实例 DB 关联会断，且不会有任何报错。"
-                      + "若只是想更新块内容，请不要删，直接对已有块 GenerateBlocksFromExternalSource，编号会保留。"
-                      + $"确实要删并重建的话，重建后用 InvokeObject 把号改回去：SetAttribute(\"AutoNumber\", false) 然后 SetAttribute(\"Number\", {pinned})。";
+                    : $"This block has the explicit block number {pinned}(AutoNumber=false)."
+                      + (dryRun ? "Deleting the block will also remove this number: " : "This number has already been removed with the block: ")
+                      + "when rebuilt from an external source, the new block receives an automatically assigned number. Instance DB associations that depend on the original block number will break without any error being reported. "
+                      + "To update block content, keep the block and run GenerateBlocksFromExternalSource against the existing block to preserve its number."
+                      + $"If deletion and recreation are required, restore the number afterwards with InvokeObject: SetAttribute(\"AutoNumber\", false) then SetAttribute(\"Number\", {pinned}).";
 
                 return BuildDeletionReport(
                     data, dryRun, crossRefOk,
-                    objectLabel: $"程序块 '{data["resolvedBlockPath"]}'",
-                    dryRunTail: "确认无误后用 dryRun=false 实际删除。",
+                    objectLabel: $"Program block '{data["resolvedBlockPath"]}'",
+                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
                     extraWarning: pinnedWarning,
                     nextActions: dryRun
                         ? new JsonArray
                         {
                             "ExportPlcBlockDocuments - back up this block before deletion.",
                             "GetPlcCrossReferences - inspect each remaining caller.",
-                            "确认后再 DeletePlcBlock(dryRun=false)"
+                            "After confirmation, call DeletePlcBlock(dryRun=false)"
                         }
                         : new JsonArray
                         {
                             "CompilePlcSoftware to detect dangling caller references",
-                            "SaveProject —— 确认无误后再存盘"
+                            "SaveProject: save only after verification"
                         });
             }
             catch (PortalException pex)
@@ -1495,21 +1495,21 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var report = BuildDeletionReport(
                     data, dryRun, crossRefOk,
-                    objectLabel: $"变量表 '{data["resolvedTagTablePath"]}'（{tagCount} 个变量）",
-                    dryRunTail: "确认无误后用 dryRun=false 实际删除。",
+                    objectLabel: $"Tag table '{data["resolvedTagTablePath"]}'({tagCount} tag(s))",
+                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
                     extraWarning: null,
                     nextActions: dryRun
                         ? new JsonArray
                         {
-                            "ExportPlcTagTable —— 删之前先把这张表导出备份",
+                            "ExportPlcTagTable: export a backup of this table before deleting it",
                             "Use GetPlcCrossReferences on the related blocks; table-level references may be unavailable.",
-                            "确认后再 DeletePlcTagTable(dryRun=false)"
+                            "After confirmation, call DeletePlcTagTable(dryRun=false)"
                         }
                         : new JsonArray
                         {
                             "CompilePlcSoftware to detect broken PLC references",
-                            "⚠️ HMI 侧的符号绑定编译查不出来，请单独核对画面变量",
-                            "SaveProject —— 确认无误后再存盘"
+                            "⚠️ Compilation cannot detect HMI symbol-binding failures; verify screen tags separately",
+                            "SaveProject: save only after verification"
                         });
 
                 report.Meta!["tagCount"] = tagCount;
@@ -1557,19 +1557,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 return BuildDeletionReport(
                     data, dryRun, crossRefOk,
                     objectLabel: $"UDT '{typePath}'",
-                    dryRunTail: "确认无误后用 dryRun=false 实际删除。",
+                    dryRunTail: "After verifying the preview, use dryRun=false to perform the deletion.",
                     extraWarning: null,
                     nextActions: dryRun
                         ? new JsonArray
                         {
                             "ExportPlcType: back up this UDT before deletion",
                             "GetPlcCrossReferences - inspect DBs and blocks using this data type.",
-                            "确认后再 DeletePlcType(dryRun=false)"
+                            "After confirmation, call DeletePlcType(dryRun=false)"
                         }
                         : new JsonArray
                         {
                             "CompilePlcSoftware to detect DBs or blocks with missing type definitions",
-                            "SaveProject —— 确认无误后再存盘"
+                            "SaveProject: save only after verification"
                         });
             }
             catch (PortalException pex)
@@ -1612,27 +1612,27 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 否则「成功」会被读成「确认可以删」—— 删除类工具里这是代价最大的错档。
                 ok = true;
                 bool queried = data["crossReferenceQueried"]?.GetValue<bool>() ?? true;
-                message = $"[dryRun] 未做任何改动。目标 {objectLabel}，"
+                message = $"[dryRun] No changes made. Target: {objectLabel}, "
                         + (crossRefOk
-                            ? $"交叉引用 {data["crossReferenceCount"]} 条（见 data.crossReferences）。"
+                            ? $"Cross-references: {data["crossReferenceCount"]} (see data.crossReferences)."
                             : queried
-                                ? "⚠️ 交叉引用查不到 —— 这不等于没人引用它，请先自行核对。"
-                                : "交叉引用未查询（" + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false，默认")
-                                    + "）—— 这不等于没人引用它。")
+                                ? "⚠️ Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before continuing."
+                                : "Cross-references were not queried (" + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false, the default")
+                                    + "). This does not mean the object is unreferenced.")
                         + dryRunTail;
             }
             else if (deleted && verifiedAbsent)
             {
                 ok = true;
-                message = $"{objectLabel} 已删除，并已重新读回确认它确实不在了。";
+                message = $"{objectLabel} was deleted and a fresh readback confirmed its absence.";
             }
             else
             {
                 // 走到这里说明 Delete() 调过但回读没能确认对象消失。绝不当成功报。
                 ok = false;
-                message = $"⚠️ 未验证：{objectLabel} 的删除结果无法确认（deleted={deleted}, verifiedAbsent={verifiedAbsent}）。"
-                        + "请在 TIA 里手工确认该对象是否还在，不要按「已删除」继续操作。";
-                warnings.Add("删除后的回读确认没有通过，本次结果不可信。");
+                message = $"⚠️ UNVERIFIED: {objectLabel} deletion outcome cannot be confirmed (deleted={deleted}, verifiedAbsent={verifiedAbsent}). "
+                        + "Manually verify in TIA whether the object still exists; do not continue on the assumption that it was deleted.";
+                warnings.Add("Post-deletion readback confirmation failed; this result is unverified.");
             }
 
             return new ResponseJsonReport

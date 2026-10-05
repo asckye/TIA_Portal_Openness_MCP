@@ -36,14 +36,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     return Lost(name);
                 }
 
-                // 反射调用外面包着 TargetInvocation 层时，真正的类型名有时只出现在消息里。
-                string message;
-                try { message = e.Message; } catch /* swallow(probe-optional): an unavailable exception message must not prevent classification by type and inner exceptions */ { message = ""; }
-                if (Has(message, "NonRecoverableException"))
-                {
-                    return Lost("NonRecoverableException");
-                }
-
                 // 进程没了以后再碰任何 Openness 对象，拿到的是 RPC / 远程调用层的错。
                 if (Has(name, "System.Runtime.InteropServices.COMException") ||
                     Has(name, "RemotingException") || Has(name, "CommunicationObjectFaultedException") || Has(name, "CommunicationObjectAbortedException"))

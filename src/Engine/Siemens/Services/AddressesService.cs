@@ -169,19 +169,19 @@ namespace TiaMcpServer.Siemens.Services
 
             if (startAddress < 0)
             {
-                return (false, $"起始地址不能为负数（收到 {startAddress}）。", null, null);
+                return (false, $"The start address must not be negative (received {startAddress}).", null, null);
             }
 
             if (!TryParseIoType(ioType, out var wanted))
             {
-                return (false, $"无法识别的 ioType '{ioType}'。可用值：Input、Output、Diagnosis、Substitute。",
+                return (false, $"Unrecognized ioType '{ioType}'. Allowed values: Input, Output, Diagnosis, Substitute.",
                         null, null);
             }
 
             var item = _session.GetDeviceItemByPath(deviceItemPath);
             if (item == null)
             {
-                return (false, $"设备项 '{deviceItemPath}' 没找到。用 GetDeviceItemTree 确认路径的每一段。",
+                return (false, $"Device item '{deviceItemPath}' was not found. Verify each path segment with GetDeviceItemTree.",
                         null, null);
             }
 
@@ -189,9 +189,9 @@ namespace TiaMcpServer.Siemens.Services
             if (addresses == null || !addresses.Any())
             {
                 // 「没有地址」和「地址改不了」是两种病，分开说。
-                return (false, $"设备项 '{deviceItemPath}' 上没有任何 I/O 地址。"
-                             + "常见于它是机架/电源/接口这类本来就不占 I/O 的对象 —— "
-                             + "确认路径指向的是**信号模块本身**。", null, null);
+                return (false, $"Device item '{deviceItemPath}' has no I/O addresses. "
+                             + "This is common for racks, power supplies and interfaces that do not occupy I/O: "
+                             + "verify that the path points to **the signal module itself**.", null, null);
             }
 
             Address? target = null;
@@ -207,7 +207,7 @@ namespace TiaMcpServer.Siemens.Services
             if (target == null)
             {
                 var have = string.Join(" / ", ReadAddresses(item).Select(x => x.IoType).Distinct());
-                return (false, $"设备项 '{deviceItemPath}' 上没有 {wanted} 类型的地址；它实际有的是：{have}。",
+                return (false, $"Device item '{deviceItemPath}' has no {wanted} addresses; the available types are: {have}.",
                         null, null);
             }
 
@@ -221,7 +221,7 @@ namespace TiaMcpServer.Siemens.Services
             if (before.StartAddress == startAddress)
             {
                 // 幂等：本来就是这个值，如实说没改，别报一次假的「已修改」。
-                return (true, $"起始地址本来就是 {startAddress}，未做修改。", before, before);
+                return (true, $"The start address is already {startAddress}; no change was made.", before, before);
             }
 
             try
@@ -231,8 +231,8 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 // 地址重叠、模块不允许改地址等都会走到这里。原因必须回给调用方。
-                return (false, $"写入起始地址失败：{ex.Message}"
-                             + "（常见原因：与其它模块的地址区重叠，或该模块的地址不允许修改）。",
+                return (false, $"Writing the start address failed: {ex.Message} "
+                             + "(common causes: overlap with another module address range, or the module address cannot be modified).",
                         before, null);
             }
 
@@ -242,16 +242,16 @@ namespace TiaMcpServer.Siemens.Services
 
             if (after == null)
             {
-                return (false, "写入后读回时找不到同类型地址了，状态异常，请在 TIA 界面里确认。", before, null);
+                return (false, "Readback after the write could not find an address of the same type. The state is abnormal; verify it in the TIA UI.", before, null);
             }
 
             if (after.StartAddress != startAddress)
             {
-                return (false, $"写入没有生效：期望 {startAddress}，读回仍是 {after.StartAddress}。"
-                             + "该模块的起始地址可能被组态锁定。", before, after);
+                return (false, $"The write did not take effect: expected {startAddress}, readback is still {after.StartAddress}. "
+                             + "The module start address may be locked by its configuration.", before, after);
             }
 
-            return (true, $"起始地址已从 {before.StartAddress} 改为 {after.StartAddress}"
+            return (true, $"The start address changed from {before.StartAddress} to {after.StartAddress}"
                         + " (native byte offsets). Run CompilePlcSoftware and SaveProject after the change.",
                     before, after);
         }

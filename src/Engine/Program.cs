@@ -369,7 +369,7 @@ namespace TiaMcpServer
                     {
                         LogDiag("Openness.Initialize failed: FileNotFoundException");
                         LogDiag($"FIX: TIA Portal V{Engineering.TiaMajorVersion} (with the Openness option) was not found on this machine. Install it, or pass --tia-major-version <n> matching the installed version, or set the TiaPortalLocation environment variable to the install path. Run `tia.cmd doctor` for a full check.");
-                        LogDiag($"修复：本机未找到 TIA Portal V{Engineering.TiaMajorVersion}（含 Openness 组件）。请安装对应版本，或用 --tia-major-version 指定已装版本，或设置 TiaPortalLocation 环境变量指向安装目录。可运行 tia.cmd doctor 一键体检。");
+                        LogDiag($"Repair: TIA Portal V{Engineering.TiaMajorVersion} (including Openness) was not found on this machine. Install the matching version, select an installed version with --tia-major-version, or set TiaPortalLocation to its installation directory. Run tia.cmd doctor to check the setup.");
                         LogDiag($"FileName: {ex.FileName}");
                         if (!string.IsNullOrWhiteSpace(ex.FusionLog))
                         {
@@ -591,7 +591,7 @@ namespace TiaMcpServer
                 {
                     LogDiag("User is not in the required group 'Siemens TIA Openness'. Exiting.");
                     LogDiag("FIX: run this exe with `doctor` (e.g. tia.cmd doctor --fix) or add your Windows user to the local group 'Siemens TIA Openness' (lusrmgr.msc), then sign out/in and restart the AI client.");
-                    LogDiag("修复：运行 tia.cmd doctor --fix，或手动把当前 Windows 用户加入本地组 'Siemens TIA Openness'（lusrmgr.msc），注销重登后重启 AI 客户端。");
+                    LogDiag("Repair: run tia.cmd doctor --fix, or manually add the current Windows user to the local 'Siemens TIA Openness' group (lusrmgr.msc), sign out and back in, then restart the AI client.");
                     Environment.ExitCode = 2;
                 }
             }

@@ -71,10 +71,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = items.Count > 0
                             ? $"PLC tag tables listed for '{softwarePath}'"
-                            : $"'{softwarePath}' 上没有枚举到任何变量表。这**不一定**表示它没有表 —— "
-                              + "读属性失败也长这样，所以 Meta 里带了这次遍历的证据"
+                            : $"'{softwarePath}' returned no tag tables during enumeration. This **does not necessarily** mean there are no tables: "
+                              + "a failed property read has the same appearance, so Meta retains the evidence from this enumeration"
                               + "（walkedGroupType / tagTablesPropertyFound / tagTablesPropertyError / groupsVisited / notes）。"
-                              + "若你确信有表，把这几项贴给维护者。",
+                              + "If tables are expected, provide these fields to the maintainer.",
                         Items = items,
                         Meta = meta
                     };

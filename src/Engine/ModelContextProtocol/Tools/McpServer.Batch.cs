@@ -143,10 +143,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 var error = BindV4Call(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out var method, out _);
                 if (error != null) return error;
                 var targetMethod = method!;
-                string description = ToolDescription(targetMethod);
+                string name = targetMethod.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? targetMethod.Name;
+                var classification = ClassificationOf(targetMethod);
                 bool orchestration = IsBatchOrchestration(targetMethod);
-                bool read = description.Contains("[READ]") || targetMethod.GetCustomAttribute<McpServerToolAttribute>()?.Name == "GetSessionState";
-                bool preview = description.Contains("[WRITE]") && targetMethod.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
+                bool read = classification?.BatchRead == true;
+                bool preview = classification?.BatchWrite == true && targetMethod.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
                 if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
                 targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, targetMethod)), new InputBudget(), read, preview, orchestration: orchestration);
             }

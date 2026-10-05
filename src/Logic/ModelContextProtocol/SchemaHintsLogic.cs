@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // The machine-readable part of a parameter description goes into the tool's JSON schema, for every tool.
+    // Explicit parameter metadata supplies the tool's JSON schema, for every tool.
     // A client that validates against the schema (Claude Code does) then rejects an invalid enum value before the
     // call leaves the model, and the model reads exact alternatives / defaults / example values instead of prose.
     // Zero dependencies; linked into the offline suite.
@@ -41,7 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 if (spec.Kind == "string" && property["enum"] == null)
                 {
-                    var alternatives = PreflightLogic.Alternatives(spec.Description).ToList();
+                    var alternatives = spec.AllowedValues.ToList();
                     if (alternatives.Count > 0)
                     {
                         // The default must stay valid; "" is only added when it is the default itself.

@@ -19,11 +19,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public static XDocument BuildDocument(string tableName, IEnumerable<PlcTagDefinition> tags)
         {
             if (string.IsNullOrWhiteSpace(tableName))
-                throw new ArgumentException("变量表名称不能为空。", nameof(tableName));
+                throw new ArgumentException("The tag table name must not be empty.", nameof(tableName));
 
             var normalizedTags = tags?.ToList() ?? throw new ArgumentNullException(nameof(tags));
             if (normalizedTags.Count == 0)
-                throw new ArgumentException("变量表至少需要 1 个变量。", nameof(tags));
+                throw new ArgumentException("A tag table requires at least one tag.", nameof(tags));
 
             ValidateTags(normalizedTags);
 
@@ -120,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!File.Exists(path))
             {
                 root["ok"] = false;
-                root["error"] = "文件不存在。";
+                root["error"] = "The file does not exist.";
                 return root;
             }
 
@@ -219,18 +219,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Select(x => x.Key)
                 .ToArray();
             if (duplicates.Length > 0)
-                throw new ArgumentException("PLC 变量名重复: " + string.Join(", ", duplicates));
+                throw new ArgumentException("Duplicate PLC tag names: " + string.Join(", ", duplicates));
 
             foreach (var tag in tags)
             {
                 if (string.IsNullOrWhiteSpace(tag.Name))
-                    throw new ArgumentException("PLC 变量名不能为空。");
+                    throw new ArgumentException("A PLC tag name must not be empty.");
                 if (string.IsNullOrWhiteSpace(tag.DataTypeName))
-                    throw new ArgumentException("PLC 变量数据类型不能为空: " + tag.Name);
+                    throw new ArgumentException("A PLC tag data type must not be empty: " + tag.Name);
                 if (string.IsNullOrWhiteSpace(tag.LogicalAddress))
-                    throw new ArgumentException("PLC 变量地址不能为空: " + tag.Name);
+                    throw new ArgumentException("A PLC tag address must not be empty: " + tag.Name);
                 if (!tag.LogicalAddress.StartsWith("%", StringComparison.Ordinal))
-                    throw new ArgumentException("PLC 变量地址必须使用 TIA 绝对地址格式，例如 %I0.0、%Q0.0: " + tag.Name);
+                    throw new ArgumentException("A PLC tag address must use TIA absolute-address syntax, for example %I0.0 or %Q0.0: " + tag.Name);
             }
         }
 

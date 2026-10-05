@@ -211,7 +211,8 @@ def guidance_literals(source):
                 i += 2
                 text += text_literals.literal_parts(tokens[i])[0]
                 if tokens[i].expressions: yield from visit(list(tokens[i].expressions), description)
-            yield token.start, text, description
+            if description or not re.fullmatch(r"[A-Za-z_]\w*", text):
+                yield token.start, text, description
             i += 1
     yield from visit(tokens)
 

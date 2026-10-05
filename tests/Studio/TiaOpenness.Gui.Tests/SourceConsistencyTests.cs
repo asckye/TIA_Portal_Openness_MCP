@@ -30,7 +30,7 @@ public class SourceConsistencyTests(WpfContext wpf)
         new(@"TrExtension\.CreateBinding\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"Loc\.Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
         new(@"Loc\.Current\.T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"SetStatus\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"(?:SetStatus|AppendLocalized)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"\bGuarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"LocalizedText\.(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),

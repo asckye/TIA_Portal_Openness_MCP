@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static XElement BuildFlgNet(string callName, IEnumerable<FlgNetCallParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(callName))
-                throw new ArgumentException("FlgNet 调用块名称不能为空。", nameof(callName));
+                throw new ArgumentException("The FlgNet call block name must not be empty.", nameof(callName));
 
             var parameterList = parameters?.ToArray() ?? Array.Empty<FlgNetCallParameter>();
             ValidateParameters(parameterList);
@@ -165,7 +165,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!File.Exists(path))
             {
                 root["ok"] = false;
-                root["error"] = "文件不存在。";
+                root["error"] = "The file does not exist.";
                 return root;
             }
 
@@ -296,20 +296,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Select(x => x.Key)
                 .ToArray();
             if (duplicateNames.Length > 0)
-                throw new ArgumentException("FlgNet 参数名重复: " + string.Join(", ", duplicateNames));
+                throw new ArgumentException("Duplicate FlgNet parameter names: " + string.Join(", ", duplicateNames));
 
             foreach (var parameter in parameters)
             {
                 if (string.IsNullOrWhiteSpace(parameter.ParameterName))
-                    throw new ArgumentException("FlgNet 参数名不能为空。");
+                    throw new ArgumentException("A FlgNet parameter name must not be empty.");
                 if (string.IsNullOrWhiteSpace(parameter.Section))
-                    throw new ArgumentException("FlgNet 参数 Section 不能为空: " + parameter.ParameterName);
+                    throw new ArgumentException("FlgNet parameter Section must not be empty: " + parameter.ParameterName);
                 if (string.IsNullOrWhiteSpace(parameter.DataType))
-                    throw new ArgumentException("FlgNet 参数 Type 不能为空: " + parameter.ParameterName);
+                    throw new ArgumentException("FlgNet parameter Type must not be empty: " + parameter.ParameterName);
                 if (parameter.SourceKind == FlgNetSourceKind.GlobalVariable && parameter.SymbolPath.Length == 0)
-                    throw new ArgumentException("FlgNet 全局变量参数必须提供符号路径: " + parameter.ParameterName);
+                    throw new ArgumentException("A FlgNet global-variable parameter requires a symbol path: " + parameter.ParameterName);
                 if (parameter.SourceKind == FlgNetSourceKind.LiteralConstant && string.IsNullOrWhiteSpace(parameter.ConstantValue))
-                    throw new ArgumentException("FlgNet 常量参数必须提供常量值: " + parameter.ParameterName);
+                    throw new ArgumentException("A FlgNet constant parameter requires a constant value: " + parameter.ParameterName);
             }
         }
 

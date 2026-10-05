@@ -172,7 +172,7 @@ def load_snapshots(directory):
 
 def compare(args):
     if getattr(args, 'migration', None):
-        return compare_migration(args)
+        return compare_text_migration(args) if args.migration == 'P6-26' else compare_migration(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -231,6 +231,18 @@ def _recursive_refs_only(schema):
                 stack.extend(edges.get(node, ()))
         return False
     return all(name in edges and on_cycle(name) for name in set(re.findall(r'"#/\$defs/([^"]+)"', text)))
+
+
+def compare_text_migration(args):
+    from snapshot_text_migration import differences, contract_text
+    baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
+    failures = 0
+    for release in args.releases or sorted(baseline.keys() | current.keys()):
+        counts, problems = differences(baseline[release], current[release], contract_text)
+        print(f'V{release} P6-26: changed-text={dict(sorted(counts.items()))}; unexpected={len(problems)}')
+        for problem in problems: print('  unexpected: ' + problem)
+        failures += len(problems)
+    return int(failures != 0)
 
 
 def compare_migration(args):
@@ -305,7 +317,7 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)
     compare_parser.add_argument('--current', type=Path, required=True)
-    compare_parser.add_argument('--migration', choices=list(__import__('phase6_groups').TASKS), help='Verify one phase-6 group migration: only its tools may change')
+    compare_parser.add_argument('--migration', choices=[*__import__('phase6_groups').TASKS, 'P6-26'], help='Verify one phase-6 group migration: only its tools may change')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
                                 help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)

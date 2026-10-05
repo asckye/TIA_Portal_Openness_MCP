@@ -42,3 +42,14 @@ namespace TiaMcp.Adapters.Contracts.Studio
         Mock = 1,
     }
 }
+
+namespace TiaMcp.Adapters.Contracts.Studio.Errors
+{
+    public enum SessionFailureReason { NotConnected, NoProjectOpen }
+
+    public sealed class SessionPreconditionException : System.InvalidOperationException
+    {
+        public SessionFailureReason Reason { get; }
+        public SessionPreconditionException(SessionFailureReason reason, string message) : base(message) { Reason = reason; }
+    }
+}

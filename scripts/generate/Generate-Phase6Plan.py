@@ -874,6 +874,7 @@ def self_test():
         except AssertionError: pass
         else: raise AssertionError('ambiguous L5 acceptance admitted')
     print('Behavior policies: 64 fail-closed records, scoped acceptance and 2 invalid ledgers passed.')
+    validate_parameter_transition("Keep", "Keep", "Keep", {"name": "string"}, set(), True, {})
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
     validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",

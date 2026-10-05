@@ -296,7 +296,7 @@ internal sealed class ResponseGoldenTests
         {
             ("argument", new ArgumentException("synthetic argument failure")),
             ("unsupported", new NotSupportedException("synthetic unsupported")),
-            ("api-missing", new InvalidOperationException("PLCSIM Advanced API (synthetic) unavailable")),
+            ("api-missing", (Exception)Activator.CreateInstance(server.GetType("TiaMcpServer.Runtime.PlcSimApiUnavailableException", true)!, "PLCSIM Advanced API (synthetic) unavailable")!),
             ("other", new InvalidOperationException("synthetic failure")),
             ("target-invocation", new TargetInvocationException("synthetic invocation failure", new ArgumentException("synthetic inner failure")))
         };

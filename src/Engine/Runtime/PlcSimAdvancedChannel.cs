@@ -7,6 +7,10 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Runtime
 {
+    public sealed class PlcSimApiUnavailableException : InvalidOperationException
+    {
+        public PlcSimApiUnavailableException(string message) : base(message) { }
+    }
     // RUNTIME channel to S7-PLCSIM Advanced through its official .NET API
     // (Siemens.Simatic.Simulation.Runtime, namespace of Siemens.Simatic.Simulation.Runtime.Api.x64.dll,
     // installed with PLCSIM Advanced under "%ProgramFiles(x86)%\Common Files\Siemens\PLCSIMADV\API\<version>").
@@ -156,7 +160,7 @@ namespace TiaMcpServer.Runtime
                     catch (Exception) /* swallow(env-probe): a failed GAC probe falls through to the explicit API-not-found diagnostic */ { source = ""; }
                 }
                 if (asm == null)
-                    throw new InvalidOperationException("PLCSIM Advanced API (" + PlcSimAdvancedLogic.ApiFileName + ") not found. Install S7-PLCSIM Advanced on this machine, or set apiPath / " + PlcSimAdvancedLogic.ApiEnvironmentVariable + ". Probed: " + string.Join("; ", probed));
+                    throw new PlcSimApiUnavailableException("PLCSIM Advanced API (" + PlcSimAdvancedLogic.ApiFileName + ") not found. Install S7-PLCSIM Advanced on this machine, or set apiPath / " + PlcSimAdvancedLogic.ApiEnvironmentVariable + ". Probed: " + string.Join("; ", probed));
                 var manager = asm.GetType("Siemens.Simatic.Simulation.Runtime.SimulationRuntimeManager", false)
                               ?? throw new InvalidOperationException("Assembly at " + hit + " has no SimulationRuntimeManager type; is it the PLCSIM Advanced API?");
                 var api = new PlcSimApi

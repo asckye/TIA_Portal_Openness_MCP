@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +11,12 @@ namespace TiaOpenness.Gui.Services;
 /// <summary>Shared operation status, progress and timestamped activity log.</summary>
 public sealed class WorkbenchActivity : ObservableObject, IDisposable
 {
+    public enum Severity { Default, Info, Warning, Error, Debug }
+    public sealed record Entry(string Time, string Message, Severity Level, string? Key, object?[] Arguments);
+    private readonly List<Entry> _entries = new();
+    public IReadOnlyList<Entry> Entries => _entries.AsReadOnly();
+    private string? _statusKey;
+    private object?[] _statusArgs = Array.Empty<object?>();
     private LocalizedText _status = LocalizedText.Key("Status.NotConnected");
     private string _log = string.Empty;
     private bool _busy;
@@ -43,6 +50,8 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public void SetStatus(string key, params object?[] args)
     {
+        _statusKey = key;
+        _statusArgs = (object?[])args.Clone();
         _status = LocalizedText.Key(key, args);
         Raise(nameof(Status));
     }
@@ -50,6 +59,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
     /// <summary>For text that is already final - an exception message from the bridge.</summary>
     private void SetStatusLiteral(string text)
     {
+        _statusKey = null;
         _status = LocalizedText.Literal(text);
         Raise(nameof(Status));
     }
@@ -67,7 +77,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         catch (Exception ex)
         {
             SetStatusLiteral(ex.Message);
-            Append(Loc.Current.T("Log.Error", ex.Message));
+            AppendLocalized("Log.Error", ex.Message);
         }
         finally
         {
@@ -86,20 +96,39 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         });
     }
 
-    public void Append(string line)
+    public void AppendStatus() => AppendEntry(Status, Severity.Default, _statusKey, _statusArgs);
+
+    public void AppendLocalized(string key, params object?[] args)
+        => AppendEntry(Loc.Current.T(key, args), key == "Log.Error" || key == "Log.Failed" ? Severity.Error : Severity.Default, key, args);
+
+    public void AppendDiagnostic(string target, string description, Severity severity)
+        => AppendEntry($"{severity}: {target} - {description}", severity, "compile-diagnostic", new object?[] { target, description });
+
+    public void AppendRule(string rule, int count)
+        => AppendEntry($"{rule} ({count})", Severity.Default, "inspection-rule", new object?[] { rule, count });
+
+    public void Append(string line, Severity severity = Severity.Default) => AppendEntry(line, severity, null, Array.Empty<object?>());
+
+    private void AppendEntry(string line, Severity severity, string? key, object?[] args)
     {
-        var stamped = $"{DateTime.Now:HH:mm:ss}  {line}{System.Environment.NewLine}";
+        string time = DateTime.Now.ToString("HH:mm:ss");
+        var stamped = $"{time}  {line}{System.Environment.NewLine}";
+        void Add()
+        {
+            _entries.Add(new Entry(time, line, severity, key, (object?[])args.Clone()));
+            Log += stamped;
+        }
 
         // Bridge log lines arrive on a background reader thread.
         if (Application.Current?.Dispatcher.CheckAccess() == false)
         {
-            Application.Current.Dispatcher.Invoke(() => Log += stamped);
+            Application.Current.Dispatcher.Invoke(Add);
             return;
         }
-        Log += stamped;
+        Add();
     }
 
-    public void ClearLog() => Log = string.Empty;
+    public void ClearLog() { _entries.Clear(); Log = string.Empty; }
 
     private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(Status));
 

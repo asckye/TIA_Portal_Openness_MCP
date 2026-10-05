@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             var nets = ReadArray(root, "networks", "$.networks");
             if (nets.Count == 0)
-                throw new ArgumentException("LAD FC 至少需要 1 个 networks[] 元素");
+                throw new ArgumentException("A LAD FC requires at least one networks[] element");
 
             var built = new System.Collections.Generic.List<PlcLadFcBlockXmlComposer.LadNetwork>();
             for (var i = 0; i < nets.Count; i++)
@@ -161,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 每个 network 是一个 FC 调用：用 FlgNetCallXmlBuilder
                 var callJson = n["callJson"] as JsonObject ?? n["call"] as JsonObject;
                 if (callJson == null)
-                    throw new ArgumentException("$.networks[" + i + "] 缺少 callJson 对象");
+                    throw new ArgumentException("$.networks[" + i + "] requires a callJson object");
                 var callName = ReadString(callJson, "$.networks[" + i + "].callJson.callName", "callName", "name");
                 var parametersArray = callJson["parameters"] as JsonArray;
                 var parameters = parametersArray == null
@@ -303,12 +303,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static void EmitLine(StructuredTextXmlBuilder builder, JsonObject lineOp, int opIndex)
         {
             var items = lineOp["items"] as JsonArray
-                ?? throw new ArgumentException("$.operations[" + opIndex + "].items 缺失");
+                ?? throw new ArgumentException("$.operations[" + opIndex + "].items is missing");
             string? lastTokenText = null;
             for (var k = 0; k < items.Count; k++)
             {
                 var item = items[k] as JsonObject
-                    ?? throw new ArgumentException("$.operations[" + opIndex + "].items[" + k + "] 必须是对象");
+                    ?? throw new ArgumentException("$.operations[" + opIndex + "].items[" + k + "] must be an object");
                 bool tightBefore = false; // 当前项前是否需要紧贴（如 ) ; , ）
 
                 if (item["sym"] is JsonNode symN)
@@ -338,7 +338,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new ArgumentException("$.operations[" + opIndex + "].items[" + k + "] 需要 sym / token / lit / raw 之一");
+                    throw new ArgumentException("$.operations[" + opIndex + "].items[" + k + "] requires one of sym / token / lit / raw");
                 }
             }
             // 末尾若不是 ; 则补 ;

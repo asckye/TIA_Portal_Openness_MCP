@@ -82,14 +82,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     : new System.Collections.Generic.List<string>();
 
                 var msg = addresses.Count > 0
-                    ? $"设备项 '{deviceItemPath}' 上有 {addresses.Count} 条 I/O 地址。"
+                    ? $"Device item '{deviceItemPath}' has {addresses.Count} I/O address(es)."
                     : childHints.Count > 0
-                        ? $"设备项 '{deviceItemPath}' **本级**没有 I/O 地址，但它的子项有 —— "
-                          + $"地址挂在子项上（分布式 IO 常见）。改用这些路径：{string.Join("；", childHints)}"
-                        : $"设备项 '{deviceItemPath}' 上没有任何 I/O 地址，它的直接子项也没有。"
-                          + "常见于它是机架/电源/接口这类本来就不占 I/O 的对象；"
-                          + "若你确信它应该有（例如分布式 IO 模块），用 GetDeviceItemTree 看一眼层级，"
-                          + "地址可能挂在更深的一层。";
+                        ? $"Device item '{deviceItemPath}' has no I/O addresses **at this level**, but its children do: "
+                          + $"Addresses belong to child items (common for distributed I/O). Use these paths: {string.Join("; ", childHints)}"
+                        : $"Device item '{deviceItemPath}' has no I/O addresses, nor do its immediate children. "
+                          + "This is common for racks, power supplies and interfaces that do not occupy I/O; "
+                          + "if addresses are expected (for example on a distributed I/O module), inspect the hierarchy with GetDeviceItemTree: "
+                          + "the addresses may belong to a deeper level.";
 
                 return new ResponseMessage
                 {
@@ -103,7 +103,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["addresses"] = arr,
                         ["childItemsWithAddresses"] = new JsonArray(
                             childHints.Select(h => (JsonNode)JsonValue.Create(h)!).ToArray()),
-                        ["note"] = "startAddress/length 是引擎原值，未做任何换算。startAddress 为字节偏移。"
+                        ["note"] = "startAddress/length are raw engine values without conversion. startAddress is a byte offset."
                     }
                 };
             }
@@ -147,8 +147,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (startAddress < 0)
                 {
                     throw new McpException(
-                        $"startAddress 不能为负数（收到 {startAddress}）。它是引擎原值字节偏移，"
-                        + "%I2.0 对应 startAddress=2，不要写成 \"2.0\"。",
+                        $"startAddress must not be negative (received {startAddress}). It is the raw engine byte offset; "
+                        + "%I2.0 corresponds to startAddress=2; do not write \"2.0\".",
                         McpErrorCode.InvalidParams);
                 }
 
@@ -171,19 +171,19 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         // 预演定位失败时保留异常，由 V4 边界报告读取失败。
                         var have = current.Count == 0
-                            ? "（一条都没有）"
+                            ? "(none)"
                             : string.Join(" / ", current.Select(x => x.IoType).Distinct());
                         throw new McpException(
-                            $"[dryRun] 改不了：'{deviceItemPath}' 上没有 {ioType} 类型的地址；实际有的是 {have}。",
+                            $"[dryRun] Cannot change: '{deviceItemPath}' has no {ioType} addresses; the available types are {have}.",
                             McpErrorCode.InvalidParams);
                     }
 
                     var preview = match.StartAddress == startAddress
-                        ? $"[dryRun] 无需修改：{ioType} 起始地址本来就是 {startAddress}。"
-                        : $"[dryRun] 将把 '{deviceItemPath}' 的 {ioType} 起始地址从 "
-                          + $"{match.StartAddress} 改为 {startAddress}（length={match.Length} 不变）。"
-                          + "确认无误后用 dryRun=false 实际写入。"
-                          + "注意：地址是否与其它模块重叠，只有真正写入时 TIA 才会判定。";
+                        ? $"[dryRun] No change needed: {ioType} start address is already {startAddress}."
+                        : $"[dryRun] Will change '{deviceItemPath}'s {ioType} start address from "
+                          + $"{match.StartAddress} to {startAddress} (length={match.Length} unchanged)."
+                          + "After verifying the preview, use dryRun=false to perform the write. "
+                          + "Warning: TIA checks for address overlap with other modules only when the write is actually performed.";
 
                     return new ResponseMessage
                     {
@@ -232,8 +232,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["nextActions"] = new JsonArray
                     {
                         "CompilePlcSoftware to validate the hardware changes",
-                        "SaveProject —— 编译 0 错之后再存盘",
-                        "GetDeviceItemIoAddresses —— 独立读回一次做最终确认"
+                        "SaveProject: save only after compilation reports zero errors",
+                        "GetDeviceItemIoAddresses: perform an independent readback for final confirmation"
                     };
                 }
 
@@ -241,9 +241,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = after != null
                         ? message
-                        : $"⚠ 未验证：{message} —— 写入调用没有报错，但读不回修改后的地址，"
-                          + "所以**无法确认**地址是否真的变了。请用 GetDeviceItemIoAddresses 或 TIA 界面自行核对，"
-                          + "在核对之前不要把它当成已完成。",
+                        : $"⚠ UNVERIFIED: {message}: the write call reported no error, but the updated address could not be read back; "
+                          + "the address change **cannot be confirmed**. Verify it with GetDeviceItemIoAddresses or the TIA UI; "
+                          + "do not treat the operation as completed before verification.",
                     Meta = meta
                 };
             }

@@ -34296,7 +34296,7 @@
       "name": "WriteClassicHmiMinimalPackageFiles"
     },
     {
-      "descriptionSha256": "5791336102e2833095bc136611d377dfb5785531702c4b1f42e337a0a87fc086",
+      "descriptionSha256": "84fd7e08cd2221c8213393cf988866c5e1f9396987e4fa75c298afbce9bde002",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

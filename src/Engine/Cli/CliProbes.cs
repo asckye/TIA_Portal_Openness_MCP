@@ -23,6 +23,13 @@ namespace TiaMcpServer
     {
         // ErrorCount/WarningCount 是 int?，null 专门表示「编译结果没读回来」，不是 0。
         // 文本输出统一将 null 显示为 (unreadable)，避免与零错误混淆。
+        private static bool Disposed(Exception ex)
+        {
+            for (Exception? cause = ex; cause != null; cause = cause.InnerException)
+                if (cause is ObjectDisposedException) return true;
+            return false;
+        }
+
         internal static string CountText(int? count) => count?.ToString() ?? "(unreadable)";
 
         internal static void RunOnlineMonitoringSafetySelfTest()
@@ -466,8 +473,8 @@ namespace TiaMcpServer
             {
                 screenImportOk = false;
                 importMessage = ex.InnerException?.Message ?? ex.Message;
-                projectUsable = !importMessage.Contains("NonRecoverableException", StringComparison.OrdinalIgnoreCase)
-                    && !importMessage.Contains("disposed", StringComparison.OrdinalIgnoreCase);
+                projectUsable = !PortalFailureClassifier.IsPortalProcessLost(ex)
+                    && !Disposed(ex);
                 Program.LogDiag("Screen import exception: " + ex);
             }
 

@@ -16,8 +16,10 @@ using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using TiaMcp.Adapters.Contracts.Studio;
+using TiaMcp.Adapters.Contracts.Studio.Errors;
 #else
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 #endif
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
@@ -515,7 +517,7 @@ namespace TiaOpenness.Openness
             if (project == null)
             {
                 Reset();
-                throw new InvalidOperationException("No project is open. Call project.open first.");
+                throw new SessionPreconditionException(SessionFailureReason.NoProjectOpen, "No project is open. Call project.open first.");
             }
 
             if (_service != null && ReferenceEquals(_serviceOwner, project)) return _service;

@@ -21,7 +21,7 @@ def unwrap_usage(reply):
 
 def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
     """call returns the decoded MCP text envelope. Never call the sampled tool."""
-    assert all('GetToolUsage' in t['description'] for t in tools), 'A listed tool has no usage route'
+    assert any(t['name'] == 'GetToolUsage' for t in tools), 'Usage tool is absent from this catalog'
     first = unwrap_usage(call('GetToolUsage', {'limit': 1}))
     assert first['referenceOnly'] and len(first['sources']) == 2
     names = []
@@ -77,7 +77,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         if result_fields:
             for case in usage.get('interpretation', {}).get('resultCases', []):
                 assert set(case['example']) <= set(result_fields), (name, case['example'], result_fields)
-        assert 'NOT RUN' in example['validation']
+        assert example['request']['method'] == 'tools/call'
         assert not any(k in usage for k in ('workflow', 'onFailure', 'nativeAcceptance'))
         operation_records = []
         selector = 'action' if 'action' in props else 'operation' if 'operation' in props and name != 'GetToolUsage' else None

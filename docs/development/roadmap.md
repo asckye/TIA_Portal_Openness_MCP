@@ -36,6 +36,10 @@
 4. Foundation 的普通工程流程已实现；LocalSession、多用户锁/提交、受保护工程认证等
    仍有独立范围限制。绑定快照的生命周期接线尚未完成，见[版本框架](unified-version-framework.md)。
 5. 所有新增工具、动作和编程语言示例进入同一 `GetToolUsage` 数据源，并检查实际检索结果。
+6. 两处仍按 Siemens 原生报错文字选择后续调用，需在真机上取得可区分的原生错误类型后替换：SiVArc 生成在报错含
+   `PLC device` 时改用所属设备名再生成一次（`SivarcService`）；PLCSIM Advanced 读取在报错含 not found / does not exist
+   时刷新变量表后重读一次（`PlcSimAdvancedChannel.ReadWithRefresh`），且可能误匹配本程序自己的 `Read returned null`
+   文本。自动下线（`WithAutoOffline`）按 D1 下载族在 P6-34 处理。
 
 ## 发布流程改造（已完成）
 

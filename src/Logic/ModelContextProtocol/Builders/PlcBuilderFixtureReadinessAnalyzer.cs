@@ -145,8 +145,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 json["status"] = Directory.Exists(path) ? "FAIL: expected XML file but found directory" : "FAIL: missing";
                 json["error"] = Directory.Exists(path)
-                    ? "路径是目录，需要指向目录内的真实 XML 文件。"
-                    : "金样本文件不存在。";
+                    ? "The path is a directory; specify an actual XML file within it."
+                    : "The golden fixture file does not exist.";
                 json["detectedMarkers"] = new JsonArray();
                 return new FixtureResult(false, json);
             }
@@ -175,7 +175,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (detected.Length != rule.RequiredMarkers.Length)
                 {
                     var missing = rule.RequiredMarkers.Except(detected, StringComparer.Ordinal).ToArray();
-                    json["error"] = "缺少结构标记: " + string.Join(", ", missing);
+                    json["error"] = "Missing structure markers: " + string.Join(", ", missing);
                 }
 
                 return new FixtureResult(detected.Length == rule.RequiredMarkers.Length, json);

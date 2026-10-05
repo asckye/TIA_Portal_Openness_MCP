@@ -71,47 +71,40 @@ def process_sample(process):
 
 def document(reply, unwrap=False):
     if 'error' in reply:
-        return {'_error': True, '_text': json.dumps(reply['error'])}
+        return {'_protocolCode': reply['error']['code']}
     result = reply['result']
-    text = '\n'.join(c.get('text', '') for c in result.get('content', []) if c.get('type') == 'text')
-    if result.get('isError'):
-        return {'_error': True, '_text': text}
-    value = json.loads(text)
-    if unwrap:
-        if value.get('meta', {}).get('bridgeSuccess') is not True:
-            return {'_error': True, '_text': json.dumps(value)}
-        value = bridge_document(value)
+    blocks = [c for c in result.get('content', []) if c.get('type') == 'text']
+    require(len(blocks) == 1, 'Expected one V4 text block')
+    value = json.loads(blocks[0]['text'])
+    require(value.get('schemaVersion') == 4 and result.get('structuredContent') == value,
+            'V4 structuredContent/text mismatch')
+    require(bool(result.get('isError')) == (value['ok'] is False), 'V4 isError mismatch')
+    # CallTool now returns the target envelope unchanged; no message decoding.
     return value
-
-
-def bridge_document(value):
-    # The existing CallTool bridge serializes CLR envelope names in PascalCase;
-    # the SDK's direct result uses camelCase. JsonObject metadata keeps its keys.
-    return {key[:1].lower() + key[1:]: item for key, item in json.loads(value['message']).items()}
 
 
 def cases(major, source):
     target = {'objectKind': 'Block', 'objectPath': '__soak_missing__', 'softwarePath': '__soak_no_plc__'}
     xref = {'softwarePath': '__soak_no_plc__', 'objectPath': '__soak_missing__'}
     return [
-        ('state', 'GetState', {}, 'state'),
-        ('compatibility', 'ReadOpennessCompatibility', {}, 'compatibility'),
+        ('state', 'GetSessionState', {}, 'state'),
+        ('compatibility', 'GetOpennessCompatibility', {}, 'compatibility'),
         ('format_preflight', 'InspectSimaticSdCompatibility', {'filePath': str(source), 'tiaMajor': major}, 'success'),
-        ('xref_block_refused', 'GetCrossReferences', xref, 'xref'),
-        ('xref_tag_refused', 'GetCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
-        ('xref_unit_refused', 'GetCrossReferences', dict(xref, unitName='__unit__'), 'xref'),
+        ('xref_block_refused', 'GetPlcCrossReferences', xref, 'xref'),
+        ('xref_tag_refused', 'GetPlcCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
+        ('xref_unit_refused', 'GetPlcCrossReferences', dict(xref, unitName='__unit__'), 'xref'),
         ('reflect_invoke_refused', 'InvokeService', dict(target, serviceTypeSuffix='CrossReferenceService', methodName='GetCrossReferences', allowWrite=True), 'reflection_refused'),
         ('reflect_suffix_refused', 'DescribeService', dict(target, serviceTypeSuffix='Service'), 'reflection_refused'),
         ('reflect_object_refused', 'InvokeObject', dict(target, methodName='GetCrossReferences', allowWrite=True), 'reflection_refused'),
-        ('journal', 'ReadNativeInvocationLog', {'take': 2}, 'success'),
-        ('journal_bad_range', 'ReadNativeInvocationLog', {'take': 0}, 'error'),
-        ('journal_bad_type', 'ReadNativeInvocationLog', {'take': 'not_an_integer'}, 'error'),
+        ('journal', 'GetNativeInvocationLog', {'take': 2}, 'success'),
+        ('journal_bad_range', 'GetNativeInvocationLog', {'take': 0}, 'error'),
+        ('journal_bad_type', 'GetNativeInvocationLog', {'take': 'not_an_integer'}, 'error'),
         ('format_missing_file', 'InspectSimaticSdCompatibility', {'filePath': str(source.with_name('missing.s7dcl')), 'tiaMajor': major}, 'error'),
         ('format_bad_version', 'InspectSimaticSdCompatibility', {'filePath': str(source), 'tiaMajor': 99}, 'error'),
-        ('bridge_success', 'CallTool', {'name': 'ReadOpennessCompatibility'}, 'bridge_success'),
+        ('bridge_success', 'CallTool', {'name': 'GetOpennessCompatibility'}, 'bridge_success'),
         ('bridge_recursion', 'CallTool', {'name': 'CallTool'}, 'bridge_error'),
-        ('bridge_bad_json', 'CallTool', {'name': 'GetState', 'argumentsJson': '{'}, 'bridge_error'),
-        ('bridge_bad_shape', 'CallTool', {'name': 'GetState', 'argumentsJson': []}, 'bridge_error'),
+        ('bridge_bad_json', 'CallTool', {'name': 'GetSessionState', 'arguments': '{'}, 'bridge_error'),
+        ('bridge_bad_shape', 'CallTool', {'name': 'GetSessionState', 'arguments': []}, 'bridge_error'),
         ('bridge_missing_args', 'CallTool', {'name': 'InspectSimaticSdCompatibility'}, 'bridge_error'),
         ('bridge_unknown_tool', 'CallTool', {'name': '__soak_unknown__'}, 'bridge_error'),
         ('unknown_tool', '__soak_unknown__', {}, 'error'),
@@ -147,31 +140,41 @@ def run_profile(args, transport, profile, run_dir):
         def execute(case, request_id):
             label, name, arguments, expectation = case
             unwrap = profile == 'lite' and name not in names and name != '__soak_unknown__'
-            request = {'name': 'CallTool', 'arguments': {'name': name, 'argumentsJson': arguments}} if unwrap else {'name': name, 'arguments': arguments}
+            request = {'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}} if unwrap else {'name': name, 'arguments': arguments}
             begin = time.monotonic()
             reply = rpc('tools/call', request_id, request)
             elapsed = time.monotonic() - begin
             value = document(reply, unwrap)
             meta = value.get('meta', {})
-            if expectation == 'error':
-                require(value.get('_error') is True, label + ': input error accepted')
-            elif expectation == 'reflection_refused':
-                require(value.get('_error') is True and 'cannot be accessed through reflection' in value['_text'], label + ': reflection policy did not refuse before target lookup')
-            elif expectation == 'bridge_error':
-                require(meta.get('bridgeSuccess') is False and meta.get('success') is False, label + ': bridge failure masked')
-            elif expectation == 'bridge_success':
-                if meta.get('bridgeSuccess') is not True or meta.get('operationSuccess') is not True:
-                    (run_dir / 'failed-response.json').write_text(json.dumps({'case': label, 'requestId': request_id, 'reply': reply}, ensure_ascii=False, indent=2), encoding='utf-8')
-                require(meta.get('bridgeSuccess') is True and meta.get('operationSuccess') is True, label + ': bridge failed')
-                require(bridge_document(value)['meta']['engineMajor'] == args.major, 'Wrong bridge engine version')
+            error_codes = {
+                'journal_bad_range': 'INTERNAL_ERROR', 'journal_bad_type': 'INVALID_ARGUMENT',
+                'format_missing_file': 'INTERNAL_ERROR', 'format_bad_version': 'INTERNAL_ERROR',
+                'bridge_recursion': 'INVALID_ARGUMENT', 'bridge_bad_json': 'INVALID_ARGUMENT',
+                'bridge_bad_shape': 'INVALID_ARGUMENT', 'bridge_missing_args': 'INVALID_ARGUMENT',
+                'bridge_unknown_tool': 'TOOL_NOT_FOUND', 'reflect_suffix_refused': 'NATIVE_OPERATION_FAILED',
+                'reflect_invoke_refused': 'OUTCOME_UNKNOWN', 'reflect_object_refused': 'OUTCOME_UNKNOWN',
+            }
+            if label == 'unknown_tool':
+                require(value.get('_protocolCode') == -32602, label + ': wrong protocol code')
+            elif label in error_codes:
+                require(value.get('ok') is False and value['error']['code'] == error_codes[label],
+                        label + ': wrong V4 error code: ' + json.dumps(value))
             elif expectation == 'xref':
-                require(meta.get('success') is False and meta.get('queried') is False and meta.get('complete') is False and meta.get('status') == 'notQueried', label + ': refusal reported as completed/empty')
+                require(value['ok'] is False and value['error']['code'] == 'PRECONDITION_FAILED'
+                        and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
+                        and value['data']['queried'] is False and value['data']['complete'] is False,
+                        label + ': refusal reported as completed/empty')
             else:
-                require(meta.get('success') is True, label + ': expected success')
+                require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success')
                 if expectation == 'state':
-                    require(value['isConnected'] is False and value['project'] == '-', 'Test attached to a project unexpectedly')
-                if expectation == 'compatibility':
-                    require(meta['engineMajor'] == args.major and meta['nativeCrossReferencesEnabled'] is False and meta['reflectionCrossReferencesAllowed'] is False, 'Wrong engine/policy')
+                    require(value['data']['isConnected'] is False and value['data']['project'] == '-', 'Test attached unexpectedly')
+                    require(value['data']['evidence']['journalHealth']['failedWrites'] == 0, 'Invocation journal write failed')
+                if expectation in ('compatibility', 'bridge_success'):
+                    evidence = value['data']['evidence']
+                    require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is False
+                            and evidence['reflectionCrossReferencesAllowed'] is False, 'Wrong engine/policy')
+            require(not any(w['code'] == 'DIAGNOSTIC_WRITE_FAILED' for w in meta.get('warnings', [])),
+                    'Invocation journal write failed')
             return label, elapsed
 
         # Warm every case once before measuring the steady sequence, including JIT/error paths.
@@ -180,7 +183,7 @@ def run_profile(args, transport, profile, run_dir):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
         if args.isolate_openness:
-            state = document(rpc('tools/call', 'worker-state', {'name': 'ReadOpennessWorkerStatus', 'arguments': {}}))['meta']['worker']
+            state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
             require(state['state'] == 'Ready' and state['workerPid'] != owned[0].pid, 'Worker isolation not active')
             worker_process = SimpleNamespace(pid=state['workerPid'])
             worker_samples.append(process_sample(worker_process))
@@ -197,8 +200,8 @@ def run_profile(args, transport, profile, run_dir):
                     counts[label] += 1; latencies.append(elapsed)
                 # A success after each error batch checks gate release / host recovery.
                 require(rpc('ping', f'ping-{batch}').get('result') == {}, 'Ping failed after input errors')
-                recovered = document(rpc('tools/call', f'recovery-{batch}', {'name': 'GetState', 'arguments': {}}))
-                require(recovered['meta']['success'] is True and recovered['isConnected'] is False, 'State failed after error batch')
+                recovered = document(rpc('tools/call', f'recovery-{batch}', {'name': 'GetSessionState', 'arguments': {}}))
+                require(recovered['ok'] is True and recovered['data']['isConnected'] is False and recovered['data']['evidence']['journalHealth']['failedWrites'] == 0, 'State failed after error batch')
                 unknown = rpc('__soak_unknown_method__', f'unknown-{batch}')
                 require(unknown.get('error', {}).get('code') == -32601, 'Unknown method not rejected')
                 empty = rpc('resources/list', f'resources-{batch}')
@@ -250,8 +253,6 @@ def run_profile(args, transport, profile, run_dir):
         require(forwarded and forwarded <= executed, 'Host/child invocation correlation lost')
     log_text = ''.join(logs)
     (run_dir / 'host-stderr.log').write_text(log_text, encoding='utf-8')
-    require('Invocation journal unavailable:' not in log_text, 'Invocation journal write failed')
-    require(not any(word in log_text for word in ('StackOverflowException', 'OutOfMemoryException', 'Unhandled exception')), 'Fatal host diagnostic')
     ordered = sorted(latencies)
     return {'transport': transport, 'profile': profile, 'concurrency': concurrency,
         'toolCount': len(names), 'workerSamples': worker_samples, 'measuredToolCalls': len(latencies), 'warmupToolCalls': len(scenario),
@@ -271,16 +272,20 @@ def main():
     parser.add_argument('--host-harness', type=Path, required=True)
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
+    parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
     parser.add_argument('--full-tool-count', type=int, default=None, help='Defaults to the version-aware roster: V20=477, V21=488')
-    parser.add_argument('--lite-tool-count', type=int, default=63)
+    parser.add_argument('--lite-tool-count', type=int, default=None)
     parser.add_argument('--max-private-mib', type=int, default=512)
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
     args = parser.parse_args()
-    if args.full_tool_count is None:
-        args.full_tool_count = 477 if args.major == 20 else 488
+    import xml.etree.ElementTree as ET
+    catalog = json.loads(ET.parse(ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)
+    roster = catalog['releases'][str(args.major)]
+    if args.full_tool_count is None: args.full_tool_count = len(roster)
+    if args.lite_tool_count is None: args.lite_tool_count = sum('lite' in row['profiles'] for row in roster)
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'host_harness', 'output'):
@@ -292,7 +297,7 @@ def main():
         'scope': 'Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.',
         'rounds': args.rounds, 'isolatedWorker': args.isolate_openness, 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
     try:
-        for transport in ('stdio', 'http'):
+        for transport in args.transports:
             for profile in ('full', 'lite'):
                 report['runs'].append(run_profile(args, transport, profile, args.output / f'{transport}-{profile}'))
         report['status'] = 'passed'

@@ -133,7 +133,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         DeviceTree.Clear();
         foreach (var node in DeviceNode.Build(devices, projectName)) DeviceTree.Add(node);
 
-        _activity.Append(Loc.Current.T("Log.DeviceCount", devices.Count));
+        _activity.AppendLocalized("Log.DeviceCount", devices.Count);
 
         // Pick a device and load its blocks as one awaited step. Letting the property setter
         // start that load meant a fire-and-forget task racing the rest of this method, and on a
@@ -192,7 +192,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         foreach (var item in result.Items.Where(i => !i.Succeeded))
         {
-            _activity.Append(Loc.Current.T("Log.Failed", item.BlockPath, item.Error));
+            _activity.AppendLocalized("Log.Failed", item.BlockPath, item.Error);
         }
 
         if (result.Failed > 0)
@@ -205,7 +205,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
             _activity.SetStatus("Status.Exported", result.Succeeded, result.Requested, result.OutputDirectory);
         }
 
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
     });
 
     private async Task ImportAsync() => await _activity.Guarded("Status.Importing", async () =>
@@ -223,11 +223,11 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         foreach (var item in result.Items.Where(i => !i.Succeeded))
         {
-            _activity.Append(Loc.Current.T("Log.Failed", item.FilePath, item.Error));
+            _activity.AppendLocalized("Log.Failed", item.FilePath, item.Error);
         }
 
         _activity.SetStatus("Status.Imported", result.Succeeded, result.Requested);
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
         await RefreshBlocksAsync();
     });
 
@@ -237,14 +237,14 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         foreach (var message in Flatten(result.Messages).Where(m => m.Severity != CompileSeverity.Information))
         {
-            _activity.Append($"{message.Severity}: {message.Target} - {message.Description}");
+            _activity.AppendDiagnostic(message.Target, message.Description, message.Severity == CompileSeverity.Error ? WorkbenchActivity.Severity.Error : WorkbenchActivity.Severity.Warning);
         }
 
         _activity.SetStatus("Status.CompileResult",
             result.State, result.ErrorCount, result.WarningCount,
             result.Duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
 
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
         await RefreshBlocksAsync();
     });
 
@@ -253,15 +253,15 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         var report = await _client.InspectAsync(SelectedDevice!.Id,
             string.IsNullOrWhiteSpace(NamePattern) ? null : NamePattern);
 
-        _activity.Append(Loc.Current.T("Log.InspectionHeader", report.DeviceId));
+        _activity.AppendLocalized("Log.InspectionHeader", report.DeviceId);
         foreach (var group in report.Findings.GroupBy(f => f.RuleId).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
-            _activity.Append($"{group.Key} ({group.Count()})");
+            _activity.AppendRule(group.Key, group.Count());
             foreach (var finding in group) _activity.Append($"    [{finding.Severity}] {finding.Target}: {finding.Message}");
         }
 
         _activity.SetStatus("Status.InspectResult", report.Findings.Count, report.BlocksScanned);
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
     });
 
     private async Task SaveAsync() => await _activity.Guarded("Status.SavingProject", async () =>
@@ -275,7 +275,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         await _client.SaveProjectAsync();
         _activity.SetStatus("Status.ProjectSaved");
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
     });
 
     private bool FilterBlock(object item)

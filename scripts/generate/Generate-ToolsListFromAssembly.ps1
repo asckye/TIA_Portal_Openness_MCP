@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$Exe,
     [Parameter(Mandatory=$true)][string]$PublicApiDirectory,
     [Parameter(Mandatory=$true)][string]$OutputPath,
@@ -21,9 +21,9 @@ try {
     $assembly=[Reflection.Assembly]::LoadFrom($exePath)
     $logic=[Reflection.Assembly]::LoadFrom((Join-Path $runtimePath 'TiaMcp.Logic.dll'))
     $type=$assembly.GetType('TiaMcpServer.ModelContextProtocol.McpServer',$true)
-    # 分类的唯一事实来源在引擎里（ToolTaxonomy）；这里经反射取大类与操作类型，避免脚本与二进制各存一份分类表。
+    # Read explicit ToolTaxonomy metadata so the generator and binary share one classification source.
     $taxonomy=$logic.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
-    $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('Parse'); $operationOf=$taxonomy.GetMethod('OperationOf')
+    $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('For'); $operationOf=$taxonomy.GetMethod('OperationOf')
     $categories=@(foreach($c in $taxonomy.GetField('Categories').GetValue($null)){[ordered]@{key=$c.Key;nameZh=$c.NameZh;nameEn=$c.NameEn;description=$c.Description;domains=@($c.Domains)}})
     # 2.7.57: the worked examples (ToolExamples) are appended to listed tool descriptions and printed by FindTools / PreviewToolCall;
     # an example that no longer fits its tool (renamed parameter, dropped tool) fails the build here rather than misleading callers.
@@ -52,7 +52,7 @@ try {
         $name=$entry.Key
         $desc=$attributes | Where-Object { $_.AttributeType.FullName -eq 'System.ComponentModel.DescriptionAttribute' } | Select-Object -First 1
         $description=if($desc){[string]$desc.ConstructorArguments[0].Value}else{''}
-        $tag=$parseTag.Invoke($null,@($description))
+        $tag=$parseTag.Invoke($null,@($name))
         $layer=[string]$tag.Item1; $domain=[string]$tag.Item2
         $op=$operationOf.Invoke($null,@($name,$description)); $operation=[string]$op.Item1; $operationInferred=[bool]$op.Item2
         $category=[string]$categoryOf.Invoke($null,@($domain))

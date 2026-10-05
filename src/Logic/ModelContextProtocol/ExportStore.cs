@@ -164,8 +164,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"Handle {id} was evicted because the store was full and it was the least recently read. Its content was discarded before expiry. "
                           + "Run the producing tool again; use SaveExportContent to save the full result to a file."
                         : err == "expired"
-                        ? $"句柄 {id} 已过期（寄存只保留 {DefaultTtlHours} 小时）。内容已经丢弃，"
-                          + "要拿全量请重跑产生它的那个工具。"
+                        ? $"Handle {id} has expired (stored content is retained for only {DefaultTtlHours} hours). The content has been discarded; "
+                          + "rerun the tool that produced it to retrieve the full content."
                         : $"Handle {id} was not found. Use ListExportHandles to see the current handles, "
                           + "or run the producing tool again to obtain a new one."
                 };

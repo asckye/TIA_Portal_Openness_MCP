@@ -21,13 +21,13 @@ namespace TiaMcpServer.ModelContextProtocol
             var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
             var interfaceNs = format.InterfaceNamespace;
             if (string.IsNullOrWhiteSpace(dbName))
-                throw new ArgumentException("DB 名称不能为空。", nameof(dbName));
+                throw new ArgumentException("DB name must not be empty.", nameof(dbName));
             if (dbNumber <= 0)
-                throw new ArgumentException("DB 编号必须大于 0。", nameof(dbNumber));
+                throw new ArgumentException("DB number must be greater than zero.", nameof(dbNumber));
 
             var members = staticMembers?.ToArray() ?? throw new ArgumentNullException(nameof(staticMembers));
             if (members.Length == 0)
-                throw new ArgumentException("全局 DB 至少需要 1 个 Static 成员。", nameof(staticMembers));
+                throw new ArgumentException("A global DB requires at least one Static member.", nameof(staticMembers));
             ValidateMembers(members);
 
             return new XDocument(
@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!File.Exists(path))
             {
                 root["ok"] = false;
-                root["error"] = "文件不存在。";
+                root["error"] = "The file does not exist.";
                 return root;
             }
 
@@ -278,14 +278,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Select(x => x.Key)
                 .ToArray();
             if (duplicates.Length > 0)
-                throw new ArgumentException("DB 成员名重复: " + string.Join(", ", duplicates));
+                throw new ArgumentException("Duplicate DB member names: " + string.Join(", ", duplicates));
 
             foreach (var member in members)
             {
                 if (string.IsNullOrWhiteSpace(member.Name))
-                    throw new ArgumentException("DB 成员名不能为空。");
+                    throw new ArgumentException("DB member name must not be empty.");
                 if (string.IsNullOrWhiteSpace(member.Datatype))
-                    throw new ArgumentException("DB 成员数据类型不能为空: " + member.Name);
+                    throw new ArgumentException("DB member data type must not be empty: " + member.Name);
             }
         }
 

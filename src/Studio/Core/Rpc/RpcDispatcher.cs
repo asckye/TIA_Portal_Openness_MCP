@@ -4,6 +4,7 @@ using System.Linq;
 using System.Globalization;
 using System.Text.Json;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Environment;
@@ -66,12 +67,7 @@ namespace TiaOpenness.Core.Rpc
             }
             catch (InvalidOperationException ex)
             {
-                var code = ex.Message.IndexOf("Not connected", StringComparison.OrdinalIgnoreCase) >= 0
-                    ? RpcErrorCodes.NotConnected
-                    : ex.Message.IndexOf("No project", StringComparison.OrdinalIgnoreCase) >= 0
-                        ? RpcErrorCodes.NoProjectOpen
-                        : RpcErrorCodes.InternalError;
-                return RpcResponse.Fail(request.Id, code, ex.Message);
+                return RpcResponse.Fail(request.Id, SessionFailureCode(ex), ex.Message);
             }
             catch (Exception ex)
             {
@@ -83,6 +79,17 @@ namespace TiaOpenness.Core.Rpc
                 if (ex.InnerException != null) data["inner"] = ex.InnerException.Message;
                 return RpcResponse.Fail(request.Id, RpcErrorCodes.OpennessFailure, ex.Message, BridgeJson.ToElement(data));
             }
+        }
+
+        private static int SessionFailureCode(InvalidOperationException error)
+        {
+            if (error is SessionPreconditionException local)
+                return local.Reason == SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes.NoProjectOpen;
+#if TIA_SHARED_ADAPTER_PATHS
+            if (error is TiaMcp.Adapters.Contracts.Studio.Errors.SessionPreconditionException shared)
+                return shared.Reason == TiaMcp.Adapters.Contracts.Studio.Errors.SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes.NoProjectOpen;
+#endif
+            return RpcErrorCodes.InternalError;
         }
 
         private object Invoke(string method, JsonElement p, ProgressCallback progress)
@@ -229,7 +236,7 @@ namespace TiaOpenness.Core.Rpc
 
         private ITiaSession Session()
         {
-            if (_session == null) throw new InvalidOperationException("Not connected. Call session.connect first.");
+            if (_session == null) throw new SessionPreconditionException(SessionFailureReason.NotConnected, "Not connected. Call session.connect first.");
             BackendEntered = true;
             return _session;
         }

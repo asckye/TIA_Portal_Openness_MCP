@@ -108,11 +108,11 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 Assert.Equal(2, model.Engineering.Blocks.Count);
                 model.Engineering.Blocks[0].Selected = true;
                 model.Engineering.OutputDirectory = @"D:\fixture\exports";
-                model.Activity.Append("Warning: Main - Binding fixture warning");
-                model.Activity.Append(Loc.Current.T("Status.CompileResult", "Warning", 0, 1, "1.0"));
-                model.Activity.Append(Loc.Current.T("Log.InspectionHeader", "PLC_1"));
-                model.Activity.Append("NAMING-001 (1)");
-                model.Activity.Append(Loc.Current.T("Status.InspectResult", 1, 2));
+                model.Activity.AppendDiagnostic("Main", "Binding fixture warning", TiaOpenness.Gui.Services.WorkbenchActivity.Severity.Warning);
+                model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 1, "1.0");
+                model.Activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
+                model.Activity.AppendRule("NAMING-001", 1);
+                model.Activity.AppendLocalized("Status.InspectResult", 1, 2);
                 window.Navigate("Blocks");
                 Layout(host);
                 var blocks = Descendants<ListBox>(host).Single(list => ReferenceEquals(list.ItemsSource, model.Engineering.BlocksView));

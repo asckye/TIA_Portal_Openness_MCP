@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var cause = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 // envelope: legacy-plcsim-failure: Failed would append dataComplete, which this executor does not set.
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
-                meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported" : cause is InvalidOperationException && cause.Message.StartsWith("PLCSIM Advanced API (", StringComparison.Ordinal) ? "ApiNotFound" : "ReadOrWriteFailed";
+                meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported" : cause is PlcSimApiUnavailableException ? "ApiNotFound" : "ReadOrWriteFailed";
                 meta["error"] = cause.Message;
                 return new ResponseJsonReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
             }

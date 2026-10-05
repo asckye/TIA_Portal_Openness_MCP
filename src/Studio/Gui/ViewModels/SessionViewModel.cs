@@ -115,7 +115,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     {
         var report = await Task.Run(TiaOpenness.Core.Environment.OpennessDoctor.Run);
 
-        _activity.Append(Loc.Current["Log.EnvironmentHeader"]);
+        _activity.AppendLocalized("Log.EnvironmentHeader");
         _activity.Append($"{report.MachineName} / {report.UserName} / {(report.Is64BitProcess ? "x64" : "x86")}");
         foreach (var check in report.Checks)
         {
@@ -124,7 +124,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         }
         foreach (var install in report.Installations)
         {
-            _activity.Append(Loc.Current.T("Log.Installed", install.Version, install.EngineeringDllPath));
+            _activity.AppendLocalized("Log.Installed", install.Version, install.EngineeringDllPath);
         }
 
         if (report.CanRunOpenness) _activity.SetStatus("Status.EnvOk");
@@ -143,7 +143,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         ProjectName = string.Empty;
         SetOpennessVersion(null);
         _activity.SetStatus("Status.NotConnected");
-        _activity.Append(_activity.Status);
+        _activity.AppendStatus();
     });
 
     /// <summary>
@@ -167,7 +167,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         {
             ProjectPath = state.OpenProject.Path ?? string.Empty;
             ProjectName = state.OpenProject.Name ?? string.Empty;
-            _activity.Append(Loc.Current.T("Log.Attached", state.OpenProject.Name));
+            _activity.AppendLocalized("Log.Attached", state.OpenProject.Name);
             await _loadProject(ProjectName);
         }
     }
@@ -193,7 +193,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
         var project = await _client.OpenProjectAsync(ProjectPath);
         ProjectName = project.Name ?? string.Empty;
-        _activity.Append(Loc.Current.T("Log.Opened", project.Name, project.Path));
+        _activity.AppendLocalized("Log.Opened", project.Name, project.Path);
         _activity.SetStatus("Status.ProjectOpen", project.Name);
         await _loadProject(ProjectName);
     });
@@ -213,7 +213,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         _client.Start(forceMock: UseMock, opennessVersion: SelectedReleaseKey);
         _started = true;
         Raise(nameof(CanSelectRelease));
-        _activity.Append(Loc.Current.T("Log.BridgeStarted", UseMock ? "mock" : "openness"));
+        _activity.AppendLocalized("Log.BridgeStarted", UseMock ? "mock" : "openness");
     }
 
     public void BrowseProject()
@@ -237,7 +237,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private void OnBridgeExited(object? sender, EventArgs e)
     {
         IsConnected = false;
-        _activity.Append(Loc.Current["Log.BridgeExited"]);
+        _activity.AppendLocalized("Log.BridgeExited");
     }
 
     private void OnActivityChanged(object? sender, PropertyChangedEventArgs e)

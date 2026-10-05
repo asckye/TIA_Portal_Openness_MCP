@@ -34,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // 放进 info 让人/模型直接看见，别只藏在 meta 里。
                     info = new List<string>(info);
                     foreach (var f in collected.CollectFailures)
-                        info.Add("State=Information; Description=[诊断收集不完整] " + f);
+                        info.Add("State=Information; Description=[diagnostic collection incomplete] " + f);
                 }
 
                 return new ResponseCompileDiagnose

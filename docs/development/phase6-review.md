@@ -1662,8 +1662,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):70 | `private const int MaxEntries = 32;` |
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):71 | `private const int MaxTotalChars = 8_000_000;` |
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):82 | `private const int MaxTombstones = 512;` |
-| [ModelContextProtocol/PreflightLogic.cs](../../src/Logic/ModelContextProtocol/PreflightLogic.cs):156 | `if (list.Count < 2 \|\| list.Any(x => x.Length > 40)) continue;` |
-| [ModelContextProtocol/PreflightLogic.cs](../../src/Logic/ModelContextProtocol/PreflightLogic.cs):202 | `if (tail.Length >= 4 && string.Equals(tail, givenTail, StringComparison.OrdinalIgnoreCase)) score = Math.Max(score, 50);` |
+| [ModelContextProtocol/PreflightLogic.cs](../../src/Logic/ModelContextProtocol/PreflightLogic.cs):173 | `if (tail.Length >= 4 && string.Equals(tail, givenTail, StringComparison.OrdinalIgnoreCase)) score = Math.Max(score, 50);` |
 | [Runtime/PlcSimAdvancedLogic.cs](../../src/Logic/Runtime/PlcSimAdvancedLogic.cs):18 | `public const int MaxScenarioSteps = 500;` |
 | [Runtime/PlcSimAdvancedLogic.cs](../../src/Logic/Runtime/PlcSimAdvancedLogic.cs):19 | `public const int MaxTagsPerCall = 500;` |
 | [Runtime/PlcSimAdvancedLogic.cs](../../src/Logic/Runtime/PlcSimAdvancedLogic.cs):114 | `if (n.Length > 64 \|\| n.IndexOfAny(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '\|', '\0' }) >= 0) throw new ArgumentException("instanceName must be 1..64 characters without path separators or wildcard characters.");` |
@@ -1784,7 +1783,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 267 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 266 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1937,10 +1936,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/build/Test-ReleasePrerequisites.ps1](../../scripts/build/Test-ReleasePrerequisites.ps1) | 产品:119; 写入/工作区:186 | 修改引用并回归 |
 | [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 产品:166,195,197,198; 根定位:14,100,104 | 修改引用并回归 |
 | [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,24 | 修改引用并回归 |
-| [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:343 | 修改引用并回归 |
+| [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:365 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:83,84,241; 根定位:13,182,183,184,228 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:662 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:658 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:16 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
@@ -1948,10 +1947,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:156,181 | 修改引用并回归 |
 | [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:13 | 修改引用并回归 |
 | [scripts/checks/Test-V21Ecosystem.py](../../scripts/checks/Test-V21Ecosystem.py) | 根定位:69 | 修改引用并回归 |
-| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:107 | 修改引用并回归 |
+| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:110 | 修改引用并回归 |
 | [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,114,128,155,182,238,241,257,429,470,476; 根定位:129,147,148,149 | 修改引用并回归 |
 | [scripts/checks/Verify-ReleaseAsset.py](../../scripts/checks/Verify-ReleaseAsset.py) | 产品:129,169,172,179,223,225; 根定位:27 | 修改引用并回归 |
-| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4868,4877,4886,4895,4904,4913,5147,5309,5451 | 修改引用并回归 |
+| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 写入/工作区:610,620,630,640,650,660,840,1786,1796,1806,1816,1826,1836,2096,2256,2412 | 修改引用并回归 |
 | [scripts/diagnostics/Collect-TiaCrashEvidence.ps1](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) | 产品:32 | 修改引用并回归 |
 | [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:35 | 修改引用并回归 |
 | [scripts/ecosystem/Install-PlcTools.ps1](../../scripts/ecosystem/Install-PlcTools.ps1) | 根定位:13; 写入/工作区:4 | 修改引用并回归 |
@@ -1961,7 +1960,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/operations/生成工程.bat](../../scripts/operations/生成工程.bat) | 产品:6,7 | 修改引用并回归 |
 | [scripts/operations/预热.bat](../../scripts/operations/预热.bat) | 产品:6,7 | 修改引用并回归 |
 | [src/Adapters/build/Adapter.Sources.props](../../src/Adapters/build/Adapter.Sources.props) | 根定位:76 | 修改引用并回归 |
-| [src/Engine/Cli/CliProbes.cs](../../src/Engine/Cli/CliProbes.cs) | 写入/工作区:433 | 修改引用并回归 |
+| [src/Engine/Cli/CliProbes.cs](../../src/Engine/Cli/CliProbes.cs) | 写入/工作区:440 | 修改引用并回归 |
 | [src/Engine/Cli/HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs) | 写入/工作区:63 | 修改引用并回归 |
 | [src/Engine/Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs) | 根定位:88 | 修改引用并回归 |
 | [src/Engine/Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) | 写入/工作区:54,59,71,86,129,224,257,335,337,354,475,488,501,523,539,544,558,622,624,639,641,656,658,673,675,690,692,707,709,724,739,948,1390,2145 | 修改引用并回归 |
@@ -2023,7 +2022,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,79,112,113,204,205,210,215 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,79,256; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16937,36687 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:170 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:161 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,60,426,442,444,472 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
@@ -2036,7 +2035,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs) | 产品:112 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:92,246,278,279,280 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs) | 产品:39 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:68 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:69 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
 共 153 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。

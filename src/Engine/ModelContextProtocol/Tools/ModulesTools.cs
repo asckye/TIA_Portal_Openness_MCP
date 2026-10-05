@@ -84,8 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 // 槽位是 TIA 运行时报出来的实际占用情况，读到什么报什么。
                 var msg = free.Count == 0
-                    ? $"'{deviceItemPath}' 当前没有空闲槽位（已占 {occupied.Count} 个）。"
-                    : $"'{deviceItemPath}' 有 {free.Count} 个空闲槽位、{occupied.Count} 个已占槽位。";
+                    ? $"'{deviceItemPath}' has no free slots ({occupied.Count} occupied)."
+                    : $"'{deviceItemPath}' has {free.Count} free slot(s) and {occupied.Count} occupied slot(s).";
 
                 return new ResponseMessage
                 {
@@ -98,8 +98,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["freeSlotCount"] = free.Count,
                         ["freeSlots"] = freeArr,
                         ["occupiedSlots"] = occArr,
-                        ["note"] = "positionNumber 直接喂给 PlugDeviceItem。空闲槽位由 TIA 运行时报告，"
-                                 + "本服务不硬编码任何 CPU 的槽位表。"
+                        ["note"] = "positionNumber is passed directly to PlugDeviceItem. Free slots are reported by the TIA runtime; "
+                                 + "this service does not hardcode a slot table for any CPU."
                     }
                 };
             }
@@ -226,18 +226,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     meta["nextActions"] = new JsonArray
                     {
-                        "SetDeviceItemIoAddress —— 要让输入从 %I2.0 开始就传 startAddress=2（本工具不改地址）",
+                        "SetDeviceItemIoAddress: pass startAddress=2 to start inputs at %I2.0 (this tool does not change addresses)",
                         "CompilePlcSoftware to validate the hardware changes",
-                        "SaveProject —— 编译 0 错之后再存盘"
+                        "SaveProject: save only after compilation reports zero errors"
                     };
                 }
 
                 return new ResponseMessage
                 {
                     Message = unverified
-                        ? $"⚠ 未验证：{r.Message} —— PlugNew 已经调用过，模块**可能已经插进去了**，"
-                          + "但读回确认失败，所以无法判定结果。请用 GetDevicePlugLocations 或 TIA 界面核对后再继续，"
-                          + "不要直接重试（会重复插入）。"
+                        ? $"⚠ UNVERIFIED: {r.Message}: PlugNew has already been called; the module **may already have been inserted**, "
+                          + "but readback confirmation failed, so the outcome cannot be determined. Verify with GetDevicePlugLocations or the TIA UI before continuing; "
+                          + "do not retry directly (it would insert a duplicate)."
                         : r.Message,
                     Meta = meta
                 };

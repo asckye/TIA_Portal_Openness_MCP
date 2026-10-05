@@ -40,9 +40,9 @@ namespace TiaMcpServer.Tests
         public sealed class BatchProbes
         {
             internal static readonly List<string> Calls = new List<string>();
-            [McpServerTool(Name = "ReadFixture"), System.ComponentModel.Description("[L0][Meta][READ] Read a fixture.")]
+            [McpServerTool(Name = "ReadFixture"), ToolClassification("L0", "Meta", "READ", batchRead: true), System.ComponentModel.Description("Read a fixture; arbitrary translated text.")]
             public static ResponseMessage Read(bool success = true) => new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = success } };
-            [McpServerTool(Name = "WriteFixture"), System.ComponentModel.Description("[L2][Meta][WRITE] Write a fixture.")]
+            [McpServerTool(Name = "WriteFixture"), ToolClassification("L2", "Meta", "WRITE", batchWrite: true), System.ComponentModel.Description("Write a fixture; arbitrary translated text.")]
             public static CallToolResult Write(string target, bool dryRun = true, string verdict = "success")
             {
                 Calls.Add(target + ":" + dryRun);

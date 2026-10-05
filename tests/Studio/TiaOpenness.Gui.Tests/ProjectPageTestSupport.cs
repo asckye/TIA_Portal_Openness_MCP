@@ -57,15 +57,26 @@ internal static class ProjectPageTestSupport
             foreach (string line in workspace ? new[] { "@@ -212,7 +212,18 @@", "   <Member Name=\"Speed_SP\"", "-    Datatype=\"Int\" />", "+    Datatype=\"Real\">", "+    <Comment>Setpoint mm/min</Comment>", "+  </Member>", "+  <Member Name=\"Ramp_Up\"", "+    Datatype=\"Time\" />", "+  <Member Name=\"Enable\"", "+    Datatype=\"Bool\" />" } : [])
                 model.VersionControl.VcDiffLines.Add(new DiffLine { Text = line, Kind = line.StartsWith('+') ? DiffLineKind.Added : line.StartsWith('-') ? DiffLineKind.Removed : DiffLineKind.Context });
         }
-        string log = "20:39:16  → " + Loc.Current["Shell.Environment"] + "\n20:39:27  → " + Loc.Current["Shell.Audit"] + "\n20:39:33  → " + Loc.Current["Shell.Calls"] + "\n20:40:14  → " + Loc.Current["Shell.Engineering"] + "\n";
-        if (connected) log += "20:40:58  Connecting · D:\\Projects\\Line04\n20:41:00  Project bound · Conveyor_Line_04\n20:41:09  → " + Loc.Current["Tree.ProgramBlocks"] + "\n";
+        foreach (var key in new[] { "Shell.Environment", "Shell.Audit", "Shell.Calls", "Shell.Engineering" })
+            model.Activity.Append("→ " + Loc.Current[key]);
+        if (connected) model.Activity.Append("Connecting · D:\\Projects\\Line04\nProject bound · Conveyor_Line_04");
         if (results)
         {
-            log += "20:42:48  Warning: Safety_Door_FB - Block not consistent — recompile required\n20:42:48  Warning: Scale_Analog_FC - Unused temp variable #tmpRaw\n20:42:48  Warning: HMI_Interface_DB - Optimized access mismatch\n";
-            log += "20:42:48  " + Loc.Current.T("Status.CompileResult", "Warning", 0, 3, "1.4") + "\n20:43:00  " + Loc.Current.T("Log.InspectionHeader", "PLC_1") + "\n20:43:00  NAMING-001 (3)\n20:43:00  DOC-001 (1)\n20:43:00  BUILD-001 (1)\n20:43:00  " + Loc.Current.T("Status.InspectResult", 5, 9) + "\n";
+            model.Activity.AppendDiagnostic("Safety_Door_FB", "Block not consistent — recompile required", Services.WorkbenchActivity.Severity.Warning);
+            model.Activity.AppendDiagnostic("Scale_Analog_FC", "Unused temp variable #tmpRaw", Services.WorkbenchActivity.Severity.Warning);
+            model.Activity.AppendDiagnostic("HMI_Interface_DB", "Optimized access mismatch", Services.WorkbenchActivity.Severity.Warning);
+            model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 3, "1.4");
+            model.Activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
+            model.Activity.AppendRule("NAMING-001", 3);
+            model.Activity.AppendRule("DOC-001", 1);
+            model.Activity.AppendRule("BUILD-001", 1);
+            model.Activity.AppendLocalized("Status.InspectResult", 5, 9);
         }
-        if (workspace && connected) log += "20:44:00  " + Loc.Current.T("Status.VcMapApplied", 9, 0, 2, 0) + "\n20:44:01  " + Loc.Current.T("Status.VcSyncDry", 4, "ProjectToWorkspace", 5) + "\n";
-        typeof(Services.WorkbenchActivity).GetProperty("Log")!.SetValue(model.Activity, log);
+        if (workspace && connected)
+        {
+            model.Activity.AppendLocalized("Status.VcMapApplied", 9, 0, 2, 0);
+            model.Activity.AppendLocalized("Status.VcSyncDry", 4, "ProjectToWorkspace", 5);
+        }
         return model;
     }
 }

@@ -113,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var all = AllToolMethods();
-                var parsed = all.Select(kv => (Name: kv.Key, Tag: ToolTaxonomy.Parse(ToolDescription(kv.Value)), Op: ToolTaxonomy.OperationOf(kv.Key, ToolDescription(kv.Value)))).ToList();
+                var parsed = all.Select(kv => (Name: kv.Key, Tag: ToolTaxonomy.For(kv.Key), Op: ToolTaxonomy.OperationOf(kv.Key, ToolDescription(kv.Value)))).ToList();
                 var lines = new List<string>();
                 var categories = new JsonArray();
                 foreach (var c in ToolTaxonomy.Categories)
@@ -195,7 +195,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var filtered = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
                     foreach (var kv in all)
                     {
-                        var tag = ToolTaxonomy.Parse(ToolDescription(kv.Value));
+                        var tag = ToolTaxonomy.For(kv.Key);
                         if (!string.IsNullOrWhiteSpace(domain) && !string.Equals(tag.Domain, domain.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
                         if (!string.IsNullOrWhiteSpace(category) && !string.Equals(ToolTaxonomy.CategoryOf(tag.Domain), category.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
                         filtered[kv.Key] = kv.Value;
@@ -213,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var kv in all)
                 {
                     string lname = kv.Key.ToLowerInvariant();
-                    string desc = ToolDescription(kv.Value).ToLowerInvariant();
+                    string desc = (ToolDescription(kv.Value) + " " + ToolMetadata.SearchAliases(kv.Key)).ToLowerInvariant();
                     int score = 0;
                     if (terms.Length == 0) score = 1;
                     foreach (var t in terms)
@@ -476,7 +476,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var report = PreflightLogic.Analyze(specs, args);
 
             string description = ToolDescription(method);
-            var tag = ToolTaxonomy.Parse(description);
+            var tag = ToolTaxonomy.For(canonical);
             var op = ToolTaxonomy.OperationOf(canonical, description);
             var precautions = PreflightLogic.Precautions(op.Operation, report.DryRunSupported).ToList();
             var usageNotes = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical);
@@ -552,10 +552,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 string? text = d?.Description;
                 bool synthesized = false;
                 if (string.IsNullOrEmpty(text)) { text = ParameterVocabulary.Describe(p.Name!); synthesized = text != null; }
-                specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized));
+                string tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+                specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized,
+                    ToolMetadata.Parameter(tool, p.Name!)?.AllowedValues));
             }
             return specs;
         }
+
+        private static ToolMetadata.Classification? ClassificationOf(MethodInfo method)
+            => method.GetCustomAttribute<ToolClassificationAttribute>()?.Value
+               ?? ToolMetadata.Find(method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name);
 
         /// <summary>Build gate: every recipe step must name a real tool and fit its signature.</summary>
         public static IReadOnlyList<string> ValidateToolRecipes()

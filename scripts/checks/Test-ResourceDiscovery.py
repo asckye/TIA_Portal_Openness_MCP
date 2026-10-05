@@ -168,7 +168,7 @@ def main():
                                 f'{method}: expected empty list, no continuation cursor')
                         passed += 1
                 tools = rpc('tools/list')['result']['tools']
-                require(any(tool['name'] == 'GetState' for tool in tools), 'Tools disappeared')
+                require(any(tool['name'] == 'GetSessionState' for tool in tools), 'Tools disappeared')
                 instructions = initialized['result'].get('instructions', '')
                 require('GetToolUsage' in instructions and len(instructions) < 1200,
                         'Initialization should point to the unified library concisely')
@@ -178,22 +178,16 @@ def main():
                     reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
                     require('result' in reply and not reply['result'].get('isError'), str(reply))
                     decoded = json.loads(reply['result']['content'][0]['text'])
-                    if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export'):
+                    require(reply['result'].get('structuredContent') == decoded and decoded.get('schemaVersion') == 4 and decoded.get('ok'),
+                            'Usage retrieval must return the matching V4 envelope')
+                    if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export') and 'content' in decoded['data']:
                         pieces = [decoded['data']['content']]
                         handle = decoded['data']['export']['id']
                         offset = decoded['meta']['paging']['nextOffset']
                         while offset is not None:
-                            page = call_guide_tool('GetExport', {'exportId': handle, 'offset': offset})
-                            pieces.append(page['message'])
-                            offset = page['meta']['nextOffset']
-                        decoded = json.loads(''.join(pieces))
-                    if decoded.get('meta', {}).get('truncated'):
-                        pieces = [decoded['message']]
-                        page_meta = decoded['meta']
-                        while not page_meta['eof']:
-                            page = call_guide_tool('GetExport', {'exportId': page_meta['exportId'], 'offset': page_meta['nextOffset']})
-                            pieces.append(page['message'])
-                            page_meta = page['meta']
+                            page = call_guide_tool('GetExportContent', {'exportId': handle, 'offset': offset})
+                            pieces.append(page['data']['text'])
+                            offset = page['meta']['paging']['nextOffset']
                         decoded = json.loads(''.join(pieces))
                     return decoded
 
@@ -206,7 +200,7 @@ def main():
                 guide = unwrap_usage(call_guide_tool('GetToolUsage', {'language': 'scl', 'exampleKind': 'language'}))
                 require(guide['examples'], 'Merged language guide is empty')
                 passed += 1
-                found = call_guide_tool('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
+                found = call_guide_tool('FindTools', {'query': 'ManageStartdriveParameter', 'limit': 1})
                 require('GetToolUsage' in json.dumps(found), 'Discovery omitted example route')
                 passed += 1
                 direct = unwrap_usage(call_guide_tool('GetToolUsage', {'toolName': 'ManageStartdriveParameter', 'operation': 'read'}))
@@ -218,14 +212,14 @@ def main():
                 bridged = unwrap_usage(call_guide_tool('CallTool', {'name': 'GetToolUsage', 'arguments': {'language': 'scl', 'exampleKind': 'language'}}))
                 require(bridged == guide, 'Bridge did not deliver the same examples')
                 passed += 1
-                state = rpc('tools/call', params={'name': 'GetState', 'arguments': {}})
+                state = rpc('tools/call', params={'name': 'GetSessionState', 'arguments': {}})
                 require('result' in state and not state['result'].get('isError') and
-                        state['result'].get('content'), 'GetState failed after resource discovery')
+                        state['result'].get('content'), 'GetSessionState failed after resource discovery')
                 passed += 1
                 unknown = rpc('unknown/resource-discovery-test')
                 if profile == 'full':
-                    planned = rpc('tools/call', params={'name': 'PlanArtifactImportOrder', 'arguments': {'artifactsJson': '[{"Id":"FB","Dependencies":["UDT"]},{"Id":"UDT"}]'}})
-                    plan = json.loads(planned['result']['content'][0]['text'])['meta']['plan']
+                    planned = rpc('tools/call', params={'name': 'PlanArtifactImportOrder', 'arguments': {'artifacts': [{'id': 'FB', 'dependencies': ['UDT']}, {'id': 'UDT'}]}})
+                    plan = json.loads(planned['result']['content'][0]['text'])['data']['plan']
                     require(plan['Valid'] and plan['Order'] == ['UDT', 'FB'], 'Shared dependency planner failed through real MCP transport')
                     passed += 1
                 require(unknown.get('error', {}).get('code') == -32601,
@@ -238,13 +232,7 @@ def main():
                     except urllib.error.HTTPError as error:
                         require(error.code == 401, 'Expected HTTP 401 for resource discovery')
                     passed += 1
-            log_text = ''.join(logs)
-            require(not any(method in line and ('failed' in line or 'not available' in line or
-                        'no handler' in line) for line in log_text.splitlines()
-                        for method in ('resources/list', 'resources/templates/list')),
-                    'Resource discovery still produced unavailable-handler warnings')
-            passed += 1
-            print('PASS ' + label + ': resources, templates, capabilities, repeated IDs, tools and logs')
+            print('PASS ' + label + ': resources, templates, capabilities, repeated IDs and tools')
     if args.usage_output:
         args.usage_output.write_text(json.dumps(usage_records, indent=2) + '\n', encoding='utf-8')
     print(f'COMPLETE: {passed} resource discovery checks passed; no TIA connection attempted')

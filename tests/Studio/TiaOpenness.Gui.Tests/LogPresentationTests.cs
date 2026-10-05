@@ -30,9 +30,9 @@ public sealed class LogPresentationTests(WpfContext wpf)
     [InlineData("Exported D:\\Warning\\Error.xml", LogLevel.Default)]
     [InlineData("DebugBlock imported", LogLevel.Default)]
     [InlineData("Compiled · 0 errors, 0 warnings", LogLevel.Default)]
-    public void Only_explicit_severity_prefixes_colour_the_view(string message, LogLevel level)
+    public void Typed_severity_controls_colour_independently_of_message_language(string message, LogLevel level)
     {
-        var row = new GlassResults.LogRow("20:45:00", message);
+        var row = new GlassResults.LogRow("20:45:00", message, level);
         Assert.Equal(level, row.Level);
         Assert.Equal(message, row.Message);
     }
@@ -45,9 +45,12 @@ public sealed class LogPresentationTests(WpfContext wpf)
             using var trace = new BindingPathTests.BindingTrace();
             var previous = ThemeManager.Current.Theme;
             var model = ProjectPageTestSupport.Model();
-            typeof(Services.WorkbenchActivity).GetProperty("Log")!.SetValue(model.Activity,
-                "20:45:00  [INFO] 工程已加载\n20:45:01  Warning: 块需要编译\n"
-                + "20:45:02  错误:导入失败\n20:45:03  [DEBUG] 读取列表\n20:45:04  Plain message\n");
+            model.Activity.ClearLog();
+            model.Activity.Append("[INFO] 工程已加载", Services.WorkbenchActivity.Severity.Info);
+            model.Activity.Append("Warning: 块需要编译", Services.WorkbenchActivity.Severity.Warning);
+            model.Activity.Append("错误:导入失败", Services.WorkbenchActivity.Severity.Error);
+            model.Activity.Append("[DEBUG] 读取列表", Services.WorkbenchActivity.Severity.Debug);
+            model.Activity.Append("Plain message");
             var window = new MainWindow(model, false);
             try
             {

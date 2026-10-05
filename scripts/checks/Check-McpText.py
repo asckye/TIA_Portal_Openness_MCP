@@ -9,6 +9,7 @@ baseline, with a reason per entry. No file, type or builder is blanket-exempt.
 segments once, preserving the Chinese text and the shrink-only allowance policy.
 """
 from collections import Counter
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -26,6 +27,7 @@ KINDS = ('description', 'exception', 'message', 'meta', 'other-literal')
 UI_PROJECTS = {'Gui', 'Client', 'Launcher'}
 CJK = re.compile('[\u3007\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002ffff\U00030000-\U000323af]')
 ESCAPE = re.compile(r'\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8})|x([0-9a-fA-F]{1,4})|(.))', re.S)
+DATA_CATEGORIES = {'project-content', 'bilingual-table', 'report-artifact', 'cli-console', 'search-alias'}
 
 
 def unescape(text):
@@ -145,7 +147,7 @@ def scan(root):
     return rows, errors, projects
 
 
-def read_baseline(path):
+def read_baseline(path, updating=False):
     entries = hygiene.read_baseline(path, KINDS)
     data = json.loads(path.read_text(encoding='utf-8'))
     allowed = data.get('allowlist')
@@ -161,8 +163,10 @@ def read_baseline(path):
             raise ValueError(f'{path}: invalid literal entry: {row!r}')
     for row in allowed:
         if (not isinstance(row.get('reason'), str) or not row['reason'].strip()
-                or row['kind'] in ('description', 'exception', 'message', 'meta')):
+                or not updating and row.get('dataCategory') not in DATA_CATEGORIES):
             raise ValueError(f'{path}: allowlist needs a data literal and a nonempty review reason')
+    if entries and not updating:
+        raise ValueError(f'{path}: first-party MCP baseline entries must be empty')
     return entries, allowed
 
 
@@ -174,7 +178,8 @@ def partition(rows, allowed):
     for row in rows:
         matches = remaining.get(row['fingerprint'], [])
         if matches:
-            consumed.append(dict(row, reason=matches.pop(0)['reason']))
+            review = matches.pop(0)
+            consumed.append(dict(row, reason=review['reason'], dataCategory=review.get('dataCategory')))
         else:
             guarded.append(row)
     return guarded, consumed
@@ -184,9 +189,8 @@ def write_baseline(path, rows, previous, allowed, initialize=False):
     if initialize and path.exists():
         raise ValueError('--allow-growth is only permitted when creating a reviewed initial baseline')
     guarded, consumed = partition(rows, allowed)
-    added, _ = lexer.difference(guarded, previous)
-    if added and not initialize:
-        raise ValueError(f'refusing baseline growth: {len(added)} new/changed Chinese literal(s)')
+    if guarded:
+        raise ValueError(f'refusing first-party MCP baseline text: {len(guarded)} Chinese literal(s) require translation or exact data review')
     data = dict(format=1, fingerprint='sha256 of sink category and own literal text/segments; '
                 'interpolation expressions counted separately; paths/lines informational; multiplicity retained',
                 entries=hygiene.baseline_rows(guarded), allowlist=hygiene.baseline_rows(consumed))
@@ -228,10 +232,26 @@ def print_inventory(rows, allowed, projects):
           f'{len(allowed)} allowed data literals, {sum(r["cjk"] for r in allowed)} CJK characters.')
 
 
-def check(root, path, update=False, allow_growth=False):
+def reviewed_data(rows, path):
+    reviews = json.loads(path.read_text(encoding='utf-8'))
+    allowed = []
+    for review in reviews:
+        if review.get('dataCategory') not in DATA_CATEGORIES or not review.get('reason', '').strip():
+            raise ValueError('Data review requires an approved category and reason')
+        matches = [r for r in rows if all(r[k] == review[k] for k in ('path', 'line', 'literal'))]
+        if len(matches) != 1:
+            raise ValueError(f'Data review must identify one current literal: {review}')
+        allowed.append(dict(matches[0], reason=review['reason'], dataCategory=review['dataCategory']))
+    return allowed
+
+
+def check(root, path, update=False, allow_growth=False, review_data=None):
     rows, errors, projects = scan(root)
     try:
-        previous, allowed = ([], []) if update and allow_growth and not path.exists() else read_baseline(path)
+        previous, allowed = ([], []) if update and allow_growth and not path.exists() else read_baseline(path, updating=update)
+        if review_data:
+            if not update: raise ValueError('--review-data requires --update-baseline')
+            allowed = reviewed_data(rows, review_data)
         guarded, consumed = partition(rows, allowed)
         print_inventory(guarded, consumed, projects)
         added, removed = lexer.difference(guarded, previous)
@@ -239,7 +259,7 @@ def check(root, path, update=False, allow_growth=False):
             write_baseline(path, rows, previous, allowed, allow_growth)
         else:
             errors.extend(f'{row["path"]}:{row["line"]}: new/changed Chinese {row["kind"]} '
-                          f'({row["cjk"]} CJK) {row["fingerprint"]}' for row in added)
+                          f'({row["cjk"]} CJK) {row["fingerprint"]}' for row in guarded)
         missing_allowed = len(allowed) - len(consumed)
         print(f'Baseline: {len(guarded)} current, {len(added)} added, {len(removed)} disappeared; '
               f'{missing_allowed} allowlist entries disappeared (--update-baseline shrinks both lists).')
@@ -317,13 +337,15 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(([], []), lexer.difference(moved, previous))
         with lexer.scratch_directory() as root:
             path = root / 'baseline.json'
-            write_baseline(path, previous, [], [], True)
+            with self.assertRaises(ValueError):
+                write_baseline(path, previous, [], [], True)
+            write_baseline(path, [], [], [], True)
             old = path.read_bytes()
             for rows, init in ((previous * 2, False), (self.rows('Message = "新文";'), False), ([], True)):
                 with self.assertRaises(ValueError):
                     write_baseline(path, rows, previous, [], init)
                 self.assertEqual(old, path.read_bytes())
-            allowed = [dict(self.rows('NameZh = "数据";')[0], reason='Reviewed bilingual data.')]
+            allowed = [dict(self.rows('NameZh = "数据";')[0], reason='Reviewed bilingual data.', dataCategory='bilingual-table')]
             write_baseline(path, [], previous, allowed)
             self.assertEqual(([], []), read_baseline(path))
 
@@ -355,15 +377,21 @@ class SelfTests(unittest.TestCase):
 
 
 def main():
-    rename = '--rename-product-references' in sys.argv
-    if rename:
-        sys.argv.remove('--rename-product-references')
-    args = hygiene.arguments(__doc__, BASELINE)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', type=Path, default=hygiene.ROOT)
+    parser.add_argument('--baseline', type=Path)
+    parser.add_argument('--update-baseline', action='store_true')
+    parser.add_argument('--allow-growth', action='store_true')
+    parser.add_argument('--review-data', type=Path, help='Exact path/line/literal reviews; fingerprints are computed by this checker')
+    parser.add_argument('--rename-product-references', action='store_true',
+                        help='Rewrite reviewed baseline literals to the 4.0 executable names before checking')
+    parser.add_argument('--self-test', action='store_true')
+    args = parser.parse_args()
     if args.self_test:
         return not unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SelfTests)).wasSuccessful()
-    if rename:
+    if args.rename_product_references:
         rename_product_references(args.baseline or args.root / BASELINE)
-    return check(args.root, args.baseline or args.root / BASELINE, args.update_baseline, args.allow_growth)
+    return check(args.root, args.baseline or args.root / BASELINE, args.update_baseline, args.allow_growth, args.review_data)
 
 
 if __name__ == '__main__':

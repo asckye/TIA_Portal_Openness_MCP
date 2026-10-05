@@ -56,10 +56,6 @@ namespace TiaDesktop.Glass
                 var stamp = new Paragraph(new Run(time)) { Margin = new Thickness(0), LineHeight = 17 };
                 stamp.SetResourceReference(TextElement.ForegroundProperty, "Ui.TertiaryLabel");
                 var body = new Paragraph(new Run(message)) { Margin = new Thickness(0), LineHeight = 17 };
-                if (message.StartsWith("Test", StringComparison.OrdinalIgnoreCase)
-                    || message.StartsWith("测试", StringComparison.Ordinal)
-                    || message.Contains(" error(s), ") || message.Contains(" 个错误,"))
-                    body.SetResourceReference(TextElement.ForegroundProperty, "Ui.Accent");
                 var row = new TableRow();
                 row.Cells.Add(new TableCell(stamp) { Padding = new Thickness(0, 0, 12, 6) });
                 row.Cells.Add(new TableCell(body) { Padding = new Thickness(0, 0, 0, 6) });

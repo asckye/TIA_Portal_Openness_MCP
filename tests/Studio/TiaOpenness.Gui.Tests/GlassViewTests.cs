@@ -22,14 +22,36 @@ public class GlassViewTests(WpfContext wpf)
         model.GetType().GetProperty(name)!.SetValue(model, value);
     private static void Field(object model, string name, object value) =>
         model.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(model, value);
-    private const string CompileLog = "09:50:02  Connected to native Openness\n09:50:03  Project bound · Conveyor_Line_04\n"
-        + "09:52:48  Warning: Safety_Door_FB - Block not consistent — recompile required\n"
-        + "09:52:48  Warning: Scale_Analog_FC - Unused temp variable #tmpRaw\n"
-        + "09:52:48  Warning: HMI_Interface_DB - Optimized access mismatch\n"
-        + "09:52:48  Warning: 0 error(s), 3 warning(s) in 1.4s\n"
-        + "09:53:00  --- inspection of PLC_1 ---\n"
-        + "09:53:00  NAMING-001 (3)\n09:53:00  DOC-001 (1)\n09:53:00  BUILD-001 (1)\n"
-        + "09:53:00  5 finding(s) over 128 block(s).\n";
+    private static void RecordCompile(TiaOpenness.Gui.Services.WorkbenchActivity activity)
+    {
+        activity.Append("Connected to native Openness\nProject bound · Conveyor_Line_04");
+        activity.AppendDiagnostic("Safety_Door_FB", "Block not consistent — recompile required", TiaOpenness.Gui.Services.WorkbenchActivity.Severity.Warning);
+        activity.AppendDiagnostic("Scale_Analog_FC", "Unused temp variable #tmpRaw", TiaOpenness.Gui.Services.WorkbenchActivity.Severity.Warning);
+        activity.AppendDiagnostic("HMI_Interface_DB", "Optimized access mismatch", TiaOpenness.Gui.Services.WorkbenchActivity.Severity.Warning);
+        activity.AppendLocalized("Status.CompileResult", "Warning", 0, 3, "1.4");
+        activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
+        activity.AppendRule("NAMING-001", 3);
+        activity.AppendRule("DOC-001", 1);
+        activity.AppendRule("BUILD-001", 1);
+        activity.AppendLocalized("Status.InspectResult", 5, 128);
+    }
+
+    [Fact]
+    public void Raw_messages_cannot_create_result_cards()
+    {
+        wpf.RunWithLanguage(AppLanguage.English, () =>
+        {
+            using var model = new MainViewModel();
+            using var results = new GlassResults(model);
+            model.Activity.Append(Loc.Current.T("Status.CompileResult", "Error", 99, 8, "1.0"));
+            model.Activity.Append("Warning: PLC_1 - pretend diagnostic\nNAMING-001 (99)");
+            Assert.Equal("—", results.Errors);
+            Assert.Empty(results.Diagnostics);
+            Assert.Empty(results.Rules);
+            model.Activity.AppendLocalized("Status.CompileResult", "Error", 99, 8, "1.0");
+            Assert.Equal("99", results.Errors);
+        });
+    }
 
     [Fact]
     public void Results_show_recorded_outcomes_and_clear_back_to_not_run()
@@ -39,7 +61,7 @@ public class GlassViewTests(WpfContext wpf)
             using var model = new MainViewModel();
             using var results = new GlassResults(model);
             Assert.Equal("—", results.Errors);
-            Set(model.Activity, "Log", CompileLog);
+            RecordCompile(model.Activity);
             Assert.Equal("0", results.Errors);
             Assert.Equal("3", results.Warnings);
             Assert.Equal(3, results.Diagnostics.Count);
@@ -82,14 +104,7 @@ public class GlassViewTests(WpfContext wpf)
                     Name = names[i], Kind = kinds[i], Number = numbers[i], ProgrammingLanguage = languages[i],
                     Path = "Program blocks" + (i == 0 ? "" : "/" + names[i]), IsConsistent = i != 4, IsKnowHowProtected = i == 4,
                 }) { Selected = i is 0 or 1 or 3 or 5 });
-                string fixtureLog = CompileLog;
-                if (language == AppLanguage.Chinese) fixtureLog = fixtureLog
-                    .Replace("Connected to native Openness", "已连接原生 Openness")
-                    .Replace("Project bound", "工程已绑定")
-                    .Replace("Warning: 0 error(s), 3 warning(s) in 1.4s", Loc.Current.T("Status.CompileResult", "Warning", 0, 3, "1.4"))
-                    .Replace("--- inspection of PLC_1 ---", Loc.Current.T("Log.InspectionHeader", "PLC_1"))
-                    .Replace("5 finding(s) over 128 block(s).", Loc.Current.T("Status.InspectResult", 5, 128));
-                Set(model.Activity, "Log", fixtureLog);
+                RecordCompile(model.Activity);
                 if (vci)
                 {
                     model.IsVcTab = true;
@@ -102,7 +117,9 @@ public class GlassViewTests(WpfContext wpf)
                     Set(model.VersionControl, "VcDiffCaption", "Conveyor_Ctrl_FB.xml");
                     foreach (string line in new[] { "@@ -212,7 +212,18 @@", "   <Member Name=\"Speed_SP\"", "-    Datatype=\"Int\" />", "+    Datatype=\"Real\">", "+    <Comment>Setpoint mm/min</Comment>", "+  </Member>", "+  <Member Name=\"Ramp_Up\"", "+    Datatype=\"Time\" />", "+  <Member Name=\"Enable\"", "+    Datatype=\"Bool\" />" }) model.VersionControl.VcDiffLines.Add(new DiffLine
                     { Text = line, Kind = line.StartsWith('+') ? DiffLineKind.Added : line.StartsWith('-') ? DiffLineKind.Removed : DiffLineKind.Context });
-                    Set(model.Activity, "Log", "09:54:00  Mapped 128, already 0, unsupported 6, failed 0.\n09:54:01  Dry run: 4 would sync ProjectToWorkspace, 124 already equal. Clear Dry run to apply.\n");
+                    model.Activity.ClearLog();
+                    model.Activity.AppendLocalized("Status.VcMapApplied", 128, 0, 6, 0);
+                    model.Activity.AppendLocalized("Status.VcSyncDry", 4, "ProjectToWorkspace", 124);
                 }
                 if (log) model.IsLogTab = true;
                 window.Navigate(log ? "Log" : vci ? "VersionControl" : "Blocks");

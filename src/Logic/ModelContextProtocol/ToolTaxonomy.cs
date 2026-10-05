@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
-    /// 工具分类的唯一事实来源。每个工具的 Description 以 "[层][域][操作]" 开头：
+    /// 工具分类的唯一事实来源。分类由 ToolMetadata 显式声明；Description 展示前缀为 "[层][域][操作]" 开头：
     ///   层  L0 = 会话/引导，L1 = 常用工程动作，L2 = 专用深度工具（默认 lite 配置只列出部分，其余经 FindTools + CallTool）；
     ///   域  下表 Domains 中的 PascalCase 标签，一个工具只属于一个域；
     ///   操作 READ / WRITE / FILE / EXECUTE / ONLINE / ONLINE-WRITE 等，可省略。
@@ -61,14 +60,10 @@ namespace TiaMcpServer.ModelContextProtocol
             ["L2"] = "专用深度工具：按对象精确寻址的读写，默认 lite 配置不全部列出，经 FindTools + CallTool 调用",
         };
 
-        private static readonly Regex TagPattern = new Regex(@"^\s*\[(?<layer>L\d)\]\[(?:Category:)?(?<domain>[^\]]+)\](?:\[(?<op>[A-Za-z-]+)\])?", RegexOptions.Compiled);
-
-        /// <summary>解析描述前缀。没有前缀时层为 L2、域为空。</summary>
-        public static (string Layer, string Domain, string Operation) Parse(string? description)
+        public static (string Layer, string Domain, string Operation) For(string name)
         {
-            var m = TagPattern.Match(description ?? "");
-            if (!m.Success) return ("L2", "", "");
-            return (m.Groups["layer"].Value, m.Groups["domain"].Value.Trim(), m.Groups["op"].Success ? m.Groups["op"].Value : "");
+            var row = ToolMetadata.Find(name);
+            return row == null ? ("L2", "", "") : (row.Layer, row.Domain, row.Operation);
         }
 
         public static Category? CategoryOfDomain(string? domain)
@@ -99,12 +94,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>
         /// 描述未标注操作类型时按工具名推断。只用于清单/分类展示（标记 inferred），不改变工具行为；
-        /// 与描述前缀冲突时以描述前缀为准。
+        /// 已登记的工具以 ToolMetadata 的显式分类为准。
         /// </summary>
         public static (string Operation, bool Inferred) OperationOf(string name, string? description)
         {
-            var tagged = Parse(description).Operation;
-            if (tagged.Length > 0) return (tagged.ToUpperInvariant(), false);
+            var row = ToolMetadata.Find(name);
+            if (row != null) return (row.Operation, row.Inferred);
             bool Starts(params string[] prefixes) => prefixes.Any(p => name.StartsWith(p, StringComparison.Ordinal));
             bool Has(params string[] parts) => parts.Any(p => name.IndexOf(p, StringComparison.Ordinal) >= 0);
             if (SessionNames.Contains(name)) return ("SESSION", true);

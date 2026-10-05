@@ -99,10 +99,7 @@ namespace TiaMcpServer.Siemens
             string summary;
             if (codeBlocks.Count > 0 && analyzedOk == 0)
             {
-                bool onlineMode = warnings.Any(w => w!.ToString().IndexOf("online mode", StringComparison.OrdinalIgnoreCase) >= 0);
-                summary = onlineMode
-                    ? "INCONCLUSIVE: no block could be exported because TIA is connected ONLINE to the PLC (Openness cannot export blocks in online mode). Go offline in TIA (Online ▸ Go offline) — the project stays open and the S7 live-read is a separate direct connection — then retry."
-                    : $"INCONCLUSIVE: none of {codeBlocks.Count} code block(s) could be exported/parsed (see warnings); no trace was performed.";
+                summary = $"INCONCLUSIVE: none of {codeBlocks.Count} code block(s) could be exported/parsed (see warnings); no trace was performed.";
             }
             else if (writeSites.Count == 0)
                 summary = $"No block writes '{tag}'. It may be set by HMI, an instruction's output, an indirect/optimized access this parser does not resolve, or the name differs from the project symbol.";

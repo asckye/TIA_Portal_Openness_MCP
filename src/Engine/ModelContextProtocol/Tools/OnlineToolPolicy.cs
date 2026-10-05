@@ -10,11 +10,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return new[]
             {
-                "在线监视只允许读取变量当前状态/当前值。",
-                "在线模式不允许修改监控表、监视表或表内对象。",
-                "不允许通过 MCP 暴露、调用或绕过任何强制表/强制相关操作。",
-                "通用反射入口必须拦截强制相关服务，并拦截在线/监视/监控表面的写入、创建、删除、下载、启停和上下线切换动作。",
-                "新增监视能力必须先探测 API 形状，再用最小实例读回验证；未验证前只能标记为探测能力。"
+                "Online monitoring may only read the current state/value of variables.",
+                "Online mode must not modify monitoring tables, watch tables or objects within those tables.",
+                "MCP must not expose, invoke or bypass any force-table or forcing operation.",
+                "Generic reflection entry points must block forcing services and all writes, creation, deletion, downloads, start/stop and online/offline transitions on online, watch and monitoring surfaces.",
+                "New monitoring capabilities must first probe the API shape, then verify readback with a minimal instance; until verified, they must be labelled as probe capabilities only."
             };
         }
 

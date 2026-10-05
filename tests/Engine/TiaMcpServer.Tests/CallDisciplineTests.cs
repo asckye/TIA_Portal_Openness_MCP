@@ -12,18 +12,18 @@ namespace TiaMcpServer.Tests
     internal static class CallDisciplineTests
     {
         private static JsonObject O(string json) => (JsonObject)JsonNode.Parse(json)!;
-        private static PreflightLogic.ParameterSpec S(string name, string kind, bool required, string? def = null, string desc = "")
-            => new PreflightLogic.ParameterSpec(name, kind, required, def, desc);
+        private static PreflightLogic.ParameterSpec S(string name, string kind, bool required, string? def = null, string desc = "", string[]? values = null, string? example = null)
+            => new PreflightLogic.ParameterSpec(name, kind, required, def, desc, allowedValues: values, exampleJson: example);
 
         internal static void Run(Action<bool, string> check)
         {
             // ---- SchemaHintsLogic.Augment ----
             var specs = new List<PreflightLogic.ParameterSpec>
             {
-                S("softwarePath", "string", true, null, "softwarePath: PLC software path, e.g. 'PLC_1'"),
-                S("action", "string", false, "\"read\"", "action: read | create | delete"),
-                S("tableKind", "string", false, "\"watch\"", "tableKind: watch|force"),
-                S("mode", "string", false, "\"\"", "mode: one of default/singleStep"),
+                S("softwarePath", "string", true, null, "softwarePath: PLC software path, e.g. 'PLC_1'", example: "\"PLC_1\""),
+                S("action", "string", false, "\"read\"", "action: read | create | delete", values: new[] { "read", "create", "delete" }),
+                S("tableKind", "string", false, "\"watch\"", "tableKind: watch|force", values: new[] { "watch", "force" }),
+                S("mode", "string", false, "\"\"", "mode: one of default/singleStep", values: new[] { "default", "singleStep" }),
                 S("limit", "integer", false, "200"),
                 S("ratio", "number", false, "0.5"),
                 S("dryRun", "boolean", false, "true"),
@@ -47,14 +47,14 @@ namespace TiaMcpServer.Tests
             // ---- derived examples ----
             var derivedSpecs = new List<PreflightLogic.ParameterSpec>
             {
-                S("softwarePath", "string", true, null, "softwarePath: the PLC"),
-                S("hmiSoftwarePath", "string", true, null, "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')"),
-                S("action", "string", true, null, "action: register | powerOn"),
-                S("devicePathJson", "string", true, null, ""),
-                S("propertiesJson", "string", true, null, ""),
-                S("exportPath", "string", true, null, "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)"),
-                S("outputDirectory", "string", true, null, "outputDirectory: folder"),
-                S("blockPath", "string", true, null, ""),
+                S("softwarePath", "string", true, null, "softwarePath: the PLC", example: "\"PLC_1\""),
+                S("hmiSoftwarePath", "string", true, null, "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')", example: "\"HMI_RT_1\""),
+                S("action", "string", true, null, "action: register | powerOn", values: new[] { "register", "powerOn" }),
+                S("devicePathJson", "string", true, null, "", example: "\"[]\""),
+                S("propertiesJson", "string", true, null, "", example: "\"{}\""),
+                S("exportPath", "string", true, null, "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)", example: "\"C:\\\\temp\\\\screen.xml\""),
+                S("outputDirectory", "string", true, null, "outputDirectory: folder", example: "\"C:\\\\Temp\\\\SomeTool\""),
+                S("blockPath", "string", true, null, "", example: "\"Main\""),
                 S("count", "integer", true, null, ""),
                 S("enabled", "boolean", true, "false", ""),
                 S("optional", "string", false, "\"x\"", ""),
@@ -71,13 +71,13 @@ namespace TiaMcpServer.Tests
             // 2.7.59 real machine: the vocabulary's e.g. [\"PLC_1\"] produced the fragment "[" and chartPath a host path
             var vmSpecs = new List<PreflightLogic.ParameterSpec>
             {
-                S("devicePathJson", "string", true, null, ParameterVocabulary.Describe("devicePathJson")!),
-                S("itemPathJson", "string", true, null, ParameterVocabulary.Describe("itemPathJson")!),
-                S("chartPath", "string", true, null, ParameterVocabulary.Describe("chartPath")!),
-                S("tablePath", "string", true, null, "tablePath: 'Group/Table' path"),
-                S("importPath", "string", true, null, ParameterVocabulary.Describe("importPath")!),
-                S("logFilePath", "string", true, null, "logFilePath: full path of the log file to write on the TIA machine ('' = no log)."),
-                S("culturesJson", "string", true, null, "culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all)."),
+                S("devicePathJson", "string", true, null, ParameterVocabulary.Describe("devicePathJson")!, example: "\"[]\""),
+                S("itemPathJson", "string", true, null, ParameterVocabulary.Describe("itemPathJson")!, example: "\"[]\""),
+                S("chartPath", "string", true, null, ParameterVocabulary.Describe("chartPath")!, example: "\"<Folder/Name>\""),
+                S("tablePath", "string", true, null, "tablePath: 'Group/Table' path", example: "\"<Folder/Name>\""),
+                S("importPath", "string", true, null, ParameterVocabulary.Describe("importPath")!, example: "\"C:\\\\Temp\\\\ManageDccChartInterface.xml\""),
+                S("logFilePath", "string", true, null, "logFilePath: full path of the log file to write on the TIA machine ('' = no log).", example: "\"C:\\\\Temp\\\\ManageDccChartInterface.xml\""),
+                S("culturesJson", "string", true, null, "culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all).", example: "\"[]\""),
             };
             var vm = O(ToolExamples.Derive("ManageDccChartInterface", vmSpecs).ArgumentsJson);
             check(vm["devicePathJson"]!.GetValue<string>() == "[]" && vm["itemPathJson"]!.GetValue<string>() == "[]" && vm["culturesJson"]!.GetValue<string>() == "[]", "derive: *Json placeholders never come from an e.g. fragment (real-machine '[')");
@@ -86,7 +86,7 @@ namespace TiaMcpServer.Tests
 
             // ---- vocabulary (parameters without their own [Description]) ----
             check(ParameterVocabulary.Describe("dryRun")!.StartsWith("dryRun: true (default) previews") && ParameterVocabulary.Describe("nope") == null && ParameterVocabulary.Names.Count >= 60, "vocabulary: common names covered, unknown -> null");
-            check(PreflightLogic.Alternatives(ParameterVocabulary.Describe("unitKind")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("action")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("eventType")).Count == 0, "vocabulary: generic texts never turn into a (wrong) enum");
+            check(new[] { "unitKind", "action", "eventType" }.All(name => SchemaHintsLogic.Augment(O("{\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}}}"), new[] { S("value", "string", true, desc: ParameterVocabulary.Describe(name)!) }, null).Enums == 0), "vocabulary: prose never invents an enum");
             var probeSpecs = McpServer.SpecsOf(typeof(ToolBridgeProbes).GetMethod("ProbeResult")!);
             check(probeSpecs.Count == 1 && probeSpecs[0].Name == "success" && !probeSpecs[0].Synthesized && probeSpecs[0].Description.Length == 0, "vocabulary: a name outside the vocabulary stays undescribed and unsynthesized");
             var vocabSchema = O("{\"properties\":{\"dryRun\":{\"type\":\"boolean\"},\"x\":{\"type\":\"string\",\"description\":\"own\"}}}");

@@ -31,7 +31,7 @@ def read(path):
     return json.loads(path.read_text(encoding='utf-8-sig'))
 
 
-def operation_classifier(source):
+def operation_classifier(source, metadata=None):
     """Accept only the taxonomy's small, ordered name-rule grammar; changes fail closed."""
     sessions = set(re.findall(r'"([^"]+)"', re.search(r'SessionNames = \{([^}]+)\}', source)[1]))
     body = source.split('if (SessionNames.Contains(name))', 1)[1]
@@ -49,10 +49,11 @@ def operation_classifier(source):
     remainder = re.sub(r'//[^\n]*', '', remainder)
     assert re.fullmatch(r'\s*return \("SESSION", true\);\s*return \("UNSPECIFIED", true\);\s*}\s*}\s*}\s*', remainder), 'Unparsed ToolTaxonomy logic'
 
-    def classify(name, description):
-        tag = re.match(r'^\s*\[L\d\]\[(?:Category:)?[^\]]+\](?:\[([A-Za-z-]+)\])?', description)
-        if tag and tag[1]:
-            return tag[1].upper()
+    declared = dict(re.findall(r'\["([^"]+)"\] = new Classification\("[^"]+", "[^"]+", "([A-Z-]+)",', metadata or ''))
+
+    def classify(name, description=None):
+        if name in declared:
+            return declared[name]
         if name in sessions:
             return 'SESSION'
         for alternatives, operation in predicates:
@@ -98,7 +99,10 @@ def check(manifest_path):
     assert set(baseline) | set(additions) == set(mapping), '3.3.0 plus reviewed V4 coverage differs'
     assert set(EXCEPTIONS) <= set(baseline), 'unused exception'
     taxonomy = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
-    classify = operation_classifier(taxonomy)
+    metadata = (ROOT / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text(encoding='utf-8')
+    declared = re.findall(r'\["([^"]+)"\] = new Classification\(', metadata)
+    assert len(declared) == len(set(declared)) and set(declared) == expected, 'explicit classification coverage differs from roster'
+    classify = operation_classifier(taxonomy, metadata)
     descriptions = {}
     for source in EngineSources(ROOT).sources.values():
         for match in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source):
@@ -152,7 +156,9 @@ class Checks(unittest.TestCase):
         source = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
         classify = operation_classifier(source)
         self.assertEqual(classify('DownloadSentinel', '[L1][PLC-Online]'), 'ONLINE-WRITE')
-        self.assertEqual(classify('Anything', '[L2][PLC-Online][ONLINE-WRITE]'), 'ONLINE-WRITE')
+        self.assertEqual(classify('Anything', '[L2][PLC-Online][ONLINE-WRITE]'), 'UNSPECIFIED')
+        metadata = '["Anything"] = new Classification("L2", "PLC-Online", "ONLINE-WRITE",'
+        self.assertEqual(operation_classifier(source, metadata)('Anything', 'arbitrary translated prose'), 'ONLINE-WRITE')
         with self.assertRaises(AssertionError): operation_classifier(source.replace('Starts("Compile", "Run")', 'OtherRule(name)'))
 
 

@@ -232,7 +232,7 @@ namespace TiaMcpServer.Siemens.Services
             if (string.IsNullOrWhiteSpace(orderNumber))
             {
                 result.Reason = "InvalidParams";
-                result.Message = "orderNumber 是空的。传信号板/模块的订货号，例如 6ES7221-3BD30-0XB0。";
+                result.Message = "orderNumber is empty. Supply the signal board/module order number, for example 6ES7221-3BD30-0XB0.";
                 return result;
             }
 
@@ -249,9 +249,9 @@ namespace TiaMcpServer.Siemens.Services
             {
                 result.Reason = "DeviceItemNotFound";
                 result.Message = plugOnDevice
-                    ? $"设备 '{deviceItemPath}' 没找到（plugOnDevice=true 时路径是整机 / 站的名字，例如 'MCP_S120'）。"
-                    : $"设备项 '{deviceItemPath}' 没找到。信号板要插在 **CPU 本体** 上，"
-                               + "路径形如 'PLC_1' 或 'PLC_1/PLC_1'；用 GetDeviceItemTree 确认每一段。";
+                    ? $"Device '{deviceItemPath}' was not found (with plugOnDevice=true, the path is the whole device/station name, for example 'MCP_S120')."
+                    : $"Device item '{deviceItemPath}' was not found. Signal boards must be inserted into **the CPU itself**; "
+                               + "the path looks like 'PLC_1' or 'PLC_1/PLC_1'. Verify each segment with GetDeviceItemTree.";
                 return result;
             }
 
@@ -268,19 +268,19 @@ namespace TiaMcpServer.Siemens.Services
                 if (taken != null)
                 {
                     result.Reason = "SlotOccupied";
-                    result.Message = $"槽位 {positionNumber} 已经被 '{taken.Name}' 占用"
-                                   + (taken.IsBuiltIn ? "（该模块是 CPU 集成的，拔不掉）" : "")
-                                   + $"。空闲槽位：{FormatSlots(free)}。";
+                    result.Message = $"Slot {positionNumber} is already occupied by '{taken.Name}'"
+                                   + (taken.IsBuiltIn ? "(this module is integrated into the CPU and cannot be unplugged)" : "")
+                                   + $". Free slots: {FormatSlots(free)}.";
                     return result;
                 }
 
                 if (free.Count > 0 && free.All(x => x.PositionNumber != positionNumber))
                 {
                     result.Reason = "SlotNotAvailable";
-                    result.Message = $"槽位 {positionNumber} 不是 '{deviceItemPath}' 的可插槽位。"
-                                   + $"这台设备当前报告的空闲槽位是：{FormatSlots(free)}。"
-                                   + "槽位号由 TIA 运行时报出，引擎不做任何硬编码 —— "
-                                   + "先用 GetDevicePlugLocations 看清楚再插。";
+                    result.Message = $"Slot {positionNumber} is not a plug location of '{deviceItemPath}'. "
+                                   + $"This device currently reports the following free slots: {FormatSlots(free)}. "
+                                   + "Slot numbers are reported by the TIA runtime; the engine does not hardcode them. "
+                                   + "Inspect GetDevicePlugLocations before inserting the module.";
                     return result;
                 }
 
@@ -291,8 +291,8 @@ namespace TiaMcpServer.Siemens.Services
                 if (free.Count == 0)
                 {
                     result.Reason = "SlotNotAvailable";
-                    result.Message = $"'{deviceItemPath}' 上没有任何空闲槽位可用（TIA 报告的空位为 0）。"
-                                   + "确认路径指向的是 CPU 本体而不是机架/接口，或者先腾出一个槽位。";
+                    result.Message = $"'{deviceItemPath}' has no free slots (TIA reports zero available slots). "
+                                   + "Verify that the path points to the CPU itself rather than a rack/interface, or free a slot first.";
                     return result;
                 }
 
@@ -303,7 +303,7 @@ namespace TiaMcpServer.Siemens.Services
             if (typeIdentifiers.Count == 0)
             {
                 result.Reason = "InvalidParams";
-                result.Message = $"从 orderNumber='{orderNumber}' version='{version}' 拼不出可用的 TypeIdentifier。";
+                result.Message = $"Cannot construct an available TypeIdentifier from orderNumber='{orderNumber}' version='{version}'.";
                 return result;
             }
 
@@ -325,12 +325,12 @@ namespace TiaMcpServer.Siemens.Services
                     catch (Exception ex)
                     {
                         // 一抛异常代理就可能死掉，必须重新取宿主句柄再继续试，否则后面全是 disposed 假象。
-                        result.Attempts.Add($"slot={slot} {typeId} -> 预检异常: {ex.Message}");
+                        result.Attempts.Add($"slot={slot} {typeId} -> preflight exception: {ex.Message}");
                         var again = ResolvePlugHost(deviceItemPath, plugOnDevice);
                         if (again == null)
                         {
                             result.Reason = "PlugFailed";
-                            result.Message = $"预检时代理对象失效且无法重新定位 '{deviceItemPath}'：{ex.Message}";
+                            result.Message = $"The proxy became invalid during preflight and could not be relocated: '{deviceItemPath}': {ex.Message}";
                             return result;
                         }
 
@@ -360,25 +360,25 @@ namespace TiaMcpServer.Siemens.Services
                 if (known == false)
                 {
                     result.Reason = "OrderNumberNotFound";
-                    result.Message = $"订货号 '{orderNumber}' 在 TIA 硬件目录里查不到{catalogNote}。"
-                                   + "先用 SearchHardwareCatalog 搜一下确认订货号和版本，"
-                                   + "GSD/HSP 没装的模块也会是这个结果。";
+                    result.Message = $"Order number '{orderNumber}' was not found in the TIA hardware catalog{catalogNote}. "
+                                   + "Search with SearchHardwareCatalog first to confirm the order number and version; "
+                                   + "modules whose GSD/HSP is not installed also produce this result.";
                 }
                 else if (known == null)
                 {
                     // 目录查不了就别冒充结论：只能说「这台设备不接受」，不能说「订货号不存在」。
                     result.Reason = "NotSupportedByDevice";
-                    result.Message = $"'{deviceItemPath}' 的槽位 {FormatSlots(free)} 都不接受 '{orderNumber}'"
-                                   + $"{catalogNote}，所以无法进一步区分是订货号写错还是该 CPU 不支持这块板。"
-                                   + "试过的变体见 attempts。";
+                    result.Message = $"'{deviceItemPath}' slot(s) {FormatSlots(free)} do not accept '{orderNumber}'"
+                                   + $"{catalogNote}, so an incorrect order number cannot be distinguished from a board unsupported by this CPU. "
+                                   + "See attempts for the variants tried.";
                 }
                 else
                 {
                     result.Reason = "NotSupportedByDevice";
-                    result.Message = $"硬件目录里能查到 '{orderNumber}'{catalogNote}，"
-                                   + $"但 '{deviceItemPath}' 的槽位 {FormatSlots(free)} 都不接受它 —— "
-                                   + "常见原因：这块板不适配该 CPU 型号/固件版本，或 version 传错了"
-                                   + $"（本次试过的版本变体见 attempts）。";
+                    result.Message = $"The hardware catalog contains '{orderNumber}'{catalogNote}, "
+                                   + $"but '{deviceItemPath}' slot(s) {FormatSlots(free)} do not accept it. "
+                                   + "Common causes: the board does not support this CPU model/firmware version, or version is incorrect "
+                                   + $"(see attempts for the version variants tried).";
                 }
 
                 result.TypeIdentifier = null;
@@ -391,10 +391,10 @@ namespace TiaMcpServer.Siemens.Services
             if (dryRun)
             {
                 result.Ok = true;
-                result.Message = $"[dryRun] 预检通过：可以把 '{acceptedType}' 以名字 '{itemName}' 插到 "
-                               + $"'{deviceItemPath}' 的槽位 {acceptedSlot}。用 dryRun=false 实际写入。"
-                               + "插完如果要改起始地址（例如让输入从 %I2.0 开始），"
-                               + "用已有的 SetDeviceItemIoAddress，不要在这里传地址。";
+                result.Message = $"[dryRun] Preflight passed: '{acceptedType}' can be inserted with name '{itemName}' into "
+                               + $"'{deviceItemPath}' slot(s) {acceptedSlot}. Use dryRun=false to perform the write. "
+                               + "To change the start address after insertion (for example to start inputs at %I2.0), "
+                               + "use SetDeviceItemIoAddress; do not pass an address here.";
                 return result;
             }
 
@@ -406,15 +406,15 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 result.Reason = "PlugFailed";
-                result.Message = $"CanPlugNew 说可以，但 PlugNew 实际执行失败：{ex.Message}"
-                               + "（工程可能被占用/只读，或该槽位在写入瞬间被别的操作占了）。";
+                result.Message = $"CanPlugNew accepted the operation, but PlugNew failed during execution: {ex.Message} "
+                               + "(the project may be locked/read-only, or another operation may have occupied the slot at the moment of the write).";
                 return result;
             }
 
             if (created == null)
             {
                 result.Reason = "PlugFailed";
-                result.Message = "PlugNew 没有抛异常但返回了 null，模块没有被创建。";
+                result.Message = "PlugNew returned null without throwing; the module was not created.";
                 return result;
             }
 
@@ -423,7 +423,7 @@ namespace TiaMcpServer.Siemens.Services
             if (verifyHost == null)
             {
                 result.Reason = "VerifyFailed";
-                result.Message = $"插入后重新定位 '{deviceItemPath}' 失败，无法确认结果，请在 TIA 界面里核对。";
+                result.Message = $"Relocating '{deviceItemPath}' after insertion failed; the outcome cannot be confirmed. Verify it in the TIA UI.";
                 return result;
             }
 
@@ -444,8 +444,8 @@ namespace TiaMcpServer.Siemens.Services
             if (after == null)
             {
                 result.Reason = "VerifyFailed";
-                result.Message = $"读回验证失败：槽位 {acceptedSlot} 上没有读到任何模块。"
-                               + "PlugNew 已返回对象但组态里没落位，请在 TIA 界面里核对。";
+                result.Message = $"Readback verification failed: slot {acceptedSlot} returned no module. "
+                               + "PlugNew returned an object, but the module is not in its configured slot. Verify it in the TIA UI.";
                 return result;
             }
 
@@ -453,7 +453,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 result.Plugged = after;
                 result.Reason = "VerifyFailed";
-                result.Message = $"读回验证失败：槽位 {acceptedSlot} 上的 '{after.Name}' 的 IsPlugged=false。";
+                result.Message = $"Readback verification failed: slot {acceptedSlot} contains '{after.Name}' with IsPlugged=false.";
                 return result;
             }
 
@@ -471,12 +471,12 @@ namespace TiaMcpServer.Siemens.Services
 
             result.Ok = true;
             var addrText = result.Addresses == null || result.Addresses.Count == 0
-                ? "该模块当前没有 I/O 地址"
-                : "当前地址 " + string.Join(" / ", result.Addresses.Select(a => a.ToString()));
+                ? "the module currently has no I/O addresses"
+                : "current addresses: " + string.Join(" / ", result.Addresses.Select(a => a.ToString()));
 
-            result.Message = $"已把 '{acceptedType}' 插到 '{deviceItemPath}' 的槽位 {acceptedSlot}，"
-                           + $"模块名 '{after.Name}'，读回确认 IsPlugged=true；{addrText}。"
-                           + "要把起始地址改成别的值（例如输入从 %I2.0 开始 → startAddress=2），"
+            result.Message = $"Inserted '{acceptedType}' into '{deviceItemPath}' slot(s) {acceptedSlot}, "
+                           + $"module name '{after.Name}'; readback confirmed IsPlugged=true; {addrText}. "
+                           + "To change the start address (for example inputs from %I2.0 -> startAddress=2), "
                            + "Use SetDeviceItemIoAddress; this tool does not change addresses. Run CompilePlcSoftware and SaveProject afterwards.";
             return result;
         }
@@ -484,7 +484,7 @@ namespace TiaMcpServer.Siemens.Services
         private static string FormatSlots(IReadOnlyList<PlugLocationInfo> free)
         {
             return free.Count == 0
-                ? "（一个都没有）"
+                ? "(none)"
                 : string.Join(", ", free.Select(x => string.IsNullOrWhiteSpace(x.Label)
                     ? x.PositionNumber.ToString()
                     : $"{x.PositionNumber}({x.Label})"));
@@ -599,13 +599,13 @@ namespace TiaMcpServer.Siemens.Services
 
                 var first = hits.FirstOrDefault();
                 var desc = first?.Description ?? first?.TypeName ?? "";
-                var ver = string.IsNullOrWhiteSpace(first?.Version) ? "" : $"，目录版本 {first!.Version}";
+                var ver = string.IsNullOrWhiteSpace(first?.Version) ? "" : $", catalog version {first!.Version}";
                 return (true, string.IsNullOrWhiteSpace(desc) ? ver : $"（{desc}{ver}）");
             }
             catch (Exception ex)
             {
                 _session.Logger?.LogWarning(ex, "Hardware catalog probe failed while classifying plug failure");
-                return (null, "（硬件目录当前查不了，无法确认订货号是否存在）");
+                return (null, "(the hardware catalog is currently unavailable; the existence of the order number cannot be confirmed)");
             }
         }
 

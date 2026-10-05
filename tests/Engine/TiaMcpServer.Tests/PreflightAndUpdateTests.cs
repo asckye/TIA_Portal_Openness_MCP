@@ -14,8 +14,8 @@ namespace TiaMcpServer.Tests
         private static bool Fails<T>(Action a) where T : Exception { try { a(); return false; } catch (T) { return true; } }
         private static JsonObject O(string json) => (JsonObject)JsonNode.Parse(json)!;
 
-        private static PreflightLogic.ParameterSpec S(string name, string kind, bool required, string? def = null, string desc = "")
-            => new PreflightLogic.ParameterSpec(name, kind, required, def, desc);
+        private static PreflightLogic.ParameterSpec S(string name, string kind, bool required, string? def = null, string desc = "", string[]? values = null, string? example = null)
+            => new PreflightLogic.ParameterSpec(name, kind, required, def, desc, allowedValues: values, exampleJson: example);
 
         internal static void Run(Action<bool, string> check)
         {
@@ -23,9 +23,9 @@ namespace TiaMcpServer.Tests
             var specs = new List<PreflightLogic.ParameterSpec>
             {
                 S("softwarePath", "string", true, null, "softwarePath: PLC software path"),
-                S("action", "string", false, "\"read\"", "action: read | create | delete"),
-                S("kind", "string", true, null, "kind: udt|tagtable|globaldb|fc|fb"),
-                S("importOption", "string", false, "\"Override\"", "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures)"),
+                S("action", "string", false, "\"read\"", "action: read | create | delete", values: new[] { "read", "create", "delete" }),
+                S("kind", "string", true, null, "kind: udt|tagtable|globaldb|fc|fb", values: new[] { "udt", "tagtable", "globaldb", "fc", "fb" }),
+                S("importOption", "string", false, "\"Override\"", "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures)", values: new[] { "None", "Override", "SkipInactiveCultures" }),
                 S("limit", "integer", false, "200"),
                 S("ratio", "number", false, "1"),
                 S("dryRun", "boolean", false, "true"),
@@ -66,23 +66,37 @@ namespace TiaMcpServer.Tests
             var nullValue = PreflightLogic.Analyze(specs, O("{\"softwarePath\":null,\"kind\":\"fc\"}"));
             check(!nullValue.Ok && nullValue.Missing.SequenceEqual(new[] { "softwarePath" }), "preflight: null for a required parameter counts as missing");
 
-            // ---- alternatives parser ----
-            check(PreflightLogic.Alternatives("action: read | create | delete").SequenceEqual(new[] { "read", "create", "delete" }), "preflight: pipe list parsed");
-            check(PreflightLogic.Alternatives("trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart (default: Permanent)").SequenceEqual(new[] { "Permanent", "PermanentAtStart", "OnceOnlyAtStart" }), "preflight: pipe list after prose parsed");
-            check(PreflightLogic.Alternatives("kind: udt|tagtable|globaldb|fc|fb").Count == 5, "preflight: unspaced pipe list parsed");
-            check(PreflightLogic.Alternatives("action: register/powerOn/run").SequenceEqual(new[] { "register", "powerOn", "run" }), "preflight: slash list after the colon parsed");
-            check(PreflightLogic.Alternatives("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)").Count == 4, "preflight: parenthesised comma list parsed");
-            check(PreflightLogic.Alternatives("softwarePath: defines the path in the project structure to the plc software").Count == 0, "preflight: prose yields no alternatives");
-            check(PreflightLogic.Alternatives("name, IP, MAC, device series on one interface (name, IP, MAC, device series)").Count == 0, "preflight: comma prose in parentheses with a two-word item is not a list");
-            check(PreflightLogic.Alternatives("filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)").Count == 0, "preflight: e.g.-lists are examples, not alternatives");
-            check(PreflightLogic.Alternatives("pgPcInterface: e.g. 'PLCSIM' or 'Realtek'").Count == 0, "preflight: quoted examples are not alternatives");
-            check(PreflightLogic.Alternatives("pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'").Count == 0, "preflight: hyphenated prose in parentheses is not a list (real-machine false positive)");
-            check(PreflightLogic.Alternatives("action: read (default) or delete").Count == 0, "preflight: '(default)' is not a list");
-            check(PreflightLogic.Alternatives("password: the password to set (setAccessPassword, protectMasterSecret) or the current one (changeMasterSecret); never logged.").Count == 0, "preflight: a two-item parenthesised reference is not a value list (real-machine false enum on password)");
-            check(PreflightLogic.Alternatives("importOption: value (None, Override)").SequenceEqual(new[] { "None", "Override" }), "preflight: a two-item list announced as 'value (...)' is a list");
-            check(PreflightLogic.Alternatives("promptAnswersJson: answers by type name, e.g. {\"ResetModule\":\"DeleteAll\"}. Destructive prompts (InitializeMemory, OverwriteOnMemoryCard, ResetModule) default to NoAction.").Count == 0, "preflight: a list in a later sentence is not the parameter's value set (DownloadPlc false enum)");
-            check(PreflightLogic.Alternatives("folderPath: group/folder path inside the software").Count == 0 && PreflightLogic.Alternatives("pgPcInterface: PG/PC interface name").Count == 0 && PreflightLogic.Alternatives("blockGroupPath: PLC block group path for kind=globaldb|fc.").Count == 0 && PreflightLogic.Alternatives("blockScope: optional regex (e.g. 'FC|Main')").Count == 0, "preflight: prose slashes, kind=a|b and quoted regexes are not lists (real-machine false enums)");
-            check(PreflightLogic.Alternatives("subnetType: IndustrialEthernet/PROFINET/PN/IE.").Count == 4 && PreflightLogic.Alternatives("kind: udt|tagtable|globaldb|fc|fb").Count == 5, "preflight: free-standing lists still parse");
+            // Enum admission is independent of every former description grammar, in either language.
+            foreach (var description in new[]
+            {
+                "action: read | create | delete",
+                "trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart (default: Permanent)",
+                "kind: udt|tagtable|globaldb|fc|fb",
+                "action: register/powerOn/run",
+                "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+                "softwarePath: defines the path in the project structure to the plc software",
+                "name, IP, MAC, device series on one interface (name, IP, MAC, device series)",
+                "filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)",
+                "pgPcInterface: e.g. 'PLCSIM' or 'Realtek'",
+                "pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'",
+                "action: read (default) or delete",
+                "password: the password to set (setAccessPassword, protectMasterSecret) or the current one (changeMasterSecret); never logged.",
+                "importOption: value (None, Override)",
+                "promptAnswersJson: answers by type name, e.g. {\"ResetModule\":\"DeleteAll\"}. Destructive prompts (InitializeMemory, OverwriteOnMemoryCard, ResetModule) default to NoAction.",
+                "folderPath: group/folder path inside the software",
+                "pgPcInterface: PG/PC interface name",
+                "blockGroupPath: PLC block group path for kind=globaldb|fc.",
+                "blockScope: optional regex (e.g. 'FC|Main')",
+                "subnetType: IndustrialEthernet/PROFINET/PN/IE.",
+                "[WRITE] 删除所有对象；不要重试", "Translated guidance without any enum list",
+            })
+            {
+                var explicitSpec = S("action", "string", true, desc: description, values: new[] { "read", "create", "delete" });
+                var typed = PreflightLogic.Analyze(new[] { explicitSpec }, O("{\"action\":\"Create\"}"));
+                check(typed.Ok && typed.Coercions.Count == 1 && typed.Warnings.Count == 0, "preflight: declared enum unchanged by description: " + description);
+                var inferred = PreflightLogic.Analyze(new[] { S("action", "string", true, desc: description) }, O("{\"action\":\"arbitrary\"}"));
+                check(inferred.Ok && inferred.Warnings.Count == 0, "preflight: prose never invents allowed values: " + description);
+            }
 
             // ---- nearest name ----
             check(PreflightLogic.Nearest("softwarepath", new[] { "softwarePath", "blockPath" }) == "softwarePath", "preflight: nearest by containment");

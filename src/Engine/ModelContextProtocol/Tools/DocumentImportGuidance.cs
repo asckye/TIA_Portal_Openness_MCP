@@ -9,15 +9,15 @@ namespace TiaMcpServer.ModelContextProtocol
         /// 只引用本版本真实存在的工具，别指向不存在的东西再把人带偏一次。
         /// </summary>
         internal const string DocumentImportHelp =
-            "\r\n按这个顺序处理，别改语法瞎猜：\r\n"
+            "\r\nFollow this sequence; do not guess by changing the syntax:\r\n"
             + "1) GetToolUsage(language:'lad') (SCL: language:'scl') — read the language examples and encoding rules, "
-            + "把你的文件逐条对齐；只改名字和操作数，别改结构。\r\n"
-            + "2) .s7dcl 是**原子失败**：整份文档任何一处不合法都整份不导入，Openness 不给行号。"
-            + "所以一次只放一个 NETWORK，导入→编译通过→再加下一段。整份写完再导，出错时没有任何定位信息。\r\n"
-            + "3) 一个 NETWORK = 一个程序段；同一个 NETWORK 里的多条 RUNG 是同一段的并联分支。"
-            + "要 12 段就写 12 个 NETWORK。\r\n"
-            + "4) 编码必须 UTF-8 **带 BOM**。别把 BOM 的转义序列当成六个字符写进文件正文 —— "
-            + "那是转义没生效，不是 BOM。\r\n"
+            + "Align your file item by item; change only names and operands, not the structure.\r\n"
+            + "2) .s7dcl import **fails atomically**: any invalid part prevents the entire document from being imported, and Openness provides no line number. "
+            + "Include one NETWORK at a time: import, compile successfully, then add the next segment. Importing the whole document at once leaves no location information when it fails.\r\n"
+            + "3) One NETWORK is one program segment; multiple RUNGs within the same NETWORK are parallel branches of that segment."
+            + "For 12 segments, write 12 NETWORKs.\r\n"
+            + "4) Encoding must be UTF-8 **with BOM**. Do not write the BOM escape sequence as six literal characters in the file body: "
+            + "that is an unprocessed escape sequence, not a BOM.\r\n"
             + "5) For DBs, UDTs or tag tables, use BuildAndImportPlcArtifact with a structured spec to bypass .s7dcl.";
 
 
