@@ -44,6 +44,9 @@ namespace TiaMcp.Logic.V4.Inputs
             if (type == typeof(ParameterRef[])) return From(NumberListValidator.ParameterReferences());
             if (type == typeof(Scalar)) return From(new InputContract<Scalar>(InputSchema.Scalar(), new InputBudget()));
             if (type == typeof(CompositeAttributeMap)) return From(CompositeAttributeMapValidator.Generic());
+            // Shape only (closed {name, value} rows, Scalar values, unique names); the tool applies its
+            // dryRun/confirmWrite and target value policy through WriteValueValidator.Create.
+            if (type == typeof(WriteValue[])) return From(WriteValueValidator.Runtime());
             if (type == typeof(ToolArguments)) return From(new InputContract<ToolArguments>(
                 InputSchema.Map(new InputSchema(V4Json.ParseInput("{}"))), new InputBudget()));
             if (type == typeof(NativeValue)) return From(new InputContract<NativeValue>(NativeSchema(), new InputBudget()));

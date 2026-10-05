@@ -89,6 +89,7 @@ namespace TiaMcpServer.Tests
             yield return new object[] { typeof(Artifact[]), "[{\"id\":\"A\"}]" };
             yield return new object[] { typeof(LintRules), "{}" };
             yield return new object[] { typeof(CompositeAttributeMap), "{\"Width\":10,\"Font\":{\"Size\":12,\"Bold\":true}}" };
+            yield return new object[] { typeof(WriteValue[]), "[{\"name\":\"DB1.Run\",\"value\":true}]" };
         }
 
         [Theory, MemberData(nameof(Families))]
@@ -123,6 +124,19 @@ namespace TiaMcpServer.Tests
             var result = Body(await tool.InvokeAsync(Request("FindTools", "{\"input\":{" + parts + "}}")));
             Assert.Equal("LIMIT_EXCEEDED", (string?)result["error"]!["code"]);
             Assert.Equal("input", (string?)result["error"]!["details"]!["parameter"]);
+            Assert.Equal(0, calls);
+        }
+
+        [Theory]
+        [InlineData("[{\"name\":\"A\",\"value\":1,\"extra\":1}]")]
+        [InlineData("[{\"name\":\"A\",\"value\":1},{\"name\":\"A\",\"value\":2}]")]
+        [InlineData("[{\"name\":\"A\",\"value\":{\"nested\":1}}]")]
+        [InlineData("[]")]
+        public async Task WriteValueRowsAreClosedBeforeBinding(string writes)
+        {
+            var tool = Register(typeof(WriteValue[])).Single(t => t.ProtocolTool.Name == "FindTools");
+            var result = Body(await tool.InvokeAsync(Request("FindTools", "{\"input\":" + writes + "}")));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
             Assert.Equal(0, calls);
         }
 
