@@ -6,6 +6,8 @@ namespace TiaMcp.PlcWorker
     internal static class WorkerOperations
     {
         internal const string DeviceCreationCandidate = "CreateHardwareDeviceCandidate";
+        internal const string PlcImportCandidate = "ImportPlcCandidate";
+        internal static bool IsImportPreview(string name, string? mode) => name == PlcImportCandidate && (mode == null || mode == "preview");
         internal static bool IsDevicePreview(string name, string? mode) => name == DeviceCreationCandidate && (mode == null || mode == "preview");
         internal static bool IsReadOnly(string name) => name=="SearchHardwareCatalog" || name=="PlanPlcExternalSourceImport" || name=="ReadState" || name=="ReadPortalProcessProjects" || name=="ReadPortalConnectReadiness" || name=="ReadWatchTableNames" || name=="ReadTechnologyObjects" || name=="ReadSoftwareInfo" || name=="ReadSoftwareTree" || name=="ReadExternalSourceNames" || name=="ListTags" || name=="ListUserConstants" || name=="ListSystemConstants" || name=="ReadBlockInfo" || name=="ReadTypeInfo" || name=="ReadBlocks" || name=="ReadTypes" || name=="ReadTagTableNames" || name=="ReadBlockHierarchy" || name=="ReadProjectTree" || name=="ListProjects";
 

@@ -49,9 +49,11 @@ internal static class Program
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Logic.V4.BehaviorCapabilities.Select(typeof(PlcFoundationEngine).Assembly, releaseKey, "P6-DEVICE") == TiaMcp.Logic.V4.BehaviorPolicy.SafeV4;
+            bool importCandidateEnabled = TiaMcp.Logic.V4.BehaviorCapabilities.Select(typeof(PlcFoundationEngine).Assembly, releaseKey, "P6-IMPORT") == TiaMcp.Logic.V4.BehaviorPolicy.SafeV4;
             var methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(m => WorkerOperations.Names.Contains(m.Name) || deviceCandidateEnabled && m.Name == WorkerOperations.DeviceCreationCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
-            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
+                .Where(m => WorkerOperations.Names.Contains(m.Name) || deviceCandidateEnabled && m.Name == WorkerOperations.DeviceCreationCandidate
+                    || importCandidateEnabled && m.Name == WorkerOperations.PlcImportCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
+            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
             var sessionOutcome=new WorkerSessionOutcomeState();
             bool disconnectAttempted=false;
             bool disconnected=false;
@@ -86,12 +88,13 @@ internal static class Program
                     readOnly=WorkerOperations.IsReadOnly(name);
                     if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                     var values = WorkerJson.ParseArguments(request.ArgumentsJson);
-                    if (name == WorkerOperations.DeviceCreationCandidate)
+                    if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate)
                     {
                         if (values.ContainsKey("bindingEpoch")) throw new ArgumentException("The worker owns the binding epoch.");
                         values["bindingEpoch"] = System.Text.Json.JsonSerializer.SerializeToElement(bindingEpoch);
                         var candidateMode = WorkerJson.Get(values, "mode");
-                        readOnly = WorkerOperations.IsDevicePreview(name, candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString());
+                        string? mode = candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString();
+                        readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode);
                     }
                     if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                     if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
@@ -115,7 +118,7 @@ internal static class Program
                     enteredOperation=true;
                     if(name=="Disconnect") disconnectAttempted=true;
                     var result = method.Invoke(engine, call);
-                    if (name == WorkerOperations.DeviceCreationCandidate && result is System.Text.Json.JsonElement candidateResult
+                    if ((name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate) && result is System.Text.Json.JsonElement candidateResult
                         && candidateResult.GetProperty("meta").GetProperty("requiresSessionReset").GetBoolean()) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);

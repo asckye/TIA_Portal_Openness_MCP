@@ -228,6 +228,19 @@ public sealed class DeviceCreationCandidateTests
         Assert.True(TiaMcp.LegacyHost.DeviceAddContract.ValidateCandidate(JsonNode.Parse(V4Json.Serialize(applied)), request).Ok);
     }
     private void Current() { }
+    [Theory]
+    [InlineData("P6-DEVICE:safe-v4", 1)]
+    [InlineData("P6-DEVICE:safe-v4,P6-IMPORT:safe-v4", 2)]
+    [InlineData("P6-IMPORT:safe-v4,P6-DEVICE:safe-v4", 2)]
+    public void TestBuildPolicyAcceptsValidatedFamilyLists(string setting, int count)
+        => Assert.Equal(count, BehaviorCapabilities.TestFamilies(setting).Length);
+
+    [Theory]
+    [InlineData("")] [InlineData("P6-UNKNOWN:safe-v4")] [InlineData("P6-DEVICE:current")]
+    [InlineData("P6-DEVICE:safe-v4,P6-DEVICE:safe-v4")] [InlineData("P6-DEVICE:safe-v4,")]
+    [InlineData("P6-IMPORT:safe-v4, P6-DEVICE:safe-v4")]
+    public void TestBuildPolicyRejectsUnknownDuplicateOrMalformedLists(string setting)
+        => Assert.Throws<InvalidOperationException>(() => BehaviorCapabilities.TestFamilies(setting));
     [BehaviorCandidate("entry", "P6-DEVICE", typeof(DeviceCreationContract))]
     private void Candidate() { }
 }

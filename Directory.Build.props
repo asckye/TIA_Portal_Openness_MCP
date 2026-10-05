@@ -6,6 +6,7 @@
     </AssemblyAttribute>
   </ItemGroup>
   <Target Name="ValidateTiaMcpTestPolicy" BeforeTargets="CoreCompile">
-    <Error Condition="'$(TiaMcpTestPolicy)' != '' and '$(TiaMcpTestPolicy)' != 'P6-DEVICE:safe-v4'" Text="Unsupported test policy build. Use P6-DEVICE:safe-v4 only for isolated test artifacts." />
+    <Error Condition="'$(TiaMcpTestPolicy)' != '' and !$([System.Text.RegularExpressions.Regex]::IsMatch('$(TiaMcpTestPolicy)', '^P6-(DEVICE|IMPORT|EXPORT|SESSION|CLOSE|SOURCE|COMPILE|FALLBACK):safe-v4(,P6-(DEVICE|IMPORT|EXPORT|SESSION|CLOSE|SOURCE|COMPILE|FALLBACK):safe-v4)*$'))" Text="Unsupported test policy build. Use a comma-separated list of known P6 families with :safe-v4 only for isolated test artifacts." />
+    <Error Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TiaMcpTestPolicy)', '(^|,)(P6-[A-Z]+:safe-v4)(,[^,]+)*,\2(,|$)'))" Text="Duplicate test policy family." />
   </Target>
 </Project>

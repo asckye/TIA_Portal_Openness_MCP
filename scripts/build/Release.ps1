@@ -314,7 +314,7 @@ if ($DocumentationOnly) {
     return
 }
 # Refuse candidate build artifacts before prerequisites, network, or release mutations.
-$testPolicyMarker = 'TiaMcpTestPolicy' + [char]17 + 'P6-DEVICE:safe-v4'
+$testPolicyMarker = 'TiaMcpTestPolicy'
 $policyRoots = @('runtime', 'src/Engine/bin', 'src/Engine/bin-v20', 'src/FoundationHost/bin', 'src/Worker/bin')
 foreach ($policyRoot in $policyRoots) {
     $policyDirectory = Join-Path $repo $policyRoot

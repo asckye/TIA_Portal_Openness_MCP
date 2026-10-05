@@ -21,6 +21,18 @@ namespace TiaMcp.Logic.V4
     {
         public const string TestProperty = "TiaMcpTestPolicy";
         public const string DeviceCandidate = "P6-DEVICE:safe-v4";
+        public const string ImportCandidate = "P6-IMPORT:safe-v4";
+
+        public static string[] TestFamilies(string? setting)
+        {
+            if (setting == null) return Array.Empty<string>();
+            var tokens = setting.Split(',');
+            var known = new[] { "DEVICE", "IMPORT", "EXPORT", "SESSION", "CLOSE", "SOURCE", "COMPILE", "FALLBACK" }
+                .Select(f => "P6-" + f + ":safe-v4").ToArray();
+            if (tokens.Any(t => !known.Contains(t, StringComparer.Ordinal)) || tokens.Distinct(StringComparer.Ordinal).Count() != tokens.Length)
+                throw new InvalidOperationException("Invalid test policy build metadata.");
+            return tokens;
+        }
         private static readonly Lazy<JsonObject> Catalog = new Lazy<JsonObject>(() =>
         {
             var resource = new ResourceManager("TiaMcp.Logic.ModelContextProtocol.ToolProfiles", typeof(BehaviorCapabilities).Assembly);
@@ -55,8 +67,7 @@ namespace TiaMcp.Logic.V4
             var policy = Released(release, family);
             var setting = product.GetCustomAttributes<AssemblyMetadataAttribute>().SingleOrDefault(a => a.Key == TestProperty)?.Value
                 ?? typeof(BehaviorCapabilities).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().SingleOrDefault(a => a.Key == TestProperty)?.Value;
-            if (setting != null && setting != DeviceCandidate) throw new InvalidOperationException("Invalid test policy build metadata.");
-            return setting == family + ":safe-v4" ? BehaviorPolicy.SafeV4 : policy;
+            return TestFamilies(setting).Contains(family + ":safe-v4", StringComparer.Ordinal) ? BehaviorPolicy.SafeV4 : policy;
         }
 
         public static MethodInfo SelectMethod(string entry, MethodInfo current, IEnumerable<MethodInfo> candidates,

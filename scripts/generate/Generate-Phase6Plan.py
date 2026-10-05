@@ -443,9 +443,24 @@ for k in keys[-2:]:
 # map is generated from the same transition decisions as the source checks.
 candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
     '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
+def candidate_example(entry, family):
+    if family == 'P6-DEVICE':
+        return {"typeIdentifier": "<exact catalog TypeIdentifier>", "deviceName": "Device_1",
+                "family": "GSD" if entry == "CreateGsdDevice" else "S7-1500", "mode": "preview", "confirm": False}
+    assert family == 'P6-IMPORT', ('missing candidate example', entry, family)
+    example = {"softwarePath": "<exact PLC software path>", "mode": "preview", "confirm": False,
+               "overwrite": False, "versionPolicy": "exact", "onError": "stop", "compileAfter": False}
+    documents = entry in ('ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments')
+    directory = entry.endswith('FromDirectory') or entry == 'ImportPlcBlocksDocuments'
+    path = 'sourceDir' if entry == 'ImportPlcProgramFromDirectory' else 'dir' if directory and not documents else 'importPath'
+    example[path] = 'C:\\reviewed-imports' + ('' if directory or documents else '\\Object_1.xml')
+    if entry != 'ImportPlcProgramFromDirectory': example['folderPath' if 'Tag' in entry else 'groupPath'] = ''
+    if directory: example['importOrder'] = ['Object_1' if documents else 'Object_1.xml']
+    if entry == 'ImportPlcBlockDocuments': example['fileNameWithoutExtension'] = 'Object_1'
+    return example
+
 behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
-    "example": {"typeIdentifier": "<exact catalog TypeIdentifier>", "deviceName": "Device_1",
-                "family": "GSD" if entry == "CreateGsdDevice" else "S7-1500", "mode": "preview", "confirm": False}}
+    "example": candidate_example(entry, family)}
     for k in keys for entry, family in sorted(candidate_entries.items()) if entry in {renames[n] for n in tools[k]}]
 runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
            "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}

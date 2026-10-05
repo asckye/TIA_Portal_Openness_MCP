@@ -10,7 +10,8 @@
     <Compile Remove="Adapters/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../Logic/V4/*.cs" LinkBase="V4" />
+    <!-- Only the V4 result contract; the D1 candidate policies in the same folder belong to the engines and hosts. -->
+    <Compile Include="../../Logic/V4/Envelope.cs;../../Logic/V4/Error.cs;../../Logic/V4/Paging.cs;../../Logic/V4/Plan.cs;../../Logic/V4/ResultMapping.cs;../../Logic/V4/V4Json.cs;../../Logic/V4/V4Validation.cs" LinkBase="V4" />
     <ProjectReference Include="../Contracts/TiaOpenness.Contracts.csproj" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />

@@ -4,6 +4,65 @@ namespace TiaMcp.LegacyHost;
 
 internal static class BatchImportContract
 {
+    internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request)
+    {
+        using var json = System.Text.Json.JsonDocument.Parse(payload?.ToJsonString() ?? throw new InvalidDataException("Missing import candidate result."));
+        var result = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Envelope>(json.RootElement.GetRawText());
+        string tool = (string)request["tool"]!;
+        if (!TiaMcp.Logic.V4.PlcImportContract.Entries.Contains(tool, StringComparer.Ordinal) || result.Meta.Tool != tool
+            || result.Meta.RequestId != (string?)request["requestId"] || result.Meta.BehaviorPolicy != TiaMcp.Logic.V4.BehaviorPolicy.SafeV4
+            || result.Meta.ReleaseKey is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21")) throw new InvalidDataException("Import candidate response identity mismatch.");
+        bool apply = (string?)request["mode"] == "apply";
+        if (!apply && result.Meta.Execution is not (TiaMcp.Logic.V4.Execution.ReadOnly or TiaMcp.Logic.V4.Execution.NotStarted)) throw new InvalidDataException("Import preview mutated the project.");
+        if (result.Data == null) { if (result.Ok) throw new InvalidDataException("Import success requires evidence."); return result; }
+        var data = JsonNode.Parse(result.Data.Value.GetRawText())!.AsObject();
+        if (data["plan"] != null)
+        {
+            var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
+            var normalized = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Logic.V4.PlcImportRequest>(request.ToJsonString(),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })!;
+            if (plan.ArgumentsHash != TiaMcp.Logic.V4.DeviceCreationSession.Hash(normalized)
+                || plan.InventoryHash != TiaMcp.Logic.V4.DeviceCreationSession.Hash(new JsonObject { ["inventory"] = data["inventory"]?.DeepClone(), ["targets"] = data["targets"]?.DeepClone() })
+                || plan.Hash != TiaMcp.Logic.V4.DeviceCreationSession.Hash(new { releaseKey = plan.ReleaseKey, tool = plan.Tool, argumentsHash = plan.ArgumentsHash,
+                    identity = plan.Identity, inputHashes = plan.InputHashes, inventoryHash = plan.InventoryHash, operations = plan.Operations, warnings = plan.Warnings }))
+                throw new InvalidDataException("Import plan hash/arguments/evidence mismatch.");
+            if (plan.Tool != tool || plan.ReleaseKey != result.Meta.ReleaseKey || plan.Operations.Count < 1
+                || plan.Operations.Count > (request["maxItems"]?.GetValue<int>() ?? 128) || plan.Operations.Any(o => o.Tool != tool)
+                || plan.InputHashes.Count != plan.Identity.Files.Count || plan.Identity.Files.Any(f => !f.Exists || !plan.InputHashes.TryGetValue(f.Path, out var h) || h != f.Sha256)) throw new InvalidDataException("Import plan scope/files mismatch.");
+            if (apply && (request["confirm"]?.GetValue<bool>() != true || plan.Hash != (string?)request["expectedPlanHash"]
+                || TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(plan.Identity.ProjectFile!) != TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject((string)request["expectedProjectFile"]!))) throw new InvalidDataException("Import confirmation mismatch.");
+            foreach (var operation in plan.Operations)
+            {
+                var target = operation.Arguments.GetProperty("target"); string kind = target.GetProperty("kind").GetString()!;
+                string group = target.GetProperty("groupPath").GetString()!;
+                string expected = (string?)request[kind == "UDT" ? "typeGroupPath" : kind == "TagTable" ? "tagFolderPath" : "blockGroupPath"] ?? "";
+                if (group != expected || operation.Arguments.GetProperty("overwrite").GetBoolean() != (request["overwrite"]?.GetValue<bool>() ?? false)) throw new InvalidDataException("Import target/options mismatch.");
+            }
+            if (!apply && data["importIssued"]?.GetValue<bool>() != false) throw new InvalidDataException("Preview import evidence conflicts.");
+        }
+        else if (result.Ok) throw new InvalidDataException("Import success requires a plan.");
+        if (apply && data["items"] is JsonArray items)
+        {
+            var children = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.BatchItem[]>(items.ToJsonString());
+            var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
+            if (children.Length != plan.Operations.Count || children.Any(c => c.Target != plan.Operations[c.Index].Arguments.GetProperty("inputPath").GetString())) throw new InvalidDataException("Import children do not match the reviewed order.");
+            _ = new TiaMcp.Logic.V4.BatchData(children); bool stopped = false; int cause = -1;
+            foreach (var child in children)
+            {
+                if (child.Result.Meta.Tool != tool || child.Result.Meta.ReleaseKey != result.Meta.ReleaseKey || child.Result.Meta.RequestId != result.Meta.RequestId) throw new InvalidDataException("Import child identity mismatch.");
+                if (child.Result.Ok)
+                {
+                    if (stopped || child.Result.Data?.GetProperty("contentVerified").GetBoolean() != true || child.Result.Data?.GetProperty("nativeImportCalls").GetInt32() != 1) throw new InvalidDataException("Import success lacks ordered content readback.");
+                }
+                else if (!stopped) { stopped = true; cause = child.Index; }
+                else if (child.Result.Error?.Details is not TiaMcp.Logic.V4.NotExecutedDetails skipped || skipped.CauseIndex != cause) throw new InvalidDataException("Import continued after failure.");
+            }
+            if (children.Any(c => c.Result.Meta.Outcome == TiaMcp.Logic.V4.Outcome.Unknown) && result.Meta.Outcome != TiaMcp.Logic.V4.Outcome.Unknown
+                || result.Ok && children.Any(c => !c.Result.Ok)) throw new InvalidDataException("Import aggregate lost child outcomes.");
+        }
+        else if (apply && result.Ok) throw new InvalidDataException("Apply lacks per-item evidence.");
+        return result;
+    }
     internal static JsonObject Validate(JsonNode? payload,bool dryRun)
     {
         if(payload is not JsonObject result) throw new InvalidDataException("Missing batch import outcome.");

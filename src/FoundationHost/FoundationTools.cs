@@ -133,6 +133,35 @@ internal sealed class FoundationTool : McpServerTool
                 unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
         }
     }
+    internal async ValueTask<CallToolResult> InvokeImportCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string tool, string id, CancellationToken cancellationToken)
+    {
+        var values = new JsonObject();
+        foreach (var pair in args) values[pair.Key] = JsonNode.Parse(pair.Value.GetRawText());
+        void Move(string from, string to) { if (values.TryGetPropertyValue(from, out var value)) { values.Remove(from); values[to] = value; } }
+        Move(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", "inputPath");
+        Move("groupPath", tool == "ImportPlcType" ? "typeGroupPath" : "blockGroupPath"); Move("folderPath", "tagFolderPath");
+        values["tool"] = tool; values["requestId"] = id;
+        values["maxItems"] ??= tool == "ImportPlcBlocksDocuments" ? 16 : TiaMcp.Logic.V4.PlcImportContract.IsDirectory(tool) ? 128 : 1;
+        bool apply = (string?)values["mode"] == "apply", dispatched = false;
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested(); dispatched = true;
+            var result = BatchImportContract.ValidateCandidate(await worker.Call(TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate, values, cancellationToken), values);
+            if (result.Meta.ReleaseKey != release) throw new InvalidDataException("Import candidate release mismatch.");
+            return FoundationV4Result.ImportCandidate(result);
+        }
+        catch (Exception ex)
+        {
+            bool sent = ex.Data["foundationRequestSent"] is bool wasSent ? wasSent : dispatched;
+            bool unknown = apply && sent && !(ex is WorkerOperationException known && known.KnownNoMutation);
+            var error = unknown ? new TiaMcp.Logic.V4.Error("Import outcome is unknown; inspect the residue and rebuild the session.",
+                new TiaMcp.Logic.V4.OutcomeUnknownDetails("worker-channel", new Dictionary<string, JsonElement> { ["residueCheck"] = JsonSerializer.SerializeToElement(new { status = "unavailable", reason = "worker-channel-failure" }) }))
+                : new TiaMcp.Logic.V4.Error("The import candidate worker request could not complete.", new TiaMcp.Logic.V4.PreconditionFailedDetails("plc-import-worker", null));
+            return FoundationV4Result.ImportCandidate(TiaMcp.Logic.V4.PlcImportSession.Result(release, tool, id, null, error,
+                unknown ? TiaMcp.Logic.V4.Outcome.Unknown : TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation,
+                unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
+        }
+    }
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken, string? release = null, string? id = null)
     {
         bool dispatched = false;

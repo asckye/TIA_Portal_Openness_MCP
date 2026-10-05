@@ -7,6 +7,7 @@ namespace TiaMcp.LegacyHost;
 
 internal static class FoundationV4Result
 {
+    internal static CallToolResult ImportCandidate(Envelope envelope) => DeviceCandidate(envelope);
     internal static CallToolResult DeviceCandidate(Envelope envelope)
     {
         var result = McpResult.From(envelope);

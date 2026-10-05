@@ -405,6 +405,431 @@
   ],
   "behaviorEntries": [
     {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
       "releaseKey": "19",
       "entry": "CreateHardwareDevice",
       "family": "P6-DEVICE",
@@ -417,6 +842,91 @@
       }
     },
     {
+      "releaseKey": "19",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
       "releaseKey": "20",
       "entry": "CreateDevice",
       "family": "P6-DEVICE",
@@ -465,6 +975,146 @@
       }
     },
     {
+      "releaseKey": "20",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcBlockDocuments",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports",
+        "groupPath": "",
+        "fileNameWithoutExtension": "Object_1"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcBlocksDocuments",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
       "releaseKey": "21",
       "entry": "CreateDevice",
       "family": "P6-DEVICE",
@@ -510,6 +1160,146 @@
         "family": "S7-1500",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcBlock",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcBlockDocuments",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports",
+        "groupPath": "",
+        "fileNameWithoutExtension": "Object_1"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcBlocksDocuments",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcBlocksFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "groupPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcProgramFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "sourceDir": "C:\\reviewed-imports",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcTagTable",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcType",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
       }
     }
   ],
