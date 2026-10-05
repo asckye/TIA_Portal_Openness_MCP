@@ -161,7 +161,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | ID | 单次任务与文件边界 | 前置依赖 | 验收证明 | 状态 |
 |---|---|---|---|---|
 | P6-01 | 合并后冻结八版事实与任务路径清单；重跑 Generate-Phase6Plan.py，固定新契约快照目录/生成规则；登记 I 与 L5 实际状态 | 本规范；只读核对 I，不改服务 | 两次生成相同、C；当前目录与源码一致 | todo |
-| P6-02 | 新建 V4 Envelope/错误码/分页/计划 DTO 和序列化单一边界；只改公共 Logic/Contracts 与项目接线，不迁工具 | 01 | T；成功/拒绝/失败/partial/unknown 黄金字节，null/键序/关联 ID；无 Siemens 引用 | todo |
+| P6-02 | 已在公共 Logic 实现 V4 信封、25 种错误详情、分页/批次/计划 DTO、MCP/CLI 映射和单一序列化/校验边界，补齐黄金字节、往返、文化与非法组合测试，现有工具不接线 | 本规范（不依赖 01） | T；成功/拒绝/失败/partial/unknown 黄金字节，null/键序/关联 ID；无 Siemens 引用 | done |
 | P6-03 | 新建 P/S/N/R/M/L/V/C/W 类型及校验适配层，ToolArguments 按目标 schema；保持原 parser 预算 | 02 | T；双编码、重复字段、溢出、null/缺省、批次 allowlist/上限正反例 | todo |
 | P6-04 | 新建 B 构造 DTO 与按 kind 的联合、嵌套 call 字段；限定新 DTO/转换文件 | 02 | T；Foundation 窄语法、输出版本/预算、XML 内容等价 | todo |
 | P6-05 | 新建 H 的 Classic/Unified/AML 类型，控件联合各自收窄；限定 H DTO 文件 | 02 | T；布局/屏幕/包样本和非法属性，Classic 与 Unified 不互换 | todo |

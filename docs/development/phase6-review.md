@@ -140,6 +140,22 @@ MCP `structuredContent` **就是上述 Envelope**；同时提供一个 TextConte
 
 CLI 的工具命令 stdout 输出一份相同 JSON，stderr 仅诊断；上述 0/2/3/4/5 为结果退出码。CLI 语法错误退出 64，无法创建工具上下文的进程级故障退出 70；这两者不得输出假成功信封。用户要求的人类报告属于 data 内文件或内容，不能改变机器退出码。错误码落地后再把冻结 MCP 文本统一为英文，并同时迁移 `TryCanonicalizeEnumArgument`、`OnlineToolPolicy.IsOnlineModeError`、Studio 错误映射、快照及 `Test-LocalStability.py` 的文本消费者。
 
+P6-02 落地补充（以下每项固定一个原规范未定细节）：
+
+- 公共 V4 类型位于 `TiaMcp.Logic.V4`（net48/net10.0）；`V4Json` 是唯一编解码入口，现有工具与 `ResponseMeta` 不接线，Contracts 继续不依赖 JSON 库。
+- JSON 使用无 BOM UTF-8、无缩进、STJ 默认转义与 invariant culture；固定字段按本节示例/表格次序输出，闭集字符串精确匹配，拒绝缺字段、未知字段、重复字段、数值枚举和非有限数字。
+- 时间使用 UTC `Z`、秒后 0–7 位小数（去尾零）；构造时转换时区，读取只接受该 UTC RFC3339 形式，未指定时区的 DateTime 拒绝序列化。
+- 错误详情中的文本字段均为 `string|null`；allowedValues/candidates/targets 为 `string[]`（无值为 `[]`），limit/actual 为非负 `int64|null`，causeIndex 为非负 `int32|null`，succeeded/failed/notExecuted 为非负 int32；可选 allowedValues 也始终输出。
+- PARTIAL_FAILURE 的计数必须同时包含成功项及失败/未执行项；没有可计数项目的已知部分副作用使用三个 0，副作用证据放在 data，不能据计数猜测原生状态。
+- 原生 evidence 和警告 details 为 `map<string,JSON值>`，保留精确键名、嵌套对象、数组与显式 null，字典按 ordinal 键序冻结；脱敏由证据生产者负责，禁止传入堆栈和凭据。
+- 信封 data 在边界冻结为 JSON 对象；领域 DTO 通过同一 V4Json 转换，data 内数组不改序，批次 index 从 0 连续递增，批次构造/读取校验 unknown 优先于 partial 并保留全部子信封。
+- requestId 是非空字符串，优先保留上游日志 ID；无上游 ID 时使用本地 GUID 的 32 位小写无连字符形式；SESSION_RESET_REQUIRED 必须为拒绝且 requiresSessionReset=true，current 必须含 UNVERIFIED_BEHAVIOR。
+- 分页 limit 为正 int32；offset 页仅填 offset/nextOffset，cursor 页仅填 cursor/nextCursor，未完成页必须给出前进的 next；`CursorScope={releaseKey:string,sessionId:string,bindingEpoch:int64,queryHash:string,snapshotId:string}` 供宿主核对游标作用域，不能据完整页推断完整工程结果。
+- 计划沿用第 4 节的 hash 字段（错误详情中仍名为 planHash）；hash/argumentsHash/inventoryHash/文件 sha256 均为 64 位小写十六进制 SHA-256，inputHashes 为按 ordinal 路径键排序的 `map<string,string>`，inventoryHash 不适用为 null，实际规范化和摘要计算由后续领域政策实现。
+- 计划 identity 固定为 `{processId:int32|null,processStartUtc:string|null,projectFile:string|null,bindingEpoch:int64|null,workspaceRoot:string|null,files:PlanFile[]}`；工程身份须完整 PID/启动时间/工程/绑定纪元，离线身份只填 workspaceRoot 与文件身份，二者互斥。
+- `PlanFile={path:string,exists:bool,byteLength:int64|null,sha256:string|null}` 区分现有输入/输出与尚不存在的输出；存在时长度和哈希必填，不存在时二者为 null；`PlanOperation={tool:string,target:string|null,arguments:object}` 保留操作顺序，arguments 后续按领域 schema 收窄。
+- PreviewData 只有 plan 字段，生成的预览必须是 read-only 成功且计划与信封的 tool/releaseKey 相同；MCP 映射为无 SDK 依赖的值对象，从一次序列化同时生成 structuredContent 和单个 TextContent，CLI 的 64/70 通过独立进程故障枚举映射。
+
 ## 4. D1 安全策略和验收
 
 所有写操作统一 `mode="preview"|"apply"`（默认 preview）、`confirm=false`；apply 要求 confirm=true、expectedPlanHash 和 expectedProjectFile。过程身份使用 `{processId,processStartUtc}`，工程身份还包括绑定纪元；离线文件操作用显式 workspaceRoot 和输入/输出文件身份代替工程身份。preview 可读目标/目录，但不得创建、导入、编译、下线、保存或重试写入。
