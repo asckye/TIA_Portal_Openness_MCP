@@ -313,6 +313,18 @@ if ($DocumentationOnly) {
     Write-Host 'Release documentation assertions passed.'
     return
 }
+# Refuse candidate build artifacts before prerequisites, network, or release mutations.
+$testPolicyMarker = 'TiaMcpTestPolicy' + [char]17 + 'P6-DEVICE:safe-v4'
+$policyRoots = @('runtime', 'src/Engine/bin', 'src/Engine/bin-v20', 'src/FoundationHost/bin', 'src/Worker/bin')
+foreach ($policyRoot in $policyRoots) {
+    $policyDirectory = Join-Path $repo $policyRoot
+    if (-not (Test-Path -LiteralPath $policyDirectory)) { continue }
+    foreach ($policyFile in Get-ChildItem -LiteralPath $policyDirectory -Recurse -File | Where-Object { $_.Extension -in '.dll','.exe' }) {
+        if ([Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($policyFile.FullName)).Contains($testPolicyMarker)) {
+            throw "Test-only behavior policy assembly cannot be released: $($policyFile.FullName)"
+        }
+    }
+}
 if (-not $Version) { throw '-Version is required' }
 if ($NoReuse -and $SkipBuild) { throw '-NoReuse and -SkipBuild cannot be combined' }
 if ($EarlyGatesOnly) {

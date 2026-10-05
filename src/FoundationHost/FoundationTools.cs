@@ -107,6 +107,32 @@ internal sealed class FoundationTool : McpServerTool
         => InvokeCoreAsync(request, cancellationToken);
     internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)
         => InvokeCoreAsync(request, cancellationToken, release, id);
+    internal async ValueTask<CallToolResult> InvokeDeviceCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string id, CancellationToken cancellationToken)
+    {
+        var values = new JsonObject();
+        foreach (var pair in args) values[pair.Key] = JsonNode.Parse(pair.Value.GetRawText());
+        values["requestId"] = id;
+        bool apply = (string?)values["mode"] == "apply";
+        bool dispatched = false;
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            dispatched = true;
+            var result = await worker.Call(TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate, values, cancellationToken);
+            return FoundationV4Result.DeviceCandidate(DeviceAddContract.ValidateCandidate(result, values));
+        }
+        catch (Exception ex)
+        {
+            bool sent = ex.Data["foundationRequestSent"] is bool wasSent ? wasSent : dispatched;
+            bool unknown = apply && sent && !(ex is WorkerOperationException known && known.KnownNoMutation);
+            var error = unknown
+                ? new TiaMcp.Logic.V4.Error("Device creation outcome is unknown; rebuild the session and inspect the target.", new TiaMcp.Logic.V4.OutcomeUnknownDetails("worker-channel", new Dictionary<string, JsonElement> { ["residueCheck"] = JsonSerializer.SerializeToElement(new { status = "unavailable", reason = "worker-channel-failure" }) }))
+                : new TiaMcp.Logic.V4.Error("The candidate worker request could not complete.", new TiaMcp.Logic.V4.PreconditionFailedDetails("device-candidate-worker", null));
+            return FoundationV4Result.DeviceCandidate(TiaMcp.Logic.V4.DeviceCreationSession.Result(release, "CreateHardwareDevice", id, null, error,
+                unknown ? TiaMcp.Logic.V4.Outcome.Unknown : TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation,
+                unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
+        }
+    }
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken, string? release = null, string? id = null)
     {
         bool dispatched = false;

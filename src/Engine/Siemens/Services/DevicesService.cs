@@ -52,6 +52,56 @@ namespace TiaMcpServer.Siemens.Services
             _session = session;
         }
 
+        private TiaMcp.Logic.V4.DeviceCreationSession? _deviceCreation;
+        private TiaMcp.Adapters.Hardware.DeviceCreationAdapter? _deviceAdapter;
+        private string? _deviceBindingGeneration;
+        private long _deviceBindingEpoch;
+
+        public TiaMcp.Logic.V4.Envelope CreateDeviceCandidate(string tool, string typeIdentifier, string deviceName, string family,
+            string mode, bool confirm, string expectedPlanHash, string expectedProjectFile)
+        {
+            var release = _session.PortalMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var id = TiaMcp.Logic.V4.Meta.Correlate(InvocationJournal.CorrelationId);
+            if (TiaMcp.Logic.V4.BehaviorCapabilities.Select(typeof(DevicesService).Assembly, release, "P6-DEVICE") != TiaMcp.Logic.V4.BehaviorPolicy.SafeV4)
+                return TiaMcp.Logic.V4.DeviceCreationSession.Result(release, tool, id, null,
+                    new TiaMcp.Logic.V4.Error("The candidate device policy is not selected.", new TiaMcp.Logic.V4.UnsupportedCapabilityDetails(release, "P6-DEVICE", "create")),
+                    TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, TiaMcp.Logic.V4.Execution.NotStarted);
+            _deviceCreation ??= new TiaMcp.Logic.V4.DeviceCreationSession();
+            if (_deviceCreation.RequiresSessionReset)
+                return TiaMcp.Logic.V4.DeviceCreationSession.Result(release, tool, id, null,
+                    new TiaMcp.Logic.V4.Error("The device-create session must be rebuilt.", new TiaMcp.Logic.V4.SessionResetRequiredDetails("device-create-unknown")),
+                    TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, TiaMcp.Logic.V4.Execution.NotStarted);
+            try
+            {
+                if (_session.CurrentProject == null || _session.CurrentPortal == null)
+                    throw new TiaMcp.Logic.V4.DeviceCreationRejection(new TiaMcp.Logic.V4.Error("No project is bound.", new TiaMcp.Logic.V4.ProjectNotBoundDetails()));
+                var project = _session.CurrentProject;
+                TiaMcp.Logic.V4.PlanIdentity Identity()
+                {
+                    _session.VerifyBinding("device-creation-candidate");
+                    if (!object.Equals(project, _session.CurrentProject))
+                        throw new TiaMcp.Logic.V4.DeviceCreationRejection(new TiaMcp.Logic.V4.Error("Project binding changed.", new TiaMcp.Logic.V4.IdentityMismatchDetails("project", null, null)));
+                    var binding = _session.GetBindingIdentity()["identity"]!.AsObject();
+                    var generation = binding["generation"]!.GetValue<string>();
+                    if (generation != _deviceBindingGeneration) { _deviceBindingGeneration = generation; _deviceBindingEpoch++; }
+                    return new TiaMcp.Logic.V4.PlanIdentity(binding["processId"]!.GetValue<int>(),
+                        DateTimeOffset.Parse(binding["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
+                        TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(project.Path.FullName), _deviceBindingEpoch, null, Array.Empty<TiaMcp.Logic.V4.PlanFile>());
+                }
+                if (_deviceAdapter == null || !_deviceAdapter.IsProject(project))
+                    _deviceAdapter = new TiaMcp.Adapters.Hardware.DeviceCreationAdapter(project, _session.CurrentPortal, Identity);
+                else _deviceAdapter.Identity = Identity;
+                return _deviceCreation.Run(_deviceAdapter, release, tool, id, typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile);
+            }
+            catch (Exception ex)
+            {
+                var error = ex is TiaMcp.Logic.V4.DeviceCreationRejection rejection ? rejection.Error
+                    : new TiaMcp.Logic.V4.Error("Device preflight is unavailable; no Create was issued.", new TiaMcp.Logic.V4.PreconditionFailedDetails("device-create-preflight", null));
+                return TiaMcp.Logic.V4.DeviceCreationSession.Result(release, tool, id, null, error,
+                    TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, TiaMcp.Logic.V4.Execution.NotStarted);
+            }
+        }
+
 
         public Device AddDevice(string orderNumber, string version, string deviceName)
         {

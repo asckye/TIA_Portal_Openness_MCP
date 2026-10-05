@@ -343,8 +343,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array.Empty<Warning>();
+            var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
+            if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, policy) == BehaviorPolicy.SafeV4)
+            { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
+                outcome == Outcome.Unknown, policy, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
@@ -587,7 +590,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 AssertV4Tool(name);
                 var usage = ResultBody(new ToolUsageTools().GetToolUsage(toolName: name));
                 if (usage?["ok"]?.GetValue<bool?>() != true) { problems.Add(name + ": usage retrieval failed"); continue; }
-                foreach (var args in new[] { row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
+                foreach (var args in new[] { BehaviorCapabilities.CandidateExample(ReleaseKey, name) ?? row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
                 {
                     var error = ValidateInfrastructureExample(name, args.AsObject());
                     if (error != null) problems.Add(name + ": " + V4Json.Serialize(error));

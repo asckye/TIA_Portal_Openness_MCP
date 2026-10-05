@@ -2,6 +2,43 @@ using System.Text.Json.Nodes;
 namespace TiaMcp.LegacyHost;
 internal static class DeviceAddContract
 {
+    internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request)
+    {
+        if (payload == null) throw new InvalidDataException("Missing device candidate result.");
+        var result = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Envelope>(payload.ToJsonString());
+        if (result.Meta.ReleaseKey != "19" || result.Meta.Tool != "CreateHardwareDevice" || result.Meta.RequestId != (string?)request["requestId"]
+            || result.Meta.BehaviorPolicy != TiaMcp.Logic.V4.BehaviorPolicy.SafeV4) throw new InvalidDataException("Candidate response identity mismatch.");
+        bool apply = (string?)request["mode"] == "apply";
+        if (!apply && result.Meta.Execution is not (TiaMcp.Logic.V4.Execution.ReadOnly or TiaMcp.Logic.V4.Execution.NotStarted)) throw new InvalidDataException("Candidate preview wrote to the project.");
+        if (result.Ok)
+        {
+            var data = JsonNode.Parse(result.Data!.Value.GetRawText())!.AsObject();
+            string article = (string?)data["catalogEntry"]?["articleNumber"] ?? "";
+            string version = (string?)data["catalogEntry"]?["version"] ?? "";
+            string family = (string?)request["family"] ?? "";
+            bool allowed = family == "S7-1200" ? article is "6ES7211-1BE40-0XB0" or "6ES7 211-1BE40-0XB0"
+                : family == "S7-1500" && article is "6ES7513-1AM03-0AB0" or "6ES7 513-1AM03-0AB0";
+            if (!allowed || version.Length == 0 || (string?)request["typeIdentifier"] != "OrderNumber:" + article + "/" + version
+                || (string?)data["capabilityScope"]?["host"] != "foundation" || (string?)data["capabilityScope"]?["family"] != family)
+                throw new InvalidDataException("Candidate model is outside Foundation capability.");
+            if (data["createIssued"]?.GetValue<bool>() != apply
+                || result.Meta.Execution != (apply ? TiaMcp.Logic.V4.Execution.Completed : TiaMcp.Logic.V4.Execution.ReadOnly)
+                || apply && ((string?)data["created"]?["name"] != (string?)request["deviceName"] || (string?)data["residueCheck"]?["status"] != "checked"))
+                throw new InvalidDataException("Candidate success did not verify the planned operation.");
+            var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
+            var arguments = plan.Operations.Single().Arguments;
+            if (plan.ReleaseKey != "19" || plan.Tool != "CreateHardwareDevice" || plan.Operations[0].Tool != plan.Tool
+                || arguments.GetProperty("typeIdentifier").GetString() != (string?)request["typeIdentifier"]
+                || arguments.GetProperty("deviceName").GetString() != (string?)request["deviceName"]
+                || arguments.GetProperty("family").GetString() != (string?)request["family"]
+                || (string?)data["catalogEntry"]?["typeIdentifier"] != (string?)request["typeIdentifier"])
+                throw new InvalidDataException("Candidate plan target mismatch.");
+            if (apply && (request["confirm"]?.GetValue<bool>() != true || plan.Hash != (string?)request["expectedPlanHash"]
+                || TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(plan.Identity.ProjectFile!) != TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject((string)request["expectedProjectFile"]!)))
+                throw new InvalidDataException("Candidate apply confirmation mismatch.");
+        }
+        return result;
+    }
     internal static JsonObject Validate(JsonNode? payload,JsonObject request)
     {
         if(payload is not JsonObject r) throw new InvalidDataException("Missing device creation result.");

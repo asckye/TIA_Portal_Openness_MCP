@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup Condition="'$(TiaMcpTestPolicy)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TiaMcpTestPolicy</_Parameter1>
+      <_Parameter2>$(TiaMcpTestPolicy)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <Target Name="ValidateTiaMcpTestPolicy" BeforeTargets="CoreCompile">
+    <Error Condition="'$(TiaMcpTestPolicy)' != '' and '$(TiaMcpTestPolicy)' != 'P6-DEVICE:safe-v4'" Text="Unsupported test policy build. Use P6-DEVICE:safe-v4 only for isolated test artifacts." />
+  </Target>
+</Project>

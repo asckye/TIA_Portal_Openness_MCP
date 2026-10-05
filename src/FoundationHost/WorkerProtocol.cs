@@ -18,6 +18,8 @@ internal sealed class WorkerOutcomeState
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
         WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
+        if (operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate && result?["meta"]?["requiresSessionReset"]?.GetValue<bool>() == true)
+            Failed(true, new IOException("Device candidate outcome is unknown; inspect before a new explicit session."));
         if(operation is "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
             Failed(true,new IOException("External-source outcome is unknown; inspect before a new explicit session."));
         if(operation is "AddDeviceWithFallback" or "ImportFromDocuments" or "ImportBlocksFromDocuments" or "DeletePlcExternalSource" or "ExportAsDocuments" or "ExportBlocksAsDocuments" or "ExportPlcWatchTable" or "ExportTechnologyObject" or "ExportBlocks" or "ExportTypes" or "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
@@ -30,6 +32,7 @@ internal static class WorkerProtocol
     internal static bool RequiresSessionReset(bool sent,Exception error) => sent && !(error is WorkerOperationException known && known.KnownNoMutation);
     internal static void ValidateExchangeResult(string operation,JsonObject arguments,JsonNode? result)
     {
+        if (operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate) { DeviceAddContract.ValidateCandidate(result, arguments); return; }
         if(operation=="AddDeviceWithFallback") { DeviceAddContract.Validate(result,arguments); return; }
         if(operation=="ImportBlocksFromDocuments") { BatchDocumentImportContract.Validate(result,arguments); return; }
         if(operation=="ImportFromDocuments") { DocumentImportContract.Validate(result,arguments); return; }

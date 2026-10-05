@@ -80,6 +80,9 @@ namespace TiaOpenness.Shared
 
         private static JsonObject? CallExample(string name, string release, string profile)
         {
+            var candidate = TiaMcp.Logic.V4.BehaviorCapabilities.CandidateExample(release, RegisteredName(name, release));
+            if (candidate != null) return new JsonObject { ["arguments"] = candidate, ["parameters"] = new JsonObject(),
+                ["note"] = "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
             var entry = profile == "full-engine" ? ProfileEntry(name, release) : null;
             var source = (string?)entry?["currentName"] ?? name;
             var row = Data.Value["calls"]?["profiles"]?[profile]?[source]?.DeepClone();

@@ -55,6 +55,9 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentImportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAdd.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/DeviceCreationAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceCreationCandidate.cs" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/OpennessAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/EngineeringExtensions.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/HmiNavigator.cs" />

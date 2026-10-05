@@ -68,9 +68,24 @@ shared_paths = ET.fromstring(read(SH + "TiaSharedAdapterPaths.props"))
 assert shared_paths.findtext(".//TiaSharedAdapterPaths") == "false"
 behavior_families = "DEVICE IMPORT EXPORT SESSION CLOSE SOURCE COMPILE FALLBACK".split()
 ledger = read("docs/reference/real-machine-ledger.md")
-for fam in behavior_families:
-    rows = re.findall(r"^\| P6-" + fam + r" .*", ledger, re.M)
-    assert len(rows) == 1 and "**NOT RUN**" in rows[0], (fam, rows)
+
+def behavior_records(text):
+    records = []
+    for fam in behavior_families:
+        rows = re.findall(r"^\| P6-" + fam + r" .*", text, re.M)
+        assert len(rows) == 1, (fam, rows)
+        # Only a release-scoped L5 acceptance can enable a released policy.
+        # Unscoped PASSED, offline evidence and another release never grant it.
+        decisions = re.findall(r"L5\[([^\]]+)\]\s*=\s*(PASSED|NOT RUN|FAILED)\b", rows[0])
+        assert len(dict(decisions)) == len(decisions), (fam, "duplicate L5 release")
+        assert all(release in keys for release, _ in decisions), (fam, "unknown L5 release")
+        for release in keys:
+            status = dict(decisions).get(release, "NOT RUN")
+            records.append({"family": "P6-" + fam, "releaseKey": release,
+                            "state": "safe-v4" if status == "PASSED" else "current", "l5": status})
+    return records
+
+behavior_policies = behavior_records(ledger)
 sys.path.insert(0, str(root / "scripts/checks"))
 import engine_sources
 engine = engine_sources.EngineSources(root)
@@ -426,7 +441,14 @@ for k in keys[-2:]:
 
 # One embedded record per release, contract version and V4 target. The registration
 # map is generated from the same transition decisions as the source checks.
-runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False, "releases": {}}
+candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
+    '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
+behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
+    "example": {"typeIdentifier": "<exact catalog TypeIdentifier>", "deviceName": "Device_1",
+                "family": "GSD" if entry == "CreateGsdDevice" else "S7-1500", "mode": "preview", "confirm": False}}
+    for k in keys for entry, family in sorted(candidate_entries.items()) if entry in {renames[n] for n in tools[k]}]
+runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
+           "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}
 for k in keys[-2:]:
     lite_names = {r["name"] for r in lite_proposal["releases"][k]}
     runtime_rows = {}
@@ -813,7 +835,9 @@ table(["任务", "当前服务 / 原语", "再生成的静态证据", "原生验
 out.append("五项已合并；共享原语清单从 " + link(SH+"TiaSharedAdapterPaths.props") + " 的 shared-native/*.props 提取，开关默认 false。静态 accepted 不等于 L5，G3/J 与发布门槛不变。\n")
 table(["已完成项目", "当前文件"], [["P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验", "<br>".join(link(p) for p in sorted(files) if p.startswith(L+"V4/") and p.endswith(".cs"))],
       ["D334：源码目录迁移完成；产品名/运行目录仍待 36–39", link("docs/development/repository-layout.md")]])
-out.append("台账已核对：" + "、".join("P6-"+f for f in behavior_families) + "，八族全部 NOT RUN；P6-PRODUCT 也为 NOT RUN。未运行任何原生调用。\n")
+out.append("D1 发布政策按台账逐版本生成；只有族行中明确的 `L5[releaseKey]=PASSED` 启用 safe-v4，未记录或失败均保持 current。当前 "
+           + str(sum(r['state'] == 'current' for r in behavior_policies)) + "/" + str(len(behavior_policies))
+           + " 条记录为 current。生成器不运行原生调用，测试构建覆盖不改变台账或发布记录。\n")
 end()
 
 def self_test():
@@ -825,6 +849,16 @@ def self_test():
         try: usage_generator['resolve_names'](NEW_V4_TOOLS, registered, {n: n for n in NEW_V4_TOOLS})
         except AssertionError: pass
         else: raise AssertionError('Unreviewed or missing new V4 registration accepted')
+    baseline = '\n'.join('| P6-' + f + ' | **NOT RUN** | acceptance |' for f in behavior_families)
+    assert all(r['state'] == 'current' for r in behavior_records(baseline))
+    passed = baseline.replace('| P6-DEVICE | **NOT RUN**', '| P6-DEVICE | L5[19]=PASSED; L5[20]=FAILED; L5[21]=NOT RUN')
+    assert [(r['family'], r['releaseKey']) for r in behavior_records(passed) if r['state'] == 'safe-v4'] == [('P6-DEVICE', '19')]
+    assert all(r['state'] == 'current' for r in behavior_records(baseline.replace('**NOT RUN**', 'offline PASSED; L5 PASSED')))
+    for invalid in ('L5[19]=PASSED L5[19]=FAILED', 'L5[15]=PASSED'):
+        try: behavior_records(baseline.replace('**NOT RUN**', invalid, 1))
+        except AssertionError: pass
+        else: raise AssertionError('ambiguous L5 acceptance admitted')
+    print('Behavior policies: 64 fail-closed records, scoped acceptance and 2 invalid ledgers passed.')
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
     validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",
@@ -872,7 +906,7 @@ def self_test():
         except AssertionError: rejected += 1
         else: raise AssertionError("negative inventory check unexpectedly passed")
     assert rejected == 6
-    print("Self-check: 6 mapping/inventory and 6 full-engine migration negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 NOT RUN behavior families passed.")
+    print("Self-check: 6 mapping/inventory and 6 full-engine migration negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 behavior families passed.")
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

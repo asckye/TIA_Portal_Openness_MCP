@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -38,7 +39,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (types == null) throw new ArgumentNullException(nameof(types));
             var methods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
-            foreach (var type in types)
+            var allTypes = types.ToArray();
+            var candidates = allTypes.SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
+                .Where(m => m.GetCustomAttribute<BehaviorCandidateAttribute>() != null).ToArray();
+            foreach (var type in allTypes)
             {
                 foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
                 {
@@ -49,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         throw new InvalidOperationException("Duplicate MCP tool name '" + name + "': "
                             + previous.DeclaringType!.FullName + "." + previous.Name + " and "
                             + method.DeclaringType!.FullName + "." + method.Name + ". Tool names must be unique (OrdinalIgnoreCase).");
-                    methods.Add(name, method);
+                    methods.Add(name, BehaviorCapabilities.SelectMethod(name, method, candidates, McpServer.ReleaseKey));
                 }
             }
             Methods = methods.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToList().AsReadOnly();
@@ -106,6 +110,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (required.Count > 0) schema["required"] = required;
             McpServer.RemoveV4NullDefaults(schema);
+            var candidate = method.GetCustomAttribute<BehaviorCandidateAttribute>();
+            if (candidate != null)
+                schema = JsonNode.Parse(((IBehaviorCandidateContract)Activator.CreateInstance(candidate.Contract)!).InputSchema.GetRawText())!.AsObject();
             return new SchemaHintedTool(tool, new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,

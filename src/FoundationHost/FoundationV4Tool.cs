@@ -47,13 +47,18 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly McpServerTool inner;
     private readonly string release;
     private readonly Tool tool;
+    private readonly bool deviceCandidate;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
-    internal FoundationV4Tool(McpServerTool inner, string release)
+    internal FoundationV4Tool(McpServerTool inner, string release) : this(inner, release, null) { }
+
+    internal FoundationV4Tool(McpServerTool inner, string release, Func<string, BehaviorPolicy>? policyForTest)
     {
         this.inner = inner; this.release = release;
         var source = inner.ProtocolTool;
+        deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
+            && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
         var properties = schema["properties"]!.AsObject();
         JsonElement? typedSchema = null;
@@ -95,8 +100,14 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (parameter != null) description = description.Replace(parameter + "Json", parameter)
             + " Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply.";
         if (parameter == "artifacts") description = "Offline dependency-first import planning. artifacts is a typed array of {id, target?, priority?, dependencies?}; 1..256 unique IDs, no missing or cyclic dependencies. No worker or file operations.";
+        if (deviceCandidate)
+        {
+            schema = JsonNode.Parse(new DeviceCreationContract().InputSchema.GetRawText())!.AsObject();
+            schema["properties"]!["family"]!["enum"] = new JsonArray("S7-1200", "S7-1500");
+            description = "[PLC foundation][WRITE] Exact catalog device creation, restricted to CPU 1211C 6ES7211-1BE40-0XB0 and CPU 1513 6ES7513-1AM03-0AB0. Default preview; apply needs confirm=true, expectedPlanHash and expectedProjectFile. One Create, no fallback, save, compile or download. Test/accepted behaviorPolicy=safe-v4.";
+        }
         tool = new Tool { Name = Name(source.Name), Description = description
-            + (inner is FoundationTool { IsNative: true } ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
+            + (inner is FoundationTool { IsNative: true } && !deviceCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
@@ -109,7 +120,10 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
-            if (validation.Error != null) return FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true });
+            if (validation.Error != null) return deviceCandidate
+                ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
+                : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true });
+            if (deviceCandidate) return await ((FoundationTool)inner).InvokeDeviceCandidateAsync(args, release, id, cancellationToken);
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             if (parameter != null)
             {

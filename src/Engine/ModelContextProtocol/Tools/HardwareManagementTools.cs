@@ -221,13 +221,14 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
-            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
+            var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, McpServer.ReleaseKey, tool, BehaviorPolicy.Current) : BehaviorPolicy.NotApplicable;
+            if (policy == BehaviorPolicy.Current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
             if (incomplete) warnings.Add(new Warning(WarningCode.IncompleteData, "The returned observation is incomplete; consult the retained evidence.", empty));
             if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "The AML document is a candidate; successful import has not been verified.", empty));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : write ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness ?? (outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.None), paging, warnings);
+                outcome == Outcome.Unknown, policy, completeness ?? (outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.None), paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };

@@ -7,6 +7,12 @@ namespace TiaMcp.LegacyHost;
 
 internal static class FoundationV4Result
 {
+    internal static CallToolResult DeviceCandidate(Envelope envelope)
+    {
+        var result = McpResult.From(envelope);
+        return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
+            Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
+    }
     internal static readonly JsonElement Schema = JsonSerializer.Deserialize<JsonElement>("""
         {"type":"object","additionalProperties":false,"required":["schemaVersion","ok","data","error","meta"],"properties":{
           "schemaVersion":{"type":"integer","const":4},"ok":{"type":"boolean"},

@@ -17,6 +17,502 @@
   "schemaVersion": 1,
   "contractVersion": 4,
   "foundationLite": false,
+  "behaviorPolicies": [
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-DEVICE",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-IMPORT",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-EXPORT",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SESSION",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-CLOSE",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-SOURCE",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-COMPILE",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "14sp1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "15.1",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "family": "P6-FALLBACK",
+      "releaseKey": "21",
+      "state": "current",
+      "l5": "NOT RUN"
+    }
+  ],
+  "behaviorEntries": [
+    {
+      "releaseKey": "19",
+      "entry": "CreateHardwareDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CreateHardwareDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CreateHardwareDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    }
+  ],
   "releases": {
     "20": [
       {

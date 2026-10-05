@@ -52,7 +52,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            var decorated = ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
+            var decorated = method.GetCustomAttribute<TiaMcp.Logic.V4.BehaviorCandidateAttribute>() != null
+                ? description + TiaOpenness.Shared.ToolUsageCatalog.Hint(name)
+                : ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? ToolCatalog.CreateTool(method)
                 : ToolCatalog.CreateTool(method, new McpServerToolCreateOptions { Name = name, Description = decorated });

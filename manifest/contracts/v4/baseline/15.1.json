@@ -4124,6 +4124,50 @@
       "name": "PlanPlcExternalSourceImport"
     },
     {
+      "descriptionSha256": "b0ba091f1df06b96f130fd8421c854487a2ed7d9cc2b7b80828101fbe7bd4a1b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "inputPath": {
+            "description": "Exact foundation argument: inputPath",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "Exact foundation argument: outputPath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputPath",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "RenderPlcBlock"
+    },
+    {
+      "descriptionSha256": "0b87dd20c3b1ffb0391ba161872c3bba6c3054dfa946a19cfd88cbfc6a01e2ac",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "inputPath": {
+            "description": "Exact foundation argument: inputPath",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "Exact foundation argument: outputPath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputPath",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "RenderPlcProgramAtlas"
+    },
+    {
       "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
       "inputSchema": {
         "additionalProperties": false,
