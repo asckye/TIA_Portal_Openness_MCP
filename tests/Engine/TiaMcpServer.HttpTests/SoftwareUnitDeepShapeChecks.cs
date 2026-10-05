@@ -41,7 +41,7 @@ internal static class SoftwareUnitDeepShapeChecks
         // ---- software units ----
         Service(units+"PlcUnitProvider"); Property(step7,units+"PlcUnitProvider","UnitGroup","PlcUnitSystemGroup");
         Property(step7,units+"PlcUnitSystemGroup","Units","PlcUnitComposition"); Property(step7,units+"PlcUnitSystemGroup","SafetyUnits","PlcSafetyUnitComposition");
-        if(v20) Console.WriteLine("CAPABILITY PlcUnitSystemGroup.Name absent on V20 (ReadPlcSoftwareUnits reports unitGroup.name null there)"); else Property(step7,units+"PlcUnitSystemGroup","Name","String",false);
+        if(v20) Console.WriteLine("CAPABILITY PlcUnitSystemGroup.Name absent on V20 (ListPlcSoftwareUnits reports unitGroup.name null there)"); else Property(step7,units+"PlcUnitSystemGroup","Name","String",false);
         Property(step7,units+"PlcUnitBase","Name","String",true); Property(step7,units+"PlcUnitBase","Author","String",true); Property(step7,units+"PlcUnitBase","NamespacePreset","String",true);
         Property(step7,units+"PlcUnitBase","Comment","MultilingualText",false); Property(step7,units+"PlcUnitBase","Relations","PlcUnitRelationComposition");
         Property(step7,units+"PlcUnitBase","BlockGroup","PlcBlockSystemGroup"); Property(step7,units+"PlcUnitBase","TypeGroup","PlcTypeSystemGroup"); Property(step7,units+"PlcUnitBase","TagTableGroup","PlcTagTableSystemGroup");

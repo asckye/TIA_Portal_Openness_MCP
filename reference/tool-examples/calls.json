@@ -3823,7 +3823,7 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ExchangePlcAlarmTextListsXlsx": {
+      "ExchangePlcAlarmTextLists": {
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "export",
@@ -3838,15 +3838,20 @@
           "unitKind": {
             "exampleValue": "unit"
           },
-          "textListNamesJson": {
-            "exampleValue": "<textListNamesJson from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "culturesJson": {
-            "exampleValue": "[\"en-US\",\"zh-CN\"]"
-          },
           "importOption": {
             "exampleValue": "None"
+          },
+          "textListNames": {
+            "exampleValue": [
+              "AlarmTexts"
+            ],
+            "requiresBinding": true
+          },
+          "cultures": {
+            "exampleValue": [
+              "en-US",
+              "zh-CN"
+            ]
           }
         },
         "operations": {
@@ -4441,8 +4446,11 @@
           "keepEmptyDataBlocks": {
             "exampleValue": false
           },
-          "accessLevelsJson": {
-            "exampleValue": "<accessLevelsJson from this operation's target or user input>",
+          "accessLevels": {
+            "exampleValue": {
+              "Inputs": 4,
+              "SafetyGlobalDBs": 1
+            },
             "requiresBinding": true
           }
         },
@@ -4673,7 +4681,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GetOpcUaConfig": {
+      "GetPlcOpcUaConfiguration": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -4861,7 +4869,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetTechnologyObjects": {
+      "ListTechnologyObjects": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -5159,8 +5167,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
-          "culturesJson": "[\"en-US\",\"zh-CN\"]",
-          "dryRun": true
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -7919,8 +7930,10 @@
           "enabled": {
             "exampleValue": false
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "SessionRequired": true
+            },
             "requiresBinding": true
           }
         },
@@ -8854,16 +8867,8 @@
           "relationType": {
             "exampleValue": "SoftwareUnit"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-            "requiresBinding": true
-          },
           "unitKind": {
             "exampleValue": "unit"
-          },
-          "commentsJson": {
-            "exampleValue": "<commentsJson from this operation's target or user input>",
-            "requiresBinding": true
           },
           "libraryName": {
             "exampleValue": ""
@@ -8873,6 +8878,18 @@
           },
           "copyMode": {
             "exampleValue": "ThrowIfExists"
+          },
+          "properties": {
+            "exampleValue": {
+              "Author": "Engineer"
+            },
+            "requiresBinding": true
+          },
+          "comments": {
+            "exampleValue": {
+              "en-US": "Unit comment"
+            },
+            "requiresBinding": true
           }
         },
         "operations": {
@@ -8906,8 +8923,10 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-              "name": "Example_1"
+              "name": "Example_1",
+              "properties": {
+                "Author": "Engineer"
+              }
             }
           },
           "createRelation": {
@@ -9197,8 +9216,10 @@
           "action": "read"
         },
         "parameters": {
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "IsSimulationDuringBlockCompilationEnabled": true
+            },
             "requiresBinding": true
           }
         },
@@ -9209,7 +9230,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "IsSimulationDuringBlockCompilationEnabled": true
+              }
             }
           }
         },
@@ -10514,8 +10537,8 @@
             "exampleValue": "<exact parameter selected from drive metadata>",
             "requiresBinding": true
           },
-          "valueJson": {
-            "exampleValue": "true"
+          "value": {
+            "exampleValue": true
           }
         },
         "operations": {
@@ -10536,7 +10559,7 @@
             "arguments": {
               "action": "setParameter",
               "parameter": "<exact parameter selected from drive metadata>",
-              "valueJson": "true"
+              "value": true
             }
           }
         },
@@ -12213,7 +12236,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadOpcUaAccessControl": {
+      "GetOpcUaAccessControl": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -12243,7 +12266,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcChecksums": {
+      "GetPlcChecksums": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -12287,7 +12310,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcObjectFingerprints": {
+      "GetPlcObjectFingerprints": {
         "arguments": {
           "softwarePath": "PLC_1",
           "objectKind": "block",
@@ -12351,7 +12374,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadPlcSoftwareUnits": {
+      "ListPlcSoftwareUnits": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -12597,7 +12620,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadTechnologyObjectTree": {
+      "GetTechnologyObjectTree": {
         "arguments": {
           "softwarePath": "PLC_1"
         },

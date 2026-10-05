@@ -14,6 +14,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage SetPlcUnitObjectAccess(string softwarePath, string unitName, string objectKind, string objectPath, string access, bool dryRun = true)
             => _session.RunHmiStepTool("SetPlcUnitObjectAccess", meta => {
+                meta["mayHaveChanged"] = false;
                 var parts = EngineeringGroupOperations.Parts(objectPath);
                 if (objectKind != "block" && objectKind != "type") throw new ArgumentException("objectKind must be block or type.");
                 var desired = (UnitAccessType)EngineeringScalarProperties.ConvertValue(JsonValue.Create(access), typeof(UnitAccessType))!;

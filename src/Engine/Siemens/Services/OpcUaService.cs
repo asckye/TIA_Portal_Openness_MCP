@@ -69,21 +69,21 @@ namespace TiaMcpServer.Siemens.Services
             var data = new JsonObject { ["softwarePath"] = softwarePath, ["timestamp"] = DateTime.Now.ToString("O") };
 
             if (_session.IsProjectNull())
-                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "No project open.", Data = data };
+                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "No project open.", Data = data, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
 
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null)
-                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Data = data };
+                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Data = data, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var provider = plc.GetService<OpcUaProvider>();
                 if (provider == null)
-                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "OpcUaProvider not available for this PLC.", Data = data };
+                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "OpcUaProvider not available for this PLC.", Data = data, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 var sig = GetOpcUaServerInterfaceGroup(plc);
                 if (sig == null)
-                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "ServerInterfaceGroup not accessible.", Data = data };
+                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "ServerInterfaceGroup not accessible.", Data = data, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 data["serverInterfaces"] = CollectOpcUaItems(TryGetPropertyValue(sig, "ServerInterfaces"));
                 data["simaticInterfaces"] = CollectOpcUaItems(TryGetPropertyValue(sig, "SimaticInterfaces"));
@@ -93,7 +93,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "GetOpcUaConfig failed for {SoftwarePath}", softwarePath);
+                _session.Logger?.LogError(ex, "GetPlcOpcUaConfiguration failed for {SoftwarePath}", softwarePath);
                 return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"Error: {ex.Message}", Data = data };
             }
         }
@@ -122,8 +122,9 @@ namespace TiaMcpServer.Siemens.Services
         // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
         public ResponseMessage ManageOpcUaInterface(string softwarePath, string interfaceName, string action = "read", string interfaceType = "ServerInterface", bool dryRun = true)
             => _session.RunHmiStepTool("ManageOpcUaInterface", meta => {
+                meta["mayHaveChanged"] = false;
                 if (action != "read" && action != "delete") throw new ArgumentException("action must be read/delete.");
-                if (string.IsNullOrWhiteSpace(interfaceName)) throw new ArgumentException("Exact interfaceName required (GetOpcUaConfig lists them).");
+                if (string.IsNullOrWhiteSpace(interfaceName)) throw new ArgumentException("Exact interfaceName required (GetPlcOpcUaConfiguration lists them).");
                 bool writing = action == "delete" && !dryRun;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
@@ -144,14 +145,14 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage SetOpcUaInterfaceEnabled(string softwarePath, string interfaceName, bool enabled, string interfaceType = "ServerInterface")
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var sig = GetOpcUaServerInterfaceGroup(plc);
-                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible." };
+                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 string collectionProp = interfaceType switch
                 {
@@ -163,7 +164,7 @@ namespace TiaMcpServer.Siemens.Services
                 var collection = TryGetPropertyValue(sig, collectionProp);
                 var item = FindByName(collection, interfaceName);
                 if (item == null)
-                    return new ResponseMessage { Message = $"{interfaceType} '{interfaceName}' not found in '{softwarePath}'." };
+                    return new ResponseMessage { Message = $"{interfaceType} '{interfaceName}' not found in '{softwarePath}'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
                 _session.TrySetProperty(item, "Enabled", enabled);
                 return new ResponseMessage
@@ -181,14 +182,14 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExportOpcUaInterface(string softwarePath, string interfaceName, string exportPath, string interfaceType = "ServerInterface")
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var sig = GetOpcUaServerInterfaceGroup(plc);
-                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible." };
+                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 string collectionProp = interfaceType switch
                 {
@@ -200,7 +201,7 @@ namespace TiaMcpServer.Siemens.Services
                 var collection = TryGetPropertyValue(sig, collectionProp);
                 var item = FindByName(collection, interfaceName);
                 if (item == null)
-                    return new ResponseMessage { Message = $"{interfaceType} '{interfaceName}' not found." };
+                    return new ResponseMessage { Message = $"{interfaceType} '{interfaceName}' not found.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 _session.TryInvokeMethodByName(item, "Export", new FileInfo(exportPath));
@@ -219,14 +220,14 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ImportOpcUaInterface(string softwarePath, string importPath, string interfaceType = "ServerInterface")
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var sig = GetOpcUaServerInterfaceGroup(plc);
-                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible." };
+                if (sig == null) return new ResponseMessage { Message = "ServerInterfaceGroup not accessible.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 string collectionProp = interfaceType switch
                 {
@@ -235,7 +236,7 @@ namespace TiaMcpServer.Siemens.Services
                 };
 
                 var collection = TryGetPropertyValue(sig, collectionProp);
-                if (collection == null) return new ResponseMessage { Message = $"{collectionProp} collection not accessible." };
+                if (collection == null) return new ResponseMessage { Message = $"{collectionProp} collection not accessible.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 // ServerInterfaceComposition.Create(name) then Import(file)
                 // OR find existing and call Import
@@ -243,7 +244,7 @@ namespace TiaMcpServer.Siemens.Services
                 // Native observation: importing a missing file left an empty server interface when the exception was discarded.
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 var fi = new FileInfo(importPath);
-                if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false) };
+                if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
                 var interfaceName = Path.GetFileNameWithoutExtension(importPath);
                 var existing = FindByName(collection, interfaceName);
 
@@ -391,7 +392,8 @@ namespace TiaMcpServer.Siemens.Services
             return matches[0];
         }
         public ResponseMessage ReadOpcUaAccessControl(string softwarePath, string section = "roles", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadOpcUaAccessControl", meta => {
+            => _session.RunHmiStepTool("GetOpcUaAccessControl", meta => {
+                meta["mayHaveChanged"] = false;
                 HardwareServicesLogic.RequireOneOf(section, new[] { "roles", "restrictions" }, "section");
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var control = RequireOpcUaAccessControl(_session.ExactPlcForEngineering(softwarePath, false));
@@ -409,6 +411,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageOpcUaAccessControl(string softwarePath, string action, string roleName = "", string definedInNamespace = "", string projectRole = "",
             string namespaceUri = "", string permission = "", bool enabled = false, string propertiesJson = "{}", bool confirmChange = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageOpcUaAccessControl", meta => {
+                meta["mayHaveChanged"] = false;
                 HardwareServicesLogic.RequireOneOf(action, HardwareServicesLogic.OpcUaActions, "action");
                 HardwareServicesLogic.RequireConfirmation(confirmChange, "confirmChange", dryRun);
                 using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();

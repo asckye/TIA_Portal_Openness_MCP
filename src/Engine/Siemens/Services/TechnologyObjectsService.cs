@@ -70,13 +70,13 @@ namespace TiaMcpServer.Siemens.Services
                 if (IsProjectNull())
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND")) };
                 }
 
                 if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")) };
                 }
 
                 Regex? regex = null;
@@ -166,7 +166,7 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "GetTechnologyObjects: no project is open. Call Connect + OpenProject "
+                    "ListTechnologyObjects: no project is open. Call Connect + OpenProject "
                     + "(or AttachToOpenProject) first.");
             }
 
@@ -174,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
             if (plc == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"GetTechnologyObjects: PLC software not found at '{softwarePath}'." + _session.AvailablePlcPathsSuffix());
+                    $"ListTechnologyObjects: PLC software not found at '{softwarePath}'." + _session.AvailablePlcPathsSuffix());
             }
 
             try
@@ -196,10 +196,10 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "GetTechnologyObjects failed for {SoftwarePath}", softwarePath);
+                _session.Logger?.LogError(ex, "ListTechnologyObjects failed for {SoftwarePath}", softwarePath);
                 // 枚举失败时不得返回看似完整的部分列表。
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"GetTechnologyObjects failed halfway through '{softwarePath}': {ex.Message}. "
+                    $"ListTechnologyObjects failed halfway through '{softwarePath}': {ex.Message}. "
                     + "The list would have been INCOMPLETE, so it is not returned.", null, ex);
             }
             return result;
@@ -207,15 +207,15 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExportTechnologyObject(string softwarePath, string toName, string exportPath)
         {
-            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var to = FindTechnologyObjectRecursive(plc, toName, out var lookupError);
                 if (to == null)
-                    return new ResponseMessage { Message = $"Technology object '{toName}' not found in '{softwarePath}': {lookupError}" };
+                    return new ResponseMessage { Message = $"Technology object '{toName}' not found in '{softwarePath}': {lookupError}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 _session.TryExportEngineeringObject(to, exportPath, out var err);
@@ -225,7 +225,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseMessage
                 {
                     Message = $"Technology object '{toName}' exported to '{exportPath}'.",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["toName"] = toName }
+                    Meta = ResponseMeta.Unstamped(true, ("exportPath", exportPath), ("toName", toName))
                 };
             }
             catch (Exception ex)
@@ -244,14 +244,14 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 failed.Add(new ImportFailure { Path = softwarePath, Error = "No project open." });
-                return new ResponseImportBatch { Imported = exported, Failed = failed };
+                return new ResponseImportBatch { Imported = exported, Failed = failed, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND")) };
             }
 
             var plc = _session.GetPlcSoftware(softwarePath);
             if (plc == null)
             {
                 failed.Add(new ImportFailure { Path = softwarePath, Error = "PLC software not found." + _session.AvailablePlcPathsSuffix() });
-                return new ResponseImportBatch { Imported = exported, Failed = failed };
+                return new ResponseImportBatch { Imported = exported, Failed = failed, Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")) };
             }
 
             try
@@ -290,6 +290,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageTechnologyObject(string softwarePath, string objectPath, string action, string typeIdentifier = "",
             string version = "", string parameter = "", string valueJson = "null", bool dryRun = true)
             => _session.RunHmiStepTool("ManageTechnologyObject", meta => {
+                meta["mayHaveChanged"] = false;
                 if (!new[] { "read", "create", "delete", "setParameter" }.Contains(action)) throw new ArgumentException("action must be read/create/delete/setParameter.");
                 var parts = EngineeringGroupOperations.Parts(objectPath);
                 bool writing = action != "read" && !dryRun;
@@ -387,7 +388,8 @@ namespace TiaMcpServer.Siemens.Services
             return row;
         }
         public ResponseMessage ReadTechnologyObjectTree(string softwarePath, string groupPath = "", bool includeParameters = false, bool includeMotionView = false, int maxDepth = 4)
-            => _session.RunHmiStepTool("ReadTechnologyObjectTree", meta => {
+            => _session.RunHmiStepTool("GetTechnologyObjectTree", meta => {
+                meta["mayHaveChanged"] = false;
                 if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 TechnologicalInstanceDBGroup root = (TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(Native.TechnologyGroup(plc), groupPath);

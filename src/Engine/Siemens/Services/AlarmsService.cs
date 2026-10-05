@@ -66,21 +66,21 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ExportAlarmClasses(string softwarePath, string exportPath)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 // Official "Export/Import of Alarm classes": the provider lives on ProjectBase; older TIA versions answered it on the PLC too.
                 var provider = plc.GetService<AlarmClassDataProvider>() ?? _session.CurrentProject?.GetService<AlarmClassDataProvider>();
                 if (provider == null)
-                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
+                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 // Native observation: other extensions are refused with "invalid file extension"; the official format is .DAT.
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 if (!exportPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
-                    return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = ResponseMeta.Unstamped(false) };
+                    return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 AlarmClassExportImportResult result = provider.Export(new FileInfo(exportPath));
                 var state = result?.State.ToString() ?? "Unknown";
@@ -104,18 +104,18 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ImportAlarmClasses(string softwarePath, string importPath)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
             try
             {
                 var provider = plc.GetService<AlarmClassDataProvider>() ?? _session.CurrentProject?.GetService<AlarmClassDataProvider>();
                 if (provider == null)
-                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
+                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
 
                 if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase) || !File.Exists(importPath))
-                    return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = ResponseMeta.Unstamped(false) };
+                    return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false)) };
                 AlarmClassExportImportResult result = provider.Import(new FileInfo(importPath));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
@@ -140,13 +140,13 @@ namespace TiaMcpServer.Siemens.Services
         // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
         public ResponseMessage ExportAlarmTextLists(string softwarePath, string exportPath)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false) };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(exportPath));
                 var state = result?.State.ToString() ?? "Unknown";
@@ -166,14 +166,14 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ImportAlarmTextLists(string softwarePath, string importPath)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false) };
-                if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false) };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
+                if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
                 TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(importPath), ImportOptions.None);
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result?.State != TextListXlsxResultState.Error;
@@ -193,13 +193,13 @@ namespace TiaMcpServer.Siemens.Services
         // ExportInstanceTextsToXlsx(file, languages, option) receives all active project languages.
         public ResponseMessage ExportAlarmInstanceTexts(string softwarePath, string exportPath, bool includeInfoText = true, bool includeAdditionalTexts = true, bool includeAlarmClass = true)
         {
-            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (_session.IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextProvider>();
-                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC.", Meta = ResponseMeta.Unstamped(false) };
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 var option = PlcAlarmTextXlsxExportOption.None;
                 if (includeInfoText) option |= PlcAlarmTextXlsxExportOption.IncludeInfoText;
@@ -227,7 +227,8 @@ namespace TiaMcpServer.Siemens.Services
         // ---- alarm text lists XLSX ----------------------------------------------------------------------------------------------------------
         public ResponseMessage ExchangePlcAlarmTextListsXlsx(string softwarePath, string action, string filePath, string unitName = "", string unitKind = "unit",
             string textListNamesJson = "[]", string culturesJson = "[]", string importOption = "None", bool confirmImport = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ExchangePlcAlarmTextListsXlsx", meta => {
+            => _session.RunHmiStepTool("ExchangePlcAlarmTextLists", meta => {
+                meta["mayHaveChanged"] = false;
                 var request = AlarmTextListRules.ValidateXlsxRequest(action, filePath, unitName, unitKind, textListNamesJson, culturesJson, importOption, confirmImport, dryRun);
                 bool writing = request.Writing;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -267,6 +268,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ImportPlcAlarmInstanceTexts(string softwarePath, string filePath, string culturesJson, bool dryRun = true)
             => _session.RunHmiStepTool("ImportPlcAlarmInstanceTexts", meta => {
+                meta["mayHaveChanged"] = false;
                 var file = new FileInfo(filePath); if (!Path.IsPathRooted(filePath) || !file.Exists) throw new FileNotFoundException("Absolute existing xlsx file required.");
                 var cultures = PlcBlockServicesLogic.ParseCultureNames(culturesJson);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
@@ -288,6 +290,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         public ResponseMessage ManagePlcAlarmTextList(string softwarePath, string action = "read", string name = "", string libraryName = "", string masterCopyPath = "", string copyMode = "", bool confirmDelete = false, int offset = 0, int limit = 100, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcAlarmTextList", meta => {
+                meta["mayHaveChanged"] = false;
                 bool writing = PlcBlockServicesLogic.ValidateTextListRequest(action, name, libraryName, masterCopyPath, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);

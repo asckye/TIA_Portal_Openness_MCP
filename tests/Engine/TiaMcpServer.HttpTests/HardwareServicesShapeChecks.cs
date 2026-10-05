@@ -156,7 +156,7 @@ internal static class HardwareServicesShapeChecks
         var opcUaPreview=opcUaWrite.GetParameters().Last();
         check(opcUaPreview.Name=="dryRun" && Equals(opcUaPreview.DefaultValue,true),"ManageOpcUaAccessControl ends with dryRun=true");
         check(Equals(opcUaWrite.GetParameters().Single(p=>p.Name=="confirmChange").DefaultValue,false),"ManageOpcUaAccessControl requires explicit confirmChange");
-        var opcUaRead=tools.Tool("ReadOpcUaAccessControl");
-        check(opcUaRead.GetParameters().Any(p=>p.Name=="offset") && opcUaRead.GetParameters().Any(p=>p.Name=="limit") && !opcUaRead.GetParameters().Any(p=>p.Name=="dryRun"),"ReadOpcUaAccessControl is a paginated read without dryRun");
+        var opcUaRead=tools.Tool("GetOpcUaAccessControl");
+        check(opcUaRead.GetParameters().Any(p=>p.Name=="offset") && opcUaRead.GetParameters().Any(p=>p.Name=="limit") && !opcUaRead.GetParameters().Any(p=>p.Name=="dryRun"),"GetOpcUaAccessControl is a paginated read without dryRun");
     }
 }

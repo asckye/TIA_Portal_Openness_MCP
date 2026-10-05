@@ -1719,7 +1719,7 @@
       },
       {
         "name": "ExchangePlcAlarmTextLists",
-        "currentName": "ExchangePlcAlarmTextListsXlsx",
+        "currentName": "ExchangePlcAlarmTextLists",
         "sourceName": "ExchangePlcAlarmTextListsXlsx",
         "profiles": [
           "full"
@@ -1731,7 +1731,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangePlcSupervisions",
@@ -1822,7 +1822,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmInstanceTexts",
@@ -1835,7 +1835,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmTextLists",
@@ -1848,7 +1848,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportDeviceAml",
@@ -1930,7 +1930,7 @@
           "interfaceName": "Server interface_1",
           "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlock",
@@ -2128,7 +2128,7 @@
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportTechnologyObjectsToDirectory",
@@ -2141,7 +2141,7 @@
           "softwarePath": "PLC_1",
           "exportDir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportUnifiedEngineeringList",
@@ -2243,7 +2243,7 @@
           "outputPath": "C:\\Examples\\generated\\result.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GeneratePlcDocumentation",
@@ -2638,7 +2638,7 @@
       },
       {
         "name": "GetOpcUaAccessControl",
-        "currentName": "ReadOpcUaAccessControl",
+        "currentName": "GetOpcUaAccessControl",
         "sourceName": "ReadOpcUaAccessControl",
         "profiles": [
           "full"
@@ -2646,7 +2646,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpennessCompatibility",
@@ -2746,7 +2746,7 @@
       },
       {
         "name": "GetPlcChecksums",
-        "currentName": "ReadPlcChecksums",
+        "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
         "profiles": [
           "full"
@@ -2754,7 +2754,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcCrossReferences",
@@ -2799,7 +2799,7 @@
       },
       {
         "name": "GetPlcObjectFingerprints",
-        "currentName": "ReadPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
         "profiles": [
           "full"
@@ -2809,11 +2809,11 @@
           "objectKind": "block",
           "objectPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcOpcUaConfiguration",
-        "currentName": "GetOpcUaConfig",
+        "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
         "profiles": [
           "full"
@@ -2821,7 +2821,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcPutGetAccess",
@@ -3068,7 +3068,7 @@
       },
       {
         "name": "GetTechnologyObjectTree",
-        "currentName": "ReadTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
         "profiles": [
           "full"
@@ -3076,7 +3076,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetToolUsage",
@@ -3351,7 +3351,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportAlarmTextLists",
@@ -3364,7 +3364,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportDeviceAml",
@@ -3492,7 +3492,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcAlarmInstanceTexts",
@@ -3504,10 +3504,13 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
-          "culturesJson": "[\"en-US\",\"zh-CN\"]",
-          "dryRun": true
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlock",
@@ -3713,7 +3716,7 @@
           "folderPath": "",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportTechnologyObjectsFromDirectory",
@@ -3727,7 +3730,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportUnifiedEngineeringList",
@@ -4105,7 +4108,7 @@
       },
       {
         "name": "ListPlcSoftwareUnits",
-        "currentName": "ReadPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
         "sourceName": "ReadPlcSoftwareUnits",
         "profiles": [
           "full"
@@ -4113,7 +4116,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSystemGroups",
@@ -4203,7 +4206,7 @@
       },
       {
         "name": "ListTechnologyObjects",
-        "currentName": "GetTechnologyObjects",
+        "currentName": "ListTechnologyObjects",
         "sourceName": "GetTechnologyObjects",
         "profiles": [
           "full"
@@ -4211,7 +4214,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTestSuiteCases",
@@ -4847,7 +4850,7 @@
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOpcUaInterface",
@@ -4862,7 +4865,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePasswordPolicy",
@@ -4891,7 +4894,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcBlockDocuments",
@@ -4966,7 +4969,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcExternalSources",
@@ -5060,7 +5063,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSupervision",
@@ -5159,7 +5162,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectLanguage",
@@ -5398,7 +5401,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTestSuiteCase",
@@ -6390,7 +6393,7 @@
           "interfaceName": "Server interface_1",
           "enabled": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcCpuSettings",
@@ -6450,7 +6453,7 @@
           "access": "Published",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcWatchTableModifyValue",
@@ -8595,7 +8598,7 @@
       },
       {
         "name": "ExchangePlcAlarmTextLists",
-        "currentName": "ExchangePlcAlarmTextListsXlsx",
+        "currentName": "ExchangePlcAlarmTextLists",
         "sourceName": "ExchangePlcAlarmTextListsXlsx",
         "profiles": [
           "full"
@@ -8607,7 +8610,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangePlcSupervisions",
@@ -8698,7 +8701,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmInstanceTexts",
@@ -8711,7 +8714,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmTextLists",
@@ -8724,7 +8727,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportDeviceAml",
@@ -8806,7 +8809,7 @@
           "interfaceName": "Server interface_1",
           "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlock",
@@ -9004,7 +9007,7 @@
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportTechnologyObjectsToDirectory",
@@ -9017,7 +9020,7 @@
           "softwarePath": "PLC_1",
           "exportDir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportUnifiedEngineeringList",
@@ -9119,7 +9122,7 @@
           "outputPath": "C:\\Examples\\generated\\result.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GeneratePlcDocumentation",
@@ -9514,7 +9517,7 @@
       },
       {
         "name": "GetOpcUaAccessControl",
-        "currentName": "ReadOpcUaAccessControl",
+        "currentName": "GetOpcUaAccessControl",
         "sourceName": "ReadOpcUaAccessControl",
         "profiles": [
           "full"
@@ -9522,7 +9525,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpennessCompatibility",
@@ -9622,7 +9625,7 @@
       },
       {
         "name": "GetPlcChecksums",
-        "currentName": "ReadPlcChecksums",
+        "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
         "profiles": [
           "full"
@@ -9630,7 +9633,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcCrossReferences",
@@ -9675,7 +9678,7 @@
       },
       {
         "name": "GetPlcObjectFingerprints",
-        "currentName": "ReadPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
         "profiles": [
           "full"
@@ -9685,11 +9688,11 @@
           "objectKind": "block",
           "objectPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcOpcUaConfiguration",
-        "currentName": "GetOpcUaConfig",
+        "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
         "profiles": [
           "full"
@@ -9697,7 +9700,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcPutGetAccess",
@@ -9944,7 +9947,7 @@
       },
       {
         "name": "GetTechnologyObjectTree",
-        "currentName": "ReadTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
         "profiles": [
           "full"
@@ -9952,7 +9955,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetToolUsage",
@@ -10227,7 +10230,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportAlarmTextLists",
@@ -10240,7 +10243,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportDeviceAml",
@@ -10368,7 +10371,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcAlarmInstanceTexts",
@@ -10380,10 +10383,13 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
-          "culturesJson": "[\"en-US\",\"zh-CN\"]",
-          "dryRun": true
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlock",
@@ -10589,7 +10595,7 @@
           "folderPath": "",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportTechnologyObjectsFromDirectory",
@@ -10603,7 +10609,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportUnifiedEngineeringList",
@@ -10995,7 +11001,7 @@
       },
       {
         "name": "ListPlcSoftwareUnits",
-        "currentName": "ReadPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
         "sourceName": "ReadPlcSoftwareUnits",
         "profiles": [
           "full"
@@ -11003,7 +11009,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSystemGroups",
@@ -11103,7 +11109,7 @@
       },
       {
         "name": "ListTechnologyObjects",
-        "currentName": "GetTechnologyObjects",
+        "currentName": "ListTechnologyObjects",
         "sourceName": "GetTechnologyObjects",
         "profiles": [
           "full"
@@ -11111,7 +11117,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTestSuiteCases",
@@ -11799,7 +11805,7 @@
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOpcUaInterface",
@@ -11814,7 +11820,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePasswordPolicy",
@@ -11843,7 +11849,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcBlockDocuments",
@@ -11889,7 +11895,7 @@
           "confirmProtectionChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcCertificate",
@@ -11934,7 +11940,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcExternalSources",
@@ -12028,7 +12034,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSupervision",
@@ -12127,7 +12133,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectLanguage",
@@ -12441,7 +12447,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTestSuiteCase",
@@ -13433,7 +13439,7 @@
           "interfaceName": "Server interface_1",
           "enabled": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcCpuSettings",
@@ -13493,7 +13499,7 @@
           "access": "Published",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcWatchTableModifyValue",

@@ -79,10 +79,29 @@ internal static class DomainShapeChecks
                         name + " needs no static CLI forwarder");
                     continue;
                 }
+                var implementation = tool;
+                var serviceName = name;
+                if (domain.Name == "SoftwareUnitDeep")
+                {
+                    check(tool.Name.EndsWith("V4", StringComparison.Ordinal) && tool.ReturnType.Name == "CallToolResult",
+                        name + " exposes the V4 envelope boundary");
+                    serviceName = tool.Name.Substring(0, tool.Name.Length - "V4".Length);
+                    implementation = tools.GetMethod(serviceName, all)!;
+                    check(implementation.GetCustomAttribute<McpServerToolAttribute>() == null,
+                        name + " retains its unregistered service implementation without an alias");
+                    var callbacks = EngineSurface.MethodFamily(tool).Where(method =>
+                        method.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal));
+                    check(callbacks.Any(callback => {
+                        var body = callback.GetMethodBody()!.GetILAsByteArray()!;
+                        return Enumerable.Range(0, Math.Max(0, body.Length - 4)).Any(index =>
+                            (body[index] == 0x28 || body[index] == 0x6f)
+                            && BitConverter.ToInt32(body, index + 1) == implementation.MetadataToken);
+                    }), name + " V4 mapping calls its original implementation");
+                }
                 // Tool and service signatures may differ (casts in the tool); parameter types only separate overloads.
                 MethodInfo method;
-                try { method = surface.Method(name); }
-                catch (AmbiguousMatchException) { method = surface.Method(name, tool.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
+                try { method = surface.Method(serviceName); }
+                catch (AmbiguousMatchException) { method = surface.Method(serviceName, implementation.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
                 var target = surface.Target(method);
                 var toolTarget = surface.Target(tool);
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
@@ -91,10 +110,10 @@ internal static class DomainShapeChecks
                 check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),
                     domain.Name + " tool uses its service with the shared session: " + name);
-                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+                var il = implementation.GetMethodBody()!.GetILAsByteArray()!;
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
-                EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls service: " + name, tool, method);
+                EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls service: " + name, implementation, method);
                 var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
                 check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tool.DeclaringType!)),
                     name + " resolves directly without a static CLI forwarder");

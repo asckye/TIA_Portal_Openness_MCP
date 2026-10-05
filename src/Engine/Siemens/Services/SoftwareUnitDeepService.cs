@@ -61,7 +61,8 @@ namespace TiaMcpServer.Siemens.Services
         private static JsonObject DocumentRow(PlcDocument document) => new JsonObject { ["name"] = document.Name, ["documentClass"] = document.GetType().Name };
         // ---- ReadPlcSoftwareUnits ----------------------------------------------------------------------------------------------------
         public ResponseMessage ReadPlcSoftwareUnits(string softwarePath, string unitName = "", string unitKind = "all", bool includeContents = true, int offset = 0, int limit = 50)
-            => _session.RunHmiStepTool("ReadPlcSoftwareUnits", meta => {
+            => _session.RunHmiStepTool("ListPlcSoftwareUnits", meta => {
+                meta["mayHaveChanged"] = false;
                 SoftwareUnitDeepLogic.RequireOneOf(unitKind, SoftwareUnitDeepLogic.UnitListKinds, "unitKind");
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
@@ -90,6 +91,7 @@ namespace TiaMcpServer.Siemens.Services
             string relationType = "", string propertiesJson = "{}", bool dryRun = true, string unitKind = "unit", string commentsJson = "{}",
             string libraryName = "", string masterCopyPath = "", string copyMode = "")
             => _session.RunHmiStepTool("ManagePlcSoftwareUnit", meta => {
+                meta["mayHaveChanged"] = false;
                 var request = SoftwareUnitDeepLogic.ValidateUnitRequest(action, unitKind, name, relatedUnit, relationType, propertiesJson, commentsJson, libraryName, masterCopyPath, copyMode, dryRun);
                 bool writing = request.Writing;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -184,6 +186,7 @@ namespace TiaMcpServer.Siemens.Services
             string groupPath = "", string directoryPath = "", string importOption = "Override", string libraryName = "", string masterCopyPath = "", string copyMode = "",
             string typePath = "", string version = "", string updatePathsMode = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcDocuments", meta => {
+                meta["mayHaveChanged"] = false;
                 bool writing = SoftwareUnitDeepLogic.ValidateDocumentRequest(action, objectKind, name, unitName, unitKind, directoryPath, importOption, libraryName, masterCopyPath, copyMode, typePath, version, updatePathsMode, dryRun);
                 bool exporting = action == "export";
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -305,7 +308,8 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ReadPlcChecksums ---------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadPlcChecksums(string softwarePath)
-            => _session.RunHmiStepTool("ReadPlcChecksums", meta => {
+            => _session.RunHmiStepTool("GetPlcChecksums", meta => {
+                meta["mayHaveChanged"] = false;
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 PlcChecksumProvider? provider = plc.GetService<PlcChecksumProvider>();
                 meta["supported"] = provider != null;
@@ -317,7 +321,8 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ReadPlcObjectFingerprints ------------------------------------------------------------------------------------------------
         public ResponseMessage ReadPlcObjectFingerprints(string softwarePath, string objectKind, string objectPath, string unitName = "", string unitKind = "unit")
-            => _session.RunHmiStepTool("ReadPlcObjectFingerprints", meta => {
+            => _session.RunHmiStepTool("GetPlcObjectFingerprints", meta => {
+                meta["mayHaveChanged"] = false;
                 SoftwareUnitDeepLogic.ValidateFingerprintRequest(objectKind, objectPath, unitName, unitKind);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
@@ -337,6 +342,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManagePlcBlockWriteProtection(string softwarePath, string blockPath, string action, string password = "", string newPassword = "",
             bool confirmProtectionChange = false, bool dryRun = true, string unitName = "", string unitKind = "unit")
             => _session.RunHmiStepTool("ManagePlcBlockWriteProtection", meta => {
+                meta["mayHaveChanged"] = false;
                 bool writing = SoftwareUnitDeepLogic.ValidateWriteProtectionRequest(action, password, newPassword, confirmProtectionChange, dryRun);
                 if (!string.IsNullOrEmpty(unitName)) SoftwareUnitDeepLogic.RequireOneOf(unitKind, SoftwareUnitDeepLogic.UnitKinds, "unitKind");
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -382,6 +388,7 @@ namespace TiaMcpServer.Siemens.Services
         // ---- ManageProjectCompilationSettings ------------------------------------------------------------------------------------------
         public ResponseMessage ManageProjectCompilationSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageProjectCompilationSettings", meta => {
+                meta["mayHaveChanged"] = false;
                 var (writing, values) = SoftwareUnitDeepLogic.ValidateCompilationSettingsRequest(action, propertiesJson, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var project = _session.CurrentProject as global::Siemens.Engineering.Project ?? throw new NotSupportedException("The bound project is a " + _session.CurrentProject?.GetType().Name + "; the compilation settings live on Siemens.Engineering.Project.");

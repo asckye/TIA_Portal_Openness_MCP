@@ -111,9 +111,9 @@ internal static class TechnologyMappingShapeChecks
         var session = provider.GetService(sessionType);
         var kernel = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
         foreach (var domain in new[] {
-            ("Alarms", "ExportAlarmClasses ImportAlarmClasses ExportAlarmTextLists ImportAlarmTextLists ExportAlarmInstanceTexts ExchangePlcAlarmTextListsXlsx ImportPlcAlarmInstanceTexts ManagePlcAlarmTextList"),
-            ("OpcUa", "GetOpcUaConfig ManageOpcUaInterface SetOpcUaInterfaceEnabled ExportOpcUaInterface ImportOpcUaInterface GenerateOpcUaModelledInterface ReadOpcUaAccessControl ManageOpcUaAccessControl"),
-            ("TechnologyObjects", "GetTechnologyObjects ExportTechnologyObject ExportTechnologyObjectsToDirectory ImportTechnologyObject ImportTechnologyObjectsFromDirectory ReadTechnologyObjectTree ManageTechnologyObject")
+            ("Alarms", "ExportAlarmClasses ImportAlarmClasses ExportAlarmTextLists ImportAlarmTextLists ExportAlarmInstanceTexts ExchangePlcAlarmTextLists ImportPlcAlarmInstanceTexts ManagePlcAlarmTextList"),
+            ("OpcUa", "GetPlcOpcUaConfiguration ManageOpcUaInterface SetOpcUaInterfaceEnabled ExportOpcUaInterface ImportOpcUaInterface GenerateOpcUaModelledInterface GetOpcUaAccessControl ManageOpcUaAccessControl"),
+            ("TechnologyObjects", "ListTechnologyObjects ExportTechnologyObject ExportTechnologyObjectsToDirectory ImportTechnologyObject ImportTechnologyObjectsFromDirectory GetTechnologyObjectTree ManageTechnologyObject")
         })
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Item1 + "Service", true)!;
@@ -131,14 +131,17 @@ internal static class TechnologyMappingShapeChecks
             foreach (var name in domain.Item2.Split(' '))
             {
                 var tool = surface.Tool(name);
-                var method = service.GetMethod(name)!;
+                string legacyName = tool.Name.Substring(0, tool.Name.Length - "V4".Length);
+                var implementation = tools.GetMethod(legacyName)!;
+                var method = service.GetMethod(legacyName)!;
                 check(!tool.IsStatic && tool.DeclaringType == tools && ReferenceEquals(surface.Target(tool), toolTarget),
                     name + " resolves to the registered instance tool");
-                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+                check(tool.ReturnType.Name == "CallToolResult", name + " exposes the V4 envelope boundary");
+                var il = implementation.GetMethodBody()!.GetILAsByteArray()!;
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
-                EngineSurface.CheckIl(check, callsService, name + " calls its domain service", tool, method);
-                check(surface.Method(name).DeclaringType == (name == "ImportTechnologyObject" ? kernel : service),
+                EngineSurface.CheckIl(check, callsService, name + " retains its domain service implementation", implementation, method);
+                check(surface.Method(legacyName).DeclaringType == (name == "ImportTechnologyObject" ? kernel : service),
                     name + " keeps its intended service or shared kernel owner");
             }
         }

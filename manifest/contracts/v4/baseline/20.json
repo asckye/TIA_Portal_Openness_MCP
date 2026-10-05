@@ -8847,8 +8847,9 @@
       "name": "ExchangeMotionCamData"
     },
     {
-      "descriptionSha256": "69df94f78c14f14743c3c787de1b82142aaf1b22bb90a9e8bf627ef50f5d8cca",
+      "descriptionSha256": "07732b4fa631bfc4ae8ef8500335543e499c15e21e452e93934db0b125bf180c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - export | import.",
@@ -8863,10 +8864,12 @@
             "description": "confirmImport: must be true together with dryRun=false to import (imports replace project data).",
             "type": "boolean"
           },
-          "culturesJson": {
-            "default": "[]",
-            "description": "culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
-            "type": "string"
+          "cultures": {
+            "description": "cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -8890,10 +8893,12 @@
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           },
-          "textListNamesJson": {
-            "default": "[]",
-            "description": "textListNamesJson: JSON array of text list names ('[]' = all).",
-            "type": "string"
+          "textListNames": {
+            "description": "textListNames: Array of text list names ('[]' = all).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "unitKind": {
             "default": "unit",
@@ -8917,7 +8922,7 @@
         ],
         "type": "object"
       },
-      "name": "ExchangePlcAlarmTextListsXlsx"
+      "name": "ExchangePlcAlarmTextLists"
     },
     {
       "descriptionSha256": "5eb1bcca7b1c13bdfaec916c17625c7c0b8290c9710d5a469d764e3851409a15",
@@ -9166,8 +9171,9 @@
       "name": "ExchangeUnifiedTags"
     },
     {
-      "descriptionSha256": "5b17273b052dccf71c96a3d6439b6c867bcd802ed308455bbbbbbe244a8971e4",
+      "descriptionSha256": "61c7829e72712f2df5a20df5d3bb12eb7b101427f365a5864b8074e6c06d3a84",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path for the export, e.g. 'C:\\Temp\\AlarmClasses.xml'",
@@ -9187,8 +9193,9 @@
       "name": "ExportAlarmClasses"
     },
     {
-      "descriptionSha256": "ca26661d0b0981711557a3152c8bb77b2e2d83dacc332d7b91f04da07320b444",
+      "descriptionSha256": "6b511f584ca88d4c486ea521019cf734e14b29b177cf716d69fdc16c4f2d938e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path for the XLSX output",
@@ -9223,8 +9230,9 @@
       "name": "ExportAlarmInstanceTexts"
     },
     {
-      "descriptionSha256": "9901b1c16f12370ef9643f91d5aa16ee158d3094dc98be57df7380bd8df61f78",
+      "descriptionSha256": "ea705f7fcb1e77afe766b09f54b5a807bef464810bd50982bda0886d26b74819",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx'",
@@ -9384,8 +9392,9 @@
       "name": "ExportHmiTagTable"
     },
     {
-      "descriptionSha256": "c0cf76ff3cb01efead5d260e555aea0447df498e1888382e9493dd3003b4ee04",
+      "descriptionSha256": "49bb899524401b45cd45ec32e60a6ae509095a98d13d65c366f9b17decf0c18f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\OpcUa_Interface.xml'",
@@ -9895,8 +9904,9 @@
       "name": "ExportScadaData"
     },
     {
-      "descriptionSha256": "8386d9b2c726f0b2a73eb047e5c28b191b9463edb6be6990a0372b01296e903e",
+      "descriptionSha256": "1cd02c623d7effff0e5226ef963af226a7b1ae5c810cf0d018cc09ac1e6229f7",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'",
@@ -9921,8 +9931,9 @@
       "name": "ExportTechnologyObject"
     },
     {
-      "descriptionSha256": "d96df95121beb76ad55b39c2a1a242dc8cc3800d68c0804f309a58b7a89ea893",
+      "descriptionSha256": "56bfe9b018b1ababfc3a317ee27f30b9697bf943dddd15d44d0fffbea03b361a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportDir": {
             "description": "exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'",
@@ -10191,13 +10202,18 @@
       "name": "GenerateErrorReport"
     },
     {
-      "descriptionSha256": "2033856dbc35ad0d423ac69af797a080fbacb2e3c7925861e0ff0b3a9d754dae",
+      "descriptionSha256": "1c89c9ee321209c00c7955645b83e3ea6d0a92d02612961057915812f0c83f01",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "accessLevelsJson": {
-            "default": "{}",
-            "description": "JSON area-to-level map; see tool description; safety permits only 0 or 1.",
-            "type": "string"
+          "accessLevels": {
+            "additionalProperties": {
+              "maximum": 2147483647,
+              "minimum": -2147483648,
+              "type": "integer"
+            },
+            "description": "Area-to-level map; see tool description; safety permits only 0 or 1.",
+            "type": "object"
           },
           "dryRun": {
             "default": true,
@@ -10821,11 +10837,33 @@
       "name": "GetOnlineState"
     },
     {
-      "descriptionSha256": "1ede15bb75c80102615f1185a918820bdff39a6a764b67c87eb8febcb3bab43f",
+      "descriptionSha256": "40207e70232ecfb0ec260727db79b5560d3b2323976a8f91f6b06827a057fd61",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "section": {
+            "default": "roles",
+            "description": "section: roles | restrictions.",
+            "enum": [
+              "roles",
+              "restrictions"
+            ],
+            "type": "string"
+          },
           "softwarePath": {
-            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           }
         },
@@ -10834,7 +10872,7 @@
         ],
         "type": "object"
       },
-      "name": "GetOpcUaConfig"
+      "name": "GetOpcUaAccessControl"
     },
     {
       "descriptionSha256": "6d4085caa5a56f381acff9c4a1b25757731228d63f1fac13014cfe7dd8d24d1d",
@@ -11023,6 +11061,23 @@
       "name": "GetPlcBlockScopes"
     },
     {
+      "descriptionSha256": "27490df6d5d58a7b21ca676de5206ed23e9843976322cf13d850b96222bab3c6",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcChecksums"
+    },
+    {
       "descriptionSha256": "a3a7c710efcbe8b9e0a4adbb5a137b1ea352254c5d864690247f06134107111b",
       "inputSchema": {
         "additionalProperties": false,
@@ -11085,6 +11140,68 @@
         "type": "object"
       },
       "name": "GetPlcCrossReferences"
+    },
+    {
+      "descriptionSha256": "0eebe4137eb61915fc674541e16438d0cc22b68e71a7562d20dfa9bec201f695",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "objectKind": {
+            "description": "objectKind: block | type.",
+            "enum": [
+              "block",
+              "type"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectKind",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcObjectFingerprints"
+    },
+    {
+      "descriptionSha256": "f6eff45350f5434b380bbbce9bcfed21ba38b57c0e6f947467d8605ddc278394",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcOpcUaConfiguration"
     },
     {
       "descriptionSha256": "f197af32e69d298f23019e36e1aa0d6d1eeceb6bd49e1ace90cac508bb9f5b39",
@@ -11321,11 +11438,32 @@
       "name": "GetState"
     },
     {
-      "descriptionSha256": "561151119d7a58c3394a522536ca4f2cd68f4a844afa15e0da8b1fa7b9c13824",
+      "descriptionSha256": "a4f7d8329c3fc12873f5926f24cef0487593ed94ac3d5f3559cb5a0e5d6e4532",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "includeMotionView": {
+            "default": false,
+            "description": "includeMotionView: true also returns the motion view of each object.",
+            "type": "boolean"
+          },
+          "includeParameters": {
+            "default": false,
+            "description": "includeParameters: true also returns parameters.",
+            "type": "boolean"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
           "softwarePath": {
-            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           }
         },
@@ -11334,7 +11472,7 @@
         ],
         "type": "object"
       },
-      "name": "GetTechnologyObjects"
+      "name": "GetTechnologyObjectTree"
     },
     {
       "descriptionSha256": "7534885a44de6d23264d859bde8abccda08a9ab5938502ea4afc3175c2571a20",
@@ -11578,8 +11716,9 @@
       "name": "GoOnline"
     },
     {
-      "descriptionSha256": "199296e5e53771adbde3f05aa4a1823be17ea16e2a863eb0bb4af54b442aebd3",
+      "descriptionSha256": "91425a70cd72cf9e7ca9863bc4b8066a5710dfb63d0f451f5c7088d7b92104a2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path to import from",
@@ -11599,8 +11738,9 @@
       "name": "ImportAlarmClasses"
     },
     {
-      "descriptionSha256": "4d569a42b665b1251ed4ce153e8dbb1855dd4325fc6e9a7d6d73838d61e50e27",
+      "descriptionSha256": "56cc3b33c8bcdd8f2e74341746a5381cf5bba11f9bde483b68066a492490d48c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path to the XLSX file",
@@ -11941,8 +12081,9 @@
       "name": "ImportMasterCopyFromGlobalLibrary"
     },
     {
-      "descriptionSha256": "7f76f984b875769930445e677682ca8df8e44e64f6b38e127926b79cc185c465",
+      "descriptionSha256": "0d1a66917db987b23dfe0f2a921e3cf6cb8da13b1d2f6941e40c3ef3f335db6a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path to the XML file",
@@ -11967,12 +12108,16 @@
       "name": "ImportOpcUaInterface"
     },
     {
-      "descriptionSha256": "8c58b29fb119b1f2126df6fc3b3bec1239486fbfd169a11160a15895e3cc668c",
+      "descriptionSha256": "a8488381225bfe31df520c5381c51a9a8abac37e4ffb996cf57ecdd2a35da240",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "culturesJson": {
-            "description": "culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
-            "type": "string"
+          "cultures": {
+            "description": "cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -11991,7 +12136,7 @@
         "required": [
           "softwarePath",
           "filePath",
-          "culturesJson"
+          "cultures"
         ],
         "type": "object"
       },
@@ -12532,8 +12677,9 @@
       "name": "ImportSinumerikAlarmTexts"
     },
     {
-      "descriptionSha256": "a1d81e790b57b514bbf5159d8da68516b855665dabb81765958011bc5af93f6e",
+      "descriptionSha256": "ae4c7f445c0278210b6267d87fa51f68447f4c9fb2c78c8f9ba7718ead8fba47",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "folderPath": {
             "description": "folderPath: optional technology object group path (use empty for root)",
@@ -12558,8 +12704,9 @@
       "name": "ImportTechnologyObject"
     },
     {
-      "descriptionSha256": "6326c9ba259f921c4944a5960fc37ad03cb8ec03f28d5fa0774aa4dc644d11b0",
+      "descriptionSha256": "768e9339d6f2364c83389d007a109fffedd14615089ec65c98a7f45636ace7a9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing technology object XML files",
@@ -13212,6 +13359,55 @@
       "name": "ListPlcForceTables"
     },
     {
+      "descriptionSha256": "81068ca5698b87b8b5cb9954c76c576c6770ff00b6f9b163c058b75c9b3be3ab",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeContents": {
+            "default": true,
+            "description": "includeContents: true also returns the contents of each unit.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 50,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "all",
+            "description": "unitKind: which unit collection unitName refers to - all | unit | safety.",
+            "enum": [
+              "all",
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcSoftwareUnits"
+    },
+    {
       "descriptionSha256": "d49b9525b5ad0d268554eb47604bee955e7fdbeb7f369720d14a120ec9a7c02f",
       "inputSchema": {
         "additionalProperties": false,
@@ -13321,6 +13517,23 @@
         "type": "object"
       },
       "name": "ListPortalProcessProjects"
+    },
+    {
+      "descriptionSha256": "16aaa787cd08d069f71f76c28f6d65f757a576df52d7821db1ea7d03dd293518",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListTechnologyObjects"
     },
     {
       "descriptionSha256": "e455a827c65327b29ef392d5933f2afaeaf698cdc4e7c4f5e47995361fde6e90",
@@ -15724,8 +15937,9 @@
       "name": "ManageOnlineDriveFunctions"
     },
     {
-      "descriptionSha256": "fe88317d2da2ff078d6e09c099834ff17d4805f086852541d623a9ea2d486701",
+      "descriptionSha256": "94acc203cb42db16d6b4cf21a29c107d692fc6763c2f7931b452a14fbf7a333c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - createRole | addStandardRole | deleteRole | setProjectRole | setPermission | setRestriction.",
@@ -15783,10 +15997,25 @@
             "description": "projectRole: exact project role name.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "roleName": {
             "default": "",
@@ -15807,8 +16036,9 @@
       "name": "ManageOpcUaAccessControl"
     },
     {
-      "descriptionSha256": "e639902d881d1b9343a58954428fe29c30795642b11dd7f5544baab4b1914d8d",
+      "descriptionSha256": "b6afa04eeb13867db395dcf1a2070529cab118ef10dec7badfe2b85157da4fbb",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -15831,7 +16061,7 @@
             "type": "boolean"
           },
           "interfaceName": {
-            "description": "interfaceName: exact name as shown in GetOpcUaConfig",
+            "description": "interfaceName: exact name as shown in GetPlcOpcUaConfiguration",
             "examples": [
               "Server interface_1"
             ],
@@ -15903,8 +16133,9 @@
       "name": "ManagePasswordPolicy"
     },
     {
-      "descriptionSha256": "0326060daa475c34153f2ca7ee78e97f5b0ff1112459a560fb33405024a1ed57",
+      "descriptionSha256": "fa97b6df4dd25d1dade0123c8825a28efb379d85f7acd64963a90c5f8ebf6aa9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -15945,6 +16176,7 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum lists to return.",
+            "minimum": 1,
             "type": "integer"
           },
           "masterCopyPath": {
@@ -15960,6 +16192,7 @@
           "offset": {
             "default": 0,
             "description": "offset: first list to return (paging).",
+            "minimum": 0,
             "type": "integer"
           },
           "softwarePath": {
@@ -16239,8 +16472,9 @@
       "name": "ManagePlcDataBlockSnapshot"
     },
     {
-      "descriptionSha256": "db9ae650adc40d58215c0b330b7743ee23cced9dc53a293486fffd708cf3dddf",
+      "descriptionSha256": "15193761bc7743b7fa83e29b5ef048f58f4db2add47481f394e38ff11d569969",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - list | read | export | import | createFromMasterCopy | createFromLibraryType.",
@@ -16797,8 +17031,9 @@
       "name": "ManagePlcSimAdvancedInstance"
     },
     {
-      "descriptionSha256": "8ff212aa34ed708bc5833c81ac9bcab0f7bb72fe2fb08ae1955772092ea94d1c",
+      "descriptionSha256": "7c415ad926befcce3d1161e9598f958a032a416e3065076d99828026087ac379",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - list | read | create | createFromMasterCopy | delete | update | createRelation | deleteRelation.",
@@ -16814,10 +17049,13 @@
             ],
             "type": "string"
           },
-          "commentsJson": {
-            "default": "{}",
-            "description": "commentsJson: JSON object language tag -> comment text.",
-            "type": "string"
+          "comments": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "comments: Object language tag -> comment text.",
+            "type": "object"
           },
           "copyMode": {
             "default": "",
@@ -16850,10 +17088,25 @@
             "description": "name: exact name of the object (case-sensitive).",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "relatedUnit": {
             "default": "",
@@ -17285,8 +17538,9 @@
       "name": "ManagePortInterconnection"
     },
     {
-      "descriptionSha256": "eda9c91b8e5556f19e95cced0bf4a10572a17d27cb734fa335c36aaa519146e8",
+      "descriptionSha256": "d187e0e9ed0acedd5d7b477c8d2c4c39ceebe874016e2684e66e983bba90e398",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -17302,10 +17556,25 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           }
         },
         "type": "object"
@@ -18312,8 +18581,44 @@
       "name": "ManageTechnologyExtensions"
     },
     {
-      "descriptionSha256": "a7f5d410d8266712afe8f4a3be9f78bf3f869443ab44a214612c86c748fcca2e",
+      "descriptionSha256": "43f54a5bb595e2225ecae4119fa7657a77aaa1b231b620d09725e8182cd4855e",
       "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - read | create | delete | setParameter.",
@@ -18348,10 +18653,41 @@
             "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
             "type": "string"
           },
-          "valueJson": {
-            "default": "null",
-            "description": "valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects).",
-            "type": "string"
+          "value": {
+            "description": "value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.",
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ],
+            "x-maxDepth": 62,
+            "x-maxUtf8Bytes": 10485760
           },
           "version": {
             "default": "",
@@ -21000,41 +21336,6 @@
       "name": "ReadOnlineDriveParameters"
     },
     {
-      "descriptionSha256": "06f14a4cc210aeb11784f389baeda53eb0aea96e633c5bcd7fe98d07a28469d2",
-      "inputSchema": {
-        "properties": {
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "section": {
-            "default": "roles",
-            "description": "section: roles | restrictions.",
-            "enum": [
-              "roles",
-              "restrictions"
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadOpcUaAccessControl"
-    },
-    {
       "descriptionSha256": "9075f9a84c1b8b61e664a1b2b1edae85deaccb5e75552594fbea171141f2d8e7",
       "inputSchema": {
         "properties": {},
@@ -21049,22 +21350,6 @@
         "type": "object"
       },
       "name": "ReadOpennessWorkerStatus"
-    },
-    {
-      "descriptionSha256": "756be0a484787d21763561d7557094fcc653b2c9d2e1949d2796f1100481545e",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcChecksums"
     },
     {
       "descriptionSha256": "ce5e7e684b25da117f721df278b476c88d1eaa05788a86c2ebd1ef7ab019577e",
@@ -21132,50 +21417,6 @@
         "type": "object"
       },
       "name": "ReadPlcLiveValuesS7"
-    },
-    {
-      "descriptionSha256": "a87a98f284da1cb1645bf616b36bdc46fe9aea724bd2a2af48223e4d399d75c4",
-      "inputSchema": {
-        "properties": {
-          "objectKind": {
-            "description": "objectKind: block | type.",
-            "enum": [
-              "block",
-              "type"
-            ],
-            "type": "string"
-          },
-          "objectPath": {
-            "description": "objectPath: path of the object inside the software ('Group/Name').",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "unit",
-            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
-            "enum": [
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "objectKind",
-          "objectPath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcObjectFingerprints"
     },
     {
       "descriptionSha256": "68f6809b35ac85b63f2509e8bd03aa5b989d6685519bbd62e13b1fd189b68cd2",
@@ -21255,52 +21496,6 @@
         "type": "object"
       },
       "name": "ReadPlcSimAdvancedTags"
-    },
-    {
-      "descriptionSha256": "59294654c64f5983f30146088e3fd354932d03a7af5d3062f256b211b5dec7f4",
-      "inputSchema": {
-        "properties": {
-          "includeContents": {
-            "default": true,
-            "description": "includeContents: true also returns the contents of each unit.",
-            "type": "boolean"
-          },
-          "limit": {
-            "default": 50,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "all",
-            "description": "unitKind: which unit collection unitName refers to - all | unit | safety.",
-            "enum": [
-              "all",
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcSoftwareUnits"
     },
     {
       "descriptionSha256": "760f90b97ca3af5cd5dc07b0370a0ae1672ce5fa670dfd34143a83e0b629610a",
@@ -21634,42 +21829,6 @@
         "type": "object"
       },
       "name": "ReadSivarcRuleTree"
-    },
-    {
-      "descriptionSha256": "19fcb19242af4e38ce44ffe0a3b03e919620738023535f51e4da51781d5ef9fa",
-      "inputSchema": {
-        "properties": {
-          "groupPath": {
-            "default": "",
-            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
-            "type": "string"
-          },
-          "includeMotionView": {
-            "default": false,
-            "description": "includeMotionView: true also returns the motion view of each object.",
-            "type": "boolean"
-          },
-          "includeParameters": {
-            "default": false,
-            "description": "includeParameters: true also returns parameters.",
-            "type": "boolean"
-          },
-          "maxDepth": {
-            "default": 4,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadTechnologyObjectTree"
     },
     {
       "descriptionSha256": "92e3ded96c2a6a51adf5dfe4aeecc4bef94a714dcab585c091f1c28e966b200b",
@@ -23519,15 +23678,16 @@
       "name": "SetDeviceItemIoAddress"
     },
     {
-      "descriptionSha256": "4a8ef40f30bc096f68eb11462ab0a2bd435de8005df928380afa647ec0f5bd31",
+      "descriptionSha256": "897adbff88605f3a798931cae6729e30916b4724b5b3ba83cc2335a22b74fbce",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "enabled": {
             "description": "enabled: true to enable, false to disable",
             "type": "boolean"
           },
           "interfaceName": {
-            "description": "interfaceName: exact name of the interface as shown in GetOpcUaConfig",
+            "description": "interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration",
             "type": "string"
           },
           "interfaceType": {
@@ -23649,8 +23809,9 @@
       "name": "SetPlcPutGetAccess"
     },
     {
-      "descriptionSha256": "818b41e3efa3737b3723832070d30611c10668c71f0fd63ae682af56c4e9d714",
+      "descriptionSha256": "a2c8bad7fcddbfda328d5239e7a2d27822ac8f7ed092e2c7d17638e875fa7245",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "access": {
             "description": "Published | Unpublished. Native software-unit object publication state.",

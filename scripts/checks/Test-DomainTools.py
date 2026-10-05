@@ -30,8 +30,8 @@ snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
     *({'tool': name, 'path': [key, 'timestamp'], 'reason': 'Watch-table read/probe DateTime.Now.ToString("O")'}
       for name in ('GetPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
       for key in ('data', 'Data')),
-    {'tool': 'GetOpcUaConfig', 'path': ['data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, direct serialization'},
-    {'tool': 'GetOpcUaConfig', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
+    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, direct serialization'},
+    {'tool': 'GetPlcOpcUaConfiguration', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
 
 
 snapshots.RAW_MASK_RULES += [
@@ -190,13 +190,13 @@ CASES = {
         + actions('ManageSiVArcRule', 'create update delete', category='screens', collectionPathJson='[]', name='Rule1'),
     'SpecializedExchange': actions('ExchangePlcSupervisions', 'export import importSettings',
                                   softwarePath=PLC, filePath='C:/domain-offline.xlsx'),
-    'SoftwareUnitDeep': [('ReadPlcSoftwareUnits', 'read', {'softwarePath': PLC})]
+    'SoftwareUnitDeep': [('ListPlcSoftwareUnits', 'read', {'softwarePath': PLC})]
         + actions('ManagePlcSoftwareUnit', 'list read create createFromMasterCopy delete update createRelation deleteRelation',
                   softwarePath=PLC, name='Unit1')
         + actions('ManagePlcDocuments', 'list read export import createFromMasterCopy createFromLibraryType',
                   softwarePath=PLC, name='Document1')
-        + [('ReadPlcChecksums', 'read', {'softwarePath': PLC}),
-           ('ReadPlcObjectFingerprints', 'read', {'softwarePath': PLC, 'objectKind': 'block', 'objectPath': 'Block1'})]
+        + [('GetPlcChecksums', 'read', {'softwarePath': PLC}),
+           ('GetPlcObjectFingerprints', 'read', {'softwarePath': PLC, 'objectKind': 'block', 'objectPath': 'Block1'})]
         + actions('ManagePlcBlockWriteProtection', 'read define protect unprotect change remove',
                   softwarePath=PLC, blockPath='Block1')
         + actions('ManageProjectCompilationSettings', 'read update'),
@@ -360,24 +360,24 @@ CASES = {
                for name, extension in (('ExportAlarmClasses', 'dat'), ('ExportAlarmTextLists', 'xlsx'), ('ExportAlarmInstanceTexts', 'xlsx'))]
         + [(name, 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.' + extension})
            for name, extension in (('ImportAlarmClasses', 'dat'), ('ImportAlarmTextLists', 'xlsx'))]
-        + actions('ExchangePlcAlarmTextListsXlsx', 'export import', softwarePath=PLC, filePath='C:/domain-offline.xlsx')
-        + [('ImportPlcAlarmInstanceTexts', 'import', {'softwarePath': PLC, 'filePath': 'C:/domain-offline.xlsx', 'culturesJson': '["en-US"]'})]
+        + actions('ExchangePlcAlarmTextLists', 'export import', softwarePath=PLC, filePath='C:/domain-offline.xlsx')
+        + [('ImportPlcAlarmInstanceTexts', 'import', {'softwarePath': PLC, 'filePath': 'C:/domain-offline.xlsx', 'cultures': ['en-US']})]
         + actions('ManagePlcAlarmTextList', 'read delete createFromMasterCopy', softwarePath=PLC, name='List1', libraryName='Library1', masterCopyPath='List1'),
-    'OpcUa': [('GetOpcUaConfig', 'read', {'softwarePath': PLC})]
+    'OpcUa': [('GetPlcOpcUaConfiguration', 'read', {'softwarePath': PLC})]
         + actions('ManageOpcUaInterface', 'read delete', softwarePath=PLC, interfaceName='Interface1')
         + [('SetOpcUaInterfaceEnabled', 'set', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'enabled': True}),
            ('ExportOpcUaInterface', 'export', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'exportPath': 'C:/domain-offline.xml'}),
            ('ImportOpcUaInterface', 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.xml'}),
            ('GenerateOpcUaModelledInterface', 'generate', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'namespaceUri': 'urn:domain:offline', 'outputPath': 'C:/domain-offline.xml'})]
-        + [('ReadOpcUaAccessControl', section, {'softwarePath': PLC, 'section': section}) for section in ('roles', 'restrictions')]
+        + [('GetOpcUaAccessControl', section, {'softwarePath': PLC, 'section': section}) for section in ('roles', 'restrictions')]
         + actions('ManageOpcUaAccessControl', 'createRole addStandardRole deleteRole setProjectRole setPermission setRestriction',
                   softwarePath=PLC, roleName='Role1', definedInNamespace='urn:domain:offline', projectRole='Role1', namespaceUri='urn:domain:offline'),
-    'TechnologyObjects': [('GetTechnologyObjects', 'read', {'softwarePath': PLC}),
+    'TechnologyObjects': [('ListTechnologyObjects', 'read', {'softwarePath': PLC}),
            ('ExportTechnologyObject', 'export', {'softwarePath': PLC, 'toName': 'Object1', 'exportPath': 'C:/domain-offline.xml'}),
            ('ExportTechnologyObjectsToDirectory', 'export', {'softwarePath': PLC, 'exportDir': 'C:/domain-offline'}),
            ('ImportTechnologyObject', 'import', {'softwarePath': PLC, 'folderPath': '', 'importPath': 'C:/domain-offline.xml'}),
            ('ImportTechnologyObjectsFromDirectory', 'import', {'softwarePath': PLC, 'folderPath': '', 'dir': 'C:/domain-offline'}),
-           ('ReadTechnologyObjectTree', 'read', {'softwarePath': PLC})]
+           ('GetTechnologyObjectTree', 'read', {'softwarePath': PLC})]
         + actions('ManageTechnologyObject', 'read create delete setParameter', softwarePath=PLC, objectPath='Object1'),
     'Devices': [
         ('GetProjectTree', 'read', {}),
@@ -1277,11 +1277,11 @@ def check_coverage(domains):
 
 
 THROWING_GUARDS = {
-    'GetTechnologyObjects': 'GetTechnologyObjects: no project is open. Call Connect + OpenProject (or AttachToOpenProject) first.',
+    'ListTechnologyObjects': 'ListTechnologyObjects: no project is open. Call Connect + OpenProject (or AttachToOpenProject) first.',
     'ImportTechnologyObject': "Failed importing technology object from 'C:/domain-offline.xml' [InvalidState]: No project is open."
 }
 SIMPLE_GUARDS = {'ExportAlarmClasses', 'ImportAlarmClasses', 'ExportAlarmTextLists', 'ImportAlarmTextLists',
-                 'ExportAlarmInstanceTexts', 'GetOpcUaConfig', 'SetOpcUaInterfaceEnabled', 'ExportOpcUaInterface',
+                 'ExportAlarmInstanceTexts', 'GetPlcOpcUaConfiguration', 'SetOpcUaInterfaceEnabled', 'ExportOpcUaInterface',
                  'ImportOpcUaInterface', 'ExportTechnologyObject'}
 
 

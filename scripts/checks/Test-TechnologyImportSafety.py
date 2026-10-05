@@ -14,7 +14,7 @@ technology = '\n'.join((
     sources.member('ImportTechnologyObject', owner='Portal', signature='public void'),
     sources.member('ImportTechnologyObject', signature='private void'),
     sources.member('ImportTechnologyObject', owner='TechnologyObjectsService', tool=False),
-    sources.member('ImportTechnologyObjectsFromDirectory', tool=False)))
+    sources.member('ImportTechnologyObjectsFromDirectory', owner='TechnologyObjectsService', tool=False)))
 assert 'bool overwrite = true' in technology
 assert 'importPath, true, new List<string>()' in technology
 assert 'file, overwrite, imported' in technology

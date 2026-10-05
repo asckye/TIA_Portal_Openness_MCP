@@ -134,7 +134,8 @@ namespace TiaMcpServer.Tests
                 typeof(HardwareNetworkTools), typeof(HardwareServicesTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
                 typeof(GitWorkflowTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),
                 typeof(PlcBuildTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
-                typeof(V21EcosystemTools), typeof(XmlBuilderTools)
+                typeof(V21EcosystemTools), typeof(XmlBuilderTools), typeof(AlarmsTools), typeof(OpcUaTools),
+                typeof(SoftwareUnitDeepTools), typeof(SoftwareUnitManagementTools), typeof(TechnologyObjectsTools)
             }).Methods, ToolCatalog.Engine.Methods);
         }
 
