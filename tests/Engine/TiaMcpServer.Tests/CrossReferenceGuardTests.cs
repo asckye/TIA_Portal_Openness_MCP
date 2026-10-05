@@ -35,9 +35,9 @@ namespace TiaMcpServer.Tests
             var stale = new List<(string Path, bool? Consistent)> { ("Main", true), ("INITIALIZATION_FC", false), ("INITIALIZATION_DB", false), ("SYSTEM_INFO_FB_IDB", true) };
             var refusal = CrossReferenceGuardLogic.Refusal(stale, "PLC_1");
             check(refusal != null && refusal.StartsWith("refused: 2 block(s) of 'PLC_1' are not compiled")
-                  && refusal.Contains("INITIALIZATION_FC, INITIALIZATION_DB") && refusal.Contains("CompileSoftware") && refusal.Contains("2026-09-21")
+                  && refusal.Contains("INITIALIZATION_FC, INITIALIZATION_DB") && refusal.Contains("CompilePlcSoftware") && refusal.Contains("2026-09-21")
                   && CrossReferenceGuardLogic.StaleCount(stale) == 2,
-                "cross-reference guard: uncompiled blocks refuse the query, are named, and the fix (CompileSoftware) plus the real-project reason are stated");
+                "cross-reference guard: uncompiled blocks refuse the query, are named, and the fix (CompilePlcSoftware) plus the real-project reason are stated");
 
             var many = new List<(string Path, bool? Consistent)>();
             for (int i = 1; i <= 14; i++) many.Add(("FB_" + i, false));

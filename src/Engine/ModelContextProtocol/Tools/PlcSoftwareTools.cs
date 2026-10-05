@@ -1,3 +1,6 @@
+using TiaMcp.Logic.V4.Domain;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -35,9 +38,13 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        [McpServerTool(Name = "GetSoftwareInfo"), Description("[L1][PLC-Software] Get PLC software properties (language, version, block counts). Requires: Connect + OpenProject. softwarePath comes from GetProjectTree (e.g. 'PLC_1'). Use GetSoftwareTree for the full block hierarchy.")]
-        public ResponseSoftwareInfo GetSoftwareInfo(
+        [McpServerTool(Name = "GetSoftwareInfo"), Description("[L1][PLC-Software] Get PLC software properties (language, version, block counts). Requires: Connect + OpenProject. softwarePath comes from GetProjectTree (e.g. 'PLC_1'). Use GetSoftwareTree for the full block hierarchy. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetSoftwareInfoV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
+            => PlcToolContract.Run("GetSoftwareInfo", false, true, () => GetSoftwareInfo(softwarePath));
+
+        public ResponseSoftwareInfo GetSoftwareInfo(
+            string softwarePath)
         {
             try
             {
@@ -67,10 +74,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CompileSoftware"), Description("[L1][PLC-Software] Compile all blocks in the PLC software. Requires: Connect + OpenProject. Returns basic success/failure. For structured error/warning details use CompileAndDiagnosePlc instead. Must compile before ExportBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches.")]
-        public ResponseCompile CompileSoftware(
+        [McpServerTool(Name = "CompilePlcSoftware"), Description("[L1][PLC-Software] Compile all blocks in the PLC software. Requires: Connect + OpenProject. Returns basic success/failure. For structured error/warning details use CompilePlcDiagnostics instead. Must compile before ExportPlcBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult CompileSoftwareV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("password: the password to access adminsitration, default: no password")] string password = "")
+            => PlcToolContract.Run("CompilePlcSoftware", true, true, () => CompileSoftware(softwarePath, password));
+
+        public ResponseCompile CompileSoftware(
+            string softwarePath,
+            string password = "")
         {
             try
             {
@@ -104,9 +116,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetSoftwareTree"), Description("[L1][PLC-Software] Get the PLC user block/type hierarchy as ASCII tree; system block groups and external sources are excluded. Inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. 'Program blocks/FBs/FB_Motor'). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy.")]
-        public ResponseSoftwareTree GetSoftwareTree(
+        [McpServerTool(Name = "GetSoftwareTree"), Description("[L1][PLC-Software] Get the PLC user block/type hierarchy as ASCII tree; system block groups and external sources are excluded. Inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). ALWAYS call before ExportPlcBlock/ImportPlcBlock to get exact group paths (e.g. 'Program blocks/FBs/FB_Motor'). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetSoftwareTreeV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
+            => PlcToolContract.Run("GetSoftwareTree", false, true, () => GetSoftwareTree(softwarePath));
+
+        public ResponseSoftwareTree GetSoftwareTree(
+            string softwarePath)
         {
             try
             {

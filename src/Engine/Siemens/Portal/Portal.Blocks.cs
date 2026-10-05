@@ -180,7 +180,7 @@ namespace TiaMcpServer.Siemens
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"GetBlocks: PLC '{softwarePath}' resolved, but its BlockGroup is not available — "
+                    $"ListPlcBlocks: PLC '{softwarePath}' resolved, but its BlockGroup is not available — "
                     + "the block list could NOT be read. This is not the same as 'the PLC has no blocks'.");
             }
 
@@ -199,7 +199,7 @@ namespace TiaMcpServer.Siemens
                 // 遍历炸在半路时原来只记日志、把**残缺的**列表当完整结果返回。
                 // 「少了几个块」比「一个都没有」更难发现，因为它看起来完全正常。
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"GetBlocks: block enumeration failed after {list.Count} block(s) in '{softwarePath}'; "
+                    $"ListPlcBlocks: block enumeration failed after {list.Count} block(s) in '{softwarePath}'; "
                     + "the returned list would have been INCOMPLETE, so it is not returned at all. "
                     + $"Root cause: {ex.Message}", null, ex);
             }
@@ -240,7 +240,7 @@ namespace TiaMcpServer.Siemens
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"GetTypes: PLC '{softwarePath}' resolved, but its TypeGroup is not available — "
+                    $"ListPlcTypes: PLC '{softwarePath}' resolved, but its TypeGroup is not available — "
                     + "the type list could NOT be read. This is not the same as 'the PLC has no types'.");
             }
 
@@ -255,7 +255,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"GetTypes: type enumeration failed after {list.Count} type(s) in '{softwarePath}'; "
+                    $"ListPlcTypes: type enumeration failed after {list.Count} type(s) in '{softwarePath}'; "
                     + "the returned list would have been INCOMPLETE, so it is not returned at all. "
                     + $"Root cause: {ex.Message}", null, ex);
             }
@@ -315,7 +315,7 @@ namespace TiaMcpServer.Siemens
                 pex.Data["blockPath"] = blockPath;
                 pex.Data["exportPath"] = exportPath;
 
-                _logger?.LogError(pex, "ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
+                _logger?.LogError(pex, "ExportPlcBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
                 throw pex;
             }
         }
@@ -361,7 +361,7 @@ namespace TiaMcpServer.Siemens
                 if (!pex.Data.Contains("typePath")) pex.Data["typePath"] = typePath;
                 if (!pex.Data.Contains("exportPath")) pex.Data["exportPath"] = exportPath;
 
-                _logger?.LogError(pex, "ExportType failed for {SoftwarePath} {TypePath} -> {ExportPath}", softwarePath, typePath, exportPath);
+                _logger?.LogError(pex, "ExportPlcType failed for {SoftwarePath} {TypePath} -> {ExportPath}", softwarePath, typePath, exportPath);
                 throw pex;
             }
         }
@@ -445,7 +445,7 @@ namespace TiaMcpServer.Siemens
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
-                _logger?.LogError(pex, "ImportBlock failed for {SoftwarePath} group={GroupPath} file={ImportPath}: {Inner}", softwarePath, groupPath, importPath, inner);
+                _logger?.LogError(pex, "ImportPlcBlock failed for {SoftwarePath} group={GroupPath} file={ImportPath}: {Inner}", softwarePath, groupPath, importPath, inner);
                 throw pex;
             }
         }
@@ -586,7 +586,7 @@ namespace TiaMcpServer.Siemens
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
-                _logger?.LogError(pex, "ImportType failed for {SoftwarePath} group={GroupPath} file={ImportPath}", softwarePath, groupPath, importPath);
+                _logger?.LogError(pex, "ImportPlcType failed for {SoftwarePath} group={GroupPath} file={ImportPath}", softwarePath, groupPath, importPath);
                 throw pex;
             }
         }

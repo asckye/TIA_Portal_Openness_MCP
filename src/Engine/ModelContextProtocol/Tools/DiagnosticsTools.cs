@@ -187,7 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var requiredTools = new[]
                 {
-                    "GetPlcWatchTables",
+                    "ListPlcWatchTables",
                     "ExportPlcWatchTable",
                     "ExportPlcWatchTablesToDirectory",
                     "ProbePlcMonitorOnlineCapabilities",
@@ -490,7 +490,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "notfound":
                     return new List<string> { "Search the live project tree for the target.", "Use full qualified paths for blocks/types.", "Report candidate matches instead of guessing." };
                 case "ambiguouspath":
-                    return new List<string> { "List candidates and choose one exact path.", "Avoid single block names when groups may contain duplicates.", "Use GetBlocksWithHierarchy before exporting/importing blocks." };
+                    return new List<string> { "List candidates and choose one exact path.", "Avoid single block names when groups may contain duplicates.", "Use GetPlcBlockHierarchy before exporting/importing blocks." };
                 case "unsupportedtiaversion":
                     return new List<string> { "Confirm TIA Portal V21 is installed.", "Restart the server with --tia-major-version 21.", "Check installed Openness assemblies." };
                 case "opennesspermissiondenied":
@@ -500,7 +500,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "importschemaerror":
                     return new List<string> { "Validate XML is well formed.", "Compare against a same-version TIA export.", "Do not mix SCL source syntax with Openness XML syntax." };
                 case "compileerror":
-                    return new List<string> { "Export the failed block/type for inspection.", "Search existing tags, DBs, UDTs, and block interfaces before adding variables.", "Fix the smallest object and run CompileAndDiagnosePlc again." };
+                    return new List<string> { "Export the failed block/type for inspection.", "Search existing tags, DBs, UDTs, and block interfaces before adding variables.", "Fix the smallest object and run CompilePlcDiagnostics again." };
                 case "hmibindingerror":
                     return new List<string> { "Read HMI screens, tag tables, tags, and connections.", "Verify the HMI tag is PLC-backed, not only internal.", "Read back dynamization and button script properties after binding." };
                 case "reflectionriskblocked":

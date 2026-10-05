@@ -16,6 +16,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs" Link="McpServer.BlockImportVerification.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs" Link="McpServer.BlockLogic.cs" />
+
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
     <Compile Include="../../../src/Engine/EngineServices.cs" Link="EngineServices.cs" />

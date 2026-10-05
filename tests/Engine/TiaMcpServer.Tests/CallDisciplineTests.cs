@@ -67,7 +67,7 @@ namespace TiaMcpServer.Tests
             check(d["devicePathJson"]!.GetValue<string>() == "[]" && d["propertiesJson"]!.GetValue<string>() == "{}" && d["blockPath"]!.GetValue<string>() == "Main", "derive: *Json shapes and blockPath");
             check(d["exportPath"]!.GetValue<string>() == "C:\\temp\\screen.xml" && d["outputDirectory"]!.GetValue<string>() == "C:\\Temp\\SomeTool", "derive: file path from e.g., directory placeholder");
             check(d["count"]!.GetValue<long>() == 1 && d["enabled"]!.GetValue<bool>() == false && d["thing"]!.GetValue<string>() == "<thing>", "derive: numbers, booleans from default, unknown -> <name>");
-            check(ToolExamples.FindOrDerive("GetBlocks", derivedSpecs).Note != ToolExamples.DerivedNote && ToolExamples.FindOrDerive("NoSuchTool", derivedSpecs).Note == ToolExamples.DerivedNote, "derive: curated example wins");
+            check(ToolExamples.FindOrDerive("ListPlcBlocks", derivedSpecs).Note != ToolExamples.DerivedNote && ToolExamples.FindOrDerive("NoSuchTool", derivedSpecs).Note == ToolExamples.DerivedNote, "derive: curated example wins");
             // 2.7.59 real machine: the vocabulary's e.g. [\"PLC_1\"] produced the fragment "[" and chartPath a host path
             var vmSpecs = new List<PreflightLogic.ParameterSpec>
             {

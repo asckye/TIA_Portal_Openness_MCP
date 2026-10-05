@@ -1,6 +1,4 @@
 using ModelContextProtocol;
-using Siemens.Engineering;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,13 +9,12 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// 导入后读回校验的三种结局。公开线的 ResponseMessage 只有 Message + Meta，
-    /// 没有三态 Outcome 契约，所以三态在这一层表达，由调用方翻译成两态：
-    ///   Mismatch → 计入 failed[]（真失败，不能当成功返回）
-    ///   Unknown  → 正常返回，但 Message 以 "⚠ 未验证：" 开头 + Meta["verified"]=false
-    /// 绝不能把 Unknown 折叠成 Verified —— "没验成" 冒充 "验过了" 比报错更糟。
-    /// </summary>
+    // A confirmed mismatch is distinct from an unavailable readback.
+    internal sealed class PlcBlockVerificationException : McpException
+    {
+        internal PlcBlockVerificationException(string message) : base(message, McpErrorCode.InternalError) { }
+    }
+
     internal enum PlcBlockVerificationState
     {
         Verified,

@@ -119,7 +119,7 @@ namespace TiaMcpServer.Tests
             check(ToolExamples.All.Count >= 70 && ToolExamples.Find("downloadtoplc") != null && ToolExamples.Find("NoSuchTool") == null, "examples: table populated, lookup case-insensitive");
             foreach (var e in ToolExamples.All)
                 check(JsonNode.Parse(e.ArgumentsJson) is JsonObject, "examples: '" + e.Tool + "' is a JSON object");
-            var decorated = ToolExamples.Decorate("GetBlocks", "[L1][PLC-Software][READ] List blocks.");
+            var decorated = ToolExamples.Decorate("ListPlcBlocks", "[L1][PLC-Software][READ] List blocks.");
             check(decorated.StartsWith("[L1][PLC-Software][READ] List blocks. Example: {\"softwarePath\":\"PLC_1\",\"regexName\":\"FB_.*\"} (") && decorated.EndsWith(")."), "examples: description decorated with the example sentence");
             check(ReferenceEquals(ToolExamples.Decorate("ProbeResult", "x"), "x") || ToolExamples.Decorate("ProbeResult", "x") == "x", "examples: tools without an example keep their description");
             // Validate every example against the tools this suite links (the build gate validates all of them against the engine).
@@ -131,8 +131,8 @@ namespace TiaMcpServer.Tests
             }
             var linkedProblems = ToolExamples.ValidateAgainst(tool => Specs(tool) is { Count: > 0 } s ? s : null).Where(p => !p.EndsWith("no tool of that name (example is stale)")).ToList();
             check(linkedProblems.Count == 0, "examples: linked tools' examples fit their signatures" + (linkedProblems.Count > 0 ? ": " + string.Join("; ", linkedProblems) : ""));
-            var gate = ToolExamples.ValidateAgainst(tool => tool == "GetBlocks" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("softwarePath", true), new KeyValuePair<string, bool>("regex", false) } : null);
-            check(gate.Any(p => p == "GetBlocks: example uses 'regexName' which is not a parameter (exact spelling required)") && gate.Any(p => p.EndsWith("no tool of that name (example is stale)")), "examples: validation flags wrong parameter names and stale tools (sentinel)");
+            var gate = ToolExamples.ValidateAgainst(tool => tool == "ListPlcBlocks" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("softwarePath", true), new KeyValuePair<string, bool>("regex", false) } : null);
+            check(gate.Any(p => p == "ListPlcBlocks: example uses 'regexName' which is not a parameter (exact spelling required)") && gate.Any(p => p.EndsWith("no tool of that name (example is stale)")), "examples: validation flags wrong parameter names and stale tools (sentinel)");
 
             // ---- CallTool / FindTools carry the example ----
             var refusal = McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\"}");

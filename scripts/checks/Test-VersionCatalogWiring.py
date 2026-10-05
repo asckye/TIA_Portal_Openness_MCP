@@ -50,7 +50,7 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('Assembly.Load', source)
 
     def test_move_refusal_and_recovery_precede_cleanup(self):
-        source = sources.member('MoveBlockToGroup', tool=False)
+        source = sources.member('MoveBlockToGroup', owner='PlcBlocksService', tool=False)
         self.assertLess(source.index('if (block is OB)'), source.index('EnsurePlcBlockGroup'))
         self.assertLess(source.index('moveVerified = verifyGroup'), source.index('finally'))
         self.assertIn('if (moveVerified)', source.split('finally', 1)[1])

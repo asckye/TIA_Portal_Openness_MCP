@@ -234,14 +234,14 @@ namespace TiaMcpServer.Siemens.Services
             string modifyValue,
             string trigger = "Permanent")
         {
-            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Basic(false, ("v4Rejection", "PROJECT_NOT_BOUND")) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
-            if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(address)) return new ResponseMessage { Message = "tableName and address are required." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Basic(false, ("v4Rejection", "NOT_FOUND")) };
+            if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(address)) return new ResponseMessage { Message = "tableName and address are required.", Meta = ResponseMeta.Basic(false, ("v4Rejection", "INVALID_ARGUMENT")) };
             var triggerType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
             object triggerValue;
             try { triggerValue = Enum.Parse(triggerType, (trigger ?? "").Trim(), true); }
-            catch (ArgumentException) /* swallow(parse-fallback): Invalid trigger names return the existing list of allowed values. */ { return new ResponseMessage { Message = "trigger must be one of: " + string.Join("/", Enum.GetNames(triggerType)) + " (case-sensitive)." }; }
+            catch (ArgumentException) /* swallow(parse-fallback): Invalid trigger names return the existing list of allowed values. */ { return new ResponseMessage { Message = "trigger must be one of: " + string.Join("/", Enum.GetNames(triggerType)) + " (case-sensitive).", Meta = ResponseMeta.Basic(false, ("v4Rejection", "INVALID_ARGUMENT")) }; }
             var triggerName = triggerValue.ToString();
 
             var meta = new JsonObject
@@ -358,9 +358,9 @@ namespace TiaMcpServer.Siemens.Services
             string address,
             string forceValue)
         {
-            if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
+            if (IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Basic(false, ("v4Rejection", "PROJECT_NOT_BOUND")) };
             var plc = _session.ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta.Basic(false, ("v4Rejection", "NOT_FOUND")) };
 
             try
             {
@@ -944,7 +944,7 @@ namespace TiaMcpServer.Siemens.Services
         // ---- tag table constants ----------------------------------------------------------------------------------------------------------
         private static JsonObject ConstantRow(PlcConstant constant, string kind) => new JsonObject { ["name"] = constant.Name, ["dataTypeName"] = constant.DataTypeName, ["value"] = constant.Value, ["kind"] = kind, ["constantClass"] = constant.GetType().Name };
         public ResponseMessage ReadPlcTagTableConstants(string softwarePath, string tablePath, string kind = "all", string unitName = "", string unitKind = "unit", int offset = 0, int limit = 200)
-            => _session.RunHmiStepTool("ReadPlcTagTableConstants", meta => {
+            => _session.RunHmiStepTool("GetPlcTagTableConstants", meta => {
                 PlcTableRules.ValidateConstantRequest(tablePath, kind, unitName, unitKind, offset, limit);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
@@ -1007,7 +1007,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     Page(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray(), offset, limit, meta);
                     meta["apiCallSuccess"] = true;
-                    meta["scope"] = "PlcWatchTableEntry / PlcForceTableEntry scalars and comment rows (PlcTableCommentEntry) in native order; values are configuration, not online data (ReadPlcWatchTableCurrentValuesReadOnly).";
+                    meta["scope"] = "PlcWatchTableEntry / PlcForceTableEntry scalars and comment rows (PlcTableCommentEntry) in native order; values are configuration, not online data (GetPlcWatchTableCurrentValuesReadOnly).";
                     return "Table entries read; no modification.";
                 }
                 if (action == "createComment")

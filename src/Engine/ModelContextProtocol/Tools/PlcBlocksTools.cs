@@ -1,3 +1,6 @@
+using TiaMcp.Logic.V4.Domain;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -37,10 +40,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region blocks
 
-        [McpServerTool(Name = "GetBlockInfo"), Description("[L2][PLC-Software] Get detailed info for one block (attributes, language, number, modification time). Requires: Connect + OpenProject. blockPath must be fully qualified: 'Group/Subgroup/BlockName' — get it from GetSoftwareTree or GetBlocksWithHierarchy. Returns: IsConsistent (false = must compile before export).")]
-        public ResponseBlockInfo GetBlockInfo(
+        [McpServerTool(Name = "GetPlcBlockInfo"), Description("[L2][PLC-Software] Get detailed info for one block (attributes, language, number, modification time). Requires: Connect + OpenProject. blockPath must be fully qualified: 'Group/Subgroup/BlockName' — get it from GetSoftwareTree or GetPlcBlockHierarchy. Returns: IsConsistent (false = must compile before export). Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetBlockInfoV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: defines the path in the project structure to the block")] string blockPath)
+            => PlcToolContract.Run("GetPlcBlockInfo", false, true, () => GetBlockInfo(softwarePath, blockPath));
+
+        public ResponseBlockInfo GetBlockInfo(
+            string softwarePath,
+            string blockPath)
         {
             try
             {
@@ -77,10 +85,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetBlocks"), Description("[L2][PLC-Software] Get a flat list of user-group blocks in PLC software. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language.")]
-        public ResponseBlocks GetBlocks(
+        [McpServerTool(Name = "ListPlcBlocks"), Description("[L2][PLC-Software] Get a flat list of user-group blocks in PLC software. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. Use GetPlcBlockHierarchy instead when you need group/folder paths for ExportPlcBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetBlocksV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
+            => PlcToolContract.Run("ListPlcBlocks", false, true, () => GetBlocks(softwarePath, regexName));
+
+        public ResponseBlocks GetBlocks(
+            string softwarePath,
+            string regexName = "")
         {
             try
             {
@@ -120,9 +133,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetBlocksWithHierarchy"), Description("[L2][PLC-Software]Get user blocks with their group hierarchy. System block groups are excluded; inspect meta.dataComplete for unreadable attributes.")]
-        public ResponseBlocksWithHierarchy GetBlocksWithHierarchy(
+        [McpServerTool(Name = "GetPlcBlockHierarchy"), Description("[L2][PLC-Software]Get user blocks with their group hierarchy. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetBlocksWithHierarchyV4(
         [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
+            => PlcToolContract.Run("GetPlcBlockHierarchy", false, true, () => GetBlocksWithHierarchy(softwarePath));
+
+        public ResponseBlocksWithHierarchy GetBlocksWithHierarchy(
+        string softwarePath)
         {
             try
             {
@@ -153,12 +170,19 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "ExportBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: Connect + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportBlocks; readable SCL/.s7dcl text → ExportAsDocuments.")]
-        public ResponseExportBlock ExportBlock(
+        [McpServerTool(Name = "ExportPlcBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: Connect + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportAsDocuments. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
             [Description("exportPath: directory that receives '<BlockName>.xml' - or, when it ends in .xml, the target file itself; the response reports the file written (Meta.exportedFile)")] string exportPath,
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+            => PlcToolContract.Run("ExportPlcBlock", true, true, () => ExportBlock(softwarePath, blockPath, exportPath, preservePath));
+
+        public ResponseExportBlock ExportBlock(
+            string softwarePath,
+            string blockPath,
+            string exportPath,
+            bool preservePath = false)
         {
             try
             {
@@ -192,7 +216,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var msg = "Failed to export block.";
                             if (!string.IsNullOrEmpty(reason)) msg += $" Reason: {reason}";
 
-                            McpServer.Logger?.LogError(pex, "MCP ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
+                            McpServer.Logger?.LogError(pex, "MCP ExportPlcBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
                                 pex.Data?["softwarePath"], pex.Data?["blockPath"], pex.Data?["exportPath"]);
 
                             throw new McpException(msg, McpErrorCode.InternalError);
@@ -327,11 +351,17 @@ namespace TiaMcpServer.ModelContextProtocol
  /* swallow(probe-optional): Group suggestions are optional and must not replace the original import error. */                return string.Empty;
             }
         }
-        [McpServerTool(Name = "ImportBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: Connect + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompileAndDiagnosePlc for full consistency. Pick the right tool: SCL/.s7dcl text → ImportFromDocuments; multiple XML files → ImportBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → PlcBuildAndImport.")]
-        public ResponseImportBlock ImportBlock(
+        [McpServerTool(Name = "ImportPlcBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: Connect + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportFromDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → PlcBuildAndImport. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the block")] string importPath)
+            => PlcToolContract.Run("ImportPlcBlock", true, true, () => ImportBlock(softwarePath, groupPath, importPath));
+
+        public ResponseImportBlock ImportBlock(
+            string softwarePath,
+            string groupPath,
+            string importPath)
         {
             try
             {
@@ -345,11 +375,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     // 确知不符：块进去了，但和 XML 声明的不是同一个东西。
                     // 这是**可判定的失败**，不能返回一条带 ⚠ 的正常响应了事。
-                    throw new McpException(
-                        $"ImportBlock: the block was imported from '{importPath}' into '{groupPath}', "
+                    throw new PlcBlockVerificationException(
+                        $"ImportPlcBlock: the block was imported from '{importPath}' into '{groupPath}', "
                         + $"but read-back does NOT match what the XML declares: {outcome.Detail}. "
-                        + "⚠ The project HAS been modified — inspect it in TIA before retrying.",
-                        McpErrorCode.InternalError);
+                        + "⚠ The project HAS been modified — inspect it in TIA before retrying.");
                 }
 
                 bool verified = outcome.State == PlcBlockVerificationState.Verified;
@@ -359,7 +388,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = verified
                         ? $"Block imported from '{importPath}' to '{groupPath}' (verified)"
                         : $"⚠ 未验证：block imported from '{importPath}' to '{groupPath}', but the read-back "
-                          + $"could not confirm it ({outcome.Detail}). Confirm with GetBlocks / GetBlockInfo "
+                          + $"could not confirm it ({outcome.Detail}). Confirm with ListPlcBlocks / GetPlcBlockInfo "
                           + "before treating this as done.",
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject
@@ -382,13 +411,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportBlock.")]
-        public ResponseImportBatch ImportBlocksFromDirectory(
+        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportBlocksFromDirectoryV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import blocks")] string groupPath,
             [Description("dir: directory that contains block .xml files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: true=Override, false=None (reject existing objects; no rename)")] bool overwrite = true)
+            => PlcToolContract.Run("ImportPlcBlocksFromDirectory", true, true, () => ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite));
+
+        public ResponseImportBatch ImportBlocksFromDirectory(
+            string softwarePath,
+            string groupPath,
+            string dir,
+            string regexName = "",
+            bool overwrite = true)
         {
             try
             {
@@ -407,8 +444,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks.")]
-        public ResponsePlcProgramImport ImportPlcProgramFromDirectory(
+        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcProgramFromDirectoryV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("sourceDir: root directory containing exported PLC XML files")] string sourceDir,
             [Description("typeGroupPath: PLC data type group path; use empty for root")] string typeGroupPath = "",
@@ -419,6 +456,19 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("compileAfter: compile PLC software after imports")] bool compileAfter = true,
             [Description("stopOnImportFailure: skip remaining imports after first import failure")] bool stopOnImportFailure = false,
             [Description("dryRun: only classify and return discovered objects; do not import or compile")] bool dryRun = false)
+            => PlcToolContract.Run("ImportPlcProgramFromDirectory", !dryRun, true, () => ImportPlcProgramFromDirectory(softwarePath, sourceDir, typeGroupPath, tagFolderPath, technologyFolderPath, blockGroupPath, regexName, compileAfter, stopOnImportFailure, dryRun));
+
+        public ResponsePlcProgramImport ImportPlcProgramFromDirectory(
+            string softwarePath,
+            string sourceDir,
+            string typeGroupPath = "",
+            string tagFolderPath = "",
+            string technologyFolderPath = "",
+            string blockGroupPath = "",
+            string regexName = "",
+            bool compileAfter = true,
+            bool stopOnImportFailure = false,
+            bool dryRun = false)
         {
             var importedTypes = new List<string>();
             var importedTagTables = new List<string>();
@@ -554,20 +604,32 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CompileAndDiagnosePlc"), Description("[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: Connect + OpenProject.")]
-        public ResponseCompileDiagnose CompileAndDiagnosePlc(
+        [McpServerTool(Name = "CompilePlcDiagnostics"), Description("[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: Connect + OpenProject. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult CompileAndDiagnosePlcV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("password: optional safety password")] string password = "")
+            => PlcToolContract.Run("CompilePlcDiagnostics", true, true, () => CompileAndDiagnosePlc(softwarePath, password));
+
+        public ResponseCompileDiagnose CompileAndDiagnosePlc(
+            string softwarePath,
+            string password = "")
             => PlcCompilation.CompileAndDiagnoseCore(softwarePath, password);
 
 
 
-        [McpServerTool(Name = "RepairAndReimportBlock"), Description("[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions).")]
-        public ResponseRepairAndCompile RepairAndReimportBlock(
+        [McpServerTool(Name = "RepairAndReimportPlcBlock"), Description("[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult RepairAndReimportBlockV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: block XML path")] string importPath,
             [Description("groupPath: block group path; use empty for root Program blocks")] string groupPath = "",
             [Description("compileAfter: compile PLC after import")] bool compileAfter = true)
+            => PlcToolContract.Run("RepairAndReimportPlcBlock", true, true, () => RepairAndReimportBlock(softwarePath, importPath, groupPath, compileAfter));
+
+        public ResponseRepairAndCompile RepairAndReimportBlock(
+            string softwarePath,
+            string importPath,
+            string groupPath = "",
+            bool compileAfter = true)
         {
             var suggestions = new List<string>();
             try
@@ -633,14 +695,23 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        [McpServerTool(Name = "ExportBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportBlocksAsDocuments; a single block → ExportBlock.")]
-        public async Task<ResponseExportBlocks> ExportBlocks(
+        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportBlocksAsDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        public Task<CallToolResult> ExportBlocksV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where to export the blocks")] string exportPath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "",
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+            => PlcToolContract.RunAsync("ExportPlcBlocks", true, true, async () => await ExportBlocks(server, context, softwarePath, exportPath, regexName, preservePath));
+
+        public async Task<ResponseExportBlocks> ExportBlocks(
+            IMcpServer server,
+            RequestContext<CallToolRequestParams> context,
+            string softwarePath,
+            string exportPath,
+            string regexName = "",
+            bool preservePath = false)
         {
             var startTime = DateTime.Now;
             var progressToken = context?.Params?.ProgressToken;
@@ -850,10 +921,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        [McpServerTool(Name = "DescribeBlockLogic"), Description("[L1][PLC-Software] Read a block's LOGIC as READABLE TEXT — the fast, accurate way to analyze LADDER (LAD) without hand-parsing FlgNet XML. For each LAD network it reconstructs the power flow as a boolean-ish expression (series = ' · ', parallel = ' + '), shows coils ( )/(S)/(R), MOVE/compare/timer boxes with their operands, and — critically — FLAGS any contact whose operand is a LITERAL CONSTANT with '⟨常量⟩' (a normally-open contact wired to FALSE silently disables its whole rung; this is nearly impossible to spot by eye). SCL/STL networks are rendered inline as code. Use this to understand or review LAD logic before editing. Requires: Connect + OpenProject + the block consistent (compile first if IsConsistent=false; export does not work in online mode — GoOffline first). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree.")]
-        public ResponseBlockLogic DescribeBlockLogic(
+        [McpServerTool(Name = "DescribePlcBlockLogic"), Description("[L1][PLC-Software] Read a block's LOGIC as READABLE TEXT — the fast, accurate way to analyze LADDER (LAD) without hand-parsing FlgNet XML. For each LAD network it reconstructs the power flow as a boolean-ish expression (series = ' · ', parallel = ' + '), shows coils ( )/(S)/(R), MOVE/compare/timer boxes with their operands, and — critically — FLAGS any contact whose operand is a LITERAL CONSTANT with a literal-constant marker (a normally-open contact wired to FALSE silently disables its whole rung; this is nearly impossible to spot by eye). SCL/STL networks are rendered inline as code. Use this to understand or review LAD logic before editing. Requires: Connect + OpenProject + the block consistent (compile first if IsConsistent=false; export does not work in online mode — GoOffline first). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult DescribeBlockLogicV4(
             [Description("softwarePath: PLC software path, e.g. '5T车' or 'PLC_1' (from GetProjectTree)")] string softwarePath,
             [Description("blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree")] string blockPath)
+            => PlcToolContract.Run("DescribePlcBlockLogic", false, true, () => DescribeBlockLogic(softwarePath, blockPath));
+
+        public ResponseBlockLogic DescribeBlockLogic(
+            string softwarePath,
+            string blockPath)
         {
             var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpLogic_" + Guid.NewGuid().ToString("N"));
             try
@@ -892,7 +968,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new McpException($"DescribeBlockLogic failed for '{blockPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"DescribePlcBlockLogic failed for '{blockPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
             finally
             {
@@ -1134,32 +1210,56 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        [McpServerTool(Name="ManagePlcBlockProtection"), Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native PlcBlockProtectionProvider. Password is passed straight to TIA and never stored or logged; native invalid-password characters are reported. Refuses protecting an already protected block or unprotecting an unprotected one. Default preview; real change requires dryRun=false AND confirmProtectionChange=true, an Offline PLC, and is verified by IsKnowHowProtected readback. No save/compile/download.")]
-        public ResponseMessage ManagePlcBlockProtection(
+        [McpServerTool(Name = "ManagePlcBlockProtection"), Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native PlcBlockProtectionProvider. Password is passed straight to TIA and never stored or logged; native invalid-password characters are reported. Refuses protecting an already protected block or unprotecting an unprotected one. Default preview; real change requires dryRun=false AND confirmProtectionChange=true, an Offline PLC, and is verified by IsKnowHowProtected readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcBlockProtectionV4(
             string softwarePath,
             string blockPath,
             [Description("action: the operation to perform - read | protect | unprotect.")] string action,
             string password="",
             [Description("confirmProtectionChange: must be true together with dryRun=false to change the protection.")] bool confirmProtectionChange=false,
             bool dryRun=true)
+            => PlcToolContract.Run("ManagePlcBlockProtection", !dryRun && action != "read", true, () => ManagePlcBlockProtection(softwarePath, blockPath, action, password, confirmProtectionChange, dryRun));
+
+        public ResponseMessage ManagePlcBlockProtection(
+            string softwarePath,
+            string blockPath,
+            string action,
+            string password="",
+            bool confirmProtectionChange=false,
+            bool dryRun=true)
             => _blocks.ManagePlcBlockProtection(softwarePath,blockPath,action,password,confirmProtectionChange,dryRun);
-        [McpServerTool(Name="ManagePlcDataBlockSnapshot"), Description("[L2][PLC-Online][ONLINE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download.")]
-        public ResponseMessage ManagePlcDataBlockSnapshot(
+        [McpServerTool(Name = "ManagePlcDataBlockSnapshot"), Description("[L2][PLC-Online][ONLINE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcDataBlockSnapshotV4(
             string softwarePath,
             string blockPath,
             [Description("action: the operation to perform - read | createSnapshot | loadSnapshotAsActualValues | loadStartValuesAsActualValues | exportSnapshot.")] string action,
             string filePath="",
             [Description("confirmValueChange: must be true together with dryRun=false to change data block values.")] bool confirmValueChange=false,
             bool dryRun=true)
+            => PlcToolContract.Run("ManagePlcDataBlockSnapshot", !dryRun && action != "read", true, () => ManagePlcDataBlockSnapshot(softwarePath, blockPath, action, filePath, confirmValueChange, dryRun));
+
+        public ResponseMessage ManagePlcDataBlockSnapshot(
+            string softwarePath,
+            string blockPath,
+            string action,
+            string filePath="",
+            bool confirmValueChange=false,
+            bool dryRun=true)
             => _blocks.ManagePlcDataBlockSnapshot(softwarePath,blockPath,action,filePath,confirmValueChange,dryRun);
-        [McpServerTool(Name="UpdatePlcProgram"), Description("[L2][PLC-Software][WRITE] Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download.")]
-        public ResponseMessage UpdatePlcProgram(
+        [McpServerTool(Name = "SetPlcProgram"), Description("[L2][PLC-Software][WRITE] Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult UpdatePlcProgramV4(
             string softwarePath,
             [Description("confirmUpdate: must be true together with dryRun=false to update the program.")] bool confirmUpdate=false,
             bool dryRun=true)
+            => PlcToolContract.Run("SetPlcProgram", !dryRun, true, () => UpdatePlcProgram(softwarePath, confirmUpdate, dryRun));
+
+        public ResponseMessage UpdatePlcProgram(
+            string softwarePath,
+            bool confirmUpdate=false,
+            bool dryRun=true)
             => _blocks.UpdatePlcProgram(softwarePath,confirmUpdate,dryRun);
-        [McpServerTool(Name="ReadPlcBlockFingerprints"), Description("[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change.")]
-        public ResponseMessage ReadPlcBlockFingerprints(
+        [McpServerTool(Name = "GetPlcBlockFingerprints"), Description("[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ReadPlcBlockFingerprintsV4(
             string softwarePath,
             [Description("targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it.")] string targetIpAddress,
             string pgPcInterface="",
@@ -1167,14 +1267,30 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100,
             bool dryRun=true)
+            => PlcToolContract.Run("GetPlcBlockFingerprints", false, true, () => ReadPlcBlockFingerprints(softwarePath, targetIpAddress, pgPcInterface, password, offset, limit, dryRun));
+
+        public ResponseMessage ReadPlcBlockFingerprints(
+            string softwarePath,
+            string targetIpAddress,
+            string pgPcInterface="",
+            string password="",
+            int offset=0,
+            int limit=100,
+            bool dryRun=true)
             => _blocks.ReadPlcBlockFingerprints(softwarePath,targetIpAddress,pgPcInterface,password,offset,limit,dryRun);
 
-        [McpServerTool(Name = "ReadPlcBlockEditCapabilities"), Description("[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project.")]
-        public ResponseMessage ReadPlcBlockEditCapabilities(
+        [McpServerTool(Name = "GetPlcBlockEditCapabilities"), Description("[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ReadPlcBlockEditCapabilitiesV4(
             [Description("Absolute exported SimaticML XML; mutually exclusive with blockPath.")] string filePath = "",
             [Description("Exact PLC software path when exporting a live block.")] string softwarePath = "",
             [Description("Exact group-qualified live block path; empty for file-only mode.")] string blockPath = "")
-            => OfflineToolExecution.RunOfflineAnalysisTool("ReadPlcBlockEditCapabilities", meta => {
+            => PlcToolContract.Run("GetPlcBlockEditCapabilities", false, true, () => ReadPlcBlockEditCapabilities(filePath, softwarePath, blockPath));
+
+        public ResponseMessage ReadPlcBlockEditCapabilities(
+            string filePath = "",
+            string softwarePath = "",
+            string blockPath = "")
+            => OfflineToolExecution.RunOfflineAnalysisTool("GetPlcBlockEditCapabilities", meta => {
                 string? temp = null;
                 try {
                     meta["offlineOnly"] = !string.IsNullOrWhiteSpace(filePath);
@@ -1185,26 +1301,44 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "AnalyzePlcReferences"), Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes.")]
-        public ResponseMessage AnalyzePlcReferences(
+        public CallToolResult AnalyzePlcReferencesV4(
             [Description("Absolute directory of exports from one PLC/scope, scanned recursively.")] string directory,
             [Description("summary | callers | callees | callPaths | unreachable | references. summary, callers, callees, callPaths, unreachable or references.")] string action = "summary",
             [Description("Exact block name or relative file ID; references uses quoted symbol components.")] string target = "",
             [Description("Maximum call-path edge depth, 1..50.")] int maxDepth = 10,
             [Description("Zero-based result offset.")] int offset = 0,
             [Description("Page size, 1..500.")] int limit = 100)
+            => PlcToolContract.Run("AnalyzePlcReferences", false, false, () => AnalyzePlcReferences(directory, action, target, maxDepth, offset, limit));
+
+        public ResponseMessage AnalyzePlcReferences(
+            string directory,
+            string action = "summary",
+            string target = "",
+            int maxDepth = 10,
+            int offset = 0,
+            int limit = 100)
             => OfflineToolExecution.RunOfflineAnalysisTool("AnalyzePlcReferences", meta => {
                 meta["data"] = PlcOfflineReferences.Analyze(directory, action, target, maxDepth, offset, limit);
                 meta["dataComplete"] = false;
                 return "Partial offline reference query completed. Inspect failures, unresolvedCalls and scope; never use it alone to justify deletion.";
             });
 
-        [McpServerTool(Name = "PatchPlcBlockDocument"), Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedFingerprint from ReadPlcBlockEditCapabilities. changesJson array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
-        public ResponseMessage PatchPlcBlockDocument(
+        [McpServerTool(Name = "PatchPlcBlockDocument"), Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedFingerprint from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
+        public CallToolResult PatchPlcBlockDocumentV4(
             [Description("Absolute existing single-block SimaticML XML file.")] string filePath,
-            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].")] string changesJson,
-            [Description("documentFingerprint returned by ReadPlcBlockEditCapabilities for this input.")] string expectedFingerprint,
+            [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].")] BlockEdit[] changes,
+            [Description("documentFingerprint returned by GetPlcBlockEditCapabilities for this input.")] string expectedFingerprint,
             [Description("New absolute output file; existing parent directory required when dryRun=false.")] string outputPath = "",
             [Description("Preview only by default; false writes a new file, never imports into TIA.")] bool dryRun = true)
+            => PlcToolContract.Run("PatchPlcBlockDocument", !dryRun, false, () =>
+                PatchPlcBlockDocument(filePath, V4Json.Serialize(changes), expectedFingerprint, outputPath, dryRun));
+
+        public ResponseMessage PatchPlcBlockDocument(
+            string filePath,
+            string changesJson,
+            string expectedFingerprint,
+            string outputPath = "",
+            bool dryRun = true)
             => OfflineToolExecution.RunOfflineAnalysisTool("PatchPlcBlockDocument", meta => {
                 var edited = PlcDocumentEditing.Patch(PlcDocumentEditing.Read(filePath), changesJson, expectedFingerprint);
                 meta["dryRun"] = dryRun; meta["result"] = PlcDocumentEditing.Inspect(edited);
@@ -1219,8 +1353,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return dryRun ? "Offline patch preview validated. No file or project changed." : "Patched document written; native import/compilation remain unverified.";
             });
 
-        [McpServerTool(Name = "ImportPlcBlockVerified"), Description("[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and expectedToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated.")]
-        public ResponseMessage ImportPlcBlockVerified(
+        [McpServerTool(Name = "ImportPlcBlockVerified"), Description("[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and expectedToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcBlockVerifiedV4(
             [Description("Exact PLC software path.")] string softwarePath,
             [Description("Exact existing block path relative to Program blocks, e.g. Pumps/FB_Pump.")] string blockPath,
             [Description("Absolute reviewed single-block SimaticML XML; name must equal the target.")] string importPath,
@@ -1228,6 +1362,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("True exports a backup and preview only; false attempts the native import.")] bool dryRun = true,
             [Description("Token returned by the matching preview; binds session, project, target, current document, candidate and compile option.")] string expectedToken = "",
             [Description("Explicitly compile only the imported block before readback; default false. Compilation is never run in preview.")] bool compileAfterImport = false)
+            => PlcToolContract.Run("ImportPlcBlockVerified", !dryRun, true, () => ImportPlcBlockVerified(softwarePath, blockPath, importPath, evidenceDirectory, dryRun, expectedToken, compileAfterImport));
+
+        public ResponseMessage ImportPlcBlockVerified(
+            string softwarePath,
+            string blockPath,
+            string importPath,
+            string evidenceDirectory,
+            bool dryRun = true,
+            string expectedToken = "",
+            bool compileAfterImport = false)
             => _blocks.ImportPlcBlockVerified(softwarePath, blockPath, importPath, evidenceDirectory, dryRun, expectedToken, compileAfterImport);
 
         #region delete blocks / tag tables / types
@@ -1242,8 +1386,15 @@ namespace TiaMcpServer.ModelContextProtocol
             + "TIA Portal V21 down during a dry run, so it is off by default and the response says 'not queried' - never "
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
             + "back the block up with ExportAsDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
-            + "CompileSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
-            + "table use DeletePlcTagTable, a UDT use DeletePlcType.")]
+            + "CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
+            + "table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult DeletePlcBlockV4(
+            [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
+            [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
+            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
+            [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            => PlcToolContract.Run("DeletePlcBlock", !dryRun, true, () => DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences));
+
     /// <summary>
     /// Partial: 删除族 —— 程序块（含全局 DB / 背景 DB / FB / FC / OB）、PLC 变量表、用户数据类型。
     /// 三个工具一个规格：dryRun 默认 true、路径必须精确、预览要把代价说清楚、
@@ -1258,10 +1409,10 @@ namespace TiaMcpServer.ModelContextProtocol
     ///     但消息与 Warnings 必须写明「查不到 ≠ 没人用」，免得被读成「确认可以删」。
     /// </summary>
         public ResponseJsonReport DeletePlcBlock(
-            [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
-            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            string softwarePath,
+            string blockPath,
+            bool dryRun = true,
+            bool crossReferences = false)
         {
             try
             {
@@ -1295,7 +1446,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                         : new JsonArray
                         {
-                            "CompileSoftware —— 看调用方有没有变成悬空引用",
+                            "CompilePlcSoftware to detect dangling caller references",
                             "SaveProject —— 确认无误后再存盘"
                         });
             }
@@ -1322,12 +1473,19 @@ namespace TiaMcpServer.ModelContextProtocol
             + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
             + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
             + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
-            + "wildcards are rejected. Back up first with ExportPlcTagTable.")]
-        public ResponseJsonReport DeletePlcTagTable(
+            + "wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult DeletePlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("tagTableName: bare table name, or the group-qualified path from GetPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
+            [Description("tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
             [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true,
             [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            => PlcToolContract.Run("DeletePlcTagTable", !dryRun, true, () => DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences));
+
+        public ResponseJsonReport DeletePlcTagTable(
+            string softwarePath,
+            string tagTableName,
+            bool dryRun = true,
+            bool crossReferences = false)
         {
             try
             {
@@ -1349,7 +1507,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                         : new JsonArray
                         {
-                            "CompileSoftware —— 看 PLC 侧有没有断链",
+                            "CompilePlcSoftware to detect broken PLC references",
                             "⚠️ HMI 侧的符号绑定编译查不出来，请单独核对画面变量",
                             "SaveProject —— 确认无误后再存盘"
                         });
@@ -1377,12 +1535,19 @@ namespace TiaMcpServer.ModelContextProtocol
             + "native cross references are disabled by default at the server-process level (see GetCrossReferences) and also require crossReferences=true (the TIA CrossReferenceService query "
             + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
             + "review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type "
-            + "first with ExportType, and CompileSoftware afterwards.")]
-        public ResponseJsonReport DeletePlcType(
+            + "first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult DeletePlcTypeV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
             [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
             [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
+            => PlcToolContract.Run("DeletePlcType", !dryRun, true, () => DeletePlcType(softwarePath, typePath, dryRun, crossReferences));
+
+        public ResponseJsonReport DeletePlcType(
+            string softwarePath,
+            string typePath,
+            bool dryRun = true,
+            bool crossReferences = false)
         {
             try
             {
@@ -1397,13 +1562,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     nextActions: dryRun
                         ? new JsonArray
                         {
-                            "ExportType —— 删之前先把这个 UDT 导出备份",
+                            "ExportPlcType: back up this UDT before deletion",
                             "GetCrossReferences —— 看还有哪些 DB / 块用它做数据类型",
                             "确认后再 DeletePlcType(dryRun=false)"
                         }
                         : new JsonArray
                         {
-                            "CompileSoftware —— 失去类型定义的 DB / 块会在这里暴露",
+                            "CompilePlcSoftware to detect DBs or blocks with missing type definitions",
                             "SaveProject —— 确认无误后再存盘"
                         });
             }
@@ -1488,7 +1653,10 @@ namespace TiaMcpServer.ModelContextProtocol
     //   - CreatePlcBlockGroup: native create of (nested) program-block user groups.
     //   - MoveBlockToGroup: organize an existing block into a group (export/delete/
     //     import round-trip, because Openness has no block-reparent API).
-        [McpServerTool(Name = "CreatePlcTypeGroup"), Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback.")]
+        [McpServerTool(Name = "CreatePlcTypeGroup"), Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult CreatePlcTypeGroupV4(string softwarePath, string groupPath, bool dryRun = true)
+            => PlcToolContract.Run("CreatePlcTypeGroup", !dryRun, true, () => CreatePlcTypeGroup(softwarePath, groupPath, dryRun));
+
         public ResponseMessage CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
         {
             try
@@ -1503,7 +1671,10 @@ namespace TiaMcpServer.ModelContextProtocol
             { throw new McpException("CreatePlcTypeGroup failed: " + ex.Message, ex, McpErrorCode.InternalError); }
         }
 
-        [McpServerTool(Name="DeleteEmptyPlcBlockGroup"), Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, save, compile, download or automatic GoOffline.")]
+        [McpServerTool(Name = "DeleteEmptyPlcBlockGroup"), Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, save, compile, download or automatic GoOffline. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult DeleteEmptyPlcBlockGroupV4(string softwarePath, string groupPath, bool dryRun=true)
+            => PlcToolContract.Run("DeleteEmptyPlcBlockGroup", !dryRun, true, () => DeleteEmptyPlcBlockGroup(softwarePath, groupPath, dryRun));
+
         public ResponseMessage DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
         {
             try
@@ -1515,10 +1686,15 @@ namespace TiaMcpServer.ModelContextProtocol
             { throw new McpException("DeleteEmptyPlcBlockGroup failed: " + ex.Message,ex,McpErrorCode.InternalError); }
         }
 
-        [McpServerTool(Name = "CreatePlcBlockGroup"), Description("[L2][PLC-Software] Create a (nested) program-block group/folder, creating any missing parent groups along the path. Idempotent — returns ok if the group already exists. groupPath uses '/' separators relative to 'Program blocks' root, e.g. '01_手动控制/手动意图'. Requires: Connect + OpenProject. Use this to set up the 手动/手自动接口/自动 layer folders, then MoveBlockToGroup to organize blocks into them.")]
-        public ResponseMessage CreatePlcBlockGroup(
+        [McpServerTool(Name = "CreatePlcBlockGroup"), Description("[L2][PLC-Software] Create nested program-block groups, creating missing parents and reusing existing groups. groupPath is relative to Program blocks. Requires Connect + OpenProject. Organize blocks with MovePlcBlockToGroup. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult CreatePlcBlockGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'")] string groupPath)
+            => PlcToolContract.Run("CreatePlcBlockGroup", true, true, () => CreatePlcBlockGroup(softwarePath, groupPath));
+
+        public ResponseMessage CreatePlcBlockGroup(
+            string softwarePath,
+            string groupPath)
         {
             try
             {
@@ -1545,12 +1721,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "MoveBlockToGroup"), Description("[L2][PLC-Software] Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block, deletes it, and re-imports it into the target group (SIMATIC SD .s7dcl preferred, SimaticML XML fallback for STL/mixed-language). The block number and references are preserved. autoCreateGroup creates the target group path if missing. Requires: Connect + OpenProject + block consistent (compile first). After moving, call CompileAndDiagnosePlc to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip.")]
-        public ResponseMessage MoveBlockToGroup(
+        [McpServerTool(Name = "MovePlcBlockToGroup"), Description("[L2][PLC-Software] Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block, deletes it, and re-imports it into the target group (SIMATIC SD .s7dcl preferred, SimaticML XML fallback for STL/mixed-language). The block number and references are preserved. autoCreateGroup creates the target group path if missing. Requires: Connect + OpenProject + block consistent (compile first). After moving, call CompilePlcDiagnostics to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult MoveBlockToGroupV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockName: exact block name to move (searched across all groups)")] string blockName,
             [Description("targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'")] string targetGroupPath,
             [Description("autoCreateGroup: create the target group path if it does not exist (default true)")] bool autoCreateGroup = true)
+            => PlcToolContract.Run("MovePlcBlockToGroup", true, true, () => MoveBlockToGroup(softwarePath, blockName, targetGroupPath, autoCreateGroup));
+
+        public ResponseMessage MoveBlockToGroup(
+            string softwarePath,
+            string blockName,
+            string targetGroupPath,
+            bool autoCreateGroup = true)
         {
             try
             {
@@ -1571,8 +1754,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ManagePlcUserGroup"), Description("[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors.")]
-        public ResponseMessage ManagePlcUserGroup(string softwarePath, [Description("blocks | types | tags | technology | watchTables | externalSources. PLC user-group family.")] string family, string groupPath, [Description("create | rename | deleteEmpty. ")] string action, string newName = "", bool dryRun = true)
+        [McpServerTool(Name = "ManagePlcUserGroup"), Description("[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcUserGroupV4(string softwarePath, [Description("blocks | types | tags | technology | watchTables | externalSources. PLC user-group family.")] string family, string groupPath, [Description("create | rename | deleteEmpty. ")] string action, string newName = "", bool dryRun = true)
+            => PlcToolContract.Run("ManagePlcUserGroup", !dryRun, true, () => ManagePlcUserGroup(softwarePath, family, groupPath, action, newName, dryRun));
+
+        public ResponseMessage ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
             => _blocks.ManagePlcUserGroup(softwarePath, family, groupPath, action, newName, dryRun);
     }
 }

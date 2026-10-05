@@ -40,7 +40,7 @@ namespace TiaMcpServer.Siemens
 
             List<PlcBlock>? blocks;
             try { blocks = GetBlocks(softwarePath, blockScope ?? ""); }
-            catch (Exception ex) { return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"GetBlocks failed: {ex.Message}", Data = data }; }
+            catch (Exception ex) { return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"ListPlcBlocks failed: {ex.Message}", Data = data }; }
 
             // null = 没连接/没打开项目。以前 GetBlocks 这时返回空列表，于是一路扫出
             // 「0 个块、没找到任何写点」，报成一份看起来正常的空结果。

@@ -2976,20 +2976,6 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "CompileAndDiagnosePlc": {
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "parameters": {
-          "password": {
-            "exampleValue": "<password supplied for this target>",
-            "requiresBinding": true
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
       "CompileDevice": {
         "arguments": {
           "devicePathJson": "[\"PLC_1\"]"
@@ -3004,7 +2990,21 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "CompileSoftware": {
+      "CompilePlcDiagnostics": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {
+          "password": {
+            "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "CompilePlcSoftware": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -3391,16 +3391,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "DescribeBlockLogic": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
       "DescribeHmiScreen": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
@@ -3499,6 +3489,16 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "DescribePlcBlockLogic": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
       },
       "DescribeService": {
         "arguments": {
@@ -4193,36 +4193,6 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ExportBlock": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
-        },
-        "parameters": {
-          "preservePath": {
-            "exampleValue": false
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "ExportBlocks": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "regexName": ""
-        },
-        "parameters": {
-          "preservePath": {
-            "exampleValue": false
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
       "ExportBlocksAsDocuments": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -4308,6 +4278,36 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
+      "ExportPlcBlock": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "exportPath": "C:\\Examples\\exports"
+        },
+        "parameters": {
+          "preservePath": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "ExportPlcBlocks": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports",
+          "regexName": ""
+        },
+        "parameters": {
+          "preservePath": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
       "ExportPlcProDiagInfo": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -4336,6 +4336,38 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
+      },
+      "ExportPlcType": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports",
+          "typePath": "UDT_Status"
+        },
+        "parameters": {
+          "preservePath": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "ExportPlcTypes": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports"
+        },
+        "parameters": {
+          "regexName": {
+            "exampleValue": "<regexName from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "preservePath": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "ExportPlcWatchTable": {
         "arguments": {
@@ -4426,38 +4458,6 @@
           "regexName": {
             "exampleValue": "<regexName from this operation's target or user input>",
             "requiresBinding": true
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ExportType": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "typePath": "UDT_Status"
-        },
-        "parameters": {
-          "preservePath": {
-            "exampleValue": false
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "ExportTypes": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports"
-        },
-        "parameters": {
-          "regexName": {
-            "exampleValue": "<regexName from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "preservePath": {
-            "exampleValue": false
           }
         },
         "operations": {},
@@ -4665,35 +4665,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetBlockInfo": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "GetBlocks": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "regexName": "FB_.*"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "GetBlocksWithHierarchy": {
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
       "GetCrossReferences": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -4880,7 +4851,48 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetPlcExternalSources": {
+      "GetPlcBlockEditCapabilities": {
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "parameters": {
+          "softwarePath": {
+            "exampleValue": "PLC_1"
+          },
+          "blockPath": {
+            "exampleValue": "Main"
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "GetPlcBlockFingerprints": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "targetIpAddress": "192.0.2.10",
+          "dryRun": true
+        },
+        "parameters": {
+          "pgPcInterface": {
+            "exampleValue": "<pgPcInterface from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "password": {
+            "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetPlcBlockHierarchy": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -4889,13 +4901,24 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GetPlcForceTables": {
+      "GetPlcBlockInfo": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "GetPlcExternalSources": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
       },
       "GetPlcRunStateS7": {
         "arguments": {
@@ -4919,23 +4942,52 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetPlcTagTables": {
+      "GetPlcTagTableConstants": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
-        "parameters": {},
+        "parameters": {
+          "kind": {
+            "exampleValue": "all"
+          },
+          "unitName": {
+            "exampleValue": "Unit_1"
+          },
+          "unitKind": {
+            "exampleValue": "unit"
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 200
+          }
+        },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetPlcWatchTables": {
+      "GetPlcTypeInfo": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status"
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetPlcWatchTableCurrentValuesReadOnly": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "parameters": {
+          "maxEntries": {
+            "exampleValue": 50
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "GetProject": {
         "arguments": {},
@@ -5030,28 +5082,6 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GetTypeInfo": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "typePath": "UDT_Status"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "GetTypes": {
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "parameters": {
-          "regexName": {
-            "exampleValue": "<regexName from this operation's target or user input>",
-            "requiresBinding": true
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "GetUnifiedCrossReferences": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
@@ -5144,35 +5174,6 @@
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
         "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ImportBlock": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "",
-          "importPath": "C:\\Temp\\FB_Pump.xml"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "ImportBlocksFromDirectory": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports"
-        },
-        "parameters": {
-          "regexName": {
-            "exampleValue": "<regexName from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "overwrite": {
-            "exampleValue": true
-          }
-        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
@@ -5371,6 +5372,17 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
+      "ImportPlcBlock": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Temp\\FB_Pump.xml"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
       "ImportPlcBlockVerified": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -5389,6 +5401,24 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
+      },
+      "ImportPlcBlocksFromDirectory": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dir": "C:\\Examples\\exports"
+        },
+        "parameters": {
+          "regexName": {
+            "exampleValue": "<regexName from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "overwrite": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "ImportPlcExternalSource": {
         "arguments": {
@@ -5466,6 +5496,17 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
+      "ImportPlcType": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
       "ImportPlcWatchTableOffline": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -5531,17 +5572,6 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ImportType": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
       },
       "ImportUnifiedEngineeringList": {
         "arguments": {
@@ -5737,6 +5767,55 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "ListPlcBlocks": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "regexName": "FB_.*"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "ListPlcForceTables": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "ListPlcTagTables": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "ListPlcTypes": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {
+          "regexName": {
+            "exampleValue": "<regexName from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "ListPlcWatchTables": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
       },
       "ListPortalProcessProjects": {
         "arguments": {},
@@ -11449,7 +11528,7 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "MonitorWatchTableLiveS7": {
+      "MonitorPlcWatchTableS7": {
         "arguments": {
           "softwarePath": "PLC_1",
           "watchTableName": "Watch_1",
@@ -11470,7 +11549,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "MoveBlockToGroup": {
+      "MovePlcBlockToGroup": {
         "arguments": {
           "softwarePath": "PLC_1",
           "blockName": "FC_Example",
@@ -11512,9 +11591,17 @@
       "PatchPlcBlockDocument": {
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "changesJson": "[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
-          "expectedFingerprint": "<fingerprint from ReadPlcBlockEditCapabilities>",
-          "dryRun": true
+          "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
         },
         "parameters": {
           "expectedFingerprint": {
@@ -11561,12 +11648,16 @@
         "arguments": {
           "provider": "opcua",
           "endpoint": "opc.tcp://192.0.2.10:4840",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "parameters": {
-          "optionsJson": {
-            "exampleValue": "<optionsJson from this operation's target or user input>",
-            "requiresBinding": true
+          "options": {
+            "exampleValue": {
+              "pollMs": 1000,
+              "source": "watch-table-export"
+            }
           }
         },
         "operations": {},
@@ -11575,11 +11666,13 @@
       "PlanOnlineReadOnlyMonitoring": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "parameters": {
           "mode": {
-            "exampleValue": "run"
+            "exampleValue": "current-values"
           }
         },
         "operations": {},
@@ -12278,47 +12371,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcBlockEditCapabilities": {
-        "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml"
-        },
-        "parameters": {
-          "softwarePath": {
-            "exampleValue": "PLC_1"
-          },
-          "blockPath": {
-            "exampleValue": "Main"
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
-      },
-      "ReadPlcBlockFingerprints": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "targetIpAddress": "192.0.2.10",
-          "dryRun": true
-        },
-        "parameters": {
-          "pgPcInterface": {
-            "exampleValue": "<pgPcInterface from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "password": {
-            "exampleValue": "<password supplied for this target>",
-            "requiresBinding": true
-          },
-          "offset": {
-            "exampleValue": 0
-          },
-          "limit": {
-            "exampleValue": 100
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "ReadPlcBlockScopes": {
         "arguments": {
           "softwarePath": "PLC_1"
@@ -12482,44 +12534,6 @@
           },
           "maxDepth": {
             "exampleValue": 4
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ReadPlcTagTableConstants": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
-        },
-        "parameters": {
-          "kind": {
-            "exampleValue": "all"
-          },
-          "unitName": {
-            "exampleValue": "Unit_1"
-          },
-          "unitKind": {
-            "exampleValue": "unit"
-          },
-          "offset": {
-            "exampleValue": 0
-          },
-          "limit": {
-            "exampleValue": 200
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ReadPlcWatchTableCurrentValuesReadOnly": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "watchTableName": "Watch_1"
-        },
-        "parameters": {
-          "maxEntries": {
-            "exampleValue": 50
           }
         },
         "operations": {},
@@ -13252,7 +13266,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "RepairAndReimportBlock": {
+      "RepairAndReimportPlcBlock": {
         "arguments": {
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
@@ -13680,6 +13694,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
+      "SetPlcProgram": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
+          "dryRun": true
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
       "SetPlcUnitObjectAccess": {
         "arguments": {
           "softwarePath": "PLC_1",
@@ -13692,6 +13716,19 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "SetPlcWatchTableModifyValue": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "MCP_W/MCP_WT",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
       },
       "SetPlcWebOperatingMode": {
         "arguments": {
@@ -13769,19 +13806,6 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "SetWatchTableModifyValue": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "tableName": "MCP_W/MCP_WT",
-          "address": "%M0.0",
-          "modifyValue": "TRUE",
-          "trigger": "OnceOnlyAtStart"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
       },
       "ShowObjectInEditor": {
         "arguments": {
@@ -13996,16 +14020,6 @@
             "requiresBinding": true
           }
         },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "UpdatePlcProgram": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "confirmUpdate": false,
-          "dryRun": true
-        },
-        "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },

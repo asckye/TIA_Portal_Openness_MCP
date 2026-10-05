@@ -132,7 +132,7 @@
         "expect": "generated blocks listed"
       },
       {
-        "tool": "CompileAndDiagnosePlc",
+        "tool": "CompilePlcDiagnostics",
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -171,7 +171,7 @@
         "expect": "block imported"
       },
       {
-        "tool": "CompileAndDiagnosePlc",
+        "tool": "CompilePlcDiagnostics",
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -241,14 +241,14 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "GetPlcWatchTables",
+        "tool": "ListPlcWatchTables",
         "arguments": {
           "softwarePath": "PLC_1"
         },
         "expect": "existing tables"
       },
       {
-        "tool": "SetWatchTableModifyValue",
+        "tool": "SetPlcWatchTableModifyValue",
         "arguments": {
           "softwarePath": "PLC_1",
           "tableName": "<Group/Table>",
@@ -374,7 +374,7 @@
         "expect": "a 'PLCSIM' PC interface with the CPU's IP"
       },
       {
-        "tool": "CompileSoftware",
+        "tool": "CompilePlcSoftware",
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -696,7 +696,7 @@
     "topic": "export-import-block",
     "purpose": "Round-trip one block through SimaticML (export, edit outside, import back).",
     "preconditions": "connect-project done.",
-    "notes": "ExportBlock reports the file written in Meta.exportedFile; ImportBlock normalises the engineering version automatically.",
+    "notes": "ExportPlcBlock reports the file written in Meta.exportedFile; ImportPlcBlock normalises the engineering version automatically.",
     "releaseKeys": [
       "20",
       "21"
@@ -706,7 +706,7 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "ExportBlock",
+        "tool": "ExportPlcBlock",
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "<Group/Block>",
@@ -715,7 +715,7 @@
         "expect": "Meta.exportedFile"
       },
       {
-        "tool": "ImportBlock",
+        "tool": "ImportPlcBlock",
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "<Group>",
@@ -724,7 +724,7 @@
         "expect": "imported"
       },
       {
-        "tool": "CompileAndDiagnosePlc",
+        "tool": "CompilePlcDiagnostics",
         "arguments": {
           "softwarePath": "PLC_1"
         },

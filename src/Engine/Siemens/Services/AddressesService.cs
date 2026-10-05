@@ -252,7 +252,7 @@ namespace TiaMcpServer.Siemens.Services
             }
 
             return (true, $"起始地址已从 {before.StartAddress} 改为 {after.StartAddress}"
-                        + "（引擎原值，字节偏移）。改完记得 CompileSoftware 并 SaveProject。",
+                        + " (native byte offsets). Run CompilePlcSoftware and SaveProject after the change.",
                     before, after);
         }
 

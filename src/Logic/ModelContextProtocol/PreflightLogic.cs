@@ -220,7 +220,7 @@ namespace TiaMcpServer.ModelContextProtocol
             switch ((operation ?? "").ToUpperInvariant())
             {
                 case "WRITE":
-                    list.Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompileSoftware then SaveProject afterwards.");
+                    list.Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject afterwards.");
                     if (dryRunSupported) list.Add("dryRun=true (default) previews; run the preview first, then repeat with dryRun=false once it is clean.");
                     break;
                 case "ONLINE-WRITE":

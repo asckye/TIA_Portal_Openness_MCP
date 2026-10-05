@@ -60,7 +60,7 @@ namespace TiaMcpServer.Siemens
             return "refused: " + stale.Count + " block(s) of '" + softwarePath + "' are not compiled (IsConsistent=false): " + shown
                  + ". Uncompiled changes may leave cross-reference information outdated; on the maintainer's real project TIA Portal V21 exited "
                  + "right after such a query (2026-09-21: five blocks re-imported with Override, then a query on the old instance DB). "
-                 + "Run CompileSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service cannot crash.";
+                 + "Run CompilePlcSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service cannot crash.";
         }
 
         /// <summary>How many blocks are known to be uncompiled (for reports that only need the number).</summary>

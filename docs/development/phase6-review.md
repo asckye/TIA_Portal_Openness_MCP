@@ -1516,7 +1516,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):16 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
 | [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):135 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
 | [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]` |
-| [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):466 | `if (conflicts.Count > 16)` |
+| [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):516 | `if (conflicts.Count > 16)` |
 | [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):122 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 | [ModelContextProtocol/Tools/SivarcTools.cs](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs):37 | `[McpServerTool(Name="ManageSivarcTableRule"), Description("[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSiVArcRule differs only in case and stays for arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace\|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None\|And\|Equal\|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} \| {kind:masterCopy\|libraryType\|masterCopyFolder\|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock ('may not be null', 2.7.39 real project) - assign another block instead}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves.")]` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):20 | `[McpServerTool(Name="ManageUnifiedScreenItem"), Description("[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial propertiesJson), update, delete (confirmDelete=true). propertiesJson nests parts as objects ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization.")]` |
@@ -1881,8 +1881,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:16597 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17294 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:16805 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17502 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -2022,7 +2022,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ClearExportHandles` | `ClearExports` | 大结果分页与文件交付 | 20, 21 |
 | `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
 | `CompileHmiDiagnostics` | `CompileAndDiagnoseHmi` | HMI 定位和诊断 | 20, 21 |
-| `CompilePlcDiagnostics` | `CompileAndDiagnosePlc` | 常用 PLC 交换与编译 | 20, 21 |
+| `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | 常用 PLC 交换与编译 | 20, 21 |
 | `ConnectPortal` | `Connect` | 工程生命周期 | 20, 21 |
 | `ConnectProject` | `ConnectToProject` | 工程生命周期 | 20, 21 |
 | `CreateHardwareDevice` | `AddDeviceWithFallback` | 硬件查找和精确创建 | 20, 21 |
@@ -2030,37 +2030,37 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `DeleteExportHandle` | `DeleteExport` | 大结果分页与文件交付 | 20, 21 |
 | `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
 | `DisconnectPortal` | `Disconnect` | 工程生命周期 | 20, 21 |
-| `ExportPlcBlock` | `ExportBlock` | 常用 PLC 交换与编译 | 20, 21 |
+| `ExportPlcBlock` | `ExportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
 | `ExportPlcTagTable` | `ExportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
-| `ExportPlcType` | `ExportType` | 常用 PLC 交换与编译 | 20, 21 |
+| `ExportPlcType` | `ExportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
 | `FindTools` | `FindTools` | 发现、用法与完整目录调用 | 20, 21 |
 | `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
 | `GenerateErrorReport` | `GenerateErrorReport` | 诊断收尾 | 20, 21 |
 | `GetEnvironmentDiagnostics` | `Doctor` | 环境与会话诊断 | 20, 21 |
 | `GetExportContent` | `GetExport` | 大结果分页与文件交付 | 20, 21 |
 | `GetOpennessWorkerStatus` | `ReadOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
-| `GetPlcBlockHierarchy` | `GetBlocksWithHierarchy` | 工程和 PLC 定位 | 20, 21 |
-| `GetPlcBlockInfo` | `GetBlockInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetPlcTypeInfo` | `GetTypeInfo` | 工程和 PLC 定位 | 20, 21 |
+| `GetPlcBlockHierarchy` | `GetPlcBlockHierarchy` | 工程和 PLC 定位 | 20, 21 |
+| `GetPlcBlockInfo` | `GetPlcBlockInfo` | 工程和 PLC 定位 | 20, 21 |
+| `GetPlcTypeInfo` | `GetPlcTypeInfo` | 工程和 PLC 定位 | 20, 21 |
 | `GetProjectInfo` | `GetProject` | 工程和 PLC 定位 | 20, 21 |
 | `GetProjectTree` | `GetProjectTree` | 工程和 PLC 定位 | 20, 21 |
 | `GetSessionState` | `GetState` | 环境与会话诊断 | 20, 21 |
 | `GetSoftwareInfo` | `GetSoftwareInfo` | 工程和 PLC 定位 | 20, 21 |
 | `GetSoftwareTree` | `GetSoftwareTree` | 工程和 PLC 定位 | 20, 21 |
 | `GetToolUsage` | `GetToolUsage` | 发现、用法与完整目录调用 | 20, 21 |
-| `ImportPlcBlock` | `ImportBlock` | 常用 PLC 交换与编译 | 20, 21 |
+| `ImportPlcBlock` | `ImportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
 | `ImportPlcExternalSource` | `ImportPlcExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
 | `ImportPlcTagTable` | `ImportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
-| `ImportPlcType` | `ImportType` | 常用 PLC 交换与编译 | 20, 21 |
+| `ImportPlcType` | `ImportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
 | `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
 | `ListDevices` | `GetDevices` | 工程和 PLC 定位 | 20, 21 |
 | `ListExportHandles` | `ListExports` | 大结果分页与文件交付 | 20, 21 |
 | `ListHmiScreens` | `GetHmiScreens` | HMI 定位和诊断 | 20, 21 |
 | `ListHmiTagTables` | `GetHmiTagTables` | HMI 定位和诊断 | 20, 21 |
 | `ListHmiTags` | `GetHmiTags` | HMI 定位和诊断 | 20, 21 |
-| `ListPlcBlocks` | `GetBlocks` | 工程和 PLC 定位 | 20, 21 |
-| `ListPlcTagTables` | `GetPlcTagTables` | 工程和 PLC 定位 | 20, 21 |
-| `ListPlcTypes` | `GetTypes` | 工程和 PLC 定位 | 20, 21 |
+| `ListPlcBlocks` | `ListPlcBlocks` | 工程和 PLC 定位 | 20, 21 |
+| `ListPlcTagTables` | `ListPlcTagTables` | 工程和 PLC 定位 | 20, 21 |
+| `ListPlcTypes` | `ListPlcTypes` | 工程和 PLC 定位 | 20, 21 |
 | `ListPortalProcessProjects` | `ListPortalProcessProjects` | 工程生命周期 | 20, 21 |
 | `ListToolCategories` | `ListToolCategories` | 发现、用法与完整目录调用 | 20, 21 |
 | `OpenProject` | `OpenProject` | 工程生命周期 | 20, 21 |

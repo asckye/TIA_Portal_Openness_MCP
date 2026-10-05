@@ -329,7 +329,7 @@ namespace TiaMcpServer.Siemens.Services
                 catch (EngineeringTargetInvocationException ex) { throw new PortalException(PortalErrorCode.InvalidState, "GetFingerprints refused (the object must be consistent; compile first): " + ex.Message, null, ex); }
                 meta["records"] = new JsonArray(fingerprints.Select(f => (JsonNode)new JsonObject { ["id"] = f.Id.ToString(), ["value"] = f.Value }).ToArray());
                 meta["count"] = fingerprints.Count; meta["apiCallSuccess"] = true;
-                meta["scope"] = "Every Fingerprint returned natively (Id / Value); fingerprints consider user input only, never compilation results. Online CPU fingerprints: ReadPlcBlockFingerprints.";
+                meta["scope"] = "Every Fingerprint returned natively (Id / Value); fingerprints consider user input only, never compilation results. Online CPU fingerprints: GetPlcBlockFingerprints.";
                 return "Offline object fingerprints read; no modification.";
             });
 

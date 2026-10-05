@@ -144,11 +144,11 @@ namespace TiaMcpServer.Siemens.Services
 
             if (failures.Count > 0)
             {
-                _session.Logger?.LogWarning($"ExportTypes completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
+                _session.Logger?.LogWarning($"ExportPlcTypes completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
             }
             else
             {
-                _session.Logger?.LogInformation($"ExportTypes completed successfully. Exported {exportList.Count} types.");
+                _session.Logger?.LogInformation($"ExportPlcTypes completed successfully. Exported {exportList.Count} types.");
             }
 
             return exportList;

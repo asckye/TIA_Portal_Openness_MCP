@@ -118,7 +118,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "GoOfflineAll"), Description(
             "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
             " Take EVERY PLC in the open project offline in one call and report each PLC's before/after online state." +
-            " Use this whenever CompileSoftware/Export*/Import* is blocked by 'operation not permitted in online mode':" +
+            " Use this whenever CompilePlcSoftware/Export*/Import* is blocked by 'operation not permitted in online mode':" +
             " a UI-initiated online session or a second online PLC is NOT released by GoOffline on a single softwarePath." +
             " Fully autonomous — never ask the user to toggle online/offline in the TIA UI, and never OCR the toolbar.")]
         public ResponseJsonReport GoOfflineAll()
@@ -170,14 +170,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CheckDownloadReadiness"), Description(
-            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject+CompileSoftware]" +
+            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject+CompilePlcSoftware]" +
             " Check whether a PLC is ready to receive a program download WITHOUT actually downloading." +
             " Verifies: DownloadProvider service is available, a network/IP configuration exists in the hardware config." +
             " Returns Ready=true only when all checks pass." +
             " Use this before DownloadToPlc to surface problems early (missing IP, no hardware config, etc.)." +
             " Meta.downloadRoutes lists every PG/PC interface -> CPU route (best-ranked first, preferred=true when the" +
             " adapter shares a subnet with the CPU) — check it on a multi-NIC PC (WLAN/VPN/PLCSIM) before downloading." +
-            " Does NOT compile — run CompileSoftware first to ensure blocks are consistent.")]
+            " Does NOT compile — run CompilePlcSoftware first to ensure blocks are consistent.")]
         public ResponseCheckDownload CheckDownloadReadiness(
             [Description("softwarePath: path to the PLC software in the project tree, e.g. 'PLC_1'")] string softwarePath)
         {
@@ -192,11 +192,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DownloadToPlc"), Description(
-            "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+CompileSoftware+CheckDownloadReadiness]" +
+            "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+CompilePlcSoftware+CheckDownloadReadiness]" +
             " Download the compiled PLC program to the physical CPU over the network." +
             " The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload)." +
             " SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior." +
-            " Workflow: Connect → OpenProject → CompileSoftware → CheckDownloadReadiness → DownloadToPlc → GetOnlineState." +
+            " Workflow: Connect → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadToPlc → GetOnlineState." +
             " On success State=Success or Warning. On Error check Errors[] for details." +
             " Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios." +
             " Set keepActualValues=false only when DB initial values must be reset — this is irreversible." +

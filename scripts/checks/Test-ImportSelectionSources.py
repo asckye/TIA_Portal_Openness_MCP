@@ -10,8 +10,8 @@ LOGIC = SRC.parent / "Logic"
 sources = EngineSources()
 MCP = sources.type_text('PlcBlocksTools')
 SHARED = sources.member('BuildPlcProgramImportResponse', owner='PlcProgramImport')
-BATCH = sources.member('ImportBlocksFromDirectory', signature='public ResponseImportBatch', tool=False)
-PROGRAM = sources.member('ImportPlcProgramFromDirectory', tool=True)
+BATCH = sources.member('ImportBlocksFromDirectory', signature='public ResponseImportBatch', owner='Portal', tool=False)
+PROGRAM = sources.member('ImportPlcProgramFromDirectory', owner='PlcBlocksTools', tool=False)
 
 class ImportSelectionWiring(unittest.TestCase):
     def test_native_overwrite_flag(self):

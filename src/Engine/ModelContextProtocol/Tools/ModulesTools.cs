@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "Pass positionNumber=-1 to let the server pick a free slot reported by TIA; slot numbers are never "
             + "hardcoded — use GetDevicePlugLocations to see them. After a successful plug the module is read back and "
             + "verified (IsPlugged / name / slot). This tool does NOT set addresses: to make the inputs start at %I2.0, "
-            + "call SetDeviceItemIoAddress afterwards with startAddress=2, then CompileSoftware and SaveProject. "
+            + "call SetDeviceItemIoAddress afterwards with startAddress=2, then CompilePlcSoftware and SaveProject. "
             + "Failures are reported by category: SlotOccupied, SlotNotAvailable, OrderNumberNotFound, "
             + "NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: "
             + "plugOnDevice=true with the station name, orderNumber '6SL3xxx-xxxxx-xxxx' (unspecified Motor Module) or a concrete "
@@ -211,7 +211,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["nextActions"] = new JsonArray
                     {
                         "SetDeviceItemIoAddress —— 要让输入从 %I2.0 开始就传 startAddress=2（本工具不改地址）",
-                        "CompileSoftware —— 硬件改动必须编译过才算数",
+                        "CompilePlcSoftware to validate the hardware changes",
                         "SaveProject —— 编译 0 错之后再存盘"
                     };
                 }

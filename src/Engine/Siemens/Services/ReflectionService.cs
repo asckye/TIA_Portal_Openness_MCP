@@ -59,7 +59,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
@@ -81,7 +81,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
@@ -154,7 +154,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
@@ -393,7 +393,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
             return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite);
@@ -420,7 +420,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
@@ -480,7 +480,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
-                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
+                    + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 

@@ -109,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "(e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. "
             + "startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong "
             + "value does NOT fail compilation — the program silently reads a different module. Read back with "
-            + "GetDeviceItemIoAddresses, then CompileSoftware and SaveProject. Overlapping address ranges are "
+            + "GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are "
             + "rejected by TIA and reported back with the reason.")]
         public ResponseMessage SetDeviceItemIoAddress(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
@@ -214,7 +214,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     meta["nextActions"] = new JsonArray
                     {
-                        "CompileSoftware —— 硬件改动必须编译过才算数",
+                        "CompilePlcSoftware to validate the hardware changes",
                         "SaveProject —— 编译 0 错之后再存盘",
                         "GetDeviceItemIoAddresses —— 独立读回一次做最终确认"
                     };

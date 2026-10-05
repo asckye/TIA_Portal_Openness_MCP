@@ -179,11 +179,11 @@ namespace TiaMcpServer.Siemens.Services
 
             if (failures.Count > 0)
             {
-                _session.Logger?.LogWarning($"ExportBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
+                _session.Logger?.LogWarning($"ExportPlcBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
             }
             else
             {
-                _session.Logger?.LogInformation($"ExportBlocks completed successfully. Exported {exportList.Count} blocks.");
+                _session.Logger?.LogInformation($"ExportPlcBlocks completed successfully. Exported {exportList.Count} blocks.");
             }
 
             return exportList;
@@ -330,8 +330,8 @@ namespace TiaMcpServer.Siemens.Services
 
             var warnings = new JsonArray
             {
-                "删除只删这一个块。它的背景 DB、以及调用它的块都不会被一起删，"
-                + "调用方会变成悬空引用 —— 删后必须 CompileSoftware 才看得出影响面。"
+                "Only this block is deleted; its instance DB and callers remain. "
+                + "Use CompilePlcSoftware after deletion to detect dangling references."
             };
 
             // TIA Portal V21，2026-09-21（docs/reference/real-machine-ledger.md）：DeletePlcBlock 干跑里的
@@ -356,8 +356,8 @@ namespace TiaMcpServer.Siemens.Services
                 warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
                     + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
                     + "优先用导出文档做离线分析；原生诊断还需显式启用服务器进程开关，编译也不能保证不崩溃。");
-                else warnings.Add("⚠️ 取不到这个块的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人调用它。"
-                    + "删前请先 ExportAsDocuments 备份，删后必须 CompileSoftware 看错误。");
+                else warnings.Add("Cross references are unavailable (" + (crossRefReason ?? "unknown reason") + "). This does not establish that the block has no callers. "
+                    + "Use ExportAsDocuments to back up before deletion and CompilePlcSoftware to check errors afterwards.");
             }
             result["warnings"] = warnings;
 
@@ -596,7 +596,7 @@ namespace TiaMcpServer.Siemens.Services
                     + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
                     + "优先用导出文档做离线分析；原生诊断还需显式启用服务器进程开关，编译也不能保证不崩溃。");
                 else warnings.Add("⚠️ 取不到这个 UDT 的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人用它。"
-                    + "删前请先 ExportType 备份，删后必须 CompileSoftware 看错误。");
+                    + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }
             result["warnings"] = warnings;
 
@@ -837,7 +837,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "Native " + nativeMethod + " returned; values not independently verified; no save/compile/download.";
             });
         public ResponseMessage UpdatePlcProgram(string softwarePath, bool confirmUpdate = false, bool dryRun = true)
-            => _session.RunHmiStepTool("UpdatePlcProgram", meta => {
+            => _session.RunHmiStepTool("SetPlcProgram", meta => {
                 bool writing = !dryRun;
                 if (writing && !confirmUpdate) throw new ArgumentException("Real program update requires confirmUpdate=true besides dryRun=false.");
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -855,7 +855,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "Native PlcSoftware.UpdateProgram returned; no save/compile/download.";
             });
         public ResponseMessage ReadPlcBlockFingerprints(string softwarePath, string targetIpAddress, string pgPcInterface = "", string password = "", int offset = 0, int limit = 100, bool dryRun = true)
-            => _session.RunHmiStepTool("ReadPlcBlockFingerprints", meta => {
+            => _session.RunHmiStepTool("GetPlcBlockFingerprints", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var provider = _session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc) ?? throw new NotSupportedException("FingerprintDataProvider unavailable for this PLC/version.");

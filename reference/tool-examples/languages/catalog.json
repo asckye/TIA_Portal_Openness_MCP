@@ -11,7 +11,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ]
     },
@@ -24,7 +24,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ]
     },
     {
@@ -36,9 +36,9 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware",
-        "ExportBlock",
-        "ImportBlock"
+        "CompilePlcSoftware",
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ]
     },
     {
@@ -49,9 +49,9 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware",
-        "ExportBlock",
-        "ImportBlock"
+        "CompilePlcSoftware",
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ]
     },
     {
@@ -62,7 +62,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ]
     },
     {
@@ -73,9 +73,9 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "BuildPlcGlobalDbXml",
-        "ImportBlock"
+        "ImportPlcBlock"
       ]
     },
     {
@@ -87,7 +87,7 @@
       "tools": [
         "ManagePlcDocuments",
         "BuildPlcUdtXml",
-        "ImportType"
+        "ImportPlcType"
       ]
     },
     {
@@ -99,7 +99,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ]
     },
     {
@@ -109,8 +109,8 @@
         "awl"
       ],
       "tools": [
-        "ExportBlock",
-        "ImportBlock"
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ]
     },
     {
@@ -120,8 +120,8 @@
         "s7-graph"
       ],
       "tools": [
-        "ExportBlock",
-        "ImportBlock"
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ]
     },
     {
@@ -190,7 +190,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -237,7 +237,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -289,7 +289,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -332,7 +332,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "Use the document import route; importPath is a directory, fileNameWithoutExtension is FC_Add_SD."
@@ -373,7 +373,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "Both files use the same basename and live in the import directory.",
@@ -420,7 +420,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "MLC_Run and MLC_Pulse are resource IDs, not literal titles. Save both files with UTF-8 BOM."
@@ -451,7 +451,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "V20 Update 4 or later, or V21. The running release key alone does not identify the installed update."
@@ -489,7 +489,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "V20 Update 4 or later, or V21. The block keeps LAD as its preferred language; each network declares its own language."
@@ -525,7 +525,7 @@
       ],
       "tools": [
         "ImportFromDocuments",
-        "CompileSoftware"
+        "CompilePlcSoftware"
       ],
       "notes": [
         "SIMATIC SD data declaration; no BEGIN section."
@@ -582,8 +582,8 @@
         }
       ],
       "tools": [
-        "ExportBlock",
-        "ImportBlock"
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ],
       "notes": [
         "Network body only; declare Enable/Permitted as Bool inputs and Run as a Bool output in an existing STL block.",
@@ -613,8 +613,8 @@
         }
       ],
       "tools": [
-        "ExportBlock",
-        "ImportBlock"
+        "ExportPlcBlock",
+        "ImportPlcBlock"
       ],
       "notes": [
         "Insert under an existing Step in a native GRAPH XML export. Preserve the Step attributes, transitions, connections and namespace.",
@@ -734,7 +734,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -773,7 +773,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -812,7 +812,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -851,7 +851,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -890,7 +890,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -929,7 +929,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -968,7 +968,7 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware",
+        "CompilePlcSoftware",
         "ImportPlcExternalSource"
       ],
       "notes": [
@@ -999,7 +999,7 @@
       ],
       "tools": [
         "BuildPlcGlobalDbXml",
-        "ImportBlock"
+        "ImportPlcBlock"
       ],
       "notes": [
         "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."
@@ -1027,7 +1027,7 @@
       ],
       "tools": [
         "BuildPlcUdtXml",
-        "ImportType"
+        "ImportPlcType"
       ],
       "notes": [
         "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."

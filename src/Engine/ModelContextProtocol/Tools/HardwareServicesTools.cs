@@ -99,7 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false applies the change.")] bool dryRun=true)
             => _hardware.ManagePlcProtection(devicePathJson,itemPathJson,action,accessLevel,password,newPassword,confirmChange,dryRun);
 
-        [McpServerTool(Name="CompileDevice"), Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadToPlc runs first; CompileSoftware / CompileAndDiagnosePlc only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download.")]
+        [McpServerTool(Name="CompileDevice"), Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadToPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download.")]
         public ResponseMessage CompileDevice(
             [Description("devicePathJson: JSON array naming the station to compile, e.g. [\"PLC_1\"].")] string devicePathJson,
             [Description("itemPathJson: JSON array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.")] string itemPathJson="[]")

@@ -477,7 +477,7 @@ namespace TiaMcpServer.Siemens.Services
             result.Message = $"已把 '{acceptedType}' 插到 '{deviceItemPath}' 的槽位 {acceptedSlot}，"
                            + $"模块名 '{after.Name}'，读回确认 IsPlugged=true；{addrText}。"
                            + "要把起始地址改成别的值（例如输入从 %I2.0 开始 → startAddress=2），"
-                           + "用 SetDeviceItemIoAddress，本工具不负责地址。改完 CompileSoftware + SaveProject。";
+                           + "Use SetDeviceItemIoAddress; this tool does not change addresses. Run CompilePlcSoftware and SaveProject afterwards.";
             return result;
         }
 

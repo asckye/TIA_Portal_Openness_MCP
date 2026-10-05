@@ -37,11 +37,12 @@ internal static class ToolExampleLibraryTests
         var steps = TiaMcpServer.Siemens.EngineeringObjectAddress.Parse((string)objectArgs["objectPathJson"]!);
         check(steps.Count == 3 && (string?)steps[2]!["property"] == "ScreenItems", "Unified example uses the actual property-step address grammar");
         check(objectUsage["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "propertiesJson"), "unresolved native property values are explicit bindings");
-        var patchSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""filePath"",""changesJson"",""expectedFingerprint""],""properties"":{""filePath"":{""type"":""string""},""changesJson"":{""type"":""string""},""expectedFingerprint"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
+        var patchSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""filePath"",""changes"",""expectedFingerprint""],""properties"":{""filePath"":{""type"":""string""},""changes"":{""type"":""array""},""expectedFingerprint"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
+        patchSchema["properties"]!["changes"] = JsonNode.Parse(TiaMcp.Logic.V4.Domain.DomainValidation.Contract<TiaMcp.Logic.V4.Domain.BlockEdit[]>().Schema.GetRawText());
         var patchCall = ToolUsageCatalog.Describe("PatchPlcBlockDocument", "21", "full-engine", "", patchSchema)["example"]!["request"]!["params"]!["arguments"]!;
         const string fixture = "<Document><Engineering version='V21'/><SW.Blocks.FC ID='0'><AttributeList><Name>FC_Example</Name><Number>1</Number><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList><ObjectList><MultilingualText ID='1' CompositionName='Title'><ObjectList><MultilingualTextItem ID='2' CompositionName='Items'><AttributeList><Culture>en-US</Culture><Text>Old title</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.FC></Document>";
         var fingerprint = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.HashText(TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Canonical(TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Parse(fixture)));
-        var edited = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Patch(fixture, (string)patchCall["changesJson"]!, fingerprint);
+        var edited = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Patch(fixture, patchCall["changes"]!.ToJsonString(), fingerprint);
         check(edited.Contains("<Text>Example</Text>") && edited.Contains("<Name>FC_Example</Name>"), "example patch payload edits the intended text while preserving the block identity");
 
         var full = ToolUsageCatalog.Examples("21", "full-engine", roster, language: "scl");

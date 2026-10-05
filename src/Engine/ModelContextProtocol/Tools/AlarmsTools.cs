@@ -44,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportAlarmClasses"), Description(
             "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
             " Import PLC alarm classes from a previously exported file." +
-            " Overwrites existing alarm class definitions. Run CompileSoftware after import.")]
+            " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import.")]
         public ResponseMessage ImportAlarmClasses(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: full file path to import from")] string importPath)
@@ -73,7 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
             " Import PLC alarm text lists from an XLSX file." +
             " The file must match the format exported by ExportAlarmTextLists." +
-            " Run CompileSoftware after import to validate alarm configuration.")]
+            " Run CompilePlcSoftware after import to validate alarm configuration.")]
         public ResponseMessage ImportAlarmTextLists(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: full file path to the XLSX file")] string importPath)

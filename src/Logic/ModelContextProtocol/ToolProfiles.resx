@@ -57,7 +57,7 @@
           "action": "callers",
           "target": "FB_Pump"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzePlcSclSource",
@@ -710,7 +710,7 @@
       },
       {
         "name": "CompilePlcDiagnostics",
-        "currentName": "CompileAndDiagnosePlc",
+        "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
         "profiles": [
           "full",
@@ -719,11 +719,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompilePlcSoftware",
-        "currentName": "CompileSoftware",
+        "currentName": "CompilePlcSoftware",
         "sourceName": "CompileSoftware",
         "profiles": [
           "full"
@@ -731,7 +731,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConfigureMotionHardwareConnection",
@@ -908,7 +908,7 @@
           "softwarePath": "PLC_1",
           "groupPath": "Examples"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcInstanceDb",
@@ -937,7 +937,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateProject",
@@ -990,7 +990,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteEmptyUnifiedHmiScreenGroup",
@@ -1047,7 +1047,7 @@
           "blockPath": "Main",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcExternalSource",
@@ -1074,7 +1074,7 @@
           "tagTableName": "Default tag table",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcType",
@@ -1088,7 +1088,7 @@
           "typePath": "UDT_Status",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteUnifiedHmiButtonEvent",
@@ -1218,7 +1218,7 @@
       },
       {
         "name": "DescribePlcBlockLogic",
-        "currentName": "DescribeBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
         "sourceName": "DescribeBlockLogic",
         "profiles": [
           "full"
@@ -1227,7 +1227,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeService",
@@ -1717,7 +1717,7 @@
       },
       {
         "name": "ExportPlcBlock",
-        "currentName": "ExportBlock",
+        "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
         "profiles": [
           "full",
@@ -1728,7 +1728,7 @@
           "blockPath": "Main",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlockDocuments",
@@ -1746,7 +1746,7 @@
       },
       {
         "name": "ExportPlcBlocks",
-        "currentName": "ExportBlocks",
+        "currentName": "ExportPlcBlocks",
         "sourceName": "ExportBlocks",
         "profiles": [
           "full"
@@ -1756,7 +1756,7 @@
           "exportPath": "C:\\Examples\\exports",
           "regexName": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlocksDocuments",
@@ -1800,11 +1800,11 @@
           "tagTableName": "Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcType",
-        "currentName": "ExportType",
+        "currentName": "ExportPlcType",
         "sourceName": "ExportType",
         "profiles": [
           "full",
@@ -1815,11 +1815,11 @@
           "exportPath": "C:\\Examples\\exports",
           "typePath": "UDT_Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcTypes",
-        "currentName": "ExportTypes",
+        "currentName": "ExportPlcTypes",
         "sourceName": "ExportTypes",
         "profiles": [
           "full"
@@ -1828,7 +1828,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcWatchTable",
@@ -1842,7 +1842,7 @@
           "watchTableName": "WT1",
           "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcWatchTablesToDirectory",
@@ -1855,7 +1855,7 @@
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportProjectTexts",
@@ -2456,7 +2456,7 @@
       },
       {
         "name": "GetPlcBlockEditCapabilities",
-        "currentName": "ReadPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
         "sourceName": "ReadPlcBlockEditCapabilities",
         "profiles": [
           "full"
@@ -2464,11 +2464,11 @@
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockFingerprints",
-        "currentName": "ReadPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
         "sourceName": "ReadPlcBlockFingerprints",
         "profiles": [
           "full"
@@ -2478,11 +2478,11 @@
           "targetIpAddress": "192.0.2.10",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockHierarchy",
-        "currentName": "GetBlocksWithHierarchy",
+        "currentName": "GetPlcBlockHierarchy",
         "sourceName": "GetBlocksWithHierarchy",
         "profiles": [
           "full",
@@ -2491,11 +2491,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockInfo",
-        "currentName": "GetBlockInfo",
+        "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
         "profiles": [
           "full",
@@ -2505,7 +2505,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockScopes",
@@ -2637,7 +2637,7 @@
       },
       {
         "name": "GetPlcTagTableConstants",
-        "currentName": "ReadPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
         "sourceName": "ReadPlcTagTableConstants",
         "profiles": [
           "full"
@@ -2646,11 +2646,11 @@
           "softwarePath": "PLC_1",
           "tablePath": "Default tag table"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcTypeInfo",
-        "currentName": "GetTypeInfo",
+        "currentName": "GetPlcTypeInfo",
         "sourceName": "GetTypeInfo",
         "profiles": [
           "full",
@@ -2660,11 +2660,11 @@
           "softwarePath": "PLC_1",
           "typePath": "UDT_Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWatchTableCurrentValuesReadOnly",
-        "currentName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
         "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
         "profiles": [
           "full"
@@ -2673,7 +2673,7 @@
           "softwarePath": "PLC_1",
           "watchTableName": "Watch_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWebDiagnostics",
@@ -2826,7 +2826,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSoftwareTree",
@@ -2839,7 +2839,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetTechnologyObjectTree",
@@ -3286,7 +3286,7 @@
       },
       {
         "name": "ImportPlcBlock",
-        "currentName": "ImportBlock",
+        "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
         "profiles": [
           "full",
@@ -3297,7 +3297,7 @@
           "groupPath": "",
           "importPath": "C:\\Temp\\FB_Pump.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlockDocuments",
@@ -3330,7 +3330,7 @@
           "dryRun": true,
           "compileAfterImport": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlocksDocuments",
@@ -3349,7 +3349,7 @@
       },
       {
         "name": "ImportPlcBlocksFromDirectory",
-        "currentName": "ImportBlocksFromDirectory",
+        "currentName": "ImportPlcBlocksFromDirectory",
         "sourceName": "ImportBlocksFromDirectory",
         "profiles": [
           "full"
@@ -3359,7 +3359,7 @@
           "groupPath": "Examples",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcExternalSource",
@@ -3388,7 +3388,7 @@
           "sourceDir": "C:\\Examples\\exports",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcTagTable",
@@ -3403,7 +3403,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\Tags.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcTagTablesFromDirectory",
@@ -3417,11 +3417,11 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcType",
-        "currentName": "ImportType",
+        "currentName": "ImportPlcType",
         "sourceName": "ImportType",
         "profiles": [
           "full",
@@ -3432,7 +3432,7 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcWatchTableOffline",
@@ -3446,7 +3446,7 @@
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportProjectTexts",
@@ -3819,7 +3819,7 @@
       },
       {
         "name": "ListPlcBlocks",
-        "currentName": "GetBlocks",
+        "currentName": "ListPlcBlocks",
         "sourceName": "GetBlocks",
         "profiles": [
           "full",
@@ -3829,7 +3829,7 @@
           "softwarePath": "PLC_1",
           "regexName": "FB_.*"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcExternalSources",
@@ -3845,7 +3845,7 @@
       },
       {
         "name": "ListPlcForceTables",
-        "currentName": "GetPlcForceTables",
+        "currentName": "ListPlcForceTables",
         "sourceName": "GetPlcForceTables",
         "profiles": [
           "full"
@@ -3853,7 +3853,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSimAdvancedInstances",
@@ -3893,7 +3893,7 @@
       },
       {
         "name": "ListPlcTagTables",
-        "currentName": "GetPlcTagTables",
+        "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
         "profiles": [
           "full",
@@ -3902,11 +3902,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcTypes",
-        "currentName": "GetTypes",
+        "currentName": "ListPlcTypes",
         "sourceName": "GetTypes",
         "profiles": [
           "full",
@@ -3915,11 +3915,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcWatchTables",
-        "currentName": "GetPlcWatchTables",
+        "currentName": "ListPlcWatchTables",
         "sourceName": "GetPlcWatchTables",
         "profiles": [
           "full"
@@ -3927,7 +3927,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPortalProcessProjects",
@@ -4667,7 +4667,7 @@
           "confirmProtectionChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcCertificate",
@@ -4698,7 +4698,7 @@
           "confirmValueChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcDocuments",
@@ -4836,7 +4836,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcTagDefinition",
@@ -4871,7 +4871,7 @@
           "action": "create",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePortInterconnection",
@@ -5399,7 +5399,7 @@
       },
       {
         "name": "MonitorPlcWatchTableS7",
-        "currentName": "MonitorWatchTableLiveS7",
+        "currentName": "MonitorPlcWatchTableS7",
         "sourceName": "MonitorWatchTableLiveS7",
         "profiles": [
           "full"
@@ -5409,11 +5409,11 @@
           "watchTableName": "Watch_1",
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "MovePlcBlockToGroup",
-        "currentName": "MoveBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
         "sourceName": "MoveBlockToGroup",
         "profiles": [
           "full"
@@ -5423,7 +5423,7 @@
           "blockName": "FC_Example",
           "targetGroupPath": "Examples"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "OpenProject",
@@ -5447,11 +5447,19 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "changesJson": "[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
-          "expectedFingerprint": "&lt;fingerprint from ReadPlcBlockEditCapabilities&gt;",
-          "dryRun": true
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanArtifactImportOrder",
@@ -5500,9 +5508,11 @@
         "arguments": {
           "provider": "opcua",
           "endpoint": "opc.tcp://192.0.2.10:4840",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanOnlineReadOnlyMonitoring",
@@ -5513,9 +5523,11 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlugDeviceItem",
@@ -5620,7 +5632,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeS7CpuIdentity",
@@ -5672,7 +5684,7 @@
       },
       {
         "name": "RepairAndReimportPlcBlock",
-        "currentName": "RepairAndReimportBlock",
+        "currentName": "RepairAndReimportPlcBlock",
         "sourceName": "RepairAndReimportBlock",
         "profiles": [
           "full"
@@ -5681,7 +5693,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ResolveSivarcExpression",
@@ -6004,7 +6016,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "referenceDir": "C:\\Examples\\reference"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceAddress",
@@ -6098,7 +6110,7 @@
       },
       {
         "name": "SetPlcProgram",
-        "currentName": "UpdatePlcProgram",
+        "currentName": "SetPlcProgram",
         "sourceName": "UpdatePlcProgram",
         "profiles": [
           "full"
@@ -6108,7 +6120,7 @@
           "confirmUpdate": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcPutGetAccess",
@@ -6141,7 +6153,7 @@
       },
       {
         "name": "SetPlcWatchTableModifyValue",
-        "currentName": "SetWatchTableModifyValue",
+        "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
         "profiles": [
           "full"
@@ -6153,7 +6165,7 @@
           "modifyValue": "TRUE",
           "trigger": "OnceOnlyAtStart"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcWebOperatingMode",
@@ -6588,7 +6600,7 @@
           "action": "callers",
           "target": "FB_Pump"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzePlcSclSource",
@@ -7241,7 +7253,7 @@
       },
       {
         "name": "CompilePlcDiagnostics",
-        "currentName": "CompileAndDiagnosePlc",
+        "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
         "profiles": [
           "full",
@@ -7250,11 +7262,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompilePlcSoftware",
-        "currentName": "CompileSoftware",
+        "currentName": "CompilePlcSoftware",
         "sourceName": "CompileSoftware",
         "profiles": [
           "full"
@@ -7262,7 +7274,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConfigureMotionHardwareConnection",
@@ -7439,7 +7451,7 @@
           "softwarePath": "PLC_1",
           "groupPath": "Examples"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcInstanceDb",
@@ -7468,7 +7480,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateProject",
@@ -7521,7 +7533,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteEmptyUnifiedHmiScreenGroup",
@@ -7578,7 +7590,7 @@
           "blockPath": "Main",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcExternalSource",
@@ -7605,7 +7617,7 @@
           "tagTableName": "Default tag table",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcType",
@@ -7619,7 +7631,7 @@
           "typePath": "UDT_Status",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteUnifiedHmiButtonEvent",
@@ -7749,7 +7761,7 @@
       },
       {
         "name": "DescribePlcBlockLogic",
-        "currentName": "DescribeBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
         "sourceName": "DescribeBlockLogic",
         "profiles": [
           "full"
@@ -7758,7 +7770,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeService",
@@ -8248,7 +8260,7 @@
       },
       {
         "name": "ExportPlcBlock",
-        "currentName": "ExportBlock",
+        "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
         "profiles": [
           "full",
@@ -8259,7 +8271,7 @@
           "blockPath": "Main",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlockDocuments",
@@ -8277,7 +8289,7 @@
       },
       {
         "name": "ExportPlcBlocks",
-        "currentName": "ExportBlocks",
+        "currentName": "ExportPlcBlocks",
         "sourceName": "ExportBlocks",
         "profiles": [
           "full"
@@ -8287,7 +8299,7 @@
           "exportPath": "C:\\Examples\\exports",
           "regexName": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlocksDocuments",
@@ -8331,11 +8343,11 @@
           "tagTableName": "Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcType",
-        "currentName": "ExportType",
+        "currentName": "ExportPlcType",
         "sourceName": "ExportType",
         "profiles": [
           "full",
@@ -8346,11 +8358,11 @@
           "exportPath": "C:\\Examples\\exports",
           "typePath": "UDT_Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcTypes",
-        "currentName": "ExportTypes",
+        "currentName": "ExportPlcTypes",
         "sourceName": "ExportTypes",
         "profiles": [
           "full"
@@ -8359,7 +8371,7 @@
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcWatchTable",
@@ -8373,7 +8385,7 @@
           "watchTableName": "WT1",
           "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcWatchTablesToDirectory",
@@ -8386,7 +8398,7 @@
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportProjectTexts",
@@ -8987,7 +8999,7 @@
       },
       {
         "name": "GetPlcBlockEditCapabilities",
-        "currentName": "ReadPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
         "sourceName": "ReadPlcBlockEditCapabilities",
         "profiles": [
           "full"
@@ -8995,11 +9007,11 @@
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockFingerprints",
-        "currentName": "ReadPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
         "sourceName": "ReadPlcBlockFingerprints",
         "profiles": [
           "full"
@@ -9009,11 +9021,11 @@
           "targetIpAddress": "192.0.2.10",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockHierarchy",
-        "currentName": "GetBlocksWithHierarchy",
+        "currentName": "GetPlcBlockHierarchy",
         "sourceName": "GetBlocksWithHierarchy",
         "profiles": [
           "full",
@@ -9022,11 +9034,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockInfo",
-        "currentName": "GetBlockInfo",
+        "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
         "profiles": [
           "full",
@@ -9036,7 +9048,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockScopes",
@@ -9168,7 +9180,7 @@
       },
       {
         "name": "GetPlcTagTableConstants",
-        "currentName": "ReadPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
         "sourceName": "ReadPlcTagTableConstants",
         "profiles": [
           "full"
@@ -9177,11 +9189,11 @@
           "softwarePath": "PLC_1",
           "tablePath": "Default tag table"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcTypeInfo",
-        "currentName": "GetTypeInfo",
+        "currentName": "GetPlcTypeInfo",
         "sourceName": "GetTypeInfo",
         "profiles": [
           "full",
@@ -9191,11 +9203,11 @@
           "softwarePath": "PLC_1",
           "typePath": "UDT_Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWatchTableCurrentValuesReadOnly",
-        "currentName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
         "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
         "profiles": [
           "full"
@@ -9204,7 +9216,7 @@
           "softwarePath": "PLC_1",
           "watchTableName": "Watch_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWebDiagnostics",
@@ -9357,7 +9369,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSoftwareTree",
@@ -9370,7 +9382,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetTechnologyObjectTree",
@@ -9817,7 +9829,7 @@
       },
       {
         "name": "ImportPlcBlock",
-        "currentName": "ImportBlock",
+        "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
         "profiles": [
           "full",
@@ -9828,7 +9840,7 @@
           "groupPath": "",
           "importPath": "C:\\Temp\\FB_Pump.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlockDocuments",
@@ -9861,7 +9873,7 @@
           "dryRun": true,
           "compileAfterImport": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlocksDocuments",
@@ -9880,7 +9892,7 @@
       },
       {
         "name": "ImportPlcBlocksFromDirectory",
-        "currentName": "ImportBlocksFromDirectory",
+        "currentName": "ImportPlcBlocksFromDirectory",
         "sourceName": "ImportBlocksFromDirectory",
         "profiles": [
           "full"
@@ -9890,7 +9902,7 @@
           "groupPath": "Examples",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcExternalSource",
@@ -9919,7 +9931,7 @@
           "sourceDir": "C:\\Examples\\exports",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcTagTable",
@@ -9934,7 +9946,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\Tags.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcTagTablesFromDirectory",
@@ -9948,11 +9960,11 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcType",
-        "currentName": "ImportType",
+        "currentName": "ImportPlcType",
         "sourceName": "ImportType",
         "profiles": [
           "full",
@@ -9963,7 +9975,7 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcWatchTableOffline",
@@ -9977,7 +9989,7 @@
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportProjectTexts",
@@ -10362,7 +10374,7 @@
       },
       {
         "name": "ListPlcBlocks",
-        "currentName": "GetBlocks",
+        "currentName": "ListPlcBlocks",
         "sourceName": "GetBlocks",
         "profiles": [
           "full",
@@ -10372,7 +10384,7 @@
           "softwarePath": "PLC_1",
           "regexName": "FB_.*"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcExternalSources",
@@ -10388,7 +10400,7 @@
       },
       {
         "name": "ListPlcForceTables",
-        "currentName": "GetPlcForceTables",
+        "currentName": "ListPlcForceTables",
         "sourceName": "GetPlcForceTables",
         "profiles": [
           "full"
@@ -10396,7 +10408,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSimAdvancedInstances",
@@ -10436,7 +10448,7 @@
       },
       {
         "name": "ListPlcTagTables",
-        "currentName": "GetPlcTagTables",
+        "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
         "profiles": [
           "full",
@@ -10445,11 +10457,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcTypes",
-        "currentName": "GetTypes",
+        "currentName": "ListPlcTypes",
         "sourceName": "GetTypes",
         "profiles": [
           "full",
@@ -10458,11 +10470,11 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcWatchTables",
-        "currentName": "GetPlcWatchTables",
+        "currentName": "ListPlcWatchTables",
         "sourceName": "GetPlcWatchTables",
         "profiles": [
           "full"
@@ -10470,7 +10482,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPortalProcessProjects",
@@ -11268,7 +11280,7 @@
           "confirmProtectionChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcBlockWriteProtection",
@@ -11315,7 +11327,7 @@
           "confirmValueChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcDocuments",
@@ -11453,7 +11465,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcTagDefinition",
@@ -11488,7 +11500,7 @@
           "action": "create",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePortInterconnection",
@@ -12091,7 +12103,7 @@
       },
       {
         "name": "MonitorPlcWatchTableS7",
-        "currentName": "MonitorWatchTableLiveS7",
+        "currentName": "MonitorPlcWatchTableS7",
         "sourceName": "MonitorWatchTableLiveS7",
         "profiles": [
           "full"
@@ -12101,11 +12113,11 @@
           "watchTableName": "Watch_1",
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "MovePlcBlockToGroup",
-        "currentName": "MoveBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
         "sourceName": "MoveBlockToGroup",
         "profiles": [
           "full"
@@ -12115,7 +12127,7 @@
           "blockName": "FC_Example",
           "targetGroupPath": "Examples"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "OpenProject",
@@ -12139,11 +12151,19 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "changesJson": "[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
-          "expectedFingerprint": "&lt;fingerprint from ReadPlcBlockEditCapabilities&gt;",
-          "dryRun": true
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanArtifactImportOrder",
@@ -12192,9 +12212,11 @@
         "arguments": {
           "provider": "opcua",
           "endpoint": "opc.tcp://192.0.2.10:4840",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanOnlineReadOnlyMonitoring",
@@ -12205,9 +12227,11 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tagPathsJson": "[\"DB_Status.Ready\"]"
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlugDeviceItem",
@@ -12312,7 +12336,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeS7CpuIdentity",
@@ -12364,7 +12388,7 @@
       },
       {
         "name": "RepairAndReimportPlcBlock",
-        "currentName": "RepairAndReimportBlock",
+        "currentName": "RepairAndReimportPlcBlock",
         "sourceName": "RepairAndReimportBlock",
         "profiles": [
           "full"
@@ -12373,7 +12397,7 @@
           "softwarePath": "PLC_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ResolveSivarcExpression",
@@ -12696,7 +12720,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "referenceDir": "C:\\Examples\\reference"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceAddress",
@@ -12790,7 +12814,7 @@
       },
       {
         "name": "SetPlcProgram",
-        "currentName": "UpdatePlcProgram",
+        "currentName": "SetPlcProgram",
         "sourceName": "UpdatePlcProgram",
         "profiles": [
           "full"
@@ -12800,7 +12824,7 @@
           "confirmUpdate": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcPutGetAccess",
@@ -12833,7 +12857,7 @@
       },
       {
         "name": "SetPlcWatchTableModifyValue",
-        "currentName": "SetWatchTableModifyValue",
+        "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
         "profiles": [
           "full"
@@ -12845,7 +12869,7 @@
           "modifyValue": "TRUE",
           "trigger": "OnceOnlyAtStart"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcWebOperatingMode",

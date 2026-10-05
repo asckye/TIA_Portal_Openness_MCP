@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // name / path not found  -> covers the wrong-softwarePath / wrong-block-name case
             if (Has(m, "not found") || Has(m, "does not exist") || Has(m, "could not be found") ||
                 Has(m, "no such") || Has(m, "unable to locate") || Has(m, "cannot find"))
-                return Tip("the name/path may be wrong — call GetProjectTree / GetSoftwareTree / GetBlocks to read the REAL names (plc software path defaults to 'PLC_1', HMI to 'HMI_RT_1') instead of guessing.");
+                return Tip("the name/path may be wrong — call GetProjectTree / GetSoftwareTree / ListPlcBlocks to read the REAL names (plc software path defaults to 'PLC_1', HMI to 'HMI_RT_1') instead of guessing.");
 
             // version mismatch (V20 exe vs V21 XML etc.)
             if (Has(m, "engineering version") || (Has(m, "version") && Has(m, "not supported")))
@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // export refused because the software/block is inconsistent
             if (Has(m, "not consistent") || Has(m, "inconsistent") || Has(m, "isconsistent"))
-                return Tip("the block/software is inconsistent and cannot be exported — call CompileSoftware first to make it consistent, then retry the export.");
+                return Tip("the block/software is inconsistent and cannot be exported — call CompilePlcSoftware first to make it consistent, then retry the export.");
 
             return "";
         }

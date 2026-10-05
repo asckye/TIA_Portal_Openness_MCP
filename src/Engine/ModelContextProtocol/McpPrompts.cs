@@ -139,7 +139,7 @@ The tree shows:
 - OB / FC / FB / GlobalDB / InstanceDB blocks with group hierarchy
 - UDT types
 - External sources
-- Full qualified paths needed for ExportBlock (e.g. 'Program blocks/FBs/FB_Motor')
+- Full qualified paths needed for ExportPlcBlock (e.g. 'Program blocks/FBs/FB_Motor')
 
 Steps:
 1. Connect + OpenProject.
@@ -162,10 +162,10 @@ Common parameter values:
 - preservePath: false=flat export, true=maintain folder structure
 
 Steps:
-1. CompileAndDiagnosePlc — ensure blocks are consistent before export.
-2. ExportBlocks — export with the parameters below.
+1. CompilePlcDiagnostics — ensure blocks are consistent before export.
+2. ExportPlcBlocks — export with the parameters below.
 
-Use the ExportBlocks tool with:
+Use the ExportPlcBlocks tool with:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}
 - regexName: {regexName}
@@ -178,9 +178,9 @@ Use the ExportBlocks tool with:
             return $@"Export user-defined types (UDTs) from PLC software.
 
 Steps:
-1. ExportTypes — export with the parameters below.
+1. ExportPlcTypes — export with the parameters below.
 
-Use the ExportTypes tool with:
+Use the ExportPlcTypes tool with:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}
 - regexName: {regexName}
@@ -279,8 +279,8 @@ Steps:
 2. ComposePlcFbBlockXml — fbBlockJson with name='{fbName}', number={fbNumber}, inputs/outputs/statics matching the description.
    - dryRun=true first to validate XML.
 3. PlcBuildAndImport — kind='fb', softwarePath='{softwarePath}', dryRun=false, compileAfter=true.
-4. CompileAndDiagnosePlc — verify 0 errors.
-5. GetBlockInfo — softwarePath='{softwarePath}', blockPath='Program blocks/{fbName}' — confirm import.
+4. CompilePlcDiagnostics — verify 0 errors.
+5. GetPlcBlockInfo — softwarePath='{softwarePath}', blockPath='Program blocks/{fbName}' — confirm import.
 
 If compile errors occur: export the failed block, inspect the XML, fix the interface, re-import.";
         }
@@ -302,8 +302,8 @@ Steps:
      ""structuredText"": {{ ""operations"": [...] }}
    }}
 3. PlcBuildAndImport — kind='fb', softwarePath='{softwarePath}', dryRun=true then dryRun=false.
-4. CompileAndDiagnosePlc.
-5. GetBlockInfo — readback confirmation.";
+4. CompilePlcDiagnostics.
+5. GetPlcBlockInfo — readback confirmation.";
         }
 
         [McpServerPrompt(Name = "CreatePlcGlobalDb"), Description("Create a new PLC GlobalDB from a natural-language description")]
@@ -319,8 +319,8 @@ Steps:
      ""staticMembers"": [{{ ""name"": ""..."", ""datatype"": ""..."", ""startValue"": ""..."" }}]
    }}
 2. PlcBuildAndImport — kind='globaldb', softwarePath='{softwarePath}', dryRun=false.
-3. CompileAndDiagnosePlc.
-4. GetBlockInfo — readback.";
+3. CompilePlcDiagnostics.
+4. GetPlcBlockInfo — readback.";
         }
 
         [McpServerPrompt(Name = "CreatePlcTagTable"), Description("Create a new PLC tag table with I/O tags")]
@@ -338,7 +338,7 @@ Steps:
      ]
    }}
 2. PlcBuildAndImport — kind='tagtable', softwarePath='{softwarePath}', dryRun=false.
-3. CompileAndDiagnosePlc.";
+3. CompilePlcDiagnostics.";
         }
 
         // ──────────────────────────────────────────────────────────────────────
@@ -351,16 +351,16 @@ Steps:
             return $@"Compile PLC software and review structured diagnostics.
 
 Steps:
-1. CompileAndDiagnosePlc — softwarePath='{softwarePath}'.
+1. CompilePlcDiagnostics — softwarePath='{softwarePath}'.
 2. Review output:
    - errors=0 → success, continue.
    - errors>0 → read each error message; the block name and line number are included.
-     - Export the failing block with ExportBlock to a working directory.
+     - Export the failing block with ExportPlcBlock to a working directory.
      - Inspect the XML, correct the interface/logic.
-     - ImportBlock the corrected file.
-     - Repeat CompileAndDiagnosePlc.
+     - ImportPlcBlock the corrected file.
+     - Repeat CompilePlcDiagnostics.
 
-Use the CompileAndDiagnosePlc tool with:
+Use the CompilePlcDiagnostics tool with:
 - softwarePath: {softwarePath}";
         }
 
@@ -459,8 +459,8 @@ Steps:
 Steps:
 1. PlanOnlineReadOnlyMonitoring — validate the monitoring request offline first.
 2. ProbePlcMonitorOnlineCapabilities — softwarePath='{softwarePath}' — discover available monitoring APIs.
-3. GetPlcWatchTables — softwarePath='{softwarePath}' — list available watch tables.
-4. ReadPlcWatchTableCurrentValuesReadOnly — read current values.
+3. ListPlcWatchTables — softwarePath='{softwarePath}' — list available watch tables.
+4. GetPlcWatchTableCurrentValuesReadOnly — read current values.
 
 IMPORTANT: this is read-only monitoring. Writing values to the PLC is not supported via MCP.";
         }

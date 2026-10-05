@@ -98,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Documented " + (hb.Entries.Count - hb.Failed) + " block(s) from " + hb.Entries.Count + " document(s)" + (hb.Failed > 0 ? " (" + hb.Failed + " failed to parse)" : "") + " into " + output.FullName + ".";
             });
 
-        [McpServerTool(Name = "LintPlcSclSource"), Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {\"disable\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompileSoftware) remains the verdict. Nothing is saved, compiled or downloaded.")]
+        [McpServerTool(Name = "LintPlcSclSource"), Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {\"disable\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompilePlcSoftware) remains the verdict. Nothing is saved, compiled or downloaded.")]
         public ResponseMessage LintPlcSclSource(
             [Description("sourceText: the SCL source text to lint.")] string sourceText = "",
             string filePath = "",
@@ -132,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["disabledRules"] = new JsonArray(options.Disabled.Select(d => (JsonNode)d).ToArray());
                 meta["rules"] = PlcDocumentationLogic.RuleCatalog();
                 meta["ok"] = findings.All(f => f.Severity != "error");
-                meta["verdictNote"] = "Heuristic pre-check only; CompileSoftware is the compiler verdict.";
+                meta["verdictNote"] = "Heuristic pre-check only; CompilePlcSoftware is the compiler verdict.";
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = findings.Count <= limit;
                 return findings.Count == 0 ? "No findings in " + meta["lineCount"] + " line(s)."
                     : findings.Count + " finding(s): " + meta["errors"] + " error(s), " + meta["warnings"] + " warning(s), " + meta["infos"] + " info.";

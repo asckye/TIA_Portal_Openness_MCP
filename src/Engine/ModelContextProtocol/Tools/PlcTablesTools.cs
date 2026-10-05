@@ -1,3 +1,6 @@
+using TiaMcp.Logic.V4.Domain;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -36,9 +39,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - PlcTables
 
-        [McpServerTool(Name = "GetPlcTagTables"), Description("[L2][PLC-Software] List all PLC tag table names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). Use before ExportPlcTagTable to get exact table names, or before ImportPlcTagTable to check for conflicts.")]
-        public ResponseStringList GetPlcTagTables(
+        [McpServerTool(Name = "ListPlcTagTables"), Description("[L2][PLC-Software] List all PLC tag table names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). Use before ExportPlcTagTable to get exact table names, or before ImportPlcTagTable to check for conflicts. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetPlcTagTablesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
+            => PlcToolContract.Run("ListPlcTagTables", false, true, () => GetPlcTagTables(softwarePath));
+
+        public ResponseStringList GetPlcTagTables(
+            string softwarePath)
         {
             try
             {
@@ -81,11 +88,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcTagTable"), Description("[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file")]
-        public ResponseExportFile ExportPlcTagTable(
+        [McpServerTool(Name = "ExportPlcTagTable"), Description("[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportPlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("tagTableName: PLC tag table name")] string tagTableName,
             [Description("exportPath: full file path to write to")] string exportPath)
+            => PlcToolContract.Run("ExportPlcTagTable", true, true, () => ExportPlcTagTable(softwarePath, tagTableName, exportPath));
+
+        public ResponseExportFile ExportPlcTagTable(
+            string softwarePath,
+            string tagTableName,
+            string exportPath)
         {
             try
             {
@@ -111,11 +124,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcTagTable"), Description("[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort)")]
-        public ResponseMessage ImportPlcTagTable(
+        [McpServerTool(Name = "ImportPlcTagTable"), Description("[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
             [Description("importPath: full file path of PLC tag table XML")] string importPath)
+            => PlcToolContract.Run("ImportPlcTagTable", true, true, () => ImportPlcTagTable(softwarePath, folderPath, importPath));
+
+        public ResponseMessage ImportPlcTagTable(
+            string softwarePath,
+            string folderPath,
+            string importPath)
         {
             try
             {
@@ -136,13 +155,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort)")]
-        public ResponseImportBatch ImportPlcTagTablesFromDirectory(
+        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
             [Description("dir: directory containing PLC tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
             [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            => PlcToolContract.Run("ImportPlcTagTablesFromDirectory", true, true, () => ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+
+        public ResponseImportBatch ImportPlcTagTablesFromDirectory(
+            string softwarePath,
+            string folderPath,
+            string dir,
+            string regexName = "",
+            bool overwrite = true)
         {
             try
             {
@@ -161,9 +188,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetPlcWatchTables"), Description("[L2][PLC-Software]List PLC watch/monitor table names (PlcWatchTable). Read-only.")]
-        public ResponseStringList GetPlcWatchTables(
+        [McpServerTool(Name = "ListPlcWatchTables"), Description("[L2][PLC-Software]List PLC watch/monitor table names (PlcWatchTable). Read-only. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetPlcWatchTablesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
+            => PlcToolContract.Run("ListPlcWatchTables", false, true, () => GetPlcWatchTables(softwarePath));
+
+        public ResponseStringList GetPlcWatchTables(
+            string softwarePath)
         {
             try
             {
@@ -186,16 +217,20 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetPlcForceTables"), Description(
+        [McpServerTool(Name = "ListPlcForceTables"), Description(
             "[L2][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
             " List all force table names in the PLC software." +
             " Force tables configure which variables are continuously forced to specific values while the CPU is online." +
             " Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic" +
             " (a forced output stays forced regardless of what the program writes) and is deliberately kept out of the AI tool surface." +
             " Create or edit force entries in the TIA Portal UI. For a one-shot value written from a watch table instead," +
-            " use SetWatchTableModifyValue (the variable reverts to PLC logic afterwards).")]
-        public ResponseStringList GetPlcForceTables(
+            " use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetPlcForceTablesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath)
+            => PlcToolContract.Run("ListPlcForceTables", false, true, () => GetPlcForceTables(softwarePath));
+
+        public ResponseStringList GetPlcForceTables(
+            string softwarePath)
         {
             try
             {
@@ -206,7 +241,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // 只读 Items 的调用方看到的是「这台 PLC 没有强制表」——和「你路径写错了」
                     // 是完全不同的结论，而它分辨不出来。
                     throw new McpException(
-                        $"GetPlcForceTables: PLC software not found at '{softwarePath}'. "
+                        $"ListPlcForceTables: PLC software not found at '{softwarePath}'. "
                         + "Use GetProjectTree to get the exact PLC path." + _session.AvailablePlcPathsSuffix(),
                         McpErrorCode.InvalidParams);
                 }
@@ -224,7 +259,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SetWatchTableModifyValue"), Description(
+        [McpServerTool(Name = "SetPlcWatchTableModifyValue"), Description(
             "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+GoOnline]" +
             " Configure a watch table entry to write a value to a PLC variable once (or on a trigger)." +
             " This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires." +
@@ -237,16 +272,24 @@ namespace TiaMcpServer.ModelContextProtocol
             " another value; the equipment stays wherever it moved to." +
             " Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again" +
             " (a force would keep overriding the program continuously). This server exposes no tool for force entries —" +
-            " GetPlcForceTables only lists them; use TIA Portal directly to force a value." +
+            " ListPlcForceTables only lists them; use TIA Portal directly to force a value." +
             " Implementation (2.7.50): the typed Openness API cannot create tag rows (PlcWatchTable.Entries.Create() only makes comment rows), so the table is exported," +
             " the row added or updated in the SimaticML and the table re-imported (override mode) into its own group; the row is read back (meta.after, readbackVerified). Project not saved." +
-            " Example: SetWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart')")]
-        public ResponseMessage SetWatchTableModifyValue(
+            " Example: SetPlcWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult SetWatchTableModifyValueV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity refused) and the table is created at the root only when it exists nowhere")] string tableName,
             [Description("address: absolute address ('%M0.0', 'DB1.DBX0.0') goes to the row's Address; a symbol ('MyTag', '\"DB\".Member') goes to its Name (quoted per segment like TIA)")] string address,
             [Description("modifyValue: value to write, e.g. 'TRUE', '42', '3.14'")] string modifyValue,
             [Description("trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)")] string trigger = "Permanent")
+            => PlcToolContract.Run("SetPlcWatchTableModifyValue", true, true, () => SetWatchTableModifyValue(softwarePath, tableName, address, modifyValue, trigger));
+
+        public ResponseMessage SetWatchTableModifyValue(
+            string softwarePath,
+            string tableName,
+            string address,
+            string modifyValue,
+            string trigger = "Permanent")
         {
             try
             {
@@ -278,11 +321,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcWatchTable"), Description("[L2][PLC-Software]Export one PLC watch/monitor table (PlcWatchTable) to XML file. Read-only against the TIA project.")]
-        public ResponseExportFile ExportPlcWatchTable(
+        [McpServerTool(Name = "ExportPlcWatchTable"), Description("[L2][PLC-Software]Export one PLC watch/monitor table (PlcWatchTable) to XML file. Read-only against the TIA project. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportPlcWatchTableV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("watchTableName: PLC watch table name")] string watchTableName,
             [Description("exportPath: full file path to write to")] string exportPath)
+            => PlcToolContract.Run("ExportPlcWatchTable", true, true, () => ExportPlcWatchTable(softwarePath, watchTableName, exportPath));
+
+        public ResponseExportFile ExportPlcWatchTable(
+            string softwarePath,
+            string watchTableName,
+            string exportPath)
         {
             try
             {
@@ -305,11 +354,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcWatchTablesToDirectory"), Description("[L2][PLC-Software]Export all PLC watch/monitor tables to XML files. Read-only against the TIA project.")]
-        public ResponseImportBatch ExportPlcWatchTablesToDirectory(
+        [McpServerTool(Name = "ExportPlcWatchTablesToDirectory"), Description("[L2][PLC-Software]Export all PLC watch/monitor tables to XML files. Read-only against the TIA project. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportPlcWatchTablesToDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("dir: output directory")] string dir,
             [Description("regexName: optional regex filter applied to table name")] string regexName = "")
+            => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", true, true, () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName));
+
+        public ResponseImportBatch ExportPlcWatchTablesToDirectory(
+            string softwarePath,
+            string dir,
+            string regexName = "")
         {
             try
             {
@@ -328,9 +383,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ProbePlcMonitorOnlineCapabilities"), Description("[L2][Online-Monitoring]Read-only probe for PLC online/offline/watch/monitor API surfaces. It does not go online/offline, change watch tables, write values, or touch restricted safety APIs.")]
-        public ResponseJsonReport ProbePlcMonitorOnlineCapabilities(
+        [McpServerTool(Name = "ProbePlcMonitorOnlineCapabilities"), Description("[L2][Online-Monitoring]Read-only probe for PLC online/offline/watch/monitor API surfaces. It does not go online/offline, change watch tables, write values, or touch restricted safety APIs. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ProbePlcMonitorOnlineCapabilitiesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
+            => PlcToolContract.Run("ProbePlcMonitorOnlineCapabilities", false, true, () => ProbePlcMonitorOnlineCapabilities(softwarePath));
+
+        public ResponseJsonReport ProbePlcMonitorOnlineCapabilities(
+            string softwarePath)
         {
             try
             {
@@ -344,11 +403,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ReadPlcWatchTableCurrentValuesReadOnly"), Description("[L2][Online-Monitoring] Read current/monitor value properties from an existing PLC watch table only. It does not create/modify watch tables, write PLC values, go offline, or use force operations.")]
-        public ResponseJsonReport ReadPlcWatchTableCurrentValuesReadOnly(
+        [McpServerTool(Name = "GetPlcWatchTableCurrentValuesReadOnly"), Description("[L2][Online-Monitoring] Read current/monitor value properties from an existing PLC watch table only. It does not create/modify watch tables, write PLC values, go offline, or use force operations. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ReadPlcWatchTableCurrentValuesReadOnlyV4(
             [Description("softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.")] string softwarePath,
-            [Description("watchTableName: existing PLC watch table path/name returned by GetPlcWatchTables.")] string watchTableName,
+            [Description("watchTableName: existing PLC watch table path/name returned by ListPlcWatchTables.")] string watchTableName,
             [Description("maxEntries: maximum entries to inspect.")] int maxEntries = 50)
+            => PlcToolContract.Run("GetPlcWatchTableCurrentValuesReadOnly", false, true, () => ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, watchTableName, maxEntries));
+
+        public ResponseJsonReport ReadPlcWatchTableCurrentValuesReadOnly(
+            string softwarePath,
+            string watchTableName,
+            int maxEntries = 50)
         {
             try
             {
@@ -363,10 +428,20 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "PlanOnlineReadOnlyMonitoring"), Description("[L2][Online-Monitoring] Validate an online-monitoring request shape without connecting to TIA Portal. Read-only preflight only: no go-online/offline, no watch-table modification, no value write, and no force operation.")]
-        public ResponseJsonReport PlanOnlineReadOnlyMonitoring(
+        public CallToolResult PlanOnlineReadOnlyMonitoringV4(
             [Description("softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.")] string softwarePath,
-            [Description("tagPathsJson: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits.")] string tagPathsJson,
+            [Description("tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits.")] string[] tagPaths,
             [Description("mode: current-values or watch-table-export-plan. Both are read-only planning modes.")] string mode = "current-values")
+            => PlcToolContract.Run("PlanOnlineReadOnlyMonitoring", false, false, () =>
+            {
+                var tagPathsValue = PlcToolContract.Input(NameListValidator.Create(new NameListPolicy(minimum: 1, trim: true)), tagPaths, "tagPaths");
+                return PlanOnlineReadOnlyMonitoring(softwarePath, V4Json.Serialize(tagPathsValue), mode);
+            });
+
+        public ResponseJsonReport PlanOnlineReadOnlyMonitoring(
+            string softwarePath,
+            string tagPathsJson,
+            string mode = "current-values")
         {
             try
             {
@@ -402,12 +477,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 catch (Exception ex)
                 {
-                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPathsJson must be a JSON array of symbolic PLC paths. Parse error: " + ex.Message);
+                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPaths must be a JSON array of symbolic PLC paths. Parse error: " + ex.Message);
                 }
 
                 if (parsed is not JsonArray tagArray)
                 {
-                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPathsJson must be a JSON array.");
+                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPaths must be a JSON array.");
                 }
 
                 foreach (var item in tagArray)
@@ -508,11 +583,22 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "PlanOnlineReadOnlyDataProvider"), Description("[L2][Online-Monitoring] Plan the commercial current-value path through an external read-only data provider such as opcua or s7-readonly. This is a preflight only: it does not connect, write PLC values, modify watch tables, go online/offline through TIA, or use force operations.")]
-        public ResponseJsonReport PlanOnlineReadOnlyDataProvider(
+        public CallToolResult PlanOnlineReadOnlyDataProviderV4(
             [Description("provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.")] string provider,
             [Description("endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.")] string endpoint,
-            [Description("tagPathsJson: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.")] string tagPathsJson,
-            [Description("optionsJson: optional JSON object such as {\"pollMs\":1000,\"source\":\"watch-table-export\"}.")] string optionsJson = "{}")
+            [Description("tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.")] string[] tagPaths,
+            [Description("options: optional JSON object such as {\"pollMs\":1000,\"source\":\"watch-table-export\"}.")] MonitoringOptions? options = null)
+            => PlcToolContract.Run("PlanOnlineReadOnlyDataProvider", false, false, () =>
+            {
+                var tagPathsValue = PlcToolContract.Input(NameListValidator.Create(new NameListPolicy(minimum: 1, trim: true)), tagPaths, "tagPaths");
+                return PlanOnlineReadOnlyDataProvider(provider, endpoint, V4Json.Serialize(tagPathsValue), options?.Json.GetRawText()!);
+            });
+
+        public ResponseJsonReport PlanOnlineReadOnlyDataProvider(
+            string provider,
+            string endpoint,
+            string tagPathsJson,
+            string optionsJson = "{}")
         {
             try
             {
@@ -527,7 +613,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var warnings = new JsonArray();
                 var acceptedTags = new JsonArray();
                 var rejectedTags = new JsonArray();
-                var options = ToolJsonArguments.ParseJsonObjectOrEmpty(optionsJson, "optionsJson");
+                var options = ToolJsonArguments.ParseJsonObjectOrEmpty(optionsJson, "options");
 
                 if (!allowedProviders.Contains(normalizedProvider))
                 {
@@ -546,12 +632,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 catch (Exception ex)
                 {
-                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPathsJson must be a JSON array. Parse error: " + ex.Message);
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPaths must be a JSON array. Parse error: " + ex.Message);
                 }
 
                 if (parsed is not JsonArray tagArray)
                 {
-                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPathsJson must be a JSON array.");
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPaths must be a JSON array.");
                 }
 
                 foreach (var item in tagArray)
@@ -632,14 +718,23 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        [McpServerTool(Name = "MonitorWatchTableLiveS7"), Description("[L2][Online-Monitoring] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use GetPlcWatchTables to list table names.")]
-        public ResponseJsonReport MonitorWatchTableLiveS7(
+        [McpServerTool(Name = "MonitorPlcWatchTableS7"), Description("[L2][Online-Monitoring] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult MonitorWatchTableLiveS7V4(
             [Description("softwarePath: PLC software path, e.g. '安全PLC'.")] string softwarePath,
-            [Description("watchTableName: existing watch table name from GetPlcWatchTables.")] string watchTableName,
+            [Description("watchTableName: existing watch table name from ListPlcWatchTables.")] string watchTableName,
             [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
             [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("expectModuleContains: optional identity guard (e.g. '1211C'); aborts on a positive module-type mismatch.")] string expectModuleContains = "")
+            => PlcToolContract.Run("MonitorPlcWatchTableS7", true, true, () => MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains));
+
+        public ResponseJsonReport MonitorWatchTableLiveS7(
+            string softwarePath,
+            string watchTableName,
+            string ip,
+            int rack = 0,
+            int slot = 1,
+            string expectModuleContains = "")
         {
             try
             {
@@ -649,16 +744,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"MonitorWatchTableLiveS7 failed: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"MonitorPlcWatchTableS7 failed: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name="ImportPlcWatchTableOffline"), Description("[L2][PLC-Software][WRITE] Import native SimaticML watch tables into an exact existing group. Offline-only, no overwrite. Rejects force-table and mixed-object XML and DTD. dryRun=true default. Does not execute modify values, start monitoring, save or download. filePath is on the MCP server.")]
+        [McpServerTool(Name = "ImportPlcWatchTableOffline"), Description("[L2][PLC-Software][WRITE] Import native SimaticML watch tables into an exact existing group. Offline-only, no overwrite. Rejects force-table and mixed-object XML and DTD. dryRun=true default. Does not execute modify values, start monitoring, save or download. filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
+            => PlcToolContract.Run("ImportPlcWatchTableOffline", !dryRun, true, () => ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, dryRun));
+
         public ResponseMessage ImportPlcWatchTableOffline(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
             => _tables.ImportPlcWatchTableOffline(softwarePath,filePath,groupPath,dryRun);
 
-        [McpServerTool(Name="ReadPlcTagTableConstants"), Description("[L2][PLC-Software][READ] Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification.")]
-        public ResponseMessage ReadPlcTagTableConstants(
+        [McpServerTool(Name = "GetPlcTagTableConstants"), Description("[L2][PLC-Software][READ] Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ReadPlcTagTableConstantsV4(
             string softwarePath,
             string tablePath,
             [Description("kind: all | user | system.")] string kind="all",
@@ -666,10 +764,20 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
             int offset=0,
             int limit=200)
+            => PlcToolContract.Run("GetPlcTagTableConstants", false, true, () => ReadPlcTagTableConstants(softwarePath, tablePath, kind, unitName, unitKind, offset, limit));
+
+        public ResponseMessage ReadPlcTagTableConstants(
+            string softwarePath,
+            string tablePath,
+            string kind="all",
+            string unitName="",
+            string unitKind="unit",
+            int offset=0,
+            int limit=200)
             => _tables.ReadPlcTagTableConstants(softwarePath,tablePath,kind,unitName,unitKind,offset,limit);
 
-        [McpServerTool(Name="ManagePlcTableEntries"), Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download.")]
-        public ResponseMessage ManagePlcTableEntries(
+        [McpServerTool(Name = "ManagePlcTableEntries"), Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcTableEntriesV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("tableKind: watch | force.")] string tableKind,
             [Description("tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).")] string tablePath,
@@ -679,6 +787,18 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
             [Description("offset: first row to return (paging).")] int offset=0,
             [Description("limit: maximum rows to return.")] int limit=200)
+            => PlcToolContract.Run("ManagePlcTableEntries", !dryRun && action != "read", true, () => ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit));
+
+        public ResponseMessage ManagePlcTableEntries(
+            string softwarePath,
+            string tableKind,
+            string tablePath,
+            string action="read",
+            int entryIndex=-1,
+            bool confirmDelete=false,
+            bool dryRun=true,
+            int offset=0,
+            int limit=200)
             => _tables.ManagePlcTableEntries(softwarePath,tableKind,tablePath,action,entryIndex,confirmDelete,dryRun,offset,limit);
     }
 }

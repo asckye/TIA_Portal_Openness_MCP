@@ -28,7 +28,7 @@ snapshots = load('snapshots', 'Snapshot-ToolResponses.py')
 snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
     {'tool': '*', 'path': ['Meta', 'timestamp'], 'reason': 'CallTool POCO envelope wall clock'},
     *({'tool': name, 'path': [key, 'timestamp'], 'reason': 'Watch-table read/probe DateTime.Now.ToString("O")'}
-      for name in ('ReadPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
+      for name in ('GetPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
       for key in ('data', 'Data')),
     {'tool': 'GetOpcUaConfig', 'path': ['data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, direct serialization'},
     {'tool': 'GetOpcUaConfig', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
@@ -274,25 +274,25 @@ CASES = {
         + [('CompareProjects', kind, {'kind': kind, 'softwarePath': PLC})
            for kind in ('software', 'softwareToLibrary', 'hardware')],
     'PlcTables': [(name, 'disconnected', {'softwarePath': PLC}) for name in (
-            'GetPlcTagTables', 'GetPlcWatchTables', 'GetPlcForceTables', 'ProbePlcMonitorOnlineCapabilities')]
+            'ListPlcTagTables', 'ListPlcWatchTables', 'ListPlcForceTables', 'ProbePlcMonitorOnlineCapabilities')]
         + [('ExportPlcTagTable', 'disconnected', dict(softwarePath=PLC, tagTableName='Tags', exportPath='C:/domain-tags.xml')),
            ('ImportPlcTagTable', 'disconnected', dict(softwarePath=PLC, folderPath='', importPath='C:/domain-tags.xml')),
            ('ImportPlcTagTablesFromDirectory', 'disconnected', dict(softwarePath=PLC, folderPath='', dir='C:/domain-tables')),
-           ('SetWatchTableModifyValue', 'disconnected', dict(softwarePath=PLC, tableName='Watch', address='%M0.0', modifyValue='TRUE')),
+           ('SetPlcWatchTableModifyValue', 'disconnected', dict(softwarePath=PLC, tableName='Watch', address='%M0.0', modifyValue='TRUE')),
            ('ExportPlcWatchTable', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch', exportPath='C:/domain-watch.xml')),
            ('ExportPlcWatchTablesToDirectory', 'disconnected', dict(softwarePath=PLC, dir='C:/domain-tables')),
-           ('ReadPlcWatchTableCurrentValuesReadOnly', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch')),
-           ('MonitorWatchTableLiveS7', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch', ip='192.0.2.1')),
+           ('GetPlcWatchTableCurrentValuesReadOnly', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch')),
+           ('MonitorPlcWatchTableS7', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch', ip='192.0.2.1')),
            ('ImportPlcWatchTableOffline', 'disconnected', dict(softwarePath=PLC, filePath='C:/domain-watch.xml'))]
-        + [('ReadPlcTagTableConstants', kind, dict(softwarePath=PLC, tablePath='Tags', kind=kind))
+        + [('GetPlcTagTableConstants', kind, dict(softwarePath=PLC, tablePath='Tags', kind=kind))
            for kind in ('all', 'user', 'system')]
         + actions('ManagePlcTableEntries', 'read createComment deleteEntry deleteTable',
                   softwarePath=PLC, tableKind='watch', tablePath='Watch', entryIndex=0, confirmDelete=True)
         + [('ManagePlcTableEntries', 'force-read', dict(softwarePath=PLC, tableKind='force', tablePath='Force'))]
-        + [('PlanOnlineReadOnlyMonitoring', mode, dict(softwarePath=PLC, tagPathsJson='["DB_HMI.MotorRun"]', mode=mode))
+        + [('PlanOnlineReadOnlyMonitoring', mode, dict(softwarePath=PLC, tagPaths=["DB_HMI.MotorRun"], mode=mode))
            for mode in ('current-values', 'watch-table-export-plan')]
         + [('PlanOnlineReadOnlyDataProvider', provider, dict(provider=provider, endpoint='opc.tcp://192.0.2.1:4840',
-                                                          tagPathsJson='["DB_HMI.MotorRun"]'))
+                                                          tagPaths=["DB_HMI.MotorRun"]))
            for provider in ('opcua', 's7-readonly')],
     'Library': [('ReadLibraryOverview', 'read', {}), ('ReadLibraryType', 'read', {'typePath': 'Type1'})]
         + actions('ManageLibraryType', 'update delete updateLibrary updateProject', typePath='Type1')
@@ -451,7 +451,7 @@ CASES = {
            ('DownloadPlcToFolder', 'disconnected', {'softwarePath': PLC,
                                                   'destinationDirectory': 'C:/domain-offline-card'})],
     'PlcSoftware': [(name, 'disconnected', {'softwarePath': PLC})
-                      for name in ('GetSoftwareInfo', 'CompileSoftware', 'GetSoftwareTree')],
+                      for name in ('GetSoftwareInfo', 'CompilePlcSoftware', 'GetSoftwareTree')],
     'Reflection': [
         ('DescribeObjectProperty', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'propertyPath': 'Name'}),
         ('DescribeObject', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC}),
@@ -484,14 +484,14 @@ CASES = {
     'PlcBuild': [('PlcBuildAndImport', 'invalid-kind', {'softwarePath': PLC, 'kind': 'invalid', 'json': '{}'})],
     'SoftwareUnitManagement': [('SetPlcUnitObjectAccess', 'disconnected',
         {'softwarePath': PLC, 'unitName': 'Unit1', 'objectKind': 'block', 'objectPath': 'FC1', 'access': 'Published'})],
-    'Types': [('GetTypeInfo', 'read', {'softwarePath': PLC, 'typePath': 'Type1'}),
-        ('GetTypes', 'read', {'softwarePath': PLC}),
-        ('ExportType', 'export', {'softwarePath': PLC, 'typePath': 'Type1', 'exportPath': 'C:/domain-offline'}),
-        ('ImportType', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
+    'Types': [('GetPlcTypeInfo', 'read', {'softwarePath': PLC, 'typePath': 'Type1'}),
+        ('ListPlcTypes', 'read', {'softwarePath': PLC}),
+        ('ExportPlcType', 'export', {'softwarePath': PLC, 'typePath': 'Type1', 'exportPath': 'C:/domain-offline'}),
+        ('ImportPlcType', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
         ('SeedProjectFromReference', 'seed', {'plcSoftwarePath': PLC, 'hmiSoftwarePath': 'HMI1', 'referenceDir': 'C:/domain-offline'}),
         # These two batch exporters return a variable elapsed duration even without a project.
         # Exercise their exact-name dispatch refusal without expanding the byte-mask allowlist.
-        ('ExportTypes', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'})],
+        ('ExportPlcTypes', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'})],
     'Documents': [('ExportAsDocuments', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'exportPath': 'C:/domain-offline'}),
         ('ExportBlocksAsDocuments', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'}),
         ('ImportFromDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'fileNameWithoutExtension': 'Block1', 'importOption': 'invalid'}),
@@ -860,22 +860,22 @@ HARDWARE_THROWS = {
 
 
 CASES['PlcBlocks'] = [
-    ('GetBlockInfo', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
-    ('GetBlocks', 'read', {'softwarePath': PLC}),
-    ('GetBlocksWithHierarchy', 'read', {'softwarePath': PLC}),
-    ('ExportBlock', 'export', {'softwarePath': PLC, 'blockPath': 'Group/Block1', 'exportPath': 'C:/domain-offline'}),
-    ('ImportBlock', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
-    ('ImportBlocksFromDirectory', 'import', {'softwarePath': PLC, 'groupPath': '', 'dir': 'C:/domain-offline'}),
+    ('GetPlcBlockInfo', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('ListPlcBlocks', 'read', {'softwarePath': PLC}),
+    ('GetPlcBlockHierarchy', 'read', {'softwarePath': PLC}),
+    ('ExportPlcBlock', 'export', {'softwarePath': PLC, 'blockPath': 'Group/Block1', 'exportPath': 'C:/domain-offline'}),
+    ('ImportPlcBlock', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
+    ('ImportPlcBlocksFromDirectory', 'import', {'softwarePath': PLC, 'groupPath': '', 'dir': 'C:/domain-offline'}),
     ('ImportPlcProgramFromDirectory', 'import', {'softwarePath': PLC, 'sourceDir': 'C:/domain-offline'}),
-    ('CompileAndDiagnosePlc', 'compile', {'softwarePath': PLC}),
-    ('RepairAndReimportBlock', 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.xml'}),
-    ('ExportBlocks', 'missing-required-argument', {'exportPath': 'C:/domain-offline'}),
-    ('DescribeBlockLogic', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
-    ('UpdatePlcProgram', 'preview', {'softwarePath': PLC}),
-    ('ReadPlcBlockFingerprints', 'preview', {'softwarePath': PLC, 'targetIpAddress': '192.0.2.1'}),
-    ('ReadPlcBlockEditCapabilities', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('CompilePlcDiagnostics', 'compile', {'softwarePath': PLC}),
+    ('RepairAndReimportPlcBlock', 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.xml'}),
+    ('ExportPlcBlocks', 'missing-required-argument', {'exportPath': 'C:/domain-offline'}),
+    ('DescribePlcBlockLogic', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('SetPlcProgram', 'preview', {'softwarePath': PLC}),
+    ('GetPlcBlockFingerprints', 'preview', {'softwarePath': PLC, 'targetIpAddress': '192.0.2.1'}),
+    ('GetPlcBlockEditCapabilities', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
     ('AnalyzePlcReferences', 'missing-directory', {'directory': 'C:/domain-offline'}),
-    ('PatchPlcBlockDocument', 'missing-file', {'filePath': 'C:/domain-offline.xml', 'changesJson': '[]', 'expectedFingerprint': 'none'}),
+    ('PatchPlcBlockDocument', 'invalid-changes', {'filePath': 'C:/domain-offline.xml', 'changes': [], 'expectedFingerprint': 'none'}),
     ('ImportPlcBlockVerified', 'preview', {'softwarePath': PLC, 'blockPath': 'Group/Block1', 'importPath': 'C:/domain-offline.xml', 'evidenceDirectory': 'C:/domain-evidence'}),
     ('DeletePlcBlock', 'preview', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
     ('DeletePlcTagTable', 'preview', {'softwarePath': PLC, 'tagTableName': 'Table1'}),
@@ -883,7 +883,7 @@ CASES['PlcBlocks'] = [
     ('CreatePlcTypeGroup', 'preview', {'softwarePath': PLC, 'groupPath': 'Group'}),
     ('DeleteEmptyPlcBlockGroup', 'preview', {'softwarePath': PLC, 'groupPath': 'Group'}),
     ('CreatePlcBlockGroup', 'create', {'softwarePath': PLC, 'groupPath': 'Group'}),
-    ('MoveBlockToGroup', 'move', {'softwarePath': PLC, 'blockName': 'Block1', 'targetGroupPath': 'Group'})
+    ('MovePlcBlockToGroup', 'move', {'softwarePath': PLC, 'blockName': 'Block1', 'targetGroupPath': 'Group'})
 ] + actions('ManagePlcBlockProtection', 'read protect unprotect', softwarePath=PLC, blockPath='Group/Block1') \
   + actions('ManagePlcDataBlockSnapshot', 'read createSnapshot loadSnapshotAsActualValues loadStartValuesAsActualValues exportSnapshot', softwarePath=PLC, blockPath='Group/Block1') \
   + actions('ManagePlcUserGroup', 'create rename deleteEmpty', softwarePath=PLC, family='blocks', groupPath='Group')
@@ -1037,25 +1037,36 @@ def session_reply(reply, profile, name, case):
     return raw
 
 
-def plc_block_reply(reply, profile, name):
+def plc_v4_reply(reply, name):
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
-    raw = reply['result']['content'][0]['text']
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(isinstance(bridge.get('meta', {}).get('bridgeSuccess'), bool),
-                          f'{name}: missing bridge status: {raw}')
-        raw = bridge['message']
-    resources.require(any(marker in raw for marker in (
-        'Project is null', 'No project', 'no project', 'No TIA project', 'Block not found',
-        'Block root group not found', 'No blocks found', 'not found', 'not exist', 'does not exist',
-        'required', 'Required', 'must not be empty', 'empty', 'Import failed',
-        'Analysis failed', 'analysis failed', 'failed', 'Failed')),
-        f'{name}: did not reach its existing offline refusal: {raw}')
+    result = reply['result']
+    content = result.get('content', [])
+    resources.require(len(content) == 1 and 'text' in content[0], f'{name}: expected one JSON text block')
+    raw = content[0]['text']
+    value = json.loads(raw)
+    resources.require(value.get('schemaVersion') == 4, f'{name}: missing V4 envelope: {raw}')
+    resources.require(result.get('structuredContent') == value, f'{name}: structured/text content differ')
+    resources.require(isinstance(value.get('ok'), bool) and result.get('isError') is (not value['ok']),
+                      f'{name}: inconsistent MCP and domain verdicts')
+    meta = value.get('meta', {})
+    resources.require(meta.get('tool') == name, f'{name}: wrong envelope tool identity')
+    resources.require(meta.get('outcome') in ('succeeded', 'failed', 'partial', 'unknown',
+                      'rejected-before-operation', 'read-failed'), f'{name}: missing outcome')
+    resources.require((value.get('error') is None) is value['ok'], f'{name}: inconsistent error')
+    if name.startswith('PlanOnlineReadOnly'):
+        resources.require(value['ok'] and value.get('data', {}).get('readOnly') is True,
+                          f'{name}: offline read-only plan failed: {raw}')
+    else:
+        resources.require(value['ok'] is False, f'{name}: disconnected/invalid request cannot succeed')
     return raw
 
 
+def plc_block_reply(reply, profile, name):
+    return plc_v4_reply(reply, name)
+
+
 SOFTWARE_REPLY_MARKERS = {
-    'GetSoftwareInfo': 'Software not found', 'CompileSoftware': 'Project is null',
+    'GetSoftwareInfo': 'Software not found', 'CompilePlcSoftware': 'Project is null',
     'GetSoftwareTree': 'no project is open',
     **{name: 'not found' for name in ('DescribeObjectProperty', 'DescribeObject', 'ListObjectChildren',
                                     'InvokeObject', 'DescribeService', 'InvokeService')},
@@ -1071,7 +1082,9 @@ SOFTWARE_REPLY_MARKERS = {
 
 
 def software_reply(reply, profile, name):
-    """Exercise the existing error/success family before comparing the complete raw reply."""
+    """Exercise the expected error/success family before comparing the complete raw reply."""
+    if name in {row[0] for row in CASES['PlcSoftware']}:
+        return plc_v4_reply(reply, name)
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
     result = reply['result']
     raw = result['content'][0]['text']
@@ -1093,8 +1106,8 @@ def software_reply(reply, profile, name):
 
 
 SOURCE_TOOL_GUARDS = {
-    'GetTypeInfo': 'Type not found', 'GetTypes': 'No TIA project is open',
-    'ExportType': 'No project is open', 'ImportType': 'No project is open',
+    'GetPlcTypeInfo': 'Type not found', 'ListPlcTypes': 'No TIA project is open',
+    'ExportPlcType': 'No project is open', 'ImportPlcType': 'No project is open',
     'SeedProjectFromReference': 'Project is null', 'ExportAsDocuments': 'No project is open',
     'ImportFromDocuments': 'Invalid importOption', 'ImportBlocksFromDocuments': 'Invalid importOption',
     'GetCrossReferences': 'notQueried', 'GetPlcExternalSources': 'PLC software not found',
@@ -1107,13 +1120,15 @@ SOURCE_TOOL_GUARDS = {
 
 
 def source_reply(reply, profile, name, case):
+    if name in {row[0] for row in CASES['Types']}:
+        return plc_v4_reply(reply, name)
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
     result = reply.get('result', {})
     raw = result.get('content', [{}])[0].get('text', json.dumps(reply.get('error', {})))
     if case == 'duplicate-argument':
         resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
         return raw
-    throwing = name in {'GetTypeInfo', 'GetTypes', 'ExportType', 'ImportType', 'ExportAsDocuments',
+    throwing = name in {'GetPlcTypeInfo', 'ListPlcTypes', 'ExportPlcType', 'ImportPlcType', 'ExportAsDocuments',
                        'ImportFromDocuments', 'ImportBlocksFromDocuments', 'GetPlcExternalSources',
                        'WritePlcSclSourceFile', 'ImportPlcExternalSource', 'DeletePlcExternalSource',
                        'GenerateBlocksFromExternalSource'}
@@ -1135,29 +1150,7 @@ def source_reply(reply, profile, name, case):
 
 
 def table_reply(reply, profile, name):
-    """Preserve each table tool's existing throw/POCO/plan family, without connecting."""
-    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
-    result = reply['result']
-    raw = result['content'][0]['text']
-    throwing = name in {'GetPlcTagTables', 'GetPlcWatchTables', 'GetPlcForceTables',
-                        'ExportPlcTagTable', 'ImportPlcTagTable', 'ExportPlcWatchTable'}
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
-                          f'{name}: unexpected bridge status: {raw}')
-        raw = bridge['message']
-    else:
-        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
-    if name.startswith('PlanOnlineReadOnly'):
-        value = json.loads(raw)
-        resources.require(value.get('ok', value.get('Ok')) is True and
-                          value.get('data', value.get('Data', {})).get('readOnly') is True,
-                          f'{name}: offline plan failed: {raw}')
-    else:
-        resources.require(any(marker in raw for marker in ('Project is null', 'No project open',
-            'No project is open', 'PLC software not found', 'Failed exporting PLC', 'PlcSoftware not found')),
-            f'{name}: did not reach the disconnected guard: {raw}')
-    return raw
+    return plc_v4_reply(reply, name)
 
 
 def unified_reply(reply, profile, name):
@@ -1583,23 +1576,32 @@ class SelfTests(unittest.TestCase):
     def test_all_declared_tools_covered(self):
         check_coverage(CASES)
 
+    @staticmethod
+    def plc_failure(name):
+        value = {'schemaVersion': 4, 'ok': False, 'data': {},
+                 'meta': {'tool': name, 'outcome': 'read-failed'},
+                 'error': {'code': 'NATIVE_OPERATION_FAILED'}}
+        return {'result': {'isError': True, 'structuredContent': value,
+                           'content': [{'text': json.dumps(value)}]}}
+
     def test_table_reply_preserves_disconnected_error_family(self):
-        reply = {'result': {'isError': True, 'content': [{'text': 'PLC software not found'}]}}
-        self.assertEqual(table_reply(reply, 'full', 'GetPlcWatchTables'), 'PLC software not found')
+        reply = self.plc_failure('ListPlcWatchTables')
+        for profile in ('full', 'lite'):
+            self.assertEqual(table_reply(reply, profile, 'ListPlcWatchTables'), reply['result']['content'][0]['text'])
         with self.assertRaises(AssertionError):
-            table_reply(reply, 'full', 'MonitorWatchTableLiveS7')
+            table_reply(reply, 'full', 'MonitorPlcWatchTableS7')
 
     def test_table_reply_rejects_unrelated_failure(self):
         reply = {'result': {'content': [{'text': '{"message":"Unexpected constructor failure"}'}]}}
         with self.assertRaises(AssertionError):
-            table_reply(reply, 'full', 'MonitorWatchTableLiveS7')
+            table_reply(reply, 'full', 'MonitorPlcWatchTableS7')
 
     def test_watch_timestamp_mask_is_narrow(self):
         raw = '{"data":{"timestamp":"2026-10-03T12:34:56.123+08:00","other":"2026-10-03T12:34:56.123+08:00"}}'
         masked = snapshots.mask_raw_text(raw, 'ProbePlcMonitorOnlineCapabilities')
         self.assertIn('"timestamp":"<string:timestamp>"', masked)
         self.assertIn('"other":"2026-10-03T12:34:56.123+08:00"', masked)
-        self.assertEqual(snapshots.mask_raw_text(raw, 'GetPlcWatchTables'), raw)
+        self.assertEqual(snapshots.mask_raw_text(raw, 'ListPlcWatchTables'), raw)
 
     def test_unique_cases(self):
         for domain, cases in CASES.items():
@@ -1607,11 +1609,11 @@ class SelfTests(unittest.TestCase):
             self.assertEqual(len(cases), len({(name, case) for name, case, _ in cases}), domain)
 
     def test_source_reply_preserves_error_family(self):
-        reply = {'result': {'isError': True, 'content': [{'text': 'Type not found'}]}}
-        self.assertEqual(source_reply(reply, 'full', 'GetTypeInfo', 'read'), 'Type not found')
+        reply = self.plc_failure('GetPlcTypeInfo')
+        self.assertEqual(source_reply(reply, 'full', 'GetPlcTypeInfo', 'read'), reply['result']['content'][0]['text'])
         reply['result']['isError'] = False
         with self.assertRaises(AssertionError):
-            source_reply(reply, 'full', 'GetTypeInfo', 'read')
+            source_reply(reply, 'full', 'GetPlcTypeInfo', 'read')
 
     def test_document_plain_error_uses_only_d1_frame_mask(self):
         def response(text):

@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        [McpServerTool(Name = "ExportAsDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportBlock). Requires TIA Portal V20 or newer.")]
+        [McpServerTool(Name = "ExportAsDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer.")]
         public ResponseExportAsDocuments ExportAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: defines the path in the project structure to the block")] string blockPath,
@@ -191,7 +191,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         var reason = (failures != null && failures.Count > 0)
                             ? string.Join("; ", failures)
-                            : "no reason captured (inconsistent block? compile first, or the block type/language may not support SIMATIC SD export — try ExportBlock for XML)";
+                            : "no reason captured (inconsistent block? compile first, or the block type/language may not support SIMATIC SD export — try ExportPlcBlock for XML)";
                         msg += $". {skipped} not exported: {reason}";
                     }
 

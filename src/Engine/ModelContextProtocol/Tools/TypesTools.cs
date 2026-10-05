@@ -1,3 +1,6 @@
+using TiaMcp.Logic.V4.Domain;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -33,10 +36,15 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        [McpServerTool(Name = "GetTypeInfo"), Description("[L2][PLC-Software]Get a type info from the plc software")]
-        public ResponseTypeInfo GetTypeInfo(
+        [McpServerTool(Name = "GetPlcTypeInfo"), Description("[L2][PLC-Software]Get a type info from the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetTypeInfoV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("typePath: defines the path in the project structure to the type")] string typePath)
+            => PlcToolContract.Run("GetPlcTypeInfo", false, true, () => GetTypeInfo(softwarePath, typePath));
+
+        public ResponseTypeInfo GetTypeInfo(
+            string softwarePath,
+            string typePath)
         {
             try
             {
@@ -70,10 +78,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetTypes"), Description("[L2][PLC-Software]Get a list of types from the plc software")]
-        public ResponseTypes GetTypes(
+        [McpServerTool(Name = "ListPlcTypes"), Description("[L2][PLC-Software]Get a list of types from the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetTypesV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
+            => PlcToolContract.Run("ListPlcTypes", false, true, () => GetTypes(softwarePath, regexName));
+
+        public ResponseTypes GetTypes(
+            string softwarePath,
+            string regexName = "")
         {
             try
             {
@@ -115,12 +128,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportType"), Description("[L2][PLC-Software]Export a type from the plc software")]
-        public ResponseExportType ExportType(
+        [McpServerTool(Name = "ExportPlcType"), Description("[L2][PLC-Software]Export a type from the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportTypeV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the directory where to export the type; output file will be '<type name>.xml'")] string exportPath,
             [Description("typePath: defines the path in the project structure to the type")] string typePath,
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+            => PlcToolContract.Run("ExportPlcType", true, true, () => ExportType(softwarePath, exportPath, typePath, preservePath));
+
+        public ResponseExportType ExportType(
+            string softwarePath,
+            string exportPath,
+            string typePath,
+            bool preservePath = false)
         {
             try
             {
@@ -152,7 +172,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var reason = pex.InnerException?.Message?.Trim();
                             var msg = "Failed to export type.";
                             if (!string.IsNullOrEmpty(reason)) msg += $" Reason: {reason}";
-                            Logger?.LogError(pex, "MCP ExportType failed for {SoftwarePath} {TypePath} -> {ExportPath}",
+                            Logger?.LogError(pex, "MCP ExportPlcType failed for {SoftwarePath} {TypePath} -> {ExportPath}",
                                 pex.Data?["softwarePath"], pex.Data?["typePath"], pex.Data?["exportPath"]);
                             throw new McpException(msg, McpErrorCode.InternalError);
                         }
@@ -192,11 +212,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportType"), Description("[L1][PLC-Software]Import a type from file into the plc software")]
-        public ResponseImportType ImportType(
+        [McpServerTool(Name = "ImportPlcType"), Description("[L1][PLC-Software]Import a type from file into the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportTypeV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the type")] string importPath)
+            => PlcToolContract.Run("ImportPlcType", true, true, () => ImportType(softwarePath, groupPath, importPath));
+
+        public ResponseImportType ImportType(
+            string softwarePath,
+            string groupPath,
+            string importPath)
         {
             try
             {
@@ -217,12 +243,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace)")]
-        public ResponseSeed SeedProjectFromReference(
+        [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult SeedProjectFromReferenceV4(
             [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
             [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
             [Description("referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)")] string referenceDir,
             [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null)
+            => PlcToolContract.Run("SeedProjectFromReference", true, true, () => SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders));
+
+        public ResponseSeed SeedProjectFromReference(
+            string plcSoftwarePath,
+            string hmiSoftwarePath,
+            string referenceDir,
+            JsonObject? placeholders = null)
         {
             try
             {
@@ -239,14 +272,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportTypes"), Description("[L2][PLC-Software]Export types from the plc software to path")]
-        public async Task<ResponseExportTypes> ExportTypes(
+        [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted.")]
+        public Task<CallToolResult> ExportTypesV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where to export the types")] string exportPath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "",
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+            => PlcToolContract.RunAsync("ExportPlcTypes", true, true, async () => await ExportTypes(server, context, softwarePath, exportPath, regexName, preservePath));
+
+        public async Task<ResponseExportTypes> ExportTypes(
+            IMcpServer server,
+            RequestContext<CallToolRequestParams> context,
+            string softwarePath,
+            string exportPath,
+            string regexName = "",
+            bool preservePath = false)
         {
             var startTime = DateTime.Now;
             var progressToken = context?.Params?.ProgressToken;

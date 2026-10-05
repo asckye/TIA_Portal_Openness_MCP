@@ -172,7 +172,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-07 | 基础设施工具契约：桥接、批次、分页、指南合并、目录与 lite 数据接线；工具文件见附表 G；不改领域服务；[路径清单](phase6-review.md#phase6-path-p6-07) | 03–06 | T、V；合并映射逐 topic、CallTool 对象信封、60 项提案示例、完整目录仍可达 | done |
 | P6-08 | Foundation 宿主名称/输入/结果适配（不改 EXE 名和 adapter 行为）；按 F7 保留 evidence、Executed、候选输出状态；[路径清单](phase6-review.md#phase6-path-p6-08) | 03–07、I | T foundation/transport、六版 V；schema 更窄、无新增 HMI/CallTool/lite；N 调用不变 | done |
 | P6-09 | 离线构造、审计、模板、生态、Git、文档生成工具迁移；文件见附表 G；[路径清单](phase6-review.md#phase6-path-p6-09) | 03–07、I | T、V；生成文件内容不变、预算与输出版本限制，修改只在本组 | todo |
-| P6-10 | PLC 块/软件/类型/表工具名称/类型/信封迁移；同名服务及独占规则；[路径清单](phase6-review.md#phase6-path-p6-10) | 03–07、I | T、V；N 调用不变，compile 两入口不误合并 | todo |
+| P6-10 | PLC 块/软件/类型/表工具名称/类型/信封迁移；同名服务及独占规则；[路径清单](phase6-review.md#phase6-path-p6-10) | 03–07、I | T、V；N 调用不变，compile 两入口不误合并 | done |
 | P6-11 | PLC 文档/原生交换/外部源/补丁工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-11) | 03–07、I | T、V；partial/unknown 和 observation 保全；N 调用不变 | todo |
 | P6-12 | 设备/AML/模块/地址工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-12) | 03–07、I | T、V；创建仍披露 current；N 调用不变 | todo |
 | P6-13 | 硬件网络/服务工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-13) | 03–07、I | T、V；逐路径/属性限制；N 调用不变 | todo |
