@@ -277,7 +277,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
     {
         var root = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
         Assert.Equal(root, MainWindow.FindBundleRoot(Path.Combine(root, "runtime", "studio")));
-        Assert.Throws<DirectoryNotFoundException>(() => MainWindow.FindBundleRoot(Path.GetPathRoot(root)!));
+        Assert.Throws<TiaOpenness.Shared.BundleResourceUnavailableException>(() => MainWindow.FindBundleRoot(Path.GetPathRoot(root)!));
     }
 
     [Fact]

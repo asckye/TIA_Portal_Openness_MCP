@@ -243,6 +243,156 @@ namespace TiaOpenness.Shared
             return path;
         }
 
+        public sealed class Product
+        {
+            public string ReleaseKey { get; private set; }
+            public string RuntimeDirectory { get; private set; }
+            public string Executable { get; private set; }
+            public string VersionOption { get; private set; }
+            public string WorkerExecutable { get { return "TiaMcp.PlcWorker." + ReleaseKey + ".exe"; } }
+            internal Product(string key, string executable, string option)
+            {
+                ReleaseKey = key;
+                RuntimeDirectory = TiaVersionCatalog.RequireRunnable(key).RuntimeDirectory;
+                Executable = executable;
+                VersionOption = option;
+            }
+        }
+
+        // Workbench commands and health checks consume this release-to-product table.
+        private static readonly Dictionary<string, Product> Products = new Dictionary<string, Product>
+        {
+            { "14sp1", new Product("14sp1", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "15.1", new Product("15.1", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "16", new Product("16", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "17", new Product("17", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "18", new Product("18", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "19", new Product("19", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "20", new Product("20", "TiaMcp.Engine.V20.exe", "--tia-major-version") },
+            { "21", new Product("21", "TiaMcp.Engine.V21.exe", "--tia-major-version") }
+        };
+        public const string StudioBridgeExecutable = "TiaOpenness.Bridge.exe";
+
+        public static Product GetProduct(string releaseKey)
+        {
+            TiaVersionCatalog.RequireRunnable(releaseKey);
+            return Products[releaseKey];
+        }
+
+        public static string ResolveWorkbenchRoot(string baseDirectory, string explicitRoot, string environmentRoot)
+        {
+            var root = ResolveRoot(baseDirectory, explicitRoot, environmentRoot);
+            if (root != null || explicitRoot != null || environmentRoot != null) return root;
+            foreach (var configuration in new[] { "Release", "Debug" })
+            foreach (var variant in new[] { "", "shared-adapter/" })
+                if ((root = WorkbenchDevelopmentRoot(baseDirectory, configuration, variant)) != null) return root;
+            return null;
+        }
+
+        public static string RequireWorkbenchRoot(string baseDirectory, string explicitRoot = null)
+        {
+            if (explicitRoot == null && AppDomain.CurrentDomain.GetData(SelectionKey) is string selected) return selected;
+            return ResolveWorkbenchRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"))
+                ?? throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+        }
+
+        public static string InitializeWorkbench(string baseDirectory, string[] args, out string[] remaining)
+        {
+            var explicitRoot = ExtractRootOption(args, out remaining);
+            var root = ResolveWorkbenchRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"));
+            if (root == null) throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+            AppDomain.CurrentDomain.SetData(SelectionKey, root);
+            Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", root);
+            return root;
+        }
+
+        private static string WorkbenchDevelopmentRoot(string baseDirectory, string configuration, string variant)
+        {
+            if (string.IsNullOrWhiteSpace(baseDirectory) || !Path.IsPathRooted(baseDirectory)) return null;
+            var output = new DirectoryInfo(baseDirectory);
+            var gui = "src/Studio/Gui/bin/" + configuration + "/" + variant + "net10.0-windows";
+            var root = FromAnchor(output, gui) ?? FromAnchor(output, gui + "/bridge")
+                ?? FromAnchor(output, "src/Studio/Bridge/bin/" + configuration + "/" + variant + "net48");
+            if (root != null) return root;
+            foreach (var harness in new[] { "TiaOpenness.Core.Tests", "TiaOpenness.Gui.Tests", "TiaOpenness.Configuration.Tests" })
+            {
+                var anchor = "tests/Studio/" + harness + "/bin/" + configuration + "/" + variant + "net10.0-windows";
+                root = FromAnchor(output, anchor) ?? FromAnchor(output, anchor + "/bridge");
+                if (root != null) return root;
+            }
+            return null;
+        }
+
+        public static string WorkbenchEnginePath(string root, string releaseKey, string baseDirectory)
+        {
+            var product = GetProduct(releaseKey);
+            var version = TiaVersionCatalog.RequireRunnable(releaseKey);
+            foreach (var configuration in new[] { "Release", "Debug" })
+            foreach (var variant in new[] { "", "shared-adapter/" })
+                if (SameRoot(WorkbenchDevelopmentRoot(baseDirectory, configuration, variant), root))
+                    return Combine(root, version.IsFullEngine
+                        ? "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + product.Executable
+                        : "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable);
+            // Preserve the engine/CLI's formal development anchors as well.
+            var enginePath = EngineExecutablePath(root, releaseKey, baseDirectory);
+            return Path.Combine(Path.GetDirectoryName(enginePath), product.Executable);
+        }
+
+        public static string WorkerPath(string root, string releaseKey)
+        {
+            var product = GetProduct(releaseKey);
+            return Combine(root, "runtime/" + product.RuntimeDirectory + "/worker/" + product.WorkerExecutable);
+        }
+
+        public static string WorkbenchBridgePath(string root, string baseDirectory)
+        {
+            foreach (var configuration in new[] { "Release", "Debug" })
+            foreach (var variant in new[] { "", "shared-adapter/" })
+            {
+                if (!SameRoot(WorkbenchDevelopmentRoot(baseDirectory, configuration, variant), root)) continue;
+                var bridge = "src/Studio/Bridge/bin/" + configuration + "/" + variant + "net48";
+                foreach (var harness in new[] { "TiaOpenness.Core.Tests", "TiaOpenness.Gui.Tests", "TiaOpenness.Configuration.Tests" })
+                {
+                    var anchor = "tests/Studio/" + harness + "/bin/" + configuration + "/" + variant + "net10.0-windows";
+                    if (SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), anchor), root)
+                        || SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), anchor + "/bridge"), root))
+                        return Combine(root, anchor + "/bridge/" + StudioBridgeExecutable);
+                }
+                return Combine(root, (SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), bridge), root)
+                    ? bridge : "src/Studio/Gui/bin/" + configuration + "/" + variant + "net10.0-windows/bridge")
+                    + "/" + StudioBridgeExecutable);
+            }
+            return Combine(root, "runtime/studio/bridge/" + StudioBridgeExecutable);
+        }
+
+        public static string RequireWorkbenchBridge(string baseDirectory, string explicitRoot = null)
+        {
+            var path = WorkbenchBridgePath(RequireWorkbenchRoot(baseDirectory, explicitRoot), baseDirectory);
+            if (!File.Exists(path)) throw new BundleResourceUnavailableException(path);
+            return path;
+        }
+
+        public static string WorkbenchAdapterPath(string baseDirectory, string releaseKey, string executable, string explicitRoot = null)
+        {
+            GetProduct(releaseKey);
+            var root = RequireWorkbenchRoot(baseDirectory, explicitRoot);
+            return Combine(Path.GetDirectoryName(WorkbenchBridgePath(root, baseDirectory)),
+                "adapters/v" + releaseKey + "/" + executable);
+        }
+
+        public static bool IsSourceCheckout(string root)
+        {
+            // Git worktrees use a .git file; source archives may have no Git metadata.
+            for (var directory = new DirectoryInfo(root); directory != null; directory = directory.Parent)
+                if (Directory.Exists(Path.Combine(directory.FullName, ".git")) || File.Exists(Path.Combine(directory.FullName, ".git"))
+                    || (File.Exists(Path.Combine(directory.FullName, "CLAUDE.md"))
+                        && File.Exists(Path.Combine(directory.FullName, "Version.props"))
+                        && Directory.Exists(Path.Combine(directory.FullName, "src")))
+                    || (File.Exists(Path.Combine(directory.FullName, "Version.props"))
+                        && File.Exists(Path.Combine(directory.FullName, "src", "Studio", "Gui", "TiaOpenness.Gui.csproj")))) return true;
+            return false;
+        }
+
         private static bool SameRoot(string candidate, string root)
         {
             return candidate != null && string.Equals(Path.GetFullPath(candidate).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),

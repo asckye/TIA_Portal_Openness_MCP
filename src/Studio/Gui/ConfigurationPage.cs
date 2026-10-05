@@ -24,15 +24,10 @@ public partial class MainWindow
         return match?.Key ?? "21";
     }
 
-    internal static string FindBundleRoot(string start)
-    {
-        var root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(start);
-        if (root != null) return root;
-        // Keep the original upward probe for unrecognized outputs (D-G7-3).
-        for (var directory = new DirectoryInfo(start); directory != null; directory = directory.Parent)
-            if (File.Exists(Path.Combine(directory.FullName, "manifest", "package-manifest.json"))) return directory.FullName;
-        throw new DirectoryNotFoundException("The desktop must remain inside the complete TIA MCP bundle.");
-    }
+        internal static string FindBundleRoot(string start)
+        {
+            return TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(start);
+        }
 
     internal void ShowConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {

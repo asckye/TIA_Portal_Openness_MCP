@@ -248,7 +248,7 @@ namespace TiaMcpConfigurator
             string client = profile.Client;
             if (!remote)
             {
-                var localArgs = new[] { ConfigCore.VersionArgument(version), version, "--tia-portal-location", tia };
+                var localArgs = ConfigCore.LocalArguments(engine, version, tia);
                 // OpenCode: command is one array that starts with the executable.
                 if (client == "opencode")
                     return new Dictionary<string, object> { { "type", "local" }, { "command", new[] { engine }.Concat(localArgs).ToArray() }, { "enabled", true } };
@@ -267,26 +267,111 @@ namespace TiaMcpConfigurator
             return entry;
         }
 
-        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia) { Save(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia, bool confirmed = false)
+        { Save(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia, confirmed); }
 
-        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia, bool confirmed = false)
+        { PrepareSave(profile, remote, address, port, key, engine, version, tia).Apply(confirmed); }
+
+        public static ClientConfigurationChange PrepareSave(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             var entry = Entry(profile, remote, address, port, key, engine, version, tia);
             string name = ServerName(profile, remote);
+            byte[] original = File.Exists(profile.Path) ? File.ReadAllBytes(profile.Path) : null;
+            string text = "";
+            if (original != null)
+                using (var reader = new StreamReader(new MemoryStream(original), Encoding.UTF8, true)) text = reader.ReadToEnd();
             if (profile.Client == "codex")
             {
-                string original = File.Exists(profile.Path) ? File.ReadAllText(profile.Path) : "";
-                ConfigCore.AtomicText(profile.Path, MergeToml(original, name, remote, address, port, key, engine, version, tia));
-                return;
+                string merged = MergeToml(text, name, remote, address, port, key, engine, version, tia);
+                bool migration = false;
+                if (!remote) merged = MigrateToml(text, name, engine, ConfigCore.LocalArguments(engine, version, tia), merged, out migration);
+                return new ClientConfigurationChange(profile.Path, original, merged, migration, remote ? null : engine);
             }
             string rootKey = RootKey(profile);
-            var root = File.Exists(profile.Path) ? ConfigCore.Json().DeserializeObject(StripJsonComments(File.ReadAllText(profile.Path))) as Dictionary<string, object> : new Dictionary<string, object>();
+            var root = original != null ? ConfigCore.Json().DeserializeObject(StripJsonComments(text)) as Dictionary<string, object> : new Dictionary<string, object>();
             if (root == null) throw new InvalidDataException(Loc.Current["Config.InvalidClientJson"]);
             object raw;
             var servers = root.TryGetValue(rootKey, out raw) ? raw as Dictionary<string, object> : new Dictionary<string, object>();
             if (servers == null) throw new InvalidDataException(Loc.Current.T("Config.InvalidServerMap", rootKey));
+            bool migrate = false;
+            if (!remote && servers.TryGetValue(name, out var previous))
+            {
+                var existing = previous as Dictionary<string, object>;
+                if (existing == null) throw new InvalidDataException(Loc.Current["Config.InvalidClientJson"]);
+                migrate = existing.TryGetValue("command", out var command)
+                    && ConfigCore.Json().Serialize(command) != ConfigCore.Json().Serialize(entry["command"]);
+                migrate |= entry.TryGetValue("args", out var desiredArgs)
+                    && (!existing.TryGetValue("args", out var previousArgs) || ConfigCore.Json().Serialize(previousArgs) != ConfigCore.Json().Serialize(desiredArgs));
+                // A product migration replaces only command/args; URLs, auth, env and
+                // client-specific options on the existing entry remain intact.
+                if (existing.ContainsKey("command"))
+                {
+                    existing["command"] = entry["command"];
+                    if (entry.TryGetValue("args", out var arguments)) existing["args"] = arguments;
+                    entry = existing;
+                }
+            }
             servers[name] = entry; root[rootKey] = servers;
-            ConfigCore.AtomicJson(profile.Path, root);
+            return new ClientConfigurationChange(profile.Path, original, ConfigCore.Json().Serialize(root), migrate, remote ? null : engine);
+        }
+
+        private static string MigrateToml(string text, string name, string engine, string[] arguments, string added, out bool migration)
+        {
+            // MergeToml has already rejected ambiguous root/dotted/inline definitions.
+            // Keep all bytes except the two local launch fields in the exact table.
+            string token = "(?:" + Regex.Escape(name) + "|\"" + Regex.Escape(name) + "\"|'" + Regex.Escape(name) + "')";
+            var target = new Regex(@"^\s*\[\s*(?:mcp_servers|" + "\"mcp_servers\"|'mcp_servers')" + @"\s*\.\s*" + token + @"\s*\]\s*(?:#.*)?$");
+            var header = new Regex(@"^\s*\[.*\]\s*(?:#.*)?$");
+            var result = new StringBuilder();
+            bool inside = false, found = false, command = false, args = false;
+            string multiline = null;
+            migration = false;
+            string newline = text.Contains("\r\n") ? "\r\n" : "\n";
+            Action finish = () =>
+            {
+                if (!inside) return;
+                if (result.Length > 0 && result[result.Length - 1] != '\n') result.Append(newline);
+                if (!command) result.Append("command = " + TomlString(engine) + newline);
+                if (!args) result.Append("args = [" + String.Join(", ", arguments.Select(TomlString)) + "]" + newline);
+            };
+            foreach (string line in Regex.Split(text, "(?<=\n)"))
+            {
+                string trimmed = line.Trim();
+                if (multiline == null && header.IsMatch(trimmed))
+                {
+                    finish(); inside = target.IsMatch(trimmed);
+                    if (inside && found) throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
+                    found |= inside;
+                }
+                var field = multiline == null && inside ? Regex.Match(trimmed, @"^(command|args)\s*=") : Match.Empty;
+                if (field.Success)
+                {
+                    string value = trimmed.Substring(field.Length).Trim();
+                    if (value.Contains("\"\"\"") || value.Contains("'''")) throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
+                    if (field.Groups[1].Value == "command")
+                    {
+                        if (command) throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
+                        command = true;
+                        // Accept basic and literal single-line strings, preserving the rest.
+                        if (!Regex.IsMatch(value, "^(\"(?:[^\"\\\\]|\\\\.)*\"|'[^']*')\\s*(?:#.*)?$"))
+                            throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
+                        result.Append("command = " + TomlString(engine) + newline);
+                    }
+                    else
+                    {
+                        if (args || !value.StartsWith("[") || !Regex.IsMatch(value, @"\]\s*(?:#.*)?$"))
+                            throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
+                        args = true;
+                        result.Append("args = [" + String.Join(", ", arguments.Select(TomlString)) + "]" + newline);
+                    }
+                }
+                else result.Append(line);
+                ScanTomlStrings(line, ref multiline);
+            }
+            finish();
+            migration = found;
+            return found ? result.ToString() : added;
         }
 
         // Remote definitions are named tia-portal-vm everywhere; local stdio ones tia-portal, matching the plugin.
@@ -359,7 +444,7 @@ namespace TiaMcpConfigurator
             else
             {
                 block.AppendLine("command = " + TomlString(engine));
-                block.AppendLine("args = [" + String.Join(", ", new[] { ConfigCore.VersionArgument(version), version, "--tia-portal-location", tia }.Select(TomlString)) + "]");
+                block.AppendLine("args = [" + String.Join(", ", ConfigCore.LocalArguments(engine, version, tia).Select(TomlString)) + "]");
             }
             block.AppendLine("startup_timeout_sec = 120"); block.AppendLine("tool_timeout_sec = 300");
             return kept.ToString() + (kept.Length > 0 ? Environment.NewLine : "") + block;

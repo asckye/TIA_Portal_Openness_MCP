@@ -1,104 +1,125 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using TiaOpenness.Client;
-using TiaOpenness.Core.Abstractions;
+using TiaMcp.Versioning;
+using TiaOpenness.Shared;
 using Xunit;
 
 namespace TiaOpenness.Core.Tests;
 
 public sealed class StudioBundleLayoutTests : IDisposable
 {
-    private static readonly Func<string, string?> LocateBridge = typeof(BridgeClient)
-        .GetMethod("LocateBridge", BindingFlags.Static | BindingFlags.NonPublic, new[] { typeof(string) })!
-        .CreateDelegate<Func<string, string?>>();
     private readonly string scratch = Path.Combine(Path.GetTempPath(), "studio core 中文 " + Guid.NewGuid().ToString("N"));
-
-    public StudioBundleLayoutTests() { Directory.CreateDirectory(scratch); }
-
-    private static string At(string root, string relative) => Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
-
-    private static void Put(string path)
+    private static string At(string root, string path) => Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar));
+    private static void Put(string root, string path)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "fixture");
+        string file = At(root, path);
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllText(file, "fixture");
+    }
+
+    public static IEnumerable<object[]> Anchors()
+    {
+        yield return new object[] { "" };
+        yield return new object[] { "runtime/studio" };
+        yield return new object[] { "runtime/studio/bridge" };
+        foreach (var configuration in new[] { "Release", "Debug" })
+        foreach (var variant in new[] { "", "shared-adapter/" })
+        {
+            yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/" + variant + "net10.0-windows" };
+            yield return new object[] { "src/Studio/Gui/bin/" + configuration + "/" + variant + "net10.0-windows/bridge" };
+            yield return new object[] { "src/Studio/Bridge/bin/" + configuration + "/" + variant + "net48" };
+        }
     }
 
     [Theory]
-    [InlineData("runtime/studio")]
-    [InlineData("runtime/studio/bridge")]
-    [InlineData("src/Studio/Gui/bin/Release/net10.0-windows")]
-    [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows")]
-    [InlineData("src/Studio/Gui/bin/Release/net10.0-windows/bridge")]
-    [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows/bridge")]
-    [InlineData("src/Studio/Bridge/bin/Release/net48")]
-    [InlineData("src/Studio/Bridge/bin/Debug/net48")]
-    [InlineData("custom/a/b/c/d")]
-    [InlineData("src/Studio/Gui/bin/Custom/net10.0-windows")]
-    public void Bridge_and_adapters_match_original_lookups(string anchor)
+    [MemberData(nameof(Anchors))]
+    public void Formal_anchors_select_the_bundle_without_cwd_or_ancestor_probes(string anchor)
     {
-        // Marker absent/present, competing local candidates and both source fallbacks.
-        // Ancestor bundles must not make a bridge select another installation's adapters.
-        foreach (bool marker in new[] { false, true })
-        foreach (int payload in new[] { 0, 1, 2, 3, 4, 8, 12, 15 })
+        Put(scratch, "manifest/package-manifest.json");
+        string output = Directory.CreateDirectory(At(scratch, anchor)).FullName;
+        foreach (string suffix in new[] { "", "\\", "/" })
+            Assert.Equal(scratch, BundleLayout.ResolveWorkbenchRoot(output + suffix, null!, null!));
+        string unknown = Directory.CreateDirectory(At(scratch, "arbitrary/bin/Release/net48")).FullName;
+        Assert.Null(BundleLayout.ResolveWorkbenchRoot(unknown, null!, null!));
+    }
+
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
+    [InlineData(4)] [InlineData(5)] [InlineData(6)] [InlineData(7)]
+    public void Workbench_uses_cli_then_environment_then_anchor(int inputs)
+    {
+        string anchor = At(scratch, "anchor"), cli = At(scratch, "CLI 中文"), env = At(scratch, "environment");
+        Directory.CreateDirectory(anchor);
+        if ((inputs & 1) != 0) Put(anchor, "manifest/package-manifest.json");
+        if ((inputs & 2) != 0) Put(env, "manifest/package-manifest.json");
+        if ((inputs & 4) != 0) Put(cli, "manifest/package-manifest.json");
+        string? expected = (inputs & 4) != 0 ? cli : (inputs & 2) != 0 ? env : (inputs & 1) != 0 ? anchor : null;
+        Assert.Equal(expected, BundleLayout.ResolveWorkbenchRoot(anchor, (inputs & 4) != 0 ? cli : null!, (inputs & 2) != 0 ? env : null!));
+        Assert.Throws<ArgumentException>(() => BundleLayout.ResolveWorkbenchRoot(anchor, "relative", env));
+        Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.ResolveWorkbenchRoot(anchor, At(scratch, "bad"), env));
+        Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.ResolveWorkbenchRoot(anchor, null!, At(scratch, "bad")));
+    }
+
+    [Theory]
+    [MemberData(nameof(Anchors))]
+    public void Products_bridge_and_adapters_have_one_path_per_selected_layout(string anchor)
+    {
+        Put(scratch, "manifest/package-manifest.json");
+        string output = Directory.CreateDirectory(At(scratch, anchor)).FullName;
+        string bridge = BundleLayout.WorkbenchBridgePath(scratch, output);
+        string expectedBridge = anchor.StartsWith("src/Studio/Gui/", StringComparison.Ordinal)
+            ? Path.Combine(output, anchor.EndsWith("/bridge", StringComparison.Ordinal) ? "" : "bridge", "TiaOpenness.Bridge.exe")
+            : anchor.StartsWith("src/Studio/Bridge/", StringComparison.Ordinal) ? Path.Combine(output, "TiaOpenness.Bridge.exe")
+            : At(scratch, "runtime/studio/bridge/TiaOpenness.Bridge.exe");
+        Assert.Equal(expectedBridge, bridge);
+        Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireWorkbenchBridge(output, scratch));
+        Put(scratch, Path.GetRelativePath(scratch, bridge));
+        Assert.Equal(bridge, BundleLayout.RequireWorkbenchBridge(output, scratch));
+        foreach (var release in TiaVersionCatalog.Runnable)
         {
-            string root = At(scratch, marker + "/" + payload + "/repository/bin-build/staging");
-            string output = Directory.CreateDirectory(At(root, anchor)).FullName;
-            Put(At(scratch, marker + "/" + payload + "/repository/manifest/package-manifest.json"));
-            if (marker) Put(At(root, "manifest/package-manifest.json"));
-            if ((payload & 1) != 0) Put(Path.Combine(output, "TiaOpenness.Bridge.exe"));
-            if ((payload & 2) != 0) Put(Path.Combine(output, "bridge", "TiaOpenness.Bridge.exe"));
-            if ((payload & 4) != 0) Put(Path.GetFullPath(Path.Combine(output, @"..\..\..\..\Bridge\bin\Debug\net48\TiaOpenness.Bridge.exe")));
-            if ((payload & 8) != 0) Put(Path.GetFullPath(Path.Combine(output, @"..\..\..\..\Bridge\bin\Release\net48\TiaOpenness.Bridge.exe")));
-            foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
-            {
-                if ((payload & 1) != 0) Put(Path.Combine(output, "adapters", "v" + key, "TiaOpenness.Openness.dll"));
-                foreach (string spelling in new[] { output, output.Replace('\\', '/'), output.ToUpperInvariant() })
-                foreach (string suffix in new[] { "", "\\", "/" })
-                {
-                    string directory = spelling + suffix;
-                    Assert.Equal(StudioLookupBaseline.LocateBridge(directory), LocateBridge(directory));
-                    var expected = StudioLookupBaseline.AdapterPath(directory, key);
-#if TIA_SHARED_ADAPTER_PATHS
-                    expected = Path.Combine(directory, "adapters", "v" + key, "TiaMcp.Adapter." + key + ".dll");
-#endif
-                    Assert.Equal(expected, SessionFactoryLoader.AdapterPath(directory, key));
-                }
-            }
+            var product = BundleLayout.GetProduct(release.Key);
+            Assert.Equal("v" + release.Key, product.RuntimeDirectory);
+            Assert.Equal(release.IsFullEngine ? "TiaMcp.Engine.V" + release.Key + ".exe" : "TiaMcp.FoundationHost.exe", product.Executable);
+            Assert.Equal(release.IsFullEngine ? "--tia-major-version" : "--release-key", product.VersionOption);
+            string configuration = anchor.Contains("/Debug/", StringComparison.Ordinal) ? "Debug" : "Release";
+            string expectedEngine = anchor.StartsWith("src/Studio/", StringComparison.Ordinal)
+                ? At(scratch, release.IsFullEngine ? "src/Engine/" + release.EngineOutputDirectory + "/" + configuration + "/net48/" + product.Executable
+                    : "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable)
+                : At(scratch, "runtime/v" + release.Key + "/" + product.Executable);
+            Assert.Equal(expectedEngine, BundleLayout.WorkbenchEnginePath(scratch, release.Key, output));
+            Assert.Equal(At(scratch, "runtime/v" + release.Key + "/worker/TiaMcp.PlcWorker." + release.Key + ".exe"), BundleLayout.WorkerPath(scratch, release.Key));
+            Assert.Equal(Path.Combine(Path.GetDirectoryName(bridge)!, "adapters", "v" + release.Key, "TiaOpenness.Openness.dll"),
+                BundleLayout.WorkbenchAdapterPath(output, release.Key, "TiaOpenness.Openness.dll", scratch));
+            Assert.Equal(Path.Combine(Path.GetDirectoryName(bridge)!, "adapters", "v" + release.Key, "TiaMcp.Adapter." + release.Key + ".dll"),
+                BundleLayout.WorkbenchAdapterPath(output, release.Key, "TiaMcp.Adapter." + release.Key + ".dll", scratch));
         }
+        Assert.Throws<ArgumentException>(() => BundleLayout.GetProduct("15"));
     }
 
-    public void Dispose()
+    [Fact]
+    public void Nested_incomplete_bundle_never_borrows_outer_bridge()
     {
-        Assert.Equal(new DirectoryInfo(Path.GetTempPath()).FullName.TrimEnd(Path.DirectorySeparatorChar),
-            new DirectoryInfo(scratch).Parent!.FullName.TrimEnd(Path.DirectorySeparatorChar));
-        Directory.Delete(scratch, true);
+        Put(scratch, "manifest/package-manifest.json");
+        Put(scratch, "runtime/studio/bridge/TiaOpenness.Bridge.exe");
+        string nested = At(scratch, "bin-build/staging");
+        Put(nested, "manifest/package-manifest.json");
+        string output = Directory.CreateDirectory(At(nested, "runtime/studio")).FullName;
+        var error = Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireWorkbenchBridge(output, nested));
+        Assert.Equal(At(nested, "runtime/studio/bridge/TiaOpenness.Bridge.exe"), error.Resource);
     }
-}
 
-// Frozen pre-G7-5 lookup bodies; process-global inputs are parameters.
-internal static class StudioLookupBaseline
-{
-    internal static string? LocateBridge(string baseDir)
+    [Fact]
+    public void Unwritable_bundle_data_keeps_user_directory_fallback()
     {
-        var candidates = new[]
-        {
-            Path.Combine(baseDir, "TiaOpenness.Bridge.exe"),
-            Path.Combine(baseDir, "bridge", "TiaOpenness.Bridge.exe"),
-            Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\Bridge\bin\Debug\net48\TiaOpenness.Bridge.exe")),
-            Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\Bridge\bin\Release\net48\TiaOpenness.Bridge.exe")),
-        };
-
-        foreach (var c in candidates)
-        {
-            if (File.Exists(c)) return c;
-        }
-        return null;
+        Put(scratch, "manifest/package-manifest.json");
+        Put(scratch, "data"); // deterministic IO refusal, without changing the user's ACLs
+        string local = At(scratch, "user");
+        var data = DataLocations.Resolve(scratch, null!, local, scratch);
+        Assert.Null(data.Root);
+        Assert.Equal(Path.Combine(local, "TiaPortalMcp"), data.ConfigDirectory);
+        Assert.Equal(Path.Combine(local, "TiaOpennessStudio", "ui.settings"), data.UiFilePath);
     }
 
-    internal static string AdapterPath(string baseDirectory, string key)
-    {
-        string path = Path.Combine(baseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
-        return path;
-    }
+    public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }
 }

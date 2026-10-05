@@ -229,9 +229,12 @@ public sealed class AdapterTiaSessionTests
     [InlineData("21")]
     public void Loader_and_hello_use_the_same_selected_adapter_and_mock_uses_Core(string key)
     {
-        var root = Path.Combine(Path.GetTempPath(), "studio-adapter-path-" + Guid.NewGuid().ToString("N"));
+        var bundle = Path.Combine(Path.GetTempPath(), "studio-adapter-path-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(bundle, "runtime", "studio", "bridge");
         try
         {
+            Directory.CreateDirectory(Path.Combine(bundle, "manifest"));
+            File.WriteAllText(Path.Combine(bundle, "manifest", "package-manifest.json"), "{}");
             string path = SessionFactoryLoader.AdapterPath(root, key);
             Assert.Equal(Path.Combine(root, "adapters", "v" + key, "TiaMcp.Adapter." + key + ".dll"), path);
             Assert.Equal(Path.Combine(root, "TiaOpenness.Core.dll"), BridgeChannel.AdapterPath(root, key, false));
@@ -242,7 +245,7 @@ public sealed class AdapterTiaSessionTests
             var factory = new AdapterSessionFactory(path, key);
             Assert.Throws<InvalidOperationException>(() => factory.Create());
         }
-        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+        finally { if (Directory.Exists(bundle)) Directory.Delete(bundle, true); }
     }
 
     private static object? Sample(Type type, bool populated)

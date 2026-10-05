@@ -19,16 +19,16 @@ namespace TiaOpenness.Core.Environment
         { Id = id; Status = status; Result = result; Evidence = evidence; }
     }
 
-    // Keep product executable names here so the product-name migration changes one helper.
+    // Environment checks use the same product table as client configuration.
     public static class EnvironmentBundleFiles
     {
         public static string HostExecutable(string key)
-        { return TiaVersionCatalog.Get(key).IsFullEngine ? "TiaMcp.Engine.V" + key + ".exe" : "TiaMcp.FoundationHost.exe"; }
+        { return TiaOpenness.Shared.BundleLayout.GetProduct(key).Executable; }
 
-        public static string WorkerExecutable(string key) { return "TiaMcp.PlcWorker." + key + ".exe"; }
+        public static string WorkerExecutable(string key) { return TiaOpenness.Shared.BundleLayout.GetProduct(key).WorkerExecutable; }
 
         public static string Host(string root, string key)
-        { return Path.Combine(root, "runtime", TiaVersionCatalog.Get(key).RuntimeDirectory, HostExecutable(key)); }
+        { return TiaOpenness.Shared.BundleLayout.WorkbenchEnginePath(root, key, root); }
 
         public static IEnumerable<string> Required(string root, string key)
         {
@@ -50,7 +50,7 @@ namespace TiaOpenness.Core.Environment
                 yield return Path.ChangeExtension(host, ".dll");
                 yield return Path.ChangeExtension(host, ".deps.json");
                 yield return Path.ChangeExtension(host, ".runtimeconfig.json");
-                yield return Path.Combine(directory, "worker", WorkerExecutable(key));
+                yield return TiaOpenness.Shared.BundleLayout.WorkerPath(root, key);
                 yield return Path.Combine(directory, "TiaMcp.WorkerChannel.dll");
                 yield return Path.Combine(directory, "worker", "TiaMcp.Adapters.Contracts.dll");
             }

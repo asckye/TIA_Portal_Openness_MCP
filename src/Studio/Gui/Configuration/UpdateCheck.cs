@@ -40,12 +40,10 @@ namespace TiaMcpConfigurator
         public static string InstalledPackage(string root) { return DeliveryField(root, "package"); }
         private static string DeliveryField(string root, string name)
         {
+            root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
+            string path = TiaOpenness.Shared.BundleLayout.RequirePath(root, "manifest/delivery.json");
             try
             {
-                string path = TiaOpenness.Shared.BundleLayout.FindResourceForStudio(
-                    TiaOpenness.Shared.BundleResource.DeliveryManifest, null, root)
-                    ?? Path.Combine(root, "manifest", "delivery.json");
-                if (!File.Exists(path)) return null;
                 var json = ConfigCore.Json().Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
                 object value;
                 return json != null && json.TryGetValue(name, out value) && value != null ? Convert.ToString(value) : null;
@@ -54,15 +52,14 @@ namespace TiaMcpConfigurator
         }
         public static string UpdaterPath(string root)
         {
-            root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(null, root) ?? root;
-            return Path.Combine(root, UpdaterRelativePath);
+            root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
+            return TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/operations/Update-Engine.ps1");
         }
         // The source repository also carries manifest\delivery.json and the updater; updating there would overwrite
         // tracked files, so the button is disabled for both a checkout and a worktree.
         public static bool IsSourceRepository(string root)
         {
-            string git = Path.Combine(root, ".git");
-            return Directory.Exists(git) || File.Exists(git);
+            return TiaOpenness.Shared.BundleLayout.IsSourceCheckout(root);
         }
 
         // Numeric MAJOR.MINOR.PATCH comparison; a leading "v" is ignored; unparsable or empty sorts lowest.
@@ -147,7 +144,8 @@ namespace TiaMcpConfigurator
         public static List<string> RunningEngines()
         {
             var list = new List<string>();
-            foreach (string name in new[] { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21", "TiaMcp.FoundationHost" })
+            foreach (string name in TiaMcp.Versioning.TiaVersionCatalog.Runnable
+                .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct())
             foreach (var p in Process.GetProcessesByName(name))
             {
                 string path = ""; try { path = p.MainModule.FileName; } catch /* swallow(env-probe): an unavailable process module path still leaves the engine PID visible in the updater check */ { }
@@ -165,6 +163,8 @@ namespace TiaMcpConfigurator
         }
         public static ProcessStartInfo Launch(string root, int waitForPid)
         {
+            root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
+            if (IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
             string shell = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe");
             return new ProcessStartInfo(shell, LaunchArguments(UpdaterPath(root), root, waitForPid)) { UseShellExecute = true, WorkingDirectory = root };
         }

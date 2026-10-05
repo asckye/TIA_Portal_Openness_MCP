@@ -61,9 +61,10 @@ Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，�
 引擎更新检查只把选定根下的正式 `runtime/v<key>` 输出认作安装；开发输出保持原有的非安装响应，
 正式安装缺交付清单或更新脚本时报告选定根下的预期路径。
 
-Studio 的配置页、客户端桥接与更新探测仍待 P6-38；调用独立的 `FindRootForStudio` / `FindResourceForStudio`，
-保持 master 的可选根、null 返回及调用方异常/回退策略，不消费引擎启动缓存或 `TIA_MCP_BUNDLE_ROOT`。
-Studio 的共享数据目录副本通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用同一旧入口；本任务不改其原生路径选择。
+工作台（Studio）的配置页、客户端桥接与更新探测由 P6-38 改用同一规则：`BundleLayout.ResolveWorkbenchRoot` /
+`RequireWorkbenchRoot`（显式根、`TIA_MCP_BUNDLE_ROOT`、已知锚点；无效显式根不回退），引擎、bridge 与 adapter 位置取自产品表
+（`GetProduct`、`WorkbenchEnginePath`、`WorkbenchBridgePath`）；缺目标版本引擎即拒绝，源码 worktree 拒绝安装更新。
+Studio 的共享数据目录副本仍通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用旧的 `FindRootForStudio`，待 P6-39 收口；原生路径选择不变。
 正式相邻 bridge/adapters 部署保持，`TiaSharedAdapterPaths` 默认 false，仍遵守 G3/J 原生验收边界。
 根启动器仍只启动 `runtime/studio/TiaOpenness.exe`。
 

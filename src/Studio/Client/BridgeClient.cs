@@ -72,7 +72,10 @@ namespace TiaOpenness.Client
                 if (IsMock != forceMock) throw new InvalidOperationException("Restart Studio to change backend mode.");
                 return;
             }
-            var exe = bridgeExePath ?? LocateBridge();
+            string[] remaining;
+            var explicitRoot = TiaOpenness.Shared.BundleLayout.ExtractRootOption(_args, out remaining);
+            var root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, explicitRoot);
+            var exe = bridgeExePath ?? TiaOpenness.Shared.BundleLayout.RequireWorkbenchBridge(AppContext.BaseDirectory, root);
             if (exe == null || !File.Exists(exe))
             {
                 throw new FileNotFoundException(
@@ -100,6 +103,8 @@ namespace TiaOpenness.Client
                 WorkingDirectory = Path.GetDirectoryName(exe),
             };
 
+            startInfo.ArgumentList.Add("--bundle-root");
+            startInfo.ArgumentList.Add(root);
             if (forceMock) startInfo.ArgumentList.Add("--mock");
             startInfo.ArgumentList.Add("--openness-version");
             startInfo.ArgumentList.Add(release.ApiVersion);
@@ -145,7 +150,7 @@ namespace TiaOpenness.Client
             }
         }
 
-        /// <summary>Looks for the bridge next to the caller, then in the usual build output folders.</summary>
+        /// <summary>Locates the bridge at the selected bundle's formal installation or development output.</summary>
         public static string LocateBridge()
         {
             return LocateBridge(AppDomain.CurrentDomain.BaseDirectory);
@@ -153,29 +158,7 @@ namespace TiaOpenness.Client
 
         internal static string LocateBridge(string baseDir)
         {
-            if (TiaOpenness.Shared.BundleLayout.FindRootForStudio(baseDir) != null)
-            {
-                // Known installed and development outputs carry the bridge locally.
-                // Use the caller's spelling, including any trailing separator.
-                string adjacent = Path.Combine(baseDir, "TiaOpenness.Bridge.exe");
-                if (File.Exists(adjacent)) return adjacent;
-                string copied = Path.Combine(baseDir, "bridge", "TiaOpenness.Bridge.exe");
-                if (File.Exists(copied)) return copied;
-            }
-            // Keep all original candidates for incomplete bundles and other callers (D-G7-3).
-            var candidates = new[]
-            {
-                Path.Combine(baseDir, "TiaOpenness.Bridge.exe"),
-                Path.Combine(baseDir, "bridge", "TiaOpenness.Bridge.exe"),
-                Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\Bridge\bin\Debug\net48\TiaOpenness.Bridge.exe")),
-                Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\Bridge\bin\Release\net48\TiaOpenness.Bridge.exe")),
-            };
-
-            foreach (var c in candidates)
-            {
-                if (File.Exists(c)) return c;
-            }
-            return null;
+            return TiaOpenness.Shared.BundleLayout.RequireWorkbenchBridge(baseDir);
         }
 
         private string NativeArguments(string selectedVersion)

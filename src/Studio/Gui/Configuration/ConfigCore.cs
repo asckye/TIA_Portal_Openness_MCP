@@ -71,17 +71,28 @@ namespace TiaMcpConfigurator
 
         public static string Engine(string root, string versionKey)
         {
+            return Engine(root, versionKey, AppContext.BaseDirectory);
+        }
+
+        public static string Engine(string root, string versionKey, string baseDirectory)
+        {
             var version = TiaVersionCatalog.RequireRunnable(versionKey);
-            // The configuration page supplies an explicit root; keep its spelling and
-            // retain the original candidates when an incomplete bundle has no marker.
-            root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(null, root) ?? root;
-            var candidates = version.IsFullEngine ? new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.Engine.V" + version.MajorVersion + ".exe"),
-                Path.Combine(root, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe") } : new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.FoundationHost.exe") };
-            var path = candidates.FirstOrDefault(File.Exists);
-            if (path == null) throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", version.DisplayName));
+            root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(baseDirectory, root);
+            var path = TiaOpenness.Shared.BundleLayout.WorkbenchEnginePath(root, versionKey, baseDirectory);
+            if (!File.Exists(path)) throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", version.DisplayName) + " " + path, path);
             return path;
+        }
+
+        public static string[] LocalArguments(string engine, string versionKey, string tia)
+        {
+            var product = TiaOpenness.Shared.BundleLayout.GetProduct(versionKey);
+            var directory = Path.GetDirectoryName(Path.GetFullPath(engine));
+            var root = TiaOpenness.Shared.BundleLayout.ResolveWorkbenchRoot(directory, null, null)
+                ?? throw new TiaOpenness.Shared.BundleResourceUnavailableException(Path.Combine(directory, "manifest", "package-manifest.json"));
+            var expected = Engine(root, versionKey, directory);
+            if (!string.Equals(Path.GetFullPath(engine), Path.GetFullPath(expected), StringComparison.OrdinalIgnoreCase))
+                throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", TiaVersionCatalog.Get(versionKey).DisplayName) + " " + expected, expected);
+            return new[] { "--bundle-root", root, product.VersionOption, product.ReleaseKey, "--tia-portal-location", tia };
         }
 
         /// <summary>
@@ -137,6 +148,9 @@ namespace TiaMcpConfigurator
         }
 
         public static void AtomicText(string path, string text)
+        { AtomicText(path, text, path + ".bak_" + Guid.NewGuid().ToString("N")); }
+
+        internal static void AtomicText(string path, string text, string backupPath)
         {
             string directory = Path.GetDirectoryName(Path.GetFullPath(path));
             Directory.CreateDirectory(directory);
@@ -144,7 +158,7 @@ namespace TiaMcpConfigurator
             try
             {
                 File.WriteAllText(temporary, text, new UTF8Encoding(false));
-                if (File.Exists(path)) File.Replace(temporary, path, path + ".bak_" + Guid.NewGuid().ToString("N"));
+                if (File.Exists(path)) File.Replace(temporary, path, backupPath);
                 else File.Move(temporary, path);
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
@@ -176,12 +190,13 @@ namespace TiaMcpConfigurator
         }
 
         public static string VersionArgument(string releaseKey)
-        { return TiaVersionCatalog.RequireRunnable(releaseKey).IsFullEngine ? "--tia-major-version" : "--release-key"; }
+        { return TiaOpenness.Shared.BundleLayout.GetProduct(releaseKey).VersionOption; }
 
-        public static string Arguments(ServerSettings settings, string key)
+        public static string Arguments(ServerSettings settings, string key, string bundleRoot = null)
         {
             ValidateKey(key);
-            return String.Join(" ", new[] { VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
+            var root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot);
+            return String.Join(" ", new[] { "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
                 "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--http-api-key", key, "--logging", "1" }.Select(Quote));
         }
 

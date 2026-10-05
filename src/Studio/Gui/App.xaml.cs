@@ -27,11 +27,20 @@ public partial class App : Application
             base.OnStartup(e);
             return;
         }
-        if (e.Args.Length > 0 && e.Args[0] == "--network")
+        string[] args;
+        try { TiaOpenness.Shared.BundleLayout.InitializeWorkbench(AppContext.BaseDirectory, e.Args, out args); }
+        catch (Exception ex)
+        {
+            if (Environment.GetEnvironmentVariable("TIA_OPENNESS_NETWORK_NO_DIALOG") == "1") Console.Error.WriteLine(ex.Message);
+            else MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(ex is ArgumentException ? 64 : 70);
+            return;
+        }
+        if (args.Length > 0 && args[0] == "--network")
         {
             // The elevated network helper never opens the workbench: no StartupUri is set on this path
             // (WPF on .NET 10 rejects assigning null to it, which used to crash this helper).
-            Shutdown(RunNetworkConfiguration(e.Args));
+            Shutdown(RunNetworkConfiguration(args));
             return;
         }
         // A background failure that reaches the dispatcher would otherwise kill the app
@@ -39,7 +48,7 @@ public partial class App : Application
         DispatcherUnhandledException += OnUnhandledException;
 
         Settings = UiSettings.Load();
-        ApplyCommandLineOverrides(e.Args);
+        ApplyCommandLineOverrides(args);
 
         Loc.Current.Language = Settings.Language;
         ThemeManager.Current.Initialize(Settings.Theme);

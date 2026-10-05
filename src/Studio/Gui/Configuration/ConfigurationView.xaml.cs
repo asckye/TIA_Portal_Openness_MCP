@@ -81,7 +81,7 @@ namespace TiaMcpConfigurator
         {
             this.preview = preview;
             Window = owner;
-            root = bundleRoot;
+            root = preview == null ? TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot) : bundleRoot;
             InitializeComponent();
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
@@ -335,14 +335,21 @@ namespace TiaMcpConfigurator
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
-                .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)) }).ToList();
+                .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)),
+                    Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")) }).ToList();
             string message = Loc.Current["Config.WriteClientsPrompt"] + String.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
+            if (targets.Any(x => x.Change.RequiresMigration))
+                message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + String.Join("\n", targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand));
             message += Loc.Current["Config.WriteClientsContinue"];
             if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {
-                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path)); }
+                try
+                {
+                    target.Change.Apply(true); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path));
+                    if (target.Change.BackupPath != null) Append(Loc.Current.T("Config.ClientBackupSaved", target.Change.BackupPath));
+                }
                 catch (Exception ex) { errors.Add(Loc.Current.T("Config.ClientSaveError", target.Names, ex.Message)); }
             }
             if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
@@ -369,10 +376,19 @@ namespace TiaMcpConfigurator
             string installed = UpdateCheck.Installed(root);
             if (installed == null) { SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle"); Find<Button>("CheckUpdate").IsEnabled = false; return; }
             SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", installed);
-            if (UpdateCheck.IsSourceRepository(root)) SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
+            if (UpdateCheck.IsSourceRepository(root))
+            {
+                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
+                Find<Button>("CheckUpdate").IsEnabled = false;
+            }
         }
         private async Task OnCheckUpdate(bool explicitRequest)
         {
+            if (UpdateCheck.IsSourceRepository(root))
+            {
+                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
+                return;
+            }
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
             var check = Find<Button>("CheckUpdate");
@@ -458,7 +474,7 @@ namespace TiaMcpConfigurator
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.ServiceAlreadyStarted"]);
             var settings = Settings(); ConfigCore.CheckListener(ConfigCore.Prefix(settings.Address, settings.Port));
             ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret();
-            var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey)) {
+            var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey, root)) {
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };

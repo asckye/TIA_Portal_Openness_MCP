@@ -28,16 +28,7 @@ namespace TiaOpenness.Core.Abstractions
         }
         internal static string AdapterPath(string baseDirectory, string key)
         {
-            var root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(baseDirectory);
-            if (root != null)
-            {
-                string installed = Path.Combine(root, "runtime", "studio", "bridge");
-                if (string.Equals(new DirectoryInfo(baseDirectory).FullName.TrimEnd(Path.DirectorySeparatorChar),
-                    installed, StringComparison.OrdinalIgnoreCase))
-                    return Path.Combine(baseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
-            }
-            // Development bridges and unrecognized layouts keep their adjacent adapters (D-G7-3).
-            return Path.Combine(baseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
+            return TiaOpenness.Shared.BundleLayout.WorkbenchAdapterPath(baseDirectory, key, "TiaOpenness.Openness.dll");
         }
         private static ITiaSessionFactory Unavailable(string reason)
         { LastDecision = reason; return new UnavailableSessionFactory(reason); }

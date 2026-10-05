@@ -1868,9 +1868,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs):35 `FindSiblingExe` | R7 bin/bin-v20/v数字候选 | 版本目录表 + 精确新产品名 |
 | [Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs):86 `RequireEngine` | P6-37 已改：目标版本引擎缺失时报 RESOURCE_UNAVAILABLE，不再使用自身 | 缺版本引擎报 RESOURCE_UNAVAILABLE |
 | [Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs):27 `FindBundleRoot` | R11 向祖先寻找包标记 | 显式根或已知锚点 |
-| [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):79 `TiaMcp.Engine.V` | 根无标记仍保留候选；产品输出名已迁移 | 严格根校验、新产品目录 |
-| [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):45 `FindResource` | 解析失败仍拼传入根 | 严格资源解析，worktree 更新保护保留 |
-| [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):156 `BundleLayout` | R13 相对开发 Debug/Release 猜测 | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
+| [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):80 `RequireWorkbenchRoot` | P6-38 已改：工作台经 BundleLayout 严格定位根并从产品表取引擎路径 | 严格根校验、新产品目录 |
+| [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):44 `RequirePath` | P6-38 已改：资源只在包根内严格解析，缺失即报错 | 严格资源解析，worktree 更新保护保留 |
+| [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):76 `BundleLayout` | R13 相对开发 Debug/Release 猜测 | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
 | [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs):42 `TIA_MCP_DATA_DIRECTORY` | 显式数据根或 bundle/data；不可写时按用途回退用户目录 | 沿用数据根政策；logs 按发布键/studio 分组 |
@@ -1904,12 +1904,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,202 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/release-workflow.md](../../docs/development/release-workflow.md) | 根定位:14,24 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:30; 根定位:49,52 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:57,68; 根定位:17,52,53,56,81,130,140,142,143,144,163,227; 写入/工作区:54,124 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:57,69; 根定位:17,52,53,56,64,82,131,141,143,144,145,164,228; 写入/工作区:54,125 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/validation.md](../../docs/development/validation.md) | 产品:413,414,435; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138 | 修改引用并回归 |
 | [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:7,10,11,12,13 | 修改引用并回归 |
-| [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5 | 修改引用并回归 |
+| [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5,17,18 | 修改引用并回归 |
 | [docs/getting-started/cursor.example.json](../../docs/getting-started/cursor.example.json) | 产品:4,5 | 修改引用并回归 |
 | [docs/licenses/THIRD-PARTY-NOTICES.md](../../docs/licenses/THIRD-PARTY-NOTICES.md) | 产品:39 | 修改引用并回归 |
 | [docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) | 产品:36,93 | 修改引用并回归 |
@@ -1999,24 +1999,27 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Logic/Properties/AssemblyInfo.cs](../../src/Logic/Properties/AssemblyInfo.cs) | 产品:3,4,5 | 修改引用并回归 |
 | [src/Logic/TiaMcp.Logic.csproj](../../src/Logic/TiaMcp.Logic.csproj) | 根定位:16 | 修改引用并回归 |
 | [src/Runtime/OpcUaLiveReader.cs](../../src/Runtime/OpcUaLiveReader.cs) | 产品:47 | 修改引用并回归 |
-| [src/Shared/BundleLayout.cs](../../src/Shared/BundleLayout.cs) | 产品:221; 根定位:35,37,40,96 | 修改引用并回归 |
+| [src/Shared/BundleLayout.cs](../../src/Shared/BundleLayout.cs) | 产品:221,265,266,267,268,269,270,271,272; 根定位:35,37,40,96 | 修改引用并回归 |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs) | 根定位:66,68 | 修改引用并回归 |
 | [src/Shared/README.md](../../src/Shared/README.md) | 根定位:10,26,40 | 修改引用并回归 |
-| [src/Studio/Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs) | 根定位:156 | 修改引用并回归 |
+| [src/Studio/Bridge/Program.cs](../../src/Studio/Bridge/Program.cs) | 根定位:24 | 修改引用并回归 |
+| [src/Studio/Bridge/TiaOpenness.Bridge.csproj](../../src/Studio/Bridge/TiaOpenness.Bridge.csproj) | 根定位:5 | 修改引用并回归 |
+| [src/Studio/Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs) | 根定位:76,77,78,161 | 修改引用并回归 |
 | [src/Studio/Client/TiaOpenness.Client.csproj](../../src/Studio/Client/TiaOpenness.Client.csproj) | 根定位:5 | 修改引用并回归 |
 | [src/Studio/Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs) | 根定位:31 | 修改引用并回归 |
-| [src/Studio/Core/Adapters/SessionFactoryLoader.cs](../../src/Studio/Core/Adapters/SessionFactoryLoader.cs) | 根定位:38 | 修改引用并回归 |
-| [src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs](../../src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs) | 产品:26 | 修改引用并回归 |
+| [src/Studio/Core/Adapters/SessionFactoryLoader.cs](../../src/Studio/Core/Adapters/SessionFactoryLoader.cs) | 根定位:37,39 | 修改引用并回归 |
+| [src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs](../../src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs) | 根定位:26,28,31,53 | 修改引用并回归 |
 | [src/Studio/Core/TiaOpenness.Core.csproj](../../src/Studio/Core/TiaOpenness.Core.csproj) | 根定位:24 | 修改引用并回归 |
-| [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:70; 写入/工作区:16 | 修改引用并回归 |
+| [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:79; 根定位:31; 写入/工作区:16 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/ClientConfigurationChange.cs](../../src/Studio/Gui/Configuration/ClientConfigurationChange.cs) | 产品:6 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ClientProfiles.cs](../../src/Studio/Gui/Configuration/ClientProfiles.cs) | 产品:12 | 修改引用并回归 |
-| [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18,81; 根定位:77 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18; 根定位:80,81,88,90,193,198 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationPreview.cs](../../src/Studio/Gui/Configuration/ConfigurationPreview.cs) | 产品:3 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationView.xaml](../../src/Studio/Gui/Configuration/ConfigurationView.xaml) | 产品:1 | 修改引用并回归 |
-| [src/Studio/Gui/Configuration/ConfigurationView.xaml.cs](../../src/Studio/Gui/Configuration/ConfigurationView.xaml.cs) | 产品:21 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/ConfigurationView.xaml.cs](../../src/Studio/Gui/Configuration/ConfigurationView.xaml.cs) | 产品:21; 根定位:84 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ModernJson.cs](../../src/Studio/Gui/Configuration/ModernJson.cs) | 产品:8 | 修改引用并回归 |
-| [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150; 根定位:45,57 | 修改引用并回归 |
-| [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,47 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,141; 根定位:43,44,55,56,62,148,166 | 修改引用并回归 |
+| [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,42 | 修改引用并回归 |
 | [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
 | [src/Studio/Gui/Services/CallJournalService.cs](../../src/Studio/Gui/Services/CallJournalService.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/Gui/Services/DiagnosticBundleService.cs](../../src/Studio/Gui/Services/DiagnosticBundleService.cs) | 写入/工作区:207 | 修改引用并回归 |
@@ -2035,15 +2038,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16937,36687 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:170 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:161 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,60,426,442,444,472 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,65,545; 根定位:128,189 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 产品:83; 根定位:10,42,44,58,59,60,61,70,76,78,81,90,91,93,95,97,108 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj](../../tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj) | 根定位:6 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/WorkbenchEnvironmentChecksTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/WorkbenchEnvironmentChecksTests.cs) | 产品:122 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/CallJournalPanelTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/CallJournalPanelTests.cs) | 产品:35 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs) | 产品:6 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs) | 产品:9 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34; 根定位:14,74,164 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs) | 产品:9,224 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7; 根定位:14,30,44,45,46,58,61,62,96,153 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs) | 产品:6,28; 根定位:15 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs) | 产品:112 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:92,246,278,279,280 | 修改引用并回归 |
@@ -2051,7 +2054,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:69 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 159 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 162 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 

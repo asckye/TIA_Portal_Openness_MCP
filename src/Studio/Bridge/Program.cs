@@ -21,6 +21,8 @@ namespace TiaOpenness.Bridge
             Console.OutputEncoding = new UTF8Encoding(false);
             if (System.Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
                 TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
+            try { TiaOpenness.Shared.BundleLayout.InitializeWorkbench(AppDomain.CurrentDomain.BaseDirectory, args, out args); }
+            catch (Exception ex) { Console.Error.WriteLine("[bridge] " + ex.Message); return ex is ArgumentException ? 64 : 70; }
             var forceMock = HasFlag(args, "--mock");
             OpennessLocator.PublicApiDirectory = GetValue(args, "--public-api");
 

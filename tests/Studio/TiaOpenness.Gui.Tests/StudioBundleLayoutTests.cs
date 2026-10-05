@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using TiaMcp.Versioning;
 using TiaMcpConfigurator;
-using TiaOpenness.Gui.Localization;
+using TiaOpenness.Shared;
 using Xunit;
 
 namespace TiaOpenness.Gui.Tests;
@@ -14,7 +14,6 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
 {
     private readonly string scratch = Path.Combine(Path.GetTempPath(), "studio gui 中文 " + Guid.NewGuid().ToString("N"));
-
     private static string At(string root, string relative) => Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
     private static void Put(string root, string relative, string content = "fixture")
     {
@@ -22,157 +21,215 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
     }
-
-    private static void Bundle(string root, bool marker, bool installed, bool development)
+    private void Bundle()
     {
-        Directory.CreateDirectory(root);
-        if (marker) Put(root, "manifest/package-manifest.json");
-        Put(root, "manifest/delivery.json", "{\"release\":\"3.2.0\",\"package\":\"fixture.zip\"}");
-        Put(root, "scripts/operations/Update-Engine.ps1");
-        foreach (var version in TiaVersionCatalog.Runnable)
-        {
-            if (installed) Put(root, "runtime/" + version.RuntimeDirectory + "/" + (version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe"));
-            if (development && version.IsFullEngine)
-                Put(root, "src/Engine/" + version.EngineOutputDirectory + "/Release/net48/TiaMcp.Engine.V" + version.MajorVersion + ".exe");
-        }
-    }
-
-    private static void EqualLookup(Func<string?> before, Func<string?> after)
-    {
-        string? expected = null, actual = null;
-        var oldError = Record.Exception(() => expected = before());
-        var newError = Record.Exception(() => actual = after());
-        Assert.Equal(oldError?.GetType(), newError?.GetType());
-        Assert.Equal(oldError?.Message.Split('\n')[0], newError?.Message.Split('\n')[0]);
-        Assert.Equal(expected, actual);
+        Put(scratch, "manifest/package-manifest.json", "{}");
+        Put(scratch, "manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"fixture.zip\"}");
+        Put(scratch, "scripts/operations/Update-Engine.ps1");
+        foreach (var release in TiaVersionCatalog.Runnable)
+            Put(scratch, "runtime/v" + release.Key + "/" + BundleLayout.GetProduct(release.Key).Executable);
     }
 
     [Theory]
-    [InlineData("runtime/studio")]
-    [InlineData("runtime/studio/bridge")]
-    [InlineData("src/Studio/Gui/bin/Release/net10.0-windows")]
-    [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows")]
-    [InlineData("src/Studio/Gui/bin/Release/net10.0-windows/bridge")]
-    [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows/bridge")]
-    [InlineData("src/Studio/Bridge/bin/Release/net48")]
-    [InlineData("src/Studio/Bridge/bin/Debug/net48")]
-    [InlineData("custom/a/b")]
-    [InlineData("custom/a/b/c/d/e/f/g/h/i/j/k/l")]
-    public void Bundle_engine_and_update_lookups_match_originals(string anchor)
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
+    [InlineData(4)] [InlineData(5)] [InlineData(6)] [InlineData(7)]
+    public void Gui_root_resolution_uses_only_the_selected_inputs(int inputs)
     {
-        foreach (bool marker in new[] { false, true })
-        foreach (string layout in new[] { "bundle", "repository", "worktree", "ci", "runtime-only", "repository/bin-build/staging" })
-        {
-            string root = At(scratch, marker + "/" + layout);
-            Bundle(root, marker, layout != "ci", layout != "runtime-only");
-            if (layout == "repository") Directory.CreateDirectory(At(root, ".git"));
-            if (layout == "worktree") Put(root, ".git", "gitdir: elsewhere");
-            if (layout.Contains("/")) Bundle(At(scratch, marker + "/repository"), true, true, true);
-            string output = Directory.CreateDirectory(At(root, anchor)).FullName;
-            foreach (string spelling in new[] { output, output.Replace('\\', '/'), output.ToUpperInvariant() })
-            foreach (string suffix in new[] { "", "\\", "/" })
-                EqualLookup(() => StudioLookupBaseline.FindBundleRoot(spelling + suffix), () => MainWindow.FindBundleRoot(spelling + suffix));
-            foreach (string spelling in new[] { root, root.Replace('\\', '/'), root.ToUpperInvariant() })
-            foreach (string suffix in new[] { "", "\\", "/", "\\.\\" })
-            {
-                string explicitRoot = spelling + suffix;
-                foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
-                    wpf.RunWithLanguage(language, () =>
-                    {
-                        foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21", "22" })
-                            EqualLookup(() => StudioLookupBaseline.Engine(explicitRoot, key), () => ConfigCore.Engine(explicitRoot, key));
-                    });
-                EqualLookup(() => StudioLookupBaseline.DeliveryField(explicitRoot, "release"), () => UpdateCheck.Installed(explicitRoot));
-                EqualLookup(() => StudioLookupBaseline.DeliveryField(explicitRoot, "package"), () => UpdateCheck.InstalledPackage(explicitRoot));
-                EqualLookup(() => StudioLookupBaseline.UpdaterPath(explicitRoot), () => UpdateCheck.UpdaterPath(explicitRoot));
-            }
-        }
+        string anchor = At(scratch, "anchor"), cli = At(scratch, "CLI 中文"), environment = At(scratch, "environment");
+        Directory.CreateDirectory(anchor);
+        if ((inputs & 1) != 0) Put(anchor, "manifest/package-manifest.json");
+        if ((inputs & 2) != 0) Put(environment, "manifest/package-manifest.json");
+        if ((inputs & 4) != 0) Put(cli, "manifest/package-manifest.json");
+        string? expected = (inputs & 4) != 0 ? cli : (inputs & 2) != 0 ? environment : (inputs & 1) != 0 ? anchor : null;
+        Assert.Equal(expected, BundleLayout.ResolveWorkbenchRoot(anchor, (inputs & 4) != 0 ? cli : null!, (inputs & 2) != 0 ? environment : null!));
+        Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.ResolveWorkbenchRoot(anchor, At(scratch, "bad"), environment));
+        Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.ResolveWorkbenchRoot(anchor, null!, At(scratch, "bad")));
     }
 
     [Theory]
-    [InlineData("absent", false)]
-    [InlineData("directory", true)]
-    [InlineData("file", true)]
-    public void Update_is_disabled_for_checkouts_and_worktrees(string kind, bool expected)
+    [InlineData("Release")] [InlineData("Debug")]
+    public void Gui_engine_selection_uses_exact_product_and_layout_without_fallback(string configuration)
     {
-        Directory.CreateDirectory(scratch);
-        if (kind == "directory") Directory.CreateDirectory(At(scratch, ".git"));
-        if (kind == "file") Put(scratch, ".git", "gitdir: elsewhere");
-        foreach (string suffix in new[] { "", "\\", "/" })
+        Bundle();
+        string gui = At(scratch, "src/Studio/Gui/bin/" + configuration + "/net10.0-windows");
+        Directory.CreateDirectory(gui);
+        foreach (var release in TiaVersionCatalog.Runnable)
         {
-            Assert.Equal(expected, UpdateCheck.IsSourceRepository(scratch + suffix));
-            Assert.Equal(kind == "directory", StudioLookupBaseline.IsSourceRepository(scratch + suffix));
+            string installed = At(scratch, "runtime/v" + release.Key + "/" + BundleLayout.GetProduct(release.Key).Executable);
+            Assert.Equal(installed, ConfigCore.Engine(scratch, release.Key, scratch));
+            string source = At(scratch, release.IsFullEngine
+                ? "src/Engine/" + release.EngineOutputDirectory + "/" + configuration + "/net48/" + BundleLayout.GetProduct(release.Key).Executable
+                : "src/FoundationHost/bin/" + configuration + "/net10.0/" + BundleLayout.GetProduct(release.Key).Executable);
+            Assert.Throws<FileNotFoundException>(() => ConfigCore.Engine(scratch, release.Key, gui));
+            Put(scratch, Path.GetRelativePath(scratch, source));
+            Assert.Equal(source, ConfigCore.Engine(scratch, release.Key, gui));
+            File.Delete(installed);
+            var missing = Assert.Throws<FileNotFoundException>(() => ConfigCore.Engine(scratch, release.Key, scratch));
+            Assert.Equal(installed, missing.FileName);
+            File.Delete(source);
         }
+        Assert.Throws<BundleResourceUnavailableException>(() => ConfigCore.Engine(At(scratch, "bad"), "21", gui));
+        Assert.Throws<ArgumentException>(() => ConfigCore.Engine("relative", "21", gui));
     }
 
     [Theory]
-    [InlineData("installed", true, false)]
-    [InlineData("development", false, true)]
-    [InlineData("repository-runtime", true, true)]
-    public void Configuration_files_match_original_engine_paths(string layout, bool installed, bool development)
+    [InlineData(false)] [InlineData(true)]
+    public void Every_client_and_release_preserves_server_url_auth_and_schema_during_migration(bool atomicWriter)
     {
-        string before = At(scratch, layout + "/before root 中文");
-        string after = At(scratch, layout + "/after root 中文");
-        Bundle(before, true, installed, development);
-        Bundle(after, true, installed, development);
+        Bundle();
         wpf.Run(() =>
         {
-            foreach (var release in TiaVersionCatalog.Runnable.Where(v => installed || v.IsFullEngine))
-            foreach (string suffix in new[] { "", "\\", "/", "\\.\\" })
-            foreach (bool remote in new[] { false, true })
-            foreach (string client in new[] { "claude-code", "codex", "gemini", "qwen", "kimi", "codebuddy", "opencode", "qwen-agent", "cursor", "vscode" })
+            foreach (var profile in ClientProfiles.All())
+            foreach (var release in TiaVersionCatalog.Runnable)
             {
-                string oldEngine = StudioLookupBaseline.Engine(before + suffix, release.Key);
-                string newEngine = ConfigCore.Engine(after + suffix, release.Key);
-                string name = Guid.NewGuid().ToString("N");
-                string oldFile = At(scratch, "configuration/" + name + ".old");
-                string newFile = At(scratch, "configuration/" + name + ".new");
-                foreach (var item in new[] { (File: oldFile, Engine: oldEngine), (File: newFile, Engine: newEngine) })
+                string engine = ConfigCore.Engine(scratch, release.Key, scratch);
+                string oldEngine = At(scratch, "runtime/v" + release.Key + "/" + "TiaMcp" + "Server.exe");
+                string path = At(scratch, "clients/" + profile.Id + "-" + release.Key + (profile.Client == "codex" ? ".toml" : ".json"));
+                var target = new ClientProfile(profile.Id, profile.Name, path, "", profile.Client);
+                var remote = ClientProfiles.Entry(target, true, "127.0.0.1", 8123, "fixture-key", null!, release.Key, null!);
+                var local = ClientProfiles.Entry(target, false, null!, 0, null!, engine, release.Key, "TIA 中文");
+                Assert.Equal("tia-portal", ClientProfiles.ServerName(target, false));
+                Assert.Equal("tia-portal-vm", ClientProfiles.ServerName(target, true));
+                Assert.Equal("http://127.0.0.1:8123/mcp", remote[ClientProfiles.UrlKey(target)]);
+                Assert.Equal("Bearer fixture-key", ((Dictionary<string, object>)remote["headers"])["Authorization"]);
+                string[] arguments = target.Client == "opencode" ? ((string[])local["command"]).Skip(1).ToArray() : (string[])local["args"];
+                Assert.Equal(new[] { "--bundle-root", scratch, BundleLayout.GetProduct(release.Key).VersionOption, release.Key, "--tia-portal-location", "TIA 中文" }, arguments);
+                Assert.Equal(engine, target.Client == "opencode" ? ((string[])local["command"])[0] : local["command"]);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                string original;
+                if (target.Client == "codex")
                 {
-                    // Both writers are unchanged production code; only Engine differs.
-                    var profile = new ClientProfile(client, client, item.File, "");
-                    ClientProfiles.Save(profile, remote, "127.0.0.1", 8123, "fixture-key", item.Engine, release.Key, @"C:\TIA 中文");
+                    original = "# user settings\r\nmodel = \"keep\"\r\n[mcp_servers.tia-portal]\r\ncommand = " + ConfigCore.Json().Serialize(oldEngine)
+                        + "\r\nargs = [\"--tia-major-version\",\"21\"]\r\nstartup_timeout_sec = 777\r\n[mcp_servers.tia-portal.env]\r\nTOKEN = \"keep-auth\"\r\n"
+                        + "[mcp_servers.tia-portal-vm]\r\nurl = \"http://127.0.0.1:8123/mcp\"\r\nhttp_headers = { Authorization = \"Bearer fixture-key\" }\r\n[mcp_servers.other]\r\ncommand = \"other.exe\"\r\n";
                 }
-                Assert.Equal(NormalizedBytes(oldFile, before), NormalizedBytes(newFile, after));
-                string oldMerge = oldFile + ".merge", newMerge = newFile + ".merge";
-                ConfigCore.MergeServer(oldMerge, "tia-portal", new Dictionary<string, object> { { "command", oldEngine } });
-                ConfigCore.MergeServer(newMerge, "tia-portal", new Dictionary<string, object> { { "command", newEngine } });
-                Assert.Equal(NormalizedBytes(oldMerge, before), NormalizedBytes(newMerge, after));
+                else
+                {
+                    var legacy = new Dictionary<string, object>(local);
+                    legacy["command"] = target.Client == "opencode" ? new[] { oldEngine, "--old" } : (object)oldEngine;
+                    legacy["env"] = new Dictionary<string, object> { { "TOKEN", "keep-auth" } };
+                    original = ConfigCore.Json().Serialize(new Dictionary<string, object> { { "keep", true }, { ClientProfiles.RootKey(target),
+                        new Dictionary<string, object> { { "tia-portal", legacy }, { "tia-portal-vm", remote }, { "other", new { command = "other.exe" } } } } });
+                }
+                File.WriteAllText(path, original, new UTF8Encoding(true));
+                byte[] before = File.ReadAllBytes(path);
+                var change = ClientProfiles.PrepareSave(target, false, null!, 0, null!, engine, release.Key, "TIA 中文");
+                Assert.True(change.RequiresMigration);
+                Assert.Equal(before, File.ReadAllBytes(path));
+                Assert.Throws<InvalidOperationException>(() => change.Apply(false));
+                Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".bak_*"));
+                if (atomicWriter) change.Apply(true);
+                else change.Apply(true, File.WriteAllText); // exercise every schema even where Windows denies File.Replace
+                Assert.Equal(before, File.ReadAllBytes(change.BackupPath));
+                Assert.Matches(@"\.bak_\d{8}T\d{13}Z$", change.BackupPath);
+                string after = File.ReadAllText(path);
+                Assert.Contains("keep-auth", after);
+                Assert.Contains("other.exe", after);
+                if (target.Client == "codex")
+                {
+                    Assert.StartsWith("# user settings\r\nmodel = \"keep\"\r\n", after);
+                    Assert.Contains("startup_timeout_sec = 777\r\n", after);
+                    Assert.Contains("url = \"http://127.0.0.1:8123/mcp\"\r\nhttp_headers = { Authorization = \"Bearer fixture-key\" }", after);
+                    Assert.Contains("command = " + ConfigCore.Json().Serialize(engine), after);
+                }
+                else
+                {
+                    var document = ConfigCore.Json().Deserialize<Dictionary<string, object>>(after);
+                    var servers = (Dictionary<string, object>)document[ClientProfiles.RootKey(target)];
+                    Assert.Equal(ConfigCore.Json().Serialize(remote), ConfigCore.Json().Serialize(servers["tia-portal-vm"]));
+                    var updated = (Dictionary<string, object>)servers["tia-portal"];
+                    Assert.Equal(ConfigCore.Json().Serialize(local["command"]), ConfigCore.Json().Serialize(updated["command"]));
+                    if (target.Client != "opencode") Assert.Equal(ConfigCore.Json().Serialize(arguments), ConfigCore.Json().Serialize(updated["args"]));
+                }
             }
         });
     }
 
-    private static byte[] NormalizedBytes(string file, string root)
+    [Fact]
+    public void Bridge_start_uses_the_explicit_bundle_before_launching_a_child()
     {
-        string text = Encoding.UTF8.GetString(File.ReadAllBytes(file));
-        string escapedRoot = ConfigCore.Json().Serialize(root);
-        text = text.Replace(escapedRoot.Substring(1, escapedRoot.Length - 2), "<ROOT>").Replace(root, "<ROOT>");
-        return Encoding.UTF8.GetBytes(text);
+        Bundle();
+        using var client = new TiaOpenness.Client.BridgeClient(new[] { "--bundle-root", scratch });
+        // Client links its own BundleLayout; exception identity differs across assemblies.
+        var error = Assert.ThrowsAny<IOException>(() => client.Start(forceMock: true));
+        Assert.Equal(typeof(BundleResourceUnavailableException).FullName, error.GetType().FullName);
+        Assert.Contains(At(scratch, "runtime/studio/bridge/TiaOpenness.Bridge.exe"), error.Message);
+        Assert.False(client.IsRunning);
+    }
+
+    [Fact]
+    public void Migration_refuses_missing_target_or_stale_preview_and_rolls_back_write_failure()
+    {
+        Bundle();
+        wpf.Run(() =>
+        {
+            var profile = new ClientProfile("claude-code", "Claude Code", At(scratch, "client.json"), "");
+            const string original = "{\"mcpServers\":{\"tia-portal\":{\"command\":\"TiaMcp" + "Server.exe\"}}}";
+            File.WriteAllText(profile.Path, original);
+            string engine = ConfigCore.Engine(scratch, "21", scratch);
+            var change = ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA");
+            Assert.Throws<IOException>(() => change.Apply(true, (path, value) =>
+            {
+                Assert.Equal(original, File.ReadAllText(change.BackupPath));
+                File.WriteAllText(path, "partial");
+                throw new IOException("injected after write");
+            }));
+            Assert.Equal(original, File.ReadAllText(profile.Path));
+            var stale = ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA");
+            File.WriteAllText(profile.Path, "new user content");
+            Assert.Throws<IOException>(() => stale.Apply(true));
+            Assert.Null(stale.BackupPath);
+            Assert.Equal("new user content", File.ReadAllText(profile.Path));
+            File.Delete(engine);
+            Assert.Throws<FileNotFoundException>(() => change.Apply(true));
+            Assert.Throws<FileNotFoundException>(() => ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA"));
+            Assert.Equal("new user content", File.ReadAllText(profile.Path));
+        });
     }
 
     [Theory]
-    [InlineData("missing")]
-    [InlineData("malformed")]
-    [InlineData("null-fields")]
-    public void Missing_and_invalid_resources_keep_results_and_errors(string kind)
+    [InlineData("file")] [InlineData("directory")] [InlineData("source-archive")] [InlineData("ancestor-worktree")]
+    public void Update_launch_refuses_worktrees_and_source_checkouts_at_the_boundary(string kind)
     {
-        Directory.CreateDirectory(scratch);
-        if (kind == "malformed") Put(scratch, "manifest/delivery.json", "broken JSON");
-        if (kind == "null-fields") Put(scratch, "manifest/delivery.json", "{\"release\":null,\"package\":null}");
-        foreach (string root in new[] { scratch, scratch + "/", "", " ", "relative", null! })
+        Bundle();
+        if (kind == "file") Put(scratch, ".git", "gitdir: elsewhere");
+        if (kind == "directory") Directory.CreateDirectory(At(scratch, ".git"));
+        if (kind == "source-archive")
         {
-            EqualLookup(() => StudioLookupBaseline.FindBundleRoot(root), () => MainWindow.FindBundleRoot(root));
-            EqualLookup(() => StudioLookupBaseline.Engine(root, "21"), () => ConfigCore.Engine(root, "21"));
-            EqualLookup(() => StudioLookupBaseline.DeliveryField(root, "release"), () => UpdateCheck.Installed(root));
-            EqualLookup(() => StudioLookupBaseline.DeliveryField(root, "package"), () => UpdateCheck.InstalledPackage(root));
-            EqualLookup(() => StudioLookupBaseline.UpdaterPath(root), () => UpdateCheck.UpdaterPath(root));
+            Put(scratch, "CLAUDE.md"); Put(scratch, "Version.props"); Directory.CreateDirectory(At(scratch, "src"));
         }
+        string root = scratch;
+        if (kind == "ancestor-worktree")
+        {
+            Put(scratch, ".git", "gitdir: elsewhere");
+            root = At(scratch, "staging");
+            Put(root, "manifest/package-manifest.json");
+        }
+        Assert.True(UpdateCheck.IsSourceRepository(root));
+        Assert.Throws<InvalidOperationException>(() => UpdateCheck.Launch(root, 123));
+    }
+
+    [Fact]
+    public void Update_resources_stay_under_selected_root_and_read_only_install_is_readable()
+    {
+        Bundle();
+        File.SetAttributes(At(scratch, "manifest/package-manifest.json"), FileAttributes.ReadOnly);
+        Assert.Equal("4.0.0", UpdateCheck.Installed(scratch));
+        Assert.Equal("fixture.zip", UpdateCheck.InstalledPackage(scratch));
+        Assert.Equal(At(scratch, "scripts/operations/Update-Engine.ps1"), UpdateCheck.UpdaterPath(scratch));
+        Assert.False(UpdateCheck.IsSourceRepository(scratch));
+        Assert.True(UpdateCheck.Launch(scratch, 123).UseShellExecute);
+        string nested = At(scratch, "staging");
+        Put(nested, "manifest/package-manifest.json");
+        Assert.Throws<BundleResourceUnavailableException>(() => UpdateCheck.Installed(nested));
+        Assert.Throws<BundleResourceUnavailableException>(() => UpdateCheck.UpdaterPath(nested));
+        Assert.Throws<BundleResourceUnavailableException>(() => UpdateCheck.Installed(At(scratch, "absent")));
     }
 
     public void Dispose()
     {
-        Assert.Equal(new DirectoryInfo(Path.GetTempPath()).FullName.TrimEnd(Path.DirectorySeparatorChar),
-            new DirectoryInfo(scratch).Parent!.FullName.TrimEnd(Path.DirectorySeparatorChar));
-        if (Directory.Exists(scratch)) Directory.Delete(scratch, true);
+        if (!Directory.Exists(scratch)) return;
+        foreach (string path in Directory.GetFiles(scratch, "*", SearchOption.AllDirectories)) File.SetAttributes(path, FileAttributes.Normal);
+        Directory.Delete(scratch, true);
     }
 }

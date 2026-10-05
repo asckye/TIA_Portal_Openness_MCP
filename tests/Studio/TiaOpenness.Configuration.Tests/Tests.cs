@@ -39,6 +39,8 @@ namespace TiaMcpConfigurator
 
         private static void VersionCatalogTests(string temp)
         {
+            Directory.CreateDirectory(Path.Combine(temp, "manifest"));
+            File.WriteAllText(Path.Combine(temp, "manifest", "package-manifest.json"), "{}");
             Assert(TiaVersionCatalog.All.Select(x => x.Key).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }),
                 "catalog preserves distinct V14 SP1 and V15.1 planned version keys");
@@ -55,7 +57,10 @@ namespace TiaMcpConfigurator
                 if (version.IsFullEngine) {
                 string sourceEngine = Path.Combine(temp, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(sourceEngine)); File.WriteAllText(sourceEngine, "stub");
-                Assert(ConfigCore.Engine(temp, version.Key) == sourceEngine, version.DisplayName + " uses its catalog source-tree fallback");
+                Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, version.Key), version.DisplayName + " missing install never probes source output");
+                string gui = Path.Combine(temp, "src", "Studio", "Gui", "bin", "Release", "net10.0-windows");
+                Directory.CreateDirectory(gui);
+                Assert(ConfigCore.Engine(temp, version.Key, gui) == sourceEngine, version.DisplayName + " formal GUI output selects matching engine development output");
                 }
                 string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(runtimeEngine)); File.WriteAllText(runtimeEngine, "stub");
@@ -67,7 +72,7 @@ namespace TiaMcpConfigurator
                     version.DisplayName + " settings retain the persisted integer Version schema");
             }
             var legacy = new ServerSettings { Version = 15, ReleaseKey = "15.1", TiaPath = temp, Address = "127.0.0.1", Port = 8735 };
-            Assert(ConfigCore.Arguments(legacy, "test-key").Contains("--release-key") && ConfigCore.Arguments(legacy, "test-key").Contains("15.1"), "V15.1 launch arguments retain exact minor identity");
+            Assert(ConfigCore.Arguments(legacy, "test-key", temp).Contains("--release-key") && ConfigCore.Arguments(legacy, "test-key", temp).Contains("15.1"), "V15.1 launch arguments retain exact minor identity");
             Assert(ConfigCore.Json().Deserialize<ServerSettings>("{\"Version\":20}").EffectiveReleaseKey == "20", "old saved V20 configuration remains readable");
         }
 
@@ -105,6 +110,51 @@ namespace TiaMcpConfigurator
             finally { listener.Stop(); }
         }
 
+        private static void BundleConfigurationTests(string temp)
+        {
+            VersionCatalogTests(temp);
+            for (int inputs = 0; inputs < 8; inputs++)
+            {
+                string matrix = Path.Combine(temp, "matrix-" + inputs);
+                string anchor = Path.Combine(matrix, "anchor"), cli = Path.Combine(matrix, "CLI 中文"), environment = Path.Combine(matrix, "environment");
+                Directory.CreateDirectory(anchor);
+                foreach (var item in new[] { (Flag: 1, Root: anchor), (Flag: 2, Root: environment), (Flag: 4, Root: cli) })
+                    if ((inputs & item.Flag) != 0)
+                    {
+                        Directory.CreateDirectory(Path.Combine(item.Root, "manifest"));
+                        File.WriteAllText(Path.Combine(item.Root, "manifest", "package-manifest.json"), "{}");
+                    }
+                string expected = (inputs & 4) != 0 ? cli : (inputs & 2) != 0 ? environment : (inputs & 1) != 0 ? anchor : null;
+                Assert(expected == TiaOpenness.Shared.BundleLayout.ResolveWorkbenchRoot(anchor, (inputs & 4) != 0 ? cli : null, (inputs & 2) != 0 ? environment : null), "Workbench root precedence " + inputs);
+            }
+            foreach (var profile in ClientProfiles.All())
+            foreach (var release in TiaVersionCatalog.Runnable)
+            {
+                string engine = ConfigCore.Engine(temp, release.Key, temp);
+                var local = ClientProfiles.Entry(profile, false, null, 0, null, engine, release.Key, "TIA path");
+                string[] launch = profile.Client == "opencode" ? ((string[])local["command"]).Skip(1).ToArray() : (string[])local["args"];
+                Assert(launch.SequenceEqual(new[] { "--bundle-root", temp, ConfigCore.VersionArgument(release.Key), release.Key, "--tia-portal-location", "TIA path" }), profile.Id + " " + release.Key + " product arguments");
+                var remote = ClientProfiles.Entry(profile, true, "127.0.0.1", 8765, "fixture-key", null, release.Key, null);
+                Assert(ClientProfiles.ServerName(profile, false) == "tia-portal" && ClientProfiles.ServerName(profile, true) == "tia-portal-vm"
+                    && (string)remote[ClientProfiles.UrlKey(profile)] == "http://127.0.0.1:8765/mcp"
+                    && (string)((Dictionary<string, object>)remote["headers"])["Authorization"] == "Bearer fixture-key", profile.Id + " " + release.Key + " stable connection fields");
+            }
+            string path = Path.Combine(temp, "migration.json");
+            var target = new ClientProfile("claude-code", "Claude Code", path, "");
+            string original = "{\"mcpServers\":{\"tia-portal\":{\"command\":\"" + "TiaMcp" + "Server.exe\"}}}";
+            File.WriteAllText(path, original);
+            var change = ClientProfiles.PrepareSave(target, false, null, 0, null, ConfigCore.Engine(temp, "21", temp), "21", "TIA path");
+            Assert(change.RequiresMigration && File.ReadAllText(path) == original, "migration preview is read-only");
+            Reject<InvalidOperationException>(() => change.Apply(false), "migration refusal does not write");
+            Assert(change.BackupPath == null, "refusal does not create a backup");
+            Reject<IOException>(() => change.Apply(true, (file, text) =>
+            {
+                Assert(File.ReadAllText(change.BackupPath) == original, "backup precedes the write");
+                File.WriteAllText(file, "partial"); throw new IOException("injected write failure");
+            }), "migration write failure is reported");
+            Assert(File.ReadAllText(path) == original, "migration write failure restores original bytes");
+        }
+
         private static void WorkbenchUiTests(string output)
         {
             Directory.CreateDirectory(output);
@@ -116,7 +166,8 @@ namespace TiaMcpConfigurator
             ThemeManager.Current.Theme = AppTheme.Light;
             Loc.Current.Language = AppLanguage.English;
             var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
-            window.ShowConfiguration(false, AppDomain.CurrentDomain.BaseDirectory);
+            // No explicit root: the test output directory is a known development anchor (P6-38 strict root rules).
+            window.ShowConfiguration(false);
             using (var form = window.Configuration)
             {
                 var versions = (System.Windows.Controls.ComboBox)form.FindName("Version");
@@ -135,12 +186,19 @@ namespace TiaMcpConfigurator
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
                 var runUpdate = (System.Windows.Controls.Button)settings.FindName("RunUpdate");
                 var installedItem = (System.Windows.Controls.TextBlock)settings.FindName("UpdateInstalledItem");
-                string installed = UpdateCheck.Installed(AppDomain.CurrentDomain.BaseDirectory);
+                string bundleRoot = MainWindow.FindBundleRoot(AppDomain.CurrentDomain.BaseDirectory);
+                Assert(File.Exists(Path.Combine(bundleRoot, "manifest", "package-manifest.json"))
+                    && !String.Equals(bundleRoot.TrimEnd(Path.DirectorySeparatorChar), AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase),
+                    "configuration console output resolves its bundle through the development anchor");
+                string installed = UpdateCheck.Installed(null);
+                bool sourceRepository = UpdateCheck.IsSourceRepository(bundleRoot);
+                string updateStateKey = sourceRepository ? "Config.SourceRepositoryUpdate" : "Config.NotChecked";
                 string ExpectedInstalled() => installed ?? Loc.Current["Config.EngineOutsideBundle"];
                 Assert(window.FindName("MenuBar") == null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled
                     && runUpdate.Visibility == System.Windows.Visibility.Collapsed
+                    && ((System.Windows.Controls.Button)settings.FindName("CheckUpdate")).IsEnabled == (installed != null && !sourceRepository)
                     && ((System.Windows.Controls.Button)settings.FindName("CheckUpdate")).Content.ToString() == "Check updates",
-                    "settings own update actions; run stays disabled and hidden until a newer release is known");
+                    "settings own update actions; source updates are disabled and run stays hidden until a newer release is known");
                 Assert(installedItem.Text == ExpectedInstalled(), "English settings name the installed engine version from the delivery manifest");
                 void AssertShellLabels(bool chinese)
                 {
@@ -149,7 +207,6 @@ namespace TiaMcpConfigurator
                         (() => Content("RailEngineering"), "Project operations", "工程操作"),
                         (() => Content("RailMcp"), "MCP & clients", "MCP 与客户端"),
                         (() => Content("SettingsButton"), "Engine & MCP settings…", "引擎 & MCP 设置…"),
-                        (() => ((System.Windows.Controls.TextBlock)settings.FindName("UpdateStateItem")).Text, "Not checked yet", "尚未检查"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
                         (() => Content("RunUpdate"), "Update engine…", "更新引擎…"),
                         (() => Content("OpenReleases"), "Open", "打开"),
@@ -165,6 +222,8 @@ namespace TiaMcpConfigurator
                         (chinese ? "Chinese" : "English") + " caption and rail track the configuration page");
                     foreach (var (read, en, zh) in labels)
                         Assert(read() == (chinese ? zh : en), (chinese ? "Chinese" : "English") + " shell/settings label: " + en);
+                    Assert(((System.Windows.Controls.TextBlock)settings.FindName("UpdateStateItem")).Text == Loc.Current[updateStateKey],
+                        (chinese ? "Chinese" : "English") + " update state follows the selected bundle and survives language changes");
                 }
                 // The window is not shown yet, so bindings refresh when the dispatcher runs.
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
@@ -319,6 +378,12 @@ namespace TiaMcpConfigurator
             }
             try
             {
+                if (args.Length > 0 && args[0] == "--bundle-tests-only")
+                {
+                    string bundleOutput = Path.GetFullPath(args.Length > 1 ? args[1] : Path.Combine(AppContext.BaseDirectory, "bundle-test-output"));
+                    BundleConfigurationTests(bundleOutput);
+                    Console.WriteLine("Passed: " + passed); return 0;
+                }
                 bool uiOnly = args.Length > 0 && args[0] == "--ui-only";
                 string output = Path.GetFullPath(args.Length > (uiOnly ? 1 : 0) ? args[uiOnly ? 1 : 0] : Path.Combine(AppContext.BaseDirectory, "test-output"));
                 if (uiOnly)
@@ -353,6 +418,11 @@ namespace TiaMcpConfigurator
                 string encrypted = ConfigCore.Protect(secret);
                 Assert(encrypted != secret && ConfigCore.Unprotect(encrypted) == secret, "DPAPI roundtrip including special characters");
 
+                Directory.CreateDirectory(Path.Combine(temp, "manifest"));
+                File.WriteAllText(Path.Combine(temp, "manifest", "package-manifest.json"), "{}");
+                Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, 21), "missing runtime in a valid bundle gives actionable failure");
+                Reject(() => ConfigCore.ValidateTia(temp, 21), "missing TIA API rejected");
+
                 string config = Path.Combine(temp, "claude.json");
                 string original = "{\"theme\":\"dark\",\"projects\":{\"D:/demo\":{\"allowedTools\":[\"one\"]}},\"mcpServers\":{\"other\":{\"command\":\"keep.exe\"},\"tia-portal-vm\":{\"url\":\"old\"}}}";
                 File.WriteAllText(config, original);
@@ -368,8 +438,6 @@ namespace TiaMcpConfigurator
                 Assert(File.ReadAllText(bad) == "{broken", "malformed config untouched");
                 File.WriteAllText(bad, "{\"mcpServers\":[]}");
                 Reject(() => ConfigCore.MergeServer(bad, "x", remote), "non-object server map rejected");
-                Reject(() => ConfigCore.Engine(temp, 21), "missing runtime gives actionable failure");
-                Reject(() => ConfigCore.ValidateTia(temp, 21), "missing TIA API rejected");
                 VersionCatalogTests(Path.Combine(temp, "version-catalog"));
 
                 string[] roundtrip = { "", secret, "C:\\space path\\", "a\\\"b", "\"", "a&echo nope", "end\\\\" };
@@ -381,7 +449,8 @@ namespace TiaMcpConfigurator
                     var actual = ConfigCore.Json().Deserialize<string[]>(text);
                     Assert(actual.SequenceEqual(roundtrip), "native process argument quoting preserves secrets and paths");
                 }
-                Probe(false); Probe(true);
+                if (Environment.GetEnvironmentVariable("TIA_MCP_TEST_NO_NETWORK") != "1") { Probe(false); Probe(true); }
+                else Console.WriteLine("Skipped: 2 loopback HTTP checks (TIA_MCP_TEST_NO_NETWORK=1)");
                 var profiles = ClientProfiles.All();
                 Assert(profiles.Count == 12, "twelve cards: Claude Code, Codex, Gemini CLI, Qwen, Kimi, Yuanbao, DeepSeek, GLM, Grok, Qwen Agent, Cursor, VS Code");
                 Assert(profiles.All(x => x.Name.All(c => c < 128) && x.Kind.All(c => c < 128)), "2.7.62: every client name and kind is English (maintainer)");
@@ -413,7 +482,7 @@ namespace TiaMcpConfigurator
                     var testProfile = new ClientProfile(profile.Id, profile.Name, Path.Combine(temp, profile.Id + (profile.Client == "codex" ? ".toml" : ".json")), profile.Hint, profile.Client, profile.Kind);
                     if (profile.Client == "codex") File.WriteAllText(testProfile.Path, "# preserved\r\nmodel = \"keep\"\r\n[mcp_servers.other]\r\ncommand = \"other.exe\"\r\n");
                     else File.WriteAllText(testProfile.Path, "{ // existing settings\n\"keep\": true, \"" + ClientProfiles.RootKey(profile) + "\": {\"other\":{\"command\":\"keep.exe\"},},}");
-                    ClientProfiles.Save(testProfile, true, "192.0.2.10", 8765, secret, null, 21, null);
+                    ClientProfiles.Save(testProfile, true, "192.0.2.10", 8765, secret, null, 21, null, confirmed: true);
                     string saved = File.ReadAllText(testProfile.Path);
                     Assert(saved.Contains("other") && saved.Contains("keep") && saved.Contains("tia-portal-vm"), profile.Name + " remote merge preserves other config");
                     if (profile.Client != "codex")
@@ -423,7 +492,7 @@ namespace TiaMcpConfigurator
                         var entry = (Dictionary<string, object>)map[ClientProfiles.ServerName(profile, true)];
                         Assert((string)entry[ClientProfiles.UrlKey(profile)] == "http://192.0.2.10:8765/mcp", profile.Name + " native HTTP schema");
                     }
-                    ClientProfiles.Save(testProfile, false, null, 0, null, @"C:\bundle space\runtime\v21\TiaMcp.Engine.V21.exe", 21, @"C:\Siemens\Portal V21");
+                    ClientProfiles.Save(testProfile, false, null, 0, null, ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21"), 21, @"C:\Siemens\Portal V21", confirmed: true);
                     Assert(File.ReadAllText(testProfile.Path).Contains("--tia-portal-location"), profile.Name + " local stdio saves explicit TIA path");
                 }
                 // 国产模型入口的客户端各自有独立 schema，泛型循环只核对了 URL 字段；这里盯住会被静默接受但客户端读不懂的形状。
@@ -439,9 +508,9 @@ namespace TiaMcpConfigurator
                 Assert(brands.All(x => x.CategoryBase == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").CategoryBase == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").CategoryBase == "CLI" && agent.CategoryBase == "Desktop", "brand cards show the client they write to; native cards show only the kind");
                 var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, null, 21, null);
                 Assert((string)openRemote["type"] == "remote" && (bool)openRemote["enabled"] && (string)openRemote["url"] == "http://192.0.2.10:8765/mcp", "OpenCode remote entry carries type=remote and enabled");
-                var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, @"C:\r\TiaMcp.Engine.V21.exe", 21, @"C:\Siemens\Portal V21");
+                var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21"), 21, @"C:\Siemens\Portal V21");
                 var openCommand = (string[])openLocal["command"];
-                Assert((string)openLocal["type"] == "local" && openCommand[0] == @"C:\r\TiaMcp.Engine.V21.exe" && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
+                Assert((string)openLocal["type"] == "local" && openCommand[0] == ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21") && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
                 Assert(ClientProfiles.RootKey(brands[0]) == "mcp" && ClientProfiles.RootKey(profiles.First(x => x.Id == "qwen")) == "mcpServers", "OpenCode servers live under 'mcp', the CLIs under 'mcpServers'");
                 string originalToml = "model = \"keep\"\r\n[mcp_servers.\"tia-portal-vm\"] # old\r\nurl = \"old\"\r\n[mcp_servers.\"tia-portal-vm\".http_headers]\r\nAuthorization = \"oldsecret\"\r\n[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n";
                 string changedToml = ClientProfiles.MergeToml(originalToml, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null);
@@ -463,12 +532,16 @@ namespace TiaMcpConfigurator
                 Reject(() => UpdateCheck.ParseRelease("{\"tag_name\":\"latest\"}", "2.7.62", UpdateCheck.Repository), "update: a tag that is not a version is rejected");
                 string delivery = Path.Combine(temp, "delivery"); Directory.CreateDirectory(Path.Combine(delivery, "manifest"));
                 File.WriteAllText(Path.Combine(delivery, "manifest", "delivery.json"), "{\"release\":\"2.7.62\",\"package\":\"TIA_MCP_Delivery_v2.7.62_20260921\"}");
-                Assert(UpdateCheck.Installed(delivery) == "2.7.62" && UpdateCheck.InstalledPackage(delivery) == "TIA_MCP_Delivery_v2.7.62_20260921" && UpdateCheck.Installed(temp) == null && !UpdateCheck.IsSourceRepository(delivery), "update: installed version comes from manifest\\delivery.json, absent elsewhere");
+                File.WriteAllText(Path.Combine(delivery, "manifest", "package-manifest.json"), "{}");
+                Directory.CreateDirectory(Path.Combine(delivery, "scripts", "operations"));
+                File.WriteAllText(Path.Combine(delivery, "scripts", "operations", "Update-Engine.ps1"), "# fixture");
+                Assert(UpdateCheck.Installed(delivery) == "2.7.62" && UpdateCheck.InstalledPackage(delivery) == "TIA_MCP_Delivery_v2.7.62_20260921", "update: installed version comes from manifest\\delivery.json, absent elsewhere");
                 Directory.CreateDirectory(Path.Combine(delivery, ".git"));
                 Assert(UpdateCheck.IsSourceRepository(delivery), "update: a .git folder marks the source repository (no in-place update there)");
                 string launch = UpdateCheck.LaunchArguments(@"C:\TIA MCP\scripts\operations\Update-Engine.ps1", @"C:\TIA MCP\", 4242);
                 Assert(launch.StartsWith("-NoProfile -ExecutionPolicy Bypass -NoExit -File \"C:\\TIA MCP\\scripts\\operations\\Update-Engine.ps1\" -InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator"), "update: the updater is launched visibly with the install root (no trailing backslash), the caller pid and the relaunch switch");
-                Assert(UpdateCheck.Launch(delivery, 1).FileName.EndsWith("powershell.exe") && UpdateCheck.Launch(delivery, 1).UseShellExecute && UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: Windows PowerShell runs scripts\\operations\\Update-Engine.ps1 from the install root");
+                Reject<InvalidOperationException>(() => UpdateCheck.Launch(delivery, 1), "update: launch boundary refuses a worktree or checkout");
+                Assert(UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: updater path remains in selected bundle");
                 Assert(UpdateCheck.RunningEngines().All(x => new[] { "TiaMcp.Engine.V20.exe PID ", "TiaMcp.Engine.V21.exe PID ", "TiaMcp.FoundationHost.exe PID " }.Any(x.StartsWith)), "update: running engines are listed by pid (the updater refuses while any runs)");
                 WorkbenchUiTests(output);
                 if (passed < 182) throw new Exception("Expected at least 182 configuration checks.");

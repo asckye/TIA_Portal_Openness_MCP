@@ -213,7 +213,17 @@ public class StringsTests(WpfContext wpf)
                 => Assert.Equal(Loc.Current.T(key, args), Assert.Throws<T>(action).Message);
             Check<ArgumentException>(() => ConfigCore.Prefix("not-an-ip", 8765), "Config.InvalidEndpoint");
             Check<ArgumentException>(() => ConfigCore.ValidateKey("a\nb"), "Config.InvalidSecret");
-            Check<FileNotFoundException>(() => ConfigCore.Engine(missing, "21"), "Config.EngineNotFound", "V21");
+            Assert.Throws<TiaOpenness.Shared.BundleResourceUnavailableException>(() => ConfigCore.Engine(missing, "21"));
+            string bundle = Path.Combine(Path.GetTempPath(), "studio-missing-engine-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(bundle, "manifest"));
+                File.WriteAllText(Path.Combine(bundle, "manifest", "package-manifest.json"), "{}");
+                var error = Assert.Throws<FileNotFoundException>(() => ConfigCore.Engine(bundle, "21", bundle));
+                Assert.StartsWith(Loc.Current.T("Config.EngineNotFound", "V21"), error.Message);
+                Assert.Equal(Path.Combine(bundle, "runtime", "v21", "TiaMcp.Engine.V21.exe"), error.FileName);
+            }
+            finally { Directory.Delete(bundle, true); }
             Check<DirectoryNotFoundException>(() => ConfigCore.ValidateTia(missing, "21"), "Config.TiaApiNotFound", "V21", "Siemens.Engineering.Base.dll");
             Check<InvalidDataException>(() => ClientProfiles.StripJsonComments("{/*"), "Config.UnclosedJsonComment");
             foreach (var (input, key) in new[]
