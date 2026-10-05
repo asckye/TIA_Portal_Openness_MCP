@@ -204,6 +204,8 @@ internal static class SharedNativeIlReader
                             definition = "!unresolved-dispatch:" + target.FullName;
                     }
                     return new { kind = "method", name = target.FullName, definition, owner = target.DeclaringType.FullName,
+                        assembly = target.DeclaringType.Scope is ModuleDefinition targetModule
+                            ? targetModule.Assembly.Name.Name : (target.DeclaringType.Scope as AssemblyNameReference)?.Name,
                         target.HasThis, parameters = target.Parameters.Count, returns = target.ReturnType.FullName,
                         native = sites.TryGetValue(target.Name, out var site) ? (object)site : null };
                 }

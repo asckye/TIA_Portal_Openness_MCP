@@ -11,6 +11,7 @@ spec.loader.exec_module(proof)
 SOURCE = r'''
 using System;
 using System.Linq;
+using System.Text.Json.Nodes;
 namespace Fixture;
 internal interface IClosed { string Read(int value); }
 public interface IOpen { string Read(int value); }
@@ -54,6 +55,17 @@ internal static class Primitive {
     public static int? ZeroState(Receiver r) => r == null ? (int?)0 : Native.AccessState(r);
 }
 internal static class Host {
+    public static bool CachedAny(object[] items) => items.OfType<JsonObject>().Any(x =>
+        x["currentValue"] != null || x["monitorValue"] != null || x["value"] != null);
+    public static bool CachedAnyNative(object[] items) => items.OfType<Receiver>().Any(x => x.Read() != null);
+    public static bool DynamicAny(object[] items, Func<JsonObject,bool> predicate) => items.OfType<JsonObject>().Any(predicate);
+    public static bool CapturingAny(object[] items, IOpen receiver) => items.OfType<JsonObject>().Any(x => receiver.Read(1) != null);
+    public static bool ExternalAny(string lower) => new[] { "name", "address", "value" }.Any(lower.Contains);
+    public static bool SiemensAny(string[] items, Siemens.Fixture.Predicate receiver) => items.Any(receiver.Contains);
+    public static bool SiemensFrameworkNamespaceAny(string[] items, Microsoft.Fixture.Predicate receiver) => items.Any(receiver.Contains);
+    public static bool AmbiguousExternalAny(string[] items, string lower, bool choose) => items.Any(choose ? lower.Contains : lower.StartsWith);
+    public static bool OptionalExternalAny(string[] items, string lower, bool enabled) => items.Any(enabled ? lower.Contains : null);
+    public static bool UnknownFactoryAny(string[] items) => items.Any(Siemens.Fixture.Predicate.Unknown());
     public static object Group(IClosed receiver, int[] items) => items.Select(receiver.Read);
     public static object Lambda(Receiver[] items) => items.Select(x => x.Read());
     public static object VirtualGroup(Virtual receiver, int[] items) => items.Select(receiver.Read);
@@ -101,16 +113,36 @@ internal static class Host {
 }
 '''
 
+EXTERNAL_SOURCE = r'''
+namespace Siemens.Fixture {
+    public sealed class Predicate {
+        public bool Contains(string value) => true;
+        public static System.Func<string,bool> Unknown() => value => true;
+    }
+}
+namespace Microsoft.Fixture {
+    public sealed class Predicate { public bool Contains(string value) => true; }
+}
+'''
+
 
 class ReaderTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.directory = proof.ROOT / 'bin-build/shared-native-reader-self-test'
         cls.directory.mkdir(parents=True, exist_ok=True)
+        external = cls.directory / 'external'
+        external.mkdir(exist_ok=True)
+        (external / 'Predicate.cs').write_text(EXTERNAL_SOURCE, encoding='utf-8', newline='\n')
+        (external / 'Siemens.Fixture.csproj').write_text(
+            '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
+            '<NuGetAudit>false</NuGetAudit></PropertyGroup></Project>', encoding='utf-8')
         (cls.directory / 'Fixture.cs').write_text(SOURCE, encoding='utf-8', newline='\n')
         (cls.directory / 'Fixture.csproj').write_text(
             '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
-            '<Optimize>true</Optimize><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>', encoding='utf-8')
+            '<EnableDefaultCompileItems>false</EnableDefaultCompileItems><Optimize>true</Optimize>'
+            '<NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Compile Include="Fixture.cs" />'
+            '<ProjectReference Include="external/Siemens.Fixture.csproj" /></ItemGroup></Project>', encoding='utf-8')
         subprocess.run(['dotnet', 'build', str(cls.directory / 'Fixture.csproj'), '-c', 'Release', '-v:q',
                         '-m:1', '-nr:false', '-p:RestoreSources=' + str(cls.directory)], check=True)
         config = proof.SelfTests.config('fixture')
@@ -147,6 +179,48 @@ class ReaderTests(unittest.TestCase):
     def test_lambda_receiver_method(self):
         self.assertIn('get_Name', str(self.graph('Lambda')))
 
+    def test_cached_any_after_of_type(self):
+        for name in ('CachedAny', 'CachedAnyNative'):
+            with self.subTest(name=name):
+                method = next(m for m in self.paths.methods.values()
+                              if m['owner'] == 'Fixture.Host' and proof.method_name(m['name']) == name)
+                il = method['il']
+                of_type = next(row for row in il if '::OfType<' in row['operand'].get('name', ''))
+                any_call = next(row for row in il if '::Any<' in row['operand'].get('name', ''))
+                store = next(i for i, row in enumerate(il) if row['op'] == 'stsfld' and '::<>9__' in row['operand']['name'])
+                self.assertEqual(['ldftn', 'newobj', 'dup', 'stsfld'], [r['op'] for r in il[store-3:store+1]])
+                calls, conditions = self.paths.values(method)
+                source, predicate = calls[any_call['offset']]
+                self.assertEqual(('call', of_type['offset']), source)
+                self.assertEqual('delegate', predicate[0])
+                self.assertIn(predicate[1], self.paths.methods)
+                self.assertEqual([predicate[1]], self.paths.callbacks(method, calls, conditions)[any_call['offset']])
+                self.paths.reached.clear()
+                graph = self.graph(name)
+                self.assertIn(predicate[1], self.paths.reached)
+                if name == 'CachedAnyNative':
+                    self.assertIn('get_Name', str(graph))
+
+    def test_external_any_is_a_framework_leaf(self):
+        graph = self.graph('ExternalAny')
+        self.assertIn('framework-call:System.Boolean System.String::Contains(System.String)', str(graph))
+        method = next(m for m in self.paths.methods.values() if proof.method_name(m['name']) == 'ExternalAny')
+        target = next(row['operand'] for row in method['il'] if row['op'] == 'ldftn')
+        self.assertEqual('System.Runtime', target['assembly'])
+        self.assertIsNone(target['definition'])
+
+    def test_siemens_method_group_without_body_fails(self):
+        for name, owner in (('SiemensAny', 'Siemens.Fixture.Predicate'),
+                            ('SiemensFrameworkNamespaceAny', 'Microsoft.Fixture.Predicate')):
+            with self.subTest(name=name):
+                method = next(m for m in self.paths.methods.values() if proof.method_name(m['name']) == name)
+                target = next(row['operand'] for row in method['il'] if row['op'] == 'ldftn')
+                self.assertEqual('Siemens.Fixture', target['assembly'])
+                self.assertIsNone(target['definition'])
+                with self.assertRaisesRegex(ValueError, r'Unresolved LINQ delegate: .*::' + name + r'\(.*IL_[0-9a-f]+') as raised:
+                    self.graph(name)
+                self.assertIn(owner + '::Contains(System.String)', str(raised.exception))
+
     def test_callback_passed_to_host_helper(self):
         self.assertIn('get_Name', str(self.graph('HelperUse')))
         self.assertEqual(self.graph('HelperUse'), self.graph('ExternalHelperUse'))
@@ -161,7 +235,8 @@ class ReaderTests(unittest.TestCase):
         self.assertIn('get_Other', graph)
 
     def test_unresolved_callbacks_fail_with_call_site(self):
-        for name in ('OpenGroup', 'Ambiguous', 'UnknownLambda', 'Unknown', 'Stale', 'AmbiguousInvoke', 'UnguardedOptional', 'VirtualUnknown'):
+        for name in ('OpenGroup', 'Ambiguous', 'UnknownLambda', 'Unknown', 'Stale', 'AmbiguousInvoke', 'UnguardedOptional', 'VirtualUnknown',
+                     'DynamicAny', 'CapturingAny', 'AmbiguousExternalAny', 'OptionalExternalAny', 'UnknownFactoryAny'):
             with self.subTest(name=name), self.assertRaisesRegex(ValueError, r'Unresolved .*IL_[0-9a-f]+'):
                 self.graph(name)
 

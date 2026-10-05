@@ -428,6 +428,9 @@ class Graph:
 class Paths:
     def __init__(self, documents):
         self.methods = {}
+        self.assemblies = {doc['assembly'] for doc in documents if doc.get('assembly')}
+        self.owners = {method['owner'] for doc in documents for method in doc['methods']}
+        self.framework_leaves = {}
         for document in documents:
             for method in document['methods']:
                 if method.get('il') is not None and '__TiaMcpNativeCall' not in method['owner']:
@@ -444,6 +447,25 @@ class Paths:
         self.reached = set()
         self.boundaries = {}
         self.guards = {}
+
+    def delegate_value(self, instruction):
+        operand = instruction['operand']
+        target = normalize(operand.get('definition') or '')
+        name = operand.get('name', '')
+        owner = operand.get('owner') or name.split('::')[0].rsplit(' ', 1)[-1]
+        assembly = operand.get('assembly')
+        # ldftn binds one method even for an instance method group. External
+        # virtual dispatch, project bodies and SDK bodies remain unresolved.
+        # Older saved dumps omit assembly; their declaring types still exclude
+        # project methods (including bodies outside the expansion scope).
+        if instruction['op'] == 'ldftn' and target in ('', normalize(name)) and '::' in name \
+                and owner.startswith(('System.', 'Microsoft.')) and owner not in self.owners \
+                and not operand.get('native') and (not assembly or assembly not in self.assemblies and
+                    (assembly in ('mscorlib', 'netstandard', 'System', 'Microsoft') or
+                     assembly.startswith(('System.', 'Microsoft.')))):
+            target = '!framework:' + normalize(name)
+            self.framework_leaves[target] = normalize(name)
+        return ('delegate', target, name)
 
     def access(self, operand):
         native = operand.get('native')
@@ -634,7 +656,7 @@ class Paths:
                     and il[position]['op'] in ('ldftn', 'ldvirtftn') and il[position+1]['op'] == 'newobj' \
                     and il[position+2]['op'] == 'dup' and (row['op'] == 'stsfld' or self.slot(il[i-1], 'stloc') is not None) \
                     and any(marker in row['operand']['name'] for marker in ('::<>9__', '/<>O::')):
-                value = ('delegate', normalize(il[position]['operand'].get('definition') or ''), il[position]['operand'].get('name', ''))
+                value = self.delegate_value(il[position])
                 field = row['operand']['name']
                 cached[field] = value if cached.get(field, value) == value else ('ambiguous-delegate',)
         positions = {row['offset']: i for i, row in enumerate(il)}
@@ -678,7 +700,7 @@ class Paths:
             elif op in ('ldftn', 'ldvirtftn'):
                 if op == 'ldvirtftn':
                     pop()
-                stack.append(('delegate', normalize(operand.get('definition') or ''), operand.get('name', '')))
+                stack.append(self.delegate_value(row))
             elif op in ('ldfld', 'ldsfld'):
                 receiver = pop() if op == 'ldfld' else None
                 stack.append(cached.get(operand['name'], ('field', normalize(operand['name']), receiver)))
@@ -763,6 +785,9 @@ class Paths:
     def callbacks(self, method, calls, conditions):
         result = {}
         targets = []
+        def resolved(target):
+            return target in self.methods or target in self.framework_leaves
+
         def guarded(offset, value):
             il = method['il']
             positions = {row['offset']: i for i, row in enumerate(il)}
@@ -792,8 +817,7 @@ class Paths:
         for instruction in method['il']:
             operand = instruction['operand']
             if instruction['op'] in ('ldftn', 'ldvirtftn'):
-                target = operand.get('definition')
-                targets.append(normalize(target or ''))
+                targets.append(self.delegate_value(instruction)[1])
             if instruction['flow'] == 'Call' and operand.get('kind') == 'method':
                 native = operand.get('native')
                 name = native['member'] if native else operand['name']
@@ -812,9 +836,29 @@ class Paths:
                     # Old synthetic fixtures lack stack/signature metadata.
                     if 'parameters' not in operand and targets:
                         delegates = [targets[-1]]
-                    if not delegates or any(target not in self.methods for target in delegates):
+                    if not delegates or any(not resolved(target) for target in delegates):
                         kind = 'LINQ' if linq else 'Invoke'
-                        raise ValueError(f'Unresolved {kind} delegate: {method["name"]} IL_{instruction["offset"]:04x} -> {name}')
+                        details = []
+                        for position, i in enumerate(indexes):
+                            if position < len(delegates) and resolved(delegates[position]):
+                                continue
+                            value = values[i] if i < len(values) else None
+                            if value and value[0] in ('delegate', 'optional-delegate'):
+                                target = value[2] or value[1] or '<unknown>'
+                                if value[0] == 'optional-delegate' and not delegates[position]:
+                                    reason = 'may be null'
+                                elif not value[1]:
+                                    reason = 'no resolved definition'
+                                elif value[1] not in self.methods:
+                                    reason = 'no dumped body'
+                                else:
+                                    reason = 'may be null'
+                                details.append(f'argument {i}: {target} ({reason})')
+                            else:
+                                reason = 'ambiguous target' if value and value[0] == 'ambiguous-delegate' else 'unknown target'
+                                details.append(f'argument {i}: {reason}')
+                        detail = '; '.join(details) or 'no statically bound target'
+                        raise ValueError(f'Unresolved {kind} delegate: {method["name"]} IL_{instruction["offset"]:04x} -> {name}; {detail}')
                     result[instruction['offset']] = delegates
         return result
 
@@ -824,6 +868,12 @@ class Paths:
 
         def expand(key, continuation, outer_handlers=(), bindings=None):
             key = normalize(key)
+            if key in self.framework_leaves:
+                exceptional = {}
+                for kind, target in outer_handlers:
+                    exceptional.setdefault('exception:' + kind, target)
+                return graph.node('framework-call:' + self.framework_leaves[key],
+                                  {'next': continuation, **exceptional})
             method = self.methods[key]
             self.reached.add(key)
             if key in active:
@@ -1066,6 +1116,148 @@ class SelfTests(unittest.TestCase):
         new = Paths([dict(methods=[host, changed])]).build(host['name'])
         self.assertNotEqual(old, new)
         self.assertTrue(any('Siemens::Read' in row[0] for row in old))
+
+    def cached_any(self, woven=False):
+        callback = self.method('System.Boolean Host/<>c::<Run>b__0_0(System.Text.Json.Nodes.JsonObject)',
+                               [self.call('Siemens::Read()', True), self.ret()])
+        func = 'System.Func`2<System.Text.Json.Nodes.JsonObject,System.Boolean>'
+        field = dict(kind='field', name=func + ' Host/<>c::<>9__0_0')
+        singleton = dict(kind='field', name='Host/<>c Host/<>c::<>9')
+        def call(name, parameters, returns, op='call'):
+            row = self.call(name, woven and op == 'call', 'enumeration-input')
+            row['op'] = op
+            row['operand'].update(parameters=parameters, HasThis=op == 'newobj', returns=returns)
+            if woven and op == 'call':
+                row['operand']['name'] = name.replace('System.Linq.Enumerable', 'Host/__TiaMcpNativeCall')
+            return row
+        host = self.method('System.Boolean Host::Run(System.Collections.IEnumerable)', [
+            dict(op='ldarg.0', flow='Next', operand=dict(kind='value')),
+            call('System.Collections.Generic.IEnumerable`1<!!0> System.Linq.Enumerable::OfType<System.Text.Json.Nodes.JsonObject>(System.Collections.IEnumerable)',
+                 1, 'System.Collections.Generic.IEnumerable`1<System.Text.Json.Nodes.JsonObject>'),
+            dict(op='ldsfld', flow='Next', operand=field),
+            dict(op='dup', flow='Next', operand=dict(kind='value')),
+            dict(op='brtrue.s', flow='Cond_Branch', operand=dict(kind='branch', target=12)),
+            dict(op='pop', flow='Next', operand=dict(kind='value')),
+            dict(op='ldsfld', flow='Next', operand=singleton),
+            dict(op='ldftn', flow='Next', operand=dict(kind='method', name=callback['name'], definition=callback['name'])),
+            call('System.Void ' + func + '::.ctor(System.Object,System.IntPtr)', 2, 'System.Void', 'newobj'),
+            dict(op='dup', flow='Next', operand=dict(kind='value')),
+            dict(op='stsfld', flow='Next', operand=field),
+            dict(op='nop', flow='Next', operand=dict(kind='value')),
+            call('System.Boolean System.Linq.Enumerable::Any<System.Text.Json.Nodes.JsonObject>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)',
+                 2, 'System.Boolean'), self.ret()])
+        host.update(HasThis=False, arguments=[dict(name='items', type='System.Collections.IEnumerable')])
+        return host, callback
+
+    def test_cached_any_after_of_type(self):
+        for woven in (False, True):
+            with self.subTest(woven=woven):
+                host, callback = self.cached_any(woven)
+                paths = Paths([dict(methods=[host, callback])])
+                calls, conditions = paths.values(host)
+                key = normalize(callback['name'])
+                self.assertEqual((('call', 1), ('delegate', key, callback['name'])), calls[12])
+                self.assertEqual([key], paths.callbacks(host, calls, conditions)[12])
+                graph = paths.build(host['name'])
+                self.assertIn('Siemens::Read', str(graph))
+                changed = self.method(callback['name'], [self.call('Siemens::Other()', True), self.ret()])
+                self.assertNotEqual(graph, Paths([dict(methods=[host, changed])]).build(host['name']))
+
+    def test_cached_any_missing_body_fails_with_target(self):
+        for definition in ('missing', None):
+            with self.subTest(definition=definition):
+                host, callback = self.cached_any(True)
+                if definition is None:
+                    host['il'][7]['operand']['definition'] = None
+                with self.assertRaisesRegex(ValueError, r'Unresolved LINQ delegate: .*Host::Run\(.*IL_000c') as raised:
+                    Paths([dict(methods=[host])]).build(host['name'])
+                self.assertIn(callback['name'], str(raised.exception))
+                self.assertIn('no resolved definition' if definition is None else 'no dumped body', str(raised.exception))
+
+    def test_unknown_any_predicate_fails_with_call_site(self):
+        for producer in ('argument', 'unknown-method'):
+            with self.subTest(producer=producer):
+                host, callback = self.cached_any()
+                if producer == 'argument':
+                    host['name'] = 'System.Boolean Host::Run(System.Collections.IEnumerable,System.Func`2<System.Text.Json.Nodes.JsonObject,System.Boolean>)'
+                    host['arguments'].append(dict(name='predicate', type='System.Func`2<System.Text.Json.Nodes.JsonObject,System.Boolean>'))
+                    row = dict(op='ldarg.1', flow='Next', operand=dict(kind='value'))
+                else:
+                    row = self.call('System.Func`2<System.Text.Json.Nodes.JsonObject,System.Boolean> Unknown::Predicate()')
+                    row['operand'].update(parameters=0, HasThis=False, returns='System.Func`2<System.Text.Json.Nodes.JsonObject,System.Boolean>')
+                # A previously consumed cached lambda must not bind a later unknown value.
+                host['il'][13:] = [dict(offset=13, op='pop', flow='Next', operand=dict(kind='value')),
+                    dict(host['il'][0], offset=14), dict(host['il'][1], offset=15), dict(offset=16, **row),
+                    dict(host['il'][12], offset=17), dict(offset=18, **self.ret())]
+                with self.assertRaisesRegex(ValueError, r'Unresolved LINQ delegate: .*Host::Run\(.*IL_0011.*argument 1: unknown target'):
+                    Paths([dict(methods=[host, callback])]).build(host['name'])
+
+    def framework_any(self, woven=False):
+        target = 'System.Boolean System.String::Contains(System.String)'
+        constructor = self.call('System.Void System.Func`2<System.String,System.Boolean>::.ctor(System.Object,System.IntPtr)')
+        constructor.update(op='newobj')
+        constructor['operand'].update(parameters=2, HasThis=True, returns='System.Void')
+        consume = self.call('System.Boolean System.Linq.Enumerable::Any<System.String>(System.Collections.Generic.IEnumerable`1<!!0>,System.Func`2<!!0,System.Boolean>)',
+                            woven, 'enumeration-input')
+        consume['operand'].update(parameters=2, HasThis=False, returns='System.Boolean')
+        if woven:
+            consume['operand']['name'] = consume['operand']['name'].replace('System.Linq.Enumerable', 'Host/__TiaMcpNativeCall')
+        return self.method('System.Boolean Host::Run(System.String[],System.String)', [
+            dict(op='ldarg.0', flow='Next', operand=dict(kind='value')),
+            dict(op='ldarg.1', flow='Next', operand=dict(kind='value')),
+            dict(op='ldftn', flow='Next', operand=dict(kind='method', name=target, definition=None,
+                owner='System.String', HasThis=True, parameters=1, returns='System.Boolean')),
+            constructor, consume, self.ret()])
+
+    def test_framework_method_group_is_a_leaf(self):
+        for woven in (False, True):
+            graphs = []
+            for assembly in (None, 'System.Runtime', 'mscorlib'):
+                with self.subTest(woven=woven, assembly=assembly):
+                    host = self.framework_any(woven)
+                    if assembly:
+                        host['il'][2]['operand']['assembly'] = assembly
+                    paths = Paths([dict(assembly='Project', methods=[host])])
+                    graph = paths.build(host['name'])
+                    self.assertIn('framework-call:System.Boolean System.String::Contains(System.String)', str(graph))
+                    self.assertEqual({host['name']}, paths.reached)
+                    self.assertEqual(woven, 'enumeration-input' in str(graph))
+                    graphs.append(graph)
+                    host['il'][2]['operand']['name'] = host['il'][2]['operand']['name'].replace('Contains', 'StartsWith')
+                    self.assertNotEqual(graph, Paths([dict(methods=[host])]).build(host['name']))
+            self.assertTrue(all(graph == graphs[0] for graph in graphs))
+        host = self.framework_any()
+        operand = host['il'][2]['operand']
+        operand.update(name=operand['name'].replace('System.String::Contains', 'Microsoft.VisualBasic.Strings::IsNumeric'),
+                       owner='Microsoft.VisualBasic.Strings', assembly='Microsoft.VisualBasic.Core')
+        self.assertIn('framework-call:', str(Paths([dict(methods=[host])]).build(host['name'])))
+
+    def test_external_delegate_policy_fails_closed(self):
+        for mutation in ('siemens-type', 'project-type', 'namespace-prefix', 'siemens-assembly', 'project-assembly',
+                         'dumped-assembly', 'dumped-type', 'unresolved-dispatch', 'virtual', 'native'):
+            with self.subTest(mutation=mutation):
+                host = self.framework_any(True)
+                pointer = host['il'][2]
+                operand = pointer['operand']
+                methods = [host]
+                if mutation in ('siemens-type', 'project-type', 'namespace-prefix'):
+                    owner = {'siemens-type': 'Siemens.Engineering.Receiver', 'project-type': 'Project.Receiver',
+                             'namespace-prefix': 'SystemProject.Receiver'}[mutation]
+                    operand.update(owner=owner, name=operand['name'].replace('System.String::', owner + '::'))
+                elif mutation.endswith('-assembly'):
+                    operand['assembly'] = {'siemens-assembly': 'Siemens.Engineering', 'project-assembly': 'Project.External',
+                                           'dumped-assembly': 'System.Project'}[mutation]
+                elif mutation == 'dumped-type':
+                    methods.append(dict(owner=operand['owner'], name=operand['name'], il=None))
+                elif mutation == 'unresolved-dispatch':
+                    operand['definition'] = '!unresolved-dispatch:' + operand['name']
+                elif mutation == 'virtual':
+                    pointer['op'] = 'ldvirtftn'
+                else:
+                    operand['native'] = dict(member='Siemens.Engineering.Receiver::Contains(System.String)')
+                with self.assertRaisesRegex(ValueError, r'Unresolved LINQ delegate: .*Host::Run\(.*IL_0004') as raised:
+                    Paths([dict(assembly='System.Project', methods=methods)]).build(host['name'])
+                self.assertIn(operand['name'], str(raised.exception))
 
     def test_callback_expansion_keeps_assembly_identity(self):
         callback = 'Internal::Read()'
@@ -1373,6 +1565,11 @@ class SelfTests(unittest.TestCase):
                 instructions = [dict(op=row['op'], flow=row['flow'], operand=row['operand']) for row in docs[variant][0]['il']]
                 docs[variant].append(self.method(helper_name, instructions))
                 docs[variant][0] = self.method(selected, [self.call(helper_name, definition=helper_name), self.ret()])
+        elif mutation == 'unknown-callback':
+            for variant in ('baseline_engine', 'default_engine', 'shared_engine'):
+                instructions = [dict(op=row['op'], flow=row['flow'], operand=row['operand']) for row in docs[variant][0]['il'][:-1]]
+                docs[variant][0] = self.method(selected, instructions + [
+                    self.call('System.Linq.Enumerable::Any(System.Func)'), self.ret()])
         if host_scope:
             host_selected, host_other = ('System.Void sample.Foundation::Read()', 'System.Void sample.Foundation::Read(System.Int32)')
             config['hosts'][0]['methodScopes'] = {'sample.Foundation': [dict(method='Read', signature=host_selected)]}
@@ -1464,6 +1661,13 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(['System.Void sample.Foundation::Read()'], [row['method'] for row in proof['foundationPaths']])
         self.assertIn('foundation', proof['acceptanceRule']['hostMethodScopes'])
         self.assertFalse(any('HostOnly' in row['member'] for row in proof['expectedNativeDelta']))
+
+    def test_unresolved_inventory_is_not_reported_as_a_member_difference(self):
+        proof, _, _ = self.scoped_proof('unknown-callback')
+        self.assertFalse(proof['defaultExpandedFullInventoryEqual'])
+        self.assertTrue(any(error.startswith('Default expanded inventory: Unresolved LINQ delegate:')
+                            and 'IL_0002' in error for error in proof['errors']))
+        self.assertNotIn('Default expanded full-category weave member multiset changed', proof['errors'])
 
     def test_scoped_host_on_adapter_only_release(self):
         proof, _, _ = self.scoped_proof(host_scope=True, release='19')
@@ -1763,11 +1967,11 @@ def main():
             errors.append('Direct Siemens domain sites remain in the default engine')
         try:
             report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain, default_scope)
+            if not report['defaultExpandedFullInventoryEqual']:
+                errors.append('Default expanded full-category weave member multiset changed')
         except ValueError as error:
             report['defaultExpandedFullInventoryEqual'] = False
             errors.append('Default expanded inventory: ' + str(error))
-        if not report['defaultExpandedFullInventoryEqual']:
-            errors.append('Default expanded full-category weave member multiset changed')
     old, new = Paths(old_docs), Paths(new_docs)
     if args.baseline_engine:
         default_paths = Paths([default_engine, default_adapter])
