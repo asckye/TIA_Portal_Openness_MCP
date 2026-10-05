@@ -14,7 +14,7 @@ namespace TiaOpenness.Gui.Localization;
 internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
-    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue];
+    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue];
 
     private static readonly (string Key, string En, string Zh)[] CommonCatalogue =
     [

@@ -51,13 +51,9 @@ namespace TiaMcpServer
 
         public static async Task Main(string[] args)
         {
-            // Reject obsolete or misspelled verbs before any TIA initialization.
-            // Only no arguments or option-led arguments select the MCP server mode.
-            if (args.Length > 0 && !args[0].StartsWith("-", StringComparison.Ordinal)
-                && !Cli.CliCommands.IsVerb(args[0]))
+            if (Cli.CliBoundary.TryValidate(args, out int syntaxExit))
             {
-                Console.Error.WriteLine("Unknown command. Run tia help for supported commands.");
-                Environment.ExitCode = 2;
+                Environment.ExitCode = syntaxExit;
                 return;
             }
             try
@@ -178,8 +174,7 @@ namespace TiaMcpServer
                 // handlers can connect immediately. Falls through to MCP host when args[0] isn't a verb.
                 if (args.Length > 0 && Cli.CliCommands.IsVerb(args[0]))
                 {
-                    EngineServices.InitializeStandalone();
-                    Environment.Exit(Cli.CliCommands.Run(args));
+                    Environment.Exit(Cli.CliCommands.RunWithContext(args));
                     return;
                 }
 
@@ -612,6 +607,12 @@ namespace TiaMcpServer
                         LogDiag("LoaderException:");
                         LogExceptionSafe(le);
                     }
+                }
+                // CLI tool verbs report a process-level failure as exit 70; the diagnostics above went to stderr and the log files.
+                if (Cli.CliBoundary.TryContextFailure(args, ex, out int contextExit))
+                {
+                    Environment.ExitCode = contextExit;
+                    return;
                 }
                 // Re-throw so host surfaces failure, but we still have the log on disk.
                 throw;

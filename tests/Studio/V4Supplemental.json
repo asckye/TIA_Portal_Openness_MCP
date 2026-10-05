@@ -1,0 +1,733 @@
+[
+  {
+    "schemaVersion": 4,
+    "ok": true,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": null,
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "succeeded",
+      "execution": "read-only",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "complete",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "INVALID_ARGUMENT",
+      "message": "Failure.",
+      "details": {
+        "parameter": "mode",
+        "allowedValues": [
+          "preview",
+          "apply"
+        ]
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "LIMIT_EXCEEDED",
+      "message": "Failure.",
+      "details": {
+        "parameter": "items",
+        "limit": 1000,
+        "actual": 1001
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "UNSUPPORTED_CAPABILITY",
+      "message": "Failure.",
+      "details": {
+        "releaseKey": "14sp1",
+        "capability": "compile",
+        "action": null
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "TOOL_NOT_FOUND",
+      "message": "Failure.",
+      "details": {
+        "tool": "MissingTool"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "PROJECT_NOT_BOUND",
+      "message": "Failure.",
+      "details": {}
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "NOT_FOUND",
+      "message": "Failure.",
+      "details": {
+        "target": "Block"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "TARGET_AMBIGUOUS",
+      "message": "Failure.",
+      "details": {
+        "target": "PLC",
+        "candidates": [
+          "PLC_A",
+          "PLC_B"
+        ]
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "IDENTITY_MISMATCH",
+      "message": "Failure.",
+      "details": {
+        "target": "project",
+        "expected": "epoch:1",
+        "actual": "epoch:2"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "ALREADY_EXISTS",
+      "message": "Failure.",
+      "details": {
+        "target": "Block"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "CONFIRMATION_REQUIRED",
+      "message": "Failure.",
+      "details": {
+        "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "PLAN_STALE",
+      "message": "Failure.",
+      "details": {
+        "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reason": "input changed"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "PRECONDITION_FAILED",
+      "message": "Failure.",
+      "details": {
+        "condition": "borrowed",
+        "target": "project"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "OFFLINE_REQUIRED",
+      "message": "Failure.",
+      "details": {
+        "targets": [
+          "PLC_A"
+        ]
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "AUTHENTICATION_REQUIRED",
+      "message": "Failure.",
+      "details": {
+        "capability": "Safety"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "ACCESS_DENIED",
+      "message": "Failure.",
+      "details": {
+        "operation": "write",
+        "target": "Block"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "SESSION_RESET_REQUIRED",
+      "message": "Failure.",
+      "details": {
+        "reason": "channel closed"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": true,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "RESOURCE_UNAVAILABLE",
+      "message": "Failure.",
+      "details": {
+        "resource": "SDK"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "IO_FAILED",
+      "message": "Failure.",
+      "details": {
+        "operation": "read",
+        "path": "input.xml"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "NATIVE_OPERATION_FAILED",
+      "message": "Failure.",
+      "details": {
+        "nativeCode": "E1",
+        "nativeMessage": "Native failure",
+        "evidence": {
+          "Executed": true,
+          "observation": {
+            "source": "readback",
+            "nativeResult": null
+          }
+        }
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "CANCELLED",
+      "message": "Failure.",
+      "details": {
+        "stage": "before dispatch"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "TIMEOUT",
+      "message": "Failure.",
+      "details": {
+        "stage": "read"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "NOT_EXECUTED",
+      "message": "Failure.",
+      "details": {
+        "causeIndex": 0
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "PARTIAL_FAILURE",
+      "message": "Failure.",
+      "details": {
+        "succeeded": 1,
+        "failed": 1,
+        "notExecuted": 1
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "partial",
+      "execution": "partial",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "partial",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "OUTCOME_UNKNOWN",
+      "message": "Failure.",
+      "details": {
+        "stage": "write",
+        "evidence": {
+          "Executed": true,
+          "observation": {
+            "source": "readback",
+            "nativeResult": null
+          }
+        }
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "unknown",
+      "execution": "unknown",
+      "requiresSessionReset": true,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "unknown",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
+      "summary": "Evidence retained."
+    },
+    "error": {
+      "code": "INTERNAL_ERROR",
+      "message": "Failure.",
+      "details": {
+        "diagnosticId": "diagnostic-1"
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "21",
+      "tool": "Sample",
+      "requestId": "request-1",
+      "outcome": "rejected-before-operation",
+      "execution": "not-started",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "none",
+      "paging": null,
+      "warnings": []
+    }
+  }
+]

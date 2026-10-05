@@ -10,4 +10,9 @@
     <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
     <Delete Files="$(TargetDir)bridge/Newtonsoft.Json.dll" Condition="!Exists('../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/Newtonsoft.Json.dll')" />
   </Target>
+  <ItemGroup>
+    <Compile Include="../V4Fixtures.cs" Link="V4Fixtures.cs" />
+    <EmbeddedResource Include="../V4Supplemental.json" Link="V4Supplemental.json" />
+    <EmbeddedResource Include="../../../manifest/contracts/v4/responses/*.json" LinkBase="V4Snapshots" />
+  </ItemGroup>
 </Project>

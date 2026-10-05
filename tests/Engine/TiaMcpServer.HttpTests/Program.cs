@@ -102,7 +102,8 @@ internal static partial class Program
                     child.Kill();
                     throw new Exception("Invalid command started a long-running process: " + command);
                 }
-                Check(child.ExitCode == 2, "Invalid command did not return usage error: " + command);
+                Check(child.ExitCode == 64, "Invalid command did not return the CLI syntax exit code: " + command);
+                Check(child.StandardOutput.ReadToEnd().Length == 0, "Invalid command wrote stdout: " + command);
                 Check(child.StandardError.ReadToEnd().Contains("Unknown command"),
                     "Invalid command reached TIA initialization: " + command);
             }

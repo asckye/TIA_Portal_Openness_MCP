@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Cli;
 using TiaMcpServer.Siemens;
 
 
@@ -81,6 +82,7 @@ namespace TiaMcpServer
 
         internal static void RunAnalyzeReferenceAssets(CliOptions options)
         {
+            var report = new CliReport();
             var workspaceRoot = GetWorkspaceRoot();
             var referenceProject = string.IsNullOrWhiteSpace(options.ReferenceProjectPath)
                 ? Path.Combine(workspaceRoot, "reference", "XM_Mxxxx_PL007N_MP301_002_V21")
@@ -101,7 +103,6 @@ namespace TiaMcpServer
             var libraryInfo = AnalyzeReferenceLibrary(referenceLibrary);
             var recommendations = BuildReferenceRecommendations(projectInfo, libraryInfo);
 
-            // envelope: legacy-roundtrip-report
             var root = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -116,8 +117,7 @@ namespace TiaMcpServer
                 ["recommendations"] = recommendations
             };
 
-            File.WriteAllText(jsonPath, root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
-            File.WriteAllText(mdPath, BuildReferenceAnalysisMarkdown(root, jsonPath), Encoding.UTF8);
+            report.Save("AnalyzeReferenceAssets", root, jsonPath, mdPath, BuildReferenceAnalysisMarkdown(root, jsonPath));
 
             Program.LogDiag("Reference analysis report written:");
             Program.LogDiag(mdPath);
@@ -211,7 +211,8 @@ namespace TiaMcpServer
                 ? Path.Combine(workspaceRoot, "reports", "hmi_component_catalog")
                 : options.HmiComponentCatalogReportDirectory!;
 
-            var root = HmiComponentCatalogAnalyzer.Analyze(probeJson, templateDir);
+            var root = CliReportInput.Read(probeJson, bodyPath => HmiComponentCatalogAnalyzer.Analyze(bodyPath, templateDir));
+            root["globalLibraryProbeJsonPath"] = probeJson;
             HmiComponentCatalogAnalyzer.WriteReports(root, reportDir);
 
             Program.LogDiag("HMI component catalog report written to:");
@@ -734,6 +735,7 @@ namespace TiaMcpServer
 
         internal static void RunGenerateMonitoringReadOnlyReport(CliOptions options)
         {
+            var report = new CliReport();
             var workspaceRoot = GetWorkspaceRoot();
             var requestedSoftwarePath = string.IsNullOrWhiteSpace(options.PlcSoftwarePath) ? "PLC_1" : options.PlcSoftwarePath!;
             var softwarePath = requestedSoftwarePath;
@@ -748,7 +750,7 @@ namespace TiaMcpServer
             var jsonPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".json");
             var mdPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".md");
 
-            var safety = EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest();
+            var safety = report.Capture("RunOnlineMonitoringSafetySelfTest", () => EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest());
             var root = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -771,8 +773,7 @@ namespace TiaMcpServer
 
             try
             {
-                var connect = EngineServices.Get<SessionTools>().Connect();
-                // envelope: legacy-late-verdict
+                var connect = report.Capture("ConnectPortal", () => EngineServices.Get<SessionTools>().Connect(), writes: true);
                 root["connect"] = new JsonObject
                 {
                     ["message"] = connect.Message ?? "",
@@ -788,7 +789,7 @@ namespace TiaMcpServer
             {
                 try
                 {
-                    var attach = EngineServices.Get<ProjectSessionTools>().AttachToOpenProject(options.ProjectName!);
+                    var attach = report.Capture("AttachOpenProject", () => EngineServices.Get<ProjectSessionTools>().AttachToOpenProject(options.ProjectName!), writes: true);
                     root["attachToOpenProject"] = new JsonObject
                     {
                         ["projectName"] = options.ProjectName,
@@ -809,7 +810,7 @@ namespace TiaMcpServer
 
             try
             {
-                var state = EngineServices.Get<SessionTools>().GetState();
+                var state = report.Capture("GetSessionState", () => EngineServices.Get<SessionTools>().GetState());
                 root["state"] = new JsonObject
                 {
                     ["isConnected"] = state.IsConnected == true,
@@ -824,7 +825,7 @@ namespace TiaMcpServer
 
             try
             {
-                var context = EngineServices.Get<DevicesTools>().ValidateAutomationContext("", "");
+                var context = report.Capture("ValidateAutomationContext", () => EngineServices.Get<DevicesTools>().ValidateAutomationContext("", ""));
                 root["automationContext"] = new JsonObject
                 {
                     ["message"] = context.Message ?? "",
@@ -856,7 +857,7 @@ namespace TiaMcpServer
 
             try
             {
-                var tables = EngineServices.Get<PlcTablesTools>().GetPlcWatchTables(softwarePath);
+                var tables = report.Capture("ListPlcWatchTables", () => EngineServices.Get<PlcTablesTools>().GetPlcWatchTables(softwarePath));
                 root["watchTables"] = new JsonArray((tables.Items ?? Array.Empty<string>()).Select(x => JsonValue.Create(x)).ToArray());
             }
             catch (Exception ex)
@@ -866,7 +867,7 @@ namespace TiaMcpServer
 
             try
             {
-                var export = EngineServices.Get<PlcTablesTools>().ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName);
+                var export = report.Capture("ExportPlcWatchTablesToDirectory", () => EngineServices.Get<PlcTablesTools>().ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName), writes: true);
                 root["watchTableExport"] = new JsonObject
                 {
                     ["message"] = export.Message ?? "",
@@ -889,7 +890,7 @@ namespace TiaMcpServer
 
             try
             {
-                var probe = EngineServices.Get<PlcTablesTools>().ProbePlcMonitorOnlineCapabilities(softwarePath);
+                var probe = report.Capture("ProbePlcMonitorOnlineCapabilities", () => EngineServices.Get<PlcTablesTools>().ProbePlcMonitorOnlineCapabilities(softwarePath));
                 root["onlineCapabilityProbe"] = probe.Data ?? new JsonObject();
                 root["onlineCapabilityProbeOk"] = probe.Ok == true;
             }
@@ -911,7 +912,7 @@ namespace TiaMcpServer
 
                 if (!string.IsNullOrWhiteSpace(selectedTable))
                 {
-                    var read = EngineServices.Get<PlcTablesTools>().ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50);
+                    var read = report.Capture("GetPlcWatchTableCurrentValuesReadOnly", () => EngineServices.Get<PlcTablesTools>().ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50));
                     root["onlineCurrentValueRead"] = read.Data ?? new JsonObject();
                     root["onlineCurrentValueReadOk"] = read.Ok == true;
                     root["onlineCurrentValueReadMessage"] = read.Message ?? "";
@@ -928,21 +929,13 @@ namespace TiaMcpServer
                 root["onlineCurrentValueReadOk"] = false;
             }
 
-            var safetyOk = safety.Ok == true;
-            var exportFailures = root["watchTableExport"]?["failed"] as JsonArray;
             root["actualPlcSoftwarePath"] = softwarePath;
-            root["ok"] = safetyOk && (exportFailures == null || exportFailures.Count == 0);
             root["liveCurrentValueReadVerified"] = root["onlineCurrentValueReadOk"]?.GetValue<bool>() == true;
             root["liveCurrentValueReadNote"] = root["liveCurrentValueReadVerified"]?.GetValue<bool>() == true
                 ? "online-current-value-read: existing watch table current/monitor values were read without writes."
                 : "Not verified. Current values require an attached online PLC and a readable existing watch table.";
 
-            File.WriteAllText(jsonPath, root.ToJsonString(new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            }), Encoding.UTF8);
-            File.WriteAllText(mdPath, BuildMonitoringReadOnlyMarkdown(root, jsonPath), Encoding.UTF8);
+            report.Save("GenerateMonitoringReadOnlyReport", root, jsonPath, mdPath, BuildMonitoringReadOnlyMarkdown(root, jsonPath));
 
             Program.LogDiag("Monitoring read-only report written:");
             Program.LogDiag(mdPath);
@@ -951,6 +944,7 @@ namespace TiaMcpServer
 
         internal static void RunGenerateGlobalLibraryProbeReport(CliOptions options)
         {
+            var report = new CliReport();
             var workspaceRoot = GetWorkspaceRoot();
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
                 ? string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
@@ -981,7 +975,7 @@ namespace TiaMcpServer
 
             try
             {
-                var connect = EngineServices.Get<SessionTools>().Connect();
+                var connect = report.Capture("ConnectPortal", () => EngineServices.Get<SessionTools>().Connect(), writes: true);
                 root["connect"] = ResponseMeta.Unstamped(connect.Meta?["success"]?.GetValue<bool>() == true, ("message", connect.Message ?? ""));
             }
             catch (Exception ex)
@@ -991,27 +985,19 @@ namespace TiaMcpServer
 
             try
             {
-                var probe = EngineServices.Get<LibraryTools>().ProbeGlobalLibrary(libraryPath, 1000);
+                var probe = report.Capture("ProbeGlobalLibrary", () => EngineServices.Get<LibraryTools>().ProbeGlobalLibrary(libraryPath, 1000));
                 root["probe"] = GlobalLibraryProbeToJson(probe);
-                root["ok"] = probe.Ok == true;
             }
             catch (Exception ex)
             {
-                // envelope: legacy-ok-report
                 root["probe"] = new JsonObject
                 {
                     ["ok"] = false,
                     ["error"] = ex.InnerException?.Message ?? ex.Message
                 };
-                root["ok"] = false;
             }
 
-            File.WriteAllText(jsonPath, root.ToJsonString(new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            }), Encoding.UTF8);
-            File.WriteAllText(mdPath, BuildGlobalLibraryProbeMarkdown(root, jsonPath), Encoding.UTF8);
+            report.Save("GenerateGlobalLibraryProbeReport", root, jsonPath, mdPath, BuildGlobalLibraryProbeMarkdown(root, jsonPath));
 
             Program.LogDiag("Global library probe report written:");
             Program.LogDiag(mdPath);
@@ -1782,7 +1768,6 @@ namespace TiaMcpServer
             }
             md.AppendLine("- Watch table regex: " + (string.IsNullOrWhiteSpace(root["watchTableRegex"]?.ToString()) ? "<none>" : root["watchTableRegex"]));
             md.AppendLine("- Export directory: " + root["exportDirectory"]);
-            md.AppendLine("- OK: " + root["ok"]);
             md.AppendLine("- Live current-value read verified: " + root["liveCurrentValueReadVerified"]);
             md.AppendLine();
 
@@ -2080,7 +2065,6 @@ namespace TiaMcpServer
 
             var probe = root["probe"] as JsonObject;
             md.AppendLine("## Summary");
-            md.AppendLine("- OK: " + root["ok"]);
             md.AppendLine("- Library path: " + root["libraryPath"]);
             md.AppendLine("- Resolved file: " + probe?["resolvedLibraryFile"]);
             md.AppendLine("- Library type: " + probe?["libraryType"]);

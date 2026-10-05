@@ -37,6 +37,9 @@
     <Compile Include="..\..\..\src\Adapters\Native\Plc\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\..\src\Engine\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
     <Compile Include="../../../src/Engine/Cli/SpecLoader.cs" Link="SpecLoader.cs" />
+    <Compile Include="../../../src/Engine/Cli/CliBoundary.cs" Link="CliBoundary.cs" />
+    <Compile Include="../../../src/Engine/Cli/CliReportInput.cs" Link="CliReportInput.cs" />
+    <EmbeddedResource Include="Golden/CliV4.json" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
     <Compile Include="..\..\..\src\Engine\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
     <Compile Include="..\..\..\src\Engine\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />

@@ -1,0 +1,39 @@
+[
+  {
+    "exitCode": 0,
+    "stdout": "{\"schemaVersion\":4,\"ok\":true,\"data\":{\"summary\":\"Evidence retained.\"},\"error\":null,\"meta\":{\"timestamp\":\"2026-10-03T00:00:00Z\",\"releaseKey\":\"21\",\"tool\":\"Sample\",\"requestId\":\"request-1\",\"outcome\":\"succeeded\",\"execution\":\"read-only\",\"requiresSessionReset\":false,\"behaviorPolicy\":\"not-applicable\",\"completeness\":\"complete\",\"paging\":null,\"warnings\":[]}}\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 2,
+    "stdout": "{\"schemaVersion\":4,\"ok\":false,\"data\":{\"summary\":\"Evidence retained.\"},\"error\":{\"code\":\"PROJECT_NOT_BOUND\",\"message\":\"Failure.\",\"details\":{}},\"meta\":{\"timestamp\":\"2026-10-03T00:00:00Z\",\"releaseKey\":\"21\",\"tool\":\"Sample\",\"requestId\":\"request-1\",\"outcome\":\"rejected-before-operation\",\"execution\":\"not-started\",\"requiresSessionReset\":false,\"behaviorPolicy\":\"not-applicable\",\"completeness\":\"none\",\"paging\":null,\"warnings\":[]}}\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 3,
+    "stdout": "{\"schemaVersion\":4,\"ok\":false,\"data\":{\"summary\":\"Evidence retained.\"},\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"Failure.\",\"details\":{\"diagnosticId\":\"diagnostic-1\"}},\"meta\":{\"timestamp\":\"2026-10-03T00:00:00Z\",\"releaseKey\":\"21\",\"tool\":\"Sample\",\"requestId\":\"request-1\",\"outcome\":\"read-failed\",\"execution\":\"read-only\",\"requiresSessionReset\":false,\"behaviorPolicy\":\"not-applicable\",\"completeness\":\"none\",\"paging\":null,\"warnings\":[]}}\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 4,
+    "stdout": "{\"schemaVersion\":4,\"ok\":false,\"data\":{\"summary\":\"Evidence retained.\"},\"error\":{\"code\":\"PARTIAL_FAILURE\",\"message\":\"Failure.\",\"details\":{\"succeeded\":1,\"failed\":1,\"notExecuted\":1}},\"meta\":{\"timestamp\":\"2026-10-03T00:00:00Z\",\"releaseKey\":\"21\",\"tool\":\"Sample\",\"requestId\":\"request-1\",\"outcome\":\"partial\",\"execution\":\"partial\",\"requiresSessionReset\":false,\"behaviorPolicy\":\"not-applicable\",\"completeness\":\"partial\",\"paging\":null,\"warnings\":[]}}\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 5,
+    "stdout": "{\"schemaVersion\":4,\"ok\":false,\"data\":{\"summary\":\"Evidence retained.\"},\"error\":{\"code\":\"OUTCOME_UNKNOWN\",\"message\":\"Failure.\",\"details\":{\"stage\":\"write\",\"evidence\":{\"Executed\":true,\"observation\":{\"source\":\"readback\",\"nativeResult\":null}}}},\"meta\":{\"timestamp\":\"2026-10-03T00:00:00Z\",\"releaseKey\":\"21\",\"tool\":\"Sample\",\"requestId\":\"request-1\",\"outcome\":\"unknown\",\"execution\":\"unknown\",\"requiresSessionReset\":true,\"behaviorPolicy\":\"not-applicable\",\"completeness\":\"unknown\",\"paging\":null,\"warnings\":[]}}\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 64,
+    "diagnostic": "A path argument is required.",
+    "stdout": "",
+    "stderr": "ERROR: A path argument is required.\n"
+  },
+  {
+    "exitCode": 70,
+    "diagnostic": "Tool context creation failed.",
+    "stdout": "",
+    "stderr": "ERROR: Tool context creation failed.\n"
+  }
+]

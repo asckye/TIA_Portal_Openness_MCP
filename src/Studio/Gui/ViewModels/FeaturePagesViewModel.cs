@@ -198,7 +198,8 @@ public sealed record CallRow(CallRecord Record)
     public string Target => Record.Target;
     public string Parameters => FeatureJson.Redact(Record.ParametersJson);
     public string Summary => Record.Summary.Resolve();
-    public string Error => Record.ErrorCode + (Record.ErrorMessage.Resolve().Length > 0 ? "\n" + Record.ErrorMessage.Resolve() : "");
+    public string Error => Record.ErrorCode + (EngineResultText.Error(Record.ErrorCode) is { Length: > 0 } localized
+        ? "\n" + localized : Record.ErrorMessage.Resolve().Length > 0 ? "\n" + Record.ErrorMessage.Resolve() : "");
     public bool HasError => Error.Length > 0;
     public string Approval => Record.ApprovalRecord.Resolve();
 }

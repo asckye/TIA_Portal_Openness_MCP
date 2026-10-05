@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFrameworks>net48;net10.0-windows</TargetFrameworks></PropertyGroup>
+  <PropertyGroup><TargetFrameworks>net48;net10.0-windows</TargetFrameworks><Nullable>annotations</Nullable></PropertyGroup>
   <ItemGroup Condition="'$(TiaSharedAdapterPaths)' == 'true'">
     <ProjectReference Include="../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <!-- Keep the original compilation units byte-identical in the default build.
@@ -10,6 +10,7 @@
     <Compile Remove="Adapters/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../Logic/V4/*.cs" LinkBase="V4" />
     <ProjectReference Include="../Contracts/TiaOpenness.Contracts.csproj" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />

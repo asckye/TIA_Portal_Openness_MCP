@@ -20,19 +20,18 @@ namespace TiaMcpServer.Cli
 
         public static bool IsVerb(string s) => Array.IndexOf(Verbs, s.ToLowerInvariant()) >= 0;
 
+        internal static int RunWithContext(string[] args)
+            => CliBoundary.RunContext(args, () => EngineServices.InitializeStandalone(), () => Run(args), Console.Error);
+
         public static int Run(string[] args)
         {
+            if (CliBoundary.TryValidate(args, out int syntaxExit)) return syntaxExit;
+            if (CliBoundary.IsTool(args)) return CliToolExecution.Run(args);
             var verb = args[0].ToLowerInvariant();
             try
             {
                 switch (verb)
                 {
-                    case "gen": return Gen(args);
-                    case "patch": return Patch(args);
-                    case "compile": return Compile(args);
-                    case "export": return Export(args);
-                    case "import": return Import(args);
-                    case "describe": return Describe(args);
                     case "prewarm": return Prewarm(args);
                     case "config": return Config(args);
                     case "doctor": return DoctorCli(args);
@@ -49,101 +48,6 @@ namespace TiaMcpServer.Cli
         }
 
         // ---- verbs ----
-
-        private static int Gen(string[] args)
-        {
-            var json = SpecLoader.LoadAsJson(Positional(args));
-            var resp = EngineServices.Get<ProjectSessionTools>().ScaffoldProject(json, Flag(args, "--dry-run"));
-            return Report(resp, Flag(args, "--json"));
-        }
-
-        private static int Patch(string[] args)
-        {
-            var json = SpecLoader.LoadAsJson(Positional(args));
-            var resp = McpServer.PatchProject(json, Flag(args, "--dry-run"), Flag(args, "--no-overwrite"));
-            return Report(resp, Flag(args, "--json"));
-        }
-
-        private static int Compile(string[] args)
-        {
-            EnsureConnectedOpen(Positional(args));
-            var plc = Opt(args, "--plc") ?? "PLC_1";
-            var c = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc(plc);
-            // 三态：ErrorCount==null 表示编译结果没读回来，不是零错误。
-            // 编译结果不可读时必须退 1，避免脚本和 CI 将未知结果当成零错误。
-            bool? clean = c.ErrorCount == null ? (bool?)null : c.ErrorCount.Value == 0;
-            var errorsText = c.ErrorCount?.ToString() ?? "(unreadable)";
-            var warningsText = c.WarningCount?.ToString() ?? "(unreadable)";
-            if (Flag(args, "--json")) Console.WriteLine(Json(c));
-            else if (clean == null) Console.WriteLine($"compile {plc}: state={c.State} errors={errorsText} warnings={warningsText} (compile result unreadable, NOT verified)");
-            else Console.WriteLine($"compile {plc}: state={c.State} errors={errorsText} warnings={warningsText}");
-            return clean == true ? 0 : 1;
-        }
-
-        private static int Describe(string[] args)
-        {
-            EnsureConnectedOpen(Positional(args));
-            var tree = EngineServices.Get<DevicesTools>().GetProjectTree();
-            if (Flag(args, "--json")) { Console.WriteLine(Json(tree)); }
-            else
-            {
-                // print the actual tree text, not just the "(retrieved)" status line
-                Console.WriteLine(tree.Tree ?? tree.Message ?? "(project tree)");
-                var plc = Opt(args, "--plc");
-                if (!string.IsNullOrWhiteSpace(plc))
-                {
-                    var blocks = EngineServices.Get<PlcBlocksTools>().GetBlocks(plc!, "");
-                    Console.WriteLine();
-                    Console.WriteLine($"== {plc} · 程序块 ==");
-                    if (blocks.Items != null)
-                        foreach (var b in blocks.Items)
-                            Console.WriteLine($"  {b.TypeName,-12} {b.Name}  [{b.ProgrammingLanguage}]");
-                    else
-                        Console.WriteLine(blocks.Message);
-                }
-            }
-            return 0;
-        }
-
-        private static int Export(string[] args)
-        {
-            EnsureConnectedOpen(Positional(args));
-            var plc = Opt(args, "--plc") ?? "PLC_1";
-            var outDir = Opt(args, "--out") ?? throw new ArgumentException("export requires --out <dir>");
-            var block = Opt(args, "--block") ?? throw new ArgumentException("export requires --block <path> (single block; bulk export not yet wired)");
-            Directory.CreateDirectory(outDir);
-            bool scl = Flag(args, "--scl");
-            if (scl) EngineServices.Get<DocumentsTools>().ExportAsDocuments(plc, block, outDir);
-            else EngineServices.Get<PlcBlocksTools>().ExportBlock(plc, block, outDir);
-            Console.WriteLine($"exported {block} ({(scl ? "SCL/documents" : "XML")}) -> {outDir}");
-            return 0;
-        }
-
-        private static int Import(string[] args)
-        {
-            EnsureConnectedOpen(Positional(args));
-            var plc = Opt(args, "--plc") ?? "PLC_1";
-            var dir = Opt(args, "--from") ?? throw new ArgumentException("import requires --from <dir>");
-            bool overwrite = !Flag(args, "--no-overwrite");
-            int n = 0;
-
-            var xml = Directory.GetFiles(dir, "*.xml");
-            if (xml.Length > 0)
-            {
-                var r = EngineServices.Get<PlcBlocksTools>().ImportBlocksFromDirectory(plc, "", dir, "", overwrite);
-                Console.WriteLine(r.Message);
-                n += xml.Length;
-            }
-            var docs = Directory.GetFiles(dir, "*.s7dcl");
-            foreach (var f in docs)
-            {
-                var name = Path.GetFileNameWithoutExtension(f);
-                try { EngineServices.Get<DocumentsTools>().ImportFromDocuments(plc, "", dir, name, overwrite ? "Override" : "None"); Console.WriteLine($"  imported {name}"); n++; }
-                catch (Exception ex) { Console.Error.WriteLine($"  skip {name}: {ex.Message}"); }
-            }
-            if (n == 0) Console.Error.WriteLine($"no .xml or .s7dcl files found under {dir}");
-            return n > 0 ? 0 : 1;
-        }
 
         private static int Prewarm(string[] args)
         {
@@ -328,34 +232,6 @@ namespace TiaMcpServer.Cli
 
         // ---- helpers ----
 
-        private static void EnsureConnectedOpen(string projectPath)
-        {
-            // Openness resolves a relative project path against the exe directory, not the shell's
-            // working dir — confusing failures. Resolve against CWD so `tia describe foo.ap21` works.
-            if (!EngineServices.Get<Siemens.Portal>().IsConnected()) EngineServices.Get<SessionTools>().Connect();
-            EngineServices.Get<ProjectSessionTools>().OpenProject(Path.GetFullPath(projectPath));
-        }
-
-        private static int Report(ResponseScaffold resp, bool asJson)
-        {
-            if (asJson) { Console.WriteLine(Json(resp)); return resp.Ok ? 0 : 1; }
-            foreach (var s in resp.Steps)
-                Console.WriteLine($"  [{s.Status,-7}] {s.Step}{(string.IsNullOrEmpty(s.Detail) ? "" : " — " + s.Detail)}");
-            Console.WriteLine(resp.Message);
-            return resp.Ok ? 0 : 1;
-        }
-
-        private static string Json(object o) =>
-            JsonSerializer.Serialize(o, new JsonSerializerOptions { WriteIndented = true });
-
-        // First non-flag argument after the verb (the project/spec path).
-        private static string Positional(string[] args)
-        {
-            for (int i = 1; i < args.Length; i++)
-                if (!args[i].StartsWith("-")) return args[i];
-            throw new ArgumentException($"`tia {args[0]}` requires a path argument. Run `tia help` for usage.");
-        }
-
         private static string? Opt(string[] args, string name)
         {
             for (int i = 1; i < args.Length - 1; i++)
@@ -403,7 +279,8 @@ GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-versi
   Put project/spec paths before global flags. help/version/schema need no TIA installation.
 MCP SERVER FLAGS (no subcommand): --isolate-openness, --worker-timeout-seconds 10..180 (default 120)
   Opt-in worker isolation; local tests do not establish native TIA stability. See docs/guides/openness-worker-isolation.md.
-Exit code: 0 = success, 1 = completed with failed steps, 2 = error.";
+Tool exit codes: 0 = complete success, 2 = rejected, 3 = failed, 4 = partial, 5 = unknown;
+64 = syntax error, 70 = tool context creation failure. Tool stdout is one V4 JSON envelope.";
 
         private const string SchemaText =
 @"PROJECT SPEC (YAML or JSON). JSON is canonical; YAML is for humans.

@@ -1783,24 +1783,22 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | F5 | 导出句柄 ok/InvalidParams | data.export 与 meta.paging；缺句柄 NOT_FOUND，覆盖 ALREADY_EXISTS | 0 | 0 |
 | F6 | Portal 文本失败，无 meta | 按实际分支判定，边界生成 error/outcome；无法证实写入结果则 unknown | 0 | 0 |
 | F7 | Foundation PascalCase DTO/裸数组/V17 envelope | data 保留原领域数据及 evidence；Executed→meta.execution，RequiresSessionReset→meta；裸数组→data.items | 0 | 0 |
-| CLI | 报告 ok/roundtrip/后写判定 | 同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data | 3 | legacy-late-verdict:1; legacy-ok-report:1; legacy-roundtrip-report:1 |
+| CLI | 报告 ok/roundtrip/后写判定 | 同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data | 0 | 0 |
 
-共 48 个注释站点、18 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
+共 45 个注释站点、16 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
 
 | variant | 源码文件 |
 |---|---|
 | legacy-existing-meta | [ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
 | legacy-independent-verdicts | [ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
 | legacy-late-stamp | [ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
-| legacy-late-verdict | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
+| legacy-late-verdict | [ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | legacy-migration-page | [Siemens/Services/MigrationReadService.cs](../../src/Engine/Siemens/Services/MigrationReadService.cs) |
 | legacy-multiple-dynamic-fields | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../src/Engine/Siemens/Services/VersionControlService.cs) |
 | legacy-ok-only | [Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
-| legacy-ok-report | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) |
 | legacy-plcsim-complete | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | legacy-plcsim-failure | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | legacy-roundtrip-data-stamp | [ModelContextProtocol/Tools/LibraryTools.cs](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs) |
-| legacy-roundtrip-report | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) |
 | legacy-runtime-settings | [Siemens/Services/RuntimeSettingsService.cs](../../src/Engine/Siemens/Services/RuntimeSettingsService.cs) |
 | legacy-single-verdict | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OnlineDownloadService.cs](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs) |
 | legacy-stamp-then-verdict | [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
@@ -1857,7 +1855,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Program.cs](../../src/Engine/Program.cs):26 `DiagLogPathLocal` | 主日志经 DataLocations；启动日志仍在安装目录 | 数据根 logs/<releaseKey>；只读安装沿用用户目录回退 |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):16 `.crash.log` | Studio 安装目录崩溃日志 | 数据根 logs/studio；只读安装沿用用户目录回退 |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):86 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
-| [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):53 `GetWorkspaceRoot` | TMP_EXPORT/src/cwd 探测 | 显式 workspace/fixture 根 |
+| [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):54 `GetWorkspaceRoot` | TMP_EXPORT/src/cwd 探测 | 显式 workspace/fixture 根 |
 | [Cli/HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs):63 `TIA_MCP_AI_PACK` | 私有 HMI 模板默认输入 | 显式模板路径 |
 | [ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../src/Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs):55 `TMP_EXPORT` | 私有套件夹具探测 | 显式 fixture 根，workspaceRoot 不猜测 |
 | [ModelContextProtocol/Tools/OnlineToolPolicy.cs](../../src/Engine/ModelContextProtocol/Tools/OnlineToolPolicy.cs):33 `WithAutoOffline` | 错误文本触发下线再执行 | D1/L5 后 OFFLINE_REQUIRED，不重试 |
@@ -1950,7 +1948,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/Cli/CliProbes.cs](../../src/Engine/Cli/CliProbes.cs) | 写入/工作区:433 | 修改引用并回归 |
 | [src/Engine/Cli/HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs) | 写入/工作区:63 | 修改引用并回归 |
 | [src/Engine/Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs) | 根定位:88 | 修改引用并回归 |
-| [src/Engine/Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) | 写入/工作区:53,58,70,84,129,223,256,334,336,353,474,487,500,522,538,543,557,621,623,638,640,655,657,672,674,689,691,706,708,723,737,954,1404,2161 | 修改引用并回归 |
+| [src/Engine/Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) | 写入/工作区:54,59,71,86,129,224,257,335,337,354,475,488,501,523,539,544,558,622,624,639,641,656,658,673,675,690,692,707,709,724,739,948,1390,2145 | 修改引用并回归 |
 | [src/Engine/Cli/SpecLoader.cs](../../src/Engine/Cli/SpecLoader.cs) | 根定位:48,55,56,59,61 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs](../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs) | 产品:152 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs](../../src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs) | 写入/工作区:30 | 修改引用并回归 |
@@ -1960,7 +1958,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:219,224 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:37; 写入/工作区:38 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:73; 写入/工作区:74 | 修改引用并回归 |
-| [src/Engine/Program.cs](../../src/Engine/Program.cs) | 产品:643; 写入/工作区:26,861 | 修改引用并回归 |
+| [src/Engine/Program.cs](../../src/Engine/Program.cs) | 产品:644; 写入/工作区:26,862 | 修改引用并回归 |
 | [src/Engine/Runtime/EnvironmentDoctor.cs](../../src/Engine/Runtime/EnvironmentDoctor.cs) | 产品:111,112; 根定位:93 | 修改引用并回归 |
 | [src/Engine/Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs) | 根定位:35,36,39,49,111 | 修改引用并回归 |
 | [src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs](../../src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs) | 产品:122 | 修改引用并回归 |
@@ -1987,7 +1985,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Client/TiaOpenness.Client.csproj](../../src/Studio/Client/TiaOpenness.Client.csproj) | 根定位:5 | 修改引用并回归 |
 | [src/Studio/Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs) | 根定位:31 | 修改引用并回归 |
 | [src/Studio/Core/Adapters/SessionFactoryLoader.cs](../../src/Studio/Core/Adapters/SessionFactoryLoader.cs) | 根定位:38 | 修改引用并回归 |
-| [src/Studio/Core/TiaOpenness.Core.csproj](../../src/Studio/Core/TiaOpenness.Core.csproj) | 根定位:21 | 修改引用并回归 |
+| [src/Studio/Core/TiaOpenness.Core.csproj](../../src/Studio/Core/TiaOpenness.Core.csproj) | 根定位:22 | 修改引用并回归 |
 | [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:70; 写入/工作区:16 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ClientProfiles.cs](../../src/Studio/Gui/Configuration/ClientProfiles.cs) | 产品:12 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18,79,80,81; 根定位:77 | 修改引用并回归 |
