@@ -25,17 +25,17 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void CheckScaffoldOperations(Action<bool, string> check)
         {
             var previous = EngineServices.Provider;
-            using var provider = new ServiceCollection().AddSingleton<PlcBuildTools>()
+            using var provider = new ServiceCollection().AddSingleton<Siemens.IEngineeringSession, ScaffoldSession>().AddSingleton<PlcBuildTools>()
                 .AddSingleton<PlcExternalSourcesTools>().AddSingleton<PlcBlocksTools>()
                 .AddSingleton<HmiDescribeTools>().AddSingleton<UnifiedHmiTools>().BuildServiceProvider();
             EngineServices.SetServiceProvider(provider);
             try
             {
-                var root = JsonNode.Parse("{\"udt\":[{}],\"globalDb\":[{}],\"tagTable\":[{}],\"sclSourceFiles\":[\"Axis.scl\"]}")!;
+                var root = JsonNode.Parse("{\"udt\":[{\"name\":\"UDT_A\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}]}],\"globalDb\":[{\"dbName\":\"DB_A\",\"dbNumber\":1,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}]}],\"tagTable\":[{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}],\"sclSourceFiles\":[\"Axis.scl\"]}")!;
                 ScaffoldCalls.Clear();
                 var result = new ResponseScaffold();
                 ApplyScaffoldPlcElements(root, "PLC_1", result);
-                check(result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }), "shared scaffold imports PLC definitions and generates the imported SCL source in order");
+                check(result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }), "shared scaffold imports PLC definitions and generates the imported SCL source in order: " + string.Join("; ", result.Steps.Select(s => s.Step + "=" + s.Status + ":" + s.Detail)));
                 rejectUdt = true; ScaffoldCalls.Clear(); result = new ResponseScaffold();
                 ApplyScaffoldPlcElements(root, "PLC_1", result); rejectUdt = false;
                 check(!result.Ok && result.Steps[0].Status == "failed" && ScaffoldCalls.Contains("generate:Axis.scl"), "shared scaffold records one failed element and processes the remaining elements");
@@ -54,10 +54,15 @@ namespace TiaMcpServer.ModelContextProtocol
             finally { EngineServices.SetServiceProvider(previous); }
         }
     }
-    internal sealed class PlcBuildTools
+    internal sealed class ScaffoldSession : Siemens.IEngineeringSession
     {
-        public void PlcBuildAndImport(string plc, string kind, string json, string a, string b, string c, bool d, bool e)
-        { if (kind == "udt" && McpServer.rejectUdt) throw new InvalidOperationException("Fixture UDT rejection"); McpServer.ScaffoldCalls.Add(kind); }
+        public void ImportType(string plc, string group, string path)
+        { if (McpServer.rejectUdt) throw new InvalidOperationException("Fixture UDT rejection"); McpServer.ScaffoldCalls.Add("udt"); }
+        public void ImportPlcTagTable(string plc, string group, string path) => McpServer.ScaffoldCalls.Add("tagtable");
+        public void ImportBlock(string plc, string group, string path) => McpServer.ScaffoldCalls.Add("globaldb");
+        public object CompileSoftware(string plc) => throw new InvalidOperationException("Unexpected build/import compile.");
+        public (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string plc, string block)
+            => throw new InvalidOperationException("Unexpected native export.");
     }
     internal sealed class PlcExternalSourcesTools
     {

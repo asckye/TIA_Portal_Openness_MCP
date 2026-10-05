@@ -26,6 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public bool? Ok { get; set; }
         public JsonObject? Data { get; set; }
+        public string[]? Errors { get; set; }
+        public string[]? Warnings { get; set; }
+        public string? OutputPath { get; set; }
+        public string[]? OutputFiles { get; set; }
     }
 }
 

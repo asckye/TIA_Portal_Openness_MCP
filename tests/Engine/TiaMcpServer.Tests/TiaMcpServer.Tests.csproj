@@ -116,4 +116,25 @@
     <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs" Link="EcosystemTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs" Link="PlcBuildTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs" Link="PlcDocumentationTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs" Link="QualityAuditTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs" Link="TemplateTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs" Link="V21EcosystemTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs" Link="XmlBuilderTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineToolExecution.cs" Link="OfflineToolExecution.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="XmlBuildResults.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="PlcProgramImport.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
+  </ItemGroup>
 </Project>

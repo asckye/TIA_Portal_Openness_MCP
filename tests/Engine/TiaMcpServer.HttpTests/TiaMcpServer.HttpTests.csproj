@@ -15,4 +15,5 @@
   <ItemGroup><PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" IncludeAssets="compile;buildTransitive" /></ItemGroup>
   <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcpServer.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../TiaMcpServer.Tests/OfflineContractChecks.cs" Link="OfflineContractChecks.cs" /></ItemGroup>
 </Project>

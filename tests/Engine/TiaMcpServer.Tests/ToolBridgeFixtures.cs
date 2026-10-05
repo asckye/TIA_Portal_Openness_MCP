@@ -16,7 +16,7 @@ using Xunit;
 namespace TiaMcpServer.Siemens
 {
     // Registration-only session boundary; no Siemens SDK types enter the offline suite.
-    internal interface IEngineeringSession { }
+    internal partial interface IEngineeringSession { }
     // Kept only for the linked EngineRegistration and maintenance root-lookup checks.
     // No Portal implementation files are compiled into this suite.
     internal sealed partial class Portal : TiaMcpServer.Tests.FakeHmiToolSession, IEngineeringSession
@@ -128,7 +128,14 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void AssemblyDiscoveryIncludesEveryAttributedTypeOnly()
         {
-            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) }).Methods, ToolCatalog.Engine.Methods);
+            Assert.Equal(new ToolCatalog(new[] {
+                typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools),
+                typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools),
+                typeof(HardwareNetworkTools), typeof(HardwareServicesTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
+                typeof(GitWorkflowTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),
+                typeof(PlcBuildTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
+                typeof(V21EcosystemTools), typeof(XmlBuilderTools)
+            }).Methods, ToolCatalog.Engine.Methods);
         }
 
         [Fact]
