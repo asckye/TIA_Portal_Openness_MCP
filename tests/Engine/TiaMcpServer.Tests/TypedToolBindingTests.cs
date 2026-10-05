@@ -88,6 +88,7 @@ namespace TiaMcpServer.Tests
             yield return new object[] { typeof(MonitoringOptions), "{}" };
             yield return new object[] { typeof(Artifact[]), "[{\"id\":\"A\"}]" };
             yield return new object[] { typeof(LintRules), "{}" };
+            yield return new object[] { typeof(CompositeAttributeMap), "{\"Width\":10,\"Font\":{\"Size\":12,\"Bold\":true}}" };
         }
 
         [Theory, MemberData(nameof(Families))]
@@ -112,6 +113,17 @@ namespace TiaMcpServer.Tests
             Assert.Null(omitted["error"]);
             Assert.True((bool)omitted["data"]!["omitted"]!);
             Assert.Equal(3, calls);
+        }
+
+        [Fact]
+        public async Task CompositeAttributeMapLeafLimitIsCheckedBeforeBinding()
+        {
+            var tool = Register(typeof(CompositeAttributeMap)).Single(t => t.ProtocolTool.Name == "FindTools");
+            string parts = string.Join(",", Enumerable.Range(0, 26).Select(i => "\"P" + i + "\":{\"A\":1,\"B\":2}"));
+            var result = Body(await tool.InvokeAsync(Request("FindTools", "{\"input\":{" + parts + "}}")));
+            Assert.Equal("LIMIT_EXCEEDED", (string?)result["error"]!["code"]);
+            Assert.Equal("input", (string?)result["error"]!["details"]!["parameter"]);
+            Assert.Equal(0, calls);
         }
 
         public static IEnumerable<object[]> UnionMembers()

@@ -43,6 +43,7 @@ namespace TiaMcp.Logic.V4.Inputs
                 new InputSchema(V4Json.ParseInput("{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"property\"],\"properties\":{\"property\":{\"type\":\"string\",\"minLength\":1},\"name\":{\"type\":\"string\",\"minLength\":1},\"index\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":2147483647}},\"not\":{\"required\":[\"name\",\"index\"]}}")), maximum: 24), new InputBudget(32768)));
             if (type == typeof(ParameterRef[])) return From(NumberListValidator.ParameterReferences());
             if (type == typeof(Scalar)) return From(new InputContract<Scalar>(InputSchema.Scalar(), new InputBudget()));
+            if (type == typeof(CompositeAttributeMap)) return From(CompositeAttributeMapValidator.Generic());
             if (type == typeof(ToolArguments)) return From(new InputContract<ToolArguments>(
                 InputSchema.Map(new InputSchema(V4Json.ParseInput("{}"))), new InputBudget()));
             if (type == typeof(NativeValue)) return From(new InputContract<NativeValue>(NativeSchema(), new InputBudget()));

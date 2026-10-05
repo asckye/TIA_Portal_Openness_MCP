@@ -52,6 +52,23 @@ namespace TiaMcp.Logic.V4.Inputs
             AttributeMapValidator.ScalarFields(attributes).Where(p => !Excluded.Contains(p.Key, StringComparer.OrdinalIgnoreCase))
                 .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
 
+        // Context-free shape for tool registration and shared admission: a value is a Scalar or one
+        // level of named Scalar parts. The owning tool still applies ScreenItem with the host's rules.
+        public static InputContract<CompositeAttributeMap> Generic() => new InputContract<CompositeAttributeMap>(
+            InputSchema.Map(InputSchema.Union(InputSchema.Scalar(), InputSchema.Map(InputSchema.Scalar(), maximum: 50)), maximum: 50),
+            new InputBudget(characters: 65536, depth: 2), CountLeaves);
+
+        private static CompositeAttributeMap CountLeaves(CompositeAttributeMap values)
+        {
+            int leaves = 0;
+            foreach (var value in values.Values)
+            {
+                leaves += value.Json.ValueKind == JsonValueKind.Object ? value.Json.EnumerateObject().Count() : 1;
+                InputGuard.Limit(leaves, 50);
+            }
+            return values;
+        }
+
         // UnifiedScreenItemLogic.cs:36-40 and UnifiedUiModelLogic.cs:117-138. The host
         // supplies admitted public readable, non-indexer parts (never collections or
         // backlinks); a get-only part can have writable leaves. Rules are snapshotted.
@@ -63,16 +80,7 @@ namespace TiaMcp.Logic.V4.Inputs
                 if (!Excluded.Contains(part.Key, StringComparer.OrdinalIgnoreCase))
                     fields.Add(part.Key, InputSchema.Object(Fields(part.Value), maximum: 50));
             return new InputContract<CompositeAttributeMap>(InputSchema.Object(fields, minimum: minimum),
-                new InputBudget(characters: 65536, depth: 2), values =>
-                {
-                    int leaves = 0;
-                    foreach (var value in values.Values)
-                    {
-                        leaves += value.Json.ValueKind == JsonValueKind.Object ? value.Json.EnumerateObject().Count() : 1;
-                        InputGuard.Limit(leaves, 50);
-                    }
-                    return values;
-                });
+                new InputBudget(characters: 65536, depth: 2), CountLeaves);
         }
     }
 

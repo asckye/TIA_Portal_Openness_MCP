@@ -305,6 +305,7 @@ EXACT_SHAPES = {
     ("ComposePlcAliasAlarmLad","rowsJson"): "PlcAliasRow[]",
     ("InstantiatePlcXmlTemplates","rowsJson"): "TemplateRow[]",
     ("PatchPlcBlockDocument","changesJson"): "BlockEdit[]",
+    ("ManageUnifiedScreenItem","propertiesJson"): "CompositeAttributeMap",
 }
 
 def shape(n, p):

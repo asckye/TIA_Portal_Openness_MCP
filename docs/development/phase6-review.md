@@ -1091,7 +1091,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageUnifiedObjectParts` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedObjectParts` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedPlantNode` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
-| `ManageUnifiedScreenItem` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
+| `ManageUnifiedScreenItem` | 20, 21 | `propertiesJson` → `properties` | string | M | `CompositeAttributeMap` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
 | `ManageUnifiedScreenLayout` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedScreenLayout` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageWatchForceTableWebAccess` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
