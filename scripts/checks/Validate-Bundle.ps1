@@ -427,7 +427,9 @@ if ((Test-Path -LiteralPath $changelog) -and ($PackageMode -or (Test-Path -Liter
     }
 }
 
-if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-build.json'))) {
+# The pre-build gate (-PendingRelease) runs before the records are regenerated; a run that stopped mid-build can leave
+# them out of step, and the post-build validation checks them strictly.
+if ($Strict -and -not $PendingRelease -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-build.json'))) {
     $delivery = Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     foreach ($entry in @(@('manifest/release-build.json',$delivery.engineBuildSha256),@('manifest/configurator-build.json',$delivery.configuratorBuildSha256))) {
         if ((FileHash (Join-Path $root $entry[0])) -ne $entry[1]) { Fail "Build record changed: $($entry[0])" }
