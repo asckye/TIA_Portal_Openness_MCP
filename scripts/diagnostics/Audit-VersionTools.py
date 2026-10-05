@@ -76,7 +76,14 @@ def main():
                     continue
                 signatures.add(signature)
                 members.add((signature[0], owner, member.split('``')[0]))
-        coverage = ROOT / (f'bin-build/multi-version/adapters/coverage-{key}.json' if key not in ('20', '21') else f'bin-build/releases/v{full["fileVersion"].rsplit(".", 1)[0]}/native-call-coverage-v{key}.json')
+        if key in ('20', '21'):
+            # Parallel release pipelines write per-version folders; older runs used the flat release folder.
+            release_dir = ROOT / f'bin-build/releases/v{full["fileVersion"].rsplit(".", 1)[0]}'
+            coverage = release_dir / f'v{key}' / f'native-call-coverage-v{key}.json'
+            if not coverage.exists():
+                coverage = release_dir / f'native-call-coverage-v{key}.json'
+        else:
+            coverage = ROOT / f'bin-build/multi-version/adapters/coverage-{key}.json'
         calls = set()
         for site in read(coverage)['sites']:
             match = re.search(r' (Siemens\.Engineering\.[^ ]+?)::([^\(]+)\(', site['member'])

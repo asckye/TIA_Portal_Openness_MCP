@@ -15,7 +15,9 @@ def main():
     catalog = read(source)
     records = read(ROOT / 'bin-build/multi-version/transport/tool-usage.json')
     for major in (20, 21):
-        full = read(ROOT / f'bin-build/releases/v{release}/tool-usage-v{major}.json')
+        # Parallel release pipelines write per-version folders; older runs used the flat release folder.
+        path = ROOT / f'bin-build/releases/v{release}/v{major}/tool-usage-v{major}.json'
+        full = read(path if path.exists() else ROOT / f'bin-build/releases/v{release}/tool-usage-v{major}.json')
         assert len(full) == 4 and all(r['checkedToolCount'] > 0 for r in full)
         selected = next(r for r in full if r['profile'] == 'full' and r['transport'] == 'stdio')
         assert selected['allSourceTextRetrievedAndHashChecked']

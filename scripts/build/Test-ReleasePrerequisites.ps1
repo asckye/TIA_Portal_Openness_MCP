@@ -66,6 +66,14 @@ function Invoke-PrerequisiteChecks($Probes) {
         }
     }
 }
+# Files Release.ps1 itself rewrites (version bump and build records). An earlier run that stopped after the build
+# leaves them modified; rerunning must stay possible so the validated builds can be reused.
+function Test-ReleaseManagedChange([string]$Line) {
+    if ($Line.Length -lt 4 -or $Line.Substring(0, 2) -ne ' M') { return $false }
+    $path = $Line.Substring(3).Trim().Trim('"').Replace('\', '/')
+    return ($path -in @('Version.props', '.claude-plugin/plugin.json', 'docs/README.md', 'docs/development/roadmap.md', 'docs/reference/tool-matrix.md')) -or
+        ($path -match '^manifest/[^/]+\.json$')
+}
 function Assert-PrerequisiteValue([bool]$Condition, [string]$Message) {
     if (-not $Condition) { throw $Message }
 }
@@ -137,6 +145,8 @@ if ($SelfTest) {
     $rows = @(Invoke-PrerequisiteChecks $cases)
     $expected = @('PASS','FAIL','PASS','FAIL','FAIL','FAIL','FAIL','FAIL','PASS','PASS','PASS')
     if ($rows[9].Detail -ne 'A' -or $rows[10].Detail -ne 'B') { throw 'Probe data was not bound per probe' }
+    $managedCases = @{' M manifest/release-build.json'=$true; ' M Version.props'=$true; ' M scripts/build/Release.ps1'=$false; '?? manifest/new.json'=$false; ' M manifest/contracts/baseline/21.json'=$false}
+    foreach ($case in $managedCases.GetEnumerator()) { if ((Test-ReleaseManagedChange $case.Key) -ne $case.Value) { throw ('Release-managed filter failed: ' + $case.Key) } }
     for ($i=0; $i -lt $expected.Count; $i++) {
         if ($rows[$i].Result -ne $expected[$i]) { throw "Prerequisite self-test failed: $($cases[$i].Name)" }
     }
@@ -145,7 +155,7 @@ if ($SelfTest) {
         $result = Invoke-PrerequisiteCommand $shell @('-NoProfile','-Command',("[Console]::Error.WriteLine('harmless warning'); exit " + $exitCode))
         if ($result.ExitCode -ne $exitCode) { throw 'Native stderr/exit-code handling failed' }
     }
-    Write-Host "Prerequisite self-tests: $($expected.Count+2) passed, 0 failed."
+    Write-Host "Prerequisite self-tests: $($expected.Count+2+$managedCases.Count) passed, 0 failed."
     return
 }
 if (-not $RepoRoot) { $RepoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent }
@@ -184,8 +194,11 @@ $probes = @(
     @{Name='Git / clean tree'; Check={
         $settings.Git = Resolve-ReleaseCommand $Git
         $result = Invoke-PrerequisiteCommand $settings.Git @('-C',$RepoRoot,'status','--porcelain','--untracked-files=normal')
-        Assert-PrerequisiteValue ($result.ExitCode -eq 0 -and $result.Output.Count -eq 0) 'Working tree must be clean, including untracked files; commit the release prose before running Release'
-        'clean'
+        Assert-PrerequisiteValue ($result.ExitCode -eq 0) 'git status failed'
+        $managed = @($result.Output | Where-Object { Test-ReleaseManagedChange $_ })
+        $other = @($result.Output | Where-Object { -not (Test-ReleaseManagedChange $_) })
+        Assert-PrerequisiteValue ($other.Count -eq 0) ('Working tree must be clean apart from release-managed files; commit or revert: ' + (($other | Select-Object -First 5) -join ', '))
+        if ($managed.Count) { 'clean apart from ' + $managed.Count + ' release-managed file(s) from an earlier run' } else { 'clean' }
     }},
     @{Name='GitHub token'; Check={
         $availableToken = Get-ReleaseToken $Token $Git ([bool]$Offline)
