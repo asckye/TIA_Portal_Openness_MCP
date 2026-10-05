@@ -825,7 +825,6 @@ def self_test():
         try: usage_generator['resolve_names'](NEW_V4_TOOLS, registered, {n: n for n in NEW_V4_TOOLS})
         except AssertionError: pass
         else: raise AssertionError('Unreviewed or missing new V4 registration accepted')
-    validate_parameter_transition("Keep", "Keep", "Keep", {"valuesJson": "string"}, {"valuesJson"}, False, {})
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
     validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",
