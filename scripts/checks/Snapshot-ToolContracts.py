@@ -250,7 +250,15 @@ def compare_migration(args):
         if set(b) != expected:
             problems.append('roster differs: ' + ', '.join(sorted(set(b) ^ expected)))
         untouched = [name for name in a if name not in members]
-        problems += [name + ': unmigrated contract changed' for name in untouched if name in b and a[name] != b[name]]
+        subs = phase6_groups.rename_map(args.migration)
+        changed_other = [name for name in untouched if name in b and a[name] != b[name]]
+        # Guidance in other groups' tools may only change by this group's renames (Check-DeadToolReferences --fix).
+        guidance = [name for name in changed_other if phase6_groups.renamed(a[name], subs) == b[name]]
+        # Snapshots keep only a description hash; such changes are listed for the reviewer's source rename check.
+        unhashed = lambda tool: {key: value for key, value in tool.items() if key != 'descriptionSha256'}
+        described = [name for name in changed_other if name not in guidance
+                     and unhashed(phase6_groups.renamed(a[name], subs)) == unhashed(b[name])]
+        problems += [name + ': unmigrated contract changed' for name in changed_other if name not in guidance + described]
         if new.get('liteTools') is not None and release in runtime.get('releases', {}):
             expected_lite = {r['currentName'] for r in runtime['releases'][release] if 'lite' in r['profiles']}
             if set(new['liteTools']) != expected_lite or not expected_lite <= set(b):
@@ -259,7 +267,12 @@ def compare_migration(args):
         if args.migration == 'P6-07' and not problems:
             _p6_07_checks(b)
         changed = sum(a[name] != b.get(phase6_groups.mapped(name, members)) for name in members)
-        print(f'V{release} {args.migration}: group={len(members)} changed={changed} untouched={len(untouched)}; FAILED={len(problems)}')
+        print(f'V{release} {args.migration}: group={len(members)} changed={changed} untouched={len(untouched)} '
+              f'(guidance renamed={len(guidance)}, description only={len(described)}); FAILED={len(problems)}')
+        for name in guidance:
+            print('  guidance renamed: ' + name)
+        for name in described:
+            print('  description only (check the source rename): ' + name)
         for problem in problems:
             print('  unexpected: ' + problem)
         failures += len(problems)

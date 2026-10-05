@@ -3,6 +3,7 @@
 A group is the set of 3.x tool names whose source file appendix G assigns to a task; the Foundation releases belong to P6-08 as a whole.
 """
 import json
+import re
 import runpy
 from collections import defaultdict
 from functools import lru_cache
@@ -51,6 +52,29 @@ def names(task):
         g = _generator()
         old = {name for name, (path, _method) in g['source_tools'].items() if g['owners'][path] == task}
     return old | {renames().get(name, name) for name in old}
+
+
+def rename_map(task):
+    """3.x -> V4 for the names `task` renames (unchanged names omitted)."""
+    table = renames()
+    return {old: table[old] for old in names(task) if old in table and table[old] != old}
+
+
+def renamed(value, subs):
+    """`value` with every whole-word 3.x name of `subs` replaced, in every string (Check-DeadToolReferences --fix semantics)."""
+    if not subs:
+        return value
+    pattern = re.compile(r'\b(?:' + '|'.join(re.escape(n) for n in sorted(subs, key=len, reverse=True)) + r')\b')
+
+    def walk(item):
+        if isinstance(item, str):
+            return pattern.sub(lambda m: subs[m[0]], item)
+        if isinstance(item, list):
+            return [walk(x) for x in item]
+        if isinstance(item, dict):
+            return {walk(k) if isinstance(k, str) else k: walk(v) for k, v in item.items()}
+        return item
+    return walk(value)
 
 
 def mapped(name, members):
