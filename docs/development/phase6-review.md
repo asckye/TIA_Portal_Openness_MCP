@@ -1094,7 +1094,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageUnifiedEvent` | 20, 21 | `scriptPropertiesJson` → `scriptProperties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs) |
 | `ManageUnifiedListEntries` | 20, 21 | `entryJson` → `entry` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedLoggingTag` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
-| `ManageUnifiedLoggingTag` | 20, 21 | `tagPathJson` → `tagPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedLoggingTag` | 20, 21 | `tagPathJson` → `tagPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `ManageUnifiedObjectParts` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedObjectParts` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedPlantNode` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
@@ -1170,7 +1170,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ScanPlcSourceAnnotations` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
 | `ScanPlcSourceAnnotations` | 20, 21 | `markersJson` → `markers` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
 | `SetCpuCommonSettings` | 20, 21 | `settingsJson` → `settings` | string | M | `CpuSettings{exactAttributes:AttributeMap<Scalar>}` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `SetUnifiedLogDuration` | 20, 21 | `durationPathJson` → `durationPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `SetUnifiedLogDuration` | 20, 21 | `durationPathJson` → `durationPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `ShowObjectInEditor` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ShowObjectInEditor` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `SynchronizeLibrary` | 20, 21 | `harmonizeOptionsJson` → `harmonizeOptions` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |

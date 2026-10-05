@@ -309,6 +309,8 @@ EXACT_SHAPES = {
     ("ManageUnifiedScreenItem","propertiesJson"): "CompositeAttributeMap",
     # EngineeringObjectAddress.Parse navigates named nested rule folders ({property,name?}[]).
     ("ManageSiVArcRule","collectionPathJson"): "PropertyStep[]",
+    ("ManageUnifiedLoggingTag","tagPathJson"): "PropertyStep[]",
+    ("SetUnifiedLogDuration","durationPathJson"): "PropertyStep[]",
 }
 
 def shape(n, p):
