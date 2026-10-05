@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -46,8 +47,11 @@ internal static class UnifiedHmiDomainShapeChecks
                     check(portal.GetMethod(name, all) == null && surface.Method(name) == method,
                         name + " implementation belongs to its service");
                     var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-                    EngineSurface.CheckIl(check, Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                        (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken),
+                    bool callsService = domain.Name == "UnifiedExchange"
+                        ? DomainShapeChecks.HmiCallsService(tool, method, tools, new HashSet<MethodBase>())
+                        : Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                            (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                    EngineSurface.CheckIl(check, callsService,
                         name + " tool calls the migrated service", tool, method);
                 }
                 var forwarder = facade.GetMethod(name, all);

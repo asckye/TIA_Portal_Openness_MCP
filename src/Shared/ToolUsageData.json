@@ -5167,75 +5167,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "GetHmiConnections": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
     "GetHmiProgramInfo": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "GetHmiScreens": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "GetHmiTagTables": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "GetHmiTags": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -6214,7 +6146,75 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListHmiConnections": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "ListHmiScreenPaths": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "ListHmiScreens": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "ListHmiTagTables": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "ListHmiTags": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -15039,8 +15039,8 @@
             "fileName": {
               "exampleValue": "Status.js"
             },
-            "expectedTagNamesJson": {
-              "exampleValue": "<expectedTagNamesJson from this operation's target or user input>",
+            "expectedTagNames": {
+              "exampleValue": "<expectedTagNames from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -15639,7 +15639,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
         },
-        "GetHmiConnections": {
+        "ListHmiConnections": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -15655,7 +15655,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GetHmiScreens": {
+        "ListHmiScreens": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -15663,7 +15663,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GetHmiTagTables": {
+        "ListHmiTagTables": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -15672,7 +15672,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "GetHmiTags": {
+        "ListHmiTags": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },

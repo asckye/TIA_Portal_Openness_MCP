@@ -21,6 +21,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["softwarePath"] = softwarePath; meta["tagTablePath"] = tagTablePath; meta["tagName"] = tagName;
                 meta["binding"] = _session.GetBindingIdentity();
                 string address = softwarePath + tagTablePath + "/" + tagName;
+                meta["readStarted"] = true;
                 var sw = InvocationJournal.Native("DeleteHmiTag.ResolveSoftware", () => _session.ResolveHmiSoftwareOrThrow(softwarePath), "HmiSoftware/HmiTarget", softwarePath);
                 if (sw is HmiTarget classic)
                 {

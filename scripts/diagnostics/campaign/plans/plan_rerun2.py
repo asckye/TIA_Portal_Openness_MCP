@@ -9,7 +9,7 @@ pkg = {"packageName": "MCP800", "tagTable": {"name": "MCP_HmiTags2", "tags": [{"
 plan = [
     S("WriteClassicHmiMinimalPackageFiles", packageJson=J(pkg), outputDirectory=D + r"\mcp47_hmi"),
     S("ImportHmiScreen", softwarePath=H, folderPath="MCP_ScreenFolder", importPath=D + r"\mcp47_hmi\MCP800_Screen.xml", expect="any", keys=["verified"], note="800x480 matches the TP700"),
-    S("GetHmiScreens", softwarePath=H), S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=10, expect="any"), S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=10, expect="any"),
+    S("ListHmiScreens", softwarePath=H), S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=10, expect="any"), S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=10, expect="any"),
     S("ExportHmiScreen", softwarePath=H, screenName="MCP_Screen", exportPath=D + r"\mcp47_screen.xml", expect="any"),
     S("ReadHmiScreenSnapshot", softwarePath=H, screenPath="/MCP_ScreenFolder/MCP_Screen", maxDepth=3, maxNodes=200, expect="any", keys=["apiCallSuccess"]),
     S("ImportHmiScreensFromDirectory", softwarePath=H, folderPath="MCP_ScreenFolder", dir=D + r"\mcp47_hmi", regexName="MCP800_Screen", overwrite=True, expect="any"),

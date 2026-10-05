@@ -1,7 +1,9 @@
 using ModelContextProtocol.Server;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 internal static class DomainShapeChecks
 {
@@ -188,16 +190,30 @@ internal static class DomainShapeChecks
                 && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target), domain.Name + " shares the engineering session");
             var methods = tools.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
             check(methods.Length == domain.Count, domain.Name + " tool count");
+            if (domain.Name == "HmiExchange")
+                check(methods.Select(method => method.GetCustomAttribute<McpServerToolAttribute>()!.Name).OrderBy(name => name)
+                    .SequenceEqual(new[] { "ListHmiScreens", "ListHmiTagTables", "ListHmiTags", "ListHmiConnections",
+                        "ExportHmiScreen", "ExportHmiTagTable", "ExportHmiConnection", "ExportHmiProgram",
+                        "ImportHmiScreen", "ImportHmiTagTable", "ImportHmiConnection",
+                        "ImportHmiScreensFromDirectory", "ImportHmiTagTablesFromDirectory" }.OrderBy(name => name)),
+                    "HMI exchange registers exactly the V4 names without legacy aliases");
             foreach (var tool in methods)
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                 check(!tool.IsStatic && surface.Tool(name) == tool, domain.Name + " owns " + name);
+                string serviceName = domain.Name == "HmiExchange" && name.StartsWith("ListHmi", StringComparison.Ordinal)
+                    ? "Get" + name.Substring(4) : name;
                 var called = name == "CompileAndDiagnoseHmi" ? surface.Method("CompileAndDiagnoseCore", all)
-                    : service.GetMethod(name, all)!;
+                    : service.GetMethod(serviceName, all)!;
                 var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-                EngineSurface.CheckIl(check, Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == called.MetadataToken),
+                bool callsService = domain.Name == "HmiExchange" || domain.Name == "HmiTagDeletion"
+                    ? HmiCallsService(tool, called, tools, new HashSet<MethodBase>())
+                    : Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                        (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == called.MetadataToken);
+                EngineSurface.CheckIl(check, callsService,
                     name + " calls its service or shared compiler", tool, called);
+                if (domain.Name == "HmiExchange" || domain.Name == "HmiTagDeletion")
+                    check(tool.ReturnType == typeof(ModelContextProtocol.Protocol.CallToolResult), name + " returns the V4 envelope carrier");
                 var forwarder = mcp.GetMethod(name, all);
                 check(forwarder == null && ReferenceEquals(surface.Target(tool), toolTarget),
                     name + " CLI target is the registered instance without a static forwarder");
@@ -220,5 +236,35 @@ internal static class DomainShapeChecks
                 name + " resolves directly to the HMI exchange service without a kernel forwarder");
         check(surface.Property("LastImportNotes").DeclaringType!.Name == "HmiExchangeService"
             && portal.GetProperty("LastImportNotes", all) == null, "HMI import notes belong to the exchange service");
+    }
+
+    private static readonly Dictionary<short, OpCode> HmiOpCodes = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(field => field.FieldType == typeof(OpCode)).Select(field => (OpCode)field.GetValue(null)!).ToDictionary(op => op.Value);
+
+    // V4 adapters invoke the original service through captured delegates and, for classic HMI, a response helper.
+    // Follow only methods reachable from this entry within its tool type; unrelated tool calls cannot satisfy the check.
+    internal static bool HmiCallsService(MethodBase caller, MethodInfo service, Type owner, HashSet<MethodBase> seen)
+    {
+        if (!seen.Add(caller)) return false;
+        var il = caller.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
+        for (int i = 0; i < il.Length;)
+        {
+            short code = il[i++] == 0xfe ? (short)(0xfe00 | il[i++]) : (short)il[i - 1];
+            var op = HmiOpCodes[code];
+            if (op == OpCodes.Call || op == OpCodes.Callvirt || op == OpCodes.Ldftn || op == OpCodes.Ldvirtftn)
+            {
+                var target = caller.Module.ResolveMethod(BitConverter.ToInt32(il, i));
+                if (target == service) return true;
+                var declaring = target!.DeclaringType;
+                while (declaring != null && declaring != owner) declaring = declaring.DeclaringType;
+                if (declaring == owner && HmiCallsService(target, service, owner, seen)) return true;
+            }
+            i += op.OperandType == OperandType.InlineNone ? 0
+                : op.OperandType == OperandType.ShortInlineBrTarget || op.OperandType == OperandType.ShortInlineI || op.OperandType == OperandType.ShortInlineVar ? 1
+                : op.OperandType == OperandType.InlineVar ? 2
+                : op.OperandType == OperandType.InlineI8 || op.OperandType == OperandType.InlineR ? 8
+                : op.OperandType == OperandType.InlineSwitch ? 4 + 4 * BitConverter.ToInt32(il, i) : 4;
+        }
+        return false;
     }
 }

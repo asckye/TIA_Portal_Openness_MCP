@@ -7,7 +7,7 @@ pkg = {"tagTable": {"name": "MCP_HmiTags", "tags": [{"name": "MCP_Run", "dataTyp
        "screen": {"name": "MCP_Screen", "items": [{"type": "Text", "name": "Title", "text": "MCP", "left": 10, "top": 10, "width": 200, "height": 30}, {"type": "Button", "name": "Btn", "text": "Start", "left": 10, "top": 60, "width": 100, "height": 40, "tag": "MCP_Run"}, {"type": "IOField", "name": "Io", "left": 10, "top": 120, "width": 100, "height": 30, "tag": "MCP_Speed"}]}}
 plan = [
     S("GetHmiProgramInfo", softwarePath=H, keys=["hmiType", "version"]),
-    S("GetHmiScreens", softwarePath=H), S("ListHmiScreenPaths", softwarePath=H, offset=0, limit=50), S("GetHmiTagTables", softwarePath=H), S("GetHmiConnections", softwarePath=H),
+    S("ListHmiScreens", softwarePath=H), S("ListHmiScreenPaths", softwarePath=H, offset=0, limit=50), S("ListHmiTagTables", softwarePath=H), S("ListHmiConnections", softwarePath=H),
     S("DescribeHmiSoftware", softwarePath=H, maxMembers=30),
     S("GetClassicHmiScreenTree", softwarePath=H, kind="screens", folderPath="", maxDepth=3, expect="any", keys=["tree"]),
     S("GetClassicHmiScreenTree", softwarePath=H, kind="popups", folderPath="", maxDepth=3, expect="any"),
@@ -23,7 +23,7 @@ plan = [
     S("ManageClassicHmiFolder", softwarePath=H, folderKind="screens", folderPath="MCP_ScreenFolder", action="create", newName="", confirmDelete=False, dryRun=False, expect="any", keys=["after"]),
     S("ImportHmiTagTable", softwarePath=H, folderPath="MCP_TagFolder", importPath=D + r"\mcp46_hmi\MCP_HmiTags.xml", expect="any", keys=["verified"]),
     S("ImportHmiScreen", softwarePath=H, folderPath="MCP_ScreenFolder", importPath=D + r"\mcp46_hmi\MCP_Screen.xml", expect="any", keys=["verified"]),
-    S("GetHmiTagTables", softwarePath=H), S("GetHmiTags", softwarePath=H, tagTableName="MCP_HmiTags", expect="any"), S("GetHmiScreens", softwarePath=H),
+    S("ListHmiTagTables", softwarePath=H), S("ListHmiTags", softwarePath=H, tagTableName="MCP_HmiTags", expect="any"), S("ListHmiScreens", softwarePath=H),
     S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=20, expect="any"),
     S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=20, expect="any"),
     S("DescribeHmiTagTable", softwarePath=H, tagTableName="MCP_HmiTags", maxMembers=20, expect="any"),

@@ -597,7 +597,7 @@ namespace TiaMcpServer.Siemens.Services
                     catch (EngineeringTargetInvocationException second) when (second.GetBaseException().Message.IndexOf("PLC device", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         attempts.Add(new JsonObject { ["plcs"] = "deviceNames", ["outcome"] = second.GetBaseException().Message }); meta["attempts"] = attempts;
-                        throw new PortalException(PortalErrorCode.InvalidState, "SiVArc found the PLC neither as '" + string.Join(", ", plcSoftwareNames) + "' nor as '" + string.Join(", ", plcs) + "'. SiVArc lists the PLCs the HMI device is connected to (official requirement: an existing project connected to an HMI device and PLC configured) - check the HMI connection to this PLC (GetHmiConnections / EnsureUnifiedHmiConnection) and retry.");
+                        throw new PortalException(PortalErrorCode.InvalidState, "SiVArc found the PLC neither as '" + string.Join(", ", plcSoftwareNames) + "' nor as '" + string.Join(", ", plcs) + "'. SiVArc lists the PLCs the HMI device is connected to (official requirement: an existing project connected to an HMI device and PLC configured) - check the HMI connection to this PLC (ListHmiConnections / EnsureUnifiedHmiConnection) and retry.");
                     }
                 }
                 meta["attempts"] = attempts;

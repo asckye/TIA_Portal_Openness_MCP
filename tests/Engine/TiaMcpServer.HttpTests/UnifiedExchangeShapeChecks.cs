@@ -83,7 +83,15 @@ internal static class UnifiedExchangeShapeChecks
         // Tool surface
         var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ExchangeUnifiedTags","ExchangeUnifiedScriptModules","ImportUnifiedOpcUaAlarms"})
+        {
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
+            check(tools.Tool(name).ReturnType==typeof(ModelContextProtocol.Protocol.CallToolResult),name+" returns the V4 envelope carrier");
+        }
+        var expectedNames=tools.Tool("ExchangeUnifiedTags").GetParameters().Single(p=>p.Name=="expectedTagNames");
+        check(expectedNames.ParameterType==typeof(string[]) && expectedNames.HasDefaultValue && expectedNames.DefaultValue==null,
+            "ExchangeUnifiedTags accepts a typed optional string array");
+        check(!tools.Tool("ExchangeUnifiedTags").GetParameters().Any(p=>p.Name=="expectedTagNamesJson"),
+            "ExchangeUnifiedTags has no legacy JSON-string parameter");
         check(Equals(tools.Tool("ImportUnifiedOpcUaAlarms")!.GetParameters().Single(p=>p.Name=="action").DefaultValue,"read"),"ImportUnifiedOpcUaAlarms defaults to read");
     }
 }

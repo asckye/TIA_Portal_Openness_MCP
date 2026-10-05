@@ -127,8 +127,8 @@ HARDWARE_V4 = {"devicePath": ["PlcOfflineFixture"], "itemPath": []}
 
 CASES = {
     'HmiExchange': [(name, 'disconnected', dict(softwarePath=PLC, **arguments)) for name, arguments in (
-        ('GetHmiScreens', {}), ('GetHmiTagTables', {}), ('GetHmiTags', {'tagTableName': 'Table'}),
-        ('GetHmiConnections', {}), ('ExportHmiScreen', {'screenName': 'Main', 'exportPath': 'C:/domain-offline.xml'}),
+        ('ListHmiScreens', {}), ('ListHmiTagTables', {}), ('ListHmiTags', {'tagTableName': 'Table'}),
+        ('ListHmiConnections', {}), ('ExportHmiScreen', {'screenName': 'Main', 'exportPath': 'C:/domain-offline.xml'}),
         ('ExportHmiTagTable', {'tagTableName': 'Table', 'exportPath': 'C:/domain-offline.xml'}),
         ('ExportHmiConnection', {'connectionName': 'Connection', 'exportPath': 'C:/domain-offline.xml'}),
         ('ExportHmiProgram', {'exportDir': 'C:/domain-offline'}),

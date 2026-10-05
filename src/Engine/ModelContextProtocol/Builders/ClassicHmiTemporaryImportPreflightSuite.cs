@@ -138,7 +138,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Step(2, "Add temporary KTP700 Basic PN HMI", "CreateHardwareCatalogDevice(...)", "只使用临时工程硬件。"),
                 Step(3, "Import Classic HMI tag table first", "ImportHmiTagTable(\"HMI_RT_1\", \"\", tagTableXmlPath)", tagPath),
                 Step(4, "Import Classic HMI screen second", "ImportHmiScreen(\"HMI_RT_1\", \"\", screenXmlPath)", screenPath),
-                Step(5, "Read back HMI tags/screens/items", "GetHmiTagTables/GetHmiScreens/DescribeHmiTag/DescribeHmiScreenItem", "确认 tag、ControllerTag、动态绑定和按钮事件。"),
+                Step(5, "Read back HMI tags/screens/items", "ListHmiTagTables/ListHmiScreens/DescribeHmiTag/DescribeHmiScreenItem", "确认 tag、ControllerTag、动态绑定和按钮事件。"),
                 Step(6, "Compile/diagnose HMI where public API supports it", "DescribeService/InvokeService guarded compile discovery", "未确认 API 前只允许发现，不允许保存真实工程。"),
                 Step(7, "Save temporary project only after readback succeeds", "SaveProject()", "仅临时工程。"));
 

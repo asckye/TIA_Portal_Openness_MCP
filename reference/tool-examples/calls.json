@@ -4013,8 +4013,8 @@
           "fileName": {
             "exampleValue": "Status.js"
           },
-          "expectedTagNamesJson": {
-            "exampleValue": "<expectedTagNamesJson from this operation's target or user input>",
+          "expectedTagNames": {
+            "exampleValue": "<expectedTagNames from this operation's target or user input>",
             "requiresBinding": true
           }
         },
@@ -4613,7 +4613,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "GetHmiConnections": {
+      "ListHmiConnections": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -4629,7 +4629,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetHmiScreens": {
+      "ListHmiScreens": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -4637,7 +4637,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetHmiTagTables": {
+      "ListHmiTagTables": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -4646,7 +4646,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GetHmiTags": {
+      "ListHmiTags": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },

@@ -53,8 +53,9 @@ namespace TiaMcpServer.Siemens.Services
                 var dir = UnifiedExchangeLogic.ValidateDirectory(directory, exporting);
                 var name = UnifiedExchangeLogic.ValidateFileName(fileName);
                 var expected = UnifiedExchangeLogic.ParseExpectedNames(expectedTagNamesJson);
-                if (exporting && expected.Length > 0) throw new ArgumentException("expectedTagNamesJson is only used by import.");
+                if (exporting && expected.Length > 0) throw new ArgumentException("expectedTagNames is only used by import.");
                 using var access = !dryRun && !exporting ? _session.AcquireHmiEditAccess() : null;
+                meta["readStarted"] = true;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 // Official pattern: tagTable.Tags.Export(dir, name) / tagTable.Tags.Import(dir); the root Tags composition carries the same members for the whole device.
                 HmiTagComposition tags;
@@ -100,6 +101,7 @@ namespace TiaMcpServer.Siemens.Services
                 var name = UnifiedExchangeLogic.ValidateFileName(fileName);
                 if (!exporting && !string.IsNullOrWhiteSpace(moduleName)) throw new ArgumentException("moduleName selects one module for export; import takes the directory (optionally one fileName).");
                 using var access = !dryRun && !exporting ? _session.AcquireHmiEditAccess() : null;
+                meta["readStarted"] = true;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 HmiScriptModuleComposition modules = hmi.Scripts;
                 HmiScriptModule? module = null;
@@ -135,6 +137,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "import" && !File.Exists(xml)) throw new FileNotFoundException("OPC UA alarm xml not found.", xml);
                 if (action == "read" && !string.IsNullOrEmpty(xmlPath)) throw new ArgumentException("xmlPath is only used by import.");
                 using var access = action == "import" && !dryRun ? _session.AcquireHmiEditAccess() : null;
+                meta["readStarted"] = true;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 var connection = hmi.Connections.Find(connectionName) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact HMI connection not found: " + connectionName);
                 meta["connection"] = new JsonObject { ["name"] = connection.Name, ["communicationDriver"] = connection.CommunicationDriver, ["partner"] = connection.Partner };

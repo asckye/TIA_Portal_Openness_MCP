@@ -1882,8 +1882,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:23240 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:23962 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:23259 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:23981 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:74 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:63 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1983,7 +1983,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/README.md](../../src/Studio/README.md) | 产品:4 | 修改引用并回归 |
 | [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:48 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:50 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.HttpTests/README.md](../../tests/Engine/TiaMcpServer.HttpTests/README.md) | 产品:14,16 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs) | 根定位:9,13,66,67,68,87,99,101,102,103,104,116,117,120,124,126,135,136,150,151,161,164,168,171,179,180,182,183,184,185,186,187,188,191,193,198,203 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 根定位:205,228 | 修改引用并回归 |
@@ -2056,9 +2056,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
 | `ListDevices` | `ListDevices` | 工程和 PLC 定位 | 20, 21 |
 | `ListExportHandles` | `ListExportHandles` | 大结果分页与文件交付 | 20, 21 |
-| `ListHmiScreens` | `GetHmiScreens` | HMI 定位和诊断 | 20, 21 |
-| `ListHmiTagTables` | `GetHmiTagTables` | HMI 定位和诊断 | 20, 21 |
-| `ListHmiTags` | `GetHmiTags` | HMI 定位和诊断 | 20, 21 |
+| `ListHmiScreens` | `ListHmiScreens` | HMI 定位和诊断 | 20, 21 |
+| `ListHmiTagTables` | `ListHmiTagTables` | HMI 定位和诊断 | 20, 21 |
+| `ListHmiTags` | `ListHmiTags` | HMI 定位和诊断 | 20, 21 |
 | `ListPlcBlocks` | `ListPlcBlocks` | 工程和 PLC 定位 | 20, 21 |
 | `ListPlcTagTables` | `ListPlcTagTables` | 工程和 PLC 定位 | 20, 21 |
 | `ListPlcTypes` | `ListPlcTypes` | 工程和 PLC 定位 | 20, 21 |

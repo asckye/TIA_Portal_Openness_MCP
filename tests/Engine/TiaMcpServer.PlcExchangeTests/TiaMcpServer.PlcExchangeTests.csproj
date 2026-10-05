@@ -12,4 +12,23 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Engine/TiaMcpServer.V$(EngineRelease).csproj" />
   </ItemGroup>
+  <!-- Use the same SDK assets as the net48 engine; init-only setters have different
+       required modifiers in the net9 assets and cannot be mixed across this boundary. -->
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" ExcludeAssets="compile;runtime" />
+    <PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" ExcludeAssets="compile;runtime" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.7.1" ExcludeAssets="compile;runtime" />
+    <Reference Include="ModelContextProtocol">
+      <HintPath>$(NuGetPackageRoot)modelcontextprotocol/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.dll</HintPath>
+    </Reference>
+    <Reference Include="ModelContextProtocol.Core">
+      <HintPath>$(NuGetPackageRoot)modelcontextprotocol.core/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.AI.Abstractions">
+      <HintPath>$(NuGetPackageRoot)microsoft.extensions.ai.abstractions/9.7.1/lib/net462/Microsoft.Extensions.AI.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+      <HintPath>$(NuGetPackageRoot)microsoft.bcl.asyncinterfaces/10.0.12/lib/net462/Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

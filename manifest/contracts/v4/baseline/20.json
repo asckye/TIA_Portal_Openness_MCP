@@ -26,9 +26,6 @@
     "GenerateBlocksFromExternalSource",
     "GenerateErrorReport",
     "GetExportContent",
-    "GetHmiScreens",
-    "GetHmiTagTables",
-    "GetHmiTags",
     "GetPlcBlockHierarchy",
     "GetPlcBlockInfo",
     "GetPlcTypeInfo",
@@ -44,6 +41,9 @@
     "ImportPlcType",
     "ListDevices",
     "ListExportHandles",
+    "ListHmiScreens",
+    "ListHmiTagTables",
+    "ListHmiTags",
     "ListPlcBlocks",
     "ListPlcTagTables",
     "ListPlcTypes",
@@ -7557,6 +7557,7 @@
     {
       "descriptionSha256": "a6598796612f39b086ab898a0f247128942713a2ce686a46127a1e5bcbfb83aa",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmDelete": {
             "default": false,
@@ -9078,8 +9079,9 @@
       "name": "ExchangeTestSuiteCase"
     },
     {
-      "descriptionSha256": "83f170fcb70a8de4b8c9f36f383ce1e3ea42a2495b9f7ef2c5c01ee1963041e2",
+      "descriptionSha256": "730b44332b9da0490326eb85ee094fc699accc74312744a63521a9519e3077a7",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "export | import. ",
@@ -9123,8 +9125,9 @@
       "name": "ExchangeUnifiedScriptModules"
     },
     {
-      "descriptionSha256": "5f2c132d2ae1e000e9c1b90f961769d77bc1380e98a7c5870befb94e56d89f38",
+      "descriptionSha256": "f1e6fe4a97301e057370e85078e7d5c26325063fd0684f4139eb38ad06590492",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "export | import. ",
@@ -9143,10 +9146,12 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "expectedTagNamesJson": {
-            "default": "[]",
-            "description": "expectedTagNamesJson: JSON array of tag names expected after the import (verified).",
-            "type": "string"
+          "expectedTagNames": {
+            "description": "expectedTagNames: Array of up to 500 distinct nonempty tag names expected after the import (verified).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "fileName": {
             "default": "",
@@ -9276,8 +9281,9 @@
       "name": "ExportDeviceAml"
     },
     {
-      "descriptionSha256": "d749c60b1601ea71cad55c8f94312de204395919f3f005d2365711ce8692a7a6",
+      "descriptionSha256": "f10ea9a2998e86f1ab76754f55ad41eb7f3f68475f74010fb99fe7b0ed8df748",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "connectionName": {
             "description": "connectionName: the HMI connection name to export",
@@ -9302,8 +9308,9 @@
       "name": "ExportHmiConnection"
     },
     {
-      "descriptionSha256": "25db45ca8684601e602cdc9e3567e9bfb64762425a2779003431c9711f46df5d",
+      "descriptionSha256": "1cc6b93925fe4cb55daee678b60c61bb196e7989258d808a6cea7b49fa34ff99",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportDir": {
             "description": "exportDir: directory to write exported files into",
@@ -9333,8 +9340,9 @@
       "name": "ExportHmiProgram"
     },
     {
-      "descriptionSha256": "e8a675e92f17f4ae4bc62b2bf5000c9f425adea5afd7126a7d4e061236bc2f45",
+      "descriptionSha256": "cd4f009e50fbd45bef8a7fc324764d0f1438d12201bc26451e1ae22cc33a0804",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)",
@@ -9368,8 +9376,9 @@
       "name": "ExportHmiScreen"
     },
     {
-      "descriptionSha256": "6f94e6ccd531e0c45b66ae211087ed1ff0acab129f69d5f2ac86d379e4558375",
+      "descriptionSha256": "64110cad10010eb570bc702b30b691358960f044a1fcb417831fa4ecde5bc32d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)",
@@ -10756,22 +10765,6 @@
       "name": "GetHardwareFeatures"
     },
     {
-      "descriptionSha256": "3f2a8d1092a7f5c573b4e3dccf7795b8ae303d8753e5e20726a4a0e41d012a84",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the HMI software",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GetHmiConnections"
-    },
-    {
       "descriptionSha256": "4c58ddf79056e17473e69ec237b630c909bdc339adb69a7676bcf46a45265181",
       "inputSchema": {
         "properties": {
@@ -10786,62 +10779,6 @@
         "type": "object"
       },
       "name": "GetHmiProgramInfo"
-    },
-    {
-      "descriptionSha256": "aed946c08d8bb1a4f1babda728f2d3a61bbf6a074e9e3727a936bd5333819308",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the HMI software",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GetHmiScreens"
-    },
-    {
-      "descriptionSha256": "051202cf6a3d7af59462a63fbb4678207af0b6e85e196425b3e1b8d530ad873d",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the HMI software",
-            "examples": [
-              "HMI_RT_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GetHmiTagTables"
-    },
-    {
-      "descriptionSha256": "29984470d9cf2bbcddd26ffeb9c8c1584c75028cd3db079b48299bac25019e5f",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the HMI software",
-            "type": "string"
-          },
-          "tagTableName": {
-            "default": "",
-            "description": "tagTableName: optional tag table name to list tags from",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GetHmiTags"
     },
     {
       "descriptionSha256": "d7753f3a5c577216dd758d242007d4fe7a8e0469a708beb2a0eacde18163b20e",
@@ -11912,8 +11849,9 @@
       "name": "ImportDeviceAml"
     },
     {
-      "descriptionSha256": "32ca0f189aaf9018d9f9ca86b9bef291652481a6b7fa98880f7c387aa841be7d",
+      "descriptionSha256": "0bd2d30746bf5ace85f4ecd7426d95a3d1b92af6272b4f226909b1cb2f6dd94b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path of exported HMI connection XML",
@@ -11933,8 +11871,9 @@
       "name": "ImportHmiConnection"
     },
     {
-      "descriptionSha256": "1ed7964cf3478391e654d0ab9c38b10f2210def15b235b8899f410854d40baac",
+      "descriptionSha256": "6b10c59f3540b9c017dc1d2dff63b682d647b1dbba97ef857e9a94b4df067698",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "folderPath": {
             "description": "folderPath: optional screen group path inside HMI (use empty for root)",
@@ -11968,8 +11907,9 @@
       "name": "ImportHmiScreen"
     },
     {
-      "descriptionSha256": "aa630f38839538f3fb45e4f8091c1402ad1e929f5075afc11b3445d3bb2aa8ab",
+      "descriptionSha256": "0ca122ebd1f541f0d817dd6343e3200d018fde2ae2c09e77abb41cb61784dd17",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing exported screen XML files",
@@ -12004,8 +11944,9 @@
       "name": "ImportHmiScreensFromDirectory"
     },
     {
-      "descriptionSha256": "7e649c87cb96f4af12a7f9f69566bc33461e1cf5203e44f4ad951c5c6dd5a047",
+      "descriptionSha256": "e7dd125787cdcd7838a35310b6ddf39f84de6f3b688cf7231a492714fda988e3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "folderPath": {
             "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
@@ -12039,8 +11980,9 @@
       "name": "ImportHmiTagTable"
     },
     {
-      "descriptionSha256": "3941c08c75ff257475504218a7ff38be4ef6866b2beafae7d92de06beca16e96",
+      "descriptionSha256": "e48b9bf4f88a30d80a0c5318286160b5587a7fa6e6a49f9ae2de48e7ff8b66d1",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dir": {
             "description": "dir: directory containing exported tag table XML files",
@@ -12889,6 +12831,7 @@
     {
       "descriptionSha256": "a6275f4c6afe1154e1fac7a9954668d1d0c19fa9262ba406d59c4414135e6077",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -13337,6 +13280,23 @@
       "name": "ListExportHandles"
     },
     {
+      "descriptionSha256": "15c6c53643efc708fc35788503c82283a2a4af2ad55bfcef06e6d9f1940e68fe",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiConnections"
+    },
+    {
       "descriptionSha256": "916364f9f1c86751631b736d78c48eca6bc7387ca6f0ceb40d896637e43213c0",
       "inputSchema": {
         "properties": {
@@ -13361,6 +13321,65 @@
         "type": "object"
       },
       "name": "ListHmiScreenPaths"
+    },
+    {
+      "descriptionSha256": "afd4bc185e8411f1406c64677ecfa336ad999fb0c4f0c82cfc2f7c5f9e06ed57",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiScreens"
+    },
+    {
+      "descriptionSha256": "0efd60e2700fc274c28968755975d1188483d6c785e6a42cf8eb61518011b214",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiTagTables"
+    },
+    {
+      "descriptionSha256": "0a9e206d0755724da32917d0e1b851fa78e33ccb634576e8e32cce16d23ae847",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          },
+          "tagTableName": {
+            "default": "",
+            "description": "tagTableName: optional tag table name to list tags from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiTags"
     },
     {
       "descriptionSha256": "c4714b10d5c404b836404de2882664aca422f9714ae5014341a4cddb9ccb56ed",

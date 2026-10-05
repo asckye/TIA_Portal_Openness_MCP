@@ -10,8 +10,9 @@ from engine_sources import EngineSources
 ROOT = Path(__file__).resolve().parents[2]
 sources = EngineSources()
 # Service bodies reach the kernel through `_session.`; the compiled fixture supplies those members directly.
-screen = sources.member('ImportHmiScreen', tool=False).replace('_session.', '')
-batch = sources.member('ImportHmiScreensFromDirectory', tool=False).replace('_session.', '')
+screen = sources.member('ImportHmiScreen', owner='HmiExchangeService', tool=False).replace('_session.', '')
+batch = sources.member('ImportHmiScreensFromDirectory', owner='HmiExchangeService', tool=False).replace('_session.', '')
+import_item = sources.member('ImportItem', owner='HmiExchangeService')
 helper = sources.member('TryImportEngineeringObjectIntoCollection', signature='out string? importedName')
 name_reader = sources.member('BestEffortExtractFirstName')
 assert screen.count('TryImportEngineeringObjectIntoCollection(') == 1
@@ -19,11 +20,14 @@ assert 'GuardClassicScreenSize(sw, importPath);' in screen
 assert 'document.Save(' not in screen and 'Regex.Match(' not in screen
 assert 'break;' in batch and 'later matching files were not attempted' in batch
 assert 'ImportOptions.Override' in helper  # Preserve this family's existing default.
-wrapper = sources.member('ImportHmiScreensFromDirectory', tool=True)
+wrapper = sources.member('ImportHmiScreensFromDirectory', owner='HmiExchangeTools', tool=False)
 assert 'Imported = result.Imported' in wrapper and 'Failed = result.Failed' in wrapper
-# The verdict may be written inline or through the envelope builder (P2-01e).
-assert any(form in wrapper for form in ('["success"] = (result.Failed == null || !result.Failed.Any())',
-                                        'ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))'))
+# P6-18 keeps the service verdict and ordered evidence through the response helper and V4 adapter.
+assert 'Meta = result.Meta' in wrapper
+assert 'ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items))' in batch
+entry = sources.member('ImportHmiScreensFromDirectoryV4', owner='HmiExchangeTools', tool=True)
+assert 'HmiExchangeContract.Run("ImportHmiScreensFromDirectory", true, true,' in entry
+assert '() => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)' in entry
 
 program = r'''
 using System;
@@ -32,15 +36,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using TiaMcpServer.ModelContextProtocol;
 enum ImportOptions { None, Override }
 enum PortalErrorCode { InvalidState, NotFound, ImportFailed, InvalidParams }
 class PortalException : Exception {
-    public PortalException(PortalErrorCode code, string message, object? context = null, Exception? inner = null) : base(message, inner) { }
+    public PortalErrorCode Code { get; }
+    public PortalException(PortalErrorCode code, string message, object? context = null, Exception? inner = null) : base(message, inner) { Code = code; }
 }
 class ImportFailure { public string? Path { get; set; } public string? Error { get; set; } }
-class ResponseImportBatch { public List<string>? Imported { get; set; } public List<ImportFailure>? Failed { get; set; } }
+class ResponseImportBatch { public List<string>? Imported { get; set; } public List<ImportFailure>? Failed { get; set; } public JsonObject? Meta { get; set; } }
 class Container { public object? Software { get; set; } }
 class Software { public object? Screens { get; set; } }
 class Named { public string Name { get; set; } = "NativeName"; }
@@ -65,6 +72,7 @@ class Harness {
     static object? TryResolveChildGroupByPath(object root, string folder) => root;
 __SCREEN__
 __BATCH__
+__IMPORT_ITEM__
 __HELPER__
 __NAME_READER__
 }
@@ -113,20 +121,31 @@ class Program {
             Check(batchCollection.Calls == 2 && batchCollection.FallbackCalls == 0, "batch stops on first failed screen");
             Check(batch.Imported!.SequenceEqual(new[] { Path.GetFileNameWithoutExtension(files[0]) }), "prior successful file retained");
             Check(batch.Failed!.Count == 1 && batch.Failed[0].Path == files[1] && batch.Failed[0].Error!.Contains("batch unknown outcome") && batch.Failed[0].Error!.Contains("later matching files were not attempted"), "failed path and unattempted remainder preserved");
+            Check((bool?)batch.Meta!["success"] == false, "a failed batch never reports success");
+            var items = batch.Meta["items"]!.AsArray();
+            Check(items.Count == 2 && (string?)items[0]!["target"] == files[0] && (string?)items[1]!["target"] == files[1], "batch evidence retains actual attempted file order");
+            Check((bool?)items[0]!["evidence"]!["operationSuccess"] == true && (bool?)items[1]!["evidence"]!["operationSuccess"] == false
+                && (bool?)items[1]!["evidence"]!["batchStopped"] == true, "success and fail-stop evidence survive together");
             var invalid = new FakeCollection(); var invalidHarness = New(invalid); invalidHarness.InvalidInput = true;
             var rejected = invalidHarness.ImportHmiScreensFromDirectory("hmi", "", dir);
             Check(invalid.Calls == 0 && rejected.Failed!.Count == 1 && rejected.Imported!.Count == 0, "batch preflight failure also stops without native entry");
+            Check((bool?)rejected.Meta!["success"] == false && rejected.Meta["items"]!.AsArray().Count == 1, "preflight rejection retains its failed verdict and item");
+            var accepted = New(new FakeCollection()).ImportHmiScreensFromDirectory("hmi", "", dir);
+            Check((bool?)accepted.Meta!["success"] == true && accepted.Imported!.Count == files.Length
+                && accepted.Meta["items"]!.AsArray().Count == files.Length, "only a completely successful batch reports success");
             Console.WriteLine($"HMI import fake-only checks passed: {checks}");
         } finally { Directory.Delete(dir, true); }
     }
 }
-'''.replace('__SCREEN__', screen).replace('__BATCH__', batch).replace('__HELPER__', helper).replace('__NAME_READER__', name_reader)
+'''.replace('__SCREEN__', screen).replace('__BATCH__', batch).replace('__IMPORT_ITEM__', import_item).replace('__HELPER__', helper).replace('__NAME_READER__', name_reader)
 parent = (ROOT / 'bin-build').resolve()
 work = parent / ('hmi-import-' + uuid.uuid4().hex)
 # Inherit the worktree ACL, as in the technology-import checker.
 work.mkdir(parents=True)
 try:
     (work / 'Program.cs').write_text(program, encoding='utf-8', newline='\n')
+    for name in ('ResponseMeta.cs', 'ResponseClock.cs'):
+        shutil.copyfile(ROOT / 'src/Logic/ModelContextProtocol' / name, work / name)
     (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>', encoding='utf-8')
     env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
     subprocess.run([os.environ.get('DOTNET', 'dotnet'), 'run', '--project', str(work / 'Checks.csproj'), '-c', 'Release', '-p:NuGetAudit=false', '-p:RestoreSources=' + str(work)], env=env, check=True)

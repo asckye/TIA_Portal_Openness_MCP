@@ -150,12 +150,13 @@ namespace TiaMcpServer.Siemens.Services
             return export;
         }
 
-        public (List<string> Exported, List<string> Failed)? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true)
+        public (List<string> Exported, List<string> Failed, JsonArray Items)? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true)
         {
             if (_session.IsProjectNull()) return null;
 
             var exported = new List<string>();
             var failed = new List<string>();
+            var items = new JsonArray();
 
             Directory.CreateDirectory(exportDir);
 
@@ -166,8 +167,8 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var safe = _session.MakeSafeFileName(s);
                     var outPath = Path.Combine(exportDir, $"screen_{safe}.xml");
-                    try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); }
-                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); }
+                    try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new JsonObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
+                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); items.Add(new JsonObject { ["target"] = "screen:" + s, ["evidence"] = new JsonObject { ["operationSuccess"] = false } }); }
                 }
             }
 
@@ -178,12 +179,12 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var safe = _session.MakeSafeFileName(t);
                     var outPath = Path.Combine(exportDir, $"tagtable_{safe}.xml");
-                    try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); }
-                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); }
+                    try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new JsonObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
+                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); items.Add(new JsonObject { ["target"] = "tagtable:" + t, ["evidence"] = new JsonObject { ["operationSuccess"] = false } }); }
                 }
             }
 
-            return (exported, failed);
+            return (exported, failed, items);
         }
 
         public void ImportHmiScreen(string softwarePath, string folderPath, string importPath)
@@ -398,23 +399,36 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
+        private static JsonObject ImportItem(string target, bool success, Exception? exception = null, string? status = null)
+        {
+            var evidence = new JsonObject { ["operationSuccess"] = success };
+            if (status != null) evidence["status"] = status;
+            if (exception is PortalException portal && (portal.Code == PortalErrorCode.InvalidState || portal.Code == PortalErrorCode.NotFound))
+                evidence["status"] = portal.Code.ToString();
+            if (exception != null) evidence["exceptionType"] = exception.GetType().Name;
+            return new JsonObject { ["target"] = target, ["evidence"] = evidence };
+        }
+
         public ResponseImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
         {
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
+            var items = new JsonArray();
 
             try
             {
                 if (_session.IsProjectNull())
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    items.Add(ImportItem(dir, false, status: "InvalidState"));
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
                 }
 
                 if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    items.Add(ImportItem(dir, false, status: "NotFound"));
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
                 }
 
                 Regex? regex = null;
@@ -432,20 +446,24 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         ImportHmiScreen(softwarePath, folderPath, file);
                         imported.Add(name);
+                        items.Add(ImportItem(file, true));
                     }
                     catch (Exception ex)
                     {
                         failed.Add(new ImportFailure { Path = file, Error = ex.ToString() + " Batch stopped; later matching files were not attempted." });
+                        items.Add(ImportItem(file, false, ex));
+                        items[items.Count - 1]!["evidence"]!["batchStopped"] = true;
                         break;
                     }
                 }
 
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
+                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
             }
             catch (Exception ex)
             {
                 failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
+                items.Add(ImportItem(dir, false, ex));
+                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
             }
         }
 
@@ -453,19 +471,22 @@ namespace TiaMcpServer.Siemens.Services
         {
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
+            var items = new JsonArray();
 
             try
             {
                 if (_session.IsProjectNull())
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    items.Add(ImportItem(dir, false, status: "InvalidState"));
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
                 }
 
                 if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
                     failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
+                    items.Add(ImportItem(dir, false, status: "NotFound"));
+                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
                 }
 
                 Regex? regex = null;
@@ -483,19 +504,22 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         ImportHmiTagTable(softwarePath, folderPath, file);
                         imported.Add(name);
+                        items.Add(ImportItem(file, true));
                     }
                     catch (Exception ex)
                     {
                         failed.Add(new ImportFailure { Path = file, Error = ex.ToString() });
+                        items.Add(ImportItem(file, false, ex));
                     }
                 }
 
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
+                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
             }
             catch (Exception ex)
             {
                 failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
+                items.Add(ImportItem(dir, false, ex));
+                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
             }
         }
 

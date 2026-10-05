@@ -1250,7 +1250,7 @@
           "dryRun": true,
           "confirmDelete": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcBlock",
@@ -1794,7 +1794,7 @@
           "moduleName": "Status",
           "fileName": "Status.js"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeUnifiedTags",
@@ -1809,7 +1809,7 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmClasses",
@@ -1875,7 +1875,7 @@
           "connectionName": "PLC_Connection",
           "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiProgram",
@@ -1888,7 +1888,7 @@
           "softwarePath": "HMI_RT_1",
           "exportDir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiScreen",
@@ -1902,7 +1902,7 @@
           "screenName": "Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiTagTable",
@@ -1916,7 +1916,7 @@
           "tagTableName": "Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportOpcUaInterface",
@@ -3392,7 +3392,7 @@
           "softwarePath": "HMI_RT_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiScreen",
@@ -3406,7 +3406,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\Screen_1.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiScreensFromDirectory",
@@ -3420,7 +3420,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiTagTable",
@@ -3434,7 +3434,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\HmiTags.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiTagTablesFromDirectory",
@@ -3448,7 +3448,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportLibraryTypeDocuments",
@@ -3761,7 +3761,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InitializeEnvironment",
@@ -3959,7 +3959,7 @@
       },
       {
         "name": "ListHmiConnections",
-        "currentName": "GetHmiConnections",
+        "currentName": "ListHmiConnections",
         "sourceName": "GetHmiConnections",
         "profiles": [
           "full"
@@ -3967,7 +3967,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiScreenPaths",
@@ -3983,7 +3983,7 @@
       },
       {
         "name": "ListHmiScreens",
-        "currentName": "GetHmiScreens",
+        "currentName": "ListHmiScreens",
         "sourceName": "GetHmiScreens",
         "profiles": [
           "full",
@@ -3992,11 +3992,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiTagTables",
-        "currentName": "GetHmiTagTables",
+        "currentName": "ListHmiTagTables",
         "sourceName": "GetHmiTagTables",
         "profiles": [
           "full",
@@ -4005,11 +4005,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiTags",
-        "currentName": "GetHmiTags",
+        "currentName": "ListHmiTags",
         "sourceName": "GetHmiTags",
         "profiles": [
           "full",
@@ -4018,7 +4018,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListIoSystems",
@@ -8129,7 +8129,7 @@
           "dryRun": true,
           "confirmDelete": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcBlock",
@@ -8673,7 +8673,7 @@
           "moduleName": "Status",
           "fileName": "Status.js"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeUnifiedTags",
@@ -8688,7 +8688,7 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportAlarmClasses",
@@ -8754,7 +8754,7 @@
           "connectionName": "PLC_Connection",
           "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiProgram",
@@ -8767,7 +8767,7 @@
           "softwarePath": "HMI_RT_1",
           "exportDir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiScreen",
@@ -8781,7 +8781,7 @@
           "screenName": "Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiTagTable",
@@ -8795,7 +8795,7 @@
           "tagTableName": "Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportOpcUaInterface",
@@ -10271,7 +10271,7 @@
           "softwarePath": "HMI_RT_1",
           "importPath": "C:\\Examples\\exports\\Main.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiScreen",
@@ -10285,7 +10285,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\Screen_1.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiScreensFromDirectory",
@@ -10299,7 +10299,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiTagTable",
@@ -10313,7 +10313,7 @@
           "folderPath": "",
           "importPath": "C:\\Temp\\HmiTags.xml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiTagTablesFromDirectory",
@@ -10327,7 +10327,7 @@
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportLibraryTypeDocuments",
@@ -10640,7 +10640,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InitializeEnvironment",
@@ -10852,7 +10852,7 @@
       },
       {
         "name": "ListHmiConnections",
-        "currentName": "GetHmiConnections",
+        "currentName": "ListHmiConnections",
         "sourceName": "GetHmiConnections",
         "profiles": [
           "full"
@@ -10860,7 +10860,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiScreenPaths",
@@ -10876,7 +10876,7 @@
       },
       {
         "name": "ListHmiScreens",
-        "currentName": "GetHmiScreens",
+        "currentName": "ListHmiScreens",
         "sourceName": "GetHmiScreens",
         "profiles": [
           "full",
@@ -10885,11 +10885,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiTagTables",
-        "currentName": "GetHmiTagTables",
+        "currentName": "ListHmiTagTables",
         "sourceName": "GetHmiTagTables",
         "profiles": [
           "full",
@@ -10898,11 +10898,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiTags",
-        "currentName": "GetHmiTags",
+        "currentName": "ListHmiTags",
         "sourceName": "GetHmiTags",
         "profiles": [
           "full",
@@ -10911,7 +10911,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListIoSystems",

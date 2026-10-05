@@ -58,11 +58,11 @@ plan = [
     S("ManagePortInterconnection", devicePathJson=J([P]), itemPathJson=J([P, "PROFINET 接口_1", "端口_1"]), action="disconnect", partnerDevicePathJson="[]", partnerItemPathJson="[]", dryRun=False, expect="any"),
     S("DumpDeviceAttributes", devicePath=P, nameFilter="Ip|Name|Cycle", keys=["count", "totalAttributes"]),
     # classic HMI
-    S("GetHmiTagTables", softwarePath=H), S("GetHmiTags", softwarePath=H, tagTableName="MCP_HmiTags"), S("GetHmiTags", softwarePath=H, tagTableName="NoSuchTable", expect="error"),
+    S("ListHmiTagTables", softwarePath=H), S("ListHmiTags", softwarePath=H, tagTableName="MCP_HmiTags"), S("ListHmiTags", softwarePath=H, tagTableName="NoSuchTable", expect="error"),
     S("DescribeHmiTagTable", softwarePath=H, tagTableName="MCP_HmiTags", maxMembers=10), S("DescribeHmiTag", softwarePath=H, tagTableName="MCP_HmiTags", tagName="MCP_Run", maxMembers=10),
     S("ExportHmiTagTable", softwarePath=H, tagTableName="MCP_HmiTags", exportPath=D + r"\mcp47_hmitags.xml"),
     S("ImportHmiScreen", softwarePath=H, folderPath="MCP_ScreenFolder", importPath=D + r"\mcp46_hmi\Classic_HMI_Minimal_Package_Screen.xml", keys=["verified"]),
-    S("GetHmiScreens", softwarePath=H), S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=10), S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=10),
+    S("ListHmiScreens", softwarePath=H), S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=10), S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=10),
     S("ExportHmiScreen", softwarePath=H, screenName="MCP_Screen", exportPath=D + r"\mcp47_screen.xml"),
     S("ReadHmiScreenSnapshot", softwarePath=H, screenPath="/MCP_ScreenFolder/MCP_Screen", maxDepth=3, maxNodes=200, keys=["apiCallSuccess"]),
     S("ImportHmiScreensFromDirectory", softwarePath=H, folderPath="MCP_ScreenFolder", dir=D + r"\mcp46_hmi", regexName="Classic_HMI_Minimal_Package_Screen", overwrite=True, expect="any"),
