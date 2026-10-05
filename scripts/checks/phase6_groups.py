@@ -64,7 +64,7 @@ def renamed(value, subs):
     """`value` with every whole-word 3.x name of `subs` replaced, in every string (Check-DeadToolReferences --fix semantics)."""
     if not subs:
         return value
-    pattern = re.compile(r'\b(?:' + '|'.join(re.escape(n) for n in sorted(subs, key=len, reverse=True)) + r')\b')
+    pattern = re.compile(r'(?<![.\w])(?:' + '|'.join(re.escape(n) for n in sorted(subs, key=len, reverse=True)) + r')\b')
 
     def walk(item):
         if isinstance(item, str):

@@ -159,7 +159,9 @@ VERB = re.compile(
     r'^(Get|Set|Add|Import|Export|Create|Delete|Compile|Download|Sync|Analyze'
     r'|Build|Write|Read|Ensure|Find|List|Describe|Invoke|Generate|Apply|Bind'
     r'|Move|Rename|Save|Open|Close|Connect|Run|Check|Validate|Preview|Preflight|Scaffold|Attach)[A-Z]')
-TOK = re.compile(r'\b([A-Z][A-Za-z0-9]{3,})\b')
+# A qualified member (`CrossReferenceService.GetCrossReferences`, a native journal label) names an
+# API, never an MCP tool, even when a historical tool had the same name.
+TOK = re.compile(r'(?<![.\w])([A-Z][A-Za-z0-9]{3,})\b')
 
 
 def load(root):
@@ -255,7 +257,7 @@ def migration_names(root):
 def rewrite_guidance(source, renames, registered):
     active = {old: new for old, new in renames.items() if old != new and old not in registered and new in registered}
     if not active: return source, []
-    pattern = re.compile(r'\b(?:' + '|'.join(re.escape(n) for n in sorted(active, key=len, reverse=True)) + r')\b')
+    pattern = re.compile(r'(?<![.\w])(?:' + '|'.join(re.escape(n) for n in sorted(active, key=len, reverse=True)) + r')\b')
     tokens, _ = text_literals.lexer.Lexer(source).scan()
     eligible = []
 
@@ -370,6 +372,15 @@ const string Hint = """See OldTool for details.""";
         self.assertEqual(sum(changed for _, _, _, changed in events), 5)
         self.assertEqual(sum(not changed for _, _, _, changed in events), 4)
         self.assertEqual(rewrite_guidance(fixed, {'OldTool': 'NewTool'}, {'NewTool'})[0], fixed)
+
+    def test_qualified_api_members_are_not_tool_names(self):
+        source = ('var r = InvocationJournal.Native("CrossReferenceService.GetCrossReferences", () => 1); '
+                  '[Description("Calls Service.OldTool natively.")] void M() {}')
+        renames = {'OldTool': 'NewTool', 'GetCrossReferences': 'GetPlcCrossReferences'}
+        fixed, events = rewrite_guidance(source, renames, {'NewTool', 'GetPlcCrossReferences'})
+        self.assertEqual((fixed, events), (source, []))
+        _, bad = scan({'<qualified>': source})
+        self.assertNotIn('OldTool', bad)
 
     def test_fix_requires_removed_old_and_registered_target(self):
         source = '[Description("Use OldTool.")]'
