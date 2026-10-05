@@ -12,6 +12,8 @@ This desktop merge is in the current source. The published v3.2.0 ZIP retains it
 
 Download the complete **TIA_MCP_Delivery** ZIP from Releases and extract the entire archive to a short, permanent directory. GitHub's source archives contain no runtime binaries.
 
+The delivery package contains runtime files, user documentation, templates, the Claude Code plugin and ecosystem resources. Development sources, build scripts and validation tools remain in the source repository.
+
 - **AI client:** open `TiaMcpConfigurator.exe`, choose **MCP & clients**, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
 - **Engineering:** open the same `TiaMcpConfigurator.exe`, switch to **Engineering**, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
 - **Studio demonstration:** run `TiaMcpConfigurator.exe --mock --lang en` from the extracted package. Results are synthetic.
@@ -47,4 +49,4 @@ All eight runtimes and Studio are built locally against the supplied SDKs. Funct
 pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-[Build and validation](docs/development/validation.md) · [Release workflow](docs/development/release-workflow.md) · [Current handoff](docs/development/handoff.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)
+[Build and validation](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [Release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [Current handoff](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)

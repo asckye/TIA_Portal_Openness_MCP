@@ -18,7 +18,7 @@
 - V15.1 基础引擎接受 TIA V15.1 实际写出的 `.ap15_1` 工程文件；此前（3.2.0 起）只认 `.ap15`，无法绑定、打开或创建 V15.1 工程。V15 的 `.ap15` 工程不会被当作 V15.1 打开。
 - 子进程标准输入统一为无 BOM UTF-8，修复控制台代码页导致的非 ASCII 请求损坏；基础宿主健康检查使用实际应用版本；更新器识别 worktree 的 `.git` 文件，避免把源码工作区当作安装包更新。
 - 保留 MCP/桌面入口文件名，新增 Logic、Runtime、Adapters.Contracts、WorkerChannel 等运行依赖，V20/V21 附带同版适配器；升级须替换完整包。设计清单移至 `docs/development/design-qa.md`，历史诊断证据移至 `manifest/history/`，启动器源码与 Glass 资源归入 Studio 源码目录。
-- 引擎按领域拆分服务、工具及会话内核，共用逻辑和运行通道拆为独立库；以契约、原始响应快照、逐领域字节比对和原生调用清单验证兼容性。离线证据不代替真机验收；[3.3.0 按虚拟机最小验收清单](docs/reference/real-machine-ledger.md#330-发布前最小验收按虚拟机)已在 V14 SP1–V21 各自的虚拟机上全部通过（结果见该节）。
+- 引擎按领域拆分服务、工具及会话内核，共用逻辑和运行通道拆为独立库；以契约、原始响应快照、逐领域字节比对和原生调用清单验证兼容性。离线证据不代替真机验收；[3.3.0 按虚拟机最小验收清单](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/v3.3.0/docs/reference/real-machine-ledger.md#330-发布前最小验收按虚拟机)已在 V14 SP1–V21 各自的虚拟机上全部通过（结果见该节）。
 
 ## [3.2.0] - 2026-10-03
 
@@ -238,7 +238,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.46] - 2026-09-20
 
-引擎 2.7.46.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.46](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.46.md)。**全部 447 个工具在自建设备的空工程 `项目1` 上各跑了一遍**（逐工具台账：[真机台账](docs/reference/real-machine-ledger.md)），一天暴露 23 处缺陷与两个新的 TIA 退出点，全部在本版修掉或守住。
+引擎 2.7.46.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.46](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.46.md)。**全部 447 个工具在自建设备的空工程 `项目1` 上各跑了一遍**（逐工具台账：[真机台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/v3.3.0/docs/reference/real-machine-ledger.md)），一天暴露 23 处缺陷与两个新的 TIA 退出点，全部在本版修掉或守住。
 
 - **修复（真机发现，23 处）**：`ManagePlcTagDefinition` 注释（MultilingualText 按语言写）；`CallTool` 桥接调不到 `ExportBlocks` / `ExportTypes`（async 工具的 server/context 参数）、`""` 视为关键字默认值、数组参数接受 JSON 字符串；`ExportBlock` / `ExportType` 回报真实文件；`CreatePlcInstanceDb` 自动编号不再生成 DB0；`GetCrossReferences` 类型化并回报原因；报警类 `.DAT`、文本列表 / 实例文本类型化导出导入；ProDiag 导出不再解析 importOptions；HW 通信连接改从 `CommunicationManagement` 取；PROFINET 子网连接递归扫描面板接口；`PlugDeviceItem` 读回递归；精确硬件路径回退到 `Items`；`DumpDeviceAttributes` 多备选过滤；经典 HMI 变量表递归用户文件夹、未知表 NotFound；`ImportHmiScreen` 剥掉面板版本不支持的属性重试；`ManageGlobalLibrary` 空 openMode；探针不再关掉已打开的库；`ImportOpcUaInterface` 不再假成功；安全自检误报；DCC 两个工具的 `driveObjectNumber` 默认值；`GeneratePlcLoadableFile` / `ManageTechnologyObject` / `ExchangeSystemDiagnosticsSettings` 的错误信息。
 - **守卫（TIA 退出点 ⑧ ⑨）**：`AddDevice` / 目录探针拒绝版本主号不等于 Portal 主版本的 WinCC Unified 面板（`/20.0.0.0` 在 V21 上让 TIA 退出）；`ManageTechnologyObject create` 描述标明 `TO_PositioningAxis 6.0` 在 1515F-2 PN V2.9 上让 TIA 退出，建议导入 XML。
@@ -423,7 +423,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.25] - 2026-09-18
 
-引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](docs/development/roadmap.md#20-官方-api-全量对齐计划)）。
+引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/v3.3.0/docs/development/roadmap.md#20-官方-api-全量对齐计划)）。
 
 - **`Siemens.Engineering.Safety` 全量封装**（12 类型 / 54 成员，按官方 "F-related Openness" 章节逐页对照）：`ManagePlcSafety` 由反射改为强类型，`read` 补齐 `AssignmentOfBlockNumbers`、`SafetySystemVersion` + 可用版本、`EnableConsistentUploadFromFCpu` / `EnableFCommunicationIdTag`、运行组 `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority`、**集体 / 软件 / 硬件 / 通信地址 F 签名**（旧实现从未真正读出）、工程级 `GlobalSettings` 与 CPU `Failsafe_FCapabilityActivated`；新增动作 `generateGlobalFIOStatusBlock` / `cleanSystemGeneratedObjects` / `generateBaseId` / `login` / `logoff` / `setPassword` / `revokePassword`，`createRuntimeGroup` 三种官方重载，`updateSettings` 支持嵌套块号段与精确版本。
 - **新工具 3 个**：`ManageSafetyGlobalSettings`（TIA Portal 级四项全局安全设置）、`ReadSafetyBlockSignatures`（逐块 F 签名，单块或整 PLC）、`ExportSafetyPrintout`（官方安全打印件 PDF/XPS）。下载提示 `SafetyProgram` 应答 `ConsistentDownload`。

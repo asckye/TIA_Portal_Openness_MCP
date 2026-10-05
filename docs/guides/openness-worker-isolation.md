@@ -38,6 +38,6 @@ Separate MCP processes under the same Windows user reserve an instance for a con
 
 ## Diagnostics and validation
 
-[Native-call diagnostics](../development/native-call-diagnostics.md) describe the journal and local evidence collector. Logs may contain private project paths; inspect them before sharing.
+[Native-call diagnostics](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) describe the journal and local evidence collector. Logs may contain private project paths; inspect them before sharing.
 
 Release checks exercise protocol behavior, worker failures and reset paths with offline test children. They do not establish live TIA stability, native cancellation or rollback. Current native acceptance is recorded in [capabilities](../reference/capabilities.md).

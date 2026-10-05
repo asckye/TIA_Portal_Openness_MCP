@@ -39,4 +39,4 @@ V20/V21 expose `CreatePlcTypeGroup` for folders under **PLC data types**. It cre
 
 Use the actual PLC software path and a relative folder path such as `Common/Motors`. Missing parents are created and existing folders reused. Inspect `createdPaths`, `createdCount` and `alreadyExisted`. If a creation fails midway, the reported parent folders may already exist; read them back before repeating the operation. The tool does not automatically compile or save.
 
-See [version support](../../reference/version-tools.md), [template files](templates.md) and the [central example catalog](../../../reference/tool-examples/languages/catalog.json). New native import acceptance remains separate from offline checks.
+See [version support](../../reference/version-tools.md), [template files](templates.md) and the [central example catalog](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/catalog.json). New native import acceptance remains separate from offline checks.

@@ -19,11 +19,13 @@ V20/V21) passed on 2026-10-04/05; results are in the
 `TiaSharedAdapterPaths` switch (engine VCI primitives, Studio shared adapter sessions) is not released and its native
 acceptance remains **NOT RUN**.
 
-3.3.1 is in progress on separate branches until it is verified: the software's own files (journal, leases,
-configuration, UI settings, logs, reports, scratch) move to a writable `<bundle>\data` folder with per-user fallback,
-and the delivery ZIP becomes runtime-only (no source tree or development files). Smaller 3.3.x items are the Openness
-access prompt hint on a first-attach timeout, journal retention, a Chinese message when .NET Framework 4.8 is missing,
-the garbled bridge stderr line, and release-pipeline speedups.
+The v3.3.0 release also carries `TIA_MCP_Runtime_v3.3.0_20261003.zip`: the same 3.3.0 files without the source tree and
+development files (every file byte-identical to the full package, which stays the update channel; not separately
+re-accepted). There are no further 3.3.x releases: the 3.3.x improvements and the former 3.3.1 work go into 4.0, and the
+release pipeline is reworked first (see the [roadmap](roadmap.md)). On master the software's own files already live in a
+writable `<bundle>\data` folder with per-user fallback, and packaging, published-asset verification, bundle checks and the
+updater follow the runtime-only delivery set in `scripts/operations/delivery-files.json`. All testing of these changes is
+deferred to the 4.0 final candidate.
 
 Only `master` is maintained. Exact release keys are `14sp1`, `15.1`, `16`, `17`,
 `18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC

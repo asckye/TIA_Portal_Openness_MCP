@@ -11,8 +11,8 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 ### 安装根与开发输出
 
 G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需要 `.git`。交付包由
-[`Package-Release.py`](../../scripts/build/Package-Release.py) 取 Git 文件集和清单中的运行文件组成，
-`reference/`、`templates/`、`scripts/`、`tools/` 和 `manifest/` 都是包根下的交付内容，不能只复制 EXE。
+[`Package-Release.py`](../../scripts/build/Package-Release.py) 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
+排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
 [`BundleLayout.cs`](../../tools/openness-shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
 维护 `BundleResource` 到包根相对路径的代码表。它不依赖 Siemens API，链接进 `TiaMcp.Logic`、
@@ -60,7 +60,7 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 | R1：`EcosystemFiles.RepositoryRoot`；指南、Python 桥接、审计 PDF | 非空 `TIA_MCP_REPOSITORY_ROOT` 优先：须为绝对路径且含 `PlcToolsBridge`，返回 `Path.GetFullPath`；否则解析安装/开发根，并检查该桥接文件 | 无显式覆盖且解析未成功时，从引擎基目录逐级向上找 `PlcToolsBridge`；失败抛原 `DirectoryNotFoundException`。无效显式覆盖直接抛错，不回退 |
 | V21 生态目录查询 | `ReadV21EcosystemCatalog` 在 V20/V21 引擎均直接读取程序集资源 `TiaMcp.V21Ecosystem.json` | 不读取磁盘副本或根覆盖；包内 JSON 缺失仍可查询 |
 | R2：引擎 `FindInstallRoot` / `CheckForUpdate` | 解析器识别的 `runtime/<RuntimeDirectory>` 安装锚点，且根下存在 `DeliveryManifest`；更新脚本相对此根定位 | 从基目录起最多检查 4 层的 `DeliveryManifest`；失败返回 null。开发输出不因解析器识别根而成为安装包；不读取仓库根环境变量 |
-| R3：CLI `SpecLoader.FindBundleRoot` | 解析安装/开发根，仍要求根下有 `templates` 与 `tools`；替换 `__BUNDLE__`，根路径斜杠转为 `/` | 从基目录起最多检查 12 层的这两个目录；失败返回 null，token 保留。忽略仓库根环境变量 |
+| R3：CLI `SpecLoader.FindBundleRoot` | 解析安装/开发根，只要求根下有 `templates`；替换 `__BUNDLE__`，根路径斜杠转为 `/` | 未识别布局保留原来从基目录起最多检查 12 层的 `templates` 与 `tools` 两个目录；失败返回 null，token 保留。忽略仓库根环境变量 |
 | R7：`EngineRouter.FindSiblingExe`；改道、doctor、CLI 配置 | 在 V20/V21 安装输出中按目标版本的 `RuntimeDirectory` 找同名 EXE；完整引擎 Release 开发输出按目标 `EngineOutputDirectory` 找同名 EXE | 原 `bin`/`bin-v20` 的 `Release/net48` 匹配，再检查当前 `v` 加数字目录的同级目标；候选必须存在且不是自身。失败返回 null；`McpConfigInstaller` 在当前版本或找不到同级引擎时使用自身 EXE。忽略仓库根环境变量 |
 | R10：Foundation LegacyHost | 版本参数与 EXE 旁存在的 `release-key.txt` 校验一致；未指定版本时读该文件。`--worker-exe` 优先，否则使用 EXE 旁 `worker` 中的对应版本 worker | 沿用宿主自身的安装布局和参数校验，不经过 `BundleLayout`，不搜索仓库 |
 | R11：Studio 配置页根 | `ShowConfiguration(bundleRoot)` 的显式值优先，否则 `FindBundleRoot` 调用解析器 | 未识别时逐级向上找 `PackageManifest`；失败抛原 `DirectoryNotFoundException` |
@@ -111,11 +111,16 @@ R1 的指南和桥接文件均相对选定根读取。Python 解释器另由 `TI
 TIA 默认 `MyDocuments\Automation` 工程目录、URL ACL 与防火墙设置保持原行为。
 Studio 的崩溃日志仍在可执行文件旁；伴随 Python 环境也保持原位置。
 
-更新脚本只整体替换 `runtime` 与 `manifest`；备份、覆盖更新和回滚均排除 `data`。
+更新器按新包的 `delivery-files.json` 接受运行资源包。备份到 `.previous` 后，使用固定 `legacyCleanup` 规则与旧包
+`manifest/release-file-hashes.json` 的交集清理已交付的开发文件；只删除哈希仍匹配的旧文件，保留用户新增或改写的内容。
+`tools/` 中继续交付的 skill/Python 源码保留，不按整目录递归清除。旧运行文件及 manifest 也仅删除记录中确认且新包不再包含的项。
+没有旧完整文件记录时，只从构建记录识别旧运行二进制，不猜测其他文件的所有权。
+备份附带本次新包文件收据，回滚先删除备份中不存在且未被用户改写的新文件，再恢复原文件，避免叠加出混合布局。
+`data`、`.previous`、`.update`、`TiaMcp_Output` 不参与开发路径清理；数据目录在覆盖和回滚时保留。
 更新的 `tia-mcp-update-*` 与清空目录用的 `tia-mcp-empty-*` 优先位于包根的 `data\temp`。
 按 ZIP 实际条目（含顶层包名）计算的最长解压路径必须小于 240 字符，否则两者沿用 `%TEMP%`；
 Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完整包最长相对文件名为 158 字符，
-加上顶层包名为 191 字符；默认 `C:\TIA_MCP_Delivery_v3.3.1_20261004` 布局即使位于盘根也超过阈值，
+加上顶层包名为 191 字符；默认 `C:\TIA_MCP_Delivery_v<版本>_<日期>` 布局即使位于盘根也超过阈值，
 因此走 `%TEMP%` 分支。较短的安装目录可使用包内 scratch，脚本会输出本次选择的解压路径。`data` 已加入根 `.gitignore`。
 
 ### 兼容边界与风险
@@ -135,9 +140,11 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
 
 - 枚举与字面量代码表一一对应，资源 ID 和路径不重复；路径是普通根相对路径，不含绝对路径、反斜杠、空段、`.` 或 `..`。
 - 九项资源在本地存在，文件本身或目录中的文件属于 `git ls-files` 文件集。
+- 每项资源及其跟踪子文件都匹配 `delivery-files.json` 的交付规则。
 - 每项路径都在 `Validate-Bundle.ps1` 实际遍历检查的 `bundleResourcePaths` 中；两份列表由检查器核对，并非共用一个数据文件。
 - C# 5 Launcher 的唯一相对候选与解析器的 Studio 安装锚点、GUI 工程的输出 EXE 名称一致。
 
+仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
 布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs)、
 [EcosystemTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EcosystemTests.cs)、
@@ -155,7 +162,7 @@ G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 
 
 1. 将交付资源放入受版本管理的包内路径，在 `BundleResource` 与 `ResourcePaths` 增加一项。
    目录资源同步调整 `FindResource` 的目录判断；编译生成的 EXE/DLL 继续由构建与交付清单管理。
-2. 同步 `Validate-Bundle.ps1` 的 `bundleResourcePaths`；核对 `Check-Repository.py` 和 `Package-Release.py` 的必需文件清单，
+2. 同步 `delivery-files.json` 和 `Validate-Bundle.ps1` 的 `bundleResourcePaths`；核对 `Check-Repository.py` 和 `Package-Release.py` 的必需文件清单，
    按资源用途补齐。清单与源码哈希由对应构建生成器更新，不手工改 manifest 哈希。
 3. 调用方复用解析器和版本目录表；需要新输出布局时显式扩充锚点。既有调用方保持覆盖优先级、路径拼写和错误语义，
    不增加新的仓库探测。仅限单个程序集使用的固定数据可按生态目录模式直接嵌入，并保留唯一可编辑源。

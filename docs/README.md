@@ -7,13 +7,13 @@
 - [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、Studio 操作和首次 SCL 导入编译。
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
 - [CLI 指南](getting-started/cli.md)：V20/V21 的命令行生成、修改、导入导出和编译。
-- [Studio](../tools/tia-openness-studio/README.md)：直接调用 Openness 的桌面工具。
+- [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md)：直接调用 Openness 的桌面工具。
 
 ## 工具、版本与示例
 
 - [版本范围](reference/version-tools.md) · [全部工具按版本分组](reference/version-tool-catalog.md) · [完整引擎工具矩阵](reference/tool-matrix.md)
-- [统一工具和语言示例](development/official-tool-usage.md)：`GetToolUsage` 的参数、完整编程文件、调用序列和官方来源。
-- [能力边界](reference/capabilities.md) · [官方 API 审计和功能缺口](reference/openness-coverage.md) · [真实工程验收记录](reference/real-machine-ledger.md)
+- [统一工具和语言示例](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：`GetToolUsage` 的参数、完整编程文件、调用序列和官方来源。
+- [能力边界](reference/capabilities.md) · [官方 API 审计和功能缺口](reference/openness-coverage.md) · [真实工程验收记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)
 - [已接入生态工具](reference/ecosystem-tools.md) · [V20/V21 补充工具](reference/v20-v21-audit-tools.md)
 
 ## 操作专题
@@ -26,9 +26,9 @@
 ## 排错和维护
 
 - [错误解释](troubleshooting/errors.md) · [Openness 限制和已知问题](troubleshooting/openness-limitations.md) · [HMI 快照](troubleshooting/hmi-snapshots.md)
-- [源码结构](development/repository-layout.md) · [构建验证](development/validation.md) · [发布](development/release-workflow.md) · [当前交接](development/handoff.md) · [待完成工作](development/roadmap.md)
-- [多版本架构](development/unified-version-framework.md) · [调用诊断](development/native-call-diagnostics.md) · [原生生命周期测试](development/native-lifecycle-tests.md) · [原生 MCP 测试](development/native-mcp-session-tests.md)
-- [脚本](../scripts/README.md) · [清单](../manifest/README.md) · [模板](../templates/README.md) · [贡献](../.github/CONTRIBUTING.md) · [支持](../.github/SUPPORT.md)
+- [源码结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/repository-layout.md) · [构建验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [发布](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [待完成工作](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/roadmap.md)
+- [多版本架构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/unified-version-framework.md) · [调用诊断](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) · [原生生命周期测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-lifecycle-tests.md) · [原生 MCP 测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-mcp-session-tests.md)
+- [脚本](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/scripts/README.md) · [清单](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/README.md) · [模板](../templates/README.md) · [贡献](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/CONTRIBUTING.md) · [支持](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/SUPPORT.md)
 - [当前版本说明](releases/v3.3.0.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
 
 当前文档只保留持续使用的说明。旧版本发布正文、临时审计和阶段交接可从 Git 历史查询。示例路径相对完整交付包或仓库根目录；运行时参数和各版示例以连接到的服务为准。

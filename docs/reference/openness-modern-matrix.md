@@ -10,7 +10,7 @@ from these build results; see the [current version matrix](version-tools.md).
 ## Implementation status
 
 This evidence review informed the source increment described in
-[unified version framework](../development/unified-version-framework.md).
+[unified version framework](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/unified-version-framework.md).
 The initial library-import and OB-move findings have source corrections there.
 Library export callers were traced and already use the bound ProjectLibrary;
 no global-library export-scope bug was confirmed. Source-only corrections and

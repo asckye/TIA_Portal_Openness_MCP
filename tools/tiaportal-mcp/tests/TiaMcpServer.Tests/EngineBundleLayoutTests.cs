@@ -71,7 +71,11 @@ namespace TiaMcpServer.Tests
                 {
                     string directory = spelling + suffix;
                     EqualLookup(() => OldInstallRoot(directory, repositoryRoot), () => McpServer.FindInstallRoot(directory, repositoryRoot));
-                    EqualLookup(() => OldBundleRoot(directory, repositoryRoot), () => SpecLoader.FindBundleRoot(directory, repositoryRoot));
+                    string? bundle = TiaOpenness.Shared.BundleLayout.FindRoot(directory);
+                    if (bundle != null && Directory.Exists(At(bundle, "templates")))
+                        Assert.Equal(bundle.Replace('\\', '/'), SpecLoader.FindBundleRoot(directory, repositoryRoot));
+                    else
+                        EqualLookup(() => OldBundleRoot(directory, repositoryRoot), () => SpecLoader.FindBundleRoot(directory, repositoryRoot));
                     foreach (string name in new[] { "TiaMcpServer.exe", "tIaMcPsErVeR.ExE", "missing.exe" })
                     foreach (int version in new[] { 14, 15, 16, 17, 18, 19, 20, 21, 22 })
                     {
@@ -201,6 +205,23 @@ namespace TiaMcpServer.Tests
             Bundle(root);
             DevelopmentEngines(root);
             Compare(root, anchor);
+        }
+
+        [Fact]
+        public void Spec_templates_resolve_in_a_delivery_without_tools_or_ancestor_resources()
+        {
+            string outer = At(scratch, "repository");
+            Bundle(outer);
+            string delivery = At(outer, "stage");
+            Bundle(delivery, tools: false);
+            Assert.False(Directory.Exists(At(delivery, "tools")));
+            foreach (string anchor in new[] { "runtime/v20", "runtime/v21" })
+                Assert.Equal(delivery.Replace('\\', '/'), SpecLoader.FindBundleRoot(At(delivery, anchor), outer));
+            // Unknown layouts still use the original upward probe.
+            string custom = Directory.CreateDirectory(At(delivery, "custom/bin")).FullName;
+            Assert.Equal(outer.Replace('\\', '/'), SpecLoader.FindBundleRoot(custom));
+            Directory.Delete(At(delivery, "templates"));
+            Assert.Equal(outer.Replace('\\', '/'), SpecLoader.FindBundleRoot(At(delivery, "runtime/v21")));
         }
 
         // Frozen pre-G7-4 bodies; only signatures and process-global inputs are parameters.

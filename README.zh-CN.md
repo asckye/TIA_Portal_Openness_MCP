@@ -12,6 +12,8 @@
 
 从 Releases 下载 **TIA_MCP_Delivery** ZIP，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包只含源码。
 
+交付包只包含运行文件、用户文档、模板、Claude Code 插件及生态资源；开发源码、构建脚本和验证工具保留在源码仓库。
+
 - **用 AI 操作：**双击 `TiaMcpConfigurator.exe`，在 **MCP 与客户端** 页面选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
 - **自己操作：**打开同一个 `TiaMcpConfigurator.exe`，切换到 **工程操作**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
 - **先看演示：**在包根目录运行 `TiaMcpConfigurator.exe --mock --lang zh`。演示使用模拟数据。
@@ -43,4 +45,4 @@ AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取�
 
 仅维护 `master`。运行二进制随完整 Release 分发，不提交到 Git。准备 SDK 和伴随 Python 环境后，使用 `Build-MultiVersion.ps1 -Test` 构建全部版本。
 
-[构建与验证](docs/development/validation.md) · [发布流程](docs/development/release-workflow.md) · [当前交接](docs/development/handoff.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)
+[构建与验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [发布流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)

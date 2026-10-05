@@ -97,6 +97,6 @@ V20/V21 默认 lite 显示 63 个常用工具，其余用 `FindTools` / `CallToo
 
 手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由配置器生成，避免复制不匹配参数。
 
-从源码构建时，兼容启动器位于 `tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](../development/repository-layout.md)。
+从源码构建时，兼容启动器位于 `tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/repository-layout.md)。
 
-原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](../development/runtime-layout.md#软件自身的数据目录)。
+原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md#软件自身的数据目录)。

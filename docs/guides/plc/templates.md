@@ -1,6 +1,6 @@
 # PLC 模板选择与使用
 
-[templates/plc](../../../templates/plc/README.md) 提供可修改的 PLC 数据结构、SCL 程序和调用网络。完整代码与调用示例集中在 `GetToolUsage` 和 [reference/tool-examples](../../../reference/tool-examples/languages/catalog.json)，避免在多个指南复制维护。
+[templates/plc](../../../templates/plc/README.md) 提供可修改的 PLC 数据结构、SCL 程序和调用网络。完整代码与调用示例集中在 `GetToolUsage` 和 [reference/tool-examples](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/catalog.json)，避免在多个指南复制维护。
 
 | 内容 | 入口 | 使用方式 |
 |---|---|---|

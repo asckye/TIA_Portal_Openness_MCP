@@ -16,6 +16,28 @@
 旧日期报告里的“SDK 未提供”“仅 Linux 源码验证”属于历史修订，不覆盖当前构建记录。
 机器证据中的历史字段仍保留原意；不要将历史通过数复制成当前测试结果。
 
+## 运行资源包校验
+
+交付内容以 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 为准；规则、打包预览和许可保留见
+[发布流程](release-workflow.md#交付清单与两种校验模式)。仓库模式继续验证源码与开发文件；解包模式无需源码，
+从仓库运行 `Validate-Bundle.ps1 -BundleRoot <包根> -PackageMode -Strict` 和
+`Check-Repository.py --root <包根> --package-mode`。缺少 `Version.props` 也会自动选择包模式。
+包模式检查交付资源、运行文件/版本/哈希、三份构建记录、工具数、用户文档和许可证；相对链接悬空即失败。
+`runtime/verification/` 的 IL 检查留在正式打包前的仓库阶段，发布资产不携带验证器。
+
+无构建产物的暂存树加 `-NoBinaries` / `--no-binaries` 只证明静态交付布局，版本差距仍会失败；
+不能把这种结果记作完整二进制验证。运行规则和资产集合自检：
+
+```powershell
+python scripts/checks/Check-BundleLayout.py --self-test
+python scripts/checks/Verify-ReleaseAsset.py --self-test
+pwsh -NoProfile -File scripts/operations/Update-Engine.ps1 -SelfTest
+```
+
+更新器自检只在当前 worktree 的 `bin-build` 中创建离线夹具，覆盖已交付开发文件删除、未知/改写文件保留、
+保护目录、路径越界和回滚新增文件清理，不连接网络或真实安装。资产自检用内存 tag 树和本地 ZIP，
+检查缺失/多余文件、误带验证器、二进制哈希、sidecar 和 tag 内容优先于 checkout。
+
 ## 一次构建全部开发工程
 
 使用 Windows 和 .NET 10 SDK（支持 .slnx、Studio WPF 及 .NET Framework 目标）。

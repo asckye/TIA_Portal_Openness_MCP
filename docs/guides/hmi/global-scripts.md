@@ -11,7 +11,7 @@
 5. 检查前后正文，将预览返回的 `token` 作为执行调用的 `expectedToken`，其余目标及内容保持相同，设置 `dryRun=false`。
 6. 检查 `operationSuccess`、`verificationSuccess` 和最终状态。`Verified` 或 `Unchanged` 才能说明目标正文与请求一致。
 
-示例模块见 `GetToolUsage(exampleId="unified-global-module")` 和 [ReadActualValue.hmi.js](../../../reference/tool-examples/languages/ReadActualValue.hmi.js)。按钮事件使用[事件动作指南](unified-actions.md)，不能给全局模块设置事件的 `ScriptCode` 属性。
+示例模块见 `GetToolUsage(exampleId="unified-global-module")` 和 [ReadActualValue.hmi.js](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/ReadActualValue.hmi.js)。按钮事件使用[事件动作指南](unified-actions.md)，不能给全局模块设置事件的 `ScriptCode` 属性。
 
 ## 怎样解释返回值
 

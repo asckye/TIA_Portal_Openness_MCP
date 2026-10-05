@@ -7,13 +7,13 @@
 | 来源 | 本项目当前用途 | 来源与许可记录 |
 |---|---|---|
 | Siemens `tia-portal-ai-extensions` | 官方 Openness 指南供检索和统一示例引用；资料不会自行执行。 | [固定来源](../../reference/siemens-openness/UPSTREAM.json) |
-| Siemens Openness Code Snippets | C# 官方示例作为参考语料纳入统一示例库，区分官方源代码与本项目 MCP 参数。 | [固定来源](../../reference/siemens-code-snippets/UPSTREAM.json) |
-| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [Studio 说明](../../tools/tia-openness-studio/README.md)、[来源](../../tools/tia-openness-studio/upstream.json) |
-| EidoTiaWorkbench | `PlanArtifactImportOrder` 复用依赖排序算法，八版共用；移除原 V21 域启发式假设。 | [改动与 MIT 许可](../../tools/third-party/eido-import-planner/README.md) |
-| `Czarnak/tia-git-addin` | MIT Core 的 SimaticML 解析、结构差异和 LAD 布局；结合本项目 HTML/Git 适配器。未复制桌面 UI。 | [固定来源](../../tools/third-party/TiaGitAddIn.Core/UPSTREAM.json) |
-| `core-engineering/siemens-plc-tools` | 固定版本的 Python 包和 CLI，通过独立伴随进程调用；安装环境另外准备。 | [固定来源](../../tools/third-party/siemens-plc-tools/UPSTREAM.json) |
-| Siemens OPC UA Modelled Interface Add-In | 复用接口 XML 生成阶段，导入使用现有 MCP 工具；不是安装上游 Add-In。 | [改动记录](../../tools/third-party/SiemensOpcUaModelled/UPSTREAM.json) |
-| `Czarnak/simaticml-decoder` | 独立 Python 进程只读分析 V21 FC/FB 导出；输出不可直接回编译或导入。 | [固定来源](../../tools/third-party/simaticml-decoder/UPSTREAM.json) |
+| Siemens Openness Code Snippets | C# 官方示例作为参考语料纳入统一示例库，区分官方源代码与本项目 MCP 参数。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/siemens-code-snippets/UPSTREAM.json) |
+| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/upstream.json) |
+| EidoTiaWorkbench | `PlanArtifactImportOrder` 复用依赖排序算法，八版共用；移除原 V21 域启发式假设。 | [改动与 MIT 许可](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/eido-import-planner/README.md) |
+| `Czarnak/tia-git-addin` | MIT Core 的 SimaticML 解析、结构差异和 LAD 布局；结合本项目 HTML/Git 适配器。未复制桌面 UI。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/TiaGitAddIn.Core/UPSTREAM.json) |
+| `core-engineering/siemens-plc-tools` | 固定版本的 Python 包和 CLI，通过独立伴随进程调用；安装环境另外准备。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/siemens-plc-tools/UPSTREAM.json) |
+| Siemens OPC UA Modelled Interface Add-In | 复用接口 XML 生成阶段，导入使用现有 MCP 工具；不是安装上游 Add-In。 | [改动记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/SiemensOpcUaModelled/UPSTREAM.json) |
+| `Czarnak/simaticml-decoder` | 独立 Python 进程只读分析 V21 FC/FB 导出；输出不可直接回编译或导入。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/simaticml-decoder/UPSTREAM.json) |
 
 随包许可、依赖与版权见[第三方清单](../licenses/THIRD-PARTY-NOTICES.md)。Siemens PublicAPI 和第三方测试工程不随交付包分发。
 
@@ -40,15 +40,15 @@
 
 `ReadPlcBlockEditCapabilities` 检查实际文档的语言、文本、标量初始值和库绑定。`PatchPlcBlockDocument` 只修改存在且匹配的目标并写入新文件。`ImportPlcBlockVerified` 按精确工程、对象和预览令牌导入后读回；库连接块、实例 DB、Safety 等有明确排除范围。
 
-`AnalyzePlcReferences` 仅分析输入 SimaticML 的调用和全局符号，不能替代完整原生交叉引用。遗漏文件、未知调用和歧义需随结果一起报告。编辑工具不会自动保存工程，编译选项必须按实际 schema 指定；导入成功、内容核对成功、编译成功分别判断。完整示例统一见[调用示例库](../development/official-tool-usage.md)。
+`AnalyzePlcReferences` 仅分析输入 SimaticML 的调用和全局符号，不能替代完整原生交叉引用。遗漏文件、未知调用和歧义需随结果一起报告。编辑工具不会自动保存工程，编译选项必须按实际 schema 指定；导入成功、内容核对成功、编译成功分别判断。完整示例统一见[调用示例库](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)。
 
 ## PLC Tools 环境
 
-在运行 MCP 的电脑上，按 [伴随工具说明](../../tools/third-party/siemens-plc-tools/README.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
+在运行 MCP 的电脑上，按 [伴随工具说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/siemens-plc-tools/README.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
 
 V20/V21 完整引擎通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及
 `scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。生态文件保留 `TIA_MCP_REPOSITORY_ROOT`
-显式覆盖，具体校验、默认 Python 路径及保留到 4.0 的兼容回退见[运行时布局](../development/runtime-layout.md)。
+显式覆盖，具体校验、默认 Python 路径及保留到 4.0 的兼容回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
 此覆盖不影响嵌入的生态目录，也不扩展 Foundation 的工具范围。
 
 `code` 提供代码分析、测试、文档与差异；`iol` 提供 I/O 与标签交换；`net`、`sim`、`sup`、`trace` 按各自配置处理网络、仿真、监督及跟踪。部分命令执行项目 Python、访问设备或抓包，不应把所有伴随命令当作离线只读检查。上游 PDF 文档命令所需的 pandoc/TeX 等环境与本项目 ReportLab 审计报告是不同路线。

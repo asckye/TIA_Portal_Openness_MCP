@@ -24,7 +24,7 @@
 
 ## 2. 下载、解压和准备环境
 
-1. 当前统一工作台使用源码构建产物，构建方式见[验证流程](../development/validation.md)。[已发布 v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) 仍是合并前界面；该 ZIP 不包含本页新增的顶部页面切换。后续正式包仍应完整下载 ZIP 和同名 `.sha256`，GitHub 的 `Source code` 不含运行二进制。
+1. 当前统一工作台使用源码构建产物，构建方式见[验证流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md)。[已发布 v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) 仍是合并前界面；该 ZIP 不包含本页新增的顶部页面切换。后续正式包仍应完整下载 ZIP 和同名 `.sha256`，GitHub 的 `Source code` 不含运行二进制。
 2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaMcpConfigurator.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
 3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制引擎或 Studio 的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
 4. 用 TIA 打开一个练习工程，确认 TIA 自己能正常查看和编译。首次练习建议使用工程副本，并只打开这一份目标工程。
@@ -101,7 +101,7 @@ V20/V21 默认只直接显示 63 个常用工具，AI 可用 `FindTools` 查找�
 
 ## 4. 第一个 AI 练习：导入加法函数并编译
 
-交付包已有完整的小例子：[FC_Add.scl](../../reference/tool-examples/languages/FC_Add.scl)。它有两个 `Int` 输入 `LeftValue`、`RightValue`，返回二者之和。无需先让 AI 从零编写代码。
+交付包已有完整的小例子：[FC_Add.scl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FC_Add.scl)。它有两个 `Int` 输入 `LeftValue`、`RightValue`，返回二者之和。无需先让 AI 从零编写代码。
 
 1. 先完成上一节，选择一个含 S7 PLC 的练习工程及准确 PLC 路径，并在 TIA 中结束工程内所有设备的在线连接后再编译。
 2. 确认工程中还没有自己的 `FC_Add`，避免覆盖同名程序。
@@ -187,9 +187,9 @@ v3.2.0 已进行八版构建、离线功能及协议测试；新增能力的真�
 
 - [配置指南](configuration.md)：两种连接模式、客户端配置、升级和故障处理。
 - [逐版本工具](../reference/version-tools.md)：所选版本实际提供的工具及差异。
-- [统一工具示例说明](../development/official-tool-usage.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
+- [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
 - [命令行指南](cli.md)：V20/V21 的生成、导入导出和编译流程。
-- [Studio 说明](../../tools/tia-openness-studio/README.md)：桌面工具的工作流和支持范围。
+- [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
 软件自己的本机连接记录、界面偏好和诊断日志默认保存在交付包的 `data\config`、`data\ui` 和 `data\diagnostics` 中，更新会保留 `data`。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。详见[配置说明](configuration.md)。

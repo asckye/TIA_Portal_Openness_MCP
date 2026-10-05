@@ -22,7 +22,7 @@ v3.2.0 提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness �
 - 文件应放在 MCP 服务所在电脑；虚拟机场景中，宿主机路径不会自动映射为虚拟机路径。
 - 先明确目标工程、PLC 和对象，再使用示例中的参数。导入、生成、编译、保存、下载分别对应不同操作。
 
-[统一示例说明](../development/official-tool-usage.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
+[统一示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
 
 ## 主要工作流
 
@@ -47,7 +47,7 @@ v3.2.0 提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness �
 | 实际 TIA 工程记录 | 仅证明记录中的版本、工程、动作和输入曾得到该结果。 |
 | 工具/API 覆盖统计 | 描述清单或审计范围；不是所有 Siemens API 已封装、全部动作可执行或全部工具真机通过的承诺。 |
 
-本版记录以 [release-build.json](../../manifest/release-build.json) 和 [multi-version-build.json](../../manifest/multi-version-build.json) 为准。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
+本版记录以 [release-build.json](../../manifest/release-build.json) 和 [multi-version-build.json](../../manifest/multi-version-build.json) 为准。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
 
 ## 仍未完成
 

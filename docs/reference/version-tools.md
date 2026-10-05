@@ -24,7 +24,7 @@ write-confirmation requirements and response envelopes. Read the selected host s
 
 Every tool has `GetToolUsage(toolName, operation)` with its actual schema, input
 origins, result interpretation and examples. `language` and `exampleId` retrieve
-programming files and call sequences from the same library. [Coverage and limits](../development/official-tool-usage.md)
+programming files and call sequences from the same library. [Coverage and limits](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)
 distinguish source patterns, custom wrappers and native acceptance.
 
 Shared algorithms belong in API-independent code. Version-specific native operations
@@ -46,7 +46,7 @@ See [every tool and its release keys](version-tool-catalog.md),
 
 The [functional gap matrix](openness-coverage.md#functional-review) separately checks
 whether an advertised tool can execute the intended engineering operation. Its
-[machine-readable evidence](../../reference/version-feature-matrix.json) records
+[machine-readable evidence](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json) records
 29 reviewed workflows/families across eight releases, exact SDK identifiers and
 source routes. These 232 version/feature cells are an audit scope, not a missing-tool
 count or a claim that every Siemens feature has been reviewed.
@@ -79,7 +79,7 @@ The formal GitHub Release ZIP contains all eight MCP runtimes, Studio and its ei
 adapters. Download that asset for installation; GitHub source archives contain no
 compiled runtimes. `Release.ps1` produces the public package after full and
 multi-version validation. `Package-MultiVersion.py` below produces a local development
-package and does not publish a Release. See [the release workflow](../development/release-workflow.md).
+package and does not publish a Release. See [the release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md).
 
 ```powershell
 ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
@@ -175,7 +175,7 @@ pass needs an explicitly selected version and test project for roundtrip verific
 | [TIAOpennessManager](https://github.com/StaniB88/TIAOpennessManager) | Public entry redirects toward AnyAutomation Studio; no reusable licensed core source established in this review |
 
 Eido copyright, source commit, local changes and license are in
-[the provenance record](../../tools/third-party/eido-import-planner/README.md).
+[the provenance record](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/eido-import-planner/README.md).
 Native SDKs and third-party source archives are not substitutes for functional integration.
 
 Official version-change references: [Siemens V15.1 changes](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-in-tia-portal-openness-v15.1)

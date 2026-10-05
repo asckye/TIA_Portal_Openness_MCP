@@ -6,10 +6,10 @@ V14 SP1–V21 均提供外部源导入、生成块和编译工具，但基础引
 
 | 目标 | `GetToolUsage` 查询 | 文件 |
 |---|---|---|
-| 第一个加法 FC | `exampleId="scl-add"` | [FC_Add.scl](../../../reference/tool-examples/languages/FC_Add.scl) |
-| FB 状态和定时器 | `exampleId="scl-state-timer"` | [FB_DelayPulse.scl](../../../reference/tool-examples/languages/FB_DelayPulse.scl) |
-| 数组与控制流 | `exampleId="scl-control-flow"` | [FC_ArrayTotal.scl](../../../reference/tool-examples/languages/FC_ArrayTotal.scl) |
-| 查找其他程序模板 | `language="scl"` | [语言目录](../../../reference/tool-examples/languages/catalog.json) |
+| 第一个加法 FC | `exampleId="scl-add"` | [FC_Add.scl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FC_Add.scl) |
+| FB 状态和定时器 | `exampleId="scl-state-timer"` | [FB_DelayPulse.scl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FB_DelayPulse.scl) |
+| 数组与控制流 | `exampleId="scl-control-flow"` | [FC_ArrayTotal.scl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FC_ArrayTotal.scl) |
+| 查找其他程序模板 | `language="scl"` | [语言目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/catalog.json) |
 
 查询结果包括完整声明、实现、文件编码、适用版本及常见错误。按返回的 `releaseKeys` 选择例子；不要只复制函数体而漏掉接口声明、实例或返回值。
 

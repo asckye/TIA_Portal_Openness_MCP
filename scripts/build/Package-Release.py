@@ -2,10 +2,12 @@
 
 Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaMcpConfigurator.exe are not tracked in Git:
 Build-Release.ps1 produces them locally and records their hashes in manifest/release-build.json and
-manifest/configurator-build.json, which ARE committed. Packaging takes the tracked files from Git, adds the local
-binaries and refuses when a binary is missing or differs from its validated hash. Release.ps1 uploads the ZIP.
+manifest/configurator-build.json, which ARE committed. Packaging filters tracked files through
+scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. Release.ps1 uploads the ZIP.
 """
 import argparse
+from collections import Counter
+import importlib.util
 from datetime import datetime
 import hashlib
 import json
@@ -15,6 +17,31 @@ import subprocess
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+
+
+CHECKS = Path(__file__).resolve().parents[1] / 'checks'
+_spec = importlib.util.spec_from_file_location('bundle_layout', CHECKS / 'Check-BundleLayout.py')
+layout = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(layout)
+
+
+def preview(root, tracked, rules, stage=None):
+    selected = sorted(name for name in tracked if layout.delivered(name, rules))
+    selected_set = set(selected)
+    excluded = Counter(name.split('/')[0] for name in tracked if name not in selected_set)
+    for name in selected:
+        print(name)
+    print(f'Dry run: {len(selected)} delivery files; {sum(excluded.values())} excluded files; no binaries built or ZIP published')
+    print('Excluded top-level groups: ' + json.dumps(dict(sorted(excluded.items())), ensure_ascii=False))
+    if stage:
+        stage = stage.resolve()
+        require(stage.is_relative_to(root) and stage != root, 'Dry-run stage must be a new directory inside this worktree')
+        require(not stage.exists(), 'Dry-run stage already exists')
+        for name in selected:
+            target = stage / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((root / name).read_bytes())
+        print('Staged filtered tree: ' + str(stage))
 
 
 def require(condition, message):
@@ -30,18 +57,28 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--git', default='git')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
+    parser.add_argument('--dry-run', action='store_true', help='List the filtered working tree without build outputs, clean-tree checks or publication')
+    parser.add_argument('--include-untracked', action='store_true', help='Dry run only: also preview new, non-ignored files awaiting review')
+    parser.add_argument('--stage-directory', type=Path, help='Dry run only: copy the filtered tree into a new worktree-local directory')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
-    subprocess.run([sys.executable, str(root / 'scripts/checks/Check-Repository.py')], check=True)
+    rules = layout.load_delivery(root)
 
     def git(*values):
         return subprocess.check_output([args.git, *values], cwd=root)
 
+    tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
+    if args.dry_run:
+        if args.include_untracked:
+            tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name]
+        preview(root, tracked, rules, args.stage_directory)
+        return
+    require(not args.include_untracked and args.stage_directory is None, 'Preview options require --dry-run')
+    subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py')], check=True)
     require(not git('status', '--porcelain', '--untracked-files=normal').strip(),
             'Review and commit the source and manifests before packaging')
     commit = git('rev-parse', 'HEAD').decode().strip()
     files = {}
-    tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
     require(not any((name.startswith('runtime/') and name != 'runtime/README.md') or name == 'TiaMcpConfigurator.exe' for name in tracked),
             'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaMcpConfigurator.exe')
     # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
@@ -184,7 +221,7 @@ def main():
             data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
-    required = ['docs/README.md',
+    required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
                 'tools/openness-shared/BundleLayout.cs',
                 'scripts/checks/Check-BundleLayout.py',
                 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
@@ -234,22 +271,14 @@ def main():
         required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     require(all(n in files for n in required), 'Full delivery entries or documentation missing')
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
-    files['RELEASE_STATUS.txt'] = (
-        f'Complete delivery: {release}; engine FileVersion {version}.\r\n'
-        f'Release keys: {", ".join(delivery.get("releaseKeys", ["20", "21"]))}.\r\n'
-        f'Engine build validation date: {metadata["generatedAt"]}; unchanged inputs verified by hashes.\r\n'
-        f'Configurator isolated tests passed: {gui["testsPassed"]}; see manifest/configurator-build.json.\r\n'
-        f'Source commit: {commit}\r\n'
-        'Open TiaMcpConfigurator.exe for the unified engineering and MCP desktop; keep the complete bundle together.\r\n'
-        'Install matching TIA/Openness and the documented .NET runtimes separately.\r\n'
-        'Preserve existing connection configuration and secret. No user secret is bundled.\r\n'
-        'Local validation results: manifest/release-build.json. Real-project acceptance remains separate.\r\n'
-        'Migration gaps and acceptance procedure: docs/guides/hmi/read-only-migration.md.\r\n'
-    ).encode('utf-8')
-    files['manifest/release-file-hashes.json'] = json.dumps({
-        'package': package, 'sourceCommit': commit,
-        'files': {name: sha(data) for name, data in sorted(files.items())}
-    }, ensure_ascii=False, indent=2).encode('utf-8')
+    # Validate compiler inputs and release-only IL verifier in the repository before
+    # projecting the delivery set. Source/build evidence never enters the ZIP.
+    subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                    str(CHECKS / 'Validate-Bundle.ps1'), '-BundleRoot', str(root), '-Strict'], check=True)
+    files = {name: data for name, data in files.items() if layout.delivered(name, rules)}
+    require(all(name in files for name in required_exes), 'Delivery rules exclude a required executable/license')
+    require(all(layout.delivered(row['path'], rules) or row['path'].startswith('runtime/verification/')
+                for row in inventory), 'Delivery rules exclude a recorded runtime dependency')
     out = args.output_directory.resolve() if args.output_directory else root / 'bin-build/releases' / ('v' + release)
     out.mkdir(parents=True, exist_ok=True)
     stage, archive = out / package, out / (package + '.zip')
@@ -261,8 +290,8 @@ def main():
     # The validator checks configuration launcher targets, blueprints, JSON, tool roster,
     # exact binary versions and build hashes in the actual delivery directory.
     subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-                    str(stage / 'scripts/checks/Validate-Bundle.ps1'), '-BundleRoot', str(stage), '-Strict'], check=True)
-    subprocess.run([sys.executable, str(stage / 'scripts/checks/Check-Repository.py')], check=True)
+                    str(CHECKS / 'Validate-Bundle.ps1'), '-BundleRoot', str(stage), '-Strict', '-PackageMode'], check=True)
+    subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py'), '--root', str(stage), '--package-mode'], check=True)
     with zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for name, data in sorted(files.items()):
             z.writestr(package + '/' + name, data)

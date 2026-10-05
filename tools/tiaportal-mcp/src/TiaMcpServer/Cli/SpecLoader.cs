@@ -59,8 +59,7 @@ namespace TiaMcpServer.Cli
         internal static string? FindBundleRoot(string baseDirectory, string? repositoryRoot = null)
         {
             var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
-            if (root != null && Directory.Exists(Path.Combine(root, "templates")) &&
-                Directory.Exists(Path.Combine(root, "tools"))) return root.Replace('\\', '/');
+            if (root != null && Directory.Exists(Path.Combine(root, "templates"))) return root.Replace('\\', '/');
             // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
             var dir = new DirectoryInfo(baseDirectory);
             for (int i = 0; i < 12 && dir != null; i++, dir = dir.Parent)

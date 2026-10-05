@@ -43,4 +43,4 @@
 
 检查官方导出状态、消息和实际文件清单；空文件或未调用导出不是“对象为空”的证据。发现故障后保留已取得的页面与诊断，先检查工程和连接状态，再开始新的采集。
 
-原生导出在服务进程的临时目录进行，不保存或修改工程。采集内容可能包含工程源码，按项目要求保存。相关操作见[全局脚本](global-scripts.md)、[图形坐标](graphic-selection.md)和[工具示例说明](../../development/official-tool-usage.md)。
+原生导出在服务进程的临时目录进行，不保存或修改工程。采集内容可能包含工程源码，按项目要求保存。相关操作见[全局脚本](global-scripts.md)、[图形坐标](graphic-selection.md)和[工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)。

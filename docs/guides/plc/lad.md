@@ -15,7 +15,7 @@ LAD XML builder 只生成 FC 调用网络，不生成任意触点、线圈、比
 ## V21 文档练习
 
 1. 读取 `GetToolUsage(exampleId="lad-contacts-edge")` 或 `exampleId="fbd-and"`。中文标题配套资源见 `exampleId="lad-chinese-resources"`。
-2. 将返回的完整文件保存在 TIA/MCP 电脑的同一目录；[FB_LadStart.s7dcl](../../../reference/tool-examples/languages/FB_LadStart.s7dcl) 与 [FB_LadStart.s7res](../../../reference/tool-examples/languages/FB_LadStart.s7res) 使用相同基本文件名，保留示例编码。
+2. 将返回的完整文件保存在 TIA/MCP 电脑的同一目录；[FB_LadStart.s7dcl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FB_LadStart.s7dcl) 与 [FB_LadStart.s7res](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FB_LadStart.s7res) 使用相同基本文件名，保留示例编码。
 3. 读取 `GetToolUsage(exampleId="sequence/plc-s7dcl-import")`。文档导入参数使用**目录和不带扩展名的文件名**，不是把 `.s7dcl` 完整路径放进任意名称参数。
 4. 检查导入状态、消息和实际导入的块，再编译、读回接口及网络。
 

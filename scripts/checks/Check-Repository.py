@@ -1,5 +1,6 @@
 """Check local documentation links and repository entrypoints without TIA or dotnet."""
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -9,6 +10,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 SKIP = {'.git', 'bin-build', 'bin', 'bin-v20', 'obj', 'obj-v20', '__pycache__', 'TiaMcp_Output', '.pytest_cache'}
+_spec = importlib.util.spec_from_file_location('bundle_layout', Path(__file__).with_name('Check-BundleLayout.py'))
+layout = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(layout)
 
 
 def documents(root):
@@ -29,7 +33,9 @@ def local_target(root, source, target):
     return None
 
 
-def check(root, no_binaries=False):
+def check(root, no_binaries=False, package_mode=False):
+    rules = layout.load_delivery(root)
+    package_mode = package_mode or not (root / 'Version.props').is_file()
     errors = []
     count = 0
     for source in documents(root):
@@ -47,14 +53,44 @@ def check(root, no_binaries=False):
         target = (root / name).resolve()
         if not target.is_relative_to(root.resolve()):
             errors.append(f'{label}: external path: {name}')
-        elif no_binaries and (name.endswith('.exe') or name.startswith('runtime/')):
+        elif no_binaries and (name.endswith('.exe') or (name.startswith('runtime/') and name != 'runtime/README.md')):
             return   # build outputs live outside Git since 2.8.1
         elif not target.exists():
             errors.append(f'{label}: missing or external path: {name}')
     package = read('manifest/package-manifest.json')
     for key, value in package['entrypoints'].items():
+        # Historical generated metadata retains this repository-only entry.
+        if package_mode and key == 'bundleValidationScript':
+            continue
         required(value, 'package entry ' + key)
     required(package['cli']['exe'], 'CLI')
+    for path in rules['include']['files']:
+        required(path, 'delivery file')
+    for prefix in rules['include']['prefixes']:
+        if no_binaries and prefix == 'runtime/':
+            continue
+        required(prefix, 'delivery folder')
+    if package_mode:
+        for path in layout.resource_paths((ROOT / layout.SOURCE).read_text(encoding='utf-8-sig')):
+            required(path, 'bundle resource')
+            if not layout.delivery_resource(path, rules):
+                errors.append('Bundle resource excluded from delivery: ' + path)
+        for path in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
+            if path != 'scripts/checks/Validate-Bundle.ps1':
+                required(path, 'blueprint')
+        roster = read('manifest/tools-list.json')
+        names = [row['name'] for row in roster['tools']]
+        if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:
+            errors.append('Tool inventory count/uniqueness differs from package metadata')
+        for path in root.rglob('*'):
+            if path.is_file() and not layout.delivered(path.relative_to(root).as_posix(), rules):
+                errors.append('File outside delivery set: ' + path.relative_to(root).as_posix())
+        if not no_binaries:
+            inventory = read('manifest/release-build.json')['runtimeFiles'] + read('manifest/multi-version-build.json')['files']
+            for row in inventory:
+                if layout.delivered(row['path'], rules):
+                    required(row['path'], 'recorded runtime')
+        return count, errors
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj', 'adapter contracts')
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json', 'adapter contracts lock')
     for name in ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs'):
@@ -114,8 +150,8 @@ def check(root, no_binaries=False):
         result = subprocess.run([sys.executable, str(checker), '--root', str(root)])
         if result.returncode:
             errors.append(f'{name} baseline check failed (see diagnostics above)')
-    layout = Path(__file__).with_name('Check-BundleLayout.py')
-    result = subprocess.run([sys.executable, str(layout), '--root', str(root)])
+    layout_script = Path(__file__).with_name('Check-BundleLayout.py')
+    result = subprocess.run([sys.executable, str(layout_script), '--root', str(root)])
     if result.returncode:
         errors.append('Bundle-layout resource check failed (see diagnostics above)')
     return count, errors
@@ -124,6 +160,7 @@ def check(root, no_binaries=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT)
+    parser.add_argument('--package-mode', action='store_true', help='Validate the runtime-only delivery, also detected when Version.props is absent')
     parser.add_argument('--no-binaries', action='store_true',
                         help='source checkout without build outputs: skip the existence of runtime/*/TiaMcpServer.exe and TiaMcpConfigurator.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
@@ -132,7 +169,7 @@ def main():
     assert local_target(args.root, source, '../README.md') is None
     assert local_target(args.root, source, '../__missing_repository_check__.md')
     assert local_target(args.root, source, '../../../__outside__.md')
-    count, errors = check(args.root, args.no_binaries)
+    count, errors = check(args.root, args.no_binaries, args.package_mode)
     for error in errors:
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')

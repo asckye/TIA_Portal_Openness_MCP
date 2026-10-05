@@ -13,6 +13,9 @@
     Source checkout without build outputs (CI, or a fresh clone before Build-Release.ps1): since 2.8.1 runtime\v20,
     runtime\v21 and TiaMcpConfigurator.exe are not tracked in Git, so their presence, versions and hashes are skipped;
     manifests, versions, launchers' syntax and the recorded source hashes are still checked.
+.PARAMETER PackageMode
+    Validate an extracted runtime-only delivery with no development tree. Also detected when Version.props is absent.
+    Run this checker from the repository; check scripts are not shipped.
 .PARAMETER SkipSourceHashes
     Skip recorded source-file existence and hash comparisons in build manifests for push/PR CI.
     Source hashes are regenerated and fully verified at release time.
@@ -22,19 +25,32 @@ param(
     [string]$BundleRoot = "",
     [switch]$Strict,
     [switch]$NoBinaries,
-    [switch]$SkipSourceHashes
+    [switch]$SkipSourceHashes,
+    [switch]$PackageMode
 )
 
 $ErrorActionPreference = "Stop"
 
 function Resolve-BundleRoot {
-    if ($BundleRoot -and (Test-Path -LiteralPath $BundleRoot)) {
+    if ($BundleRoot) {
+        if (-not (Test-Path -LiteralPath $BundleRoot -PathType Container)) { throw "Bundle root does not exist: $BundleRoot" }
         return (Resolve-Path -LiteralPath $BundleRoot).Path
     }
     return (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "../..")).Path
 }
 
 $root = Resolve-BundleRoot
+$PackageMode = $PackageMode -or -not (Test-Path -LiteralPath (Join-Path $root 'Version.props'))
+$deliveryRules = Get-Content -LiteralPath (Join-Path $root 'scripts/operations/delivery-files.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($deliveryRules.schemaVersion -ne 1) { throw 'Unsupported delivery-files schema' }
+function MatchesDeliveryRule([string]$path, $rule) {
+    if (@($rule.files) -ccontains $path) { return $true }
+    foreach ($prefix in $rule.prefixes) { if ($path.StartsWith($prefix, [StringComparison]::Ordinal)) { return $true } }
+    return $false
+}
+function IsDeliveryFile([string]$path) {
+    return (MatchesDeliveryRule $path $deliveryRules.include) -and -not (MatchesDeliveryRule $path $deliveryRules.exclude)
+}
 $failures = New-Object System.Collections.Generic.List[string]
 
 function Fail([string]$msg) {
@@ -54,6 +70,19 @@ function FileHash([string]$path) {
 }
 
 Write-Host "Bundle root: $root"
+Write-Host ("Validation mode: " + $(if ($PackageMode) { 'package' } else { 'repository' }))
+foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.prefixes)) {
+    if ($NoBinaries -and ($path -eq 'TiaMcpConfigurator.exe' -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
+    if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
+    else { Fail "Missing delivery resource: $path" }
+}
+if ($PackageMode) {
+    foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Force) {
+        $relative = $file.FullName.Substring($root.Length + 1).Replace('\', '/')
+        if (-not (IsDeliveryFile $relative)) { Fail "File outside delivery set: $relative" }
+    }
+}
+
 
 if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at release time; recorded source-file checks skipped" -ForegroundColor Cyan }
 
@@ -110,6 +139,7 @@ foreach ($guiFile in @(
     'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
     'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs'
 )) {
+    if ($PackageMode -and -not (IsDeliveryFile $guiFile)) { continue }
     if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
     if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
     else { Fail "Missing GUI entry: $guiFile" }
@@ -117,11 +147,13 @@ foreach ($guiFile in @(
 
 foreach ($name in @('TiaMcp.Runtime.csproj','S7LiveReader.cs','OpcUaLiveReader.cs','S7WebApiChannel.cs','UnifiedOpenPipeChannel.cs')) {
     $path = 'tools/tiaportal-mcp/src/TiaMcp.Runtime/' + $name
+    if ($PackageMode) { continue }
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing runtime channel source: $path" }
 }
 if (!$NoBinaries) {
     $verifier = Join-Path $root 'runtime/verification/NativeCallWeaver.dll'
     foreach ($name in @('NativeCallWeaver.dll','NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json','Mono.Cecil.dll')) {
+        if ($PackageMode) { continue }
         if (!(Test-Path -LiteralPath (Join-Path $root "runtime/verification/$name"))) { Fail "Missing packaged native verifier: $name" }
     }
     foreach ($major in @(20,21)) {
@@ -144,6 +176,7 @@ if (!$NoBinaries) {
 
 foreach ($name in @('ChannelMessage.cs','LineFraming.cs','ChannelCodec.cs','ChannelClient.cs','ChannelServer.cs','TiaMcp.WorkerChannel.csproj','packages.lock.json')) {
     $path = 'tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + $name
+    if ($PackageMode) { continue }
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing worker channel source: $path" }
 }
 if (!$NoBinaries) {
@@ -160,7 +193,7 @@ if (!$NoBinaries) {
         }
     }
 }
-if (!(Test-Path -LiteralPath (Join-Path $root 'tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
+if (-not $PackageMode -and !(Test-Path -LiteralPath (Join-Path $root 'tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
 
 # The checkout and delivery use the same canonical runtime paths.
 $exe = Join-Path $root 'runtime/v21/TiaMcpServer.exe'
@@ -224,6 +257,7 @@ else {
         Ok "Blueprint JSON parses"
         if ($blueprint.requiredBundleFiles) {
             foreach ($rel in $blueprint.requiredBundleFiles) {
+                if ($PackageMode -and $rel -eq 'scripts/checks/Validate-Bundle.ps1') { continue } # Repository-only historical metadata.
                 $p = Join-Path $root ($rel -replace "/", [IO.Path]::DirectorySeparatorChar)
                 if (-not (Test-Path -LiteralPath $p)) {
                     Fail "Blueprint requiredBundleFiles missing: $rel"
@@ -297,15 +331,19 @@ if (Test-Path -LiteralPath $hmiDir) {
 # Version.props is the product version source; release records must match it.
 $changelog = Join-Path $root "CHANGELOG.md"
 $versionProps = Join-Path $root "Version.props"
-[xml]$versionXml = Get-Content -LiteralPath $versionProps -Raw -Encoding UTF8
-$sourceRelease = [string]$versionXml.Project.PropertyGroup.TiaMcpRelease
-if ($sourceRelease -notmatch '^\d+\.\d+\.\d+$') { Fail 'Version.props: release must be X.Y.Z' }
+if ($PackageMode) {
+    $sourceRelease = [string]((Get-Content -LiteralPath (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json).release)
+} else {
+    [xml]$versionXml = Get-Content -LiteralPath $versionProps -Raw -Encoding UTF8
+    $sourceRelease = [string]$versionXml.Project.PropertyGroup.TiaMcpRelease
+}
+if ($sourceRelease -notmatch '^\d+\.\d+\.\d+$') { Fail 'Release must be X.Y.Z' }
 $plugin = Get-Content (Join-Path $root '.claude-plugin/plugin.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($plugin.version -ne $sourceRelease) { Fail 'Plugin version differs from Version.props' }
-else { Ok 'Plugin version matches Version.props' }
+if ($plugin.version -ne $sourceRelease) { Fail 'Plugin version differs from release version' }
+else { Ok 'Plugin version matches release version' }
 $manifest  = Join-Path $root "manifest\package-manifest.json"
 
-if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $versionProps) -and (Test-Path -LiteralPath $manifest)) {
+if ((Test-Path -LiteralPath $changelog) -and ($PackageMode -or (Test-Path -LiteralPath $versionProps)) -and (Test-Path -LiteralPath $manifest)) {
     $clText = Get-Content -LiteralPath $changelog -Raw -Encoding UTF8
     $clMatch = [regex]::Match($clText, '(?m)^##\s*\[(?<v>\d+\.\d+\.\d+)\]')
     if (-not $clMatch.Success) {
@@ -381,12 +419,23 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             $studio = Join-Path $root 'runtime/studio/TiaOpenness.exe'
             if (-not (Test-Path -LiteralPath $studio)) { Fail 'Studio executable missing' }
             elseif ((Get-Item -LiteralPath $studio).VersionInfo.FileVersion -ne $build.fileVersion) { Fail 'Studio version is stale' }
-            $pin = Get-Content -LiteralPath (Join-Path $root 'scripts/build/bundled-dotnet.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-            if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/host/fxr/$($pin.version)/hostfxr.dll"))) { Fail "Bundled .NET $($pin.version) host missing" }
-            foreach ($framework in $pin.frameworks) { if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/shared/$framework/$($pin.version)"))) { Fail "Bundled $framework $($pin.version) missing" } }
+            if (-not $PackageMode) {
+                $pin = Get-Content -LiteralPath (Join-Path $root 'scripts/build/bundled-dotnet.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+                if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/host/fxr/$($pin.version)/hostfxr.dll"))) { Fail "Bundled .NET $($pin.version) host missing" }
+                foreach ($framework in $pin.frameworks) { if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/shared/$framework/$($pin.version)"))) { Fail "Bundled $framework $($pin.version) missing" } }
+            } else {
+                # The recorded runtime inventory supplies exact versions and hashes in a package.
+                foreach ($name in @('LICENSE.txt', 'ThirdPartyNotices.txt')) {
+                    if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/$name"))) { Fail "Bundled .NET license missing: $name" }
+                }
+                foreach ($pattern in @('runtime/dotnet/host/fxr/*/hostfxr.dll', 'runtime/dotnet/shared/Microsoft.NETCore.App/*/Microsoft.NETCore.App.deps.json', 'runtime/dotnet/shared/Microsoft.AspNetCore.App/*/Microsoft.AspNetCore.App.deps.json', 'runtime/dotnet/shared/Microsoft.WindowsDesktop.App/*/Microsoft.WindowsDesktop.App.deps.json')) {
+                    $recorded = @($build.runtimeFiles) + @($multi.files) | Where-Object { $_.path -like $pattern }
+                    if (-not $recorded) { Fail "Bundled .NET runtime record missing: $pattern" }
+                }
+            }
         }
     }
-    if (-not $SkipSourceHashes) {
+    if (-not $PackageMode -and -not $SkipSourceHashes) {
         foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles)) {
             if ($null -eq $row) { continue }
             $file = Join-Path $root $row.path
@@ -407,7 +456,11 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
     }
     foreach ($row in @($build.runtimeFiles) + @($multi.files)) {
         if ($null -eq $row) { continue }
-        if ($NoBinaries) { break }
+        if ($PackageMode -and -not (IsDeliveryFile $row.path)) {
+            if (-not $row.path.StartsWith('runtime/verification/')) { Fail "Recorded runtime excluded from delivery: $($row.path)" }
+            continue
+        }
+        if ($NoBinaries) { continue }
         $file = Join-Path $root $row.path
         if (!(Test-Path -LiteralPath $file)) { Fail "Runtime dependency missing: $($row.path)" }
         else {
@@ -418,7 +471,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             if ($digest -ne $row.sha256) { Fail "Runtime hash differs: $($row.path)" }
         }
     }
-    if ($failures.Count -eq 0) { Ok $(if ($NoBinaries -and $SkipSourceHashes) { 'Build records and versions match (binaries and source hashes not checked)' } elseif ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } elseif ($SkipSourceHashes) { 'Both runtime versions and build manifest hashes match (source hashes not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
+    if ($failures.Count -eq 0) { Ok $(if ($PackageMode) { 'Delivery records and package resources match (source checks run in the repository)' } elseif ($NoBinaries -and $SkipSourceHashes) { 'Build records and versions match (binaries and source hashes not checked)' } elseif ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } elseif ($SkipSourceHashes) { 'Both runtime versions and build manifest hashes match (source hashes not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
 }
 
 if ($failures.Count -gt 0) {

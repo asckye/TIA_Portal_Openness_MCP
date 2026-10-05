@@ -1,5 +1,6 @@
 """Check the BCL resource table against Git and Validate-Bundle's enforced list; no dotnet."""
 import argparse
+import json
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -7,12 +8,48 @@ import sys
 import shutil
 import unittest
 import uuid
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'tools/openness-shared/BundleLayout.cs'
 VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
 LAUNCHER = 'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs'
 GUI_PROJECT = 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'
+DELIVERY_RULES = 'scripts/operations/delivery-files.json'
+
+
+def load_delivery(root):
+    rules = json.loads((root / DELIVERY_RULES).read_text(encoding='utf-8-sig'))
+    if rules.get('schemaVersion') != 1:
+        raise ValueError('Unsupported delivery-files schema')
+    for group in ('include', 'exclude', 'legacyCleanup'):
+        for kind in ('files', 'prefixes'):
+            rows = rules[group][kind]
+            if not isinstance(rows, list) or len(rows) != len(set(rows)):
+                raise ValueError('Invalid delivery rule list: ' + group + '/' + kind)
+            for path in rows:
+                if (not isinstance(path, str) or not plain_path(path.rstrip('/'))
+                        or path.endswith('/') != (kind == 'prefixes')):
+                    raise ValueError('Invalid delivery path: ' + str(path))
+    return rules
+
+
+def plain_path(path):
+    return (bool(path) and not any(c in path for c in '\\:*?[]')
+            and all(part not in ('', '.', '..') for part in path.split('/')))
+
+
+def matches(path, rules):
+    return path in rules['files'] or any(path.startswith(prefix) for prefix in rules['prefixes'])
+
+
+def delivered(path, rules):
+    return plain_path(path) and matches(path, rules['include']) and not matches(path, rules['exclude'])
+
+
+def delivery_resource(path, rules):
+    # A directory resource needs its entire subtree, not just one included child.
+    return delivered(path, rules) or delivered(path.rstrip('/') + '/__resource__', rules)
 
 
 def resource_paths(source):
@@ -69,6 +106,7 @@ def launcher_paths(layout, launcher, gui_project):
 
 
 def check(root, tracked):
+    rules = load_delivery(root)
     layout = (root / SOURCE).read_text(encoding='utf-8-sig')
     paths = resource_paths(layout)
     launcher_paths(layout, (root / LAUNCHER).read_text(encoding='utf-8-sig'),
@@ -86,10 +124,71 @@ def check(root, tracked):
                 errors.append('Resource is not in the Git file set: ' + path)
         if path not in validated:
             errors.append('Resource is not checked by Validate-Bundle: ' + path)
+        if not delivery_resource(path, rules):
+            errors.append('Resource is not in the delivery set: ' + path)
+        if target.is_dir():
+            for child in target.rglob('*'):
+                relative = child.relative_to(root).as_posix()
+                if child.is_file() and (tracked is None or relative in tracked) and not delivered(relative, rules):
+                    errors.append('Resource child is not in the delivery set: ' + relative)
     return len(paths), errors
 
 
 class LayoutChecks(unittest.TestCase):
+    def test_python_installer_covers_external_runtime_dependencies(self):
+        expected = set()
+        for path in (ROOT / 'tools/third-party/siemens-plc-tools').rglob('pyproject.toml'):
+            project = tomllib.loads(path.read_text(encoding='utf-8'))['project']
+            expected.update(d for d in project.get('dependencies', []) if not d.startswith('plc-'))
+            for extra in ('opcua', 'web'):
+                expected.update(d for d in project.get('optional-dependencies', {}).get(extra, []) if not d.startswith('plc-'))
+        installer = (ROOT / 'scripts/ecosystem/Install-PlcTools.ps1').read_text(encoding='utf-8-sig')
+        actual = re.search(r'\$dependencies = @\((.*?)\n\)', installer, re.S)
+        self.assertIsNotNone(actual)
+        self.assertEqual(set(re.findall(r"'([^']+)'", actual[1])), expected)
+        self.assertIn('@dependencies pytest pytest-asyncio pytest-cov reportlab', installer)
+
+    def test_shipped_license_copies_are_unchanged(self):
+        for source, copy in (
+                ('tools/third-party/TiaGitAddIn.Core/LICENSE', 'TiaGitAddIn.Core-LICENSE.txt'),
+                ('tools/third-party/SiemensOpcUaModelled/LICENSE.md', 'SiemensOpcUaModelled-LICENSE.md'),
+                ('tools/third-party/eido-import-planner/LICENSE', 'Eido-LICENSE.txt'),
+                ('tools/tia-openness-studio/LICENSE', 'TiaOpennessStudio-LICENSE.txt'),
+                ('tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt', 'Manrope-OFL.txt'),
+                ('tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt', 'JetBrainsMono-OFL.txt'),
+                ('reference/siemens-code-snippets/LICENSE.md', 'SiemensCodeSnippets-LICENSE.md')):
+            with self.subTest(source=source):
+                self.assertEqual((ROOT / source).read_text(encoding='utf-8-sig'),
+                                 (ROOT / 'docs/licenses' / copy).read_text(encoding='utf-8-sig'))
+
+    def test_delivery_includes_runtime_resources_and_plugin(self):
+        rules = load_delivery(ROOT)
+        for path in ('TiaMcpConfigurator.exe', 'runtime/v21/TiaMcpServer.exe',
+                     'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
+                     '.claude-plugin/plugin.json', 'hooks/hooks.json',
+                     'tools/tiaportal-mcp/skill/SKILL.md',
+                     'tools/third-party/siemens-plc-tools/packages/plc-code/src/plc_code/cli.py',
+                     'tools/third-party/simaticml-decoder/src/simaticml_decoder/parse.py'):
+            with self.subTest(path=path):
+                self.assertTrue(delivered(path, rules))
+        for path in resource_paths((ROOT / SOURCE).read_text(encoding='utf-8-sig')):
+            with self.subTest(resource=path):
+                self.assertTrue(delivery_resource(path, rules))
+
+    def test_delivery_excludes_development_and_prefix_lookalikes(self):
+        rules = load_delivery(ROOT)
+        for path in ('runtime/verification/NativeCallWeaver.dll', 'runtime/verification/Mono.Cecil.dll',
+                     'AGENTS.md', 'Version.props', 'RELEASE_STATUS.txt', '.github/workflows/release.yml',
+                     'tools/tiaportal-mcp/src/TiaMcpServer/Program.cs', 'docs/development/runtime-layout.md',
+                     'scripts/checks/Validate-Bundle.ps1', 'reference/tool-examples/README.md',
+                     'manifest/contracts/tools.json', 'manifest/history/old.json',
+                     'tools/third-party/siemens-plc-tools/packages/plc-code/tests/test_cli.py',
+                     'tools/third-party/simaticml-decoder/pyproject.toml',
+                     'runtime-other/file.dll', 'templates-other/file.json', 'README.md.bak',
+                     'runtime/../private.key', '/runtime/file.dll', 'runtime\\file.dll'):
+            with self.subTest(path=path):
+                self.assertFalse(delivered(path, rules))
+
     def test_launcher_matches_installed_anchor_and_gui_filename(self):
         layout, launcher, project = [(ROOT / path).read_text(encoding='utf-8-sig')
                                      for path in (SOURCE, LAUNCHER, GUI_PROJECT)]
@@ -132,7 +231,7 @@ class LayoutChecks(unittest.TestCase):
         root = parent / ('bundle-check-' + uuid.uuid4().hex)
         root.mkdir()
         try:
-            for relative in (SOURCE, VALIDATOR, LAUNCHER, GUI_PROJECT):
+            for relative in (SOURCE, VALIDATOR, LAUNCHER, GUI_PROJECT, DELIVERY_RULES):
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text((ROOT / relative).read_text(encoding='utf-8-sig'), encoding='utf-8')

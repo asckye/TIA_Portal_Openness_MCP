@@ -16,7 +16,7 @@ v3.2.0 正式交付包与当前 `master` 提供八版本配置选择、V14 SP1�
 | v20 | `b5b0a68b3d8d747fc81473fd46ac7ddd2ed260f3` | 上游历史 v2.3.2；当前 V20 开发使用 master |
 | v21 | `af7f7a7f8d6a08cd5eafabfda6b379837c82014e` | 上游历史 v2.5.2；当前 V21 开发使用 master |
 
-来源和同步记录见 [upstream-version-branches.json](../../manifest/upstream-version-branches.json)。旧分支有未进入主线的独立历史，清理时没有将这些旧源码覆盖到当前实现。
+来源和同步记录见 [upstream-version-branches.json](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/upstream-version-branches.json)。旧分支有未进入主线的独立历史，清理时没有将这些旧源码覆盖到当前实现。
 
 ## 备份与恢复
 

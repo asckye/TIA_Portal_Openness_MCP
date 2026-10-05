@@ -29,4 +29,4 @@ The high-level recipe accepts `set-bit`, `reset-bit` and `toggle-bit`. Other rec
 
 When explicitly using `syntaxCheck=true`, inspect whether the native check ran, was unavailable, or faulted. A native fault can invalidate the TIA session; verify the project state before repeating a write. Do not infer zero errors from a missing field.
 
-See [screen generation](design.md), [tag binding](tag-binding.md) and the [central language catalog](../../../reference/tool-examples/languages/catalog.json).
+See [screen generation](design.md), [tag binding](tag-binding.md) and the [central language catalog](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/catalog.json).

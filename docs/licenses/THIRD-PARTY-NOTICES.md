@@ -30,7 +30,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 ## 随包 .NET 运行时（`runtime/dotnet`）
 
-3.3.0 起随包分发 Microsoft .NET 10.0.12 运行时（Microsoft.NETCore.App、Microsoft.AspNetCore.App、Microsoft.WindowsDesktop.App），取自微软官方压缩包 `aspnetcore-runtime-10.0.12-win-x64.zip` 与 `windowsdesktop-runtime-10.0.12-win-x64.zip`，按 [scripts/build/bundled-dotnet.json](../../scripts/build/bundled-dotnet.json) 记录的 SHA-512 校验后原样展开，不做修改。许可证为 MIT（© .NET Foundation and Contributors），原文与第三方声明随运行时保留在 `runtime/dotnet/LICENSE.txt`、`runtime/dotnet/ThirdPartyNotices.txt`；参见 [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt)。
+3.3.0 起随包分发 Microsoft .NET 10.0.12 运行时（Microsoft.NETCore.App、Microsoft.AspNetCore.App、Microsoft.WindowsDesktop.App），取自微软官方压缩包 `aspnetcore-runtime-10.0.12-win-x64.zip` 与 `windowsdesktop-runtime-10.0.12-win-x64.zip`，按 [scripts/build/bundled-dotnet.json](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/scripts/build/bundled-dotnet.json) 记录的 SHA-512 校验后原样展开，不做修改。许可证为 MIT（© .NET Foundation and Contributors），原文与第三方声明随运行时保留在 `runtime/dotnet/LICENSE.txt`、`runtime/dotnet/ThirdPartyNotices.txt`；参见 [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt)。
 
 ## 仅构建期的诊断覆盖工具
 
@@ -44,11 +44,11 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 | 组件 | 固定来源 | 许可与本地文件 |
 |---|---|---|
-| TiaGitAddIn.Core：SimaticML、结构比较、LAD 布局 | Czarnak/tia-git-addin `01d0bca9f92da9052aeb8f3130d25edb1847a22b` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../tools/third-party/TiaGitAddIn.Core/LICENSE)、[来源](../../tools/third-party/TiaGitAddIn.Core/UPSTREAM.json)。构建新增 `TiaGitAddIn.Core.dll`。 |
+| TiaGitAddIn.Core：SimaticML、结构比较、LAD 布局 | Czarnak/tia-git-addin `01d0bca9f92da9052aeb8f3130d25edb1847a22b` | MIT，© 2026 Łukasz Czarnacki；[许可证](TiaGitAddIn.Core-LICENSE.txt)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/TiaGitAddIn.Core/UPSTREAM.json)。构建新增 `TiaGitAddIn.Core.dll`。 |
 | Siemens 官方 Openness 指南 | siemens/tia-portal-ai-extensions `b5c7041648dc10f9225ef082306ade6c335b8771` | MIT，© 2026 Siemens AG；[许可证](../../reference/siemens-openness/LICENSE)、[来源](../../reference/siemens-openness/UPSTREAM.json)。2026-10-01 核对更新，32 个指南正文未变化，本地保留稳定的 skills 路径；作为资料，不自动执行。 |
-| Siemens OPC UA 接口生成源码 | tia-portal-applications/tia-addin-opc-ua-modelled-interface `317dfd06dae840ff229e721b140de4b89829120e` | 保留[完整 Siemens 条款](../../tools/third-party/SiemensOpcUaModelled/LICENSE.md)；第 2 节对源代码及生成源代码授予 MIT，© 2022 Siemens AG；[改动记录](../../tools/third-party/SiemensOpcUaModelled/UPSTREAM.json)。未复制上游 Add-In 二进制。 |
-| PLC Tools 的八个 Python 包及根 CLI | core-engineering/siemens-plc-tools `887eea1ea3495832648f47e42759320141952717` | MIT；[许可证](../../tools/third-party/siemens-plc-tools/LICENSE)、[改动记录](../../tools/third-party/siemens-plc-tools/UPSTREAM.json)。以独立 Python 进程运行，安装环境和依赖不随源码入库。 |
-| SimaticML Decoder 0.2.3 | Czarnak/simaticml-decoder `2f100023c2d6f4e7a4df02cbd04975de48f5d207` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../tools/third-party/simaticml-decoder/LICENSE)、[来源](../../tools/third-party/simaticml-decoder/UPSTREAM.json)。原样源码、独立 Python 进程、只读分析；输出不可回编译或导入。上游测试语料不随本项目分发。 |
+| Siemens OPC UA 接口生成源码 | tia-portal-applications/tia-addin-opc-ua-modelled-interface `317dfd06dae840ff229e721b140de4b89829120e` | 保留[完整 Siemens 条款](SiemensOpcUaModelled-LICENSE.md)；第 2 节对源代码及生成源代码授予 MIT，© 2022 Siemens AG；[改动记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/SiemensOpcUaModelled/UPSTREAM.json)。未复制上游 Add-In 二进制。 |
+| PLC Tools 的八个 Python 包及根 CLI | core-engineering/siemens-plc-tools `887eea1ea3495832648f47e42759320141952717` | MIT；[许可证](../../tools/third-party/siemens-plc-tools/LICENSE)、[改动记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/siemens-plc-tools/UPSTREAM.json)。以独立 Python 进程运行，安装环境和依赖不随源码入库。 |
+| SimaticML Decoder 0.2.3 | Czarnak/simaticml-decoder `2f100023c2d6f4e7a4df02cbd04975de48f5d207` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../tools/third-party/simaticml-decoder/LICENSE)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/simaticml-decoder/UPSTREAM.json)。原样源码、独立 Python 进程、只读分析；输出不可回编译或导入。上游测试语料不随本项目分发。 |
 
 `TiaUtilities` 和 `tia-linter` 的 GPL 源码未复制。布尔别名/报警生成、XML 模板展开及通用工程质量规则为独立实现。Repsay 客户端和 Czarnak MCP 的功能需求通过本项目现有 API 与新批量协议实现，未复制其源代码。Python 依赖由安装脚本单独还原，包括可选 PDF 审计报告使用的 ReportLab；安装环境不打包进交付仓库。
 
@@ -71,18 +71,18 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 ## TIA Openness Studio desktop integration
 
 - Source: [asckye/tia-openness-studio](https://github.com/asckye/tia-openness-studio), commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, v2.4.0.
-- Copyright (c) 2026 asckye; [MIT license](../../tools/tia-openness-studio/LICENSE).
+- Copyright (c) 2026 asckye; [MIT license](TiaOpennessStudio-LICENSE.txt).
 - Integrated WPF UI, contracts, typed client, mock, inspection/diff helpers and tests. The integrated desktop now uses a direct Openness bridge with eight version-specific adapters and no MCP transport. No upstream native DLL or Siemens SDK is included in the desktop build.
-- [Provenance and archive hashes](../../tools/tia-openness-studio/upstream.json); [integration and behavior](../../tools/tia-openness-studio/README.md). The full original source and complete Git history are retained as reference archives.
+- [Provenance and archive hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/upstream.json); [integration and behavior](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md). The full original source and complete Git history are retained as reference archives.
 - Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.
 
 ## Glass Layers desktop fonts
 
-Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The font files, original licenses, source URLs and file hashes are under [`tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts). Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
+Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The original [Manrope license](Manrope-OFL.txt) and [JetBrains Mono license](JetBrainsMono-OFL.txt) are included here; font source URLs and hashes remain in the source repository. Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
 
 ## Eido import dependency planner
 
-MIT, copyright (c) 2026 EIDO AUTOMATION, S.L.U. The adapted implementation and retained license are described in [the provenance record](../../tools/third-party/eido-import-planner/README.md). Both MCP profiles share this implementation.
+MIT, copyright (c) 2026 EIDO AUTOMATION, S.L.U. The [original license](Eido-LICENSE.txt) is included here; implementation provenance remains in the source repository. Both MCP profiles share this implementation.
 
 The foundation HTTP transport uses ModelContextProtocol.AspNetCore 0.3.0-preview.4 (MIT), matching the existing MCP SDK, and the Microsoft.AspNetCore.App shared framework. No independent HTTP MCP protocol implementation is copied from another repository.
 
@@ -90,10 +90,9 @@ The foundation HTTP transport uses ModelContextProtocol.AspNetCore 0.3.0-preview
 
 The complete C# source corpus of [Siemens TIA Portal Openness Code Snippets](https://github.com/siemens/tia-portal-openness-code-snippets)
 is retained as reference text at commit `4a8cc79d0666633e524e52f3335d99ff993f8830`,
-copyright Siemens 2025-2026. Section 2 of the [original license](../../reference/siemens-code-snippets/LICENSE.md)
-grants MIT terms for source code. All original notices remain. The complete license,
-source/dependency files and [provenance](../../reference/siemens-code-snippets/UPSTREAM.json)
-are bundled; no upstream executable, SDK or sample engineering archive is included.
+copyright Siemens 2025-2026. Section 2 of the [original license](SiemensCodeSnippets-LICENSE.md)
+grants MIT terms for source code. All original notices remain. The complete license is bundled here; source/dependency files and provenance
+remain in the source repository; no upstream executable, SDK or sample engineering archive is included.
 The generated MCP catalog also embeds the previously vendored MIT Siemens AI extension
 guides. It does not compile or execute these references. Project summaries and MCP
 argument templates are identified separately from official source text.

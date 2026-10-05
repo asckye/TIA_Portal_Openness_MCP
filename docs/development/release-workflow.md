@@ -1,8 +1,44 @@
 # 完整 Release 发布流程
 
-从 v3.2.0 起，完整 TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、WPF 配置器、Studio 及八版原生适配器，以及源码、示例、文档、模板和许可证。基础引擎与完整引擎的范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。
+从 v3.2.0 起，完整 TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、WPF 配置器、Studio 及八版原生适配器，以及运行资源、用户文档、模板、插件和许可证。自 3.3.0 之后的下一个版本起，交付 ZIP 不再携带开发源码及构建工具。基础引擎与完整引擎的范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。
 
 运行文件不提交 Git。三份构建记录是 manifest/release-build.json、manifest/configurator-build.json、manifest/multi-version-build.json；manifest/delivery.json 绑定它们的哈希。PublicAPI、个人密钥、私人 TIA 工程、设计交接和构建日志不分发，原始版权与许可证保留。
+
+## 交付清单与两种校验模式
+
+[`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
+`include.files` 为精确路径，`include.prefixes` 为以 `/` 结尾的目录前缀，`exclude` 优先；未匹配的跟踪文件不交付。
+Python 打包器、资产核验、仓库/布局检查与 PowerShell 校验器、更新器均读取它。运行文件仍只来自三份构建记录，
+不会把磁盘上任意新文件塞入 ZIP。`runtime/verification/` 只用于发布前的 IL 验证，不分发。
+
+保留 BundleLayout 的九项资源、全部模板、生态与操作脚本、Claude Code 插件及其 skill、用户说明和许可证。
+Python 桥接所用两个第三方项目只交付 `src`、PLC Tools 的八个 `packages/*/src` 和许可证；
+`Install-PlcTools.ps1` 安装外部运行依赖，不再依赖未交付的本地项目打包元数据。
+字体、Studio、TiaGitAddIn、Siemens OPC UA、Eido 与嵌入官方代码示例的许可原文在 `docs/licenses/` 保留副本。
+
+三份构建记录供解包校验读取版本、依赖清单及 SHA-256，`delivery.json` 绑定记录哈希并供软件检查版本；
+`tools-list.json` 用于包内入口及工具数量校验，`version-tools.json` 是用户版本矩阵入口。
+其他构建证据和 `RELEASE_STATUS.txt`、`release-file-hashes.json` 不进入新 ZIP。
+
+- 仓库模式：`Validate-Bundle.ps1 -Strict` 保留源码、构建输入哈希、版本和本地 IL 校验；日常检查可用
+  `-NoBinaries -SkipSourceHashes`。`Check-Repository.py` 运行源码门禁与 BundleLayout 表校验。
+- 包模式：从仓库执行 `Validate-Bundle.ps1 -BundleRoot <解包根> -PackageMode -Strict` 与
+  `Check-Repository.py --root <解包根> --package-mode`。没有 `Version.props` 时也自动识别包模式。
+  检查交付资源、用户文档链接、许可证、构建记录、运行文件版本/哈希；不读取源文件或调用包内 IL 验证器。
+  生成的旧 package/blueprint 元数据中的 `scripts/checks/Validate-Bundle.ps1` 条目仅属仓库说明，包模式明确忽略该单项。
+  新增资源必须纳入规则，不能以源码缺失为由跳过其他必需项。
+
+无发布构建时可查看当前文件投影，不执行 Release 或生成可发布资产：
+
+```powershell
+python scripts/build/Package-Release.py --dry-run --include-untracked --stage-directory bin-build/delivery-preview
+python scripts/checks/Check-Repository.py --root bin-build/delivery-preview --no-binaries
+pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -BundleRoot bin-build/delivery-preview -PackageMode -Strict -NoBinaries
+```
+
+`--include-untracked` 仅在 dry run 中用于预览待审查的新文件，正式打包仍要求干净提交树。
+预览打印完整文件集和排除的顶层分组；没有运行二进制时不能作为完整发布验证。
+旧构建记录与 CHANGELOG 版本不一致仍报错，不能修改记录哈希来让预览变绿。
 
 ## 准备和执行
 
@@ -22,8 +58,8 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 2. Build-Release.ps1 构建两个完整引擎与配置器，执行功能、协议和稳定性测试。
 3. Build-MultiVersion.ps1 -SkipFullEngines -Test 构建八版 Worker/Adapter、六个基础引擎运行包和 Studio，执行八版 SDK 元数据、XSD、基础工具、传输和全部工具示例校验，写入八版本交付记录。
 4. 检查仓库链接、失效工具引用和严格包验证，提交明确变更路径，生成一次 Release X.Y.Z: <summary> 提交。
-5. Package-Release.py 核对提交树与清单内全部运行文件、源码哈希、版本及必要组件，在实际暂存目录运行严格检查，生成 ZIP、SHA-256 和 package-result.json。
-6. Verify-ReleaseAsset.py 独立验证 ZIP 等于提交树加记录哈希的运行文件。
+5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
+6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
 8. Publish-Release.ps1 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest。
 9. 等待 Verify published release 下载并校验公开资产，再记录发布 URL、提交和验收状态。

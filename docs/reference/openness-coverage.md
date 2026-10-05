@@ -24,14 +24,14 @@ five names unimplemented. It is only one migration list. The functional review c
 engineering workflows those names represent, existing runtime gates, and additional
 API families. See the [implementation order](version-tools.md#remaining-tools-and-acceptance).
 
-Reproduce with `scripts/diagnostics/Audit-VersionTools.py --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](../../manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
+Reproduce with `scripts/diagnostics/Audit-VersionTools.py --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
 
 The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6f3a5e1f2d4554f2adfefce883843c4bb8f5d6d2/docs/reference/openness-coverage.md). It does not describe the newly enabled version routes.
 
 ## Functional review
 
 Reviewed on 2026-10-03 against the eight supplied SDK XML sets, current source routes
-and the advertised catalogs. The [functional matrix JSON](../../reference/version-feature-matrix.json)
+and the advertised catalogs. The [functional matrix JSON](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)
 contains exact identifiers, input hashes, source files, tool names and follow-up work
 for every row below. It is separate from the generated member-reference audit and
 does not redistribute the SDKs. The table covers 29 workflows/families, not all
