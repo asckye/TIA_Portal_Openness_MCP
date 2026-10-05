@@ -448,24 +448,114 @@ class Paths:
         self.boundaries = {}
         self.guards = {}
 
+    def framework_member(self, operand):
+        name = operand.get('name', '')
+        owner = operand.get('owner') or name.split('::')[0].rsplit(' ', 1)[-1]
+        assembly = operand.get('assembly')
+        target = normalize(operand.get('definition') or '')
+        # Older dumps omit assembly identity; still exclude every dumped owner.
+        return target in ('', normalize(name)) and '::' in name \
+            and owner.startswith(('System.', 'Microsoft.')) and owner not in self.owners \
+            and not operand.get('native') and (not assembly or assembly not in self.assemblies and
+                (assembly in ('mscorlib', 'netstandard', 'System', 'Microsoft') or
+                 assembly.startswith(('System.', 'Microsoft.'))))
+
     def delegate_value(self, instruction):
         operand = instruction['operand']
         target = normalize(operand.get('definition') or '')
         name = operand.get('name', '')
-        owner = operand.get('owner') or name.split('::')[0].rsplit(' ', 1)[-1]
-        assembly = operand.get('assembly')
         # ldftn binds one method even for an instance method group. External
         # virtual dispatch, project bodies and SDK bodies remain unresolved.
         # Older saved dumps omit assembly; their declaring types still exclude
         # project methods (including bodies outside the expansion scope).
-        if instruction['op'] == 'ldftn' and target in ('', normalize(name)) and '::' in name \
-                and owner.startswith(('System.', 'Microsoft.')) and owner not in self.owners \
-                and not operand.get('native') and (not assembly or assembly not in self.assemblies and
-                    (assembly in ('mscorlib', 'netstandard', 'System', 'Microsoft') or
-                     assembly.startswith(('System.', 'Microsoft.')))):
+        if instruction['op'] == 'ldftn' and self.framework_member(operand):
             target = '!framework:' + normalize(name)
             self.framework_leaves[target] = normalize(name)
-        return ('delegate', target, name)
+        value = ('delegate', target, name)
+        if operand.get('native') or instruction['op'] == 'ldvirtftn':
+            return (*value, 'native' if operand.get('native') else 'ldvirtftn')
+        return value
+
+    @staticmethod
+    def delegate_type(name):
+        return bool(re.match(r'^System\.(?:Func`|Action(?:`|$)|Predicate`|Comparison`|Converter`|Delegate$|MulticastDelegate$)', name))
+
+    def delegate_arguments(self, operand):
+        return [i + int(operand.get('HasThis', False))
+                for i, kind in enumerate(parameter_types(operand.get('name', ''))) if self.delegate_type(kind)]
+
+    def native_free(self, key):
+        """Prove the entire dumped closure, including cycles and dead branches."""
+        pending, reached = [key], set()
+        while pending:
+            target = pending.pop()
+            if target in reached:
+                continue
+            reached.add(target)
+            method = self.methods[target]
+            if method.get('states'):
+                raise ValueError('state machine in ' + method['name'])
+            if any(self.delegate_type(arg['type']) for arg in method.get('arguments', [])):
+                raise ValueError('unresolved delegate parameter in ' + method['name'])
+            for row in method['il']:
+                operand = row['operand']
+                site = f'{method["name"]} IL_{row["offset"]:04x} -> {operand.get("name", row["op"])}'
+                if operand.get('native'):
+                    raise ValueError('native member at ' + site)
+                if row['op'] in ('ldftn', 'ldvirtftn'):
+                    raise ValueError('delegate creation at ' + site)
+                if operand.get('kind') == 'field' and self.delegate_type(operand['name'].split(' ', 1)[0]):
+                    raise ValueError('unresolved delegate field at ' + site)
+                if row['flow'] != 'Call':
+                    continue
+                if operand.get('kind') != 'method':
+                    raise ValueError('unresolved dispatch at ' + site)
+                callee = normalize(operand.get('definition') or '')
+                declaring_type = operand.get('owner') or operand['name'].split('::')[0].rsplit(' ', 1)[-1]
+                if self.delegate_arguments(operand) or self.delegate_type(declaring_type) \
+                        or self.delegate_type(operand.get('returns', '')):
+                    raise ValueError('unresolved delegate at ' + site)
+                if callee in self.methods:
+                    pending.append(callee)
+                elif not self.framework_member(operand):
+                    raise ValueError('unresolved dispatch or missing body at ' + site)
+        return reached
+
+    def framework_callbacks(self, method, calls, callbacks):
+        result = {}
+        for row in method['il']:
+            operand, offset = row['operand'], row['offset']
+            if row['flow'] != 'Call' or row['op'] == 'newobj' or (operand.get('native') or {}).get('opcode') == 'newobj' \
+                    or operand.get('kind') != 'method' \
+                    or offset in callbacks or normalize(operand.get('definition') or '') in self.methods:
+                continue
+            values = calls.get(offset, ())
+            declaring_type = operand.get('owner') or operand['name'].split('::')[0].rsplit(' ', 1)[-1]
+            # Signature-only detection covers unknown framework/SDK callbacks;
+            # project consumers retain their existing bound-value expansion rules.
+            indexes = set(self.delegate_arguments(operand)) if declaring_type.startswith(('System.', 'Microsoft.', 'Siemens.')) else set()
+            indexes.update(i for i, value in enumerate(values)
+                if value and value[0] in ('delegate', 'optional-delegate', 'ambiguous-delegate'))
+            if not indexes:
+                continue
+            site = f'{method["name"]} IL_{offset:04x} -> {operand["name"]}'
+            try:
+                if not self.framework_member(operand):
+                    raise ValueError('consumer is not an external non-native framework member')
+                targets, reached = [], set()
+                for i in sorted(indexes):
+                    value = values[i] if i < len(values) else None
+                    if not value or value[0] != 'delegate' or len(value) != 3 or value[1] not in self.methods:
+                        raise ValueError(f'argument {i}: no statically bound ldftn target with a dumped body ({value})')
+                    targets.append(value[1])
+                    reached.update(self.native_free(value[1]))
+            except ValueError as error:
+                raise ValueError(f'Unresolved callback consumer: {site}; {error}') from error
+            self.reached.update(reached)
+            # Multiplicity is immaterial only after proving every target native-free.
+            result[offset] = 'framework-callback:' + json.dumps(
+                [normalize(operand['name']), targets], separators=(',', ':'))
+        return result
 
     def access(self, operand):
         native = operand.get('native')
@@ -775,7 +865,12 @@ class Paths:
         if key in active:
             return False
         method = self.methods[key]
-        result = any(row['operand'].get('native') for row in method['il']) or bool(method.get('states'))
+        # Match the reader's existing Func/Action expansion surface; unrelated
+        # framework delegate APIs must not pull new project bodies into the graph.
+        result = any(row['operand'].get('native') or
+            row['flow'] == 'Call' and row['op'] != 'newobj' and self.framework_member(row['operand'])
+            and any(kind.startswith(('System.Func`', 'System.Action')) for kind in parameter_types(row['operand']['name']))
+            for row in method['il']) or bool(method.get('states'))
         if not result:
             result = any(self.has_boundary(target, (*active, key)) for row in method['il']
                 if (target := normalize(row['operand'].get('definition') or '')) in self.methods)
@@ -887,6 +982,7 @@ class Paths:
             slots = {row['offset']: graph.node('epsilon') for row in il}
             calls, conditions = self.values(method, bindings)
             callbacks = self.callbacks(method, calls, conditions)
+            framework_callbacks = self.framework_callbacks(method, calls, callbacks)
             lifted, guard_branches = self.lifted_guards(method, calls, conditions)
             guard_checks = self.guard_checks(method, calls, conditions, guard_branches)
             handlers = method.get('handlers', [])
@@ -951,7 +1047,9 @@ class Paths:
                         next_node = expand(callback, next_node, catches)
                     native = operand.get('native')
                     target = normalize(operand.get('definition') or '')
-                    if offset in lifted:
+                    if offset in framework_callbacks:
+                        graph.nodes[here] = (framework_callbacks[offset], {'next': next_node, **exceptional})
+                    elif offset in lifted:
                         self.reached.update(lifted[offset]['reached'])
                         graph.nodes[here] = ('epsilon', {'next': next_node})
                     elif native:
@@ -1277,6 +1375,223 @@ class SelfTests(unittest.TestCase):
             document['methods'][0]['expansionOnly'] = False
         with self.assertRaisesRegex(ValueError, 'Ambiguous method'):
             Paths(documents)
+
+    def framework_consumer(self):
+        dictionary = 'System.Collections.Concurrent.ConcurrentDictionary`2<System.String,System.Reflection.PropertyInfo>'
+        func = 'System.Func`2<System.String,System.Reflection.PropertyInfo>'
+        closure = 'Host/<>c__DisplayClass3_0'
+        def simple(op, **operand):
+            return dict(op=op, flow='Next', operand=dict(kind='value', **operand))
+        def field(op, kind, name):
+            return dict(op=op, flow='Next', operand=dict(kind='field', name=kind + ' ' + closure + '::' + name))
+        def call(name, parameters, returns, owner, op='call', definition=None):
+            row = self.call(name, definition=definition)
+            row['op'] = op
+            row['operand'].update(owner=owner, parameters=parameters, returns=returns, HasThis=op != 'call')
+            return row
+        callback = self.method('System.Reflection.PropertyInfo ' + closure + '::<Run>b__0(System.String)', [
+            simple('ldarg.0'), field('ldfld', 'System.Type', 'type'),
+            simple('ldarg.0'), field('ldfld', 'System.String', 'propertyName'),
+            call('System.Reflection.PropertyInfo System.Type::GetProperty(System.String)', 1,
+                 'System.Reflection.PropertyInfo', 'System.Type', 'callvirt'), self.ret()])
+        callback.update(HasThis=True, arguments=[dict(name='_', type='System.String')])
+        constructor = self.method('System.Void ' + closure + '::.ctor()', [self.ret()])
+        host = self.method('System.Reflection.PropertyInfo Host::Run(' + dictionary + ',System.Type,System.String)', [
+            call(constructor['name'], 0, 'System.Void', closure, 'newobj', constructor['name']), simple('stloc.0'),
+            simple('ldloc.0'), simple('ldarg.1'), field('stfld', 'System.Type', 'type'),
+            simple('ldloc.0'), simple('ldarg.2'), field('stfld', 'System.String', 'propertyName'),
+            simple('ldarg.0'), simple('ldarg.2'), simple('ldloc.0'),
+            dict(op='ldftn', flow='Next', operand=dict(kind='method', name=callback['name'], definition=callback['name'])),
+            call('System.Void ' + func + '::.ctor(System.Object,System.IntPtr)', 2, 'System.Void', func, 'newobj'),
+            call('!1 ' + dictionary + '::GetOrAdd(!0,System.Func`2<!0,!1>)', 2, '!1', dictionary, 'callvirt'), self.ret()])
+        host.update(HasThis=False, arguments=[dict(name=name, type=kind)
+            for name, kind in [('cache', dictionary), ('type', 'System.Type'), ('propertyName', 'System.String')]])
+        return host, callback, constructor
+
+    def test_native_free_framework_consumer(self):
+        for assembly in (None, 'mscorlib', 'System.Collections.Concurrent', 'Microsoft.Framework'):
+            for capturing in (False, True):
+                with self.subTest(assembly=assembly, capturing=capturing):
+                    host, callback, constructor = self.framework_consumer()
+                    if not capturing:
+                        callback['HasThis'] = False
+                        get_type = self.call('System.Type System.Type::GetType(System.String)')
+                        get_type['operand'].update(owner='System.Type', HasThis=False, parameters=1, returns='System.Type')
+                        callback['il'] = [dict(offset=0, op='ldstr', flow='Next', operand=dict(kind='value', value='System.Object')),
+                            dict(offset=1, **get_type), dict(offset=2, op='ldarg.0', flow='Next', operand=dict(kind='value')),
+                            *callback['il'][4:]]
+                        host['il'][10].update(op='ldnull')
+                    if assembly:
+                        host['il'][13]['operand']['assembly'] = assembly
+                    methods = [host, callback, constructor]
+                    before, after = Paths([dict(assembly='Project', methods=methods)]), Paths([dict(assembly='Project', methods=methods)])
+                    errors, rows = compare_paths(before, after, 'Host', {host['name']})
+                    self.assertEqual([], errors)
+                    self.assertTrue(rows[0]['equal'])
+                    graph = before.build(host['name'])
+                    self.assertEqual(2, len(graph))
+                    self.assertTrue(graph[0][0].startswith('framework-callback:'))
+                    self.assertIn('::GetOrAdd(', graph[0][0])
+                    self.assertIn(normalize(callback['name']), graph[0][0])
+                    self.assertNotIn('::GetProperty(', str(graph))
+                    self.assertIn(normalize(callback['name']), before.reached)
+
+    def test_framework_consumer_identity_is_compared(self):
+        for mutation in ('callback', 'consumer', 'ordinal'):
+            with self.subTest(mutation=mutation):
+                host, callback, constructor = self.framework_consumer()
+                before = Paths([dict(methods=[host, callback, constructor])])
+                host, callback, constructor = self.framework_consumer()
+                if mutation == 'consumer':
+                    host['il'][13]['operand']['name'] = host['il'][13]['operand']['name'].replace('GetOrAdd', 'AddOrUpdate')
+                else:
+                    callback['name'] = callback['name'].replace('b__0', 'b__1') if mutation == 'callback' else callback['name'].replace('Class3_', 'Class9_')
+                    host['il'][11]['operand'].update(name=callback['name'], definition=callback['name'])
+                errors, rows = compare_paths(before, Paths([dict(methods=[host, callback, constructor])]), 'Host', {host['name']})
+                self.assertEqual(mutation == 'ordinal', rows[0]['equal'])
+                if mutation != 'ordinal':
+                    self.assertIn('expanded branch graph changed', errors[0])
+
+    def test_framework_callback_transitive_closure(self):
+        host, callback, constructor = self.framework_consumer()
+        helper = self.method('System.Reflection.PropertyInfo Helper::Read(System.Type,System.String)', [
+            dict(op='ldarg.0', flow='Next', operand=dict(kind='value')),
+            dict(op='ldarg.1', flow='Next', operand=dict(kind='value')),
+            *[{k: v for k, v in row.items() if k != 'offset'} for row in callback['il'][4:]]])
+        helper['arguments'] = [dict(name='type', type='System.Type'), dict(name='name', type='System.String')]
+        forward = self.call(helper['name'], definition=helper['name'])
+        forward['operand'].update(parameters=2, returns='System.Reflection.PropertyInfo', HasThis=False)
+        callback['il'][4] = dict(offset=4, **forward)
+        paths = Paths([dict(methods=[host, callback, constructor, helper])])
+        graph = paths.build(host['name'])
+        self.assertEqual(2, len(graph))
+        self.assertTrue({normalize(callback['name']), helper['name']} <= paths.reached)
+        helper['il'][2] = dict(offset=2, **forward)
+        paths = Paths([dict(methods=[host, callback, constructor, helper])])
+        self.assertEqual(graph, paths.build(host['name']))
+        helper['il'].insert(1, dict(offset=4, **self.call('System.String Siemens.Block::get_Name()', True)))
+        with self.assertRaisesRegex(ValueError, r'Unresolved callback consumer: .*Host::Run\(.*IL_000d.*Helper::Read\(.*IL_0004'):
+            paths.build(host['name'])
+
+    def test_framework_callback_native_and_unresolved_bodies_fail(self):
+        for mutation in ('native-read', 'native-field', 'missing-siemens', 'missing-project', 'dispatch',
+                         'delegate-creation', 'delegate-field', 'delegate-parameter', 'delegate-invoke',
+                         'state', 'indirect-call', 'missing-body'):
+            with self.subTest(mutation=mutation):
+                host, callback, constructor = self.framework_consumer()
+                row = callback['il'][4]
+                if mutation == 'native-read':
+                    row['operand']['native'] = dict(member='System.String Siemens.Block::get_Name()', category='direct', opcode='callvirt')
+                elif mutation == 'native-field':
+                    callback['il'][1]['operand']['native'] = dict(member='Siemens.Block::Name')
+                elif mutation.startswith('missing-') and mutation != 'missing-body':
+                    owner = 'Siemens.Block' if mutation == 'missing-siemens' else 'Project.Helper'
+                    row['operand'].update(owner=owner, name='System.String ' + owner + '::Read()', definition=None)
+                elif mutation == 'dispatch':
+                    row['operand']['definition'] = '!unresolved-dispatch:' + row['operand']['name']
+                elif mutation == 'delegate-creation':
+                    row.update(op='ldftn', flow='Next')
+                elif mutation == 'delegate-field':
+                    callback['il'][1]['operand']['name'] = 'System.Func`1<System.String> Host::Callback'
+                elif mutation == 'delegate-parameter':
+                    callback['arguments'][0]['type'] = 'System.Func`1<System.String>'
+                elif mutation == 'delegate-invoke':
+                    row['operand'].update(owner='System.Func`1<System.String>', name='System.String System.Func`1<System.String>::Invoke()')
+                elif mutation == 'state':
+                    callback['states'] = ['Host/State']
+                elif mutation == 'indirect-call':
+                    row.update(op='calli', operand=dict(kind='value'))
+                elif mutation == 'missing-body':
+                    callback['il'] = None
+                with self.assertRaisesRegex(ValueError, r'Unresolved callback consumer: .*Host::Run\(.*IL_000d'):
+                    Paths([dict(methods=[host, callback, constructor])]).build(host['name'])
+
+    def test_framework_consumer_rejects_unknown_delegates(self):
+        for mutation in ('parameter', 'field', 'unknown', 'null', 'optional', 'ambiguous', 'virtual', 'native-pointer'):
+            with self.subTest(mutation=mutation):
+                host, callback, constructor = self.framework_consumer()
+                if mutation == 'virtual':
+                    host['il'][11]['op'] = 'ldvirtftn'
+                elif mutation == 'native-pointer':
+                    host['il'][11]['operand']['native'] = dict(member=callback['name'])
+                else:
+                    prefix = [dict(op='ldarg.0', flow='Next', operand=dict(kind='value')),
+                              dict(op='ldarg.2', flow='Next', operand=dict(kind='value'))]
+                    producers = [dict(op='ldarg.3', flow='Next', operand=dict(kind='value'))]
+                    if mutation == 'field':
+                        producers = [dict(op='ldsfld', flow='Next', operand=dict(kind='field', name='System.Func`2<System.String,System.Reflection.PropertyInfo> Host::Callback'))]
+                    elif mutation in ('null', 'unknown'):
+                        producers = [dict(op='ldnull' if mutation == 'null' else 'ldloc.7', flow='Next', operand=dict(kind='value'))]
+                    elif mutation in ('optional', 'ambiguous'):
+                        bound = [{k: v for k, v in row.items() if k != 'offset'} for row in host['il'][10:13]]
+                        alternate = [dict(op='ldnull', flow='Next', operand=dict(kind='value'))]
+                        if mutation == 'ambiguous':
+                            alternate = json.loads(json.dumps(bound))
+                            alternate[1]['operand']['definition'] += 'Other'
+                        producers = [dict(op='ldarg.3', flow='Next', operand=dict(kind='value')),
+                            dict(op='brtrue.s', flow='Cond_Branch', operand=dict(kind='branch', target=8)),
+                            *bound, dict(op='br.s', flow='Branch', operand=dict(kind='branch', target=8+len(alternate))), *alternate]
+                    rows = prefix + producers + [{k: v for k, v in row.items() if k != 'offset'} for row in host['il'][13:]]
+                    host = self.method(host['name'], rows)
+                offset = next(row['offset'] for row in host['il'] if '::GetOrAdd(' in row['operand'].get('name', ''))
+                with self.assertRaisesRegex(ValueError, rf'Unresolved callback consumer: .*Host::Run\(.*IL_{offset:04x}'):
+                    Paths([dict(methods=[host, callback, constructor])]).build(host['name'])
+
+    def test_framework_consumer_boundary_remains_strict(self):
+        for mutation in ('siemens', 'siemens-assembly', 'project', 'dumped-type', 'dumped-assembly', 'native', 'dispatch'):
+            with self.subTest(mutation=mutation):
+                host, callback, constructor = self.framework_consumer()
+                operand = host['il'][13]['operand']
+                methods = [host, callback, constructor]
+                if mutation in ('siemens', 'project'):
+                    owner = 'Siemens.Cache' if mutation == 'siemens' else 'SystemProject.Cache'
+                    operand.update(name=operand['name'].replace(operand['owner'], owner), owner=owner)
+                elif mutation in ('siemens-assembly', 'dumped-assembly'):
+                    operand['assembly'] = 'Siemens.Engineering' if mutation == 'siemens-assembly' else 'System.Project'
+                elif mutation == 'dumped-type':
+                    methods.append(dict(owner=operand['owner'], name=operand['name'], il=None))
+                elif mutation == 'native':
+                    operand['native'] = dict(member=operand['name'], category='direct', opcode='callvirt')
+                else:
+                    operand['definition'] = '!unresolved-dispatch:' + operand['name']
+                with self.assertRaisesRegex(ValueError, r'Unresolved callback consumer: .*Host::Run\(.*IL_000d'):
+                    Paths([dict(assembly='System.Project', methods=methods)]).build(host['name'])
+
+    def test_framework_consumer_inside_dumped_helper_is_recorded(self):
+        host, callback, constructor = self.framework_consumer()
+        entry = self.method('Entry::Run()', [self.call(host['name'], definition=host['name']), self.ret()])
+        paths = Paths([dict(methods=[entry, host, callback, constructor])])
+        self.assertEqual(paths.build(host['name']), paths.build(entry['name']))
+
+    def test_framework_consumer_checks_every_callback(self):
+        host, callback, constructor = self.framework_consumer()
+        second = json.loads(json.dumps(callback))
+        second['name'] = second['name'].replace('b__0', 'b__1')
+        bound = json.loads(json.dumps(host['il'][10:13]))
+        bound[1]['operand'].update(name=second['name'], definition=second['name'])
+        consumer = host['il'][13]
+        consumer['operand']['name'] = consumer['operand']['name'].replace('GetOrAdd(!0,', 'AddOrUpdate(!0,System.Func`2<!0,!1>,')
+        consumer['operand']['parameters'] = 3
+        host['il'][13:13] = bound
+        for i, row in enumerate(host['il']):
+            row['offset'] = i
+        paths = Paths([dict(methods=[host, callback, second, constructor])])
+        graph = paths.build(host['name'])
+        self.assertEqual(2, len(graph))
+        self.assertIn(normalize(second['name']), graph[0][0])
+        self.assertTrue({normalize(callback['name']), normalize(second['name'])} <= paths.reached)
+        second['il'][4]['operand']['native'] = dict(member='System.String Siemens.Block::get_Name()')
+        with self.assertRaisesRegex(ValueError, r'Unresolved callback consumer: .*Host::Run\(.*IL_0010.*native member'):
+            paths.build(host['name'])
+
+    def test_framework_consumer_keeps_exception_edges(self):
+        host, callback, constructor = self.framework_consumer()
+        host['il'] += [dict(offset=15, **self.call('Siemens::Recover()', True)), dict(offset=16, **self.ret())]
+        host['handlers'] = [dict(kind='Catch', type='Exception', start=13, end=14, target=15)]
+        graph = Paths([dict(methods=[host, callback, constructor])]).build(host['name'])
+        self.assertIn('exception:Catch:Exception', str(graph))
+        self.assertIn('Siemens::Recover()', str(graph))
+        self.assertNotIn('::GetProperty(', str(graph))
 
     def test_state_machine_and_catch_expansion(self):
         outer = self.method('Host::Run()', [self.ret()], states=['State'])
