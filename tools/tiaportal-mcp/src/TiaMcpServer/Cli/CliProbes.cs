@@ -53,7 +53,7 @@ namespace TiaMcpServer
 
             Program.LogDiag($"FlowLight test: directory={projectDirectory}, project={projectName}");
 
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_FlowLight_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_FlowLight_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             HmiTemplateBuilder.WriteFlowLightPlcXml(importDir);
 
@@ -116,7 +116,7 @@ namespace TiaMcpServer
 
             Program.LogDiag($"Fix current flow binding: project={projectName}");
 
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_FixFlowBinding_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_FixFlowBinding_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             HmiTemplateBuilder.WriteFlowLightPlcXml(importDir);
 
@@ -220,7 +220,7 @@ namespace TiaMcpServer
         internal static void RunProbeS71200Device(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
-                ? Path.Combine(Path.GetTempPath(), "TiaMcpServer_DeviceProbe")
+                ? Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_DeviceProbe")
                 : options.ProjectDirectory!;
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "Probe_1211C_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
@@ -431,7 +431,7 @@ namespace TiaMcpServer
                 : options.ProjectName!;
             var workspace = Directory.GetCurrentDirectory();
             var screenImportPath = Path.Combine(workspace, "TMP_EXPORT", "optimized_hmi", "Screens", "主画面_优化.xml");
-            var probeDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Ktp700HmiImport_" + Guid.NewGuid().ToString("N"));
+            var probeDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Ktp700HmiImport_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(probeDir);
             var preparedScreenImportPath = PrepareClassicHmiScreenForKtp700(screenImportPath, probeDir);
 
@@ -604,7 +604,7 @@ namespace TiaMcpServer
             string? importProbeResult = null;
             try
             {
-                var sampleImportPath = Path.Combine(Path.GetTempPath(), "ClassicHmiTagTable_" + Guid.NewGuid().ToString("N") + ".xml");
+                var sampleImportPath = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "ClassicHmiTagTable_" + Guid.NewGuid().ToString("N") + ".xml");
                 WriteClassicHmiTagTableProbeXml(sampleImportPath, "Motor_HMI_Tags");
                 var importRes = EngineServices.Get<HmiExchangeTools>().ImportHmiTagTable("HMI_RT_1", "", sampleImportPath);
                 var ok = importRes.Meta?["success"]?.GetValue<bool>() == true;
@@ -1268,7 +1268,7 @@ namespace TiaMcpServer
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_KTP700_Basic_HmiSymbolicTags_" + DateTime.Now.ToString("yyyyMMdd_HHmm")
                 : options.ProjectName!;
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Ktp700SymbolicTags_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Ktp700SymbolicTags_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(projectDirectory);
             Directory.CreateDirectory(importDir);
             PlcHmiSyncXml.WriteMotorMinimalPlcXml(importDir);
@@ -1380,7 +1380,7 @@ namespace TiaMcpServer
                 ? "MCP_FlowLight_Test_20260427_1605"
                 : options.ProjectName!;
             var softwarePath = "PLC_1";
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_SclSyntax_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_SclSyntax_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             HmiTemplateBuilder.WritePlcSyntaxValidationXml(importDir);
             HmiTemplateBuilder.WritePlcSyntaxIecFbXml(importDir);
@@ -1471,7 +1471,7 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_MotorMinimal_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_MotorMinimal_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             PlcHmiSyncXml.WriteMotorMinimalPlcXml(importDir);
 

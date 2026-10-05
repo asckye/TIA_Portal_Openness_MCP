@@ -411,7 +411,7 @@ Used by `tia gen` (build from zero) and `tia patch` (upsert into existing).
 
   projectName     string  gen: required. Project name.
   projectPath     string  patch: required. Path to the .apXX to open.
-  directoryPath   string  gen: output folder (default %TEMP%).
+  directoryPath   string  gen: output folder (default data/temp; per-user temp fallback).
   plcName         string  default PLC_1.
   plcFamily       string  default S7-1500.
   plcMlfb         string  exact order number (optional).

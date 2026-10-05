@@ -23,10 +23,7 @@ public sealed class UiSettings
 
     public AppTheme Theme { get; set; } = AppTheme.Auto;
 
-    public static string FilePath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "TiaOpennessStudio",
-        "ui.settings");
+    public static string FilePath { get; } = TiaOpenness.Shared.DataLocations.Current.UiFilePath;
 
     public static UiSettings Load() => Load(FilePath);
 

@@ -22,7 +22,7 @@ namespace TiaMcpServer.Siemens
         internal string? Format, FailurePhase;
         private readonly string scope;
         private static readonly object LogGate = new object();
-        private static readonly string DiagnosticLog = Path.Combine(Path.GetTempPath(), "TiaMcpServer.native-export.log");
+        private static readonly string DiagnosticLog = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.native-export.log");
 
         private NativeExportCapture(string scope, bool libraryVersion)
         { this.scope = scope; Script = !libraryVersion; }

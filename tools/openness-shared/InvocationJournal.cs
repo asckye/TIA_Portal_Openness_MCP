@@ -39,8 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             public void Write(Func<string> row)
             {
-                var root = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY");
-                if (string.IsNullOrWhiteSpace(root)) root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaMcp", "diagnostics");
+                var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 if (!Path.IsPathRooted(root)) throw new IOException("Diagnostic path must be absolute.");
                 Directory.CreateDirectory(root);
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");

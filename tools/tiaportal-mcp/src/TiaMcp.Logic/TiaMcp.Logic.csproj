@@ -11,6 +11,7 @@
     <ProjectReference Include="../../../third-party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" />
     <Compile Include="../../../openness-shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../../../openness-shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <Compile Include="../../../openness-shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" />
     <Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" />
     <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />

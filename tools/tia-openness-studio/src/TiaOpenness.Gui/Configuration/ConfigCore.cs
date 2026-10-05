@@ -30,7 +30,7 @@ namespace TiaMcpConfigurator
 
     public static class ConfigCore
     {
-        public static readonly string StateDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaPortalMcp");
+        public static readonly string StateDirectory = TiaOpenness.Shared.DataLocations.Current.ConfigDirectory;
         public static string ClaudePath { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude.json"); } }
         public static JavaScriptSerializer Json() { return new JavaScriptSerializer { MaxJsonLength = 32 * 1024 * 1024, RecursionLimit = 256 }; }
 

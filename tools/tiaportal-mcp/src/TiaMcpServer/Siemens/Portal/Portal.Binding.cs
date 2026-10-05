@@ -20,7 +20,7 @@ namespace TiaMcpServer.Siemens
             return process.StartTime.ToUniversalTime().Ticks;
         }
         private static PortalProcessLease Reserve(int pid, long ticks) => PortalProcessLease.Acquire(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaMcp", "instance-leases"), pid, ticks);
+            TiaOpenness.Shared.DataLocations.Current.LeasesDirectory, pid, ticks);
         private void CaptureBinding()
         {
             HmiExactAccess.InvalidateTokens();

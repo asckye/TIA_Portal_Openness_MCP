@@ -37,7 +37,7 @@ namespace TiaMcpServer.Siemens.Services
         };
         private static Logic.ExportInventory CfcPreflight(ChartProviderS7 provider, string modelVersion, long filter, JsonObject meta)
         {
-            var temp = new FileInfo(Path.Combine(Path.GetTempPath(), "tia-mcp-cfc-preflight-" + Guid.NewGuid().ToString("N") + ".xml.zip"));
+            var temp = new FileInfo(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-cfc-preflight-" + Guid.NewGuid().ToString("N") + ".xml.zip"));
             try
             {
                 provider.CompleteExport(temp.FullName, modelVersion, filter, true);

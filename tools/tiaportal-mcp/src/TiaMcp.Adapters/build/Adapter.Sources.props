@@ -67,6 +67,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.Shared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/DataLocations.cs" Link="Diagnostics/DataLocations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/BundleLayout.cs" Link="Diagnostics/BundleLayout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />
     <Compile Include="$(AdapterSourceRoot)/TiaMcp.Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
     <Reference Include="@(AdapterApi)">

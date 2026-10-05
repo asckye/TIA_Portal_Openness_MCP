@@ -119,7 +119,7 @@ namespace TiaMcpServer.Siemens
             new JavaScriptParser(new ParserOptions { Tolerant = false }).ParseModule(scriptCode);
             meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
             if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new InvalidOperationException("A preview expectedToken is required before import.");
-            var work = Path.Combine(Path.GetTempPath(), "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
+            var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
             var backup = Path.Combine(work, "before");
             meta["backupDirectory"] = backup;
             meta["backupRetention"] = "Native files stay on the MCP machine for recovery; they may contain private project source. Remove manually when no longer needed.";

@@ -170,7 +170,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public (string TempDir, List<string> Paths)? ExportBlocksToTemp(string softwarePath, string regexName = "", bool preservePath = false)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
             var list = ExportBlocks(softwarePath, tempDir, regexName, preservePath);
@@ -1076,7 +1076,7 @@ namespace TiaMcpServer.Siemens.Services
                     $"Target group already contains '{blockName}'; relocation never overwrites another block.");
 
             // 3) export -> delete -> import into target group (no native reparent)
-            var tempDir = Path.Combine(Path.GetTempPath(), "tia_mcp_move", Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_move", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             string method;
             bool moveVerified = false;

@@ -315,7 +315,7 @@ namespace TiaMcpServer.Siemens.Services
             if (dryRun) { result["generated"] = false; return result; }
             lock (OpcUaModelLock)
             {
-                string scratch = Path.Combine(Path.GetTempPath(), "TiaMcp-OpcUa-" + Guid.NewGuid().ToString("N"));
+                string scratch = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcp-OpcUa-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(scratch);
                 try
                 {

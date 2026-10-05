@@ -19,6 +19,7 @@
   <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../openness-shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../../../openness-shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <InternalsVisibleTo Include="TiaOpenness.Core.Tests" />
   </ItemGroup>
 </Project>

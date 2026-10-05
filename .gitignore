@@ -68,3 +68,4 @@ TIA_V21_PublicAPI/
 /runtime/verification/
 *.ap14
 *.zap14
+/data/

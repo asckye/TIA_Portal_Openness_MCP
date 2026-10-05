@@ -226,7 +226,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException("ScaffoldProject: 'projectName' is required", McpErrorCode.InvalidParams);
             var directoryPath = S("directoryPath");
             if (string.IsNullOrWhiteSpace(directoryPath))
-                directoryPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tia_mcp_scaffold_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+                directoryPath = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_scaffold_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
             var plcName = S("plcName", "PLC_1");
             var plcFamily = S("plcFamily", "S7-1500");
             var plcMlfb = S("plcMlfb");

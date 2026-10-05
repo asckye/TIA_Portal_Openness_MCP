@@ -855,7 +855,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: PLC software path, e.g. '5T车' or 'PLC_1' (from GetProjectTree)")] string softwarePath,
             [Description("blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree")] string blockPath)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpLogic_" + Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpLogic_" + Guid.NewGuid().ToString("N"));
             try
             {
                 Directory.CreateDirectory(tempDir);

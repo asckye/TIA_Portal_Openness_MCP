@@ -22,7 +22,7 @@ namespace TiaMcpServer
 {
     public class Program
     {
-        private static readonly string DiagLogPath = Path.Combine(Path.GetTempPath(), "TiaMcpServer.log");
+        private static readonly string DiagLogPath = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.log");
         private static readonly string DiagLogPathLocal = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.startup.log");
 
         private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)

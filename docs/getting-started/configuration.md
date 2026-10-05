@@ -64,7 +64,7 @@
 
 配置器保留已有其他服务和设置，并为旧文件生成 `.bak_...` 备份。无效输入会报告具体失败；多选客户端时分别查看各项结果。JSONC 重写后为标准 JSON，原文保留在备份中。已有同名 `tia-portal` / `tia-portal-vm` 定义时检查是否存在重复来源。
 
-本机连接记录位于 `%LOCALAPPDATA%\TiaPortalMcp`；HTTP 服务配置按所选版本保存为 `http-v<版本>.json`，客户端记录为 `client.json`。这些本机记录使用当前 Windows 用户的加密保护；客户端自身配置文件按其格式保存密钥，不要公开配置或备份。
+本机连接记录默认位于可写交付包的 `data\config`；可用绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定数据根。无法定位交付包或其 `data` 不可写时，沿用 `%LOCALAPPDATA%\TiaPortalMcp`。首次使用新目录只复制缺失的旧记录，保留旧文件且不覆盖已有文件；HTTP 服务配置按所选版本保存为 `http-v<版本>.json`，客户端记录为 `client.json`。这些本机记录使用当前 Windows 用户的加密保护；客户端自身配置文件按其格式保存密钥，不要公开配置或备份。
 
 ## 工具显示与示例
 
@@ -98,3 +98,5 @@ V20/V21 默认 lite 显示 63 个常用工具，其余用 `FindTools` / `CallToo
 手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由配置器生成，避免复制不匹配参数。
 
 从源码构建时，兼容启动器位于 `tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](../development/repository-layout.md)。
+
+原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](../development/runtime-layout.md#软件自身的数据目录)。

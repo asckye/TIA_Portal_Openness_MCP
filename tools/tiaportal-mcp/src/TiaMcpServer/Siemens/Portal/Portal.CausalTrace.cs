@@ -57,7 +57,7 @@ namespace TiaMcpServer.Siemens
             var codeBlocks = blocks.Where(b => !(b is DataBlock)).ToList();
             data["scannedBlockCount"] = codeBlocks.Count;
 
-            var tmpDir = Path.Combine(Path.GetTempPath(), "tia_trace_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            var tmpDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_trace_" + Guid.NewGuid().ToString("N").Substring(0, 8));
             Directory.CreateDirectory(tmpDir);
 
             var writeSites = new JsonArray();

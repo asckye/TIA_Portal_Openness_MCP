@@ -395,7 +395,7 @@ namespace TiaMcpServer.Siemens
                 // Already correct: version matches (or unknown) AND a BOM is present -> import as-is.
                 if (fixedText == text && hasBom) return path;
 
-                var tmp = Path.Combine(Path.GetTempPath(), "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
+                var tmp = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
                 File.WriteAllText(tmp, fixedText, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
                 return tmp;
             }
@@ -593,7 +593,7 @@ namespace TiaMcpServer.Siemens
 
         public (string TempDir, List<string> Paths)? ExportBlockToTemp(string softwarePath, string blockPath, bool preservePath = false)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
             var blk = ExportBlock(softwarePath, blockPath, tempDir, preservePath);

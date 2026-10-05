@@ -54,8 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage ReadNativeInvocationLog([Description("Number of recent entries, 1..500.")] int take = 100)
         {
             if (take < 1 || take > 500) throw new ArgumentException("take must be 1..500.");
-            var root = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY");
-            if (string.IsNullOrWhiteSpace(root)) root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaMcp", "diagnostics");
+            var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
             if (!Path.IsPathRooted(root)) throw new ArgumentException("Diagnostics directory must be absolute.");
             var files = Directory.Exists(root) ? new DirectoryInfo(root).GetFiles("calls-*.jsonl*")
                 .Where(f => f.Name.EndsWith(".jsonl", StringComparison.Ordinal) || f.Name.EndsWith(".jsonl.previous", StringComparison.Ordinal))

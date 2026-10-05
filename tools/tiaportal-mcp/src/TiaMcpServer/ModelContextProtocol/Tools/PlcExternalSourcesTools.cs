@@ -109,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string finalPath;
                 if (string.IsNullOrWhiteSpace(outputPath))
                 {
-                    var dir = Path.Combine(Path.GetTempPath(), "tia_mcp_scl");
+                    var dir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_scl");
                     finalPath = Path.Combine(dir, defaultName + ".scl");
                 }
                 else if (Directory.Exists(outputPath) ||

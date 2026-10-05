@@ -299,7 +299,7 @@ namespace TiaOpenness.Core.Mock
         private static string StatePathFor(string projectPath)
         {
             var root = Path.Combine(
-                System.Environment.GetEnvironmentVariable("TIA_STUDIO_MOCK_STATE_ROOT") ?? Path.GetTempPath(),
+                System.Environment.GetEnvironmentVariable("TIA_STUDIO_MOCK_STATE_ROOT") ?? TiaOpenness.Shared.DataLocations.Current.TempDirectory,
                 "TiaOpenness", "mock-vci");
 
             var key = string.IsNullOrWhiteSpace(projectPath) ? "unnamed" : projectPath;

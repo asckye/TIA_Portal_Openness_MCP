@@ -278,7 +278,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (string.IsNullOrWhiteSpace(outputDirectory))
                 {
-                    outputDirectory = Path.Combine(Path.GetTempPath(), "TiaMcpReports");
+                    outputDirectory = TiaOpenness.Shared.DataLocations.Current.ReportsDirectory;
                 }
 
                 Directory.CreateDirectory(outputDirectory);
@@ -336,7 +336,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (string.IsNullOrWhiteSpace(outputDirectory))
                 {
-                    outputDirectory = Path.Combine(Path.GetTempPath(), "TiaMcpReports", "errors");
+                    outputDirectory = Path.Combine(TiaOpenness.Shared.DataLocations.Current.ReportsDirectory, "errors");
                 }
 
                 Directory.CreateDirectory(outputDirectory);

@@ -11,12 +11,13 @@
     2. REFUSES while any TiaMcpServer.exe or TiaMcpConfigurator.exe is running (lists the PIDs; never kills them).
     3. Finds the release: GitHub API releases/latest (or -Version vX.Y.Z), falling back to the release page when the
        API is rate-limited. The TIA machine needs internet access to github.com.
-    4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts into a short folder under
-       %TEMP% and checks the package layout. Windows PowerShell's Expand-Archive, Copy-Item and Remove-Item stop at
-       260-character paths and the package holds paths of ~110 characters below its root, so every tree copy and
+    4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts under <root>\data\temp\ when
+       the longest extracted path is below 240 characters (otherwise %TEMP%) and checks the package layout.
+       Windows PowerShell's Expand-Archive, Copy-Item and Remove-Item stop at
+       260-character paths and the package holds paths of ~158 characters below its root, so every tree copy and
        delete goes through robocopy (long-path safe) and only the extraction folder is length-checked.
     5. Backs up the current install to <root>\.previous\<package>\ (last two kept), replaces runtime\ and manifest\
-       wholesale and overlays everything else from the package.
+       wholesale and overlays everything else from the package, preserving data\ on update and rollback.
     6. Prints the new version. Start the engine again and call Bootstrap to confirm serverVersion.
 
   -Check only reports the installed and latest versions. -Rollback restores the newest backup (engine stopped as well).
@@ -98,9 +99,18 @@ function CopyTree([string]$from, [string]$to, [string[]]$excludeDirs = @(), [str
     & robocopy.exe @rc | Out-Null
     if ($LASTEXITCODE -ge 8) { throw ('robocopy failed (exit ' + $LASTEXITCODE + ') copying ' + $from + ' -> ' + $to) }
 }
+function GetScratchRoot([int]$longestEntry = 0) {
+    $candidate = Join-Path $root 'data\temp'
+    $extraction = Join-Path $candidate ('tia-mcp-update-' + $PID)
+    # Leave room below Windows PowerShell's 260-character extraction limit. The archive
+    # entry length includes its top-level package folder; robocopy handles longer copies.
+    if ($extraction.Length + 1 + $longestEntry -lt 240) { return $candidate }
+    return [IO.Path]::GetTempPath()
+}
+$scratchRoot = GetScratchRoot
 function RemoveTree([string]$path) {
     if (-not (Test-Path -LiteralPath $path)) { return }
-    $empty = Join-Path ([IO.Path]::GetTempPath()) ('tia-mcp-empty-' + $PID)
+    $empty = Join-Path $scratchRoot ('tia-mcp-empty-' + $PID)
     New-Item -ItemType Directory -Force -Path $empty | Out-Null
     & robocopy.exe $empty $path /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw ('robocopy failed (exit ' + $LASTEXITCODE + ') clearing ' + $path) }
@@ -121,7 +131,7 @@ if ($Rollback) {
     RequireStopped
     Say ("rolling back " + $installed + " -> " + $backupVersion + " from " + $backup.FullName)
     foreach ($dir in 'runtime', 'manifest') { RemoveTree (Join-Path $root $dir) }
-    CopyTree $backup.FullName $root
+    CopyTree $backup.FullName $root @((Join-Path $backup.FullName 'data'))
     $now = [string]((Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json).release)
     Say ("DONE: installed version is now " + $now + ". Start the engine and call Bootstrap to confirm serverVersion.")
     Relaunch
@@ -196,23 +206,25 @@ if ($expected -ne $actual) { Fail ("SHA-256 mismatch: sidecar " + $expected + " 
 Say ("SHA-256 verified " + $actual)
 
 # ---------------------------------------------------------------- extract + check layout
-# Extract under %TEMP% (short) rather than under the install root: the package's longest relative path is ~145
-# characters and Windows PowerShell cannot extract or copy beyond 260. Check both destinations before touching anything.
+# Prefer package-local scratch only below 240 characters, otherwise retain the short %TEMP% path.
+# Windows PowerShell cannot extract beyond 260; check the actual archive paths before touching the install.
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$longest = 0; $longestName = ''
+$longest = 0; $longestName = ''; $longestEntry = 0
 $archive = [IO.Compression.ZipFile]::OpenRead($zipFile)
 try {
     foreach ($entry in $archive.Entries) {
         $rel = $entry.FullName
+        $longestEntry = [math]::Max($longestEntry, $rel.Length)
         $cut = $rel.IndexOf('/')
         if ($cut -ge 0) { $rel = $rel.Substring($cut + 1) }   # strip the top-level package folder
         if ($rel.Length -gt $longest) { $longest = $rel.Length; $longestName = $rel }
     }
 } finally { $archive.Dispose() }
-$extract = Join-Path ([IO.Path]::GetTempPath()) ('tia-mcp-update-' + $PID)
+$scratchRoot = GetScratchRoot $longestEntry
+$extract = Join-Path $scratchRoot ('tia-mcp-update-' + $PID)
 if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }
 $limit = 250
-$extractLongest = $extract.Length + 1 + $zipName.Length - 4 + 1 + $longest
+$extractLongest = $extract.Length + 1 + $longestEntry
 if ($extractLongest -gt $limit) { Fail ('the temp folder is too deep for extraction: ' + $extract + ' -> ' + $extractLongest + ' > ' + $limit + ' characters; set TEMP to a shorter folder and run again') }
 if ($root.Length + 1 + $longest -gt $limit) { Say ('note: the install root is deep (' + $root.Length + ' characters); the update copies with robocopy, but Explorer and other tools may not open the deepest source files (' + $longestName + ')') }
 Say ("extracting to " + $extract + " (longest package path " + $longest + " characters)")
@@ -232,13 +244,13 @@ $backupDir = Join-Path $previousRoot $installedPackage
 RemoveTree $backupDir
 New-Item -ItemType Directory -Path $backupDir | Out-Null
 Say ("backing up the current install to " + $backupDir)
-CopyTree $root $backupDir @((Join-Path $root '.previous'), (Join-Path $root '.update'), (Join-Path $root 'TiaMcp_Output'), (Join-Path $root 'bin-build')) @('*.log')
+CopyTree $root $backupDir @((Join-Path $root '.previous'), (Join-Path $root '.update'), (Join-Path $root 'data'), (Join-Path $root 'TiaMcp_Output'), (Join-Path $root 'bin-build')) @('*.log')
 foreach ($old in (Get-ChildItem -LiteralPath $previousRoot -Directory | Sort-Object LastWriteTime -Descending | Select-Object -Skip 2)) {
     RemoveTree $old.FullName; Say ("dropped old backup " + $old.Name)
 }
 Say 'replacing runtime\ and manifest\, overlaying the rest'
 foreach ($dir in 'runtime', 'manifest') { RemoveTree (Join-Path $root $dir) }
-CopyTree $package $root
+CopyTree $package $root @((Join-Path $package 'data'))
 Remove-Item -LiteralPath $work -Recurse -Force
 RemoveTree $extract
 

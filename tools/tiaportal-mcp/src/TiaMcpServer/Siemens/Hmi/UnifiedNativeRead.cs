@@ -88,7 +88,7 @@ namespace TiaMcpServer.Siemens
         }
         internal static IEnumerable<JsonObject> Export(object target, string scope, bool libraryVersion)
         {
-            var directory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "tia-mcp-read-" + Guid.NewGuid().ToString("N")));
+            var directory = new DirectoryInfo(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-read-" + Guid.NewGuid().ToString("N")));
             directory.Create();
             try
             {

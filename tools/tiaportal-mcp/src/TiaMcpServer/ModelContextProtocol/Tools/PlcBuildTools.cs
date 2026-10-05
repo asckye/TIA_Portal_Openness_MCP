@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var build = BuildPlcArtifact(normalizedKind, json);
                 var xml = build["xml"]?.ToString() ?? "";
                 var objectName = ResolveBuiltPlcObjectName(xml);
-                var tempDir = Path.Combine(Path.GetTempPath(), "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+                var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
                 Directory.CreateDirectory(tempDir);
                 var fileName = EngineeringFileNames.MakeSafeFileName(string.IsNullOrWhiteSpace(objectName) ? normalizedKind : objectName) + ".xml";
                 var xmlPath = Path.Combine(tempDir, fileName);

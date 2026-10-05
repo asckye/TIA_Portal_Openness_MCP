@@ -256,7 +256,7 @@ namespace TiaMcpServer.Siemens.Services
                 XDocument doc;
                 if (table != null)
                 {
-                    tempFile = Path.Combine(Path.GetTempPath(), "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
+                    tempFile = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
                     if (File.Exists(tempFile)) File.Delete(tempFile);
                     table.Export(new FileInfo(tempFile), ExportOptions.None);
                     doc = XDocument.Load(tempFile);
@@ -269,7 +269,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 var action = WatchTableEntryXml.Upsert(doc, address, modifyValue, triggerName);
                 meta["rowAction"] = action;
-                tempFile ??= Path.Combine(Path.GetTempPath(), "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
+                tempFile ??= Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
                 doc.Save(tempFile);
 
                 meta["mayHaveChanged"] = true;

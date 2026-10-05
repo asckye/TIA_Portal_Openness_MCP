@@ -106,10 +106,26 @@ public class UiSettingsTests : IDisposable
     }
 
     [Fact]
-    public void The_real_settings_file_lives_under_the_local_profile()
+    public void Settings_and_configuration_use_the_shared_data_locations()
     {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        Assert.Equal(TiaOpenness.Shared.DataLocations.Current.UiFilePath, UiSettings.FilePath);
+        Assert.Equal(TiaOpenness.Shared.DataLocations.Current.ConfigDirectory, TiaMcpConfigurator.ConfigCore.StateDirectory);
+    }
 
-        Assert.StartsWith(localAppData, UiSettings.FilePath, StringComparison.OrdinalIgnoreCase);
+    [Fact]
+    public void Core_and_gui_share_the_process_data_root_even_after_environment_changes()
+    {
+        var first = TiaOpenness.Shared.DataLocations.Current.Root;
+        string? previous = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.GetDirectoryName(_path));
+            var core = typeof(TiaOpenness.Core.Mock.MockTiaSession).Assembly;
+            var type = core.GetType("TiaOpenness.Shared.DataLocations", throwOnError: true)!;
+            var locations = type.GetProperty("Current", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!.GetValue(null);
+            var root = type.GetProperty("Root", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(locations);
+            Assert.Equal(first, root);
+        }
+        finally { Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previous); }
     }
 }

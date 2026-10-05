@@ -59,7 +59,7 @@ namespace TiaMcpServer.Siemens
     {
         private static readonly object LogGate = new object();
         private static StreamWriter? Writer;
-        internal static readonly string LogPath = Path.Combine(Path.GetTempPath(), "TiaMcpServer.hmi-read.log");
+        internal static readonly string LogPath = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.hmi-read.log");
         internal string OperationId { get; } = Guid.NewGuid().ToString("N");
         internal string Phase { get; private set; } = "start";
         internal string? LastAttemptedPath { get; private set; }

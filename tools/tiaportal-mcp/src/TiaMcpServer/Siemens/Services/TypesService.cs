@@ -156,7 +156,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public (string TempDir, List<string> Paths)? ExportTypesToTemp(string softwarePath, string regexName = "", bool preservePath = false)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
             var list = ExportTypes(softwarePath, tempDir, regexName, preservePath);
@@ -220,7 +220,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (manifest?["hmiScreensDir"] != null) hmiScreensDir = Path.Combine(referenceDir, manifest["hmiScreensDir"]!.ToString());
                 if (manifest?["hmiTagTablesDir"] != null) hmiTagsDir = Path.Combine(referenceDir, manifest["hmiTagTablesDir"]!.ToString());
 
-                var tempDir = Path.Combine(Path.GetTempPath(), "tia-seed-" + Guid.NewGuid().ToString("N"));
+                var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-seed-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
 
                 void CopyDirWithReplace(string srcDir, string dstDir)
@@ -304,7 +304,7 @@ namespace TiaMcpServer.Siemens.Services
         }
         public (string TempDir, List<string> Paths)? ExportTypeToTemp(string softwarePath, string typePath, bool preservePath = false)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
+            var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
             var t = _session.ExportType(softwarePath, typePath, tempDir, preservePath);

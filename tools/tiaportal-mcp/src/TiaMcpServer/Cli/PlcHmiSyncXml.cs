@@ -32,7 +32,7 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_PlcHmiSync_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_PlcHmiSync_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             var reportDir = Path.Combine(projectDirectory, projectName + "_reports");
             Directory.CreateDirectory(reportDir);
@@ -327,7 +327,7 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_ChineseComments_" + Guid.NewGuid().ToString("N"));
+            var importDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_ChineseComments_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
             WriteMotorMinimalPlcXml(importDir);
 

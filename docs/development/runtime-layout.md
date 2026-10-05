@@ -16,7 +16,7 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 
 [`BundleLayout.cs`](../../tools/openness-shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
 维护 `BundleResource` 到包根相对路径的代码表。它不依赖 Siemens API，链接进 `TiaMcp.Logic`、
-`TiaOpenness.Core`、`TiaOpenness.Client` 和 `TiaOpenness.Gui`，不编入织入的引擎 EXE。
+`TiaOpenness.Core`、`TiaOpenness.Client`、`TiaOpenness.Gui` 与共享适配器，不编入织入的引擎 EXE。
 
 `FindRoot(baseDirectory, explicitRoot)` 的顺序是：非空显式根 → 已知安装锚点 → 已知开发锚点。
 显式根必须是绝对路径且含根标记；无效时直接返回 null，不再尝试自动定位。显式根保留原拼写，自动定位使用
@@ -82,13 +82,49 @@ R1 的指南和桥接文件均相对选定根读取。Python 解释器另由 `TI
 [`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是生态目录的唯一可编辑源，两个完整引擎工程
 直接将其嵌入，不生成另一份 JSON。更新目录须重建引擎；运行时修改随包副本不改变查询结果。指南仍从磁盘读取。
 
+### 软件自身的数据目录
+
+[`DataLocations.cs`](../../tools/openness-shared/DataLocations.cs) 在进程首次使用时确定一个数据根，并在链接该源码的
+程序集之间共享缓存；之后不会因环境变量或目录权限变化重新选择。顺序如下：
+
+1. 非空 `TIA_MCP_DATA_DIRECTORY`：必须为绝对路径；无效值报错，不静默回退。
+2. `BundleLayout.FindRoot(AppContext.BaseDirectory)` 找到的包根下 `data`：创建目录，写入并删除小探测文件；成功才采用。
+3. 未找到包根或探测失败（例如安装于不可写的 `C:\Program Files`）时，沿用各用途原有的用户目录。
+
+| 数据根下的目录 | 内容 | 无数据根时的原位置 |
+|---|---|---|
+| `diagnostics` | 原生调用 JSONL 日志 | `%LOCALAPPDATA%\TiaMcp\diagnostics` |
+| `leases` | 实例租约 | `%LOCALAPPDATA%\TiaMcp\instance-leases` |
+| `config` | `http-v<版本>.json`、`client.json` 等本机配置 | `%LOCALAPPDATA%\TiaPortalMcp` |
+| `ui` | `ui.settings` 语言与主题偏好 | `%LOCALAPPDATA%\TiaOpennessStudio` |
+| `logs` | `TiaMcpServer.log`、`TiaMcpServer.hmi-read.log`、`TiaMcpServer.native-export.log` | `%TEMP%` |
+| `reports` | 未指定输出目录时的诊断报告 | `%TEMP%\TiaMcpReports` |
+| `temp` | 引擎与 Studio 的临时文件、默认 scaffold 和 mock 工程 | `%TEMP%` |
+
+`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍优先于数据根决定诊断目录，读写使用同一解析逻辑；
+`TIA_STUDIO_MOCK_STATE_ROOT` 仍优先覆盖 mock 版本控制状态位置。调用方明确给出的报告或工程目录不变。
+临时文件保留原有命名与清理方式，没有新增自动清理策略。
+
+首次使用数据根（含显式覆盖）中的 `config` 或 `ui` 时，仅将缺失的文件从旧用户目录复制过来；
+已有目标文件不覆盖，旧文件不移动、不删除。诊断、租约、日志和临时文件不迁移。
+客户端自身的配置（`ClientProfiles`、`McpConfigInstaller`、`ConfigCore.ClaudePath`）、Siemens ProgramData 读取、
+TIA 默认 `MyDocuments\Automation` 工程目录、URL ACL 与防火墙设置保持原行为。
+Studio 的崩溃日志仍在可执行文件旁；伴随 Python 环境也保持原位置。
+
+更新脚本只整体替换 `runtime` 与 `manifest`；备份、覆盖更新和回滚均排除 `data`。
+更新的 `tia-mcp-update-*` 与清空目录用的 `tia-mcp-empty-*` 优先位于包根的 `data\temp`。
+按 ZIP 实际条目（含顶层包名）计算的最长解压路径必须小于 240 字符，否则两者沿用 `%TEMP%`；
+Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完整包最长相对文件名为 158 字符，
+加上顶层包名为 191 字符；默认 `C:\TIA_MCP_Delivery_v3.3.1_20261004` 布局即使位于盘根也超过阈值，
+因此走 `%TEMP%` 分支。较短的安装目录可使用包内 scratch，脚本会输出本次选择的解压路径。`data` 已加入根 `.gitignore`。
+
 ### 兼容边界与风险
 
 - 阶段 0–5 保持路径字符串、异常类型与首行错误语义；环境变量名称也不变。
   `EcosystemFiles.Guidance` 的文档 ID 仍按指南根路径截取生成，不额外规范化。
 - 解析器不会跨出已识别的根借文件，但调用方遇到不完整包仍可能触发旧探测并命中祖先仓库。
   因此仓库内暂存不能单独证明可重定位，验收使用仓库外的完整交付包；4.0 删除这些兼容回退。
-- 安装目录写入（启动日志、崩溃日志、伴随 Python 环境）保持原位置，迁移到 LocalAppData 属于 4.0。
+- 软件自身的配置、诊断、日志和临时数据按上节优先写入包内；崩溃日志、伴随 Python 环境保持原位置。
 - R4–R6 的 `GetWorkspaceRoot`、HMI 模板默认目录和 `workspaceRoot` 套件参数是私人工作区输入，未纳入交付资源解析；
   阶段 6 删除默认值或改为显式输入。G7 不改变这部分原生 CLI 路径。
 - P1-07 的 G7 前置阻塞已解除，整体目录重组仍待阶段 4 完成后进行。
@@ -193,7 +229,7 @@ P3-18 将最后三个产品余项文件按职责拆开，产品与测试均不�
 | D-G7-3 | 不受支持的重定位：阶段 0–5 保留原有探测作为兼容回退，4.0 删除（依据“先兼容，后破坏”的原则） |
 | D-G7-4 | 开发锚点编入产品，只认枚举出的输出目录；测试显式给根 |
 | D-G7-5 | `v21-ecosystem.json` 已直接嵌入 V20/V21 引擎；指南仍读取随包文件，改为嵌入前需另做差分证明 |
-| D-G7-6 | 安装目录写入（启动日志、崩溃日志、伴随 Python 环境）阶段 0–5 不动，4.0 改到 LocalAppData |
+| D-G7-6 | 原迁往 LocalAppData 的方向由 D331 维护者决定替代：软件自身数据优先留在包内，旧用户路径作为兼容回退；崩溃日志与伴随 Python 环境不变 |
 | D-G7-7 | G7-5 已修复 Studio 的 worktree `.git` 判断，文件和目录都禁止安装更新（仅 UI 行为） |
 | D-G7-8 | 私有工作区默认值阶段 0–5 不动，阶段 6 删除或改为显式输入 |
 | D-P5-1…6 | 见上文“注释与 `*Leftovers`”与“用户可见文案语言”；D-P5-3/5（新文本英文、4.0 统一英文）由维护者决定（2026-10-03） |

@@ -211,7 +211,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         if (args.Any(a => string.Equals(a, "--mock", StringComparison.OrdinalIgnoreCase))) UseMock = true;
         var index = Array.FindIndex(args, a => string.Equals(a, "--project", StringComparison.OrdinalIgnoreCase));
         if (index >= 0 && index + 1 < args.Length) ProjectPath = args[index + 1];
-        else if (UseMock) ProjectPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TiaOpennessStudioMock", "Line.ap21");
+        else if (UseMock) ProjectPath = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaOpennessStudioMock", "Line.ap21");
 
         if (!UseMock) return;
         await ConnectAsync();
