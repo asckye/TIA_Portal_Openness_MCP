@@ -1801,8 +1801,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/layout-proposal-4.0.md](../../docs/development/layout-proposal-4.0.md) | 根定位:36 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/native-mcp-session-tests.md](../../docs/development/native-mcp-session-tests.md) | 产品:8 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,202 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,202 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,202 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/release-workflow.md](../../docs/development/release-workflow.md) | 根定位:14,24 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:30; 根定位:49,52 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:67,69; 根定位:17,60,62,63,64,65,66,91,139,149,151,152,153,170,234,235; 写入/工作区:77,133 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
@@ -1937,7 +1935,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs) | 产品:173 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:90,243,275,276,277 | 修改引用并回归 |
 
-共 146 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 144 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 
