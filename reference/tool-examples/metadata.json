@@ -354,7 +354,7 @@
       ],
       "profile": "full-engine"
     },
-    "CompileAndDiagnoseHmi": {
+    "CompileHmiDiagnostics": {
       "resultCases": [
         {
           "example": {

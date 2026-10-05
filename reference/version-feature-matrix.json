@@ -2280,9 +2280,9 @@
         "21": "partial"
       },
       "tools": [
-        "ReadUnifiedEngineeringObjects",
+        "ListUnifiedEngineeringObjects",
         "ReadUnifiedScreenBranch",
-        "UpdateUnifiedGlobalScript"
+        "SetUnifiedGlobalScript"
       ],
       "sdkIdentifiers": [
         "T:Siemens.Engineering.HmiUnified.HmiSoftware"
@@ -2349,14 +2349,14 @@
         "18": [],
         "19": [],
         "20": [
-          "ReadUnifiedEngineeringObjects",
+          "ListUnifiedEngineeringObjects",
           "ReadUnifiedScreenBranch",
-          "UpdateUnifiedGlobalScript"
+          "SetUnifiedGlobalScript"
         ],
         "21": [
-          "ReadUnifiedEngineeringObjects",
+          "ListUnifiedEngineeringObjects",
           "ReadUnifiedScreenBranch",
-          "UpdateUnifiedGlobalScript"
+          "SetUnifiedGlobalScript"
         ]
       }
     },

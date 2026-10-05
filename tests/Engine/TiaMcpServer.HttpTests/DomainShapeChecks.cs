@@ -235,17 +235,23 @@ internal static class DomainShapeChecks
                 check(!tool.IsStatic && surface.Tool(name) == tool, domain.Name + " owns " + name);
                 string serviceName = domain.Name == "HmiExchange" && name.StartsWith("ListHmi", StringComparison.Ordinal)
                     ? "Get" + name.Substring(4) : name;
-                var called = name == "CompileAndDiagnoseHmi" ? surface.Method("CompileAndDiagnoseCore", all)
+                var implementation = tool;
+                if (domain.Name == "HmiDescribe")
+                {
+                    check(tool.Name.EndsWith("V4", StringComparison.Ordinal), name + " exposes its V4 boundary");
+                    implementation = tools.GetMethod(tool.Name.Substring(0, tool.Name.Length - 2), all)!;
+                    check(implementation.GetCustomAttribute<McpServerToolAttribute>() == null,
+                        name + " retains an unregistered implementation without an alias");
+                }
+                var called = name == "CompileHmiDiagnostics" ? surface.Method("CompileAndDiagnoseCore", all)
                     : service.GetMethod(serviceName, all)!;
-                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-                bool callsService = domain.Name == "HmiExchange" || domain.Name == "HmiTagDeletion"
-                    ? HmiCallsService(tool, called, tools, new HashSet<MethodBase>())
-                    : Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                        (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == called.MetadataToken);
+                bool callsService = HmiCallsService(tool, called, tools, new HashSet<MethodBase>());
+                if (domain.Name == "HmiDescribe")
+                    check(HmiCallsService(tool, implementation, tools, new HashSet<MethodBase>()),
+                        name + " V4 boundary calls its original implementation");
                 EngineSurface.CheckIl(check, callsService,
                     name + " calls its service or shared compiler", tool, called);
-                if (domain.Name == "HmiExchange" || domain.Name == "HmiTagDeletion")
-                    check(tool.ReturnType == typeof(ModelContextProtocol.Protocol.CallToolResult), name + " returns the V4 envelope carrier");
+                check(tool.ReturnType == typeof(ModelContextProtocol.Protocol.CallToolResult), name + " returns the V4 envelope carrier");
                 var forwarder = mcp.GetMethod(name, all);
                 check(forwarder == null && ReferenceEquals(surface.Target(tool), toolTarget),
                     name + " CLI target is the registered instance without a static forwarder");

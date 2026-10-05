@@ -2940,21 +2940,165 @@
       },
       "CompareUnifiedGraphicSelections": {
         "arguments": {
-          "beforePagesJson": "[\"<all original Meta pages from ReadUnifiedGraphicSelection, in pageIndex order>\"]",
-          "afterPagesJson": "[\"<all new Meta pages from ReadUnifiedGraphicSelection, in pageIndex order>\"]"
+          "beforePages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "before-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ],
+          "afterPages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "after-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ]
         },
         "parameters": {
-          "beforePagesJson": {
-            "requiresBinding": true
+          "beforePages": {
+            "requiresBinding": true,
+            "meaning": "Replace this illustrative page with every complete data.page returned by GetUnifiedGraphicSelection, preserving pageIndex order and snapshot scope identity."
           },
-          "afterPagesJson": {
-            "requiresBinding": true
+          "afterPages": {
+            "requiresBinding": true,
+            "meaning": "Replace this illustrative page with every complete data.page returned by GetUnifiedGraphicSelection, preserving pageIndex order and snapshot scope identity."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "CompileAndDiagnoseHmi": {
+      "CompileHmiDiagnostics": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -4983,7 +5127,19 @@
       "GetUnifiedCrossReferences": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "parameters": {
           "filter": {
@@ -5455,8 +5611,10 @@
           "softwarePath": "HMI_RT_1",
           "category": "textLists",
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedNamesJson": "[\"Example_1\"]",
-          "dryRun": true
+          "dryRun": true,
+          "expectedNames": [
+            "Example_1"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -5700,7 +5858,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ListUnifiedLibraryFolder": {
+      "ListUnifiedLibraryFolderEntries": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
@@ -11391,7 +11549,7 @@
           "dryRun": true
         },
         "parameters": {
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -11403,7 +11561,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "delete": {
@@ -11417,16 +11577,28 @@
       "ManageUnifiedEvent": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "eventType": "Down",
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "parameters": {
           "propertyName": {
             "exampleValue": "Visible"
           },
-          "scriptPropertiesJson": {
+          "scriptProperties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
@@ -11447,7 +11619,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "scriptPropertiesJson": "{\"<property from read event script>\":\"<typed edited value>\"}"
+              "scriptProperties": {
+                "<property from read event script>": "<typed edited value>"
+              }
             }
           },
           "delete": {
@@ -11538,7 +11712,16 @@
       "ManageUnifiedLoggingTag": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagPathJson": "[{\"property\":\"TagTables\",\"name\":\"ExampleTags\"},{\"property\":\"Tags\",\"name\":\"Ready\"}]",
+          "tagPath": [
+            {
+              "property": "TagTables",
+              "name": "ExampleTags"
+            },
+            {
+              "property": "Tags",
+              "name": "Ready"
+            }
+          ],
           "dryRun": true,
           "action": "read"
         },
@@ -11546,8 +11729,10 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -11564,7 +11749,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "name": "Example_1"
             }
           },
@@ -11683,7 +11870,7 @@
           "plantObjectType": {
             "requiresBinding": true
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -11695,7 +11882,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "delete": {
@@ -12525,7 +12714,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadHmiScreenSnapshot": {
+      "GetHmiScreenSnapshot": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenPath": "Overview"
@@ -13255,7 +13444,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedEngineeringObjects": {
+      "ListUnifiedEngineeringObjects": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "category": "textLists"
@@ -13274,7 +13463,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedFaceplateInstance": {
+      "GetUnifiedFaceplateInstance": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
@@ -13301,7 +13490,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedGlobalScript": {
+      "GetUnifiedGlobalScript": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
@@ -13322,12 +13511,14 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedGraphicSelection": {
+      "GetUnifiedGraphicSelection": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "Overview",
-          "itemNamesJson": "[\"StatusText\"]"
+          "itemNames": [
+            "StatusText"
+          ]
         },
         "parameters": {
           "cursor": {
@@ -13344,7 +13535,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedHmiButtonEvent": {
+      "GetUnifiedHmiButtonEvent": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenPath": "Overview",
@@ -13355,7 +13546,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedHmiDynamization": {
+      "GetUnifiedHmiDynamization": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenPath": "Overview",
@@ -13380,7 +13571,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedLibraryType": {
+      "GetUnifiedLibraryType": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
@@ -13433,12 +13624,12 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedObjectProperties": {
+      "GetUnifiedObjectProperties": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
         "parameters": {
-          "objectPathJson": {
+          "objectPath": {
             "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
             "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
           },
@@ -13452,13 +13643,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedPlantObject": {
+      "GetUnifiedPlantObject": {
         "arguments": {},
         "parameters": {
           "plantPath": {
             "exampleValue": "Plant_1"
           },
-          "objectPathJson": {
+          "objectPath": {
             "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
             "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
           },
@@ -13527,35 +13718,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedScreenBranch": {
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "expectedProject": "Example",
-          "screenPath": "Overview"
-        },
-        "parameters": {
-          "itemName": {
-            "exampleValue": "StatusText"
-          },
-          "branchJson": {
-            "exampleValue": "<branchJson from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "cursor": {
-            "exampleValue": "<cursor from the preceding read>",
-            "requiresBinding": true
-          },
-          "pageSize": {
-            "exampleValue": 100
-          },
-          "budgetMs": {
-            "exampleValue": 5000
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ReadUnifiedTagDefinitions": {
+      "ListUnifiedTagDefinitions": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
@@ -14149,7 +14312,15 @@
       "SetUnifiedLogDuration": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "durationPathJson": "[{\"property\":\"<exact duration property from ReadUnifiedObjectProperties>\"}]",
+          "durationPath": [
+            {
+              "property": "DataLogs",
+              "name": "ExampleLog"
+            },
+            {
+              "property": "LogDuration"
+            }
+          ],
           "kind": "log",
           "days": 1,
           "hours": 1,
@@ -14158,7 +14329,20 @@
           "hundredNanoseconds": 1,
           "dryRun": true
         },
-        "parameters": {},
+        "parameters": {
+          "durationPath": {
+            "exampleValue": [
+              {
+                "property": "DataLogs",
+                "name": "ExampleLog"
+              },
+              {
+                "property": "LogDuration"
+              }
+            ],
+            "requiresBinding": true
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
@@ -14409,12 +14593,12 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateUnifiedGlobalScript": {
+      "SetUnifiedGlobalScript": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "moduleName": "Status",
-          "scriptCode": "<complete scriptCode from ReadUnifiedGlobalScript with the intended edit>",
+          "scriptCode": "<complete scriptCode from GetUnifiedGlobalScript with the intended edit>",
           "dryRun": true
         },
         "parameters": {
@@ -14429,43 +14613,71 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateUnifiedMultilingualProperty": {
+      "SetUnifiedMultilingualProperty": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "property": "Text",
           "culture": "zh-CN",
           "rawText": "运行状态",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateUnifiedObjectProperties": {
+      "SetUnifiedObjectProperties": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-          "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "properties": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          }
         },
         "parameters": {
-          "propertiesJson": {
+          "properties": {
             "requiresBinding": true
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateUnifiedPlantObject": {
+      "SetUnifiedPlantObject": {
         "arguments": {
           "plantPath": "Plant_1",
-          "objectPathJson": "[]",
-          "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [],
+          "properties": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          }
         },
         "parameters": {
-          "propertiesJson": {
+          "properties": {
             "requiresBinding": true
           }
         },
@@ -14582,7 +14794,19 @@
       "ValidateUnifiedObject": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -15333,6 +15557,45 @@
           "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
         },
         "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetUnifiedScreenBranch": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "/Overview"
+        },
+        "parameters": {
+          "itemName": {
+            "exampleValue": "StatusText"
+          },
+          "branch": {
+            "exampleValue": [
+              {
+                "property": "Interface"
+              },
+              {
+                "name": "Speed",
+                "key": "PropertyName"
+              },
+              {
+                "property": "Dynamizations"
+              }
+            ],
+            "requiresBinding": true
+          },
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "pageSize": {
+            "exampleValue": 100
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       }

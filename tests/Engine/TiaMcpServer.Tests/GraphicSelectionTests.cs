@@ -139,10 +139,10 @@ namespace TiaMcpServer.Tests
             check(blocked["status"]!.ToString() == "HmiReadSessionBlocked" && session.FixtureResolveCalls == stopped, "future selection blocked until explicit rebind");
             check(portal.CompareUnifiedGraphicSelections(original, original).Meta!["success"]!.GetValue<bool>(), "offline comparison still works with unavailable TIA");
             HmiToolFixture.Configure(new FakeHmiToolSession { FixtureRoot = hmi });
-            var bridge = McpServer.CallTool("ReadUnifiedGraphicSelection", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"screenPath\":\"/Main\",\"itemNamesJson\":\"[\\\"fgxTop\\\"]\"}");
-            check(bridge.Meta!["success"]!.GetValue<bool>(), "selection tool discoverable through CallTool bridge");
-            var badCompare = McpServer.CallTool("CompareUnifiedGraphicSelections", "{\"beforePagesJson\":\"[]\",\"afterPagesJson\":\"[]\"}");
-            check(!badCompare.Meta!["success"]!.GetValue<bool>(), "comparison validation failure propagated through CallTool bridge");
+            var bridge = McpServer.CallTool("GetUnifiedGraphicSelection", new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"screenPath\":\"/Main\",\"itemNames\":[\"fgxTop\"]}")));
+            check(bridge.IsError != true, "selection tool discoverable through CallTool bridge");
+            var badCompare = McpServer.CallTool("CompareUnifiedGraphicSelections", new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"beforePages\":[],\"afterPages\":[]}")));
+            check(badCompare.IsError == true, "comparison validation failure propagated through CallTool bridge");
         }
     }
 }

@@ -2,7 +2,6 @@ using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Generic;
 using System.Reflection.Emit;
 using ModelContextProtocol.Protocol;
 using System.Reflection;
@@ -44,13 +43,24 @@ internal static class UnifiedHmiDomainShapeChecks
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                 check(!tool.IsStatic && surface.Tool(name) == tool && ReferenceEquals(surface.Target(tool), toolTarget),
                     name + " resolves to the instance tool singleton");
-                bool migrated = new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems", "UnifiedUiModel" }.Contains(domain.Name);
+                bool inspection = new[] { "UnifiedObjectServices", "UnifiedEngineering", "UnifiedEvents" }.Contains(domain.Name);
+                bool migrated = inspection || new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems", "UnifiedUiModel" }.Contains(domain.Name);
                 if (migrated)
                 {
                     check(tool.ReturnType == typeof(CallToolResult), name + " returns the V4 envelope");
                     check(!tool.GetParameters().Any(p => p.Name!.EndsWith("Json", StringComparison.Ordinal)), name + " exposes typed arguments");
                 }
                 var implementation = LegacyNames.TryGetValue(name, out var legacy) ? legacy : name;
+                if (inspection)
+                {
+                    check(tool.Name.EndsWith("V4", StringComparison.Ordinal), name + " exposes its V4 boundary");
+                    implementation = tool.Name.Substring(0, tool.Name.Length - 2);
+                    var original = tools.GetMethod(implementation, all)!;
+                    check(original.GetCustomAttribute<McpServerToolAttribute>() == null,
+                        name + " retains an unregistered implementation without an alias");
+                    check(CallsService(tool, original, tools, new HashSet<MethodBase>()),
+                        name + " V4 boundary calls its original implementation");
+                }
                 var method = service.GetMethod(implementation, all);
                 if (method != null)
                 {

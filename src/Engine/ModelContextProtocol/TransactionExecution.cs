@@ -19,7 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static readonly IReadOnlyCollection<string> SupportedTools = Array.AsReadOnly(new[] {
             "CreatePlcTypeGroup", "DeleteEmptyPlcBlockGroup", "ManagePlcUserGroup",
             "ManageDeviceUserGroup", "ManageUnifiedHmiGroup", "DeleteEmptyUnifiedHmiScreenGroup",
-            "UpdateUnifiedObjectProperties", "UpdateUnifiedMultilingualProperty"
+            "SetUnifiedObjectProperties", "SetUnifiedMultilingualProperty"
         });
 
         internal static void RequireSupported(string name)

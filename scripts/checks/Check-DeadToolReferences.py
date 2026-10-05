@@ -40,6 +40,15 @@ HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
 ALLOWED = {
+    # P6-19 keeps these data identities stable; none is a registered tool alias.
+    'ReadUnifiedGraphicSelection': 'Frozen graphic-selection scope.tool identity, shared by captured pages, their DTO schema and offline comparison',
+    'ReadUnifiedGlobalScript': 'Existing migration cursor scope identity; the registered tool is GetUnifiedGlobalScript',
+    'ReadUnifiedTagDefinitions': 'Existing migration cursor scope identity; the registered tool is ListUnifiedTagDefinitions',
+    'ReadUnifiedScreenBranch': 'Existing migration cursor scope identity; the registered tool is GetUnifiedScreenBranch',
+    'ReadUnifiedLibraryType': 'Existing migration cursor scope identity; the registered tool is GetUnifiedLibraryType',
+    'ReadUnifiedFaceplateInstance': 'Existing migration cursor scope identity; the registered tool is GetUnifiedFaceplateInstance',
+    'ListUnifiedLibraryFolder': 'Existing migration cursor scope identity; the registered tool is ListUnifiedLibraryFolders',
+    'UpdateUnifiedGlobalScript': 'Existing preview-token hash namespace UpdateUnifiedGlobalScript/v1, not a callable alias',
     'GetCrossReferences': 'Native CrossReferenceService method name, including the reflection denylist in CrossReferenceGuardLogic; the MCP tool is GetPlcCrossReferences',
     'ExportAsDocuments': 'Native document export member in LibraryTypeVersion reflection, PlcType/PlcDocument API descriptions and native result diagnostics; not an MCP alias',
     'ImportFromDocuments': 'Native PlcDocumentComposition/PlcTypeComposition import member in API descriptions and native result diagnostics; not an MCP alias',

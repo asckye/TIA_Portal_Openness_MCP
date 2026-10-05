@@ -53,11 +53,11 @@ internal static class GlobalScriptBridgeTests
         var scripts = resolve.Invoke(null, new object[] { resolver, "HMI_RT_2:Scripts", "", true });
         check(ReferenceEquals(scripts, hmi.Scripts), "actual EXE resolves Scripts composition for native import");
 
-        var tool = EngineSurface.For(server).Tool("UpdateUnifiedGlobalScript")!;
+        var tool = EngineSurface.For(server).Tool("SetUnifiedGlobalScript")!;
         check(tool.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute")
             && (bool)tool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue
             && tool.GetParameters().Single(p => p.Name == "expectedToken").DefaultValue?.ToString() == "",
-            "actual EXE registers UpdateUnifiedGlobalScript with safe preview defaults");
+            "actual EXE registers SetUnifiedGlobalScript with safe preview defaults");
         // Inspect the actual referenced Siemens DLL, never start/attach TIA.
         var unifiedReference = server.GetReferencedAssemblies().SingleOrDefault(a => a.Name == "Siemens.Engineering.WinCCUnified");
         if (unifiedReference == null)

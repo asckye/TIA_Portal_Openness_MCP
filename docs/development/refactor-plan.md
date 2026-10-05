@@ -181,7 +181,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-16 | Classic HMI 文件夹与 Motion/ProDiag 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-16) | 03–07、I | T、V；目标联合互斥与能力拒绝；N 调用不变 | done |
 | P6-17 | Unified HMI 核心、组、屏幕项、UI 模型契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-17) | 03–07、I | T、V；控件设计 DTO 与旧结果信息等价；N 调用不变 | done |
 | P6-18 | HMI/Unified 交换与变量删除契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-18) | 03–07、I | T、V；逐项结果、导入导出边界；N 调用不变 | done |
-| P6-19 | HMI 描述/检查/脚本/图形快照/对象服务/反射契约迁移；文件见 G；[路径清单](phase6-review.md#phase6-path-p6-19) | 03–07、I | T、V；游标身份/完整性与反射准入；N 调用不变 | todo |
+| P6-19 | HMI 描述/检查/脚本/图形快照/对象服务/反射契约迁移；文件见 G；[路径清单](phase6-review.md#phase6-path-p6-19) | 03–07、I | T、V；游标身份/完整性与反射准入；N 调用不变 | done |
 | P6-20 | CFC/TestSuite/V20Options/OptionalEngineering/SpecializedExchange 契约迁移；[路径清单](phase6-review.md#phase6-path-p6-20) | 03–07、I | T、V；两版能力差集；N 调用不变 | done |
 | P6-21 | DCC/Startdrive/Teamcenter 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-21) | 03–07、I | T、V；联合/动态属性；已知现场事故不标记已修复；N 调用不变 | done |
 | P6-22 | 库/Sivarc/VCI 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-22) | 03–07、I | T、V；大小写、范围、selection 限制；N 调用不变，保留 G3/J 开关门槛 | done |

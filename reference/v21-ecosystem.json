@@ -2047,7 +2047,7 @@
       "integrationStatus": "partially_mapped",
       "ourTools": [
         "ExchangeUnifiedScriptModules",
-        "ReadUnifiedGlobalScript"
+        "GetUnifiedGlobalScript"
       ],
       "assessment": "Old Add-In needs V21 adaptation. Existing script export covers part; screen-wide Excel overview not ported.",
       "readmeSha256": "04e26e487db480f3e3d7dfd5c7c5cba41109ac3fca5d45f8de1f552f1e4e31b8",

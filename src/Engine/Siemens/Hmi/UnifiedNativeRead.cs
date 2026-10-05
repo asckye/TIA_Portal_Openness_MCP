@@ -34,7 +34,7 @@ namespace TiaMcpServer.Siemens
             var name = MigrationRead.Get(module, "Name")?.ToString();
             yield return new JsonObject { ["path"] = "/Scripts/" + MigrationRead.Segment(name ?? ""), ["kind"] = "scriptModule", ["status"] = "ok",
                 ["name"] = name, ["type"] = module.GetType().FullName, ["evidence"] = evidence, ["bodyReadSuccess"] = false,
-                ["note"] = "Inventory only. ReadUnifiedGlobalScript must successfully export original text to prove body acquisition." };
+                ["note"] = "Inventory only. GetUnifiedGlobalScript must successfully export original text to prove body acquisition." };
         }
         internal static IEnumerable<JsonObject> Script(object hmi, string moduleName)
         {

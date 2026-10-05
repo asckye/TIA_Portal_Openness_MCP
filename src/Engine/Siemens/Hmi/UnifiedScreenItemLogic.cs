@@ -112,7 +112,7 @@ namespace TiaMcpServer.Siemens
                 row["create"] = new JsonArray(creates.Select(c => (JsonNode)JsonValue.Create(c)!).ToArray());
             }
             if (kind == "part" && depth > 0) row["properties"] = Schema(t, depth - 1);
-            if (kind == "multilingual") row["edit"] = "UpdateUnifiedMultilingualProperty or propertiesJson {\"" + p.Name + "\": {\"<culture>\": \"text\"}}";
+            if (kind == "multilingual") row["edit"] = "SetUnifiedMultilingualProperty or propertiesJson {\"" + p.Name + "\": {\"<culture>\": \"text\"}}";
             return row;
         }
         internal static JsonArray Schema(Type type, int depth = 2)

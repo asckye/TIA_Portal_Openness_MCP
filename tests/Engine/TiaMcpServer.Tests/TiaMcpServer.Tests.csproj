@@ -164,4 +164,10 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs" Link="ReflectionTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
+  </ItemGroup>
 </Project>

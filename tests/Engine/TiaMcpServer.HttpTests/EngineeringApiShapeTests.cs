@@ -91,8 +91,8 @@ internal static class EngineeringApiShapeTests
             var preview=method.GetParameters().Single(p=>p.Name=="dryRun");
             check(preview.HasDefaultValue && Equals(preview.DefaultValue,true),name+" defaults to preview");
         }
-        check(tools.Tool("ReadUnifiedEngineeringObjects")!=null,"Unified reader exposed");
-        foreach(var name in new[]{"ManageProjectLanguage","ManageUnifiedPlantNode","UpdateUnifiedPlantObject","UpdateUnifiedObjectProperties","UpdateUnifiedMultilingualProperty","ExportUnifiedEngineeringList","ManageUnifiedLoggingTag","SetUnifiedLogDuration","ManageUnifiedOpcUaAlarmType","CreatePlcInstanceDb","GeneratePlcSourceFromBlocks","GeneratePlcLoadableFile","RetrieveProjectArchive","ExportProjectTexts","ImportProjectTexts","ManageGlobalLibrary","ManageLibraryFolder","ManagePlcTagDefinition"}) {
+        check(tools.Tool("ListUnifiedEngineeringObjects")!=null,"Unified reader exposed");
+        foreach(var name in new[]{"ManageProjectLanguage","ManageUnifiedPlantNode","SetUnifiedPlantObject","SetUnifiedObjectProperties","SetUnifiedMultilingualProperty","ExportUnifiedEngineeringList","ManageUnifiedLoggingTag","SetUnifiedLogDuration","ManageUnifiedOpcUaAlarmType","CreatePlcInstanceDb","GeneratePlcSourceFromBlocks","GeneratePlcLoadableFile","RetrieveProjectArchive","ExportProjectTexts","ImportProjectTexts","ManageGlobalLibrary","ManageLibraryFolder","ManagePlcTagDefinition"}) {
             var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         }

@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens.Services
                 ?? throw new PortalException(PortalErrorCode.NotFound,"ScreenItems unavailable."),itemName);
         }
         public ResponseMessage ReadUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType)
-            => _session.RunHmiStepTool("ReadUnifiedHmiButtonEvent",meta=>{
+            => _session.RunHmiStepTool("GetUnifiedHmiButtonEvent",meta=>{
                 var handler=HmiExactAccess.Event(ExactHmiItem(softwarePath,screenPath,buttonName),eventType);
                 var data=HmiExactAccess.EventDto(handler);
                 meta["event"]=data;
@@ -66,7 +66,7 @@ namespace TiaMcpServer.Siemens.Services
             return matches[0];
         }
         public ResponseMessage ReadUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName)
-            => _session.RunHmiStepTool("ReadUnifiedHmiDynamization",meta=>{
+            => _session.RunHmiStepTool("GetUnifiedHmiDynamization",meta=>{
                 var dyn=ExactDynamization(ExactHmiItem(softwarePath,screenPath,itemName),propertyName);
                 var data=HmiSnapshot.Capture(dyn,8,2000);
                 meta["dynamization"]=data;
@@ -107,7 +107,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["persistence"]="Not saved.";return "Empty group deleted and absence verified.";
             });
         public ResponseMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
-            => _session.RunHmiStepTool("ReadHmiScreenSnapshot",meta=>{
+            => _session.RunHmiStepTool("GetHmiScreenSnapshot",meta=>{
                 meta["softwarePath"]=softwarePath;meta["screenPath"]=screenPath;
                 meta["readOnly"] = true;
                 var trace = new HmiReadTrace();

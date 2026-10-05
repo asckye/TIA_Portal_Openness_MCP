@@ -134,9 +134,9 @@
       ],
       "tools": [
         "SetUnifiedHmiButtonEventScriptCode",
-        "ReadUnifiedGlobalScript",
+        "GetUnifiedGlobalScript",
         "ExchangeUnifiedScriptModules",
-        "UpdateUnifiedGlobalScript"
+        "SetUnifiedGlobalScript"
       ]
     },
     {
@@ -648,7 +648,7 @@
       ],
       "notes": [
         "Event body, not an exported global module. hmiSoftwarePath, screenName and buttonName select the target; eventType=\"Tapped\"; scriptCode is the file text. The tag ActualValue must exist.",
-        "For a global module, keep the exported function declarations and paired .hmi.yml metadata from ReadUnifiedGlobalScript.",
+        "For a global module, keep the exported function declarations and paired .hmi.yml metadata from GetUnifiedGlobalScript.",
         "Use the event body as scriptCode. The named ActualValue tag and target button must exist."
       ],
       "sourceUrls": [
@@ -673,7 +673,7 @@
             "scriptCode": "const value = Tags(\"ActualValue\").Read();\nHMIRuntime.Trace(String(value));",
             "syntaxCheck": false
           },
-          "expect": "meta.success reports the write. Missing syntaxErrorCount means NOT CHECKED. CompileAndDiagnoseHmi checks the HMI compilation separately."
+          "expect": "meta.success reports the write. Missing syntaxErrorCount means NOT CHECKED. CompileHmiDiagnostics checks the HMI compilation separately."
         }
       ]
     },
@@ -1056,7 +1056,7 @@
       ],
       "tools": [
         "ExchangeUnifiedScriptModules",
-        "CompileAndDiagnoseHmi"
+        "CompileHmiDiagnostics"
       ],
       "notes": [
         "Create/export the named global module in the selected TIA release first. Preserve its generated .hmi.yml and companion files, edit the exported .hmi.js function body and use the same export directory for import. This code file alone is not an import package.",
@@ -1105,7 +1105,7 @@
           "expect": "Inspect meta.nativeSuccess, modulesAfter and operation-specific verification fields."
         },
         {
-          "tool": "CompileAndDiagnoseHmi",
+          "tool": "CompileHmiDiagnostics",
           "arguments": {
             "softwarePath": "<same software>"
           },
@@ -1128,8 +1128,8 @@
       "files": [],
       "tools": [
         "ListUnifiedGlobalScripts",
-        "ReadUnifiedGlobalScript",
-        "UpdateUnifiedGlobalScript"
+        "GetUnifiedGlobalScript",
+        "SetUnifiedGlobalScript"
       ],
       "notes": [
         "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take expectedToken from the preview, then apply the same text."
@@ -1148,7 +1148,7 @@
           "expect": "Select the exact existing module name."
         },
         {
-          "tool": "ReadUnifiedGlobalScript",
+          "tool": "GetUnifiedGlobalScript",
           "arguments": {
             "softwarePath": "<same software>",
             "expectedProject": "<same project>",
@@ -1157,7 +1157,7 @@
           "expect": "Retrieve the complete exported source; preserve unchanged functions and definitions."
         },
         {
-          "tool": "UpdateUnifiedGlobalScript",
+          "tool": "SetUnifiedGlobalScript",
           "arguments": {
             "softwarePath": "<same software>",
             "expectedProject": "<same project>",
@@ -1168,7 +1168,7 @@
           "expect": "Review before/after text and copy the returned token."
         },
         {
-          "tool": "UpdateUnifiedGlobalScript",
+          "tool": "SetUnifiedGlobalScript",
           "arguments": {
             "softwarePath": "<same software>",
             "expectedProject": "<same project>",

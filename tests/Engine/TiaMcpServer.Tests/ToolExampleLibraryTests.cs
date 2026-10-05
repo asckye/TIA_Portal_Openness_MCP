@@ -31,12 +31,12 @@ internal static class ToolExampleLibraryTests
         check(((string)oldPath["example"]!["request"]!["params"]!["arguments"]!["path"]!).EndsWith(".ap15_1"), "V15.1 project example uses its exact extension");
         var modernPath = ToolUsageCatalog.InlineCalls("20").First(r => (string?)r!["tool"] == "OpenProject")!;
         check(((string)modernPath["arguments"]!["path"]!).EndsWith(".ap20"), "inline discovery uses the same V20 example");
-        var objectSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath"",""objectPathJson"",""propertiesJson""],""properties"":{""softwarePath"":{""type"":""string""},""objectPathJson"":{""type"":""string""},""propertiesJson"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
-        var objectUsage = ToolUsageCatalog.Describe("UpdateUnifiedObjectProperties", "21", "full-engine", "", objectSchema);
+        var objectSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath"",""objectPath"",""properties""],""properties"":{""softwarePath"":{""type"":""string""},""objectPath"":{""type"":""array""},""properties"":{""type"":""object""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
+        var objectUsage = ToolUsageCatalog.Describe("SetUnifiedObjectProperties", "21", "full-engine", "", objectSchema);
         var objectArgs = objectUsage["example"]!["request"]!["params"]!["arguments"]!;
-        var steps = TiaMcpServer.Siemens.EngineeringObjectAddress.Parse((string)objectArgs["objectPathJson"]!);
+        var steps = TiaMcpServer.Siemens.EngineeringObjectAddress.Parse(objectArgs["objectPath"]!.ToJsonString());
         check(steps.Count == 3 && (string?)steps[2]!["property"] == "ScreenItems", "Unified example uses the actual property-step address grammar");
-        check(objectUsage["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "propertiesJson"), "unresolved native property values are explicit bindings");
+        check(objectUsage["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "properties"), "unresolved native property values are explicit bindings");
         var patchSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""filePath"",""changes"",""expectedFingerprint""],""properties"":{""filePath"":{""type"":""string""},""changes"":{""type"":""array""},""expectedFingerprint"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
         patchSchema["properties"]!["changes"] = JsonNode.Parse(TiaMcp.Logic.V4.Domain.DomainValidation.Contract<TiaMcp.Logic.V4.Domain.BlockEdit[]>().Schema.GetRawText());
         var patchCall = ToolUsageCatalog.Describe("PatchPlcBlockDocument", "21", "full-engine", "", patchSchema)["example"]!["request"]!["params"]!["arguments"]!;

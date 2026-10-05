@@ -187,7 +187,7 @@
           "archivePath": "C:\\Examples\\Archive.zap{major}",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AttachDeviceNodeToSubnet",
@@ -952,10 +952,152 @@
           "full"
         ],
         "arguments": {
-          "beforePagesJson": "[\"&lt;all original Meta pages from ReadUnifiedGraphicSelection, in pageIndex order&gt;\"]",
-          "afterPagesJson": "[\"&lt;all new Meta pages from ReadUnifiedGraphicSelection, in pageIndex order&gt;\"]"
+          "beforePages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "before-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ],
+          "afterPages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "after-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompileDevice",
@@ -973,7 +1115,7 @@
       },
       {
         "name": "CompileHmiDiagnostics",
-        "currentName": "CompileAndDiagnoseHmi",
+        "currentName": "CompileHmiDiagnostics",
         "sourceName": "CompileAndDiagnoseHmi",
         "profiles": [
           "full",
@@ -982,7 +1124,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompilePlcDiagnostics",
@@ -1280,7 +1422,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteExportHandle",
@@ -1380,7 +1522,7 @@
           "eventType": "Down",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteUnifiedHmiDynamization",
@@ -1396,7 +1538,7 @@
           "propertyName": "Visible",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiScreen",
@@ -1410,7 +1552,7 @@
           "softwarePath": "HMI_RT_1",
           "screenName": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiScreenItem",
@@ -1424,7 +1566,7 @@
           "screenName": "Overview",
           "itemName": "StatusText"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiSoftware",
@@ -1436,7 +1578,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiTag",
@@ -1450,7 +1592,7 @@
           "tagTableName": "Default tag table",
           "tagName": "Ready"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiTagTable",
@@ -1463,7 +1605,7 @@
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeObject",
@@ -1476,7 +1618,7 @@
           "objectKind": "Project",
           "objectPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeObjectProperty",
@@ -1490,7 +1632,7 @@
           "objectPath": "",
           "propertyPath": "Name"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribePlcBlockLogic",
@@ -1517,7 +1659,7 @@
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeUnifiedHmiButtonEventScript",
@@ -2217,7 +2359,7 @@
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExtractPlcBlockMetrics",
@@ -2599,11 +2741,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHmiScreenSnapshot",
-        "currentName": "ReadHmiScreenSnapshot",
+        "currentName": "GetHmiScreenSnapshot",
         "sourceName": "ReadHmiScreenSnapshot",
         "profiles": [
           "full"
@@ -2612,7 +2754,7 @@
           "softwarePath": "HMI_RT_1",
           "screenPath": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetLibraryOverview",
@@ -2681,7 +2823,7 @@
           "objectPath": "",
           "propertyPath": "Name"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOnlineDriveParameters",
@@ -3203,13 +3345,25 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedFaceplateInstance",
-        "currentName": "ReadUnifiedFaceplateInstance",
+        "currentName": "GetUnifiedFaceplateInstance",
         "sourceName": "ReadUnifiedFaceplateInstance",
         "profiles": [
           "full"
@@ -3222,11 +3376,11 @@
           "typePath": "UDT_Status",
           "version": "&lt;version from target discovery&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedGlobalScript",
-        "currentName": "ReadUnifiedGlobalScript",
+        "currentName": "GetUnifiedGlobalScript",
         "sourceName": "ReadUnifiedGlobalScript",
         "profiles": [
           "full"
@@ -3236,11 +3390,11 @@
           "expectedProject": "Example",
           "moduleName": "Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedGraphicSelection",
-        "currentName": "ReadUnifiedGraphicSelection",
+        "currentName": "GetUnifiedGraphicSelection",
         "sourceName": "ReadUnifiedGraphicSelection",
         "profiles": [
           "full"
@@ -3249,13 +3403,15 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "Overview",
-          "itemNamesJson": "[\"StatusText\"]"
+          "itemNames": [
+            "StatusText"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiButtonEvent",
-        "currentName": "ReadUnifiedHmiButtonEvent",
+        "currentName": "GetUnifiedHmiButtonEvent",
         "sourceName": "ReadUnifiedHmiButtonEvent",
         "profiles": [
           "full"
@@ -3266,11 +3422,11 @@
           "buttonName": "StartButton",
           "eventType": "Down"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiDynamization",
-        "currentName": "ReadUnifiedHmiDynamization",
+        "currentName": "GetUnifiedHmiDynamization",
         "sourceName": "ReadUnifiedHmiDynamization",
         "profiles": [
           "full"
@@ -3281,7 +3437,7 @@
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiTexts",
@@ -3299,7 +3455,7 @@
       },
       {
         "name": "GetUnifiedLibraryType",
-        "currentName": "ReadUnifiedLibraryType",
+        "currentName": "GetUnifiedLibraryType",
         "sourceName": "ReadUnifiedLibraryType",
         "profiles": [
           "full"
@@ -3310,7 +3466,7 @@
           "typePath": "UDT_Status",
           "version": "&lt;version from target discovery&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedObjectEvents",
@@ -3339,7 +3495,7 @@
       },
       {
         "name": "GetUnifiedObjectProperties",
-        "currentName": "ReadUnifiedObjectProperties",
+        "currentName": "GetUnifiedObjectProperties",
         "sourceName": "ReadUnifiedObjectProperties",
         "profiles": [
           "full"
@@ -3347,17 +3503,17 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedPlantObject",
-        "currentName": "ReadUnifiedPlantObject",
+        "currentName": "GetUnifiedPlantObject",
         "sourceName": "ReadUnifiedPlantObject",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeAlarms",
@@ -3396,7 +3552,7 @@
       },
       {
         "name": "GetUnifiedScreenBranch",
-        "currentName": "ReadUnifiedScreenBranch",
+        "currentName": "GetUnifiedScreenBranch",
         "sourceName": "ReadUnifiedScreenBranch",
         "profiles": [
           "full"
@@ -3404,9 +3560,9 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetV21EcosystemCatalog",
@@ -3835,10 +3991,12 @@
           "softwarePath": "HMI_RT_1",
           "category": "textLists",
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedNamesJson": "[\"Example_1\"]",
-          "dryRun": true
+          "dryRun": true,
+          "expectedNames": [
+            "Example_1"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportUnifiedOpcUaAlarms",
@@ -3924,7 +4082,7 @@
           "objectPath": "",
           "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InvokeService",
@@ -3939,7 +4097,7 @@
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
           "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InvokeUnifiedOpenPipe",
@@ -4079,7 +4237,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiScreens",
@@ -4154,7 +4312,7 @@
           "objectPath": "",
           "collectionProperty": "Devices"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcBlocks",
@@ -4370,7 +4528,7 @@
       },
       {
         "name": "ListUnifiedEngineeringObjects",
-        "currentName": "ReadUnifiedEngineeringObjects",
+        "currentName": "ListUnifiedEngineeringObjects",
         "sourceName": "ReadUnifiedEngineeringObjects",
         "profiles": [
           "full"
@@ -4379,7 +4537,7 @@
           "softwarePath": "HMI_RT_1",
           "category": "textLists"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedGlobalScripts",
@@ -4392,7 +4550,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedHmiApiTypes",
@@ -4406,7 +4564,7 @@
       },
       {
         "name": "ListUnifiedLibraryFolderEntries",
-        "currentName": "ListUnifiedLibraryFolder",
+        "currentName": "ListUnifiedLibraryFolderEntries",
         "sourceName": "ListUnifiedLibraryFolder",
         "profiles": [
           "full"
@@ -4415,11 +4573,11 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedTagDefinitions",
-        "currentName": "ReadUnifiedTagDefinitions",
+        "currentName": "ListUnifiedTagDefinitions",
         "sourceName": "ReadUnifiedTagDefinitions",
         "profiles": [
           "full"
@@ -4428,7 +4586,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListVersionControlWorkspaces",
@@ -5696,7 +5854,7 @@
           "action": "create",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedEvent",
@@ -5707,12 +5865,24 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "eventType": "Down",
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedHmiGroup",
@@ -5756,11 +5926,20 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagPathJson": "[{\"property\":\"TagTables\",\"name\":\"ExampleTags\"},{\"property\":\"Tags\",\"name\":\"Ready\"}]",
+          "tagPath": [
+            {
+              "property": "TagTables",
+              "name": "ExampleTags"
+            },
+            {
+              "property": "Tags",
+              "name": "Ready"
+            }
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedObjectParts",
@@ -5805,7 +5984,7 @@
           "dryRun": true,
           "action": "create"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedPlantNode",
@@ -5820,7 +5999,7 @@
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedScreenItem",
@@ -6161,7 +6340,7 @@
         "arguments": {
           "cursor": "&lt;cursor from the preceding read&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RenderPlcBlockDocument",
@@ -6712,7 +6891,7 @@
       },
       {
         "name": "SetUnifiedGlobalScript",
-        "currentName": "UpdateUnifiedGlobalScript",
+        "currentName": "SetUnifiedGlobalScript",
         "sourceName": "UpdateUnifiedGlobalScript",
         "profiles": [
           "full"
@@ -6721,10 +6900,10 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "moduleName": "Status",
-          "scriptCode": "&lt;complete scriptCode from ReadUnifiedGlobalScript with the intended edit&gt;",
+          "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedHmiButtonEventScriptCode",
@@ -6763,7 +6942,15 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "durationPathJson": "[{\"property\":\"&lt;exact duration property from ReadUnifiedObjectProperties&gt;\"}]",
+          "durationPath": [
+            {
+              "property": "DataLogs",
+              "name": "ExampleLog"
+            },
+            {
+              "property": "LogDuration"
+            }
+          ],
           "kind": "log",
           "days": 1,
           "hours": 1,
@@ -6772,54 +6959,82 @@
           "hundredNanoseconds": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedMultilingualProperty",
-        "currentName": "UpdateUnifiedMultilingualProperty",
+        "currentName": "SetUnifiedMultilingualProperty",
         "sourceName": "UpdateUnifiedMultilingualProperty",
         "profiles": [
           "full"
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "property": "Text",
           "culture": "zh-CN",
           "rawText": "运行状态",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedObjectProperties",
-        "currentName": "UpdateUnifiedObjectProperties",
+        "currentName": "SetUnifiedObjectProperties",
         "sourceName": "UpdateUnifiedObjectProperties",
         "profiles": [
           "full"
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-          "propertiesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedPlantObject",
-        "currentName": "UpdateUnifiedPlantObject",
+        "currentName": "SetUnifiedPlantObject",
         "sourceName": "UpdateUnifiedPlantObject",
         "profiles": [
           "full"
         ],
         "arguments": {
           "plantPath": "Plant_1",
-          "objectPathJson": "[]",
-          "propertiesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedRuntimeSettings",
@@ -7015,9 +7230,21 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WriteClassicHmiMinimalPackageFiles",
@@ -7292,7 +7519,7 @@
           "archivePath": "C:\\Examples\\Archive.zap{major}",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AttachDeviceNodeToSubnet",
@@ -8057,10 +8284,152 @@
           "full"
         ],
         "arguments": {
-          "beforePagesJson": "[\"&lt;all original Meta pages from ReadUnifiedGraphicSelection, in pageIndex order&gt;\"]",
-          "afterPagesJson": "[\"&lt;all new Meta pages from ReadUnifiedGraphicSelection, in pageIndex order&gt;\"]"
+          "beforePages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "before-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ],
+          "afterPages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "after-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompileDevice",
@@ -8078,7 +8447,7 @@
       },
       {
         "name": "CompileHmiDiagnostics",
-        "currentName": "CompileAndDiagnoseHmi",
+        "currentName": "CompileHmiDiagnostics",
         "sourceName": "CompileAndDiagnoseHmi",
         "profiles": [
           "full",
@@ -8087,7 +8456,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompilePlcDiagnostics",
@@ -8385,7 +8754,7 @@
           "groupPath": "Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteExportHandle",
@@ -8485,7 +8854,7 @@
           "eventType": "Down",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteUnifiedHmiDynamization",
@@ -8501,7 +8870,7 @@
           "propertyName": "Visible",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiScreen",
@@ -8515,7 +8884,7 @@
           "softwarePath": "HMI_RT_1",
           "screenName": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiScreenItem",
@@ -8529,7 +8898,7 @@
           "screenName": "Overview",
           "itemName": "StatusText"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiSoftware",
@@ -8541,7 +8910,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiTag",
@@ -8555,7 +8924,7 @@
           "tagTableName": "Default tag table",
           "tagName": "Ready"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeHmiTagTable",
@@ -8568,7 +8937,7 @@
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeObject",
@@ -8581,7 +8950,7 @@
           "objectKind": "Project",
           "objectPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeObjectProperty",
@@ -8595,7 +8964,7 @@
           "objectPath": "",
           "propertyPath": "Name"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribePlcBlockLogic",
@@ -8622,7 +8991,7 @@
           "objectPath": "",
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DescribeUnifiedHmiButtonEventScript",
@@ -9322,7 +9691,7 @@
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExtractPlcBlockMetrics",
@@ -9704,11 +10073,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHmiScreenSnapshot",
-        "currentName": "ReadHmiScreenSnapshot",
+        "currentName": "GetHmiScreenSnapshot",
         "sourceName": "ReadHmiScreenSnapshot",
         "profiles": [
           "full"
@@ -9717,7 +10086,7 @@
           "softwarePath": "HMI_RT_1",
           "screenPath": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetLibraryOverview",
@@ -9786,7 +10155,7 @@
           "objectPath": "",
           "propertyPath": "Name"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOnlineDriveParameters",
@@ -10308,13 +10677,25 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedFaceplateInstance",
-        "currentName": "ReadUnifiedFaceplateInstance",
+        "currentName": "GetUnifiedFaceplateInstance",
         "sourceName": "ReadUnifiedFaceplateInstance",
         "profiles": [
           "full"
@@ -10327,11 +10708,11 @@
           "typePath": "UDT_Status",
           "version": "&lt;version from target discovery&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedGlobalScript",
-        "currentName": "ReadUnifiedGlobalScript",
+        "currentName": "GetUnifiedGlobalScript",
         "sourceName": "ReadUnifiedGlobalScript",
         "profiles": [
           "full"
@@ -10341,11 +10722,11 @@
           "expectedProject": "Example",
           "moduleName": "Status"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedGraphicSelection",
-        "currentName": "ReadUnifiedGraphicSelection",
+        "currentName": "GetUnifiedGraphicSelection",
         "sourceName": "ReadUnifiedGraphicSelection",
         "profiles": [
           "full"
@@ -10354,13 +10735,15 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "Overview",
-          "itemNamesJson": "[\"StatusText\"]"
+          "itemNames": [
+            "StatusText"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiButtonEvent",
-        "currentName": "ReadUnifiedHmiButtonEvent",
+        "currentName": "GetUnifiedHmiButtonEvent",
         "sourceName": "ReadUnifiedHmiButtonEvent",
         "profiles": [
           "full"
@@ -10371,11 +10754,11 @@
           "buttonName": "StartButton",
           "eventType": "Down"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiDynamization",
-        "currentName": "ReadUnifiedHmiDynamization",
+        "currentName": "GetUnifiedHmiDynamization",
         "sourceName": "ReadUnifiedHmiDynamization",
         "profiles": [
           "full"
@@ -10386,7 +10769,7 @@
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedHmiTexts",
@@ -10404,7 +10787,7 @@
       },
       {
         "name": "GetUnifiedLibraryType",
-        "currentName": "ReadUnifiedLibraryType",
+        "currentName": "GetUnifiedLibraryType",
         "sourceName": "ReadUnifiedLibraryType",
         "profiles": [
           "full"
@@ -10415,7 +10798,7 @@
           "typePath": "UDT_Status",
           "version": "&lt;version from target discovery&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedObjectEvents",
@@ -10444,7 +10827,7 @@
       },
       {
         "name": "GetUnifiedObjectProperties",
-        "currentName": "ReadUnifiedObjectProperties",
+        "currentName": "GetUnifiedObjectProperties",
         "sourceName": "ReadUnifiedObjectProperties",
         "profiles": [
           "full"
@@ -10452,17 +10835,17 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedPlantObject",
-        "currentName": "ReadUnifiedPlantObject",
+        "currentName": "GetUnifiedPlantObject",
         "sourceName": "ReadUnifiedPlantObject",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeAlarms",
@@ -10501,7 +10884,7 @@
       },
       {
         "name": "GetUnifiedScreenBranch",
-        "currentName": "ReadUnifiedScreenBranch",
+        "currentName": "GetUnifiedScreenBranch",
         "sourceName": "ReadUnifiedScreenBranch",
         "profiles": [
           "full"
@@ -10509,9 +10892,9 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetV21EcosystemCatalog",
@@ -10940,10 +11323,12 @@
           "softwarePath": "HMI_RT_1",
           "category": "textLists",
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedNamesJson": "[\"Example_1\"]",
-          "dryRun": true
+          "dryRun": true,
+          "expectedNames": [
+            "Example_1"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportUnifiedOpcUaAlarms",
@@ -11029,7 +11414,7 @@
           "objectPath": "",
           "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InvokeService",
@@ -11044,7 +11429,7 @@
           "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
           "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InvokeUnifiedOpenPipe",
@@ -11198,7 +11583,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiScreens",
@@ -11273,7 +11658,7 @@
           "objectPath": "",
           "collectionProperty": "Devices"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcBlocks",
@@ -11499,7 +11884,7 @@
       },
       {
         "name": "ListUnifiedEngineeringObjects",
-        "currentName": "ReadUnifiedEngineeringObjects",
+        "currentName": "ListUnifiedEngineeringObjects",
         "sourceName": "ReadUnifiedEngineeringObjects",
         "profiles": [
           "full"
@@ -11508,7 +11893,7 @@
           "softwarePath": "HMI_RT_1",
           "category": "textLists"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedGlobalScripts",
@@ -11521,7 +11906,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedHmiApiTypes",
@@ -11535,7 +11920,7 @@
       },
       {
         "name": "ListUnifiedLibraryFolderEntries",
-        "currentName": "ListUnifiedLibraryFolder",
+        "currentName": "ListUnifiedLibraryFolderEntries",
         "sourceName": "ListUnifiedLibraryFolder",
         "profiles": [
           "full"
@@ -11544,11 +11929,11 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedTagDefinitions",
-        "currentName": "ReadUnifiedTagDefinitions",
+        "currentName": "ListUnifiedTagDefinitions",
         "sourceName": "ReadUnifiedTagDefinitions",
         "profiles": [
           "full"
@@ -11557,7 +11942,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListVersionControlWorkspaces",
@@ -12972,7 +13357,7 @@
           "action": "create",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedEvent",
@@ -12983,12 +13368,24 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "eventType": "Down",
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedHmiGroup",
@@ -13032,11 +13429,20 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagPathJson": "[{\"property\":\"TagTables\",\"name\":\"ExampleTags\"},{\"property\":\"Tags\",\"name\":\"Ready\"}]",
+          "tagPath": [
+            {
+              "property": "TagTables",
+              "name": "ExampleTags"
+            },
+            {
+              "property": "Tags",
+              "name": "Ready"
+            }
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedObjectParts",
@@ -13081,7 +13487,7 @@
           "dryRun": true,
           "action": "create"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedPlantNode",
@@ -13096,7 +13502,7 @@
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUnifiedScreenItem",
@@ -13437,7 +13843,7 @@
         "arguments": {
           "cursor": "&lt;cursor from the preceding read&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RenderPlcBlockDocument",
@@ -13988,7 +14394,7 @@
       },
       {
         "name": "SetUnifiedGlobalScript",
-        "currentName": "UpdateUnifiedGlobalScript",
+        "currentName": "SetUnifiedGlobalScript",
         "sourceName": "UpdateUnifiedGlobalScript",
         "profiles": [
           "full"
@@ -13997,10 +14403,10 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "moduleName": "Status",
-          "scriptCode": "&lt;complete scriptCode from ReadUnifiedGlobalScript with the intended edit&gt;",
+          "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedHmiButtonEventScriptCode",
@@ -14039,7 +14445,15 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "durationPathJson": "[{\"property\":\"&lt;exact duration property from ReadUnifiedObjectProperties&gt;\"}]",
+          "durationPath": [
+            {
+              "property": "DataLogs",
+              "name": "ExampleLog"
+            },
+            {
+              "property": "LogDuration"
+            }
+          ],
           "kind": "log",
           "days": 1,
           "hours": 1,
@@ -14048,54 +14462,82 @@
           "hundredNanoseconds": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedMultilingualProperty",
-        "currentName": "UpdateUnifiedMultilingualProperty",
+        "currentName": "SetUnifiedMultilingualProperty",
         "sourceName": "UpdateUnifiedMultilingualProperty",
         "profiles": [
           "full"
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
           "property": "Text",
           "culture": "zh-CN",
           "rawText": "运行状态",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedObjectProperties",
-        "currentName": "UpdateUnifiedObjectProperties",
+        "currentName": "SetUnifiedObjectProperties",
         "sourceName": "UpdateUnifiedObjectProperties",
         "profiles": [
           "full"
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-          "propertiesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedPlantObject",
-        "currentName": "UpdateUnifiedPlantObject",
+        "currentName": "SetUnifiedPlantObject",
         "sourceName": "UpdateUnifiedPlantObject",
         "profiles": [
           "full"
         ],
         "arguments": {
           "plantPath": "Plant_1",
-          "objectPathJson": "[]",
-          "propertiesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
-          "dryRun": true
+          "dryRun": true,
+          "objectPath": [],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedRuntimeSettings",
@@ -14291,9 +14733,21 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WriteClassicHmiMinimalPackageFiles",

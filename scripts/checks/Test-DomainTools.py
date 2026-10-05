@@ -140,36 +140,36 @@ CASES = {
     'HmiDescribe': [(name, 'disconnected', dict(softwarePath=PLC, **arguments)) for name, arguments in (
         ('GetHmiProgramInfo', {}), ('DescribeHmiSoftware', {}), ('DescribeHmiScreen', {'screenName': 'Main'}),
         ('DescribeHmiTagTable', {'tagTableName': 'Table'}),
-        ('DescribeHmiTag', {'tagTableName': 'Table', 'tagName': 'Tag'}), ('CompileAndDiagnoseHmi', {}),
+        ('DescribeHmiTag', {'tagTableName': 'Table', 'tagName': 'Tag'}), ('CompileHmiDiagnostics', {}),
         ('DescribeHmiScreenItem', {'screenName': 'Main', 'itemName': 'Item'}))],
     'HmiTagDeletion': [('DeleteHmiTag', 'disconnected', {
         'softwarePath': PLC, 'tagTablePath': '/Table', 'tagName': 'Tag'})],
     'HmiInspection': [
         ('ArchiveSavedProject', 'preview', {'archivePath': 'C:/domain-offline.zap21'}),
-        ('ReadUnifiedHmiButtonEvent', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
+        ('GetUnifiedHmiButtonEvent', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
         ('DeleteUnifiedHmiButtonEvent', 'preview', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
-        ('ReadUnifiedHmiDynamization', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'itemName': 'Button1', 'propertyName': 'Left'}),
+        ('GetUnifiedHmiDynamization', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'itemName': 'Button1', 'propertyName': 'Left'}),
         ('DeleteUnifiedHmiDynamization', 'preview', {'softwarePath': 'HMI', 'screenPath': '/Main', 'itemName': 'Button1', 'propertyName': 'Left'}),
         ('DeleteEmptyUnifiedHmiScreenGroup', 'preview', {'softwarePath': 'HMI', 'groupPath': '/Group'}),
-        ('ReadHmiScreenSnapshot', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main'}),
+        ('GetHmiScreenSnapshot', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main'}),
         ('ListHmiScreenPaths', 'read', {'softwarePath': 'HMI'})],
     'MigrationRead': [
         ('ListUnifiedGlobalScripts', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
-        ('ReadUnifiedGlobalScript', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation'}),
-        ('ReadUnifiedTagDefinitions', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
-        ('ReadUnifiedScreenBranch', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main'}),
-        ('ReadUnifiedLibraryType', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'typePath': '/Type1', 'version': '1.0.0'}),
-        ('ReadUnifiedFaceplateInstance', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemName': 'Faceplate1', 'typePath': '/Type1', 'version': '1.0.0'}),
-        ('ListUnifiedLibraryFolder', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('GetUnifiedGlobalScript', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation'}),
+        ('ListUnifiedTagDefinitions', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('GetUnifiedScreenBranch', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main'}),
+        ('GetUnifiedLibraryType', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'typePath': '/Type1', 'version': '1.0.0'}),
+        ('GetUnifiedFaceplateInstance', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemName': 'Faceplate1', 'typePath': '/Type1', 'version': '1.0.0'}),
+        ('ListUnifiedLibraryFolderEntries', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
         ('ReleaseUnifiedReadCursor', 'release-missing', {'cursor': 'domain-offline'})],
     'RuntimeSettings': [
         ('ReadUnifiedRuntimeSettings', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
         ('UpdateUnifiedRuntimeSettings', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'changesJson': '{"StartScreen":"/Main"}'})],
     'GraphicSelection': [
-        ('ReadUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNamesJson': '["Button1"]'}),
+        ('GetUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNamesJson': '["Button1"]'}),
         ('CompareUnifiedGraphicSelections', 'incomplete', {'beforePagesJson': '[]', 'afterPagesJson': '[]'})],
     'GlobalScriptEdit': [
-        ('UpdateUnifiedGlobalScript', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation', 'scriptCode': 'export function Navigate() {}'})],
+        ('SetUnifiedGlobalScript', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation', 'scriptCode': 'export function Navigate() {}'})],
     'Cfc': actions('ExchangeCfcCharts', 'export selectiveExport import exportInstructionData',
         softwarePath=PLC, filePath='C:/cfc-offline-fixture.xml.zip', modelVersion='V2.0', chartNames=['Chart1'])
         + actions('ManageCfcChartProtection', 'read add change remove', softwarePath=PLC,
@@ -659,20 +659,20 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                   'itemName': 'Button1',
                   'propertyName': 'Visible',
                   'tagName': 'Tag1'})],
- 'UnifiedObjectServices': [('ReadUnifiedPlantObject', 'offline', {}),
+ 'UnifiedObjectServices': [('GetUnifiedPlantObject', 'offline', {}),
                            ('ManageUnifiedPlantNode', 'offline', {'plantPath': 'Plant/Node', 'action': 'create'}),
-                           ('UpdateUnifiedPlantObject',
+                           ('SetUnifiedPlantObject',
                             'offline',
                             {'plantPath': 'Plant/Node',
                              'objectPathJson': '[]',
                              'propertiesJson': '{"Visible":true}'}),
-                           ('ReadUnifiedObjectProperties', 'offline', {'softwarePath': 'HMI_RT_1'}),
-                           ('UpdateUnifiedObjectProperties',
+                           ('GetUnifiedObjectProperties', 'offline', {'softwarePath': 'HMI_RT_1'}),
+                           ('SetUnifiedObjectProperties',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
                              'objectPathJson': '[]',
                              'propertiesJson': '{"Visible":true}'}),
-                           ('UpdateUnifiedMultilingualProperty',
+                           ('SetUnifiedMultilingualProperty',
                             'offline',
                             {'softwarePath': 'HMI_RT_1',
                              'objectPathJson': '[]',
@@ -735,7 +735,7 @@ CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftw
                           'category': 'textLists',
                           'filePath': 'C:/domain-unified.xml',
                           'expectedNamesJson': '[]'}),
-                        ('ReadUnifiedEngineeringObjects',
+                        ('ListUnifiedEngineeringObjects',
                          'offline',
                          {'softwarePath': 'HMI_RT_1', 'category': 'textLists'}),
                         ('ManageUnifiedEngineeringObject',
@@ -1218,7 +1218,7 @@ def hmi_reply(reply, profile, name):
         marker = ('HMI program not found' if name == 'GetHmiProgramInfo' else
                   'HMI software not found' if name.startswith('GetHmi') or name == 'ExportHmiProgram' else
                   'No project is open' if name.startswith('ImportHmi') else
-                  'Failed compiling software' if name == 'CompileAndDiagnoseHmi' else 'Project is null')
+                  'Failed compiling software' if name == 'CompileHmiDiagnostics' else 'Project is null')
         resources.require(marker in raw, f'{name}: missing disconnected refusal: {raw}')
     else:
         value = json.loads(raw)

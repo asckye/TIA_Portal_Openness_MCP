@@ -19,7 +19,7 @@ namespace TiaMcpServer.Siemens.Services
         public UnifiedObjectServicesService(IEngineeringSession session) => _session = session;
 
         public ResponseMessage ReadUnifiedObjectProperties(string softwarePath, string objectPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadUnifiedObjectProperties", meta => {
+            => _session.RunHmiStepTool("GetUnifiedObjectProperties", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0, limit 1..500 required.");
                 var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var items = target is IEnumerable && target is not string ? EngineeringGroupOperations.Items(target).ToArray() : new[] { target };
@@ -35,7 +35,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage UpdateUnifiedObjectProperties(string softwarePath, string objectPathJson, string propertiesJson, bool dryRun = true)
-            => _session.RunHmiStepTool("UpdateUnifiedObjectProperties", meta => {
+            => _session.RunHmiStepTool("SetUnifiedObjectProperties", meta => {
                 EngineeringObjectAddress.Parse(objectPathJson);
                 var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (changes.Count == 0 || changes.ContainsKey("Name") || changes.ContainsKey("Parent")) throw new ArgumentException("Nonempty scalar changes required; renaming/reparenting excluded.");
@@ -52,7 +52,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage UpdateUnifiedMultilingualProperty(string softwarePath, string objectPathJson, string property, string culture, string rawText, bool dryRun = true)
-            => _session.RunHmiStepTool("UpdateUnifiedMultilingualProperty", meta => {
+            => _session.RunHmiStepTool("SetUnifiedMultilingualProperty", meta => {
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 UnifiedMultilingualText.Validate(target, property, culture);
@@ -256,7 +256,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         public ResponseMessage ReadUnifiedPlantObject(string plantPath="", string objectPathJson="[]", int offset=0, int limit=100)
-            => _session.RunHmiStepTool("ReadUnifiedPlantObject", meta => {
+            => _session.RunHmiStepTool("GetUnifiedPlantObject", meta => {
                 if(offset<0 || limit<1 || limit>500) throw new ArgumentException("offset >= 0, limit 1..500 required.");
                 var root=string.IsNullOrEmpty(plantPath) ? ExactPlantViews() : ExactPlantNode(plantPath);
                 var target=EngineeringObjectAddress.Resolve(root,objectPathJson);
@@ -299,7 +299,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage UpdateUnifiedPlantObject(string plantPath, string objectPathJson, string propertiesJson, bool dryRun=true)
-            => _session.RunHmiStepTool("UpdateUnifiedPlantObject", meta => {
+            => _session.RunHmiStepTool("SetUnifiedPlantObject", meta => {
                 using var access=dryRun ? null : _session.AcquireHmiEditAccess();
                 var target=EngineeringObjectAddress.Resolve(ExactPlantNode(plantPath),objectPathJson);
                 var changes=JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");

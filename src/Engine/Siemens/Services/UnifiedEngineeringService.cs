@@ -38,7 +38,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadUnifiedEngineeringObjects(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadUnifiedEngineeringObjects", meta => {
+            => _session.RunHmiStepTool("ListUnifiedEngineeringObjects", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
                 var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                 if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Unified HMI required.");

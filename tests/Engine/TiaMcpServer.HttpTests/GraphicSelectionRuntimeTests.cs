@@ -62,6 +62,6 @@ internal static class GraphicSelectionRuntimeTests
         catch (TargetInvocationException ex) when (ex.InnerException is ObjectDisposedException) { fatal = true; }
         check(fatal, "actual EXE propagates fatal handle exception instead of continuing selection");
         var mcp = EngineSurface.For(server);
-        check(new[] { "ReadUnifiedGraphicSelection", "CompareUnifiedGraphicSelections" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true), "actual EXE registers both graphical-selection tools");
+        check(new[] { "GetUnifiedGraphicSelection", "CompareUnifiedGraphicSelections" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true), "actual EXE registers both graphical-selection tools");
     }
 }

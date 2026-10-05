@@ -23,6 +23,9 @@ namespace TiaMcp.Logic.V4.Domain
         }
         internal static Type Concrete(Type type, JsonElement value)
         {
+            if (type == typeof(BranchStep)) return value.TryGetProperty("property", out _) ? typeof(PropertyBranchStep)
+                : value.TryGetProperty("attribute", out _) ? typeof(AttributeBranchStep)
+                : value.TryGetProperty("index", out _) ? typeof(IndexBranchStep) : typeof(NamedBranchStep);
             if (type == typeof(NetworkOperation)) return value.GetProperty("type").GetString() switch
             { "EnsureSubnet" => typeof(EnsureSubnetOperation), "AttachDeviceNodeToSubnet" => typeof(AttachDeviceNodeOperation), _ => typeof(CpuSettingsOperation) };
             if (type == typeof(BlockEdit)) return value.GetProperty("action").GetString() switch
@@ -38,6 +41,13 @@ namespace TiaMcp.Logic.V4.Domain
         {
             var d = new Dictionary<Type, InputSchema>();
             var text = String(); var name = String(1); var count = Integer(0); var strings = Array(text);
+            d[typeof(PropertyBranchStep)] = Object(("property", text));
+            d[typeof(AttributeBranchStep)] = Object(("attribute", text));
+            d[typeof(IndexBranchStep)] = Object(("index", count));
+            d[typeof(NamedBranchStep)] = Object(("name", text), ("key?", text));
+            d[typeof(BranchStep)] = Union(d[typeof(PropertyBranchStep)], d[typeof(AttributeBranchStep)],
+                d[typeof(IndexBranchStep)], d[typeof(NamedBranchStep)]);
+            d[typeof(BranchStep[])] = Array(d[typeof(BranchStep)], 0, 64);
             d[typeof(SubjectAlternativeName)] = Object(("type", String(0, null, "Dns", "Email", "IP", "Uri")), ("value", String(1, 255)));
             d[typeof(SubjectAlternativeName[])] = Array(d[typeof(SubjectAlternativeName)], 0, 64);
             d[typeof(Artifact)] = Object(("id", String(1, 512)), ("dependencies?", Array(name, 0, 256)), ("target?", text), ("priority?", Integer()));

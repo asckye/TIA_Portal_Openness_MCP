@@ -14,7 +14,7 @@ namespace TiaMcpServer.Siemens.Services
             string scriptCode, bool dryRun = true, string expectedToken = "")
         {
             lock (_globalScriptEditGate)
-                return _session.RunHmiStepTool("UpdateUnifiedGlobalScript", meta =>
+                return _session.RunHmiStepTool("SetUnifiedGlobalScript", meta =>
                 {
                     meta["softwarePath"] = softwarePath; meta["moduleName"] = moduleName;
                     if (string.IsNullOrWhiteSpace(expectedProject) || string.IsNullOrWhiteSpace(softwarePath))

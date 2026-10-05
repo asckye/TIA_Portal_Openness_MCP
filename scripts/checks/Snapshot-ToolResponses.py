@@ -185,7 +185,7 @@ PASSIVE_RESOURCE_CALLS = (
 DOMAIN_CALLS = {
     'Diagnostics': 'ValidateAutomationContext',
     'Exports': 'GetExport',
-    'HMI': 'CompileAndDiagnoseHmi',
+    'HMI': 'CompileHmiDiagnostics',
     'Hardware': 'GetProjectTopology',
     'PLC-Online': 'GetOnlineState',
     'PLC-Software': 'GetSoftwareTree',

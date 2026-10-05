@@ -763,7 +763,7 @@
         "expect": "handler written"
       },
       {
-        "tool": "CompileAndDiagnoseHmi",
+        "tool": "CompileHmiDiagnostics",
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },

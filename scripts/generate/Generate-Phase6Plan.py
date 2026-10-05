@@ -313,6 +313,7 @@ EXACT_SHAPES = {
     ("ManageSiVArcRule","collectionPathJson"): "PropertyStep[]",
     ("ManageUnifiedLoggingTag","tagPathJson"): "PropertyStep[]",
     ("SetUnifiedLogDuration","durationPathJson"): "PropertyStep[]",
+    ("ReadUnifiedScreenBranch", "branchJson"): "BranchStep[]",
 }
 
 def shape(n, p):

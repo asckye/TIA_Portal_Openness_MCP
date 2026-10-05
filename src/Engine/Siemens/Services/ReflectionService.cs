@@ -66,6 +66,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ModelContextProtocol.ResponseObjectDescribe
             {
                 Message = "OK",
+                Meta = ResponseMeta.Unstamped(true),
                 ObjectKind = objectKind,
                 ObjectPath = objectPath,
                 TypeName = o.GetType().FullName ?? o.GetType().Name,
@@ -102,6 +103,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ModelContextProtocol.ResponseObjectDescribe
             {
                 Message = "OK",
+                Meta = ResponseMeta.Unstamped(true),
                 ObjectKind = objectKind,
                 ObjectPath = $"{objectPath}.{propertyPath}",
                 TypeName = v.GetType().FullName ?? v.GetType().Name,
@@ -164,6 +166,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectChildren
                 {
                     Message = "Collection not found or not enumerable",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     Collection = collectionProperty,
@@ -182,6 +185,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ModelContextProtocol.ResponseObjectChildren
             {
                 Message = "OK",
+                Meta = ResponseMeta.Unstamped(true),
                 ObjectKind = objectKind,
                 ObjectPath = objectPath,
                 Collection = collectionProperty,
@@ -197,6 +201,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = hardDenyReason,
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -214,6 +219,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = "Method not allowed (read-only mode)",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -239,6 +245,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
             }
 
+            bool invocationAttempted = false;
             try
             {
                 var t = instance.GetType();
@@ -252,6 +259,7 @@ namespace TiaMcpServer.Siemens.Services
                     return new ModelContextProtocol.ResponseObjectValue
                     {
                         Message = "Method not found (signature mismatch)",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
                         ObjectKind = resultKind,
                         ObjectPath = resultPath
                     };
@@ -290,6 +298,7 @@ namespace TiaMcpServer.Siemens.Services
                     converted[i] = av;
                 }
 
+                invocationAttempted = true;
                 var result = mi.Invoke(instance, converted);
 
                 object? outValue = result;
@@ -308,6 +317,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = "OK",
+                    Meta = ResponseMeta.Unstamped(true, ("invocationAttempted", true)),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath,
                     ValueType = result?.GetType().FullName ?? (result == null ? null : result.GetType().Name),
@@ -319,6 +329,8 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = tie.InnerException?.Message ?? tie.Message,
+                    Meta = ResponseMeta.Unstamped(false, ("invocationAttempted", invocationAttempted),
+                        ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -328,6 +340,8 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = ex.Message,
+                    Meta = ResponseMeta.Unstamped(false, ("invocationAttempted", invocationAttempted),
+                        ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -407,6 +421,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "Denied by safety policy: force-related services are not exposed through this MCP server.",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = null,
@@ -430,6 +445,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "Service type not found",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = null,
@@ -444,6 +460,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "GetService failed (service not available for this object)",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = st.FullName ?? st.Name,
@@ -454,6 +471,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ModelContextProtocol.ResponseObjectDescribe
             {
                 Message = "OK",
+                Meta = ResponseMeta.Unstamped(true),
                 ObjectKind = "Service",
                 ObjectPath = $"{objectKind}:{objectPath}::{serviceTypeSuffix}",
                 TypeName = svc.GetType().FullName ?? svc.GetType().Name,
@@ -469,6 +487,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = "Denied by safety policy: force-related services are not exposed through this MCP server.",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };
@@ -490,6 +509,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = "Service type not found",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };
@@ -502,6 +522,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectValue
                 {
                     Message = "GetService failed (service not available for this object)",
+                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };
