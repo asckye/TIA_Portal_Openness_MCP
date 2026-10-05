@@ -35,4 +35,4 @@ VCI 对可映射对象逐项报告结果。块、变量表、数据类型等程�
 
 若提示块不一致，先编译该块；若提示访问保护，按工程的保护设置处理。工程中某个对象未导出时，应保留失败记录并说明缺口。
 
-自动导出和提交的可选工具见 [vci-watch](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/vci-watch/README.md)。先完成一次手动基线，再配置自动化和提交范围。
+自动导出和提交的可选工具见 [vci-watch](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/scripts/operations/vci-watch/README.md)。先完成一次手动基线，再配置自动化和提交范围。

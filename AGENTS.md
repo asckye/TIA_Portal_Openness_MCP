@@ -9,7 +9,7 @@
 - 阶段 0–5 不改变 MCP 对外接口：工具名称、参数名与类型、返回结构和错误语义保持不变。
 - 不改变西门子 Openness 调用的顺序、参数和线程归属，除非任务明确要求；有改动时在报告中列出前后调用序列。
 - 不编辑 `manifest/*.json` 中的哈希，不手改生成文件（`manifest/tools-list.json`、
-  `tools/openness-shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等），除非任务要求运行对应生成器。
+  `src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等），除非任务要求运行对应生成器。
 - 不连接 TIA Portal、PLC、VM 或任何网络服务；不运行 live 测试分支。
 
 ## 代码

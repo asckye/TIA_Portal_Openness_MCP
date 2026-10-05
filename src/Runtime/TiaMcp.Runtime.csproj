@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Preserve the engine dependency version when resolving the OPC UA client independently. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Sharp7" Version="1.1.84" />
+    <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
+    <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
+    <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
+  <!-- The Siemens Web API client is a protocol library; Openness and PLCSIM stay in the woven engine. -->
+  <Target Name="RejectEngineeringDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <ForbiddenRuntimeReference Include="@(ReferencePath)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(?i:Siemens\.Engineering|Siemens\.Simatic\.Simulation|TiaMcpServer|ModelContextProtocol)'))" />
+    </ItemGroup>
+    <Error Condition="'@(ForbiddenRuntimeReference)' != ''" Text="TiaMcp.Runtime must not reference engineering or MCP assemblies: @(ForbiddenRuntimeReference)" />
+  </Target>
+</Project>

@@ -2,8 +2,8 @@
 
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
 
-本页是 P4-01 的设计结论。路径前缀：**E** = `tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/`，
-**F** = `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/` 与 `Policy/`（第 D 步迁移后），**S** = `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs`。
+本页是 P4-01 的设计结论。路径前缀：**E** = `src/Engine/Siemens/Portal/`，
+**F** = `src/Adapters/Native/` 与 `Policy/`（第 D 步迁移后），**S** = `src/Adapters/Native/Studio/OpennessSession.cs`。
 数字为 2026-10-03 的源码统计。
 
 ## 现状：三套原生实现
@@ -110,7 +110,7 @@ Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）�
 
 信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
 
-[worker-channel 回归套件及预览规则映射](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
+[worker-channel 回归套件及预览规则映射](../../tests/Engine/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
 
 **第 A 步删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录、7 个测试项目（实测 6,676 个断言）以及
 `TiaMcp.TransportFixture`/`TiaMcp.EndpointFixture`。理由：生产中没有使用；长度前缀分帧只在 Linux 上验证过；维护两套并行编解码，
@@ -125,7 +125,7 @@ JsonLegacy 的 `DifferentialCodec.cs` 和两个夹具。原套件实测断言数
 JsonLegacy 5,462、HostPreview 78、AsyncPreview 203、HostTransport 102、Endpoint 383（含进程测试 302），
 共 **6,676**。删除 70 个版本化文件、10,572 行（其中 C# 25 个文件、3,156 行）。循环、差分语料和进程断言均按原计数器统计，不等同于 xunit 用例数。
 下表按断言规则归组；`P` = `ProtocolTests`，`S` = `ServerTests`，`X` = `ProcessTests`，
-`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests)。
+`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tests/Engine/TiaMcp.WorkerChannel.Tests)。
 
 | 预览断言组（包含循环变体） | 协议 2 测试或不移植原因 |
 |---|---|
@@ -257,7 +257,7 @@ HttpTests engineering-api 每版增加 13 项，native-diagnostics 每版增加 
 ## 第 I 步的领域迁移样板（P4-I1：VCI）
 
 引擎目录只导入一次 `TiaSharedAdapterPaths.props`，构建日志打印开关值，默认仍为 `false`。
-原语只有一份源码：[VersionControlPrimitives.cs](../../tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs)。
+原语只有一份源码：[VersionControlPrimitives.cs](../../src/Adapters/Native/Vci/VersionControlPrimitives.cs)。
 默认引擎通过共享 props 链接它并定义 `TIA_ENGINE_LOCAL_PRIMITIVES`，命名空间为 `TiaMcpServer.Siemens.LocalVci`；
 开启开关时不链接该文件，改用适配器中的 `TiaOpenness.Openness.VersionControlPrimitives`，不会产生同名类型冲突。
 服务只在 `using Vci = …` 处选择原语类型，所有读写无条件调用 `Vci.X(...)`。
@@ -297,9 +297,9 @@ Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省�
 `evidence` 是仓库内证据输出路径，版本键必须使用字符串。不同领域单独运行证明，不能合并差量后验收；
 默认变体同时核对领域内精确去重与领域外逐调用者清单，防止同一 Siemens 成员在两个领域一增一减互相抵消。
 
-原语链接也按领域拆分：[vci.props](../../tools/openness-shared/shared-native/vci.props) 显式列出
+原语链接也按领域拆分：[vci.props](../../src/Shared/shared-native/vci.props) 显式列出
 `TiaSharedNativePrimitive` 项及其 `Link` 路径。共享引擎 props 与 `Adapter.Sources.props` 都只通配导入
-`tools/openness-shared/shared-native/*.props` 这个专用目录，默认引擎和每版适配器消费同一项；不通配收集 C# 源码。
+`src/Shared/shared-native/*.props` 这个专用目录，默认引擎和每版适配器消费同一项；不通配收集 C# 源码。
 以后每个领域新增自己的小 props 文件即可，避免并行任务修改同一清单，审查者仍能逐行核对进入引擎和适配器的原语源码。
 源码闭包测试核对所有领域声明、八版适配器的实际 Compile 项以及两版引擎的开关选择。默认开关与原语编译符号不变。
 
@@ -335,7 +335,7 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 
 共享路径的全局引擎 ∪ 适配器多重集按精确增减验收：引擎 VCI 的直接成员归零，适配器只加入宿主实际到达的新原语，
 共享成员不保留重复的原生实现。领域外的方法体及织入清单不允许变化。默认迁移及共享路径增减清单均由检查器生成到
-[VCI 原生迁移证据](p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
+[VCI 原生迁移证据](evidence/p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
 该 JSON 的 `acceptanceRule` 记录上述规则；默认精确去重差量、展开图及其他检查全部通过时才令 `accepted` 为 `true`。
 每版 `errors` 保留实际失败；`--include-failed` 只允许输出失败证据，仍返回非零退出码。
 证据格式 2 的 `expectedNativeDelta` 增加 `opcode`：直接成员的计数、去重及允许增量均以成员与分派操作码为键，
@@ -379,8 +379,8 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 
 ## 关键文件
 
-- `tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Adapter.Sources.props`
-- `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs`
-- `tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/Program.cs`
-- `tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/WorkerClient.cs`
-- `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs`
+- `src/Adapters/build/Adapter.Sources.props`
+- `src/Adapters/Native/Session/PlcFoundationEngine.cs`
+- `src/Worker/Program.cs`
+- `src/FoundationHost/WorkerClient.cs`
+- `src/Adapters/Native/Studio/OpennessSession.cs`

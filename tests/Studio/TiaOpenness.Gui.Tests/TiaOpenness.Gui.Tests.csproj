@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Engine/TiaMcpServer.Tests/DataLocationsTests.cs" Link="DataLocationsTests.cs" />
+    <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" />
+    <EmbeddedResource Include="../../../src/Studio/Gui/**/*.xaml;../../../src/Studio/Gui/**/*.cs"
+      Exclude="../../../src/Studio/Gui/bin/**;../../../src/Studio/Gui/obj/**" LinkBase="Source" WithCulture="false" />
+  </ItemGroup>
+  <Target Name="CopyBridgeForFunctionalTests" AfterTargets="Build">
+    <ItemGroup><BridgePayload Include="../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.exe;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.dll;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.config" /></ItemGroup>
+    <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
+    <Delete Files="$(TargetDir)bridge/Newtonsoft.Json.dll" Condition="!Exists('../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/Newtonsoft.Json.dll')" />
+  </Target>
+</Project>

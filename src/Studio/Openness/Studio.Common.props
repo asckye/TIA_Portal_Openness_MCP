@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup><TiaPublicApiReleaseKey>$(StudioReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../Shared/TiaPublicApi.props" />
+  <PropertyGroup>
+    <TiaReleaseKey>$(StudioReleaseKey)</TiaReleaseKey>
+    <TiaFeatureProfile>Studio</TiaFeatureProfile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../Shared/TiaFeatures.props" />
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>TiaOpenness.Openness</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <StudioApiAssembly Condition="'$(StudioReleaseKey)' != '21'">Siemens.Engineering.dll</StudioApiAssembly>
+    <StudioApiAssembly Condition="'$(StudioReleaseKey)' == '21'">Siemens.Engineering.Base.dll</StudioApiAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Core/TiaOpenness.Core.csproj" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/EngineeringExtensions.cs" Link="EngineeringExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/HmiNavigator.cs" Link="HmiNavigator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.cs" Link="OpennessSession.cs" />
+    <Compile Include="../OpennessSessionFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessVersionControl.cs" Link="OpennessVersionControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VersionControlPrimitives.cs" Link="VersionControlPrimitives.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
+    <Compile Include="StudioRelease.cs" />
+    <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />
+    <Reference Include="@(NativeApi)"><Private>false</Private><SpecificVersion>true</SpecificVersion></Reference>
+  </ItemGroup>
+  <Target Name="RequireMatchingPublicApi" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(SiemensEngineeringDirectory)' == ''" Text="Supply the official matching PublicAPI directory with SiemensEngineeringDirectory." />
+    <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/$(StudioApiAssembly)"><Output TaskParameter="Assemblies" ItemName="ApiIdentity" /></GetAssemblyIdentity>
+    <Error Condition="'%(ApiIdentity.Version)' != '$(StudioApiVersion)'" Text="This adapter requires exact $(StudioReleaseKey) PublicAPI assemblies." />
+  </Target>
+</Project>

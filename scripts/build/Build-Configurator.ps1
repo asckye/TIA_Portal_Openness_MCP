@@ -3,15 +3,15 @@ param([switch]$Test)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$studio = Join-Path $root 'tools/tia-openness-studio'
-$configurationTests = Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'
-$versionCatalog = Join-Path $root 'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs'
-$processArguments = Join-Path $root 'tools/openness-shared/ProcessArguments.cs'
-$opennessEnvironment = Join-Path $root 'tools/openness-shared/OpennessEnvironment.cs'
-$bundleLayout = Join-Path $root 'tools/openness-shared/BundleLayout.cs'
+$studio = Join-Path $root 'src/Studio'
+$configurationTests = Join-Path $root 'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'
+$versionCatalog = Join-Path $root 'src/Logic/Siemens/TiaVersionCatalog.cs'
+$processArguments = Join-Path $root 'src/Shared/ProcessArguments.cs'
+$opennessEnvironment = Join-Path $root 'src/Shared/OpennessEnvironment.cs'
+$bundleLayout = Join-Path $root 'src/Shared/BundleLayout.cs'
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
-$fonts = Join-Path $studio 'src/TiaOpenness.Gui/Fonts'
+$fonts = Join-Path $studio 'Gui/Fonts'
 $resourceOutput = Join-Path $root 'bin-build\configurator-resources'
 New-Item -ItemType Directory -Force -Path $resourceOutput | Out-Null
 $metadata = Join-Path $resourceOutput 'DesktopVersion.cs'
@@ -27,7 +27,7 @@ $attributes += '[assembly: AssemblyFileVersion("' + $release + '.0")]'
 $attributes += '[assembly: AssemblyInformationalVersion("' + $release + '")]'
 $attributes += '[assembly: AssemblyMetadata("TiaMcpRelease", "' + $release + '")]'
 [IO.File]::WriteAllText($metadata, "using System.Reflection;`n" + ($attributes -join "`n"), [Text.UTF8Encoding]::new($false))
-& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references (Join-Path $studio 'src/TiaOpenness.Launcher/Launcher.cs') $processArguments $metadata
+& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references (Join-Path $studio 'Launcher/Launcher.cs') $processArguments $metadata
 if ($LASTEXITCODE -ne 0) { throw 'Configurator build failed.' }
 if ($Test) {
     $output = Join-Path $root 'bin-build\configurator-tests'
@@ -40,17 +40,17 @@ if ($Test) {
     if ([int]$match.Groups[1].Value -lt 157) { throw 'Expected at least 157 configurator checks.' }
     # Record the .NET 10 test host and its desktop/bridge project inputs as well as the launcher.
     $projectInputs = foreach ($project in @('Gui', 'Client', 'Core', 'Contracts', 'Bridge')) {
-        Get-ChildItem (Join-Path $studio "src/TiaOpenness.$project") -Recurse -File |
+        Get-ChildItem (Join-Path $studio "$project") -Recurse -File |
             Where-Object { $_.Extension -in '.cs','.xaml','.csproj' -and $_.FullName -notmatch '[\\/](bin|obj)[\\/]' }
     }
     $testInputs = Get-ChildItem (Split-Path -Parent $configurationTests) -File | Where-Object { $_.Extension -in '.cs','.csproj' }
     $inputs = @($projectInputs) + @($testInputs) + @(
-        Get-Item (Join-Path $studio 'src/TiaOpenness.Launcher/Launcher.cs')
+        Get-Item (Join-Path $studio 'Launcher/Launcher.cs')
         Get-Item $PSCommandPath
         Get-Item (Join-Path $root 'Version.props')
         Get-Item (Join-Path $studio 'Directory.Build.props')
-        Get-Item (Join-Path $studio 'tests/Directory.Build.props')
-        Get-Item (Join-Path $root 'tools/openness-shared/LocalProcess.cs')
+        Get-Item (Join-Path $root 'tests/Studio/Directory.Build.props')
+        Get-Item (Join-Path $root 'src/Shared/LocalProcess.cs')
     ) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-Item $bundleLayout) + @(Get-ChildItem $fonts -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }

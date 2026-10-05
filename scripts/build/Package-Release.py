@@ -140,7 +140,7 @@ def main():
     require(runtime_names == {r['path'] for r in inventory}, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/openness-shared/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props'} & set(files))
+    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'tests/Engine/', 'build-tools/native-call-weaver/', 'src/Shared/', 'third_party/TiaGitAddIn.Core/', 'third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
@@ -200,19 +200,19 @@ def main():
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     require(gui['testsPassed'] > 0, 'Missing configurator test result')
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
-    studio = 'tools/tia-openness-studio/'
-    desktop_projects = tuple(studio + 'src/TiaOpenness.' + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
-    gui_inputs = {n for n in files if n.startswith(studio + 'src/TiaOpenness.Gui/Fonts/') or
+    studio = 'src/Studio/'
+    desktop_projects = tuple(studio + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
+    gui_inputs = {n for n in files if n.startswith(studio + 'Gui/Fonts/') or
                   (n.startswith(desktop_projects) and Path(n).suffix in ('.cs', '.xaml', '.csproj')) or
-                  (n.startswith(studio + 'tests/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj'))} | {
+                  (n.startswith('tests/Studio/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj'))} | {
         'scripts/build/Build-Configurator.ps1', 'Version.props',
-        studio + 'src/TiaOpenness.Launcher/Launcher.cs',
-        studio + 'Directory.Build.props', studio + 'tests/Directory.Build.props',
-        'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs',
-        'tools/openness-shared/OpennessEnvironment.cs',
-        'tools/openness-shared/BundleLayout.cs',
-        'tools/openness-shared/ProcessArguments.cs',
-        'tools/openness-shared/LocalProcess.cs',
+        studio + 'Launcher/Launcher.cs',
+        studio + 'Directory.Build.props', 'tests/Studio/Directory.Build.props',
+        'src/Logic/Siemens/TiaVersionCatalog.cs',
+        'src/Shared/OpennessEnvironment.cs',
+        'src/Shared/BundleLayout.cs',
+        'src/Shared/ProcessArguments.cs',
+        'src/Shared/LocalProcess.cs',
     }
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:
@@ -222,49 +222,49 @@ def main():
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
-                'tools/openness-shared/BundleLayout.cs',
+                'src/Shared/BundleLayout.cs',
                 'scripts/checks/Check-BundleLayout.py',
-                'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
-                'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
-                'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
+                'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
+                'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
+                'src/Adapters.Contracts/packages.lock.json',
                 'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
-                'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Regular.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Medium.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-SemiBold.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Bold.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Regular.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Medium.ttf',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/SOURCES.txt',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/Strings.cs',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Light.xaml',
-                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Dark.xaml',
-                'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
-                'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs',
+                'src/Studio/Launcher/Launcher.cs',
+                'src/Studio/Gui/Themes/Glass.xaml',
+                'src/Studio/Gui/Controls/GlassLogView.cs',
+                'src/Studio/Gui/Fonts/Manrope-Regular.ttf',
+                'src/Studio/Gui/Fonts/Manrope-Medium.ttf',
+                'src/Studio/Gui/Fonts/Manrope-SemiBold.ttf',
+                'src/Studio/Gui/Fonts/Manrope-Bold.ttf',
+                'src/Studio/Gui/Fonts/Manrope-OFL.txt',
+                'src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf',
+                'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
+                'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
+                'src/Studio/Gui/Fonts/SOURCES.txt',
+                'src/Studio/Gui/TiaOpenness.Gui.csproj',
+                'src/Studio/Gui/Configuration/ConfigurationView.xaml',
+                'src/Studio/Gui/Configuration/ConfigurationView.xaml.cs',
+                'src/Studio/Gui/Configuration/ConfigCore.cs',
+                'src/Studio/Gui/Configuration/ClientProfiles.cs',
+                'src/Studio/Gui/Configuration/UpdateCheck.cs',
+                'src/Studio/Gui/Configuration/ModernJson.cs',
+                'src/Studio/Gui/Localization/Strings.cs',
+                'src/Studio/Gui/Themes/Palette.Light.xaml',
+                'src/Studio/Gui/Themes/Palette.Dark.xaml',
+                'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
+                'tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs',
                 'scripts/operations/预热.bat', 'scripts/operations/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
-                'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
-    required += ['tools/tiaportal-mcp/src/TiaMcp.Runtime/' + name for name in
+                'plugin/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
+    required += ['src/Runtime/' + name for name in
                  ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs')]
     required += [f'runtime/v{major}/TiaMcp.Runtime.dll' for major in (20, 21)]
     required += [f'runtime/v{major}/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
     required += [f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
     required += ['runtime/verification/' + name for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll')]
-    required += ['tools/tiaportal-mcp/src/' + name for name in ('TiaMcp.Adapters/Native/Plc/PlcServices.cs', 'TiaMcpServer/ModelContextProtocol/InvocationJournal.Adapter.cs')]
-    required += ['tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs']
-    required += ['tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
-    required += ['tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
+    required += ['src/' + name for name in ('Adapters/Native/Plc/PlcServices.cs', 'Engine/ModelContextProtocol/InvocationJournal.Adapter.cs')]
+    required += ['tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs']
+    required += ['src/WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
+    required += ['src/Studio/Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
         required += [f'runtime/v{key}/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll')]

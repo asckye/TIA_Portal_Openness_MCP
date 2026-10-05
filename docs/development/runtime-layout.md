@@ -3,7 +3,7 @@
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [响应与异常设计](response-and-errors.md) · [验证分层](validation.md)
 
 本页记录 G7（运行时与仓库布局解耦）的现行实现和 P2-05（历史注释、`*Leftovers` 与用户可见文案语言）的清理规则。路径缩写：`E/` =
-`tools/tiaportal-mcp/src/TiaMcpServer/`，`L/` = `tools/tiaportal-mcp/src/TiaMcp.Logic/`，`S/` = `tools/tia-openness-studio/src/`。
+`src/Engine/`，`L/` = `src/Logic/`，`S/` = `src/Studio/`。
 P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 ## G7：运行时资源定位
@@ -14,7 +14,7 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 [`Package-Release.py`](../../scripts/build/Package-Release.py) 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
-[`BundleLayout.cs`](../../tools/openness-shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
+[`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
 维护 `BundleResource` 到包根相对路径的代码表。它不依赖 Siemens API，链接进 `TiaMcp.Logic`、
 `TiaOpenness.Core`、`TiaOpenness.Client`、`TiaOpenness.Gui` 与共享适配器，不编入织入的引擎 EXE。
 
@@ -23,7 +23,7 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 `DirectoryInfo` 的父目录路径。解析器不读取环境变量、不检查 `.git`，也不向任意祖先目录搜索。
 
 下表路径均相对包根；`<configuration>` 是 `Release` 或 `Debug`，运行文件与输出目录由构建生成。
-版本目录取自 [`TiaVersionCatalog.cs`](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs)。
+版本目录取自 [`TiaVersionCatalog.cs`](../../src/Logic/Siemens/TiaVersionCatalog.cs)。
 
 | 锚点 | 支持的基目录 |
 |---|---|
@@ -84,7 +84,7 @@ R1 的指南和桥接文件均相对选定根读取。Python 解释器另由 `TI
 
 ### 软件自身的数据目录
 
-[`DataLocations.cs`](../../tools/openness-shared/DataLocations.cs) 在进程首次使用时确定一个数据根，并在链接该源码的
+[`DataLocations.cs`](../../src/Shared/DataLocations.cs) 在进程首次使用时确定一个数据根，并在链接该源码的
 程序集之间共享缓存；之后不会因环境变量或目录权限变化重新选择。顺序如下：
 
 1. 非空 `TIA_MCP_DATA_DIRECTORY`：必须为绝对路径；无效值报错，不静默回退。
@@ -113,7 +113,7 @@ Studio 的崩溃日志仍在可执行文件旁；伴随 Python 环境也保持�
 
 更新器按新包的 `delivery-files.json` 接受运行资源包。备份到 `.previous` 后，使用固定 `legacyCleanup` 规则与旧包
 `manifest/release-file-hashes.json` 的交集清理已交付的开发文件；只删除哈希仍匹配的旧文件，保留用户新增或改写的内容。
-`tools/` 中继续交付的 skill/Python 源码保留，不按整目录递归清除。旧运行文件及 manifest 也仅删除记录中确认且新包不再包含的项。
+`plugin/skill/` 和 `third_party/` 中继续交付的 Python 源码保留，不按整目录递归清除。旧 `tools/` 文件、运行文件及 manifest 也仅删除记录中确认且新包不再包含的项。
 没有旧完整文件记录时，只从构建记录识别旧运行二进制，不猜测其他文件的所有权。
 备份附带本次新包文件收据，回滚先删除备份中不存在且未被用户改写的新文件，再恢复原文件，避免叠加出混合布局。
 `data`、`.previous`、`.update`、`TiaMcp_Output` 不参与开发路径清理；数据目录在覆盖和回滚时保留。
@@ -146,11 +146,11 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
-布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EcosystemTests.cs)、
-[EngineBundleLayoutTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
-[Core 布局测试](../../tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
-[GUI 布局测试](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
+布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs)、
+[EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs)、
+[EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
+[Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
+[GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。
 
 G7-1 已将 `ReadOpennessGuidance`、`ReadV21EcosystemCatalog` 和 bin 布局的 `CheckForUpdate` 加入 P0-06。

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <PropertyGroup>
+    <TiaFeatureProfile>Adapter</TiaFeatureProfile>
+    <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">21</TiaReleaseKey>
+  </PropertyGroup>
+  <Import Project="../../../src/Shared/TiaFeatures.props" />
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>FacetTestReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
+    <Compile Include="../../../src/Adapters/Native/Session/OpennessAdapter.cs" Link="OpennessAdapter.cs" />
+    <Compile Include="../../../src/Engine/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../../../src/Shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareRead.cs" Link="PlcSoftwareRead.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcSoftwareReadPolicy.cs" Link="PlcSoftwareReadPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
+  </ItemGroup>
+</Project>

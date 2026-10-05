@@ -7,7 +7,7 @@
 - [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、Studio 操作和首次 SCL 导入编译。
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
 - [CLI 指南](getting-started/cli.md)：V20/V21 的命令行生成、修改、导入导出和编译。
-- [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md)：直接调用 Openness 的桌面工具。
+- [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：直接调用 Openness 的桌面工具。
 
 ## 工具、版本与示例
 

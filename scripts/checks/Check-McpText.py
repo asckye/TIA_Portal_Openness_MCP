@@ -21,7 +21,7 @@ spec.loader.exec_module(hygiene)
 lexer = hygiene.lexer
 BASELINE = Path('scripts/checks/mcp-text-baseline.json')
 KINDS = ('description', 'exception', 'message', 'meta', 'other-literal')
-UI_PROJECTS = {'TiaOpenness.Gui', 'TiaOpenness.Client', 'TiaOpenness.Launcher'}
+UI_PROJECTS = {'Gui', 'Client', 'Launcher'}
 CJK = re.compile('[\u3007\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002ffff\U00030000-\U000323af]')
 ESCAPE = re.compile(r'\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8})|x([0-9a-fA-F]{1,4})|(.))', re.S)
 
@@ -317,7 +317,7 @@ class SelfTests(unittest.TestCase):
                 path = root / lexer.SOURCE_ROOTS[0] / project / 'A.cs'
                 path.parent.mkdir()
                 path.write_text('throw new Exception("中文");', encoding='utf-8')
-            path = root / lexer.SOURCE_ROOTS[2] / 'TiaOpenness.Gui/A.cs'
+            path = root / lexer.SOURCE_ROOTS[2] / 'Gui/A.cs'
             path.parent.mkdir()
             path.write_text('Message = "界面";', encoding='utf-8')
             rows, errors, _ = scan(root)

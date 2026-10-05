@@ -21,8 +21,8 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = Path('scripts/checks/swallowed-exceptions-baseline.json')
-SOURCE_ROOTS = ('tools/tiaportal-mcp/src', 'tools/openness-shared',
-                'tools/tia-openness-studio/src')
+SOURCE_ROOTS = ('src', 'src/Shared',
+                'src/Studio')
 CATEGORIES = ('cleanup', 'teardown', 'logging-failure', 'probe-optional',
               'enumerate-optional', 'native-fallback', 'parse-fallback',
               'env-probe', 'ui', 'fail-open-guard', 'privacy')
@@ -357,6 +357,8 @@ def scan(root):
             continue
         for parent, dirs, names in os.walk(directory, onerror=lambda exc: errors.append(str(exc))):
             dirs[:] = sorted(name for name in dirs if name.lower() not in SKIP_DIRS)
+            if Path(parent) == root / 'src':
+                dirs[:] = [name for name in dirs if name not in ('Shared', 'Studio')]
             for name in sorted(names):
                 if not name.lower().endswith('.cs') or name.lower().endswith(GENERATED_SUFFIXES):
                     continue

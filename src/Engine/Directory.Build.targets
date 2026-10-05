@@ -1,0 +1,30 @@
+<Project>
+  <!-- Resolve the NuGet targets' selected directory before traversing project references.
+       The adapter then checks the exact release identities in this same directory. -->
+  <Target Name="SelectEngineAdapterPublicApi" BeforeTargets="AssignProjectConfiguration">
+    <Error Condition="!$([System.IO.Path]::IsPathRooted('$(SiemensEngineeringDirectory)'))" Text="Engine and adapter require one absolute SiemensEngineeringDirectory." />
+    <ItemGroup>
+      <ProjectReference Update="../Adapters/V$(TiaBuildVersion)/Adapter.$(TiaBuildVersion).csproj">
+        <AdditionalProperties>SiemensEngineeringDirectory=$(SiemensEngineeringDirectory)</AdditionalProperties>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
+  <Target Name="ValidateEngineAdapterPublicApi" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_EngineSiemensReference Include="@(ReferencePath)" Condition="$([System.String]::Copy('%(Filename)').StartsWith('Siemens.Engineering'))">
+        <ExpectedPath>$([System.IO.Path]::GetFullPath('$(SiemensEngineeringDirectory)/%(Filename)%(Extension)'))</ExpectedPath>
+      </_EngineSiemensReference>
+    </ItemGroup>
+    <Error Condition="'@(_EngineSiemensReference)' == ''" Text="No Siemens.Engineering references resolved for the engine." />
+    <Error Condition="'%(_EngineSiemensReference.FullPath)' != '%(_EngineSiemensReference.ExpectedPath)'" Text="Engine Siemens reference %(_EngineSiemensReference.Identity) is outside the adapter PublicAPI root $(SiemensEngineeringDirectory)." />
+  </Target>
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(DesignTimeBuild)' != 'true'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\build-tools\native-call-weaver\NativeCallWeaver.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;TargetFramework;RuntimeIdentifier" />
+    <CustomAdditionalCompileInputs Include="$(MSBuildThisFileDirectory)..\..\build-tools\native-call-weaver\bin\$(Configuration)\net10.0\NativeCallWeaver.dll" />
+  </ItemGroup>
+  <!-- Instrument our own intermediate EXE before any copy/package/test. Never patch PublicAPI.
+       Re-running on an unchanged EXE verifies its inventory instead of double-instrumenting. -->
+  <Target Name="InstrumentNativeCallBoundaries" AfterTargets="CoreCompile" Condition="'$(Configuration)' == 'Release' and '$(DesignTimeBuild)' != 'true'">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="dotnet &quot;$(MSBuildThisFileDirectory)..\..\build-tools\native-call-weaver\bin\$(Configuration)\net10.0\NativeCallWeaver.dll&quot; weave &quot;@(IntermediateAssembly)&quot; &quot;$(IntermediateOutputPath)native-call-coverage.json&quot;" />
+  </Target>
+</Project>

@@ -189,7 +189,7 @@ v3.2.0 已进行八版构建、离线功能及协议测试；新增能力的真�
 - [逐版本工具](../reference/version-tools.md)：所选版本实际提供的工具及差异。
 - [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
 - [命令行指南](cli.md)：V20/V21 的生成、导入导出和编译流程。
-- [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/tia-openness-studio/README.md)：桌面工具的工作流和支持范围。
+- [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
 软件自己的本机连接记录、界面偏好和诊断日志默认保存在交付包的 `data\config`、`data\ui` 和 `data\diagnostics` 中，更新会保留 `data`。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。详见[配置说明](configuration.md)。

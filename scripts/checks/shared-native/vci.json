@@ -32,5 +32,5 @@
     {"name": "SyncVersionControlWorkspace", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "SyncVersionControlWorkspace"}]},
     {"name": "ConnectProjectToWorkspace", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "ConnectProjectToWorkspace"}]}
   ],
-  "evidence": "docs/development/p4-i1-native-evidence.json"
+  "evidence": "docs/development/evidence/p4-i1-native-evidence.json"
 }

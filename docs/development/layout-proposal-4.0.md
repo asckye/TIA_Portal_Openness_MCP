@@ -41,6 +41,18 @@
 ## 执行方式
 
 1. 合并 D333 与全部冻结分支，master 干净。
-2. 单独一个提交：`git mv` 迁移加路径更新，不改任何代码逻辑；用“迁移前后编译产物 IL 一致”的现有比对工具确认无行为变化。
+2. 单独一个提交：用文件系统迁移加路径更新，不改任何代码逻辑；由审查者暂存提交，用现有 IL 读取器比较迁移前后产物。
 3. 完整验证：八版构建、全部测试套件、仓库与包模式校验、发布预演（不发布）。
 4. 之后再进入阶段 6 的代码工作，避免目录移动与逻辑改动混在同一批。
+
+## D334 路径归属
+
+上表保留迁移前路径作为对照；现行入口见[仓库结构](repository-layout.md)。D334 不改程序集、EXE、工具名称或资源布局。
+
+- 测试工程子目录保留原名，`Shared` 随 Engine 测试移动；套件表独立放到 `tests/test-suites.json`。
+- Studio 的 `Directory.Build.props`、README 放到 `src/Studio`；测试层 props 放到 `tests/Studio`，显式导入前者，保持导入链。
+- Studio 的 LICENSE、`upstream.json`、`upstream/` 一起放到 `third_party/tia-openness-studio`。归档及来源哈希原样保留，记录内的上游导入路径仍按原归档解释。
+- 原 `tools/README.md` 导航并入 `repository-layout.md`。没有其他未归属的源码目录，`tools/` 整体移除。
+- `vci-watch` 移到 operations 后仍不进入交付包；交付规则显式排除它，保持迁移前文件集合。更新器保留旧 `tools/` 清理路径，并登记新源码根。
+- 发布构建日志移到 `bin-build/releases/v<Version>/build.log` 和 `build.err.log`；发布暂存白名单收录新源码根。
+- 已发布说明、publication 记录和构建哈希证据不机械改写；构建记录仅由构建脚本重新生成。

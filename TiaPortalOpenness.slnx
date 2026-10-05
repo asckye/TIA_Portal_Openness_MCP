@@ -1,86 +1,86 @@
 <Solution>
   <!-- PlcWorker is built per TiaReleaseKey by Build-PlcAdapterWorkers.ps1; it has no default release. -->
   <Folder Name="/Engine/">
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj" />
+    <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Project Path="src/Logic/TiaMcp.Logic.csproj" />
+    <Project Path="src/FoundationHost/TiaMcpServer.LegacyHost.csproj" />
+    <Project Path="src/Engine/TiaMcpServer.V20.csproj" />
+    <Project Path="src/Engine/TiaMcpServer.V21.csproj" />
   </Folder>
   <Folder Name="/PlcAdapters/">
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V14Sp1/Adapter.14sp1.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V14Sp1/Adapter.14sp1.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V15_1/Adapter.15.1.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V15_1/Adapter.15.1.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V16/Adapter.16.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V16/Adapter.16.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V17/Adapter.17.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V17/Adapter.17.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V18/Adapter.18.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V18/Adapter.18.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V19/Adapter.19.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V19/Adapter.19.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V20/Adapter.20.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V20/Adapter.20.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/V21/Adapter.21.csproj">
-      <BuildDependency Project="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="src/Adapters/V21/Adapter.21.csproj">
+      <BuildDependency Project="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     </Project>
   </Folder>
   <Folder Name="/Studio/">
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Client/TiaOpenness.Client.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Core/TiaOpenness.Core.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj" />
+    <Project Path="src/Studio/Bridge/TiaOpenness.Bridge.csproj" />
+    <Project Path="src/Studio/Client/TiaOpenness.Client.csproj" />
+    <Project Path="src/Studio/Contracts/TiaOpenness.Contracts.csproj" />
+    <Project Path="src/Studio/Core/TiaOpenness.Core.csproj" />
+    <Project Path="src/Studio/Gui/TiaOpenness.Gui.csproj" />
   </Folder>
   <Folder Name="/Studio/Openness/">
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V14Sp1/StudioOpenness.V14Sp1.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V15_1/StudioOpenness.V15_1.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V16/StudioOpenness.V16.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V17/StudioOpenness.V17.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V18/StudioOpenness.V18.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V19/StudioOpenness.V19.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V20/StudioOpenness.V20.csproj" />
-    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Openness/V21/StudioOpenness.V21.csproj" />
+    <Project Path="src/Studio/Openness/V14Sp1/StudioOpenness.V14Sp1.csproj" />
+    <Project Path="src/Studio/Openness/V15_1/StudioOpenness.V15_1.csproj" />
+    <Project Path="src/Studio/Openness/V16/StudioOpenness.V16.csproj" />
+    <Project Path="src/Studio/Openness/V17/StudioOpenness.V17.csproj" />
+    <Project Path="src/Studio/Openness/V18/StudioOpenness.V18.csproj" />
+    <Project Path="src/Studio/Openness/V19/StudioOpenness.V19.csproj" />
+    <Project Path="src/Studio/Openness/V20/StudioOpenness.V20.csproj" />
+    <Project Path="src/Studio/Openness/V21/StudioOpenness.V21.csproj" />
   </Folder>
   <Folder Name="/Tests/Engine/">
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/FakeApi/FakeApi.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/Fixture/Fixture.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/OptionalDependency/OptionalDependency.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.DiagnosticsTests/FakeApi/FakeApi.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/Fixture/Fixture.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/OptionalDependency/OptionalDependency.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">
-    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj" />
-    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" />
-    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
+    <Project Path="tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj" />
+    <Project Path="tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" />
+    <Project Path="tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
-    <Project Path="tools/native-call-weaver/NativeCallWeaver.csproj" />
-    <Project Path="tools/third-party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
+    <Project Path="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
   </Folder>
 </Solution>

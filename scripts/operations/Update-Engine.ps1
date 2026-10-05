@@ -155,7 +155,7 @@ if ($SelfTest) {
     try {
         $rules = ReadDeliveryRules (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
         $inventory = @{}
-        foreach ($relative in @('tools/old/source.cs', 'tools/old/user.txt', 'tools/old/modified.cs', 'tools/tiaportal-mcp/skill/SKILL.md', 'scripts/checks/old.py', 'AGENTS.md', 'user.txt', 'data/config/user.json', '.previous/keep', '.update/keep', 'TiaMcp_Output/keep')) {
+        foreach ($relative in @('tools/old/source.cs', 'tools/old/user.txt', 'tools/old/modified.cs', 'plugin/skill/SKILL.md', 'scripts/checks/old.py', 'AGENTS.md', 'user.txt', 'data/config/user.json', '.previous/keep', '.update/keep', 'TiaMcp_Output/keep')) {
             $path = Join-Path $fixture $relative
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $path) | Out-Null
             Set-Content -LiteralPath $path -Value 'original'
@@ -164,7 +164,7 @@ if ($SelfTest) {
         Set-Content -LiteralPath (Join-Path $fixture 'tools/old/modified.cs') -Value 'user edit'
         RemoveLegacyFiles $fixture $rules $inventory
         foreach ($relative in @('tools/old/source.cs', 'scripts/checks/old.py', 'AGENTS.md')) { AssertTest (-not (Test-Path -LiteralPath (Join-Path $fixture $relative))) ('removed ' + $relative) }
-        foreach ($relative in @('tools/old/user.txt', 'tools/old/modified.cs', 'tools/tiaportal-mcp/skill/SKILL.md', 'user.txt', 'data/config/user.json', '.previous/keep', '.update/keep', 'TiaMcp_Output/keep')) { AssertTest (Test-Path -LiteralPath (Join-Path $fixture $relative)) ('preserved ' + $relative) }
+        foreach ($relative in @('tools/old/user.txt', 'tools/old/modified.cs', 'plugin/skill/SKILL.md', 'user.txt', 'data/config/user.json', '.previous/keep', '.update/keep', 'TiaMcp_Output/keep')) { AssertTest (Test-Path -LiteralPath (Join-Path $fixture $relative)) ('preserved ' + $relative) }
         foreach ($relative in @('../outside', '/absolute', 'C:/outside', 'data/config/user.json', '.previous/keep', '.update/keep', 'TiaMcp_Output/keep')) {
             $rejected = $false
             try { $null = OwnedPath $fixture $relative } catch { $rejected = $true }

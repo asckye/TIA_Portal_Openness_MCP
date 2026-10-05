@@ -16,11 +16,11 @@ $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1'
 $env:DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$project=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj'
-if(!$NativeCallWeaverPath){$NativeCallWeaverPath=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'}
+$project=Join-Path $repo 'src/Worker/TiaMcpServer.PlcWorker.csproj'
+if(!$NativeCallWeaverPath){$NativeCallWeaverPath=Join-Path $repo 'build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'}
 $weaver=(Resolve-Path -LiteralPath $NativeCallWeaverPath).Path
 $apiRoot=(Resolve-Path -LiteralPath $PublicApiRoot).Path
-if(!$SourceRoot){$SourceRoot=Join-Path $repo 'tools/tiaportal-mcp/src'}
+if(!$SourceRoot){$SourceRoot=Join-Path $repo 'src'}
 $source=(Resolve-Path -LiteralPath $SourceRoot).Path
 if(!$EvidenceDirectory){$EvidenceDirectory=Join-Path $repo 'bin-build/plc-adapter-workers'}
 $null=New-Item -ItemType Directory -Force -Path $EvidenceDirectory
@@ -41,7 +41,7 @@ $results=@()
 foreach($key in $ReleaseKeys){
     $release=$releases[$key]
     $api=(Resolve-Path -LiteralPath (Join-Path $apiRoot $release[0])).Path
-    $props=@("-p:TiaReleaseKey=$key","-p:SiemensEngineeringDirectory=$api","-p:AdapterSourceRoot=$source","-p:WorkerSourceRoot=$(Join-Path $source 'TiaMcpServer.PlcWorker')",'-p:NuGetAudit=false','-p:UseSharedCompilation=false')
+    $props=@("-p:TiaReleaseKey=$key","-p:SiemensEngineeringDirectory=$api","-p:AdapterSourceRoot=$source","-p:WorkerSourceRoot=$(Join-Path $source 'Worker')",'-p:NuGetAudit=false','-p:UseSharedCompilation=false')
     if($UseReferenceAssemblyPackage){$props+='-p:UseReferenceAssemblyPackage=true'}
     if($NativeCallWeaverPath){$props+="-p:NativeCallWeaverPath=$((Resolve-Path -LiteralPath $NativeCallWeaverPath).Path)"}
     if(!$NoRestore){

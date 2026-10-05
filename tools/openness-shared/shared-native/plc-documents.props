@@ -1,8 +1,0 @@
-<Project>
-  <PropertyGroup Condition="'$(TiaReleaseKey)' == '21'">
-    <DefineConstants>$(DefineConstants);PLC_EXTERNAL_SOURCE_GROUP_RENAME</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <TiaSharedNativePrimitive Include="$(MSBuildThisFileDirectory)../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcDocumentPrimitives.cs" Link="Native/Plc/PlcDocumentPrimitives.cs" />
-  </ItemGroup>
-</Project>

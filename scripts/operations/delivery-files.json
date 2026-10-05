@@ -27,8 +27,8 @@
       "docs/reference/version-branches.md",
       "docs/reference/version-tool-catalog.md",
       "docs/reference/version-tools.md",
-      "tools/third-party/siemens-plc-tools/LICENSE",
-      "tools/third-party/simaticml-decoder/LICENSE",
+      "third_party/siemens-plc-tools/LICENSE",
+      "third_party/simaticml-decoder/LICENSE",
       "reference/v21-ecosystem.json",
       "docs/licenses/TiaGitAddIn.Core-LICENSE.txt",
       "docs/licenses/SiemensOpcUaModelled-LICENSE.md",
@@ -52,23 +52,24 @@
       "docs/assets/",
       ".claude-plugin/",
       "hooks/",
-      "tools/tiaportal-mcp/skill/",
-      "tools/third-party/siemens-plc-tools/src/",
-      "tools/third-party/simaticml-decoder/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-code/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-core/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-iol/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-modbus/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-net/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-sim/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-sup/src/",
-      "tools/third-party/siemens-plc-tools/packages/plc-trace/src/"
+      "plugin/skill/",
+      "third_party/siemens-plc-tools/src/",
+      "third_party/simaticml-decoder/src/",
+      "third_party/siemens-plc-tools/packages/plc-code/src/",
+      "third_party/siemens-plc-tools/packages/plc-core/src/",
+      "third_party/siemens-plc-tools/packages/plc-iol/src/",
+      "third_party/siemens-plc-tools/packages/plc-modbus/src/",
+      "third_party/siemens-plc-tools/packages/plc-net/src/",
+      "third_party/siemens-plc-tools/packages/plc-sim/src/",
+      "third_party/siemens-plc-tools/packages/plc-sup/src/",
+      "third_party/siemens-plc-tools/packages/plc-trace/src/"
     ]
   },
   "exclude": {
     "files": [],
     "prefixes": [
-      "runtime/verification/"
+      "runtime/verification/",
+      "scripts/operations/vci-watch/"
     ]
   },
   "legacyCleanup": {
@@ -86,6 +87,11 @@
     ],
     "prefixes": [
       "tools/",
+      "src/",
+      "tests/",
+      "third_party/",
+      "build-tools/",
+      "scripts/operations/vci-watch/",
       "scripts/checks/",
       "scripts/build/",
       "scripts/generate/",

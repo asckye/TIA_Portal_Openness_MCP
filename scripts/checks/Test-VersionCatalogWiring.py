@@ -6,8 +6,8 @@ import xml.etree.ElementTree as ET
 from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
-SERVER = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
-LOGIC = ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Logic'
+SERVER = ROOT / 'src/Engine'
+LOGIC = ROOT / 'src/Logic'
 sources = EngineSources()
 
 
@@ -87,12 +87,12 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('Opt(args', source)
 
     def test_configurator_uses_keys_not_indices(self):
-        source = read(ROOT / 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs')
+        source = read(ROOT / 'src/Studio/Gui/Configuration/ConfigurationView.xaml.cs')
         selected = source.split('private string SelectedVersion', 1)[1].split('private string StatePath', 1)[0]
         self.assertIn('selected.Key', selected)
         self.assertNotIn('SelectedIndex', selected)
         self.assertIn('versions.ItemsSource = TiaVersionCatalog.Runnable', source)
-        tree = ET.parse(ROOT / 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml')
+        tree = ET.parse(ROOT / 'src/Studio/Gui/Configuration/ConfigurationView.xaml')
         version = next(e for e in tree.iter() if e.get('{http://schemas.microsoft.com/winfx/2006/xaml}Name') == 'Version')
         self.assertEqual(version.get('SelectedValuePath'), 'Key')
         self.assertFalse(list(version))
@@ -104,16 +104,16 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertIn('TiaOpenness.Configuration.Tests.csproj', build)
         self.assertIn('@(Get-Item $versionCatalog)', build)
         package = read(ROOT / 'scripts/build/Package-Release.py')
-        self.assertIn('TiaMcp.Logic/Siemens/TiaVersionCatalog.cs', package)
-        project = ET.parse(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj')
+        self.assertIn('Logic/Siemens/TiaVersionCatalog.cs', package)
+        project = ET.parse(ROOT / 'tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj')
         linked = [e.get('Include', '').replace('\\', '/') for e in project.iter('Compile')]
         references = [e.get('Include', '').replace('\\', '/') for e in project.iter('ProjectReference')]
-        self.assertTrue(any(p.endswith('/TiaMcp.Logic/TiaMcp.Logic.csproj') for p in references))
+        self.assertTrue(any(p.endswith('/Logic/TiaMcp.Logic.csproj') for p in references))
         for suffix in ['Siemens/TiaVersionCatalog.cs', 'Siemens/Capability.cs', 'CliOptions.cs']:
             self.assertFalse(any(p.endswith(suffix) for p in linked), suffix)
             self.assertTrue((LOGIC / suffix).is_file(), suffix)
         self.assertIn('CheckSuite.Run(nameof(TiaVersionCatalogTests), TiaVersionCatalogTests.Run)',
-                      read(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/OfflineChecks.cs'))
+                      read(ROOT / 'tests/Engine/TiaMcpServer.Tests/OfflineChecks.cs'))
 
 
 if __name__ == '__main__':

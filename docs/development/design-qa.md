@@ -84,8 +84,8 @@ is recorded in the release notes, not inferred from this visual review.
 Reproduce the captures by setting `TIA_GLASS_SCREENSHOTS` to an output directory and running
 `scripts/build/Build-Configurator.ps1 -Test` (requires the .NET 10 SDK) plus the Studio WPF test
 project in Release mode. Configuration is rendered from the compiled
-`tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml` control.
+`src/Studio/Gui/Configuration/ConfigurationView.xaml` control.
 The workbench styles, log presentation and embedded font files live in
-[`Themes/Glass.xaml`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml),
-[`Controls/GlassLogView.cs`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs) and
-[`Fonts`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts).
+[`Themes/Glass.xaml`](../../src/Studio/Gui/Themes/Glass.xaml),
+[`Controls/GlassLogView.cs`](../../src/Studio/Gui/Controls/GlassLogView.cs) and
+[`Fonts`](../../src/Studio/Gui/Fonts).

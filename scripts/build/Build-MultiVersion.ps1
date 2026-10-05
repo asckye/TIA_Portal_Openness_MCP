@@ -29,14 +29,14 @@ foreach ($major in @(20,21)) {
         throw "V$major runtime channel assembly missing; rebuild the full engines"
     }
 }
-$weaver=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
+$weaver=Join-Path $repo 'build-tools/native-call-weaver/NativeCallWeaver.csproj'
 & $Dotnet build $weaver -c Release -v:q *> (Join-Path $logs 'weaver.log')
 if($LASTEXITCODE){throw 'Native weaver build failed'}
 & (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') *> (Join-Path $logs 'bundled-dotnet.log')
 if(!$?){throw 'Bundled .NET runtime layout failed'}
 & (Join-Path $PSScriptRoot 'Build-PlcAdapterWorkers.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -UseReferenceAssemblyPackage -EvidenceDirectory (Join-Path $logs 'adapters')
 & (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
-$hostProject=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj'
+$hostProject=Join-Path $repo 'src/FoundationHost/TiaMcpServer.LegacyHost.csproj'
 $publish=Join-Path $logs 'foundation-host'
 $engineRecord=Get-Content -LiteralPath (Join-Path $repo 'manifest/release-build.json') -Raw | ConvertFrom-Json
 $publishArgs=@('publish',$hostProject,'-c','Release','-o',$publish,'-v:q',"-p:Version=$($engineRecord.release)","-p:FileVersion=$($engineRecord.fileVersion)")
@@ -51,7 +51,7 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     Get-ChildItem -LiteralPath $publish -File | Where-Object {$_.Extension -in '.exe','.dll','.config','.json'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $runtime -Force}
     [IO.File]::WriteAllText((Join-Path $runtime 'release-key.txt'),$key,[Text.UTF8Encoding]::new($false))
     $framework='net48'
-    $workerBuild=Join-Path $repo "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/bin/$key/Release/$framework"
+    $workerBuild=Join-Path $repo "src/Worker/bin/$key/Release/$framework"
     Get-ChildItem -LiteralPath $workerBuild -File | Where-Object {$_.Extension -in '.exe','.dll','.config'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $worker -Force}
     if(@(Get-ChildItem -LiteralPath $worker -Filter 'TiaMcp.Adapter.*.dll').Count -ne 1){throw "Exactly one matching adapter is required: $key"}
     & (Join-Path $runtime 'TiaMcpServer.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
@@ -59,13 +59,13 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     $catalog=Get-Content -LiteralPath (Join-Path $logs "tools-$key.json") -Raw | ConvertFrom-Json
     $records+=@{releaseKey=$key;profile='plc-foundation';toolCount=$catalog.tools.Count;nativeAcceptance='NOT RUN'}
 }
-$studioBuild=Join-Path $repo 'tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows'
+$studioBuild=Join-Path $repo 'src/Studio/Gui/bin/Release/net10.0-windows'
 $studioOutput=Join-Path $repo 'runtime/studio'
 New-Item -ItemType Directory -Force $studioOutput | Out-Null
 Get-ChildItem -LiteralPath $studioBuild | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $studioOutput -Recurse -Force}
 # The build apphost only knows installed .NET; the published one also searches the bundled ../dotnet.
 $studioApphost=Join-Path $logs 'studio-apphost'
-& $Dotnet publish (Join-Path $repo 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj') -c Release --no-build -o $studioApphost -v:q -p:TiaSharedAdapterPaths=false *> (Join-Path $logs 'studio-apphost.log')
+& $Dotnet publish (Join-Path $repo 'src/Studio/Gui/TiaOpenness.Gui.csproj') -c Release --no-build -o $studioApphost -v:q -p:TiaSharedAdapterPaths=false *> (Join-Path $logs 'studio-apphost.log')
 if($LASTEXITCODE){throw 'Studio apphost publication failed'}
 Copy-Item -LiteralPath (Join-Path $studioApphost 'TiaOpenness.exe') -Destination $studioOutput -Force
 function Assert-BundledRuntime([string]$Exe,[string[]]$Arguments,[string]$Name) {
@@ -93,7 +93,7 @@ if($Test) {
         $summary=Get-Content -LiteralPath (Join-Path $suiteResults "$suite.json") -Raw -Encoding UTF8 | ConvertFrom-Json
         $validation.dotnetSuites[$suite]=@{passed=[int]$summary.passed;failed=[int]$summary.failed;skipped=[int]$summary.skipped;total=[int]$summary.total;minimumPassed=[int]$summary.minimumPassed;maximumSkipped=[int]$summary.maximumSkipped}
     }
-    $fixture=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj'
+    $fixture=Join-Path $repo 'tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj'
     & $Dotnet build $fixture -c Release -v:q *> (Join-Path $logs 'fixture-build.log')
     if($LASTEXITCODE){throw 'Transport fixture build failed'}
     $fixtureExe=Join-Path (Split-Path $fixture -Parent) 'bin/Release/net10.0/TransportFixture.exe'

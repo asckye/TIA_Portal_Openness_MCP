@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><LangVersion>latest</LangVersion><Nullable>enable</Nullable>
+    <AssemblyName>DiagnosticsTests</AssemblyName><DebugType>none</DebugType><DebugSymbols>false</DebugSymbols>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="FakeApi/**/*.cs" />
+    <ProjectReference Include="FakeApi/FakeApi.csproj" />
+    <!-- Build order only: the fixture is woven with the Release weaver below in every configuration. -->
+    <ProjectReference Include="../../../build-tools/native-call-weaver/NativeCallWeaver.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" SetConfiguration="Configuration=Release" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;TargetFramework;RuntimeIdentifier" />
+    <CustomAdditionalCompileInputs Include="../../../build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="../../../src/Shared/NativeCallDiagnostics.Journal.cs" Link="NativeCallDiagnostics.cs" />
+  </ItemGroup>
+  <Target Name="InstrumentFixture" AfterTargets="CoreCompile">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="dotnet &quot;../../../build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll&quot; weave &quot;@(IntermediateAssembly)&quot;" />
+  </Target>
+  <ItemGroup><Compile Include="../../../src/Shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
+</Project>

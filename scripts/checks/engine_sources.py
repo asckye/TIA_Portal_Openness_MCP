@@ -10,7 +10,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-ENGINE = Path('tools/tiaportal-mcp/src/TiaMcpServer')
+ENGINE = Path('src/Engine')
 spec = importlib.util.spec_from_file_location('source_contract_lexer',
                                             Path(__file__).with_name('Check-SwallowedExceptions.py'))
 lexer = importlib.util.module_from_spec(spec)

@@ -3,8 +3,8 @@
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [验证分层](validation.md)
 
 本页是 P2-01（统一响应信封构造器）和 P2-03（审计空 `catch`）的设计结论。路径缩写：`T.` =
-`tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.`，`P.` =
-`tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.`，`L/` = `tools/tiaportal-mcp/src/TiaMcp.Logic/`。
+`src/Engine/ModelContextProtocol/Tools/McpServer.`，`P.` =
+`src/Engine/Siemens/Portal/Portal.`，`L/` = `src/Logic/`。
 数字为 2026-10-03 的源码统计，带“约”的为启发式估算。
 
 ## 前置事实
@@ -146,7 +146,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 
 ### 日志与检查
 
-- 辅助方法 `openness-shared/SwallowedExceptions.cs`：`Note(string site, Exception ex)` 只记录位置、异常类型全名和 `HResult`，
+- 辅助方法 `src/Shared/SwallowedExceptions.cs`：`Note(string site, Exception ex)` 只记录位置、异常类型全名和 `HResult`，
   不读取 `ex.Message`（可能是原生 getter 或含工程数据），不调用 `ex.ToString()`；每个位置每进程首次记录、之后只计数；自身绝不抛出。
 - 输出默认关闭；引擎、Studio 桥接进程和 Foundation worker 统一用 `TIA_MCP_LOG_SWALLOWED=1` 开启，每个位置写一行 stderr；
   未开启时引擎只在 `ILogger` Debug 级别（类别 `TiaMcpServer.Swallowed`）记录，已开启调试日志时可见。永远不写入 `calls-*.jsonl`、`InvocationJournal` 计数器或任何 meta 字段。

@@ -5,7 +5,7 @@
   "description": "Siemens TIA Portal (博途) Openness automation via the TiaMcpServer MCP — project/PLC/HMI scaffolding, SCL/LAD authoring, compile, download, online read. Includes V20/V21 runtimes; the plugin defaults to local V21.",
   "author": { "name": "asckye" },
   "keywords": ["siemens", "tia-portal", "tia-openness", "plc", "hmi", "scl", "s7", "automation", "mcp"],
-  "skills": "./tools/tiaportal-mcp",
+  "skills": "./plugin",
   "hooks": "./hooks/hooks.json",
   "mcpServers": {
     "tia-portal": {

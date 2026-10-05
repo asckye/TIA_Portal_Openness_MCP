@@ -46,7 +46,7 @@ owns current counts and per-version exclusions; the
 
 ## Compiler feature table
 
-[TiaFeatures.props](../../tools/openness-shared/TiaFeatures.props) is the single table
+[TiaFeatures.props](../../src/Shared/TiaFeatures.props) is the single table
 of compiler features and their exact release ranges. It lives beside `TiaPublicApi.props`
 in the existing shared build-input directory, which the release source inventories already
 include. No implicit repository-wide import is used.
@@ -174,8 +174,8 @@ worker and must use observed state, never request-supplied identity.
 
 ## Evidence and maintenance
 
-The retained [historical migration ledger](legacy-plc-migration-status.json),
-[manual-read evidence](legacy-plc-manual-checklist.json) and `*-api-evidence.json`
+The retained [historical migration ledger](evidence/legacy-plc-migration-status.json),
+[manual-read evidence](evidence/legacy-plc-manual-checklist.json) and `*-api-evidence.json`
 preserve exact source/API observations. Historical status strings apply to their
 recorded revision; current build and advertised scope come from the generated
 manifests and version matrix. The 62-name ledger is not an exhaustive API inventory.

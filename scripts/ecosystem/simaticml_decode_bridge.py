@@ -5,7 +5,7 @@ import sys
 from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'tools/third-party/simaticml-decoder/src'))
+sys.path.insert(0, str(ROOT / 'third_party/simaticml-decoder/src'))
 from simaticml_decoder import emit, fold, parse  # noqa: E402
 from simaticml_decoder.input_policy import read_xml  # noqa: E402
 

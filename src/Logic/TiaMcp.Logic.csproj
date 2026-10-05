@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
+  <PropertyGroup>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Esprima" Version="3.0.5" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
+    <ProjectReference Include="../../third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+    <Compile Include="../Shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" />
+    <Compile Include="../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
+    <Compile Include="../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" />
+    <Compile Include="../Shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" />
+    <Compile Include="../Shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />
+    <EmbeddedResource Include="../Shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <!-- Check resolved references as well as declarations, including transitive dependencies. -->
+  <Target Name="RejectEngineDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <ForbiddenLogicReference Include="@(Reference)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '^(?i:Siemens|ModelContextProtocol)'))" />
+      <ForbiddenLogicReference Include="@(ReferencePath)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(?i:Siemens|ModelContextProtocol)'))" />
+      <ForbiddenLogicPackage Include="@(PackageReference)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '^(?i:Siemens|ModelContextProtocol)'))" />
+    </ItemGroup>
+    <Error Condition="'@(ForbiddenLogicReference)' != '' Or '@(ForbiddenLogicPackage)' != ''" Text="TiaMcp.Logic must not reference Siemens or ModelContextProtocol: @(ForbiddenLogicReference); @(ForbiddenLogicPackage)" />
+  </Target>
+</Project>

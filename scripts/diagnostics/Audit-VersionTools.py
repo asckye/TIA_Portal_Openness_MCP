@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--output', type=Path, default=ROOT / 'bin-build/multi-version/api-audit')
     args = parser.parse_args()
     full = read(ROOT / 'manifest/tools-list.json')
-    policy = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolVersionPolicy.cs').read_text('utf-8-sig').split('internal static string ToolProblem', 1)[0]
+    policy = (ROOT / 'src/Engine/Siemens/ToolVersionPolicy.cs').read_text('utf-8-sig').split('internal static string ToolProblem', 1)[0]
     v21only = set(re.findall(r'\["([^"]+)"\]\s*=', policy))
     names = {t['name'] for t in full['tools']}
     assert v21only <= names

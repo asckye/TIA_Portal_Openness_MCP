@@ -9,7 +9,7 @@ sources = EngineSources()
 SINGLE = sources.member('ImportFromDocuments', signature='bool ImportFromDocuments')
 BATCH = sources.member('ImportBlocksFromDocuments', signature='IEnumerable<PlcBlock>')
 MCP = sources.member('ImportBlocksFromDocuments', tool=True)
-PRIMITIVES = (ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
+PRIMITIVES = (ROOT / 'src/Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
 
 class DocumentImportSafetySources(unittest.TestCase):
     def test_shared_primitives_keep_each_native_operation_and_argument(self):
@@ -29,7 +29,7 @@ class DocumentImportSafetySources(unittest.TestCase):
         self.assertLess(SINGLE.index('Documents.SetAutoNumber(imported, false);'), SINGLE.index('Documents.SetNumber(imported, prevNumber.Value);'))
 
     def test_worker_blocks_reads_and_previews_after_uncertain_document_batch(self):
-        worker = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker'
+        worker = ROOT / 'src/Worker'
         program = (worker / 'Program.cs').read_text(encoding='utf-8')
         guard = program.index('sessionOutcome.RequireUsable(readOnly);')
         self.assertLess(guard, program.index('MutationIdentityPolicy.ValidateTarget'))

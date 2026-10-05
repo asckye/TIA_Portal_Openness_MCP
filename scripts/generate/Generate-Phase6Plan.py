@@ -17,10 +17,10 @@ catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96
 assert set(catalog) == set(names)
 for n in names:
     assert catalog[n].strip().split(", ") == [k for k in keys if n in tools[k]], n
-E = "tools/tiaportal-mcp/src/TiaMcpServer/"
-L = "tools/tiaportal-mcp/src/TiaMcp.Logic/"
-F = "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/"
-S = "tools/tia-openness-studio/src/"
+E = "src/Engine/"
+L = "src/Logic/"
+F = "src/FoundationHost/"
+S = "src/Studio/"
 sys.path.insert(0, str(root / "scripts/checks"))
 import engine_sources
 engine = engine_sources.EngineSources(root)
@@ -424,7 +424,7 @@ table(["项目", "发布键", "AssemblyName", "4.0 安装 EXE", "框架不变"],
 config_specs = [
     (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", r'"(TIA_MCP_REPOSITORY_ROOT)"', "替换为 --bundle-root / TIA_MCP_BUNDLE_ROOT"),
     (E+"ModelContextProtocol/Tools/McpServer.Profile.cs", r"(TIA_MCP_PROFILE)", "lite/full 名称保留，名单改为 V4 数据"),
-    (S+"TiaOpenness.Gui/Configuration/ClientProfiles.cs", r'"(tia-portal(?:-vm)?)"', "server key 保留，command/args 改用新产品表"),
+    (S+"Gui/Configuration/ClientProfiles.cs", r'"(tia-portal(?:-vm)?)"', "server key 保留，command/args 改用新产品表"),
     (E+"Cli/McpConfigInstaller.cs", r'"(mcpServers|servers|tia-portal)"', "JSON/TOML 根及 server key 保留，command/args 更新"),
     (F+"HostOptions.cs", r'"(--worker-exe|--tia-release|--tia-version|--tia-portal-location)"', "精确版本与显式 worker 输入继续支持"),
     (E+"ModelContextProtocol/Tools/EcosystemTools.cs", r'"(TIA_MCP_PLC_TOOLS_PYTHON)"', "显式 Python 优先；缺省环境改到 LocalAppData"),
@@ -444,16 +444,16 @@ layout_policies = [
     (E+"Cli/SpecLoader.cs", "FindBundleRoot", "R3 十二层 templates/tools 探测", "显式根/已知锚点；未解析 __BUNDLE__ 报错"),
     (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "R7 bin/bin-v20/v数字候选", "版本目录表 + 精确新产品名"),
     (E+"Cli/McpConfigInstaller.cs", "FindSiblingExe", "目标引擎缺失时使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
-    (S+"TiaOpenness.Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
-    (S+"TiaOpenness.Gui/Configuration/ConfigCore.cs", "TiaMcpServer.exe", "根无标记仍保留候选", "严格根校验、新产品目录"),
-    (S+"TiaOpenness.Gui/Configuration/UpdateCheck.cs", "FindResource", "解析失败仍拼传入根", "严格资源解析，worktree 更新保护保留"),
-    (S+"TiaOpenness.Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
-    (S+"TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
-    (S+"TiaOpenness.Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
+    (S+"Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
+    (S+"Gui/Configuration/ConfigCore.cs", "TiaMcpServer.exe", "根无标记仍保留候选", "严格根校验、新产品目录"),
+    (S+"Gui/Configuration/UpdateCheck.cs", "FindResource", "解析失败仍拼传入根", "严格资源解析，worktree 更新保护保留"),
+    (S+"Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
+    (S+"Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
+    (S+"Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
     (E+"Program.cs", "DiagLogPathLocal", "安装目录启动日志/TEMP 共用日志", "LocalAppData/TiaMcp/logs/<releaseKey>"),
-    (S+"TiaOpenness.Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "LocalAppData/TiaMcp/logs/studio"),
+    (S+"Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "LocalAppData/TiaMcp/logs/studio"),
     (E+"ModelContextProtocol/Tools/EcosystemTools.cs", "ecosystem-python", "包根下私有 Python 缺省", "显式解释器或 LocalAppData 环境"),
-    (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "TMP_EXPORT/tools/cwd 探测", "显式 workspace/fixture 根"),
+    (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "TMP_EXPORT/src/cwd 探测", "显式 workspace/fixture 根"),
     (E+"Cli/HmiTemplateBuilder.cs", "TIA_MCP_AI_PACK", "私有 HMI 模板默认输入", "显式模板路径"),
     (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", "TMP_EXPORT", "私有套件夹具探测", "显式 fixture 根，workspaceRoot 不猜测"),
     (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", "WithAutoOffline", "错误文本触发下线再执行", "D1/L5 后 OFFLINE_REQUIRED，不重试"),
@@ -478,7 +478,7 @@ SCAN_TERMS = {
 scan = []
 excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")
 for f in sorted(files):
-    if f.startswith(excluded) or f == "CHANGELOG.md" or "/third-party/" in f: continue
+    if f.startswith(excluded) or f == "CHANGELOG.md" or (f.startswith("third_party/") and not f.startswith("third_party/tia-openness-studio/")): continue
     if pathlib.PurePosixPath(f).suffix.lower() not in {".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".slnx", ".config", ".gitignore", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml"}: continue
     content = read(f)
     hits = {kind: [str(i) for i,l in enumerate(content.splitlines(), 1) if re.search(pattern, l)] for kind,pattern in SCAN_TERMS.items()}

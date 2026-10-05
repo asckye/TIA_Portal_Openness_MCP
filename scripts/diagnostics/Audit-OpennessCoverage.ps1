@@ -42,7 +42,7 @@ if (-not $PSBoundParameters.ContainsKey('DynamicCoverage')) {
     $DynamicCoverage = Join-Path $PSScriptRoot 'openness-dynamic-coverage.json'
 }
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$src  = Join-Path $repo 'tools\tiaportal-mcp\src\TiaMcpServer'
+$src  = Join-Path $repo 'src\Engine'
 if (-not (Test-Path $PublicApiDirectory)) { throw "PublicAPI directory not found: $PublicApiDirectory" }
 if ($OutputDirectory -eq '') { $OutputDirectory = Join-Path $repo ("bin-build\audits\openness-coverage-" + (Get-Date -Format 'yyyyMMdd')) }
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null

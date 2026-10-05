@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFrameworks>net48;net10.0-windows</TargetFrameworks></PropertyGroup>
+  <ItemGroup Condition="'$(TiaSharedAdapterPaths)' == 'true'">
+    <ProjectReference Include="../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <!-- Keep the original compilation units byte-identical in the default build.
+         The switched loader/channel copies are checked against those originals. -->
+    <Compile Remove="Abstractions/SessionFactoryLoader.cs;Rpc/BridgeChannel.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'">
+    <Compile Remove="Adapters/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Contracts/TiaOpenness.Contracts.csproj" />
+    <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../Shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../Shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
+    <InternalsVisibleTo Include="TiaOpenness.Core.Tests" />
+  </ItemGroup>
+</Project>

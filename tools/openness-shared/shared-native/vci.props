@@ -1,5 +1,0 @@
-<Project>
-  <ItemGroup>
-    <TiaSharedNativePrimitive Include="$(MSBuildThisFileDirectory)../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" Link="Native/Vci/VersionControlPrimitives.cs" />
-  </ItemGroup>
-</Project>

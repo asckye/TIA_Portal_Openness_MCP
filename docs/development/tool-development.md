@@ -2,13 +2,13 @@
 
 [重构计划](refactor-plan.md) · [仓库结构](repository-layout.md) · [验证分层](validation.md) · [响应与异常设计](response-and-errors.md)
 
-完整引擎的工具声明位于 `tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools`。
+完整引擎的工具声明位于 `src/Engine/ModelContextProtocol/Tools`。
 新增工具时同时检查所属文件、类型化调用、版本策略和注册目录；示例、参数来源及结果解释统一维护在
 `reference/tool-examples`，按验证分层执行受影响版本的构建、离线测试和契约快照。
 
 ## 运行时资源
 
-工具使用随包指南、模板或伴随脚本时，复用 `tools/openness-shared/BundleLayout.cs` 的资源表与安装/开发锚点。
+工具使用随包指南、模板或伴随脚本时，复用 `src/Shared/BundleLayout.cs` 的资源表与安装/开发锚点。
 各调用方的显式覆盖和兼容回退并不相同；不要复制向上探测仓库的旧逻辑。
 新增资源的清单、布局测试和仓库外验证步骤见[运行时布局](runtime-layout.md#新增运行时资源)。
 `reference/v21-ecosystem.json` 由 V20/V21 引擎直接嵌入；修改该源文件后须重建，运行时不会从磁盘覆盖嵌入数据。
@@ -59,6 +59,6 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 响应兼容性包含属性顺序、null、转义、数值类型和时间戳的编码。SDK 默认选项、`BridgeJson`、
 `DisciplineJson` 与无参数 `ToJsonString()` 的事实由
-[HttpTests 黄金数据](../../tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/README.md)记录；
+[HttpTests 黄金数据](../../tests/Engine/TiaMcpServer.HttpTests/README.md)记录；
 修改响应代码须比较规范化快照和格式 3 原始文本哈希。`meta.error` 按维护者决策 D1 只将首行
 “类型: 消息”作为执行器黄金比较的契约，堆栈帧允许随迁移变化；这不授权改写实际返回内容。

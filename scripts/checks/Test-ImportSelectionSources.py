@@ -5,8 +5,8 @@ import unittest
 from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
-LOGIC = SRC.parent / "TiaMcp.Logic"
+SRC = ROOT / "src/Engine"
+LOGIC = SRC.parent / "Logic"
 sources = EngineSources()
 MCP = sources.type_text('PlcBlocksTools')
 SHARED = sources.member('BuildPlcProgramImportResponse', owner='PlcProgramImport')
@@ -52,7 +52,7 @@ class ImportSelectionWiring(unittest.TestCase):
         self.assertFalse((SRC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
         for version in (20, 21):
             project = (SRC / f'TiaMcpServer.V{version}.csproj').read_text(encoding='utf-8')
-            self.assertIn('<ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj"', project)
+            self.assertIn('<ProjectReference Include="../Logic/TiaMcp.Logic.csproj"', project)
 
 if __name__ == '__main__':
     unittest.main()

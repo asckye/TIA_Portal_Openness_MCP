@@ -17,7 +17,7 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_ROOT = Path('tools/tiaportal-mcp/src')
+SOURCE_ROOT = Path('src')
 BASELINE = Path('scripts/checks/response-envelope-baseline.json')
 RATCHET = ('timestamp_now_assignments', 'success_assignments')
 METRICS = ('timestamp_indexers', 'success_indexers', 'ok_indexers',

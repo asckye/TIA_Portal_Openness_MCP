@@ -4,7 +4,7 @@ v3.2.0 的 V20/V21 **Release 构建**包含原生调用诊断覆盖。范围是�
 
 ## 覆盖机制
 
-`tools/native-call-weaver` 使用固定版本 Mono.Cecil 0.11.6，在编译完成、复制 EXE 之前给调用点生成包装方法。构建逐项清点，实际二进制内嵌 `TiaMcp.NativeCallCoverage.json`，记录调用者、原始 IL 位置、目标成员及唯一调用点 ID。
+`build-tools/native-call-weaver` 使用固定版本 Mono.Cecil 0.11.6，在编译完成、复制 EXE 之前给调用点生成包装方法。构建逐项清点，实际二进制内嵌 `TiaMcp.NativeCallCoverage.json`，记录调用者、原始 IL 位置、目标成员及唯一调用点 ID。
 
 - 直接调用：`Siemens.Engineering*` 程序集中的方法、构造器、属性 getter/setter、索引器、事件订阅与取消。
 - 反射调用：`MethodInfo/ConstructorInfo.Invoke`、属性/字段读写、`Activator.CreateInstance(Type)` 等；接收者或反射成员属于 Openness 时才记录原生阶段。

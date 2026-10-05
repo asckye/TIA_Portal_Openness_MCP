@@ -21,8 +21,8 @@ import sys
 import collections
 from pathlib import Path
 
-ROOT = str(Path(__file__).resolve().parents[2] / 'tools/tiaportal-mcp/src/TiaMcpServer')
-LOGIC_ROOT = str(Path(ROOT).with_name('TiaMcp.Logic'))
+ROOT = str(Path(__file__).resolve().parents[2] / 'src/Engine')
+LOGIC_ROOT = str(Path(ROOT).with_name('Logic'))
 
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。

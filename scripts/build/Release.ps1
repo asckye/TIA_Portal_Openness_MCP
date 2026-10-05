@@ -129,14 +129,14 @@ function FirstExisting([string[]]$candidates) { foreach ($c in $candidates) { if
 
 function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
     # Preserve the exact engine sourceFiles contract enforced by Package-Release.py.
-    $roots = @('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/native-call-weaver','tools/openness-shared',
-        'tools/third-party/TiaGitAddIn.Core','tools/third-party/SiemensOpcUaModelled')
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+        'third_party/TiaGitAddIn.Core','third_party/SiemensOpcUaModelled')
     $extensions = @('.cs','.csproj','.props','.targets','.xml','.json')
     $files = @()
     if ($Kind -eq 'engine') { $files += Get-Item -LiteralPath (Join-Path $Root 'Version.props') }
     else {
-        $roots = @('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/openness-shared','tools/tia-openness-studio',
-            'tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate')
+        $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','src/Shared','src/Studio','tests/Studio','third_party/tia-openness-studio',
+            'build-tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate')
         $extensions = @('.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json')
     }
     $files += Get-ChildItem ($roots | ForEach-Object { Join-Path $Root $_ }) -Recurse -File | Where-Object {
@@ -147,10 +147,10 @@ function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][strin
     }
 }
 function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
-    $roots = @('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/native-call-weaver','tools/openness-shared',
-        'tools/third-party','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate','scripts/ecosystem',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+        'third_party/eido-import-planner','third_party/siemens-plc-tools','third_party/SiemensOpcUaModelled','third_party/simaticml-decoder','third_party/TiaGitAddIn.Core','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate','scripts/ecosystem',
         'reference','templates')
-    if ($Kind -eq 'multi') { $roots += 'tools/tia-openness-studio' }
+    if ($Kind -eq 'multi') { $roots += @('src/Studio','tests/Studio','third_party/tia-openness-studio') }
     $files = @((Get-Item -LiteralPath (Join-Path $Root 'Version.props')))
     $files += Get-ChildItem ($roots | ForEach-Object { Join-Path $Root $_ }) -Recurse -File | Where-Object {
         $_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json','.xaml','.ps1','.py','.toml','.xsd','.ttf' -and
@@ -414,7 +414,9 @@ foreach ($f in @('docs\reference\capabilities.md', 'docs\development\roadmap.md'
 
 # ---------------------------------------------------------------- 3. cheap gates, then independently reusable builds
 Invoke-ReleaseEarlyGates
-$buildLog = Join-Path $repo 'build.log'
+$buildOutput = Join-Path $repo ('bin-build/releases/v' + $Version)
+New-Item -ItemType Directory -Force $buildOutput | Out-Null
+$buildLog = Join-Path $buildOutput 'build.log'
 $engineReason = Get-ReleaseReuseReason 'engine'
 if (-not $engineReason) {
     Say 'Reused Build-Release: release/fileVersion, complete source inventory and recorded binary hashes match; validation retained unchanged'
@@ -431,14 +433,14 @@ if (-not $engineReason) {
     $savedBuildPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue'
-        & powershell.exe @buildArgs > $buildLog 2> (Join-Path $repo 'build.err.log')
+        & powershell.exe @buildArgs > $buildLog 2> (Join-Path $buildOutput 'build.err.log')
         $buildExitCode = $LASTEXITCODE
     } finally { $ErrorActionPreference = $savedBuildPreference }
     $built = $false
     if (Test-Path -LiteralPath $buildLog) { $built = (Get-Content -LiteralPath $buildLog -Raw) -match 'Built and checked both runtimes' }
     if ($buildExitCode -ne 0 -or -not $built) {
         $err = ''
-        if (Test-Path (Join-Path $repo 'build.err.log')) { $err = (Get-Content (Join-Path $repo 'build.err.log') -Raw) }
+        if (Test-Path (Join-Path $buildOutput 'build.err.log')) { $err = (Get-Content (Join-Path $buildOutput 'build.err.log') -Raw) }
         Fail ('Build-Release did not report "Built and checked both runtimes" (exit ' + $buildExitCode + '). Tail of build.err.log: ' + ($err.Substring([Math]::Max(0, $err.Length - 1500))))
     }
     Say 'Build-Release OK'
@@ -468,7 +470,7 @@ Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Pa
 # ---------------------------------------------------------------- 5. commit + package
 # stage tracked changes plus new files under the known source/doc roots only - never "git add -A" at the repo root;
 # the binaries are ignored by .gitignore since 2.8.1, so they can never end up in the commit
-$changedPaths = @(& $Git diff --name-only) + @(& $Git ls-files --others --exclude-standard -- docs tools scripts templates hooks manifest reference .claude-plugin .github)
+$changedPaths = @(& $Git diff --name-only) + @(& $Git ls-files --others --exclude-standard -- docs src tests third_party build-tools plugin scripts templates hooks manifest reference .claude-plugin .github)
 if ($DryRun) {
     Say ('DryRun passed; would commit ' + $changedPaths.Count + ' file(s); commit/package/push/tag/upload skipped')
     $changedPaths | Sort-Object -Unique | ForEach-Object { Say ('    ' + $_) }

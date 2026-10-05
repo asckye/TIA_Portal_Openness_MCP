@@ -16,21 +16,21 @@ def project_cases(root):
     def add(path, properties=None):
         cases.append((path.relative_to(root).as_posix(), properties or {}))
 
-    for pattern in ('tools/tiaportal-mcp/src/TiaMcp.Adapters/V*/*.csproj',
-                    'tools/tia-openness-studio/src/TiaOpenness.Openness/V*/*.csproj',
-                    'tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V*.csproj'):
+    for pattern in ('src/Adapters/V*/*.csproj',
+                    'src/Studio/Openness/V*/*.csproj',
+                    'src/Engine/TiaMcpServer.V*.csproj'):
         for path in sorted(root.glob(pattern)):
             add(path)
-    for name in ('src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj',
-                 'tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj'):
+    for name in ('src/Worker/TiaMcpServer.PlcWorker.csproj',
+                 'tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj'):
         for release in RELEASES:
-            add(root / 'tools/tiaportal-mcp' / name, {'TiaReleaseKey': release})
+            add(root / name, {'TiaReleaseKey': release})
     # Keep intentional test defines covered, without moving them into the feature table.
-    for path in sorted((root / 'tools').glob('*/tests/**/*.csproj')):
+    for path in sorted((root / 'tests').glob('**/*.csproj')):
         source = path.read_text(encoding='utf-8-sig')
         if '<DefineConstants>' in source or '<TiaMajor>' in source:
             add(path)
-    suites = json.loads((root / 'tools/tiaportal-mcp/tests/test-suites.json').read_text(encoding='utf-8-sig'))
+    suites = json.loads((root / 'tests/test-suites.json').read_text(encoding='utf-8-sig'))
     for name in ('offline', 'offline-v20'):
         properties = dict(arg.removeprefix('-p:').split('=', 1)
                           for arg in suites[name]['arguments'] if arg.startswith('-p:'))

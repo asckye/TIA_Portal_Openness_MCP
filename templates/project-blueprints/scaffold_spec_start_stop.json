@@ -148,7 +148,7 @@
   ],
   "ladDocs": [
     {
-      "importPath": "__BUNDLE__\\tools\\tiaportal-mcp\\skill\\lad-cookbook",
+      "importPath": "__BUNDLE__\\plugin\\skill\\lad-cookbook",
       "name": "MCPVerify_FC_LAD"
     }
   ],

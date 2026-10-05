@@ -8,7 +8,7 @@ import os
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "tools/third-party/siemens-plc-tools"
+SOURCE = ROOT / "third_party/siemens-plc-tools"
 
 
 def main():

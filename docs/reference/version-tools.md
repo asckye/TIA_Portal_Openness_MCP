@@ -175,7 +175,7 @@ pass needs an explicitly selected version and test project for roundtrip verific
 | [TIAOpennessManager](https://github.com/StaniB88/TIAOpennessManager) | Public entry redirects toward AnyAutomation Studio; no reusable licensed core source established in this review |
 
 Eido copyright, source commit, local changes and license are in
-[the provenance record](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/tools/third-party/eido-import-planner/README.md).
+[the provenance record](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md).
 Native SDKs and third-party source archives are not substitutes for functional integration.
 
 Official version-change references: [Siemens V15.1 changes](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-in-tia-portal-openness-v15.1)

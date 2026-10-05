@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V20'">20</TiaBuildVersion>
+    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V21'">21</TiaBuildVersion>
+    <TiaPublicApiReleaseKey>$(TiaBuildVersion)</TiaPublicApiReleaseKey>
+    <TiaReleaseKey>$(TiaBuildVersion)</TiaReleaseKey>
+    <TiaFeatureProfile>Engine</TiaFeatureProfile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaPublicApi.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaFeatures.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaSharedAdapterPaths.props" />
+  <PropertyGroup>
+    <!-- Explicit build properties/environment still win, including an offline PublicAPI copy. -->
+    <TiaPortalLocation Condition="'$(TiaPortalLocation)' == '' and '$(TiaBuildVersion)' != ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP$(TiaBuildVersion)\Global', 'Path', '', RegistryView.Registry64, RegistryView.Registry32))</TiaPortalLocation>
+  </PropertyGroup>
+  <!-- Set before SDK imports. Command-line obj paths propagate into project references
+       and can overwrite this engine's assets with the netstandard dependency's assets. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V20'">
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj-v20\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory)obj-v20\</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

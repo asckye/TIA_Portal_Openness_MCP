@@ -67,6 +67,8 @@ def source_files(root, errors, include_project=lambda project: True):
             continue
         for parent, dirs, names in os.walk(directory, onerror=lambda exc: errors.append(str(exc))):
             dirs[:] = sorted(name for name in dirs if name.lower() not in lexer.SKIP_DIRS)
+            if Path(parent) == root / 'src':
+                dirs[:] = [name for name in dirs if name not in ('Shared', 'Studio')]
             for name in sorted(names):
                 if not name.lower().endswith('.cs') or name.lower().endswith(lexer.GENERATED_SUFFIXES):
                     continue

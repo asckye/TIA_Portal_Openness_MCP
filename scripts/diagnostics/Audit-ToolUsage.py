@@ -11,7 +11,7 @@ def read(path):
 def main():
     matrix = read(ROOT / 'manifest/version-tools.json')['releases']
     release = read(ROOT / 'manifest/release-build.json')['release']
-    source = ROOT / 'tools/openness-shared/ToolUsageData.json'
+    source = ROOT / 'src/Shared/ToolUsageData.json'
     catalog = read(source)
     records = read(ROOT / 'bin-build/multi-version/transport/tool-usage.json')
     for major in (20, 21):

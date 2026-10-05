@@ -1143,7 +1143,7 @@ def dump(assembly, inventory, directory, config):
     directory.mkdir(parents=True, exist_ok=True)
     tool = ROOT / 'bin-build/shared-native-il-reader'
     tool.mkdir(parents=True, exist_ok=True)
-    cecil = ROOT / 'tools/native-call-weaver/bin/Release/net10.0/Mono.Cecil.dll'
+    cecil = ROOT / 'build-tools/native-call-weaver/bin/Release/net10.0/Mono.Cecil.dll'
     if not cecil.is_file():
         raise ValueError('Build NativeCallWeaver first: ' + str(cecil))
     project = tool / 'Reader.csproj'

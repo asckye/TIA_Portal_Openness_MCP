@@ -97,7 +97,7 @@ from engine_sources import EngineSources
 engine=EngineSources(root)
 head='using System; using System.Collections; using System.Collections.Generic; using System.Linq; using System.Reflection; '
 if kind=='match':
-    path=root/'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Guard.cs'
+    path=root/'src/Logic/Siemens/Guard.cs'
     engine.sources[path]=path.read_text(encoding='utf-8-sig')
     text=head+'namespace TiaMcpServer.Siemens { internal static class Guard {'+engine.member('MatchPlcName',owner='Guard')+'}}'
 else:

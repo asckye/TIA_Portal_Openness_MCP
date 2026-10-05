@@ -1,0 +1,39 @@
+<Project>
+  <PropertyGroup><TiaPublicApiReleaseKey>$(AdapterReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../Shared/TiaPublicApi.props" />
+  <PropertyGroup><TiaFeatureProfile>Adapter</TiaFeatureProfile></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../Shared/TiaFeatures.props" />
+  <!-- Release.props declares the module identities before the SDK directory is defaulted.
+       Rebase those items while preserving their exact identity metadata. -->
+  <ItemGroup>
+    <_TiaAdapterApi Include="@(AdapterApi)" />
+    <AdapterApi Remove="@(AdapterApi)" />
+    <AdapterApi Include="@(_TiaAdapterApi->'$(SiemensEngineeringDirectory)/%(Filename)%(Extension)')" />
+    <_TiaAdapterApi Remove="@(_TiaAdapterApi)" />
+  </ItemGroup>
+  <PropertyGroup>
+    <!-- Import before SDK props: restore and compile share the isolated paths. -->
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)/obj/$(AdapterReleaseKey)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(MSBuildProjectDirectory)/bin/$(AdapterReleaseKey)/</BaseOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <AdapterSourceRoot Condition="'$(AdapterSourceRoot)' == ''">$(MSBuildThisFileDirectory)../../</AdapterSourceRoot>
+    <OutputType>Library</OutputType>
+    <AssemblyName>TiaMcp.Adapter.$(AdapterReleaseKey)</AssemblyName>
+    <RootNamespace>TiaMcp.PlcFoundation</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>latest</LangVersion>
+    <DefineConstants>$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
+    <Nullable>enable</Nullable>
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <NuGetAudit>false</NuGetAudit>
+    <NativeCallWeaverPath Condition="'$(NativeCallWeaverPath)' == ''">$(MSBuildThisFileDirectory)../../../build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll</NativeCallWeaverPath>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>

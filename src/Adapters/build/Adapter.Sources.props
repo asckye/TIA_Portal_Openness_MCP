@@ -1,0 +1,84 @@
+<Project>
+  <!-- Transitional shared native source, compiled separately against each exact API.
+       No source glob, generated placeholder, or Siemens copy. DTOs come from Contracts. -->
+  <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../Shared/shared-native/*.props" />
+  <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcServices.cs" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcHardwareCatalog.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotContract.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotProcessSource.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcRuntimeQueries.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcRuntimeQueryPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/MutationIdentityPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCompilePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExchangePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExportPublication.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchExport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchImportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchExportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcBlockXmlPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcFoundationEngine.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcFoundationPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcDisconnectPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcLifecyclePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOfflineChecks.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOfflinePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcReadContracts.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcReadPathPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/TiaVersionCatalog.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/EngineeringAssemblyIdentity.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Engine/Siemens/OpennessReleaseContract.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryRead.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareRead.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcSoftwareReadPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSpecialExport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSpecialExportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDocumentExport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentExport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentExportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDocumentExportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceImport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceWorkflow.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceImportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDocumentImport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDocumentImportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentImport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcBatchDocumentImportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAdd.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/OpennessAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/EngineeringExtensions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/HmiNavigator.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/OpennessSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/OpennessVersionControl.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/PlcNavigator.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/StudioAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/StudioThreadGuard.cs" />
+    <Compile Include="@(AdapterSource);@(TiaSharedNativePrimitive)" Link="NativeShared/%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.Shared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/DataLocations.cs" Link="Diagnostics/DataLocations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/BundleLayout.cs" Link="Diagnostics/BundleLayout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />
+    <Compile Include="$(AdapterSourceRoot)/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
+    <Reference Include="@(AdapterApi)">
+      <HintPath>%(Reference.Identity)</HintPath><Private>false</Private><SpecificVersion>true</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(AdapterReleaseKey)</_Parameter2></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>AdapterIntegration</_Parameter1><_Parameter2>standalone-worker-preview</_Parameter2></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>NativeCallInstrumentation</_Parameter1><_Parameter2>weave-and-verify-required</_Parameter2></AssemblyAttribute>
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" />
+  </ItemGroup>
+</Project>

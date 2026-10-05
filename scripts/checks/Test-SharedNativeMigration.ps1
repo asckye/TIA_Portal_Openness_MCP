@@ -50,23 +50,23 @@ function Build-Variant([string]$SourceRepo, [string]$Destination, [string]$Label
     New-Item -ItemType Directory -Force $Destination | Out-Null
     Push-Location $SourceRepo
     try {
-        $project = if ($engine) {"tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V$key.csproj"}
-            else {"tools/tiaportal-mcp/src/TiaMcp.Adapters/$folder/Adapter.$key.csproj"}
+        $project = if ($engine) {"src/Engine/TiaMcpServer.V$key.csproj"}
+            else {"src/Adapters/$folder/Adapter.$key.csproj"}
         $enabled = if ($variant -eq 'shared') {'true'} else {'false'}
         Run 'dotnet' @('build',$project,'-c','Release',"-p:SiemensEngineeringDirectory=$api",
             "-p:TiaSharedAdapterPaths=$enabled","-p:RestoreSources=$(Join-Path $out 'empty-feed')",
             '-p:NuGetAudit=false','-m:1','-nr:false','-p:BuildInParallel=false') (Join-Path $out "$Label-build.log")
         $source = if ($engine) {
-            if ($key -eq '20') {'tools/tiaportal-mcp/src/TiaMcpServer/bin-v20/Release/net48'}
-            else {'tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net48'}
-        } else {"tools/tiaportal-mcp/src/TiaMcp.Adapters/$folder/bin/$key/Release/net48"}
+            if ($key -eq '20') {'src/Engine/bin-v20/Release/net48'}
+            else {'src/Engine/bin/Release/net48'}
+        } else {"src/Adapters/$folder/bin/$key/Release/net48"}
         Copy-Item -Path (Join-Path $source '*') -Destination $Destination -Recurse -Force
         # The verifier checks its own binary fingerprint; retain the exact
         # instrumenter used by this source tree for later replay.
         $savedWeaver = Join-Path $Destination 'weaver'
         New-Item -ItemType Directory -Force $savedWeaver | Out-Null
         # Baselines checked out from before the .NET 10 move build the weaver for net8.0.
-        $weaverOutput = @('net10.0', 'net8.0') | ForEach-Object { "tools/native-call-weaver/bin/Release/$_" } | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+        $weaverOutput = @('net10.0', 'net8.0') | ForEach-Object { "build-tools/native-call-weaver/bin/Release/$_" } | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
         if (!$weaverOutput) { throw 'Native call weaver output not found' }
         Copy-Item -Path (Join-Path $weaverOutput '*') -Destination $savedWeaver -Recurse -Force
     } finally { Pop-Location }
@@ -95,7 +95,7 @@ try {
         $baselineRevision = (Get-Content -Raw -LiteralPath $baselineRecord | ConvertFrom-Json).revision
         if (!$baselineRevision) { throw 'Saved baselines must record their source revision.' }
     }
-    Run 'dotnet' @('build','tools/native-call-weaver/NativeCallWeaver.csproj','-c','Release',
+    Run 'dotnet' @('build','build-tools/native-call-weaver/NativeCallWeaver.csproj','-c','Release',
         "-p:RestoreSources=$(Join-Path $out 'empty-feed')",'-p:NuGetAudit=false','-m:1','-nr:false') (Join-Path $out 'weaver-build.log')
     Run 'python' @($checker,'--self-test') (Join-Path $out 'checker-self-test.log')
     Run 'python' @((Join-Path $repo 'scripts/checks/Test-SharedNativeIlReader.py')) (Join-Path $out 'reader-self-test.log')

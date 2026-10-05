@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <Compile Include="../../../src/Adapters/Native/Session/BindingSnapshotContract.cs" Link="BindingSnapshotContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/BindingSnapshotProcessSource.cs" Link="BindingSnapshotProcessSource.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs" Link="PlcExternalSourceWorkflowPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/ExternalSourceWorkflowContract.cs" Link="ExternalSourceWorkflowContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/DeviceAddContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchDocumentExportPolicy.cs" Link="PlcBatchDocumentExportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/BatchDocumentExportContract.cs" Link="BatchDocumentExportContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" Link="PlcExternalSourceDeletePolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/ExternalSourceDeleteContract.cs" Link="ExternalSourceDeleteContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/HardwareCatalogContract.cs" Link="HardwareCatalogContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcExternalSourceImportPolicy.cs" Link="PlcExternalSourceImportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/ExternalSourcePlanContract.cs" Link="ExternalSourcePlanContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcDocumentExportPolicy.cs" Link="PlcDocumentExportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/DocumentExportContract.cs" Link="DocumentExportContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcDisconnectPolicy.cs" Link="PlcDisconnectPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/DisconnectContract.cs" Link="DisconnectContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSpecialExportPolicy.cs" Link="PlcSpecialExportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/SpecialExportContract.cs" Link="SpecialExportContract.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineLadderBuilders.cs" Link="OfflineLadderBuilders.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineLadderTools.cs" Link="OfflineLadderTools.cs" />
+
+    <Compile Include="../../../src/FoundationHost/LegacyHostPassiveDiagnostics.cs" Link="LegacyHostPassiveDiagnostics.cs" />
+    <Compile Include="../../../src/FoundationHost/LegacyHostPassiveDiagnosticTools.cs" Link="LegacyHostPassiveDiagnosticTools.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineSymbolManifest.cs" Link="OfflineSymbolManifest.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineSymbolManifestTools.cs" Link="OfflineSymbolManifestTools.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/BatchImportContract.cs" Link="BatchImportContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchExportPolicy.cs" Link="PlcBatchExportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/BatchExportContract.cs" Link="BatchExportContract.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineBlockCompositionBuilders.cs" Link="OfflineBlockCompositionBuilders.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineBlockCompositionTools.cs" Link="OfflineBlockCompositionTools.cs" />
+
+    <Compile Include="../../../src/FoundationHost/RuntimeQueryContract.cs" Link="RuntimeQueryContract.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcRuntimeQueryPolicy.cs" Link="PlcRuntimeQueryPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineCompositionBuilders.cs" Link="OfflineCompositionBuilders.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineCompositionTools.cs" Link="OfflineCompositionTools.cs" />
+    <Compile Include="../../../src/FoundationHost/SupplementaryReadContract.cs" Link="SupplementaryReadContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <Compile Include="../../../src/FoundationHost/FoundationTools.cs" Link="FoundationTools.cs" />
+    <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
+    <Compile Include="../../../src/FoundationHost/DeclarationReadContract.cs" Link="DeclarationReadContract.cs" />
+    <Compile Include="../../../src/FoundationHost/V17ReadEnvelope.cs" Link="V17ReadEnvelope.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkerProtocol.cs" Link="WorkerProtocol.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcExportPublication.cs" Link="PlcExportPublication.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcBlockXmlPolicy.cs" Link="PlcBlockXmlPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcExchangePolicy.cs" Link="PlcExchangePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/V17MutationEnvelope.cs" Link="V17MutationEnvelope.cs" />
+    <Compile Include="../../../src/FoundationHost/V17CompileEnvelope.cs" Link="V17CompileEnvelope.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcOfflinePolicy.cs" Link="PlcOfflinePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
+    <Compile Include="../../../src/Worker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../../../src/Worker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineXmlBuilders.cs" Link="OfflineXmlBuilders.cs" />
+    <Compile Include="../../../src/FoundationHost/OfflineXmlTools.cs" Link="OfflineXmlTools.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcDocumentImportPolicy.cs" Link="PlcDocumentImportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/DocumentImportContract.cs" Link="DocumentImportContract.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchDocumentImportPolicy.cs" Link="PlcBatchDocumentImportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/BatchDocumentImportContract.cs" Link="BatchDocumentImportContract.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/FoundationHost/ImportOrderTool.cs" Link="ImportOrderTool.cs" /><Compile Include="../../../src/FoundationHost/HostOptions.cs" Link="HostOptions.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/FoundationHost/ToolUsageTool.cs" Link="ToolUsageTool.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
+</Project>

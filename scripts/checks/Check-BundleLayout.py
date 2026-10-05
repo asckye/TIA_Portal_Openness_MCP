@@ -11,10 +11,10 @@ import uuid
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = 'tools/openness-shared/BundleLayout.cs'
+SOURCE = 'src/Shared/BundleLayout.cs'
 VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
-LAUNCHER = 'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs'
-GUI_PROJECT = 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'
+LAUNCHER = 'src/Studio/Launcher/Launcher.cs'
+GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
 
 
@@ -137,7 +137,7 @@ def check(root, tracked):
 class LayoutChecks(unittest.TestCase):
     def test_python_installer_covers_external_runtime_dependencies(self):
         expected = set()
-        for path in (ROOT / 'tools/third-party/siemens-plc-tools').rglob('pyproject.toml'):
+        for path in (ROOT / 'third_party/siemens-plc-tools').rglob('pyproject.toml'):
             project = tomllib.loads(path.read_text(encoding='utf-8'))['project']
             expected.update(d for d in project.get('dependencies', []) if not d.startswith('plc-'))
             for extra in ('opcua', 'web'):
@@ -150,12 +150,12 @@ class LayoutChecks(unittest.TestCase):
 
     def test_shipped_license_copies_are_unchanged(self):
         for source, copy in (
-                ('tools/third-party/TiaGitAddIn.Core/LICENSE', 'TiaGitAddIn.Core-LICENSE.txt'),
-                ('tools/third-party/SiemensOpcUaModelled/LICENSE.md', 'SiemensOpcUaModelled-LICENSE.md'),
-                ('tools/third-party/eido-import-planner/LICENSE', 'Eido-LICENSE.txt'),
-                ('tools/tia-openness-studio/LICENSE', 'TiaOpennessStudio-LICENSE.txt'),
-                ('tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt', 'Manrope-OFL.txt'),
-                ('tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt', 'JetBrainsMono-OFL.txt'),
+                ('third_party/TiaGitAddIn.Core/LICENSE', 'TiaGitAddIn.Core-LICENSE.txt'),
+                ('third_party/SiemensOpcUaModelled/LICENSE.md', 'SiemensOpcUaModelled-LICENSE.md'),
+                ('third_party/eido-import-planner/LICENSE', 'Eido-LICENSE.txt'),
+                ('third_party/tia-openness-studio/LICENSE', 'TiaOpennessStudio-LICENSE.txt'),
+                ('src/Studio/Gui/Fonts/Manrope-OFL.txt', 'Manrope-OFL.txt'),
+                ('src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt', 'JetBrainsMono-OFL.txt'),
                 ('reference/siemens-code-snippets/LICENSE.md', 'SiemensCodeSnippets-LICENSE.md')):
             with self.subTest(source=source):
                 self.assertEqual((ROOT / source).read_text(encoding='utf-8-sig'),
@@ -166,9 +166,9 @@ class LayoutChecks(unittest.TestCase):
         for path in ('TiaMcpConfigurator.exe', 'runtime/v21/TiaMcpServer.exe',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',
-                     'tools/tiaportal-mcp/skill/SKILL.md',
-                     'tools/third-party/siemens-plc-tools/packages/plc-code/src/plc_code/cli.py',
-                     'tools/third-party/simaticml-decoder/src/simaticml_decoder/parse.py'):
+                     'plugin/skill/SKILL.md',
+                     'third_party/siemens-plc-tools/packages/plc-code/src/plc_code/cli.py',
+                     'third_party/simaticml-decoder/src/simaticml_decoder/parse.py'):
             with self.subTest(path=path):
                 self.assertTrue(delivered(path, rules))
         for path in resource_paths((ROOT / SOURCE).read_text(encoding='utf-8-sig')):
@@ -179,11 +179,11 @@ class LayoutChecks(unittest.TestCase):
         rules = load_delivery(ROOT)
         for path in ('runtime/verification/NativeCallWeaver.dll', 'runtime/verification/Mono.Cecil.dll',
                      'AGENTS.md', 'Version.props', 'RELEASE_STATUS.txt', '.github/workflows/release.yml',
-                     'tools/tiaportal-mcp/src/TiaMcpServer/Program.cs', 'docs/development/runtime-layout.md',
+                     'src/Engine/Program.cs', 'docs/development/runtime-layout.md',
                      'scripts/checks/Validate-Bundle.ps1', 'reference/tool-examples/README.md',
                      'manifest/contracts/tools.json', 'manifest/history/old.json',
-                     'tools/third-party/siemens-plc-tools/packages/plc-code/tests/test_cli.py',
-                     'tools/third-party/simaticml-decoder/pyproject.toml',
+                     'third_party/siemens-plc-tools/packages/plc-code/tests/test_cli.py',
+                     'third_party/simaticml-decoder/pyproject.toml',
                      'runtime-other/file.dll', 'templates-other/file.json', 'README.md.bak',
                      'runtime/../private.key', '/runtime/file.dll', 'runtime\\file.dll'):
             with self.subTest(path=path):

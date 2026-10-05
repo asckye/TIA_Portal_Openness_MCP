@@ -19,7 +19,7 @@ def main():
     methods = '\n'.join(sources.member(name, signature='public void') for name in
                         ('ImportPlcExternalSource', 'GenerateBlocksFromExternalSource'))
     methods += '\n' + sources.member('ExternalSourceNameMatches')
-    primitive_source = (ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
+    primitive_source = (ROOT / 'src/Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
     declarations = ('Software(SoftwareContainer container)', 'Sources(PlcExternalSourceGroup group)',
                     'CreateFromFile(PlcExternalSourceComposition sources, string name, string path)',
                     'Generate(PlcExternalSource source)')

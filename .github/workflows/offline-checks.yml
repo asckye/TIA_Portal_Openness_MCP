@@ -75,11 +75,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Build Studio
-        run: dotnet build tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio client functional tests
-        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet test tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio WPF functional tests
-        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet test tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
 
   foundation-transport:
     runs-on: windows-latest
@@ -96,9 +96,9 @@ jobs:
       - name: Build host and synthetic worker without Siemens SDKs
         shell: pwsh
         run: |
-          dotnet publish tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/ci-foundation
+          dotnet publish src/FoundationHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/ci-foundation
           if ($LASTEXITCODE) { throw 'Host build failed' }
-          dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
+          dotnet build tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
           if ($LASTEXITCODE) { throw 'Fixture build failed' }
           foreach ($key in @('14sp1','15.1','16','17','18','19')) {
             $target = "runtime/v$key"
@@ -107,4 +107,4 @@ jobs:
             [IO.File]::WriteAllText((Join-Path $target 'release-key.txt'), $key)
           }
       - name: Six real STDIO hosts and isolated HTTP sessions
-        run: python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/ci-foundation-results
+        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/ci-foundation-results

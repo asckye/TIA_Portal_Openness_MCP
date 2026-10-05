@@ -12,7 +12,7 @@ import uuid
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-CATALOG = ROOT / 'tools/tiaportal-mcp/tests/test-suites.json'
+CATALOG = ROOT / 'tests/test-suites.json'
 RESULTS = ROOT / 'test-results'
 NS = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
 OUTCOMES = {'Passed': 'passed', 'Failed': 'failed', 'NotExecuted': 'skipped'}

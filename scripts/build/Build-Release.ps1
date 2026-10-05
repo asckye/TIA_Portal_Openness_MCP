@@ -104,7 +104,7 @@ if($SelfTest){
     return
 }
 if(-not $V20ReferenceRoot -or -not $V21ReferenceRoot){throw '-V20ReferenceRoot and -V21ReferenceRoot are required'}
-$source=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer'
+$source=Join-Path $repo 'src/Engine'
 [xml]$versionXml=Get-Content (Join-Path $repo 'Version.props') -Raw
 $release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
 $version=$release + '.0'
@@ -165,30 +165,30 @@ Assert-MatchedCheckCount 'crashEvidence' $crashEvidence 'Crash evidence collecto
 Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
 Run $Python @((Join-Path $repo 'scripts/checks/Test-VersionCatalogWiring.py')) 'version-catalog-wiring.log'
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-WriteGuard.ps1')) 'write-guard.log'
-$offline=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj'
+$offline=Join-Path $repo 'tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj'
 Restore $offline @()
 $offlinePassed=Run-DotnetSuite 'offline' 'offline.log'
 # Exercise admission and bridge refusal with both compiled identities, not only
 # the default V21 symbol. These are offline tests, never native TIA calls.
 $offlineV20Passed=Run-DotnetSuite 'offline-v20' 'offline-v20.log'
-$versionPolicyProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj'
+$versionPolicyProject=Join-Path $repo 'tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj'
 Restore $versionPolicyProject @()
 $versionPolicySdkPassed=Run-DotnetSuite 'version-policy' 'version-policy-sdk.log'
-$harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj'
+$harnessProject=Join-Path $repo 'tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj'
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
 $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe'
-$weaverProject=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
+$weaverProject=Join-Path $repo 'build-tools/native-call-weaver/NativeCallWeaver.csproj'
 Restore $weaverProject @()
 Run $Dotnet @('build',$weaverProject,'-c','Release','--no-restore','-v:q') 'native-weaver-build.log'
-$weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
+$weaver=Join-Path $repo 'build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
 $verifierDirectory=Join-Path $repo 'runtime/verification'
 New-Item -ItemType Directory -Force $verifierDirectory | Out-Null
 foreach ($name in @('NativeCallWeaver.dll','NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json','Mono.Cecil.dll')) {
     Copy-Item -LiteralPath (Join-Path (Split-Path $weaver) $name) -Destination $verifierDirectory -Force
 }
 $packagedWeaver=Join-Path $verifierDirectory 'NativeCallWeaver.dll'
-$diagnosticProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj'
+$diagnosticProject=Join-Path $repo 'tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj'
 Restore $diagnosticProject @()
 Run $Dotnet @('build',$diagnosticProject,'-c','Release','--no-restore','-v:q') 'native-diagnostics-build.log'
 $diagnosticFixture=Join-Path (Split-Path $diagnosticProject) 'bin/Release/net48/DiagnosticsTests.exe'
@@ -203,8 +203,8 @@ if($diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate inc
 $common=@{diagnosticTests=$diagnosticTests}
 [IO.File]::WriteAllText((Join-Path $sharedOut 'common.json'),($common|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
 } else {
-    $harness=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
-    $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
+    $harness=Join-Path $repo 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+    $weaver=Join-Path $repo 'build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
     $verifierDirectory=Join-Path $repo 'runtime/verification'
     $packagedWeaver=Join-Path $verifierDirectory 'NativeCallWeaver.dll'
     $diagnosticTests=(Get-Content (Join-Path $sharedOut 'common.json') -Raw | ConvertFrom-Json).diagnosticTests
@@ -219,7 +219,7 @@ foreach($major in @($PipelineMajor)) {
     $project=Join-Path $source $(if($major -eq 20){'TiaMcpServer.V20.csproj'}else{'TiaMcpServer.V21.csproj'})
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
     $properties=@("-p:SiemensEngineeringDirectory=$api")
-    $nativeProject=Join-Path $repo "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V$major/NativeTests.V$major.csproj"
+    $nativeProject=Join-Path $repo "tests/Engine/TiaMcpServer.NativeTests/V$major/NativeTests.V$major.csproj"
     # Both graphs write Logic/Runtime/contracts/third-party obj/bin. Hold a worktree-specific
     # mutex through restore, compile and payload copy; all subsequent gates run concurrently.
     $mutexHash=[Security.Cryptography.SHA256]::Create()

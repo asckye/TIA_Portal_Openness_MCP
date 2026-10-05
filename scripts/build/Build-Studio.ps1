@@ -10,9 +10,9 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$studio=Join-Path $repo 'tools/tia-openness-studio'
+$studio=Join-Path $repo 'src/Studio'
 if(!$TiaSharedAdapterPaths){
-    [xml]$sharedProps=Get-Content -Raw (Join-Path $repo 'tools/openness-shared/TiaSharedAdapterPaths.props')
+    [xml]$sharedProps=Get-Content -Raw (Join-Path $repo 'src/Shared/TiaSharedAdapterPaths.props')
     $TiaSharedAdapterPaths=[string]$sharedProps.Project.PropertyGroup.TiaSharedAdapterPaths.'#text'
 }
 $shared=$TiaSharedAdapterPaths -eq 'true'
@@ -31,8 +31,8 @@ function RunDotnet([string[]]$Arguments,[string]$Log) {
     & $Dotnet @Arguments > (Join-Path $logs $Log) 2>&1
     if($LASTEXITCODE){throw "Studio build/test failed; see $logs/$Log"}
 }
-RunDotnet @('build',(Join-Path $studio 'src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'),'-c','Release','--nologo') 'gui.log'
-$app=Join-Path $studio "src/TiaOpenness.Gui/bin/Release/${outputSubdirectory}net10.0-windows"
+RunDotnet @('build',(Join-Path $studio 'Gui/TiaOpenness.Gui.csproj'),'-c','Release','--nologo') 'gui.log'
+$app=Join-Path $studio "Gui/bin/Release/${outputSubdirectory}net10.0-windows"
 $legacyJson=Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll'
 if($legacyJson){throw 'Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging'}
 if (!(Test-Path -LiteralPath (Join-Path $app 'TiaMcp.WorkerChannel.dll'))) { throw 'Studio client worker channel is missing' }
@@ -41,8 +41,8 @@ foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Te
 }
 $native=@()
 if($shared){
-    RunDotnet @('build',(Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'),'-c','Release','--nologo') 'weaver.log'
-    $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
+    RunDotnet @('build',(Join-Path $repo 'build-tools/native-call-weaver/NativeCallWeaver.csproj'),'-c','Release','--nologo') 'weaver.log'
+    $weaver=Join-Path $repo 'build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
 }
 if(!$ReleaseKeys){$ReleaseKeys=if($PublicApiRoot){@('14sp1','15.1','16','17','18','19','20','21')}else{@('20','21')}}
 foreach($key in $ReleaseKeys) {
@@ -50,7 +50,7 @@ foreach($key in $ReleaseKeys) {
     $relative=switch($key){'14sp1'{'TIA_V14SP1_PublicAPI/V14 SP1'} '15.1'{'TIA_V15.1_PublicAPI/V15.1'} '21'{'TIA_V21_PublicAPI/V21/net48'} default{"TIA_V${key}_PublicAPI/V$key"}}
     $inputApi=if($key -eq '20' -and $V20ReferenceRoot){$V20ReferenceRoot}elseif($key -eq '21' -and $V21ReferenceRoot){$V21ReferenceRoot}elseif($PublicApiRoot){Join-Path $PublicApiRoot $relative}else{throw "Missing PublicAPI root for $key"}
     $api=(Resolve-Path -LiteralPath $inputApi).Path
-    $project=if($shared){Join-Path $repo "tools/tiaportal-mcp/src/TiaMcp.Adapters/$folder/Adapter.$key.csproj"}else{Join-Path $studio "src/TiaOpenness.Openness/$folder/StudioOpenness.$folder.csproj"}
+    $project=if($shared){Join-Path $repo "src/Adapters/$folder/Adapter.$key.csproj"}else{Join-Path $studio "Openness/$folder/StudioOpenness.$folder.csproj"}
     RunDotnet @('build',$project,'-c','Release','--nologo',"-p:SiemensEngineeringDirectory=$api") "native-v$key.log"
     $built=Join-Path (Split-Path $project -Parent) $(if($shared){"bin/$key/Release/net48"}else{'bin/Release/net48'})
     if(Get-ChildItem -LiteralPath $built -Filter 'Siemens.*.dll' -File){throw 'Siemens assemblies must not be copied into the Studio build'}
@@ -69,11 +69,11 @@ foreach($key in $ReleaseKeys) {
     $native+=@{releaseKey=$key;assemblySha256=(Get-FileHash -LiteralPath $assembly).Hash.ToLowerInvariant();nativeAcceptance='NOT RUN'}
 }
 if($Test) {
-    RunDotnet @('build',(Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'),'-c','Release','--nologo') 'configuration-build.log'
-    & (Join-Path $studio "tests/TiaOpenness.Configuration.Tests/bin/Release/${outputSubdirectory}net10.0-windows/TiaOpenness.Configuration.Tests.exe") (Join-Path $logs 'configuration-tests') > (Join-Path $logs 'configuration-tests.log') 2>&1
+    RunDotnet @('build',(Join-Path $repo 'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'),'-c','Release','--nologo') 'configuration-build.log'
+    & (Join-Path $repo "tests/Studio/TiaOpenness.Configuration.Tests/bin/Release/${outputSubdirectory}net10.0-windows/TiaOpenness.Configuration.Tests.exe") (Join-Path $logs 'configuration-tests') > (Join-Path $logs 'configuration-tests.log') 2>&1
     if($LASTEXITCODE){throw "Embedded configuration tests failed; see $logs/configuration-tests.log"}
-    RunDotnet @('test',(Join-Path $studio 'tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj'),'-c','Release','--nologo') 'client-tests.log'
-    RunDotnet @('test',(Join-Path $studio 'tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj'),'-c','Release','--nologo') 'gui-tests.log'
+    RunDotnet @('test',(Join-Path $repo 'tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj'),'-c','Release','--nologo') 'client-tests.log'
+    RunDotnet @('test',(Join-Path $repo 'tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj'),'-c','Release','--nologo') 'gui-tests.log'
 }
 if(Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Siemens.*.dll'){throw 'Studio output contains a Siemens assembly'}
 if(Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll'){throw 'Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging'}

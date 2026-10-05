@@ -55,7 +55,7 @@
                            },
     "entrypoints":  {
                         "readme":  "README.md",
-                        "skill":  "tools/tiaportal-mcp/skill/SKILL.md",
+                        "skill":  "plugin/skill/SKILL.md",
                         "mcpServerExe":  "runtime/v21/TiaMcpServer.exe",
                         "cursorExample":  "docs/getting-started/cursor.example.json",
                         "toolRoster":  "manifest/tools-list.json",

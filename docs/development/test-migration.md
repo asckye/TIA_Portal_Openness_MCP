@@ -4,7 +4,7 @@
 
 ## 现状
 
-`tools/tiaportal-mcp/tests` 下的回归测试原为控制台程序，用自写的 `Check()` 并由 `dotnet run` 执行。
+`tests/Engine` 下的回归测试原为控制台程序，用自写的 `Check()` 并由 `dotnet run` 执行。
 任务 1–4 已将下表中的回归工程包装为 xunit 并接入 TRX 门禁；其余控制台框架仍须显式执行。Studio 测试已经使用 xunit。
 
 | 类别 | 工程 | 运行方式 |
@@ -24,7 +24,7 @@
   `CheckSuite` 适配器，把现有套件按 `Program.cs` 的顺序作为一个有序 theory 执行，每项检查是一条结果，合计与
   控制台一致；测试并行关闭（套件会修改静态状态与环境变量）。之后按套件分批拆成测试类，每类计数不得减少。
   与 HttpTests 共享编译的 `HmiScreenTraversalTests.cs` 不转换。
-- **门禁读取 trx 并对照最低数量表**：新增 `scripts/checks/Test-DotnetSuites.py` 与 `tools/tiaportal-mcp/tests/test-suites.json`，
+- **门禁读取 trx 并对照最低数量表**：新增 `scripts/checks/Test-DotnetSuites.py` 与 `tests/test-suites.json`，
   运行 `dotnet test --logger trx`，失败、低于下限、跳过超限或缺少 trx 均失败，输出 `COMPLETE: N … passed`，
   `release-build.json` 字段不变。门禁切换后，`Program.Main` 只保留子进程夹具入口，普通 `dotnet run` 以非零退出。
 - **控制台测试框架加保护**：`Harness.props` 设 `IsTestProject=false`，直接对其运行 `dotnet test` 时报错；仓库检查

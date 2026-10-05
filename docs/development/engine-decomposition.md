@@ -2,7 +2,7 @@
 
 [重构计划](refactor-plan.md) · [版本框架](unified-version-framework.md) · [验证分层](validation.md)
 
-本页是 P3-01 的设计结论。路径相对 `tools/tiaportal-mcp/src/TiaMcpServer`；`P.` 表示 `Siemens/Portal/Portal.`，
+本页是 P3-01 的设计结论。路径相对 `src/Engine`；`P.` 表示 `Siemens/Portal/Portal.`，
 `T.` 表示 `ModelContextProtocol/Tools/McpServer.`。数字为 2026-10-03 的源码统计。
 
 ## 现状
@@ -116,18 +116,18 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 
 | 原试点文件（`McpServer.` 前缀） | 实例工具类 | 工具数 |
 |---|---|---|
-| `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) | 3 |
-| `V21Ecosystem.cs` | [V21EcosystemTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 4 |
-| `GitWorkflow.cs` | [GitWorkflowTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs) | 1 |
-| `PlcTemplates.cs` | [TemplateTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) | 2 |
-| `QualityAudit.cs` | [QualityAuditTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs) | 1 |
-| `ImportOrder.cs` | [ImportOrderTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
-| `Guides.cs` | [GuideTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GuideTools.cs) | 1 |
-| `ToolUsage.cs` | [ToolUsageTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
-| `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 16 |
+| `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 3 |
+| `V21Ecosystem.cs` | [V21EcosystemTools](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 4 |
+| `GitWorkflow.cs` | [GitWorkflowTools](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs) | 1 |
+| `PlcTemplates.cs` | [TemplateTools](../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs) | 2 |
+| `QualityAudit.cs` | [QualityAuditTools](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 1 |
+| `ImportOrder.cs` | [ImportOrderTools](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
+| `Guides.cs` | [GuideTools](../../src/Engine/ModelContextProtocol/Tools/GuideTools.cs) | 1 |
+| `ToolUsage.cs` | [ToolUsageTools](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
+| `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 16 |
 
-试点工具直接使用 [OfflineToolExecution](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineToolExecution.cs)
-与 [XmlBuildResults](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
+试点工具直接使用 [OfflineToolExecution](../../src/Engine/ModelContextProtocol/Tools/OfflineToolExecution.cs)
+与 [XmlBuildResults](../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
 `GuideTools` 通过构造器注入 `ToolUsageTools`，指南入口不再经过静态转发。
 这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
 HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；
@@ -137,9 +137,9 @@ HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周�
 
 ### Portal 领域迁移样板
 
-CFC 是第一个样板：[CfcService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/CfcService.cs)
+CFC 是第一个样板：[CfcService](../../src/Engine/Siemens/Services/CfcService.cs)
 放在 `Siemens/Services/`，命名空间为 `TiaMcpServer.Siemens.Services`，类名以 `Service` 结尾；
-[CfcTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs) 保持在工具目录平铺。
+[CfcTools](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs) 保持在工具目录平铺。
 服务通过构造器接收 `IEngineeringSession`，原方法体只把 `RunHmiStepTool`、`AcquireHmiEditAccess`、
 `ExactPlcForEngineering` 改为接口调用，静态辅助继续用 `EngineeringSessionHelpers`，纯逻辑保留在 Logic。
 本次没有新增内核接口成员，也没有直接写会话字段或 CLI 转发。`EngineRegistration` 在包含会话时按上述
@@ -169,17 +169,17 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 
 ### CLI 宿主与命令实现
 
-步骤 16 的 CLI 拆分保留 [Program.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Program.cs)
+步骤 16 的 CLI 拆分保留 [Program.cs](../../src/Engine/Program.cs)
 中的参数分派、引擎路由、stdio/HTTP/隔离宿主启动及启动诊断。动词表与动词分派仍由
-[CliCommands.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs) 提供。
+[CliCommands.cs](../../src/Engine/Cli/CliCommands.cs) 提供。
 原有四个 `Program` partial 的方法原样归入以下内部静态类，命名空间仍为 `TiaMcpServer`：
 
 | 实现 | 文件 |
 |---|---|
-| HMI 模板与绑定验证 | [HmiTemplateBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs) |
-| PLC/HMI 同步、XML 与结构化文本生成 | [PlcHmiSyncXml.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs) |
-| CLI 探针与工程验证命令 | [CliProbes.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs) |
-| 离线分析、预检查与报告构造 | [ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
+| HMI 模板与绑定验证 | [HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs) |
+| PLC/HMI 同步、XML 与结构化文本生成 | [PlcHmiSyncXml.cs](../../src/Engine/Cli/PlcHmiSyncXml.cs) |
+| CLI 探针与工程验证命令 | [CliProbes.cs](../../src/Engine/Cli/CliProbes.cs) |
+| 离线分析、预检查与报告构造 | [ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) |
 
 跨类调用显式限定声明类型，仅共享成员改为 `internal`；结构化文本委托随 XML 生成器迁移。
 这些类全部留在受原生调用织入的引擎程序集中。CLI 通过 `EngineServices.Get<T>()` 调用所属工具或服务；
@@ -203,9 +203,9 @@ P3-18 删除迁移期嵌套 `*ToolSupport` 和 HMI 编译转发。目录枚举�
 
 ### PLC 块、编辑与用户组
 
-[PlcBlocksTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) 承载
+[PlcBlocksTools](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) 承载
 P3-13a 的 27 个工具：块读取、导入导出、编译诊断、逻辑描述、保护/快照/指纹、离线编辑、验证导入、删除和 PLC 用户组。
-[PlcBlocksService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcBlocksService.cs) 承载这些工具独有的
+[PlcBlocksService](../../src/Engine/Siemens/Services/PlcBlocksService.cs) 承载这些工具独有的
 Portal 实现，包括批量块导出、删除、保护/快照/指纹、验证导入及组管理；`_blockGroupDeleteGate` 随服务实例迁移。
 两者按约定注册为非 `IDisposable` 单例。`ManageUnifiedHmiGroup` 留在原混合文件。
 
@@ -287,7 +287,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 ### HMI 离线替身边界
 
 需要离线替身的领域服务接收不含 Siemens 类型的窄会话接口，不因此为每个服务增加接口。
-[IHmiToolSession](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/IHmiToolSession.cs) 由 `Portal` 显式转发，
+[IHmiToolSession](../../src/Engine/Siemens/IHmiToolSession.cs) 由 `Portal` 显式转发，
 与 `IEngineeringSession` 解析为同一个会话单例；五个服务和工具类仍按 `EngineRegistration` 约定注册，均不实现 `IDisposable`。
 
 | 成员 | 用途 |
@@ -315,9 +315,9 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 库 | [LibraryService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/LibraryService.cs) / [LibraryTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) | 12 |
-| VCI | [VersionControlService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
-| SiVArc | [SivarcService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SivarcService.cs) / [SivarcTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
+| 库 | [LibraryService](../../src/Engine/Siemens/Services/LibraryService.cs) / [LibraryTools](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) | 12 |
+| VCI | [VersionControlService](../../src/Engine/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
+| SiVArc | [SivarcService](../../src/Engine/Siemens/Services/SivarcService.cs) / [SivarcTools](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
 
 库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 包含混合文件中的 `GenerateSiVArc`。
 VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例字段，保留原有获取、保活和失效清理顺序。
@@ -338,17 +338,17 @@ VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 报警 | [AlarmsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AlarmsService.cs) / [AlarmsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) | 8 |
-| OPC UA | [OpcUaService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs) / [OpcUaTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) | 8 |
-| 工艺对象 | [TechnologyObjectsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
+| 报警 | [AlarmsService](../../src/Engine/Siemens/Services/AlarmsService.cs) / [AlarmsTools](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs) | 8 |
+| OPC UA | [OpcUaService](../../src/Engine/Siemens/Services/OpcUaService.cs) / [OpcUaTools](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) | 8 |
+| 工艺对象 | [TechnologyObjectsService](../../src/Engine/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
 
 报警服务包括 `Step7Leftovers` 中的 XLSX 交换以及 `PlcBlockServices` 中的实例文本导入、文本列表管理；
 OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具包括 `EngineeringManagement` 中的管理入口。
 这些工具没有 CLI 静态调用点。通用 PLC 程序批量导入仍使用 `Portal.ImportTechnologyObject`，因此其两个重载
-保留在 [Portal.Software.TechnologyObjects.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs)，
+保留在 [Portal.Software.TechnologyObjects.cs](../../src/Engine/Siemens/Portal/Portal.Software.TechnologyObjects.cs)，
 工艺对象服务通过会话接口复用带 `overwrite` 和 `importedNames` 的重载。
 
-[Portal.TechnologyMapping.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.TechnologyMapping.cs)
+[Portal.TechnologyMapping.cs](../../src/Engine/Siemens/Portal/Portal.TechnologyMapping.cs)
 保留 Motion 和 Startdrive 使用的 `ParameterRow`、`TechnologyObjectRow`、`TypedMotionView`、`InterfaceRow`、
 `MappingRow`、`ConnectTyped`、`DisconnectTyped`、`IsConnectedTyped`，以及它们依赖的
 `ModuleRef`、`ChannelRef`、`AxisEncoderInterfaceRow`、`TorqueInterfaceRow`、`MeasuringInputRow`、`OutputCamRow`、
@@ -365,11 +365,11 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| TestSuite | [TestSuiteService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
-| V20Options | [V20OptionsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
-| OptionalEngineering | [OptionalEngineeringService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OptionalEngineeringService.cs) / [OptionalEngineeringTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) | 2 |
-| SpecializedExchange | [SpecializedExchangeService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SpecializedExchangeService.cs) / [SpecializedExchangeTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) | 1 |
-| SoftwareUnitDeep | [SoftwareUnitDeepService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SoftwareUnitDeepService.cs) / [SoftwareUnitDeepTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) | 7 |
+| TestSuite | [TestSuiteService](../../src/Engine/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
+| V20Options | [V20OptionsService](../../src/Engine/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
+| OptionalEngineering | [OptionalEngineeringService](../../src/Engine/Siemens/Services/OptionalEngineeringService.cs) / [OptionalEngineeringTools](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) | 2 |
+| SpecializedExchange | [SpecializedExchangeService](../../src/Engine/Siemens/Services/SpecializedExchangeService.cs) / [SpecializedExchangeTools](../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) | 1 |
+| SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Engine/Siemens/Services/SoftwareUnitDeepService.cs) / [SoftwareUnitDeepTools](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) | 7 |
 
 Motion、HMI、库及 SiVArc 生成工具已归入所属实例工具类；
 `ManagePlcSoftwareUnit` 归入 `SoftwareUnitDeepTools`。
@@ -394,9 +394,9 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| DCC | [DccService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DccService.cs) / [DccTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) | 8 |
-| Teamcenter | [TeamcenterService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TeamcenterService.cs) / [TeamcenterTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) | 3 |
-| Startdrive | [StartdriveService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/StartdriveService.cs) / [StartdriveTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) | 11 |
+| DCC | [DccService](../../src/Engine/Siemens/Services/DccService.cs) / [DccTools](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) | 8 |
+| Teamcenter | [TeamcenterService](../../src/Engine/Siemens/Services/TeamcenterService.cs) / [TeamcenterTools](../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs) | 3 |
+| Startdrive | [StartdriveService](../../src/Engine/Siemens/Services/StartdriveService.cs) / [StartdriveTools](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) | 11 |
 
 这些工具没有 CLI 静态调用点，继续按约定注册为单例。Teamcenter 的 `_teamcenterConnection` 与
 `_teamcenterConnectionLabel` 随方法迁入服务，不增加连接、断开或清理动作。
@@ -443,11 +443,11 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| Devices | [DevicesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs) / [DevicesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
-| HardwareManagement | [HardwareManagementService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareManagementService.cs) / [HardwareManagementTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) | 1 |
-| HardwareAml | [HardwareAmlService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareAmlService.cs) / [HardwareAmlTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) | 3 |
-| Modules | [ModulesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/ModulesService.cs) / [ModulesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) | 2 |
-| Addresses | [AddressesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AddressesService.cs) / [AddressesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) | 2 |
+| Devices | [DevicesService](../../src/Engine/Siemens/Services/DevicesService.cs) / [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
+| HardwareManagement | [HardwareManagementService](../../src/Engine/Siemens/Services/HardwareManagementService.cs) / [HardwareManagementTools](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) | 1 |
+| HardwareAml | [HardwareAmlService](../../src/Engine/Siemens/Services/HardwareAmlService.cs) / [HardwareAmlTools](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) | 3 |
+| Modules | [ModulesService](../../src/Engine/Siemens/Services/ModulesService.cs) / [ModulesTools](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs) | 2 |
+| Addresses | [AddressesService](../../src/Engine/Siemens/Services/AddressesService.cs) / [AddressesTools](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs) | 2 |
 
 `ModulesService` 通过构造器接收同一容器的 `DevicesService` 单例以复用目录查询；模块地址读取复用
 `AddressesService.ReadAddresses`，订货号格式化复用 DevicesService 的静态辅助。四个领域结果 DTO
@@ -465,7 +465,7 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 `EnumerateAllDevices`、`GetPlcSoftwareNamesForDesktop`、`ValidateAutomationContext`、`FormatExceptionDetail`、
 `ToJsonArray`。保留原日志类别，不新增会话写入。
 
-CLI 直接解析 [DevicesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs)
+CLI 直接解析 [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)
 调用八个原有入口：`GetProjectTree`、`GetDeviceInfo`、`ValidateAutomationContext`、`AddDevice`、
 `AddDeviceWithFallback`、`SearchInstalledGsdDevices`、`SearchHardwareCatalog`、`AddHardwareCatalogDeviceWithProbe`。
 工具签名、描述、返回及错误首行不变。`Test-DomainTools.py` 覆盖全部 22 个工具，包含旧式抛异常、
@@ -507,8 +507,8 @@ HttpTests 保留全部既有断言，另检查两个领域的工具归属、共�
 `OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
 包括迁入的 `ReadTransferRoutes`。
 原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
-下载提示处理位于 [OnlineDownloadService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs)，
-工具位于 [OnlineDownloadTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
+下载提示处理位于 [OnlineDownloadService](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)，
+工具位于 [OnlineDownloadTools](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
 原 `McpServer.PlcSoftware.Online.cs` 的五个硬件工具已迁入 Addresses、Devices、HardwareNetwork、HardwareServices；
 跨领域的 `IsOnlineModeError`、
 `WithAutoOffline` 保持原入口，后者通过容器取得同一服务，保留下线后仅重试一次的行为。
@@ -690,9 +690,9 @@ CLI 直接解析 `UnifiedHmiTools` 调用以下 13 个入口：
 原生调用顺序、参数与线程归属保持不变；上述离线证明不替代真机验收。
 ### 运行时通道与实例工具（P3-16a）
 
-20 个工具分别迁入 [RuntimeTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs)（7）、
-[RuntimeChannelTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs)（8）和
-[PlcSimAdvancedTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs)（5）。
+20 个工具分别迁入 [RuntimeTools](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs)（7）、
+[RuntimeChannelTools](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs)（8）和
+[PlcSimAdvancedTools](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs)（5）。
 工具仍在引擎内，按约定注册为非 IDisposable 单例，方法签名、描述、响应及拒绝顺序保持原样。
 这 20 个工具没有 CLI 静态调用点，因此没有保留 McpServer 转发。
 
@@ -701,7 +701,7 @@ GetPutGetAccess；TraceTagCause、TraceTagCauseLive 继续调用内核的同名�
 工程读取、块导出、S7 读取的顺序、参数和线程归属不变。其他两个工具类没有会话依赖。
 RuntimeMeta 由 RuntimeChannelTools 保留为内部静态辅助，供 PLCSIM 执行器复用。
 
-[TiaMcp.Runtime](../../tools/tiaportal-mcp/src/TiaMcp.Runtime/TiaMcp.Runtime.csproj) 为不织入的 net48 协议程序集，
+[TiaMcp.Runtime](../../src/Runtime/TiaMcp.Runtime.csproj) 为不织入的 net48 协议程序集，
 保持 TiaMcpServer.Runtime 命名空间，引用原版本 Sharp7、Workstation.UaClient、官方 HTTP Web API 客户端及 Logic。
 官方 Siemens.Simatic.S7.Webserver.API 是协议客户端；此程序集不引用 Siemens.Engineering、PLCSIM 或引擎。
 独立还原时显式保持引擎已有的 DependencyInjection 版本，不引入新的依赖版本。
@@ -732,11 +732,11 @@ Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite �
 避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。HttpTests 另外核对实例单例、会话依赖与程序集归属。
 ### 会话与工程工具
 
-[SessionTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs)
+[SessionTools](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)
 承载 9 个会话工具；
-[ProjectSessionTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)
+[ProjectSessionTools](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)
 承载 11 个工程工具；
-[DiagnosticsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs)
+[DiagnosticsTools](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)
 承载 `RunCapabilitySelfTest`、`RunOnlineMonitoringSafetySelfTest`、`GenerateAcceptanceReport`、`GenerateErrorReport`。
 三者直接接收 `IEngineeringSession`，由 `EngineRegistration` 按工具类型约定注册为
 非 `IDisposable` 单例，不增加领域服务，也不接收具体 `Portal`。`Portal` 继续管理连接、工程句柄和事务状态，

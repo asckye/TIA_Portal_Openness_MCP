@@ -131,39 +131,39 @@ foreach ($resource in $bundleResourcePaths) {
     else { Fail "Missing bundle resource: $resource" }
 }
 foreach ($guiFile in @(
-    'tools/openness-shared/BundleLayout.cs',
+    'src/Shared/BundleLayout.cs',
     'scripts/checks/Check-BundleLayout.py',
-    'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
-    'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
-    'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
-    'tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcServices.cs',
-    'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/InvocationJournal.Adapter.cs',
-    'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs',
+    'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
+    'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
+    'src/Adapters.Contracts/packages.lock.json',
+    'src/Adapters/Native/Plc/PlcServices.cs',
+    'src/Engine/ModelContextProtocol/InvocationJournal.Adapter.cs',
+    'tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs',
     'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
-    'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Regular.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Medium.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-SemiBold.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Bold.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Regular.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Medium.ttf',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/SOURCES.txt',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/Strings.cs',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Light.xaml',
-    'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Dark.xaml',
-    'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
-    'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs'
+    'src/Studio/Launcher/Launcher.cs',
+    'src/Studio/Gui/Themes/Glass.xaml',
+    'src/Studio/Gui/Controls/GlassLogView.cs',
+    'src/Studio/Gui/Fonts/Manrope-Regular.ttf',
+    'src/Studio/Gui/Fonts/Manrope-Medium.ttf',
+    'src/Studio/Gui/Fonts/Manrope-SemiBold.ttf',
+    'src/Studio/Gui/Fonts/Manrope-Bold.ttf',
+    'src/Studio/Gui/Fonts/Manrope-OFL.txt',
+    'src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf',
+    'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
+    'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
+    'src/Studio/Gui/Fonts/SOURCES.txt',
+    'src/Studio/Gui/TiaOpenness.Gui.csproj',
+    'src/Studio/Gui/Configuration/ConfigurationView.xaml',
+    'src/Studio/Gui/Configuration/ConfigurationView.xaml.cs',
+    'src/Studio/Gui/Configuration/ConfigCore.cs',
+    'src/Studio/Gui/Configuration/ClientProfiles.cs',
+    'src/Studio/Gui/Configuration/UpdateCheck.cs',
+    'src/Studio/Gui/Configuration/ModernJson.cs',
+    'src/Studio/Gui/Localization/Strings.cs',
+    'src/Studio/Gui/Themes/Palette.Light.xaml',
+    'src/Studio/Gui/Themes/Palette.Dark.xaml',
+    'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
+    'tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs'
 )) {
     if ($PackageMode -and -not (IsDeliveryFile $guiFile)) { continue }
     if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
@@ -172,7 +172,7 @@ foreach ($guiFile in @(
 }
 
 foreach ($name in @('TiaMcp.Runtime.csproj','S7LiveReader.cs','OpcUaLiveReader.cs','S7WebApiChannel.cs','UnifiedOpenPipeChannel.cs')) {
-    $path = 'tools/tiaportal-mcp/src/TiaMcp.Runtime/' + $name
+    $path = 'src/Runtime/' + $name
     if ($PackageMode) { continue }
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing runtime channel source: $path" }
 }
@@ -201,7 +201,7 @@ if (!$NoBinaries) {
 }
 
 foreach ($name in @('ChannelMessage.cs','LineFraming.cs','ChannelCodec.cs','ChannelClient.cs','ChannelServer.cs','TiaMcp.WorkerChannel.csproj','packages.lock.json')) {
-    $path = 'tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + $name
+    $path = 'src/WorkerChannel/' + $name
     if ($PackageMode) { continue }
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing worker channel source: $path" }
 }
@@ -219,7 +219,7 @@ if (!$NoBinaries) {
         }
     }
 }
-if (-not $PackageMode -and !(Test-Path -LiteralPath (Join-Path $root 'tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
+if (-not $PackageMode -and !(Test-Path -LiteralPath (Join-Path $root 'src/Studio/Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
 
 # The checkout and delivery use the same canonical runtime paths.
 $exe = Join-Path $root 'runtime/v21/TiaMcpServer.exe'
@@ -270,7 +270,7 @@ if ($exe) {
 $readme = Join-Path $root "README.md"
 if (-not (Test-Path -LiteralPath $readme)) { Fail "Missing README.md" } else { Ok "README.md present" }
 
-$skill = Join-Path $root "tools\tiaportal-mcp\skill\SKILL.md"
+$skill = Join-Path $root "plugin\skill\SKILL.md"
 if (-not (Test-Path -LiteralPath $skill)) { Fail "Missing SKILL.md" } else { Ok "SKILL.md present" }
 
 $blueprintPath = Join-Path $root "templates\project-blueprints\full_plc_hmi_project.json"

@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = ROOT / 'tools/openness-shared/ToolUsageData.json'
+OUTPUT = ROOT / 'src/Shared/ToolUsageData.json'
 
 
 def read(path):

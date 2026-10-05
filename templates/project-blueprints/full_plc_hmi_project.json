@@ -8,7 +8,7 @@
     "README.md",
     "scripts/checks/Validate-Bundle.ps1",
     "docs/guides/project-generation.md",
-    "tools/tiaportal-mcp/skill/SKILL.md",
+    "plugin/skill/SKILL.md",
     "manifest/tools-list.json",
     "docs/reference/tool-matrix.md",
     "docs/guides/plc/templates.md",

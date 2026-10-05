@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
+  <!--
+    最小离线自检套件。
+
+    已迁移的纯逻辑通过 TiaMcp.Logic 项目引用复用；其余引擎文件继续链接源码，
+    以便在没有 Siemens.Engineering 运行时的环境中执行离线断言。
+
+    通过共享 xunit 适配器和 trx 最低数量门禁运行，每项 Check 对应一条测试结果。
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <Compile Include="../../../src/Engine/EngineServices.cs" Link="EngineServices.cs" />
+    <Compile Include="../../../src/Engine/EngineRegistration.cs" Link="EngineRegistration.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
+    <Compile Include="..\..\..\src\Adapters\Native\Plc\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
+    <Compile Include="../../../src/Engine/Cli/SpecLoader.cs" Link="SpecLoader.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
+    <Compile Include="..\..\..\src\Engine\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\TimedAttachment.cs" Link="TimedAttachment.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ProjectOwnership.cs" Link="ProjectOwnership.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\TransactionExecution.cs" Link="TransactionExecution.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineeringObjectAddress.cs" Link="EngineeringObjectAddress.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineeringGroupOperations.cs" Link="EngineeringGroupOperations.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineeringScalarProperties.cs" Link="EngineeringScalarProperties.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
+    <PackageReference Include="Esprima" Version="3.0.5" />
+    <PackageReference Include="YamlDotNet" Version="13.7.1" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Services\MigrationReadService.cs" Link="MigrationReadService.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedGraphicSelection.cs" Link="UnifiedGraphicSelection.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedRuntimeSettingsAccess.cs" Link="UnifiedRuntimeSettingsAccess.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Services\RuntimeSettingsService.cs" Link="RuntimeSettingsService.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\RuntimeSettingsTools.cs" Link="RuntimeSettingsTools.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Services\GraphicSelectionService.cs" Link="GraphicSelectionService.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\GraphicSelectionTools.cs" Link="GraphicSelectionTools.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\MigrationReadTools.cs" Link="MigrationReadTools.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\MigrationPages.cs" Link="MigrationPages.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\MigrationRead.cs" Link="MigrationRead.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedTagDefinitions.cs" Link="UnifiedTagDefinitions.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\NativeExportCapture.cs" Link="NativeExportCapture.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedScriptAccess.cs" Link="UnifiedScriptAccess.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedGlobalScriptEdit.cs" Link="UnifiedGlobalScriptEdit.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Services\GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ProjectArchive.cs" Link="ProjectArchive.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiExactAccess.cs" Link="HmiExactAccess.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiSnapshot.cs" Link="HmiSnapshot.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Services\HmiInspectionService.cs" Link="HmiInspectionService.cs" />
+    <Compile Include="../../../src/Engine/Siemens/IHmiToolSession.cs" Link="IHmiToolSession.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\HmiInspectionTools.cs" Link="HmiInspectionTools.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiEventAccess.cs" Link="HmiEventAccess.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\PropertyPathReader.cs" Link="PropertyPathReader.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineeringExport.cs" Link="EngineeringExport.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
+    <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
+    <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
+    <Compile Include="..\..\..\src\Engine\Siemens\SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\HardwareUtilityRules.cs" Link="HardwareUtilityRules.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\DeviceServiceObjectRules.cs" Link="DeviceServiceObjectRules.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ObjectIdentityRules.cs" Link="ObjectIdentityRules.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ToolTransactionRules.cs" Link="ToolTransactionRules.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\EngineeringCredentialRules.cs" Link="EngineeringCredentialRules.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\ToolExamples.cs" Link="ToolExamples.cs" />
+    <Compile Include="..\..\..\src\Engine\ModelContextProtocol\InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\StartdriveLogic.cs" Link="StartdriveLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
+    <Compile Include="..\..\..\src\Engine\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\third_party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ScaffoldOperations.cs" Link="Shared/ScaffoldOperations.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
+    <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
+    <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
+</Project>
