@@ -1,11 +1,13 @@
-param(
-    [Parameter(Mandatory=$true)][string]$V20ReferenceRoot,
-    [Parameter(Mandatory=$true)][string]$V21ReferenceRoot,
+﻿param(
+    [string]$V20ReferenceRoot,
+    [string]$V21ReferenceRoot,
     [string]$Dotnet='dotnet',
     [string]$Python='python',
     [string]$NuGetConfig='',
     [ValidatePattern('^\d{8}$')][string]$ReleaseDate=(Get-Date -Format 'yyyyMMdd'),
     [switch]$NoRestore,
+    [ValidateSet(0,20,21)][int]$PipelineMajor=0,
+    [switch]$SelfTest,
     [ValidateRange(10,10000)][int]$LocalStabilityRounds=50
 )
 $ErrorActionPreference='Stop'
@@ -45,8 +47,63 @@ function Assert-MatchedCheckCount([string]$Key,[System.Text.RegularExpressions.M
     $actual=if($Match.Success){[int]$Match.Groups[1].Value}else{$null}
     Assert-CheckCount $Key $actual $Message
 }
+function Wait-VersionPipelines($Jobs,[string]$Output) {
+    $null=$Jobs | Wait-Job
+    $failed=@()
+    foreach($job in $Jobs) {
+        $messages=@(Receive-Job $job -ErrorAction Continue 2>&1)
+        $messages | Out-File -LiteralPath (Join-Path $Output ($job.Name+'.log')) -Encoding utf8
+        Write-Host "$($job.Name): $($job.State); log: $Output/$($job.Name).log"
+        if($job.State -ne 'Completed'){$failed+=$job.Name}
+    }
+    if($failed.Count){throw ('Version pipelines failed: '+($failed -join ', ')+'; both logs retained')}
+}
 
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+if($SelfTest){
+    $scratch=Join-Path $repo ('bin-build/parallel-selftest-'+[guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force $scratch | Out-Null
+    $passed=0
+    try {
+        foreach($failKeys in @('', '20', '20,21')) {
+            $case=Join-Path $scratch ('case-'+[guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory $case | Out-Null
+            $jobs=@()
+            try {
+                foreach($major in @(20,21)) {
+                    $jobs+=Start-Job -Name "release-v$major" -ScriptBlock {
+                        param($Directory,$Major,$FailKeys)
+                        [IO.File]::WriteAllText((Join-Path $Directory "$Major.ready"),'ready')
+                        $other=if($Major -eq 20){21}else{20}
+                        $deadline=(Get-Date).AddSeconds(15)
+                        while(!(Test-Path -LiteralPath (Join-Path $Directory "$other.ready"))) {
+                            if((Get-Date) -gt $deadline){throw 'Pipelines did not overlap'}
+                            Start-Sleep -Milliseconds 50
+                        }
+                        if("$Major" -in ($FailKeys -split ',')){throw "Synthetic V$Major failure"}
+                        "V$Major passed"
+                    } -ArgumentList $case,$major,$failKeys
+                }
+                $failure=''
+                try {Wait-VersionPipelines $jobs $case} catch {$failure=$_.Exception.Message}
+                if([bool]$failure -ne [bool]$failKeys){throw 'Pipeline aggregate accepted the wrong result'}
+                foreach($key in ($failKeys -split ',' | Where-Object {$_})) {if($failure -notlike "*release-v$key*"){throw 'Aggregate omitted a failing version'}}
+                $passed++
+                foreach($major in @(20,21)) {
+                    $contents=Get-Content (Join-Path $case "release-v$major.log") -Raw
+                    if(!$contents -or $contents -like '*did not overlap*'){throw 'Separate pipeline evidence missing or pipelines ran serially'}
+                    $passed++
+                }
+            } finally {foreach($job in $jobs){if($job.State -eq 'Running'){Stop-Job $job};Remove-Job $job -Force}}
+        }
+        Write-Host "Parallel pipeline self-tests: $passed passed, 0 failed."
+    } finally {
+        if((Split-Path ([IO.Path]::GetFullPath($scratch)) -Parent) -ne (Join-Path $repo 'bin-build')){throw 'Unsafe fixture cleanup'}
+        Remove-Item -LiteralPath $scratch -Recurse -Force
+    }
+    return
+}
+if(-not $V20ReferenceRoot -or -not $V21ReferenceRoot){throw '-V20ReferenceRoot and -V21ReferenceRoot are required'}
 $source=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer'
 [xml]$versionXml=Get-Content (Join-Path $repo 'Version.props') -Raw
 $release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
@@ -56,10 +113,24 @@ $null=[DateTime]::ParseExact($ReleaseDate,'yyyyMMdd',[Globalization.CultureInfo]
 $package="TIA_MCP_Delivery_v${release}_$ReleaseDate"
 $out=Join-Path $repo "bin-build/releases/v$release"
 New-Item -ItemType Directory -Force $out | Out-Null
+$sharedOut=$out
+if($PipelineMajor){$out=Join-Path $sharedOut "v$PipelineMajor"; New-Item -ItemType Directory -Force $out | Out-Null}
 $env:DOTNET_CLI_HOME=Join-Path $out 'dotnet-home'
+$env:MSBUILDDISABLENODEREUSE='1'
+if($PipelineMajor){
+    $env:TEMP=Join-Path $out 'temp'; $env:TMP=$env:TEMP
+    $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $out 'diagnostics'
+    New-Item -ItemType Directory -Force $env:TEMP,$env:TIA_MCP_DIAGNOSTICS_DIRECTORY | Out-Null
+}
+function Read-ReleaseInputs([switch]$Validation) {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    if ($Validation) { @(Get-ReleaseValidationInputs $repo 'engine') } else { @(Get-ReleaseSources $repo 'engine') }
+}
+if(-not $PipelineMajor){$sourceFiles=@(Read-ReleaseInputs);$validationInputs=@(Read-ReleaseInputs -Validation)}
 $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
 function Run([string]$Program,[string[]]$Arguments,[string]$Log) {
+    if($Program -eq $Dotnet -and $Arguments[0] -in 'build','restore'){$Arguments+=@('-nodeReuse:false','-p:UseSharedCompilation=false')}
     # Windows PowerShell wraps native stderr as ErrorRecord even for warnings.
     $savedPreference=$ErrorActionPreference
     try {
@@ -81,10 +152,22 @@ function Run-DotnetSuite([string]$Name,[string]$Log) {
     $summary=Get-Content (Join-Path $results "$Name.json") -Raw -Encoding UTF8 | ConvertFrom-Json
     return [int]$summary.passed
 }
+if(-not $PipelineMajor) {
+Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
+$nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
+if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
+Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--self-test') 'native-mcp-safety.log'
+$nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
+Assert-MatchedCheckCount 'nativeMcpSafety' $nativeMcpSafety 'Native MCP safety checks incomplete'
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
+$crashEvidence=[regex]::Match((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
+Assert-MatchedCheckCount 'crashEvidence' $crashEvidence 'Crash evidence collector checks incomplete'
+Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
+Run $Python @((Join-Path $repo 'scripts/checks/Test-VersionCatalogWiring.py')) 'version-catalog-wiring.log'
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-WriteGuard.ps1')) 'write-guard.log'
 $offline=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj'
 Restore $offline @()
 $offlinePassed=Run-DotnetSuite 'offline' 'offline.log'
-Run $Python @((Join-Path $repo 'scripts/checks/Test-VersionCatalogWiring.py')) 'version-catalog-wiring.log'
 # Exercise admission and bridge refusal with both compiled identities, not only
 # the default V21 symbol. These are offline tests, never native TIA calls.
 $offlineV20Passed=Run-DotnetSuite 'offline-v20' 'offline-v20.log'
@@ -117,23 +200,34 @@ Assert-CheckCount 'diagnosticRejection' $diagnosticTests.rejectionChecks 'Native
 if($diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate incomplete'}
 # Compile the separate opt-in native harness, but execute ONLY its offline safety
 # checks here. Live TIA creation belongs to a dedicated, explicitly enabled run.
-Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
-$nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
-if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
-Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--self-test') 'native-mcp-safety.log'
-$nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
-Assert-MatchedCheckCount 'nativeMcpSafety' $nativeMcpSafety 'Native MCP safety checks incomplete'
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
-$crashEvidence=[regex]::Match((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
-Assert-MatchedCheckCount 'crashEvidence' $crashEvidence 'Crash evidence collector checks incomplete'
-Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
+$common=@{diagnosticTests=$diagnosticTests}
+[IO.File]::WriteAllText((Join-Path $sharedOut 'common.json'),($common|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
+} else {
+    $harness=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+    $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
+    $verifierDirectory=Join-Path $repo 'runtime/verification'
+    $packagedWeaver=Join-Path $verifierDirectory 'NativeCallWeaver.dll'
+    $diagnosticTests=(Get-Content (Join-Path $sharedOut 'common.json') -Raw | ConvertFrom-Json).diagnosticTests
+    $nativeSupervisor=[regex]::Match((Get-Content (Join-Path $sharedOut 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
+    $nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $sharedOut 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
+    $crashEvidence=[regex]::Match((Get-Content (Join-Path $sharedOut 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
+}
 $checks=[ordered]@{}
-foreach($major in @(20,21)) {
+if($PipelineMajor) {
+foreach($major in @($PipelineMajor)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
     $project=Join-Path $source $(if($major -eq 20){'TiaMcpServer.V20.csproj'}else{'TiaMcpServer.V21.csproj'})
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
     $properties=@("-p:SiemensEngineeringDirectory=$api")
     $nativeProject=Join-Path $repo "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V$major/NativeTests.V$major.csproj"
+    # Both graphs write Logic/Runtime/contracts/third-party obj/bin. Hold a worktree-specific
+    # mutex through restore, compile and payload copy; all subsequent gates run concurrently.
+    $mutexHash=[Security.Cryptography.SHA256]::Create()
+    try{$mutexName='Local\TIA-Release-'+[BitConverter]::ToString($mutexHash.ComputeHash([Text.Encoding]::UTF8.GetBytes($repo.ToLowerInvariant()))).Replace('-','')}finally{$mutexHash.Dispose()}
+    $buildMutex=[Threading.Mutex]::new($false,$mutexName)
+    $locked=$false
+    try {
+    try {$locked=$buildMutex.WaitOne()} catch [Threading.AbandonedMutexException] {$locked=$true}
     Restore $nativeProject $properties
     Run $Dotnet (@('build',$nativeProject,'-c','Release','--no-restore','-v:q')+$properties) "native-build-v$major.log"
     $nativeOutput=Join-Path (Split-Path $nativeProject) 'bin/Release/net48'
@@ -156,6 +250,7 @@ foreach($major in @(20,21)) {
     # Fail on obsolete dependencies so an old DLL is never silently republished.
     foreach($file in Get-ChildItem -LiteralPath $runtime -File | Where-Object {$_.Extension -in '.exe','.dll','.config'}){if($file.Name -notin $payload.Name){throw "Review obsolete runtime file: $($file.FullName)"}}
     $payload | Copy-Item -Destination $runtime -Force
+    } finally {if($locked){$buildMutex.ReleaseMutex()};$buildMutex.Dispose()}
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
     Run $harness @($exe,'example-library-only') "example-library-v$major.log"
@@ -202,7 +297,8 @@ foreach($major in @(20,21)) {
     # V21 document adapters are offline on both runtimes; use the supplied V21 schemas.
     $v21Schemas=Join-Path (Split-Path (Resolve-Path -LiteralPath $V21ReferenceRoot).Path -Parent) 'Schemas'
     $v21EcosystemOut=Join-Path $out ("v21-ecosystem-v$major-"+[Guid]::NewGuid().ToString('N'))
-    Run $Python @((Join-Path $repo 'scripts/checks/Test-V21Ecosystem.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--schema-root',$v21Schemas,'--output',$v21EcosystemOut) "v21-ecosystem-v$major.log"
+    $ecosystemPython=if($env:TIA_MCP_PLC_TOOLS_PYTHON){$env:TIA_MCP_PLC_TOOLS_PYTHON}else{$Python}
+    Run $ecosystemPython @((Join-Path $repo 'scripts/checks/Test-V21Ecosystem.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--schema-root',$v21Schemas,'--output',$v21EcosystemOut) "v21-ecosystem-v$major.log"
     $v21EcosystemFiles=@(Get-ChildItem -LiteralPath $v21EcosystemOut -Filter result.json -Recurse -File)
     if($v21EcosystemFiles.Count -ne 1){throw 'V21 ecosystem evidence missing or ambiguous'}
     $v21Ecosystem=Get-Content -LiteralPath $v21EcosystemFiles[0].FullName -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -258,16 +354,37 @@ foreach($major in @(20,21)) {
     Assert-MatchedCheckCount 'ecosystem' $ecosystem 'Ecosystem runtime validation incomplete; install the companion Python environment first'
     $checks["V$major"]['ecosystemAssemblyPassed']=[int]$ecosystem.Groups[1].Value
     $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
-    if($major -eq 21){
-        # 两个确定性离线测试直接反射已发布的 V21 EXE：PG/PC 路由选择与 softwarePath 匹配器。
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api) 'route-selection-v21.log'
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1')) 'match-plc-name-v21.log'
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-WriteGuard.ps1')) 'write-guard.log'
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
-        # 工具矩阵与清单同源：清单刚生成就重建矩阵，docs/reference/tool-matrix.md 不再手工维护。
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.ps1'),'-ToolsList',(Join-Path $repo 'manifest/tools-list.json'),'-OutFile',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'
-    }
 }
+[IO.File]::WriteAllText((Join-Path $out 'pipeline-result.json'),($checks["V$PipelineMajor"]|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
+Write-Output "V$PipelineMajor pipeline passed; logs: $out"
+return
+}
+$jobs=@()
+try {
+    foreach($major in @(20,21)) {
+        $parameters=@{V20ReferenceRoot=$V20ReferenceRoot;V21ReferenceRoot=$V21ReferenceRoot;Dotnet=$Dotnet;Python=$Python;NuGetConfig=$NuGetConfig;ReleaseDate=$ReleaseDate;NoRestore=[bool]$NoRestore;LocalStabilityRounds=$LocalStabilityRounds;PipelineMajor=$major}
+        $jobs+=Start-Job -Name "release-v$major" -ScriptBlock {
+            param($Script,$Parameters,$WorkingDirectory)
+            Set-Location -LiteralPath $WorkingDirectory
+            & $Script @Parameters
+        } -ArgumentList $PSCommandPath,$parameters,$repo
+    }
+    Wait-VersionPipelines $jobs $out
+    foreach($major in @(20,21)) {
+        $result=Join-Path $out "v$major/pipeline-result.json"
+        if(!(Test-Path -LiteralPath $result)){throw "V$major pipeline returned no validation record"}
+        $checks["V$major"]=Get-Content -LiteralPath $result -Raw -Encoding UTF8 | ConvertFrom-Json
+    }
+} finally {
+    foreach($job in $jobs){if($job.State -eq 'Running'){Stop-Job $job};Remove-Job $job -Force}
+}
+# Validate the shipped V21 assembly as well as the early production-source fixtures.
+$exe=Join-Path $repo 'runtime/v21/TiaMcpServer.exe';$api=$V21ReferenceRoot
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api,'-Exe',$exe) 'route-selection-v21.log'
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1'),'-Exe',$exe) 'match-plc-name-v21.log'
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
+# 工具矩阵与清单同源：清单刚生成就重建矩阵，docs/reference/tool-matrix.md 不再手工维护。
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.ps1'),'-ToolsList',(Join-Path $repo 'manifest/tools-list.json'),'-OutFile',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'
 function WriteJson($Path,$Value){[IO.File]::WriteAllText($Path,($Value|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))}
 $roster=Get-Content (Join-Path $repo 'manifest/tools-list.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $manifestPath=Join-Path $repo 'manifest/package-manifest.json'
@@ -296,12 +413,10 @@ $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo '
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.
-$sourceFiles=@(@(Get-Item (Join-Path $repo 'Version.props')) + @(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/openness-shared'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'}) | Sort-Object FullName | ForEach-Object {
-    $text=[IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n")
-    $sha=[Security.Cryptography.SHA256]::Create()
-    try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
-    [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=$digest}
-})
-WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles})
+$currentValidation=@(Read-ReleaseInputs -Validation)
+if(($validationInputs|ConvertTo-Json -Depth 4 -Compress) -cne ($currentValidation|ConvertTo-Json -Depth 4 -Compress)){throw 'Validation inputs changed during the build; refusing to record results'}
+$currentInputs=@(Read-ReleaseInputs)
+if(($sourceFiles|ConvertTo-Json -Depth 4 -Compress) -cne ($currentInputs|ConvertTo-Json -Depth 4 -Compress)){throw 'Build inputs changed while validation was running; refusing to record results'}
+WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate."

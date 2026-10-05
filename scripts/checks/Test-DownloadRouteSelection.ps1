@@ -7,20 +7,25 @@
 # The assembly is copied to an ASCII %TEMP% path first so Windows PowerShell 5.1 can LoadFrom it
 # even when the repo lives under a non-ASCII (e.g. Chinese) path.
 #
-# Usage:  build the V21 exe, then:  powershell -File scripts\checks\Test-DownloadRouteSelection.ps1
+# SourceOnly compiles the exercised production members without building the engine.
+# Usage: build the V21 exe, then:  powershell -File scripts\checks\Test-DownloadRouteSelection.ps1
 # Exit code 0 = all pass, 1 = a case failed or the exe is missing.
-param([string]$PublicApiDirectory = '', [string]$Exe = '')   # 显式 PublicAPI 目录；未给时回退到注册表
+param([string]$PublicApiDirectory = '', [string]$Exe = '', [switch]$SourceOnly, [string]$Python = 'python', [string]$Dotnet = 'dotnet')   # 显式 PublicAPI 目录；未给时回退到注册表
 $ErrorActionPreference = "Stop"
 
 $srcDir = if ($Exe) { Split-Path -Parent (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21" }
-if (-not (Test-Path -LiteralPath (Join-Path $srcDir "TiaMcpServer.exe"))) {
+if (-not $SourceOnly -and -not (Test-Path -LiteralPath (Join-Path $srcDir "TiaMcpServer.exe"))) {
   Write-Host "FAIL: build the V21 exe first (not found: $srcDir\TiaMcpServer.exe)"; exit 1
 }
 $tmp = Join-Path $env:TEMP ("tia_routetest_{0}" -f [guid]::NewGuid().ToString("N"))
 $tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
 $tmp = [IO.Path]::GetFullPath($tmp)
 if (-not $tmp.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Test directory escaped TEMP.' }
-Copy-Item -LiteralPath $srcDir -Destination $tmp -Recurse -Force
+if ($SourceOnly) {
+  New-Item -ItemType Directory -Path $tmp | Out-Null
+  . (Join-Path $PSScriptRoot '../build/Test-ReleasePrerequisites.ps1') -FunctionsOnly -Python $Python -Dotnet $Dotnet
+  New-ReleaseSourceFixture (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'route' $tmp $PublicApiDirectory $Python $Dotnet
+} else { Copy-Item -LiteralPath $srcDir -Destination $tmp -Recurse -Force }
 
 # Loading the Portal type pulls in Siemens.Engineering, which lives in the TIA install (the build
 # references it, it is never copied local). Probe the copied output first, then the PublicAPI

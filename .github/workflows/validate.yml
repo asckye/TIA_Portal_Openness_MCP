@@ -28,9 +28,36 @@ jobs:
       - name: Offline bundle validation
         shell: pwsh
         run: ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
+      - name: Windows PowerShell bundle validation and CHANGELOG self-tests
+        shell: powershell
+        run: |
+          & ./scripts/checks/Validate-Bundle.ps1 -SelfTest
+          if ($LASTEXITCODE) { throw 'CHANGELOG self-tests failed' }
+          & ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
+          if ($LASTEXITCODE) { throw 'Windows PowerShell bundle validation failed' }
+      - name: Release prerequisites, reuse and documentation assertions
+        shell: pwsh
+        run: |
+          ./scripts/build/Test-ReleasePrerequisites.ps1 -SelfTest
+          ./scripts/build/Release.ps1 -SelfTest
+          ./scripts/build/Build-Release.ps1 -SelfTest
+          ./scripts/build/Release.ps1 -DocumentationOnly
+          ./scripts/checks/Validate-Bundle.ps1 -SelfTest
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+      - name: Release safety scripts and production PLC name fixture
+        shell: powershell
+        run: |
+          python scripts/checks/Test-NativeLifecycle.py --self-test
+          if ($LASTEXITCODE) { throw 'Native supervisor self-tests failed' }
+          python scripts/checks/Test-NativeMcpSession.py --self-test
+          if ($LASTEXITCODE) { throw 'Native MCP self-tests failed' }
+          & ./scripts/checks/Test-CrashEvidence.ps1
+          & ./scripts/checks/Test-WriteGuard.ps1
+          if ($LASTEXITCODE) { throw 'Write guard tests failed' }
+          & ./scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
+          if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py
       - name: Build launcher and test .NET 10 configuration page

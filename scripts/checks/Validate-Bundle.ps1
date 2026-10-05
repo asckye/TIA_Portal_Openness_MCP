@@ -26,10 +26,36 @@ param(
     [switch]$Strict,
     [switch]$NoBinaries,
     [switch]$SkipSourceHashes,
-    [switch]$PackageMode
+    [switch]$PackageMode,
+    [string]$PendingRelease = '',
+    [switch]$SelfTest
 )
 
 $ErrorActionPreference = "Stop"
+
+function Test-ChangelogVersion([string]$Newest, [string]$Released, [bool]$RepositoryOnly, [bool]$NoteExists) {
+    if ($Newest -notmatch '^\d+\.\d+\.\d+$' -or $Released -notmatch '^\d+\.\d+\.\d+$') { return $false }
+    return $Newest -eq $Released -or ($RepositoryOnly -and $NoteExists -and [version]$Newest -gt [version]$Released)
+}
+if ($SelfTest) {
+    $cases = @(
+        @('3.3.0','3.3.0',$false,$false,$true),
+        @('4.0.0','3.3.0',$true,$true,$true),
+        @('4.0.0','3.3.0',$true,$false,$false),
+        @('4.0.0','3.3.0',$false,$true,$false),
+        @('3.2.0','3.3.0',$true,$true,$false),
+        @('3.10.0','3.9.0',$true,$true,$true),
+        @('invalid','3.3.0',$true,$true,$false)
+    )
+    foreach ($case in $cases) {
+        if ((Test-ChangelogVersion $case[0] $case[1] $case[2] $case[3]) -ne $case[4]) { throw "CHANGELOG self-test failed: $($case -join ',')" }
+    }
+    Write-Host "CHANGELOG self-tests: $($cases.Count) passed, 0 failed."
+    exit 0
+}
+if ($PendingRelease -and (-not $NoBinaries -or -not $SkipSourceHashes -or $PackageMode)) {
+    throw '-PendingRelease is only for the repository pre-build gate with -NoBinaries -SkipSourceHashes'
+}
 
 function Resolve-BundleRoot {
     if ($BundleRoot) {
@@ -341,6 +367,12 @@ if ($sourceRelease -notmatch '^\d+\.\d+\.\d+$') { Fail 'Release must be X.Y.Z' }
 $plugin = Get-Content (Join-Path $root '.claude-plugin/plugin.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($plugin.version -ne $sourceRelease) { Fail 'Plugin version differs from release version' }
 else { Ok 'Plugin version matches release version' }
+if ($PendingRelease) {
+    if ($PackageMode -or $sourceRelease -ne $PendingRelease) { Fail 'Pending release must match Version.props in a repository' }
+    # Only this explicit pre-build mode permits the mechanical version bump before rebuilding.
+    # The old manifests must still agree with each other and their recorded hashes.
+    $sourceRelease = [string]((Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json).release)
+}
 $manifest  = Join-Path $root "manifest\package-manifest.json"
 
 if ((Test-Path -LiteralPath $changelog) -and ($PackageMode -or (Test-Path -LiteralPath $versionProps)) -and (Test-Path -LiteralPath $manifest)) {
@@ -354,6 +386,15 @@ if ((Test-Path -LiteralPath $changelog) -and ($PackageMode -or (Test-Path -Liter
         $versionFailures = $failures.Count
         $build = Get-Content (Join-Path $root 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
         $delivery = Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        $hasNote = Test-Path -LiteralPath (Join-Path $root "docs/releases/v$version.md") -PathType Leaf
+        if (-not (Test-ChangelogVersion $version $delivery.release ($NoBinaries -and -not $PackageMode) $hasNote)) {
+            Fail 'CHANGELOG must match the release, or name a newer documented release in repository -NoBinaries mode'
+        }
+        if ($PendingRelease -and $version -ne $PendingRelease) { Fail 'Newest CHANGELOG entry must match the pending release' }
+        if ($NoBinaries -and -not $PackageMode -and [version]$version -gt [version]$delivery.release -and $hasNote) {
+            Ok "Unreleased CHANGELOG $version has matching release notes; validating published records for $($delivery.release)"
+            $version = $delivery.release
+        }
         $engineVersion = $build.release
         if ($delivery.release -ne $version -or $delivery.engineRelease -ne $engineVersion -or $delivery.fileVersion -ne $build.fileVersion) {
             Fail 'Delivery version differs from CHANGELOG or engine build record'
@@ -436,11 +477,12 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         }
     }
     if (-not $PackageMode -and -not $SkipSourceHashes) {
-        foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles)) {
+        foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles) + @($build.validationInputs) + @($multi.validationInputs)) {
             if ($null -eq $row) { continue }
             $file = Join-Path $root $row.path
             if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
-            $bytes = if ([IO.Path]::GetExtension($file) -eq ".ttf") { [IO.File]::ReadAllBytes($file) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
+            if ([IO.Path]::GetExtension($file) -eq ".ttf") { $bytes = [IO.File]::ReadAllBytes($file) }
+            else { $bytes = [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
             $algorithm = [Security.Cryptography.SHA256]::Create()
             try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','') }
             finally { $algorithm.Dispose() }

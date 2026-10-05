@@ -4,20 +4,25 @@
 # The assembly and dependencies are copied to an ASCII %TEMP% path so Windows PowerShell 5.1 can
 # LoadFrom it even when the repo lives under a non-ASCII (e.g. Chinese) path.
 #
-# Usage:  build the V21 exe, then:  powershell -File scripts\checks\Test-MatchPlcName.ps1
+# SourceOnly compiles the exercised production members without building the engine.
+# Usage: build the V21 exe, then:  powershell -File scripts\checks\Test-MatchPlcName.ps1
 # Exit code 0 = all pass, 1 = a case failed or the exe is missing.
-param([string]$Exe = '')
+param([string]$Exe = '', [switch]$SourceOnly, [string]$Python = 'python', [string]$Dotnet = 'dotnet')
 $ErrorActionPreference = "Stop"
 
 $srcExe = if ($Exe) { (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21\TiaMcpServer.exe" }
-if (-not (Test-Path -LiteralPath $srcExe)) {
+if (-not $SourceOnly -and -not (Test-Path -LiteralPath $srcExe)) {
   Write-Host "FAIL: build the V21 exe first (not found: $srcExe)"; exit 1
 }
 $tmp = Join-Path $env:TEMP ("tia_matchtest_{0}" -f [guid]::NewGuid().ToString("N"))
 $tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
 $tmp = [IO.Path]::GetFullPath($tmp)
 if (-not $tmp.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Test directory escaped TEMP.' }
-Copy-Item -LiteralPath (Split-Path -Parent $srcExe) -Destination $tmp -Recurse -Force
+if ($SourceOnly) {
+  New-Item -ItemType Directory -Path $tmp | Out-Null
+  . (Join-Path $PSScriptRoot '../build/Test-ReleasePrerequisites.ps1') -FunctionsOnly -Python $Python -Dotnet $Dotnet
+  New-ReleaseSourceFixture (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'match' $tmp '' $Python $Dotnet
+} else { Copy-Item -LiteralPath (Split-Path -Parent $srcExe) -Destination $tmp -Recurse -Force }
 
 try {
   $asm = [Reflection.Assembly]::LoadFrom((Join-Path $tmp (Split-Path -Leaf $srcExe)))

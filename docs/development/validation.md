@@ -331,6 +331,41 @@ python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/
 
 P4-E2 仍要求六版 Foundation 响应快照 `changed=0, rawChanged=0`、八版工具契约零差异和 foundation/foundation-api 等既有套件门禁。[真机台账](../reference/real-machine-ledger.md)中的逐版本协议 2 验收在发布前完成；上述离线检查不替代它。
 
+## 发布脚本的日常验证
+
+发布前的低成本门禁不再留到完整引擎构建之后。`validate.yml` 日常运行两种 PowerShell 的仓库包验证、
+CHANGELOG 规则、预检和复用自测、并行流水线自测、发布文档断言、原生监督器/MCP 安全自测、崩溃证据、写保护和生产源码 PLC 名称匹配。
+`offline-checks.yml` 已覆盖仓库/链接、失效工具引用、BundleLayout/交付集合自测、示例目录及版本目录接线。
+CHANGELOG 可以先提交下一版本条目，但必须同时提交对应发布说明；此时 `Version.props`、插件与旧 manifest 保持原发布版本，
+`-NoBinaries` 验证旧记录之间的一致性。发布模式和包模式仍要求精确一致。
+
+```powershell
+powershell -NoProfile -File scripts/build/Test-ReleasePrerequisites.ps1 -SelfTest
+powershell -NoProfile -File scripts/build/Release.ps1 -SelfTest
+powershell -NoProfile -File scripts/build/Build-Release.ps1 -SelfTest
+powershell -NoProfile -File scripts/checks/Validate-Bundle.ps1 -SelfTest
+pwsh -NoProfile -File scripts/build/Release.ps1 -DocumentationOnly
+powershell -NoProfile -File scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
+# 需要本机 V21 PublicAPI 和 .NET Framework 4.8 targeting pack；列入日常本机验证，不等待发布。
+powershell -NoProfile -File scripts/checks/Test-DownloadRouteSelection.ps1 -SourceOnly -PublicApiDirectory <V21-net48-SDK> -Python <python.exe>
+```
+
+两项 `-SourceOnly` 检查通过仓库词法提取器定位当前生产方法并用 .NET 10 的 C# 编译器生成 net48 小夹具，
+不复制算法，不修改生产源码，不构建完整引擎，不连接 TIA；路由夹具仍引用真实 PublicAPI，并使用原有假路由对象。
+完整构建后还会对实际 V21 程序重跑这两项检查。其余本机二进制/API/传输门禁继续由下文的完整八版本构建运行。
+
+独立早期门禁为 `Release.ps1 -Version X.Y.Z -EarlyGatesOnly -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>`，
+须在版本、文档已机械更新后运行；它不执行预检、版本修改、归档、完整引擎构建或任何 Git 写入/远程操作。
+`Validate-Bundle.ps1 -PendingRelease X.Y.Z -Strict -NoBinaries -SkipSourceHashes` 仅供这个阶段使用：
+分别验证新源码版本/文档和旧 manifest 内部一致性，不能用于发布产物验证。
+预检独立运行用 `Test-ReleasePrerequisites.ps1 -PublicApiRoot <SDK-root> -Offline`，离线模式只接受已有 SHA-512 正确的缓存及显式/环境令牌。
+伴随 Python 用 `TIA_MCP_PLC_TOOLS_PYTHON` 指定；构建中的 V21 生态夹具也使用该解释器，避免预检与执行环境不同。
+
+预检、复用、CHANGELOG 和并发自测均报告通过/失败数量；复用覆盖相同输入、改源码、增删源码、改/缺二进制、改 release/fileVersion，
+以及旧输出目录的保留移动。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
+沙箱内 Python 3.12 的 `TemporaryDirectory` 可能因私有 ACL 返回 `WinError 5`；原生监督器/MCP 的离线自测遇到该错误应记录为未通过，
+由维护者在普通本机环境复跑，不跳过门禁、不进入 live 分支。
+
 ## 完整八版本构建
 
 ```powershell
@@ -338,7 +373,7 @@ pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-r
 ```
 
 此命令先运行 V20/V21 `Build-Release.ps1`，再构建 Foundation worker、Studio 及全部适配器，
-执行功能和传输检查并生成证据。只有刚完成完整引擎构建才使用 `-SkipFullEngines`。
+执行功能和传输检查并生成证据。只有刚完成完整引擎构建，或 Release 已确认源码、版本、运行文件与完整验证记录完全一致时，才使用 `-SkipFullEngines`。
 PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。
 设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 可运行八版 UDT/GlobalDB 官方 interface XSD 检查；
 片段 XSD 通过不代表完整文档或目标 CPU 语义通过。

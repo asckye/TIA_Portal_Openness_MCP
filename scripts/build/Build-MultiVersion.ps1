@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 param(
     [Parameter(Mandatory=$true)][string]$PublicApiRoot,
     [string]$Dotnet='dotnet',
@@ -9,6 +9,12 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+function Read-MultiVersionInputs([switch]$Validation) {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    if ($Validation) { @(Get-ReleaseValidationInputs $repo 'multi') } else { @(Get-ReleaseSources $repo 'multi') }
+}
+$sources=@(Read-MultiVersionInputs)
+$validationInputs=@(Read-MultiVersionInputs -Validation)
 $api=(Resolve-Path -LiteralPath $PublicApiRoot).Path
 $env:TIA_MCP_TEST_PUBLIC_API_ROOT=$api
 $logs=Join-Path $repo 'bin-build/multi-version'
@@ -106,15 +112,11 @@ $bundledDotnet=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet'))+[IO.Pa
 $files=@(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File | Where-Object {($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith($bundledDotnet,[StringComparison]::OrdinalIgnoreCase)) -and $_.Name -ne 'README.md'} | Sort-Object FullName | ForEach-Object {
     @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
 })
-$sourceRoots=@('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/openness-shared','tools/tia-openness-studio','tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate') | ForEach-Object {Join-Path $repo $_}
-$algorithm=[Security.Cryptography.SHA256]::Create()
-try {
-    $sources=@(Get-ChildItem $sourceRoots -Recurse -File | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json' -and $_.FullName -notmatch '[\\/](obj|bin|obj-v20|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
-        $bytes=[Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n"))
-        @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=[BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','').ToLowerInvariant()}
-    })
-} finally {$algorithm.Dispose()}
-$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$engineRecord.release;fileVersion=$engineRecord.fileVersion;releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources}
+$currentValidation=@(Read-MultiVersionInputs -Validation)
+if(($validationInputs|ConvertTo-Json -Depth 4 -Compress) -cne ($currentValidation|ConvertTo-Json -Depth 4 -Compress)){throw 'Validation inputs changed during the build; refusing to record results'}
+$currentInputs=@(Read-MultiVersionInputs)
+if(($sources|ConvertTo-Json -Depth 4 -Compress) -cne ($currentInputs|ConvertTo-Json -Depth 4 -Compress)){throw 'Multi-version inputs changed during validation; refusing to record results'}
+$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$engineRecord.release;fileVersion=$engineRecord.fileVersion;releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources;validationInputs=$validationInputs}
 [IO.File]::WriteAllText((Join-Path $repo 'manifest/multi-version-build.json'),($record | ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
 $deliveryPath=Join-Path $repo 'manifest/delivery.json'
 $delivery=Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json

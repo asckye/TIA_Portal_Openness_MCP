@@ -38,13 +38,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -BundleRoot bin-build/d
 
 `--include-untracked` 仅在 dry run 中用于预览待审查的新文件，正式打包仍要求干净提交树。
 预览打印完整文件集和排除的顶层分组；没有运行二进制时不能作为完整发布验证。
-旧构建记录与 CHANGELOG 版本不一致仍报错，不能修改记录哈希来让预览变绿。
+仓库的 `-NoBinaries` 模式允许 CHANGELOG 最新条目高于已发布版本，但必须有同版本发布说明；
+各份旧 manifest 仍须相互一致。包模式和带二进制的发布模式继续要求精确一致，不能手改记录哈希。
 
 ## 准备和执行
 
 在 Windows 的 master 工作区操作，审查全部改动，停止该安装目录下的 MCP 和 Studio 进程。需要 PowerShell 7、Git、所需 .NET SDK/运行时与 Framework 开发环境、Python 和八版 SDK。设置 TIA_MCP_PLC_TOOLS_PYTHON 指向已有 PLC Tools 伴随环境。SDK 目录结构见[构建说明](../reference/version-tools.md#build-test-and-package)。
 
-先写 CHANGELOG.md 最新版本条目与 docs/releases/vX.Y.Z.md，更新当前说明；发布后在 handoff.md 和 publication-vX.Y.Z.json 记录结果。发布正文写明各版范围、组件、测试结果和真实工程验收状态。英文文档和提交说明使用英文，不添加 AI 署名。
+先写并提交 CHANGELOG.md 最新版本条目与 docs/releases/vX.Y.Z.md，更新当前说明，确保工作树（含未跟踪文件）干净；发布后在 handoff.md 和 publication-vX.Y.Z.json 记录结果。发布正文写明各版范围、组件、测试结果和真实工程验收状态。英文文档和提交说明使用英文，不添加 AI 署名。
 
 ```powershell
 pwsh -NoProfile -File scripts/build/Release.ps1 -Version X.Y.Z -Summary "Concise English release summary" -PublicApiRoot <SDK-root> -V20ReferenceRoot <V20-SDK> -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>
@@ -54,29 +55,51 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 
 脚本依次执行：
 
-1. 检查 master、上游、SDK、进程和发布说明；更新 `Version.props` 中的 `TiaMcpRelease` 和 `.claude-plugin/plugin.json` 版本，以及文档当前发布链接与路线图标题。完整引擎、基础宿主、配置器和 Studio 从 `Version.props` 派生版本。
-2. Build-Release.ps1 构建两个完整引擎与配置器，执行功能、协议和稳定性测试。
-3. Build-MultiVersion.ps1 -SkipFullEngines -Test 构建八版 Worker/Adapter、六个基础引擎运行包和 Studio，执行八版 SDK 元数据、XSD、基础工具、传输和全部工具示例校验，写入八版本交付记录。
-4. 检查仓库链接、失效工具引用和严格包验证，提交明确变更路径，生成一次 Release X.Y.Z: <summary> 提交。
+1. 首先运行 `Test-ReleasePrerequisites.ps1`：汇总检查 .NET 10 SDK、PowerShell 7、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
+2. 更新 `Version.props`、插件版本、文档当前发布链接及路线图标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/路线图断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
+3. 分别判断两份记录能否复用。完整引擎不能复用时，`Build-Release.ps1` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。`Build-MultiVersion.ps1 -SkipFullEngines -Test` 也独立判定是否需要重建和重测八版适配器、基础引擎与 Studio。
+4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
 5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
 6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
 8. Publish-Release.ps1 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest。
 9. 等待 Verify published release 下载并校验公开资产，再记录发布 URL、提交和验收状态。
 
-任一步失败即停止。日志保留在 release.log、build.log、bin-build/releases/v<版本>/ 和 bin-build/multi-version/。令牌来自 -Token、GITHUB_TOKEN 或 Git Credential Manager，不打印、不放入发布包。
+任一步失败即停止。日志保留在 release.log、build.log、bin-build/releases/v<版本>/ 和 bin-build/multi-version/；完整引擎分版日志在版本目录下的 `v20/`、`v21/`，汇总为 `release-v20.log`、`release-v21.log`。一版失败仍收集并报告两版结果。令牌来自 -Token、GITHUB_TOKEN 或 Git Credential Manager，不打印、不放入发布包。
 
 ## 分阶段与恢复
 
--NoPush 完成本地提交、打包和验证后停止；检查具体产物后用相同参数加 -Resume 继续推送、CI、tag 和发布。-NoTag 在推送及 CI 后停止；-DryRun 只到构建与本地检查。
+-NoPush 完成本地提交、打包和验证后停止；检查具体产物后用相同参数加 -Resume 继续推送、CI、tag 和发布。-NoTag 在推送及 CI 后停止；-DryRun 只到构建与本地检查，且不写 Git 暂存区。`-Resume` 仍重跑预检和早期门禁；只有输入及产物与记录相同时才跳过构建和提交，否则回到构建/提交路径。
 
--SkipBuild 只适用于所有源码和运行文件仍与三份构建记录相符的情况，不能用于改版本号却没有重建的产物。Prepare-Delivery.ps1 单独运行只准备完整引擎与配置器；正式发布仍需多版本构建。
+默认自动复用：release/fileVersion、完整源码文件集合（含新增/删除）、源码哈希、补充验证输入和运行文件集合/哈希均一致，且原有验证完整时，才跳过对应引擎或多版本构建及测试。日志写明复用或重建原因。`-NoReuse` 强制两部分都重建；`-SkipBuild` 保留为严格断言，任何不匹配立即失败，不能与 `-NoReuse` 同用。
+
+原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。复用不改写两份构建记录的日期、版本、哈希或测试结果；配置器/交付元数据单独刷新，随后重新绑定原多版本记录。`Prepare-Delivery.ps1` 单独运行只准备完整引擎与配置器；正式发布仍需经过多版本判定和最终严格验证。
 
 长路径环境可用 `Package-Release.py --output-directory <较短的新目录>`，保留生成的 package-result.json 所记录的实际 ZIP 路径；恢复 Release 流程时将该结果记录及同名 ZIP/SHA-256 放到默认版本目录。
 
-已有归档不自动覆盖或删除。先检查、保留，再用 Package-Release.py --output-directory <新目录> 生成本地候选。恢复发布前，默认发布目录的 package-result.json 必须指向此次验证的归档及当前提交。
+每次新运行或 `-Resume` 都将已有 `bin-build/releases/v<版本>` 完整移动到同级 `v<版本>.previous-<时间戳>-<唯一后缀>`，保留原归档和日志，再从当前 HEAD 生成并验证候选；移动前检查绝对父目录和重解析点，不覆盖历史目录。无需手动归档。
 
 已公开的 Release、tag 和资产不改写；发现问题应修正并发布新补丁版本。发布不自动更新运行中的服务或虚拟机。
+
+## 独立检查与并发资源
+
+```powershell
+# 离线预检不下载，也不调用凭据管理器；缺少缓存或环境令牌会明确失败。
+pwsh -NoProfile -File scripts/build/Test-ReleasePrerequisites.ps1 -PublicApiRoot <SDK-root> -Offline
+# 已完成版本机械更新后，只跑早期门禁，不访问 GitHub、不构建完整引擎、不提交。
+powershell -NoProfile -File scripts/build/Release.ps1 -Version X.Y.Z -EarlyGatesOnly -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>
+```
+
+| 共享资源 | 并发处理 |
+|---|---|
+| HTTP 端口 | HttpTests 与 Python 协议夹具均从系统申请端口 0；没有两版共用的固定监听端口 |
+| Logic、Runtime、contracts、第三方项目的 obj/bin | 工作树路径派生的 mutex 保护还原、编译和运行文件复制；该短段串行，随后两版长耗时门禁并行 |
+| MSBuild/C# 服务 | 关闭节点复用和共享编译器；公共测试夹具、weaver 先构建一次，子流水线只读 |
+| TEMP/TMP、DOTNET_CLI_HOME、诊断目录及测试日志 | 各版独立目录；稳定性、生态证据沿用 GUID 子目录 |
+| worker/宿主进程 | 原测试仅清理自己创建的进程；没有按全局进程名清理另一流水线 |
+| tools-list、工具矩阵和 manifest | 两版成功汇合后才串行生成；任一版失败不写完整构建记录 |
+
+`Build-Release.ps1 -SelfTest` 用两个必须同时启动的假流水线验证并发，以及一版/两版失败时的日志与汇总；不启动引擎。实际两版构建耗时仍须在具备 SDK、伴随环境和本地 HTTP 能力的维护者机器测量。
 
 ## GitHub 与原生验收
 
