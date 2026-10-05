@@ -2,8 +2,9 @@
 
 These types are not wired to tools. Obtain a parameter schema from the **same**
 `InputContract<T>.Schema` instance used to validate that action and release. Embed it
-under `inputSchema.properties[parameter]`; the outer tool schema owns whether that
-parameter is required. Call `Read(JsonElement, parameter, optional)` before native
+under `inputSchema.properties[parameter]`; when it uses root-local references,
+hoist `$defs` to the outer document root as well. The outer tool schema owns whether
+that parameter is required. Call `Read(JsonElement, parameter, optional)` before native
 work, or `Validate(typedValue, parameter)` for an already typed caller. Both return
 `InputResult<T>` with V4 `Error` details and a normalized value. Do not deserialize
 the DTO and skip the contract.
@@ -23,7 +24,8 @@ parsing, then checks parsed elements iteratively. Reader depth failures become
 depth of rejected input. Syntax errors remain value-free `INVALID_ARGUMENT` errors.
 The hook does not configure another serializer. Constructors bound external
 `JsonElement` trees before recursive V4 or schema validation; schema recursion is
-bounded by its own checked document depth.
+bounded by its own checked document depth and the input depth. Reference chains
+that do not consume input are checked for cycles and limited to 64 definitions.
 DTO fields are closed, camelCase and ordinal. Dynamic map keys retain exact SDK
 spelling and insertion order. Duplicate JSON keys are rejected before materializing
 a dictionary. Input errors do not echo JSON, values, keys or parser diagnostics.
@@ -58,13 +60,22 @@ Compact JSON character counts, traversal counts, culture/SDK admission, confirma
 and normalized-name uniqueness remain business validation, not schema annotations.
 
 `InputSchema` accepts an explicit, closed vocabulary (see `InputSchema.cs`). It
-rejects unsupported keywords, including refs and formats, rather than claiming to
-have validated them. No remote schema fetching occurs. Callers must provide an
-inlined supported schema or add reviewed support before wiring a schema that uses
-additional keywords. `ToolTarget.BusinessValidation` is also required when the
+supports root-local `#/$defs/name` references, `$comment` and `if`/`then`/`else` for
+the existing HMI schemas. Missing or remote references, non-consuming reference
+cycles, unsupported pointer forms and other unsupported keywords (including
+formats) fail at construction. No remote schema fetching occurs. Callers must
+provide a supported schema or add reviewed support before wiring additional
+keywords. `ToolTarget.BusinessValidation` is also required when the
 target has constraints beyond its schema; target budgets are checked independently
 of the batch's budget. All policies are scoped to the caller's action and release;
 these adapters do not imply a capability exists on every CPU/release.
+
+`InputContract` also accepts an optional `validateInput` callback. It runs on the
+bounded, schema-checked element before DTO construction, inside the same V4 error
+mapping as the typed normalizer. HMI uses this hook for aggregate AML item/depth
+budgets so the contract returns `LIMIT_EXCEEDED` while its existing direct DTO
+constructors retain their `ArgumentException` behavior. The callback must not
+invoke native operations or alter input; normalization still runs after construction.
 
 Before using R with a native collection, the integration must construct the
 admission graph from the supported SDK surface and call `ValidateTraversal` while

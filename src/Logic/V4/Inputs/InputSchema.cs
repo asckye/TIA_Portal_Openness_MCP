@@ -7,18 +7,26 @@ using System.Text.RegularExpressions;
 namespace TiaMcp.Logic.V4.Inputs
 {
     // A deliberately closed JSON Schema vocabulary. Unsupported keywords fail at
-    // construction, never silently skip a target tool's constraint. No remote refs.
+    // construction, never silently skip a target tool's constraint. References are
+    // restricted to this document's root definitions; nothing is fetched remotely.
     public sealed class InputSchema
     {
         private static readonly string[] Keywords = { "type", "enum", "const", "properties", "required", "additionalProperties",
             "items", "minItems", "maxItems", "uniqueItems", "minProperties", "maxProperties", "propertyNames", "minLength", "maxLength",
-            "pattern", "minimum", "maximum", "anyOf", "oneOf", "allOf", "not", "title", "description", "default", "examples", "$schema" };
+            "pattern", "minimum", "maximum", "anyOf", "oneOf", "allOf", "not", "if", "then", "else",
+            "title", "description", "default", "examples", "$schema", "$comment", "$defs", "$ref" };
         public JsonElement Json { get; }
         public InputSchema(JsonElement schema)
         {
             // Bound the document iteratively before any recursive schema traversal.
             new InputBudget().Check(schema);
-            Verify(schema);
+            Verify(schema, schema);
+            if (schema.ValueKind == JsonValueKind.Object && schema.TryGetProperty("$defs", out var definitions))
+            {
+                var depths = new Dictionary<string, int>(StringComparer.Ordinal);
+                foreach (var definition in definitions.EnumerateObject())
+                    ReferenceDepth(definition.Name, schema, new HashSet<string>(StringComparer.Ordinal), depths);
+            }
             Json = V4Json.Deserialize<JsonElement>(V4Json.Serialize(schema));
         }
         private static InputSchema Build(Dictionary<string, object?> schema) => new InputSchema(V4Json.Data(schema)!.Value);
@@ -74,9 +82,9 @@ namespace TiaMcp.Logic.V4.Inputs
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException || ex is InvalidOperationException || ex is RegexMatchTimeoutException)
             { return InputGuard.Invalid(parameter); }
         }
-        internal void Check(JsonElement value) => Check(Json, value);
+        internal void Check(JsonElement value) => Check(Json, value, Json);
 
-        private static void Verify(JsonElement schema)
+        private static void Verify(JsonElement schema, JsonElement root)
         {
             if (schema.ValueKind == JsonValueKind.True || schema.ValueKind == JsonValueKind.False) return;
             if (schema.ValueKind != JsonValueKind.Object) throw new ArgumentException("A target schema must be an object or boolean.");
@@ -87,11 +95,15 @@ namespace TiaMcp.Logic.V4.Inputs
                     throw new ArgumentException("Unsupported or duplicate target-schema keyword.");
                 switch (field.Name)
                 {
-                    case "properties": foreach (var property in field.Value.EnumerateObject()) Verify(property.Value); break;
-                    case "items": case "additionalProperties": case "propertyNames": case "not": Verify(field.Value); break;
+                    case "properties": case "$defs":
+                        foreach (var property in field.Value.EnumerateObject()) Verify(property.Value, root);
+                        break;
+                    case "$ref": _ = Definition(root, ReferenceName(field.Value)); break;
+                    case "items": case "additionalProperties": case "propertyNames": case "not":
+                    case "if": case "then": case "else": Verify(field.Value, root); break;
                     case "anyOf": case "oneOf": case "allOf":
                         if (field.Value.GetArrayLength() == 0) throw new ArgumentException("Empty schema union.");
-                        foreach (var branch in field.Value.EnumerateArray()) Verify(branch);
+                        foreach (var branch in field.Value.EnumerateArray()) Verify(branch, root);
                         break;
                     case "pattern": _ = new Regex(field.Value.GetString()!, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)); break;
                     case "type":
@@ -103,10 +115,60 @@ namespace TiaMcp.Logic.V4.Inputs
             }
         }
 
-        private static void Check(JsonElement schema, JsonElement value)
+        private static string ReferenceName(JsonElement reference)
+        {
+            const string prefix = "#/$defs/";
+            if (reference.ValueKind != JsonValueKind.String || !reference.GetString()!.StartsWith(prefix, StringComparison.Ordinal))
+                throw new ArgumentException("Only root definition references are supported.");
+            string name = reference.GetString()!.Substring(prefix.Length);
+            if (name.Contains('/') || name.Contains('%')
+                || Regex.IsMatch(name, "~(?![01])", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+                throw new ArgumentException("A reference must name one root definition.");
+            return name.Replace("~1", "/").Replace("~0", "~");
+        }
+
+        private static JsonElement Definition(JsonElement root, string name)
+        {
+            if (!root.TryGetProperty("$defs", out var definitions) || definitions.ValueKind != JsonValueKind.Object
+                || !definitions.TryGetProperty(name, out var definition))
+                throw new ArgumentException("Missing local schema definition.");
+            return definition;
+        }
+
+        // Recursive item/property definitions consume input depth. Alias/combinator
+        // cycles do not, so reject those (and unbounded alias chains) at construction.
+        private static int ReferenceDepth(string name, JsonElement root, HashSet<string> active, Dictionary<string, int> depths)
+        {
+            if (depths.TryGetValue(name, out int known)) return known;
+            if (!active.Add(name) || active.Count > V4Json.MaximumInputDepth)
+                throw new ArgumentException("Non-consuming or excessive schema reference chain.");
+            int depth = 1;
+            foreach (string next in SameValueReferences(Definition(root, name)))
+                depth = Math.Max(depth, 1 + ReferenceDepth(next, root, active, depths));
+            active.Remove(name);
+            if (depth > V4Json.MaximumInputDepth) throw new ArgumentException("Excessive schema reference chain.");
+            depths.Add(name, depth);
+            return depth;
+        }
+
+        private static IEnumerable<string> SameValueReferences(JsonElement schema)
+        {
+            if (schema.ValueKind != JsonValueKind.Object) yield break;
+            if (schema.TryGetProperty("$ref", out var reference)) yield return ReferenceName(reference);
+            foreach (string key in new[] { "not", "if", "then", "else", "anyOf", "oneOf", "allOf" })
+            {
+                if (!schema.TryGetProperty(key, out var child)) continue;
+                var branches = child.ValueKind == JsonValueKind.Array ? child.EnumerateArray().ToArray() : new[] { child };
+                foreach (var branch in branches)
+                    foreach (string name in SameValueReferences(branch)) yield return name;
+            }
+        }
+
+        private static void Check(JsonElement schema, JsonElement value, JsonElement root)
         {
             if (schema.ValueKind == JsonValueKind.True) return;
             InputGuard.Require(schema.ValueKind != JsonValueKind.False && value.ValueKind != JsonValueKind.Undefined);
+            if (schema.TryGetProperty("$ref", out var reference)) Check(Definition(root, ReferenceName(reference)), value, root);
             if (schema.TryGetProperty("type", out var type))
                 InputGuard.Require(type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!)) : IsType(value, type.GetString()!));
             if (schema.TryGetProperty("enum", out var allowed))
@@ -115,18 +177,21 @@ namespace TiaMcp.Logic.V4.Inputs
             foreach (string keyword in new[] { "anyOf", "oneOf", "allOf" })
             {
                 if (!schema.TryGetProperty(keyword, out var branches)) continue;
-                if (keyword == "allOf") { foreach (var branch in branches.EnumerateArray()) Check(branch, value); continue; }
+                if (keyword == "allOf") { foreach (var branch in branches.EnumerateArray()) Check(branch, value, root); continue; }
                 int matches = 0;
                 InputRejection? budgetFailure = null;
                 foreach (var branch in branches.EnumerateArray())
                 {
-                    try { Check(branch, value); matches++; }
+                    try { Check(branch, value, root); matches++; }
                     catch (InputRejection rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
                 }
                 if (matches == 0 && budgetFailure != null) throw budgetFailure;
                 InputGuard.Require(keyword == "oneOf" ? matches == 1 : matches > 0);
             }
-            if (schema.TryGetProperty("not", out var excluded)) InputGuard.Require(!Matches(excluded, value));
+            if (schema.TryGetProperty("not", out var excluded)) InputGuard.Require(!Matches(excluded, value, root));
+            if (schema.TryGetProperty("if", out var condition)
+                && schema.TryGetProperty(Matches(condition, value, root) ? "then" : "else", out var consequent))
+                Check(consequent, value, root);
             if (value.ValueKind == JsonValueKind.String)
             {
                 var text = value.GetString()!;
@@ -144,7 +209,7 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 var entries = value.EnumerateArray().ToArray();
                 Size(schema, entries.Length, "minItems", "maxItems");
-                if (schema.TryGetProperty("items", out var items)) foreach (var entry in entries) Check(items, entry);
+                if (schema.TryGetProperty("items", out var items)) foreach (var entry in entries) Check(items, entry, root);
                 if (schema.TryGetProperty("uniqueItems", out var unique) && unique.GetBoolean())
                     for (int i = 0; i < entries.Length; i++) for (int j = 0; j < i; j++) InputGuard.Require(!Equal(entries[i], entries[j]));
             }
@@ -157,9 +222,9 @@ namespace TiaMcp.Logic.V4.Inputs
                 foreach (var property in properties)
                 {
                     InputGuard.Require(names.Add(property.Name));
-                    if (schema.TryGetProperty("propertyNames", out var keys)) Check(keys, V4Json.Deserialize<JsonElement>(V4Json.Serialize(property.Name)));
-                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value);
-                    else if (schema.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value);
+                    if (schema.TryGetProperty("propertyNames", out var keys)) Check(keys, V4Json.Deserialize<JsonElement>(V4Json.Serialize(property.Name)), root);
+                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value, root);
+                    else if (schema.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, root);
                 }
                 if (schema.TryGetProperty("required", out var required))
                     foreach (var key in required.EnumerateArray()) InputGuard.Require(names.Contains(key.GetString()!));
@@ -171,9 +236,9 @@ namespace TiaMcp.Logic.V4.Inputs
             if (schema.TryGetProperty(min, out var minimum)) InputGuard.Require(actual >= minimum.GetInt32());
             if (schema.TryGetProperty(max, out var maximum)) InputGuard.Limit(actual, maximum.GetInt32());
         }
-        private static bool Matches(JsonElement schema, JsonElement value)
+        private static bool Matches(JsonElement schema, JsonElement value, JsonElement root)
         {
-            try { Check(schema, value); return true; }
+            try { Check(schema, value, root); return true; }
             catch (InputRejection) /* swallow(parse-fallback): a failing branch is the expected result of a schema not predicate */
             { return false; }
         }

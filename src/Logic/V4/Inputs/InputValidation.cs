@@ -74,14 +74,17 @@ namespace TiaMcp.Logic.V4.Inputs
     {
         private readonly InputSchema schema;
         private readonly Func<T, T> normalize;
+        private readonly Action<JsonElement>? validateInput;
         public InputBudget Budget { get; }
         public JsonElement Schema => schema.Json;
 
-        public InputContract(InputSchema schema, InputBudget budget, Func<T, T>? normalize = null)
+        public InputContract(InputSchema schema, InputBudget budget, Func<T, T>? normalize = null,
+            Action<JsonElement>? validateInput = null)
         {
             this.schema = schema ?? throw new ArgumentNullException(nameof(schema));
             Budget = budget ?? throw new ArgumentNullException(nameof(budget));
             this.normalize = normalize ?? (value => value);
+            this.validateInput = validateInput;
         }
 
         public InputResult<T> Read(string? json, string parameter, bool optional = false)
@@ -109,6 +112,9 @@ namespace TiaMcp.Logic.V4.Inputs
             {
                 Budget.Check(input);
                 schema.Check(input);
+                // Family aggregate budgets must run before constructors can reject
+                // them as ordinary argument errors. The shape is already checked.
+                validateInput?.Invoke(input);
                 var value = normalize(V4Json.Deserialize<T>(V4Json.Serialize(input)));
                 return new InputResult<T>(presence, value, null);
             }
