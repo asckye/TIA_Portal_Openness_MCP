@@ -35,63 +35,16 @@ namespace TiaMcpServer.Siemens
         public static string? FindSiblingExe(int version)
             => FindSiblingExe(version, () => Process.GetCurrentProcess().MainModule.FileName);
 
-        // The repository override is intentionally ignored, as in the original lookup.
-        internal static string? FindSiblingExe(int version, Func<string> ownExePath, string? repositoryRoot = null)
+        internal static string? FindSiblingExe(int version, Func<string> ownExePath, string? bundleRoot = null)
         {
             var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
             try
             {
                 string own = ownExePath();
-                string exeName = target.IsFullEngine ? "TiaMcp.Engine.V" + target.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe";
-                string dir = Path.GetDirectoryName(own) ?? "";
-                var candidates = new List<string>();
-
-                var root = TiaOpenness.Shared.BundleLayout.FindRoot(dir);
-                if (root != null)
-                {
-                    var output = new DirectoryInfo(dir);
-                    if (string.Equals(output.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
-                        && (string.Equals(output.Name, "v20", StringComparison.OrdinalIgnoreCase)
-                            || string.Equals(output.Name, "v21", StringComparison.OrdinalIgnoreCase)))
-                        candidates.Add(Path.Combine(output.Parent!.FullName, target.RuntimeDirectory, exeName));
-                    else if (target.IsFullEngine && string.Equals(output.Parent?.Name, "Release", StringComparison.OrdinalIgnoreCase)
-                        && string.Equals(output.Parent?.Parent?.Parent?.FullName,
-                            Path.Combine(root, "src", "Engine"), StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Preserve the original prefix spelling, separators and literal Release/net48 suffix.
-                        string source = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(dir)))!;
-                        candidates.Add(Path.Combine(source, target.EngineOutputDirectory, "Release", "net48", exeName));
-                    }
-                }
-
-                // Keep the original layout probes for incomplete bundles and unrecognized outputs (D-G7-3).
-                var m = Regex.Match(dir, @"^(.*)[\\/]bin(-v20)?[\\/]Release[\\/]net48$", RegexOptions.IgnoreCase);
-                if (m.Success && target.IsFullEngine)
-                {
-                    string binDir = target.EngineOutputDirectory;
-                    candidates.Add(Path.Combine(m.Groups[1].Value, binDir, "Release", "net48", exeName));
-                }
-
-                var parent = new DirectoryInfo(dir);
-                if (parent.Parent != null && Regex.IsMatch(parent.Name, @"^v\d+$", RegexOptions.IgnoreCase))
-                {
-                    candidates.Add(Path.Combine(parent.Parent.FullName, target.RuntimeDirectory, exeName));
-                }
-
-                foreach (var c in candidates)
-                {
-                    if (File.Exists(c) &&
-                        !string.Equals(Path.GetFullPath(c), Path.GetFullPath(own), StringComparison.OrdinalIgnoreCase))
-                    {
-                        return c;
-                    }
-                }
+                string candidate = TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, Path.GetDirectoryName(own)!, bundleRoot);
+                return string.Equals(Path.GetFullPath(candidate), Path.GetFullPath(own), StringComparison.OrdinalIgnoreCase) ? null : candidate;
             }
-            catch /* swallow(env-probe): lookup failure retains the original null result so callers fail closed */
-            {
-                // Lookup failure is returned to the caller, which must fail closed.
-            }
-            return null;
+            catch (IOException) { /* swallow(env-probe): missing bundle or sibling paths are unavailable routes; callers fail closed */ return null; }
         }
 
         /// <summary>
@@ -109,7 +62,9 @@ namespace TiaMcpServer.Siemens
             }
 
             string? sibling = FindSiblingExe(version);
-            if (sibling == null) return false;
+            if (sibling == null)
+                sibling = TiaOpenness.Shared.BundleLayout.RequireEngine(TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version).Key,
+                    Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)!);
 
             log($"EngineRouter: TIA V{version} requested but this exe is built for V{CompiledTiaMajorVersion}; rerouting to {sibling}");
             var psi = new ProcessStartInfo

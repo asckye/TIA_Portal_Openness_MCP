@@ -22,7 +22,7 @@ namespace TiaMcpServer
 {
     public class Program
     {
-        private static readonly string DiagLogPath = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.log");
+        private static string DiagLogPath => Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.log");
         private static readonly string DiagLogPathLocal = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.startup.log");
 
         private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)
@@ -51,6 +51,23 @@ namespace TiaMcpServer
 
         public static async Task Main(string[] args)
         {
+            try
+            {
+                var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);
+                TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
+            }
+            catch (ArgumentException error)
+            {
+                Console.Error.WriteLine("RESOURCE_UNAVAILABLE: " + error.Message);
+                Environment.ExitCode = 64;
+                return;
+            }
+            catch (IOException error)
+            {
+                Console.Error.WriteLine(error.Message);
+                Environment.ExitCode = 70;
+                return;
+            }
             if (Cli.CliBoundary.TryValidate(args, out int syntaxExit))
             {
                 Environment.ExitCode = syntaxExit;
@@ -597,6 +614,12 @@ namespace TiaMcpServer
             }
             catch (Exception ex)
             {
+                if (ex is TiaOpenness.Shared.BundleResourceUnavailableException resource)
+                {
+                    Console.Error.WriteLine(resource.Message);
+                    Environment.ExitCode = 70;
+                    return;
+                }
                 LogDiag("FATAL:");
                 LogExceptionSafe(ex);
                 if (ex is ReflectionTypeLoadException rtle && rtle.LoaderExceptions != null)

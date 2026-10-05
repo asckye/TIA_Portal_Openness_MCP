@@ -750,7 +750,7 @@ table(["公共库/桌面项目", "当前目标框架（源码属性）"],
       [[link(p), ET.fromstring(read(p)).findtext('.//TargetFrameworks') or ET.fromstring(read(p)).findtext('.//TargetFramework')]
        for p in [L+"TiaMcp.Logic.csproj", S+"Gui/TiaOpenness.Gui.csproj", S+"Core/TiaOpenness.Core.csproj"]])
 config_specs = [
-    (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", r'"(TIA_MCP_REPOSITORY_ROOT)"', "替换为 --bundle-root / TIA_MCP_BUNDLE_ROOT"),
+    (SH+"BundleLayout.cs", r'"(--bundle-root|TIA_MCP_BUNDLE_ROOT)"', "P6-37：--bundle-root 优先于 TIA_MCP_BUNDLE_ROOT，再用已知锚点；旧 TIA_MCP_REPOSITORY_ROOT 已删除"),
     (E+"ModelContextProtocol/Tools/McpServer.Profile.cs", r"(TIA_MCP_PROFILE)", "lite/full 名称保留，名单改为 V4 数据"),
     (S+"Gui/Configuration/ClientProfiles.cs", r'"(tia-portal(?:-vm)?)"', "server key 保留，command/args 改用新产品表"),
     (E+"Cli/McpConfigInstaller.cs", r'"(mcpServers|servers|tia-portal)"', "JSON/TOML 根及 server key 保留，command/args 更新"),
@@ -771,7 +771,7 @@ layout_policies = [
     (E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "FindInstallRoot", "R2 四层 delivery 探测", "已知安装根 + delivery 标记"),
     (E+"Cli/SpecLoader.cs", "FindBundleRoot", "R3 十二层 templates/tools 探测", "显式根/已知锚点；未解析 __BUNDLE__ 报错"),
     (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "R7 bin/bin-v20/v数字候选", "版本目录表 + 精确新产品名"),
-    (E+"Cli/McpConfigInstaller.cs", "FindSiblingExe", "目标引擎缺失时使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
+    (E+"Cli/McpConfigInstaller.cs", "RequireEngine", "P6-37 已改：目标版本引擎缺失时报 RESOURCE_UNAVAILABLE，不再使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
     (S+"Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
     (S+"Gui/Configuration/ConfigCore.cs", "TiaMcp.Engine.V", "根无标记仍保留候选；产品输出名已迁移", "严格根校验、新产品目录"),
     (S+"Gui/Configuration/UpdateCheck.cs", "FindResource", "解析失败仍拼传入根", "严格资源解析，worktree 更新保护保留"),

@@ -12,6 +12,13 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 HostOptions options;
+try
+{
+    var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);
+    TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
+}
+catch (TiaOpenness.Shared.BundleResourceUnavailableException ex) { Console.Error.WriteLine(ex.Message); return 70; }
+catch (ArgumentException ex) { Console.Error.WriteLine("RESOURCE_UNAVAILABLE: " + ex.Message); return 64; }
 try { options = HostOptions.Parse(args, AppContext.BaseDirectory); }
 catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 2; }
 

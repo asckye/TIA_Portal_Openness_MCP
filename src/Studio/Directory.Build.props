@@ -12,6 +12,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
+    <DefineConstants Condition="'$(MSBuildProjectName)' == 'TiaOpenness.Core' Or '$(MSBuildProjectName)' == 'TiaOpenness.Client' Or $([System.String]::Copy('$(MSBuildProjectName)').StartsWith('TiaOpenness.Gui'))">$(DefineConstants);TIA_BUNDLE_LAYOUT_STUDIO</DefineConstants>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <NuGetAudit>true</NuGetAudit>

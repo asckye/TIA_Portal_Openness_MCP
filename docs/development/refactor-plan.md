@@ -199,7 +199,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |
 | P6-35 | 汇总逐版/逐族行为能力与 V4 schema 缺省；未验收族保持 current，并重新生成实际发布快照；[路径清单](phase6-review.md#phase6-path-p6-35) | 26；已进入发布的 27–34 必须对应 L5 通过；其余明确延期 | T、V；schema 不广告未实现安全策略、UNVERIFIED_BEHAVIOR 可见；不改 G3/J 默认开关 | todo |
 | P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | done |
-| P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | todo |
+| P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | done |
 | P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测；[路径清单](phase6-review.md#phase6-path-p6-38) | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | todo |
 | P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |
 | P6-40 | 更新 `reference/tool-examples`、`src/Engine/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `scripts/generate/Generate-ToolUsage.py`、`Generate-ToolCapabilityMatrix.ps1`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |

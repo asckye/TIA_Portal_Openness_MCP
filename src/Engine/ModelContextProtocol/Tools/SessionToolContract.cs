@@ -27,6 +27,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
         {
+            if (exception is TiaOpenness.Shared.BundleResourceUnavailableException resource)
+                return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
             var evidence = new JsonObject { ["exceptionType"] = exception.GetType().Name };

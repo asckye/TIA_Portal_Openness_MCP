@@ -42,7 +42,7 @@ namespace TiaMcpConfigurator
         {
             try
             {
-                string path = TiaOpenness.Shared.BundleLayout.FindResource(
+                string path = TiaOpenness.Shared.BundleLayout.FindResourceForStudio(
                     TiaOpenness.Shared.BundleResource.DeliveryManifest, null, root)
                     ?? Path.Combine(root, "manifest", "delivery.json");
                 if (!File.Exists(path)) return null;
@@ -54,7 +54,7 @@ namespace TiaMcpConfigurator
         }
         public static string UpdaterPath(string root)
         {
-            root = TiaOpenness.Shared.BundleLayout.FindRoot(null, root) ?? root;
+            root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(null, root) ?? root;
             return Path.Combine(root, UpdaterRelativePath);
         }
         // The source repository also carries manifest\delivery.json and the updater; updating there would overwrite

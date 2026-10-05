@@ -35,7 +35,7 @@ namespace TiaOpenness.Core.Abstractions
 #if TIA_SHARED_ADAPTER_PATHS
             return Path.Combine(baseDirectory, "adapters", "v" + key, "TiaMcp.Adapter." + key + ".dll");
 #else
-            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+            var root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(baseDirectory);
             if (root != null)
             {
                 string installed = Path.Combine(root, "runtime", "studio", "bridge");

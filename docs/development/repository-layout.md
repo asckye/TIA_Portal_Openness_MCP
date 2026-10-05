@@ -49,7 +49,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 引擎与 Studio 使用 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 从已知安装/开发输出定位
 含 `manifest/package-manifest.json` 的包根。完整包放在仓库外仍可使用，无需 `.git`。
 指南、Python 桥接和 CLI 模板相对包根读取；V21 生态目录直接嵌入 V20/V21 引擎，随包 JSON 仅是参考副本。
-`TIA_MCP_REPOSITORY_ROOT` 只沿用生态文件调用方的覆盖语义，不是所有资源的全局覆盖。
+包根只由 `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` 或已知安装锚点决定（见[运行时布局](runtime-layout.md)）；旧 `TIA_MCP_REPOSITORY_ROOT` 已删除。
 
 安装引擎在 `runtime/<RuntimeDirectory>`；Studio 在 `runtime/studio`，原生桥接及其按版本的适配器在
 `runtime/studio/bridge` 及其 `adapters` 子目录。版本路径取自 `TiaVersionCatalog`，生成的二进制不列入交付资源代码表。

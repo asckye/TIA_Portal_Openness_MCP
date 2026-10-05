@@ -4,7 +4,7 @@ $exePath=(Resolve-Path -LiteralPath $Exe).Path
 $api=(Resolve-Path -LiteralPath $PublicApiDirectory).Path
 $runtime=Split-Path $exePath
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-$env:TIA_MCP_REPOSITORY_ROOT=$repo
+$env:TIA_MCP_BUNDLE_ROOT=$repo
 $scratch=Join-Path $repo ('TiaMcp_Output/ecosystem-assembly-'+[Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $scratch | Out-Null
 $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $scratch 'diagnostics'

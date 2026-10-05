@@ -105,7 +105,7 @@ public static class EnvironmentServiceContext
         string root = data.WorkbenchDataDirectory;
         var context = new EnvironmentCheckContext
         {
-            BundleRoot = BundleLayout.FindRoot(AppContext.BaseDirectory), DataRoot = root,
+            BundleRoot = BundleLayout.FindRootForStudio(AppContext.BaseDirectory), DataRoot = root,
             UserFallback = data.Root == null, ConfigDirectory = data.ConfigDirectory, LogsDirectory = data.LogsDirectory,
         };
         LoadEndpoint(context);

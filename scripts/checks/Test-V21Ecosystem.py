@@ -66,7 +66,7 @@ def main():
                     (cwc/'control/index.html').write_text('<html>test</html>',encoding='utf-8')
                     (cwc/'manifest.json').write_text(json.dumps({'mver':'1.2.0','control':{'identity':{'name':'Demo','displayname':'Demo','version':'1.0','type':'guid://551BF148-2F0D-4293-8E10-C9C3A1A6A073'}}}),encoding='utf-8')
                     with resources.server(args.exe,args.public_api,args.major,transport,profile,args.host_harness,args.public_api,isolate=isolated,
-                                          env_overrides={'TIA_MCP_REPOSITORY_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case) as (rpc,http,logs):
+                                          env_overrides={'TIA_MCP_BUNDLE_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case) as (rpc,http,logs):
                         rpc('initialize','init',{'protocolVersion':'2024-11-05','capabilities':{},'clientInfo':{'name':'ecosystem-check','version':'1'}})
                         rpc('notifications/initialized',notification=True)
                         number=0

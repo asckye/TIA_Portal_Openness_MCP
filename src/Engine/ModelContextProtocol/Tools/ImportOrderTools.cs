@@ -96,6 +96,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult Failure(string tool, Exception error, bool writes, bool current)
         {
             var cause = error.InnerException ?? error;
+            if (cause is BundleResourceUnavailableException resource)
+                return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (error is Rejected rejected)
                 return Result(tool, null, rejected.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (!writes && (cause is ArgumentException || cause is JsonException))

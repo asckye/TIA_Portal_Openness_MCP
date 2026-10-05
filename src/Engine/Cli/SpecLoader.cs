@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using YamlDotNet.Serialization;
 
@@ -38,35 +39,29 @@ namespace TiaMcpServer.Cli
 
         // The shipped spec templates reference bundled .scl/.s7dcl files via a "__BUNDLE__" token
         // so they work without the user hand-editing absolute paths. Resolve it to the package
-        // root (a known bundle anchor, with the original upward probe as a compatibility fallback).
+        // root selected at startup.
         // Forward slashes are used so the result stays valid inside JSON string values (no \-escaping
-        // needed) and Windows file APIs accept them. If the root can't be found, the token is left
-        // as-is and the user must substitute it manually.
-        private static string ResolveBundleToken(string text)
+        // needed) and Windows file APIs accept them.
+        internal static string ResolveBundleToken(string text, string? baseDirectory = null, string? bundleRoot = null)
         {
             if (!text.Contains("__BUNDLE__")) return text;
-            var root = FindBundleRoot();
-            if (root == null) return text;
+            var root = FindBundleRoot(baseDirectory ?? AppContext.BaseDirectory, bundleRoot);
+            foreach (Match match in Regex.Matches(text, @"__BUNDLE__(?:/|\\\\)([^""'\r\n]+)"))
+            {
+                string relative = match.Groups[1].Value.Replace("\\\\", "/");
+                string expected = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
+                TiaOpenness.Shared.BundleLayout.RequirePath(root, relative, Directory.Exists(expected));
+            }
             return text.Replace("__BUNDLE__\\\\", root + "/")  // JSON "__BUNDLE__\\templates" -> root + "/templates"
                        .Replace("__BUNDLE__/", root + "/")      // YAML / forward-slash form
                        .Replace("__BUNDLE__", root);
         }
 
-        private static string? FindBundleRoot()
-            => FindBundleRoot(AppContext.BaseDirectory);
-
-        // The repository override is intentionally ignored, as in the original lookup.
-        internal static string? FindBundleRoot(string baseDirectory, string? repositoryRoot = null)
+        internal static string FindBundleRoot(string baseDirectory, string? bundleRoot = null)
         {
-            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
-            if (root != null && Directory.Exists(Path.Combine(root, "templates"))) return root.Replace('\\', '/');
-            // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
-            var dir = new DirectoryInfo(baseDirectory);
-            for (int i = 0; i < 12 && dir != null; i++, dir = dir.Parent)
-                if (Directory.Exists(Path.Combine(dir.FullName, "templates")) &&
-                    Directory.Exists(Path.Combine(dir.FullName, "src")))
-                    return dir.FullName.Replace('\\', '/');
-            return null;
+            string root = ModelContextProtocol.EcosystemFiles.RepositoryRoot(baseDirectory, bundleRoot);
+            TiaOpenness.Shared.BundleLayout.RequirePath(root, "templates", true);
+            return root.Replace('\\', '/');
         }
 
         public static string YamlToJson(string yaml)

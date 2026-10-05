@@ -52,33 +52,7 @@ namespace TiaMcpServer
         }
 
         private static string GetWorkspaceRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null)
-            {
-                if (Directory.Exists(Path.Combine(dir.FullName, "TMP_EXPORT")) &&
-                    Directory.Exists(Path.Combine(dir.FullName, "src")))
-                {
-                    return dir.FullName;
-                }
-
-                dir = dir.Parent;
-            }
-
-            var current = new DirectoryInfo(Environment.CurrentDirectory);
-            while (current != null)
-            {
-                if (Directory.Exists(Path.Combine(current.FullName, "TMP_EXPORT")) &&
-                    Directory.Exists(Path.Combine(current.FullName, "src")))
-                {
-                    return current.FullName;
-                }
-
-                current = current.Parent;
-            }
-
-            return Environment.CurrentDirectory;
-        }
+            => TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory);
 
         internal static void RunAnalyzeReferenceAssets(CliOptions options)
         {

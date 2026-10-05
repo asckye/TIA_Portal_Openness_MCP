@@ -79,13 +79,11 @@ namespace TiaMcpServer.Cli
 
         /// <summary>
         /// The exe the config should point at for <paramref name="tiaMajorVersion"/>: this exe
-        /// when it matches, otherwise the sibling built for that version (falls back to this
-        /// exe — it self-routes at startup anyway, this just avoids the extra hop).
+        /// from the selected bundle's formal install/development layout.
         /// </summary>
         public static string ExeForVersion(int tiaMajorVersion)
         {
-            if (tiaMajorVersion == Siemens.EngineRouter.CompiledTiaMajorVersion) return OwnExePath();
-            return Siemens.EngineRouter.FindSiblingExe(tiaMajorVersion) ?? OwnExePath();
+            return TiaOpenness.Shared.BundleLayout.RequireEngine(tiaMajorVersion.ToString(), Path.GetDirectoryName(OwnExePath())!);
         }
 
         public static JsonObject BuildServerEntry(string exePath, int tiaMajorVersion, HostStyle style, bool full = false)

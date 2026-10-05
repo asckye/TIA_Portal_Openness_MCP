@@ -44,6 +44,7 @@ namespace TiaMcpServer.Cli
             catch (Exception ex)
             {
                 Console.Error.WriteLine("ERROR: " + ex.Message);
+                if (ex is TiaOpenness.Shared.BundleResourceUnavailableException) return 70;
                 return 2;
             }
         }
@@ -275,6 +276,7 @@ USAGE
   tia version
 
 GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-version KEY
+  --bundle-root ABSOLUTE_PATH overrides TIA_MCP_BUNDLE_ROOT and formal install/development anchors.
   Runnable keys: 20, 21. --tia-major-version N remains an alias.
   Keys 14sp1, 15.1, 16, 17, 18, 19 are planned only and cannot run.
   Original V14 and V15 are outside the target scope and are unsupported.

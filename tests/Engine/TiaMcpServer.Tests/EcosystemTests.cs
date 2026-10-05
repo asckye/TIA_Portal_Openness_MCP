@@ -75,152 +75,38 @@ namespace TiaMcpServer.Tests
     public sealed class EcosystemRepositoryRootTests : IDisposable
     {
         private readonly string scratch = Path.Combine(Path.GetTempPath(), "ecosystem root 中文 " + Guid.NewGuid().ToString("N"));
-
-        public EcosystemRepositoryRootTests() { Directory.CreateDirectory(scratch); }
-
-        private static string At(string root, string relative)
-            => Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
-
-        private static void Put(string root, string relative, string content = "fixture")
+        private static string At(string root, string path) => Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar));
+        private static void Put(string root, string path, string text = "fixture")
         {
-            string file = At(root, relative);
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            File.WriteAllText(file, content);
-        }
-
-        private static void Bundle(string root, bool manifest = true)
-        {
-            if (manifest) Put(root, "manifest/package-manifest.json");
-            Put(root, "scripts/ecosystem/plc_tools_bridge.py");
-            Put(root, "reference/siemens-openness/skills/blocks/SKILL.md", "Fixture guidance\nSecond line");
-            Put(root, "reference/siemens-openness/UPSTREAM.json", "{\"commit\":\"fixture\"}");
-        }
-
-        private void Compare(string output)
-        {
-            string configured = At(scratch, "override root 中文");
-            // The old override requires only the companion marker, not a package manifest.
-            Bundle(configured, false);
-            string invalid = At(scratch, "invalid override");
-            Put(invalid, "manifest/package-manifest.json");
-            foreach (string suffix in new[] { "", Path.DirectorySeparatorChar.ToString(), "/" })
-            foreach (string? explicitRoot in new[] { null, "", " ", configured, configured + suffix,
-                configured + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar,
-                invalid, At(scratch, "missing"), "relative" })
-            {
-                string? before = null, after = null;
-                var oldError = Record.Exception(() => before = OldRepositoryRoot(output + suffix, explicitRoot));
-                var newError = Record.Exception(() => after = EcosystemFiles.RepositoryRoot(output + suffix, explicitRoot));
-                Assert.Equal(oldError?.GetType(), newError?.GetType());
-                Assert.Equal(oldError?.Message, newError?.Message);
-                Assert.Equal(before, after);
-                if (before == null) continue;
-                foreach (var request in new[] { (Query: "", Document: ""), (Query: "Second", Document: ""),
-                    (Query: "", Document: "blocks/SKILL.md") })
-                    Assert.Equal(EcosystemFiles.Guidance(before, request.Query, request.Document, 0, 100).ToJsonString(),
-                        EcosystemFiles.Guidance(after!, request.Query, request.Document, 0, 100).ToJsonString());
-            }
+            string file = At(root, path);
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!); File.WriteAllText(file, text);
         }
 
         [Theory]
-        [InlineData("runtime/v14sp1")]
-        [InlineData("runtime/v15.1")]
-        [InlineData("runtime/v16")]
-        [InlineData("runtime/v17")]
-        [InlineData("runtime/v18")]
-        [InlineData("runtime/v19")]
-        [InlineData("runtime/v20")]
-        [InlineData("runtime/v21")]
-        [InlineData("runtime/studio")]
-        [InlineData("runtime/studio/bridge")]
-        [InlineData("src/Engine/bin/Release/net48")]
-        [InlineData("src/Engine/bin/Debug/net48")]
-        [InlineData("src/Engine/bin-v20/Release/net48")]
-        [InlineData("src/Engine/bin-v20/Debug/net48")]
-        [InlineData("src/Studio/Gui/bin/Release/net10.0-windows")]
-        [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows")]
-        [InlineData("src/Studio/Gui/bin/Release/net10.0-windows/bridge")]
-        [InlineData("src/Studio/Gui/bin/Debug/net10.0-windows/bridge")]
-        [InlineData("src/Studio/Bridge/bin/Release/net48")]
-        [InlineData("src/Studio/Bridge/bin/Debug/net48")]
-        public void Supported_anchors_match_the_original_probe(string anchor)
+        [MemberData(nameof(TiaOpenness.Shared.Tests.BundleLayoutTests.Anchors), MemberType = typeof(TiaOpenness.Shared.Tests.BundleLayoutTests))]
+        public void Guidance_uses_the_chosen_root_without_requiring_the_python_bridge(string anchor)
         {
-            Bundle(scratch);
-            Compare(Directory.CreateDirectory(At(scratch, anchor)).FullName);
+            Put(scratch, "manifest/package-manifest.json");
+            Put(scratch, "reference/siemens-openness/skills/blocks/SKILL.md", "Fixture guidance");
+            Put(scratch, "reference/siemens-openness/UPSTREAM.json", "{\"commit\":\"fixture\"}");
+            string output = Directory.CreateDirectory(At(scratch, anchor)).FullName;
+            Assert.Equal(scratch, EcosystemFiles.RepositoryRoot(output, null));
+            Assert.Equal(1, EcosystemFiles.Guidance(scratch, "", "", 0, 100)["total"]!.GetValue<int>());
         }
 
         [Theory]
-        [InlineData("bundle")]
-        [InlineData("repository-runtime")]
-        [InlineData("worktree")]
-        [InlineData("ci")]
-        public void Repository_layouts_match_the_original_probe(string layout)
+        [InlineData("reference/siemens-openness/skills")]
+        [InlineData("reference/siemens-openness/UPSTREAM.json")]
+        public void Missing_guidance_reports_the_exact_expected_resource(string missing)
         {
-            Bundle(scratch);
-            if (layout == "repository-runtime") Directory.CreateDirectory(At(scratch, ".git"));
-            if (layout == "worktree") Put(scratch, ".git");
-            if (layout != "ci") Directory.CreateDirectory(At(scratch, "runtime/v21"));
-            Compare(Directory.CreateDirectory(At(scratch, "src/Engine/bin/Release/net48")).FullName);
+            Put(scratch, "manifest/package-manifest.json");
+            Put(scratch, "reference/siemens-openness/skills/blocks/SKILL.md");
+            Put(scratch, "reference/siemens-openness/UPSTREAM.json", "{\"commit\":\"fixture\"}");
+            if (missing.EndsWith("skills")) Directory.Delete(At(scratch, missing), true); else File.Delete(At(scratch, missing));
+            Assert.Equal(At(scratch, missing), Assert.Throws<TiaOpenness.Shared.BundleResourceUnavailableException>(
+                () => EcosystemFiles.Guidance(scratch, "", "", 0, 100)).Resource);
         }
 
-        [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, false)]
-        [InlineData(false, true)]
-        [InlineData(true, true)]
-        public void Nested_staging_keeps_the_original_fallback(bool manifest, bool companion)
-        {
-            Bundle(scratch);
-            string staging = At(scratch, "bin-build/staging");
-            if (manifest) Put(staging, "manifest/package-manifest.json");
-            if (companion) Bundle(staging, manifest);
-            Compare(Directory.CreateDirectory(At(staging, "runtime/v21")).FullName);
-        }
-
-        [Theory]
-        [InlineData("elsewhere/runtime/v21")]
-        [InlineData("runtime/v22")]
-        [InlineData("runtime/v21/plugins")]
-        [InlineData("src/Engine/bin/Custom/net48")]
-        [InlineData("src/Engine/bin/Release/net10.0")]
-        [InlineData("tools/other/bin/Release/net48")]
-        public void Stray_ancestor_marker_keeps_the_original_fallback(string anchor)
-        {
-            Bundle(scratch);
-            Compare(Directory.CreateDirectory(At(scratch, anchor)).FullName);
-        }
-
-        [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, false)]
-        [InlineData(false, true)]
-        public void Runtime_only_and_missing_markers_keep_the_original_result(bool manifest, bool companion)
-        {
-            if (manifest) Put(scratch, "manifest/package-manifest.json");
-            if (companion) Bundle(scratch, false);
-            Compare(Directory.CreateDirectory(At(scratch, "runtime/v21")).FullName);
-        }
-
-        // Frozen pre-G7-3 RepositoryRoot body; only its process-global inputs are parameters.
-        private static string OldRepositoryRoot(string baseDirectory, string? configured)
-        {
-            if (!string.IsNullOrWhiteSpace(configured))
-            {
-                if (!Path.IsPathRooted(configured) || !File.Exists(Path.Combine(configured, "scripts", "ecosystem", "plc_tools_bridge.py")))
-                    throw new DirectoryNotFoundException("TIA_MCP_REPOSITORY_ROOT must point to this source/distribution root.");
-                return Path.GetFullPath(configured);
-            }
-            for (var dir = new DirectoryInfo(baseDirectory); dir != null; dir = dir.Parent)
-                if (File.Exists(Path.Combine(dir.FullName, "scripts", "ecosystem", "plc_tools_bridge.py"))) return dir.FullName;
-            throw new DirectoryNotFoundException("Companion files missing. Set TIA_MCP_REPOSITORY_ROOT to the source/distribution root.");
-        }
-
-        public void Dispose()
-        {
-            string full = Path.GetFullPath(scratch);
-            Assert.Equal(new DirectoryInfo(Path.GetTempPath()).FullName.TrimEnd(Path.DirectorySeparatorChar),
-                new DirectoryInfo(full).Parent!.FullName.TrimEnd(Path.DirectorySeparatorChar));
-            Directory.Delete(full, true);
-        }
+        public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }
     }
 }

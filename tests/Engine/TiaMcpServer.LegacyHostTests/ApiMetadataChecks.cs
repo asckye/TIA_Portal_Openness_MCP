@@ -21,5 +21,6 @@ public sealed class ApiMetadataChecks
         ApiMetadataTests.Run(Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT")!, AdapterRoot(), check));
 
     private static string AdapterRoot([CallerFilePath] string currentFile = "") =>
-        Path.GetFullPath(Path.Combine(Path.GetDirectoryName(currentFile)!, "../../../src/Adapters"));
+        Environment.GetEnvironmentVariable("TIA_MCP_TEST_ADAPTER_ROOT")
+        ?? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(currentFile)!, "../../../src/Adapters"));
 }

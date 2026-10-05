@@ -15,72 +15,62 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
-维护 `BundleResource` 到包根相对路径的代码表。它不依赖 Siemens API，链接进 `TiaMcp.Logic`、
-`TiaOpenness.Core`、`TiaOpenness.Client`、`TiaOpenness.Gui` 与共享适配器，不编入织入的引擎 EXE。
+维护资源相对路径和同级产品路由。公共实现由 `TiaMcp.Logic` 导出，两个引擎、Foundation 和 CLI 共用；
+Studio 与适配器的链接副本保留内部可见性，跨程序集通过 AppDomain 中的字符串共享启动时的选择。
 
-`FindRoot(baseDirectory, explicitRoot)` 的顺序是：非空显式根 → 已知安装锚点 → 已知开发锚点。
-显式根必须是绝对路径且含根标记；无效时直接返回 null，不再尝试自动定位。显式根保留原拼写，自动定位使用
-`DirectoryInfo` 的父目录路径。解析器不读取环境变量、不检查 `.git`，也不向任意祖先目录搜索。
+P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` 与 `TIA_MCP_BUNDLE_ROOT`。
+选择顺序为 **CLI → 环境变量 → 正式安装/开发锚点**；两项显式输入并存时 CLI 优先。
+相对路径或缺参数属于语法错误（CLI 退出 64）；目录不存在或缺根标记退出 70。
+显式根无效立即报 `RESOURCE_UNAVAILABLE`，不会尝试环境变量或其他根，不启动工具。
+启动选择固定后供资源、数据目录及路由共用，并传给子进程。
 
-下表路径均相对包根；`<configuration>` 是 `Release` 或 `Debug`，运行文件与输出目录由构建生成。
-版本目录取自 [`TiaVersionCatalog.cs`](../../src/Logic/Siemens/TiaVersionCatalog.cs)。
+下表路径均相对包根；`<configuration>` 为 `Release` 或 `Debug`。
 
-| 锚点 | 支持的基目录 |
+| 锚点 | 基目录 |
 |---|---|
+| 包根 | 自身含 `manifest/package-manifest.json` 的目录 |
 | MCP 安装输出 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` |
-| Studio 安装输出 | `runtime/studio`、`runtime/studio/bridge` |
-| 随包 .NET 运行时 | `runtime/dotnet`（`scripts/build/bundled-dotnet.json` 固定版本与 SHA-512；基础宿主和统一桌面的发布 apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装的 .NET） |
-| 完整引擎开发输出 | `E/bin-v20/<configuration>/net48`（V20）、`E/bin/<configuration>/net48`（V21） |
-| Studio 开发输出 | `S/TiaOpenness.Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`S/TiaOpenness.Bridge/bin/<configuration>/net48` |
+| 完整引擎开发输出 | `src/Engine/bin-v20/<configuration>/net48`、`src/Engine/bin/<configuration>/net48` |
+| Foundation 开发输出 | `src/FoundationHost/bin/<configuration>/net10.0` |
+| 引擎测试宿主输出 | `tests/Engine/TiaMcpServer.HttpTests/bin/<configuration>/net48`；`tests/Engine/TiaMcpServer.LegacyHostTests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcpServer.Tests/bin/<configuration>/net10.0` |
+| Studio 安装输出（既有） | `runtime/studio`、`runtime/studio/bridge` |
+| Studio 开发输出（既有） | `src/Studio/Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`src/Studio/Bridge/bin/<configuration>/net48` |
+| 随包 .NET 运行时 | `runtime/dotnet`；apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装 .NET |
 
-`FindResource` 在选定根下检查文件或目录是否存在；不存在返回 null，不另选一个根。
-这只是解析器的行为；调用方保留的兼容回退及错误处理见下表。
+解析不依赖当前工作目录、`.git` 或写权限，不向任意祖先查找资源。
+资源缺失由 `RequirePath` / `RequireResource` 报 `RESOURCE_UNAVAILABLE`，携带选定根下的预期路径。
 
-### 资源与调用方的解析顺序
+| 资源 | 包根相对路径 |
+|---|---|
+| 根标记、交付清单 | `manifest/package-manifest.json`、`manifest/delivery.json` |
+| 指南及来源 | `reference/siemens-openness/skills`、`reference/siemens-openness/UPSTREAM.json` |
+| V21 生态目录参考副本 | `reference/v21-ecosystem.json` |
+| PLC Tools、SimaticML 桥接 | `scripts/ecosystem/plc_tools_bridge.py`、`scripts/ecosystem/simaticml_decode_bridge.py` |
+| 更新脚本 | `scripts/operations/Update-Engine.ps1` |
+| CLI 模板 | `templates`、默认 HMI 模板 `templates/hmi`；`__BUNDLE__` 引用的具体文件/目录也必须存在于选定根 |
 
-代码表当前有九项。路径均相对包根，目录项检查目录存在，其余检查文件存在。
+`EcosystemFiles.RepositoryRoot` 现在只返回公共解析器选定的根；指南不再要求 Python 桥接文件作为根标记。
+不再读取旧 `TIA_MCP_REPOSITORY_ROOT`，也不使用祖先仓库、`templates`/源码目录组合、
+`TMP_EXPORT` 或 cwd 推断包根。私人工作区及输出缺省的后续收口属于 P6-39。
 
-| 资源 ID | 相对路径 | 用途 |
-|---|---|---|
-| `PackageManifest` | `manifest/package-manifest.json` | 安装根标记 |
-| `DeliveryManifest` | `manifest/delivery.json` | 引擎与 Studio 的安装版本信息 |
-| `OpennessGuides` | `reference/siemens-openness/skills` | `ReadOpennessGuidance` 的指南正文 |
-| `OpennessProvenance` | `reference/siemens-openness/UPSTREAM.json` | 指南来源与固定版本 |
-| `V21EcosystemCatalog` | `reference/v21-ecosystem.json` | 随包参考副本；查询工具读取嵌入数据 |
-| `PlcToolsBridge` | `scripts/ecosystem/plc_tools_bridge.py` | PLC Tools 伴随命令与质量审计 PDF |
-| `SimaticMlDecodeBridge` | `scripts/ecosystem/simaticml_decode_bridge.py` | SimaticML 只读解码伴随进程 |
-| `UpdateScript` | `scripts/operations/Update-Engine.ps1` | 安装包更新脚本路径 |
-| `Templates` | `templates` | CLI 规格文件中 `__BUNDLE__` 引用的模板 |
+同级路由统一调用 `BundleLayout.RequireEngine`：安装布局使用
+`runtime/v<key>/TiaMcp.FoundationHost.exe` 或 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`；
+正式开发锚点使用对应 Release/Debug 输出。目标缺失即拒绝，不改用当前 EXE，也不接受任意 `bin` 或 `v数字` 目录。
+Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，显式 `--worker-exe` 保持优先；
+默认 worker 位于选定根的 `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`。
+引擎更新检查只把选定根下的正式 `runtime/v<key>` 输出认作安装；开发输出保持原有的非安装响应，
+正式安装缺交付清单或更新脚本时报告选定根下的预期路径。
 
-资源表不包含生成的引擎、桥接或适配器二进制；这些候选路径仍由调用方和版本目录表组合。
-以下 R 编号沿用 G7 清点编号；“回退”均指 D-G7-3 保留到 4.0 的兼容路径，不是新增资源的定位方式。
+Studio 的配置页、客户端桥接与更新探测仍待 P6-38；调用独立的 `FindRootForStudio` / `FindResourceForStudio`，
+保持 master 的可选根、null 返回及调用方异常/回退策略，不消费引擎启动缓存或 `TIA_MCP_BUNDLE_ROOT`。
+Studio 的共享数据目录副本通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用同一旧入口；本任务不改其原生路径选择。
+正式相邻 bridge/adapters 部署保持，`TiaSharedAdapterPaths` 默认 false，仍遵守 G3/J 原生验收边界。
+根启动器仍只启动 `runtime/studio/TiaOpenness.exe`。
 
-| 使用者 / 资源 | 正常解析顺序 | 兼容回退及未找到时的行为 |
-|---|---|---|
-| R1：`EcosystemFiles.RepositoryRoot`；指南、Python 桥接、审计 PDF | 非空 `TIA_MCP_REPOSITORY_ROOT` 优先：须为绝对路径且含 `PlcToolsBridge`，返回 `Path.GetFullPath`；否则解析安装/开发根，并检查该桥接文件 | 无显式覆盖且解析未成功时，从引擎基目录逐级向上找 `PlcToolsBridge`；失败抛原 `DirectoryNotFoundException`。无效显式覆盖直接抛错，不回退 |
-| V21 生态目录查询 | `ReadV21EcosystemCatalog` 在 V20/V21 引擎均直接读取程序集资源 `TiaMcp.V21Ecosystem.json` | 不读取磁盘副本或根覆盖；包内 JSON 缺失仍可查询 |
-| R2：引擎 `FindInstallRoot` / `CheckForUpdate` | 解析器识别的 `runtime/<RuntimeDirectory>` 安装锚点，且根下存在 `DeliveryManifest`；更新脚本相对此根定位 | 从基目录起最多检查 4 层的 `DeliveryManifest`；失败返回 null。开发输出不因解析器识别根而成为安装包；不读取仓库根环境变量 |
-| R3：CLI `SpecLoader.FindBundleRoot` | 解析安装/开发根，只要求根下有 `templates`；替换 `__BUNDLE__`，根路径斜杠转为 `/` | 未识别布局保留原来从基目录起最多检查 12 层的 `templates` 与 `tools` 两个目录；失败返回 null，token 保留。忽略仓库根环境变量 |
-| R7：`EngineRouter.FindSiblingExe`；改道、doctor、CLI 配置 | 在 V20/V21 安装输出中按目标版本的 `RuntimeDirectory` 找对应产品 EXE；完整引擎 Release 开发输出按目标 `EngineOutputDirectory` 找对应产品 EXE | 原 `bin`/`bin-v20` 的 `Release/net48` 匹配，再检查当前 `v` 加数字目录的同级目标；候选必须存在且不是自身。失败返回 null；`McpConfigInstaller` 在当前版本或找不到同级引擎时使用自身 EXE。忽略仓库根环境变量 |
-| R10：Foundation LegacyHost | 版本参数与 EXE 旁存在的 `release-key.txt` 校验一致；未指定版本时读该文件。`--worker-exe` 优先，否则使用 EXE 旁 `worker` 中的对应版本 worker | 沿用宿主自身的安装布局和参数校验，不经过 `BundleLayout`，不搜索仓库 |
-| R11：Studio 配置页根 | `ShowConfiguration(bundleRoot)` 的显式值优先，否则 `FindBundleRoot` 调用解析器 | 未识别时逐级向上找 `PackageManifest`；失败抛原 `DirectoryNotFoundException` |
-| R11：`ConfigCore.Engine` | 校验配置页传入的根，先查 `runtime/<RuntimeDirectory>/TiaMcp.FoundationHost.exe`（Foundation）或 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`（完整引擎）；V20/V21 再查对应的 `E/<EngineOutputDirectory>/Release/net48/TiaMcp.Engine.V<major>.exe` | 根标记缺失仍保留传入根及同一组候选；失败抛原 `FileNotFoundException`。Foundation 版本没有源码输出候选 |
-| R11：Studio `UpdateCheck` | 安装版本由 `FindResource(DeliveryManifest, …, root)` 读取；更新脚本由显式根定位 | 解析失败仍使用传入根下的原路径。`.git` 文件和目录都判为源码工作区，禁用安装更新 |
-| R12：根 Launcher | 根目录的 `TiaOpenness.exe` 只查自身目录下 `runtime/studio/TiaOpenness.exe` | C# 5 启动器不链接解析器，无其他相对候选；缺文件沿用原提示 |
-| R13：`BridgeClient` | 显式 `bridgeExePath` 优先；否则识别安装/开发锚点，依次查调用方基目录旁和 `bridge` 子目录内的 `TiaOpenness.Bridge.exe` | 保留同样的两个本地候选，再查原相对开发路径下的 Bridge Debug、Release 输出；失败返回 null |
-| R14：Studio `SessionFactoryLoader` | 默认构建识别 `runtime/studio/bridge`，从桥接基目录下 `adapters/v<key>/TiaOpenness.Openness.dll` 加载 | 开发桥接和未识别布局仍用同一相邻适配器路径，不搜索其他根；缺文件返回原不可用会话工厂 |
-
-`TiaSharedAdapterPaths=true` 的构建变体使用桥接基目录下 `adapters/v<key>/TiaMcp.Adapter.<key>.dll`，
-不改变相邻部署方式；开关默认 false，验收边界见[适配器设计](adapter-merge.md)。这里的 `<key>` 为八个精确版本键。
-
-R1 的指南和桥接文件均相对选定根读取。Python 解释器另由 `TIA_MCP_PLC_TOOLS_PYTHON` 指定，未设置时使用
-根下本机准备的 `TiaMcp_Output/ecosystem-python/Scripts/python.exe`；此环境不随包提供。
-`ReadOpennessGuidance`、`RunPlcCompanionTool`、`AuditEngineeringExports`、`ReadV21EcosystemCatalog` 和
-`DecodePlcSimaticMl` 属于 V20/V21 完整引擎工具，不因布局支持八个版本而加入 Foundation。
-`DecodePlcSimaticMl` 在 V20 引擎中也只接受其声明的 V21 FC/FB 输入。
-
-[`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是生态目录的唯一可编辑源，两个完整引擎工程
-直接将其嵌入，不生成另一份 JSON。更新目录须重建引擎；运行时修改随包副本不改变查询结果。指南仍从磁盘读取。
+V21 生态目录查询仍读取两个完整引擎嵌入的 `TiaMcp.V21Ecosystem.json`，磁盘副本缺失不影响查询。
+[`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建引擎。
+Python 解释器仍由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；其现有缺省环境由 P6-39 处理。
+这些生态工具属于 V20/V21，不加入 Foundation。
 
 ### 软件自身的数据目录
 
@@ -88,7 +78,7 @@ R1 的指南和桥接文件均相对选定根读取。Python 解释器另由 `TI
 程序集之间共享缓存；之后不会因环境变量或目录权限变化重新选择。顺序如下：
 
 1. 非空 `TIA_MCP_DATA_DIRECTORY`：必须为绝对路径；无效值报错，不静默回退。
-2. `BundleLayout.FindRoot(AppContext.BaseDirectory)` 找到的包根下 `data`：创建目录，写入并删除小探测文件；成功才采用。
+2. 引擎/Foundation 启动选定根（未初始化的调用方使用 `BundleLayout.FindRoot(AppContext.BaseDirectory)`）下的 `data`：创建目录，写入并删除小探测文件；成功才采用。Studio 继续使用旧根入口。
 3. 未找到包根或探测失败（例如安装于不可写的 `C:\Program Files`）时，沿用各用途原有的用户目录。
 
 | 数据根下的目录 | 内容 | 无数据根时的原位置 |
@@ -126,13 +116,13 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
 
 ### 兼容边界与风险
 
-##- 阶段 0–5 保持路径字符串、异常类型与首行错误语义；环境变量名称也不变。
+- 阶段 0–5 的路径字符串、异常类型与首行错误语义冻结已结束；P6-37 按上节硬切根变量和资源失败行为。
   `EcosystemFiles.Guidance` 的文档 ID 仍按指南根路径截取生成，不额外规范化。
-- 解析器不会跨出已识别的根借文件，但调用方遇到不完整包仍可能触发旧探测并命中祖先仓库。
-  因此仓库内暂存不能单独证明可重定位，验收使用仓库外的完整交付包；4.0 删除这些兼容回退。
+- 引擎、Foundation 和 CLI 不再触发祖先兼容探测；嵌套暂存缺资源也拒绝借用外层仓库。
+  Studio 调用方剩余根探测由 P6-38 处理，完整交付包的重定位仍需独立验收。
 - 软件自身的配置、诊断、日志和临时数据按上节优先写入包内；崩溃日志、伴随 Python 环境保持原位置。
-- R4–R6 的 `GetWorkspaceRoot`、HMI 模板默认目录和 `workspaceRoot` 套件参数是私人工作区输入，未纳入交付资源解析；
-  阶段 6 删除默认值或改为显式输入。G7 不改变这部分原生 CLI 路径。
+- P6-37 删除 R4–R6 的 `TMP_EXPORT`/cwd 根猜测，并将默认 HMI 模板改为选定根下的 `templates/hmi`。
+  显式私人工作区、HMI 模板和输出参数仍保持原值；私人输入缺省的后续变更由 P6-39 处理。
 - P1-07 的 G7 前置阻塞已解除，整体目录重组仍待阶段 4 完成后进行。
 
 ### 检查器与离线证明
@@ -153,6 +143,8 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
 [Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
 [GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。
+Foundation 的 [BundleRootTests.cs](../../tests/Engine/TiaMcpServer.LegacyHostTests/BundleRootTests.cs)
+覆盖六个 release-key、相邻版本文件、默认 worker 及显式 `--worker-exe`。
 
 G7-1 已将 `ReadOpennessGuidance`、`ReadV21EcosystemCatalog` 和 bin 布局的 `CheckForUpdate` 加入 P0-06。
 G7-3 的仓库外交付包比较保持原始响应一致（质量 PDF 因缺少 ReportLab 未验证）；G7-4 的九项重定位比较只存在时间字段差异。
@@ -233,9 +225,9 @@ P3-18 将最后三个产品余项文件按职责拆开，产品与测试均不�
 | 编号 | 决定 |
 |---|---|
 | D-G7-1 | 布局用 `openness-shared` 中的代码表，`manifest/package-manifest.json` 为根标记，`Check-BundleLayout.py` 校验 |
-| D-G7-2 | 阶段 0–5 只保留 `TIA_MCP_REPOSITORY_ROOT`；4.0 再引入 `TIA_MCP_BUNDLE_ROOT` 或 `--bundle-root`，旧名保留为别名 |
-| D-G7-3 | 不受支持的重定位：阶段 0–5 保留原有探测作为兼容回退，4.0 删除（依据“先兼容，后破坏”的原则） |
-| D-G7-4 | 开发锚点编入产品，只认枚举出的输出目录；测试显式给根 |
+| D-G7-2 | 历史阶段 0–5 使用旧根变量；P6-37 硬切为 `--bundle-root` / `TIA_MCP_BUNDLE_ROOT`，旧名不作别名 |
+| D-G7-3 | P6-37 已删除引擎/Foundation/CLI 的兼容探测；Studio 收口由 P6-38 执行 |
+| D-G7-4 | 开发锚点编入产品，只认枚举出的引擎、Foundation 和测试宿主输出；其他测试布局显式给根 |
 | D-G7-5 | `v21-ecosystem.json` 已直接嵌入 V20/V21 引擎；指南仍读取随包文件，改为嵌入前需另做差分证明 |
 | D-G7-6 | 原迁往 LocalAppData 的方向由 D331 维护者决定替代：软件自身数据优先留在包内，旧用户路径作为兼容回退；崩溃日志与伴随 Python 环境不变 |
 | D-G7-7 | G7-5 已修复 Studio 的 worktree `.git` 判断，文件和目录都禁止安装更新（仅 UI 行为） |

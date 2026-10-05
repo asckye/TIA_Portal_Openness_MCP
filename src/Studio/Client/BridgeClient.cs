@@ -153,7 +153,7 @@ namespace TiaOpenness.Client
 
         internal static string LocateBridge(string baseDir)
         {
-            if (TiaOpenness.Shared.BundleLayout.FindRoot(baseDir) != null)
+            if (TiaOpenness.Shared.BundleLayout.FindRootForStudio(baseDir) != null)
             {
                 // Known installed and development outputs carry the bridge locally.
                 // Use the caller's spelling, including any trailing separator.

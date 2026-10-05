@@ -11,33 +11,22 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public static string RepositoryRoot()
         {
-            return RepositoryRoot(AppDomain.CurrentDomain.BaseDirectory, Environment.GetEnvironmentVariable("TIA_MCP_REPOSITORY_ROOT"));
+            return RepositoryRoot(AppDomain.CurrentDomain.BaseDirectory, null);
         }
 
         internal static string RepositoryRoot(string baseDirectory, string? configured)
         {
-            if (!string.IsNullOrWhiteSpace(configured))
-            {
-                if (!Path.IsPathRooted(configured) || !File.Exists(Path.Combine(configured, "scripts", "ecosystem", "plc_tools_bridge.py")))
-                    throw new DirectoryNotFoundException("TIA_MCP_REPOSITORY_ROOT must point to this source/distribution root.");
-                return Path.GetFullPath(configured);
-            }
-            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
-            if (root != null && File.Exists(Path.Combine(root, "scripts", "ecosystem", "plc_tools_bridge.py"))) return root;
-            // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
-            for (var dir = new DirectoryInfo(baseDirectory); dir != null; dir = dir.Parent)
-                if (File.Exists(Path.Combine(dir.FullName, "scripts", "ecosystem", "plc_tools_bridge.py"))) return dir.FullName;
-            throw new DirectoryNotFoundException("Companion files missing. Set TIA_MCP_REPOSITORY_ROOT to the source/distribution root.");
+            return TiaOpenness.Shared.BundleLayout.RequireRoot(baseDirectory, configured);
         }
 
         public static JsonObject Guidance(string root, string query, string document, int offset, int limit)
         {
             if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0; limit 1..500 lines/items.");
-            var folder = Path.Combine(root, "reference", "siemens-openness", "skills");
+            var folder = TiaOpenness.Shared.BundleLayout.RequirePath(root, "reference/siemens-openness/skills", true);
             // Use an enumerated identifier, not an arbitrary caller-controlled filesystem path.
             var files = Directory.GetFiles(folder, "*.md", SearchOption.AllDirectories)
                 .Select(p => new { Path = p, Id = p.Substring(folder.Length + 1).Replace('\\', '/') }).OrderBy(p => p.Id, StringComparer.Ordinal).ToList();
-            var provenance = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference", "siemens-openness", "UPSTREAM.json")))!.AsObject();
+            var provenance = JsonNode.Parse(File.ReadAllText(TiaOpenness.Shared.BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")))!.AsObject();
             var result = new JsonObject { ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(), ["referenceDataOnly"] = true };
             if (!string.IsNullOrEmpty(document))
             {

@@ -608,7 +608,7 @@ END_DATA_BLOCK
                 ? "MCP_HMI_Template_Validation_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 : options.ProjectName!;
             var templateDirectory = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(AppContext.BaseDirectory, "hmi_templates")
+                ? TiaOpenness.Shared.BundleLayout.RequirePath(TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory), "templates/hmi", true)
                 : options.HmiTemplateDirectory!;
 
             Directory.CreateDirectory(projectDirectory);
@@ -735,7 +735,7 @@ END_DATA_BLOCK
                 ? "MCP_HMI_Template_Binding_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 : options.ProjectName!;
             var templateDirectory = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(AppContext.BaseDirectory, "hmi_templates")
+                ? TiaOpenness.Shared.BundleLayout.RequirePath(TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory), "templates/hmi", true)
                 : options.HmiTemplateDirectory!;
             Directory.CreateDirectory(projectDirectory);
             var reportDir = Path.Combine(projectDirectory, projectName + "_reports");

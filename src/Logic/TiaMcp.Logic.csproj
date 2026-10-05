@@ -5,6 +5,7 @@
     <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_BUNDLE_LAYOUT_PUBLIC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />

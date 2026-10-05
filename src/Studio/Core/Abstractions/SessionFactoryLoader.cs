@@ -28,7 +28,7 @@ namespace TiaOpenness.Core.Abstractions
         }
         internal static string AdapterPath(string baseDirectory, string key)
         {
-            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+            var root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(baseDirectory);
             if (root != null)
             {
                 string installed = Path.Combine(root, "runtime", "studio", "bridge");

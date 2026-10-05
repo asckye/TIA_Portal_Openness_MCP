@@ -47,8 +47,8 @@
 在运行 MCP 的电脑上，按 [伴随工具说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-docs/development/repository-layout.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
 
 V20/V21 完整引擎通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及
-`scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。生态文件保留 `TIA_MCP_REPOSITORY_ROOT`
-显式覆盖，具体校验、默认 Python 路径及保留到 4.0 的兼容回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
+`scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。包根可用 `--bundle-root` 或
+`TIA_MCP_BUNDLE_ROOT` 显式指定，具体校验和默认 Python 路径见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
 此覆盖不影响嵌入的生态目录，也不扩展 Foundation 的工具范围。
 
 `code` 提供代码分析、测试、文档与差异；`iol` 提供 I/O 与标签交换；`net`、`sim`、`sup`、`trace` 按各自配置处理网络、仿真、监督及跟踪。部分命令执行项目 Python、访问设备或抓包，不应把所有伴随命令当作离线只读检查。上游 PDF 文档命令所需的 pandoc/TeX 等环境与本项目 ReportLab 审计报告是不同路线。

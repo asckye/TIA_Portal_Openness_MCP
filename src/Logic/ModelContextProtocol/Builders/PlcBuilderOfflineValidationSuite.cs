@@ -86,19 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static string ResolveWorkspaceRoot(string fixtureDirectory)
-        {
-            var current = new DirectoryInfo(Path.GetFullPath(fixtureDirectory));
-            while (current != null)
-            {
-                if (Directory.Exists(Path.Combine(current.FullName, "TMP_EXPORT")) &&
-                    Directory.Exists(Path.Combine(current.FullName, "src")))
-                    return current.FullName;
-
-                current = current.Parent;
-            }
-
-            return Path.GetFullPath(Path.Combine(fixtureDirectory, "..", ".."));
-        }
+            => TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory);
 
         private static string BuildMarkdown(JsonObject root, string jsonPath)
         {

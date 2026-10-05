@@ -62,7 +62,11 @@ namespace TiaOpenness.Shared
             }
             else
             {
+#if TIA_BUNDLE_LAYOUT_STUDIO
+                var bundle = BundleLayout.FindRootForStudio(baseDirectory);
+#else
                 var bundle = BundleLayout.FindRoot(baseDirectory);
+#endif
                 if (bundle != null)
                 {
                     var candidate = Path.Combine(bundle, "data");

@@ -7,6 +7,7 @@ internal sealed class HostOptions
     public required string ReleaseKey { get; init; }
     public required string WorkerExe { get; init; }
     public required string ApiDirectory { get; init; }
+    public required string BundleRoot { get; init; }
     public bool NativeEnabled { get; init; }
     public bool CatalogOnly { get; init; }
     public string Transport { get; init; } = "stdio";
@@ -15,6 +16,8 @@ internal sealed class HostOptions
 
     public static HostOptions Parse(string[] args, string directory)
     {
+        string explicitRoot = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);
+        string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
         var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging" };
@@ -51,7 +54,8 @@ internal sealed class HostOptions
         var api = Value("--public-api");
         if (api.Length == 0) api = version.FindApiDirectory(Value("--tia-portal-location", Environment.GetEnvironmentVariable("TiaPortalLocation") ?? "")) ?? "";
         return new HostOptions {
-            ReleaseKey = release, WorkerExe = Value("--worker-exe", Path.Combine(directory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
+            BundleRoot = bundleRoot, ReleaseKey = release,
+            WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
             ApiDirectory = api, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key
         };
     }

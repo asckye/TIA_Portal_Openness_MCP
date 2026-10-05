@@ -44,26 +44,20 @@ namespace TiaMcpServer.ModelContextProtocol
             return client;
         }
 
-        /// <summary>The delivery root (the folder holding manifest/delivery.json), walking up from the engine's directory; null when not found.</summary>
+        /// <summary>The delivery root selected by the common bundle resolver.</summary>
         internal static string? FindInstallRoot()
             => FindInstallRoot(AppContext.BaseDirectory);
 
-        // The repository override is intentionally ignored, as in the original lookup.
-        internal static string? FindInstallRoot(string baseDirectory, string? repositoryRoot = null)
+        internal static string? FindInstallRoot(string baseDirectory, string? bundleRoot = null)
         {
-            try
-            {
-                var dir = new DirectoryInfo(baseDirectory);
-                var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
-                // Only installed anchors qualify here; the development root is beyond the original four-level probe.
-                if (root != null && string.Equals(dir.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
-                    && File.Exists(Path.Combine(root, "manifest", "delivery.json"))) return root;
-                // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
-                for (int i = 0; i < 4 && dir != null; i++, dir = dir.Parent)
-                    if (File.Exists(Path.Combine(dir.FullName, "manifest", "delivery.json"))) return dir.FullName;
-            }
-            catch /* swallow(env-probe): an unavailable installation path retains the original null result */ { }
-            return null;
+            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory, bundleRoot);
+            if (root == null) return null;
+            var directory = new DirectoryInfo(baseDirectory);
+            if (!string.Equals(directory.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
+                || !TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => string.Equals(v.RuntimeDirectory, directory.Name, StringComparison.OrdinalIgnoreCase)))
+                return null;
+            TiaOpenness.Shared.BundleLayout.RequirePath(root, "manifest/delivery.json");
+            return root;
         }
 
         [McpServerTool(Name = "CheckProductUpdate"), Description(
@@ -86,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["currentVersion"] = current;
             meta["currentFileVersion"] = typeof(McpServer).Assembly.GetName().Version?.ToString();
             var root = FindInstallRoot();
-            var updater = root != null ? Path.Combine(root, UpdateLogic.UpdaterRelativePath) : null;
+            var updater = root != null ? TiaOpenness.Shared.BundleLayout.RequirePath(root, UpdateLogic.UpdaterRelativePath) : null;
             bool updaterPresent = updater != null && File.Exists(updater);
             meta["installRoot"] = root;
             meta["updaterScript"] = updaterPresent ? updater : null;

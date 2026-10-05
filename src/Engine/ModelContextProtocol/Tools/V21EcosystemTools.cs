@@ -71,9 +71,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!Path.IsPathRooted(filePath) || !File.Exists(filePath)) throw new ArgumentException("Existing absolute filePath required.");
                 if (timeoutSeconds < 1 || timeoutSeconds > 60) throw new ArgumentException("timeoutSeconds 1..60 required.");
                 var root = EcosystemFiles.RepositoryRoot();
+                var bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/simaticml_decode_bridge.py");
                 var python = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? Path.Combine(root, "TiaMcp_Output", "ecosystem-python", "Scripts", "python.exe");
                 if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Configure TIA_MCP_PLC_TOOLS_PYTHON to Python 3.11+.");
-                var run = await EcosystemFiles.Run(python, new[] { "-I", "-B", "-X", "utf8", Path.Combine(root, "scripts", "ecosystem", "simaticml_decode_bridge.py") }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
+                var run = await EcosystemFiles.Run(python, new[] { "-I", "-B", "-X", "utf8", bridge }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
                 meta["exitCode"] = run["exitCode"]!.DeepClone(); meta["timedOut"] = run["timedOut"]!.DeepClone();
                 if (run["timedOut"]!.GetValue<bool>() || run["outputTruncated"]!.GetValue<bool>()) throw new InvalidOperationException("Decoder timed out or exceeded response budget; no complete analysis returned.");
                 var data = JsonNode.Parse(run["stdout"]!.GetValue<string>())?.AsObject() ?? throw new InvalidOperationException("Decoder returned no JSON object.");
@@ -82,7 +83,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 // envelope: legacy-independent-verdicts
                 meta["success"] = ok; meta["operationSuccess"] = ok;
                 return new ResponseMessage { Message = ok ? "Analysis-only decoded logic; do not import this output." : "Decode refused or failed; inspect data.error.", Meta = meta };
-            } catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }
+            } catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
+            catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }
         }
     }
 }

@@ -26,7 +26,7 @@ public partial class MainWindow
 
     internal static string FindBundleRoot(string start)
     {
-        var root = TiaOpenness.Shared.BundleLayout.FindRoot(start);
+        var root = TiaOpenness.Shared.BundleLayout.FindRootForStudio(start);
         if (root != null) return root;
         // Keep the original upward probe for unrecognized outputs (D-G7-3).
         for (var directory = new DirectoryInfo(start); directory != null; directory = directory.Parent)

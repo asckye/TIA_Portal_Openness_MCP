@@ -83,6 +83,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (args.Count > 100 || args.Any(a => !(a is JsonValue v) || !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");
                 if (!Path.IsPathRooted(workingDirectory) || !Directory.Exists(workingDirectory)) throw new ArgumentException("workingDirectory must exist and be absolute.");
                 string root = EcosystemFiles.RepositoryRoot();
+                string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
                 string python = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? Path.Combine(root, "TiaMcp_Output", "ecosystem-python", "Scripts", "python.exe");
                 if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Run Install-PlcTools.ps1 and configure TIA_MCP_PLC_TOOLS_PYTHON.");
                 meta["arguments"] = args.DeepClone(); meta["workingDirectory"] = workingDirectory; meta["python"] = python;
@@ -90,11 +91,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (mode == "run" && dryRun) { meta["success"] = true; meta["executed"] = false; return new ResponseMessage { Message = "Execution plan only. Review selected command/config; dryRun=false executes it.", Meta = meta }; }
                 var request = new JsonObject { ["mode"] = mode, ["arguments"] = args.DeepClone() };
                 meta["dispatchStarted"] = true;
-                var result = await EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", Path.Combine(root, "scripts", "ecosystem", "plc_tools_bridge.py") }, workingDirectory, request.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
+                var result = await EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", bridge }, workingDirectory, request.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
                 foreach (var item in result) meta[item.Key] = item.Value?.DeepClone();
                 meta["executed"] = true;
                 return new ResponseMessage { Message = "Companion exited; inspect success, exitCode, stdout and stderr. This does not certify TIA compatibility or live PLC behavior.", Meta = meta };
             }
+            catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Companion failed: " + ex.Message, Meta = meta }; }
         }
     }

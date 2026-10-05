@@ -19,10 +19,80 @@ namespace TiaOpenness.Shared
         Templates
     }
 
-    // Only known output layouts establish a root. Callers retain their original
-    // probing and error policy when this resolver returns null (D-G7-3).
-    internal static class BundleLayout
+#if TIA_BUNDLE_LAYOUT_PUBLIC
+    public sealed class BundleResourceUnavailableException : IOException
+#else
+    internal sealed class BundleResourceUnavailableException : IOException
+#endif
     {
+        public string Resource { get; }
+        public BundleResourceUnavailableException(string resource)
+            : base("RESOURCE_UNAVAILABLE: Expected bundle resource at " + resource) { Resource = resource; }
+    }
+
+    // All linked copies share the startup selection using only BCL values.
+#if TIA_BUNDLE_LAYOUT_PUBLIC
+    public static class BundleLayout
+#else
+    internal static class BundleLayout
+#endif
+    {
+        private const string SelectionKey = "TiaOpenness.Shared.BundleLayout.v4";
+
+        public static string ExtractRootOption(string[] args, out string[] remaining)
+        {
+            string root = null;
+            var rest = new List<string>();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (!string.Equals(args[i], "--bundle-root", StringComparison.OrdinalIgnoreCase))
+                { rest.Add(args[i]); continue; }
+                if (root != null) throw new ArgumentException("Repeated option: --bundle-root.");
+                if (++i == args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", StringComparison.Ordinal))
+                    throw new ArgumentException("--bundle-root requires an absolute path.");
+                root = args[i];
+                if (!IsAbsolute(root)) throw new ArgumentException("--bundle-root requires an absolute path: " + root);
+            }
+            remaining = rest.ToArray();
+            return root;
+        }
+
+        public static string Initialize(string baseDirectory, string explicitRoot = null)
+        {
+            var root = ResolveRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"));
+            if (root == null) throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+            AppDomain.CurrentDomain.SetData(SelectionKey, root);
+            Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", root);
+            return root;
+        }
+
+        public static string RequireRoot(string baseDirectory, string explicitRoot = null)
+        {
+            return FindRoot(baseDirectory, explicitRoot)
+                ?? throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+        }
+
+        // Pure selection inputs support the complete precedence matrix without process mutations.
+        public static string ResolveRoot(string baseDirectory, string explicitRoot, string environmentRoot)
+        {
+            string configured = explicitRoot ?? environmentRoot;
+            if (configured != null)
+            {
+                if (!IsAbsolute(configured)) throw new ArgumentException("Bundle root must be an absolute path: " + configured);
+                var marker = Combine(configured, RelativePath(BundleResource.PackageManifest));
+                if (!Directory.Exists(configured) || !File.Exists(marker)) throw new BundleResourceUnavailableException(marker);
+                return configured;
+            }
+            return FindAnchorRoot(baseDirectory);
+        }
+
+        private static bool IsAbsolute(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) return false;
+            string prefix = Path.GetPathRoot(path);
+            return Path.DirectorySeparatorChar != '\\' || prefix.Length >= 3;
+        }
+
         // Check-BundleLayout.py checks this table against Git and Validate-Bundle.
         private static readonly Dictionary<BundleResource, string> ResourcePaths =
             new Dictionary<BundleResource, string>
@@ -38,12 +108,12 @@ namespace TiaOpenness.Shared
                 { BundleResource.Templates, "templates" }
             };
 
-        public static string RelativePath(BundleResource resource)
+        internal static string RelativePath(BundleResource resource)
         {
             return ResourcePaths[resource];
         }
 
-        public static string FindResource(BundleResource resource, string baseDirectory, string explicitRoot = null)
+        internal static string FindResource(BundleResource resource, string baseDirectory, string explicitRoot = null)
         {
             var relative = RelativePath(resource);
             var root = FindRoot(baseDirectory, explicitRoot);
@@ -55,13 +125,34 @@ namespace TiaOpenness.Shared
 
         public static string FindRoot(string baseDirectory, string explicitRoot = null)
         {
-            // Keep explicit spelling, separators and error handling with the caller.
-            // An invalid explicit root must not silently select another installation.
-            if (!string.IsNullOrWhiteSpace(explicitRoot))
-                return HasMarker(explicitRoot) ? explicitRoot : null;
+            if (explicitRoot == null && AppDomain.CurrentDomain.GetData(SelectionKey) is string selected) return selected;
+            return ResolveRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"));
+        }
+
+        // Studio keeps its pre-P6-37 null/error policy until P6-38. Do not consume
+        // the engine's startup selection or environment override at this entry point.
+        internal static string FindRootForStudio(string baseDirectory, string explicitRoot = null)
+        {
+            if (!string.IsNullOrWhiteSpace(explicitRoot)) return HasMarker(explicitRoot) ? explicitRoot : null;
+            return FindAnchorRoot(baseDirectory, true);
+        }
+
+        internal static string FindResourceForStudio(BundleResource resource, string baseDirectory, string explicitRoot = null)
+        {
+            var root = FindRootForStudio(baseDirectory, explicitRoot);
+            if (root == null) return null;
+            var path = Combine(root, RelativePath(resource));
+            bool directory = resource == BundleResource.OpennessGuides || resource == BundleResource.Templates;
+            return (directory ? Directory.Exists(path) : File.Exists(path)) ? path : null;
+        }
+
+        private static string FindAnchorRoot(string baseDirectory, bool studio = false)
+        {
             if (string.IsNullOrWhiteSpace(baseDirectory) || !Path.IsPathRooted(baseDirectory)) return null;
 
             var directory = new DirectoryInfo(baseDirectory);
+            if (!studio && HasMarker(directory.FullName)) return directory.FullName == directory.Root.FullName ? directory.FullName
+                : directory.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             foreach (var version in TiaVersionCatalog.Runnable)
             {
                 var root = FromAnchor(directory, "runtime/" + version.RuntimeDirectory);
@@ -89,8 +180,74 @@ namespace TiaOpenness.Shared
                 var bridgeRoot = FromAnchor(directory,
                     "src/Studio/Bridge/bin/" + configuration + "/net48");
                 if (bridgeRoot != null) return bridgeRoot;
+                if (!studio)
+                {
+                    var foundationRoot = FromAnchor(directory,
+                        "src/FoundationHost/bin/" + configuration + "/net10.0");
+                    if (foundationRoot != null) return foundationRoot;
+                    foreach (var harness in new[] {
+                        "TiaMcpServer.HttpTests/bin/" + configuration + "/net48",
+                        "TiaMcpServer.LegacyHostTests/bin/" + configuration + "/net10.0",
+                        "TiaMcpServer.Tests/bin/" + configuration + "/net10.0" })
+                    {
+                        var harnessRoot = FromAnchor(directory, "tests/Engine/" + harness);
+                        if (harnessRoot != null) return harnessRoot;
+                    }
+                }
             }
             return null;
+        }
+
+        internal static string RequireResource(BundleResource resource, string baseDirectory, string explicitRoot = null)
+        {
+            return RequirePath(RequireRoot(baseDirectory, explicitRoot), RelativePath(resource),
+                resource == BundleResource.OpennessGuides || resource == BundleResource.Templates);
+        }
+
+        public static string RequirePath(string root, string relative, bool directory = false)
+        {
+            var path = Combine(root, relative.Replace('\\', '/'));
+            var full = Path.GetFullPath(path);
+            var prefix = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (!full.StartsWith(prefix, Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                throw new ArgumentException("Bundle resource must be under the selected root: " + path);
+            if (!(directory ? Directory.Exists(path) : File.Exists(path))) throw new BundleResourceUnavailableException(path);
+            return path;
+        }
+
+        public static string EngineExecutablePath(string root, string releaseKey, string baseDirectory)
+        {
+            var version = TiaVersionCatalog.RequireRunnable(releaseKey);
+            string name = version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe";
+            var output = new DirectoryInfo(baseDirectory);
+            foreach (var configuration in new[] { "Release", "Debug" })
+            {
+                foreach (var sourceVersion in TiaVersionCatalog.Runnable)
+                {
+                    if (!sourceVersion.IsFullEngine) continue;
+                    if (SameRoot(FromAnchor(output, "src/Engine/" + sourceVersion.EngineOutputDirectory + "/" + configuration + "/net48"), root))
+                        return version.IsFullEngine ? Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + name)
+                            : Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
+                }
+                if (SameRoot(FromAnchor(output, "src/FoundationHost/bin/" + configuration + "/net10.0"), root))
+                    return version.IsFullEngine ? Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + name)
+                        : Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
+            }
+            return Combine(root, "runtime/" + version.RuntimeDirectory + "/" + name);
+        }
+
+        public static string RequireEngine(string releaseKey, string baseDirectory, string explicitRoot = null)
+        {
+            var path = EngineExecutablePath(RequireRoot(baseDirectory, explicitRoot), releaseKey, baseDirectory);
+            if (!File.Exists(path)) throw new BundleResourceUnavailableException(path);
+            return path;
+        }
+
+        private static bool SameRoot(string candidate, string root)
+        {
+            return candidate != null && string.Equals(Path.GetFullPath(candidate).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         private static string FromAnchor(DirectoryInfo directory, string anchor)
