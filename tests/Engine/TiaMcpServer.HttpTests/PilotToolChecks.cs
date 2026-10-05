@@ -6,9 +6,27 @@ using System.Reflection;
 using ModelContextProtocol.Protocol;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 
 internal static class PilotToolChecks
 {
+    // The served example resolves the catalog's format tokens ({release}, {major}, {extension}) for this release.
+    private static bool SameExample(JsonNode? generated, JsonNode? served, string release)
+    {
+        if (generated is JsonValue g && served is JsonValue s && g.TryGetValue<string>(out var text) && s.TryGetValue<string>(out var actual))
+        {
+            string major = release == "14sp1" ? "14" : release == "15.1" ? "15" : release;
+            string pattern = Regex.Escape(text).Replace(Regex.Escape("{release}"), Regex.Escape(release))
+                .Replace(Regex.Escape("{major}"), Regex.Escape(major)).Replace(Regex.Escape("{extension}"), "[A-Za-z0-9]+");
+            return Regex.IsMatch(actual, "^" + pattern + "$");
+        }
+        if (generated is JsonObject go && served is JsonObject so)
+            return go.Count == so.Count && go.All(p => so.ContainsKey(p.Key) && SameExample(p.Value, so[p.Key], release));
+        if (generated is JsonArray ga && served is JsonArray sa)
+            return ga.Count == sa.Count && ga.Zip(sa, (a, b) => SameExample(a, b, release)).All(same => same);
+        return JsonNode.DeepEquals(generated, served);
+    }
+
     internal static void UsageServesEveryMigratedExampleAgainstItsActualSchema(Assembly server, Action<bool, string> check)
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
@@ -37,11 +55,11 @@ internal static class PilotToolChecks
             check((string?)example["kind"] == "parameterized-call-example", name + " serves a parameterized example");
             var served = example["request"]!["params"]!["arguments"]!.AsObject();
             foreach (var value in entry["arguments"]!.AsObject())
-                check(JsonNode.DeepEquals(value.Value, served[value.Key]), name + "." + value.Key + " preserves the generated example");
+                check(SameExample(value.Value, served[value.Key], release), name + "." + value.Key + " preserves the generated example");
             foreach (var value in served.Where(p => !entry["arguments"]!.AsObject().ContainsKey(p.Key)))
                 check(JsonNode.DeepEquals(actual["properties"]![value.Key]!["default"], value.Value), name + "." + value.Key + " uses its declared default");
             var schema = Activator.CreateInstance(schemaType, new object[] { tool.ProtocolTool.InputSchema })!;
-            foreach (var sample in new[] { entry["arguments"]!, served })
+            foreach (var sample in new JsonNode[] { served })
                 check(schemaType.GetMethod("Validate")!.Invoke(schema, new object[] { JsonSerializer.SerializeToElement(sample), "arguments" }) == null,
                     name + " example satisfies its actual schema");
         }
