@@ -188,7 +188,7 @@ lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常�
 
 所有入口接受 `--bundle-root <absolute-path>` / `TIA_MCP_BUNDLE_ROOT`。选择顺序：显式 CLI → 环境变量 → BundleLayout 的已知安装/开发锚点；CLI 与环境变量并存时 CLI 优先。显式值无效立即报错，不向别处查找。根必须含 manifest/package-manifest.json，资源必须在该根，缺失返回 RESOURCE_UNAVAILABLE；删除任意祖先仓库、templates/tools、TMP_EXPORT、同级引擎找不到时改用自身等探测。Foundation 的 release-key.txt、显式 --worker-exe、正式相邻 bridge/adapters 部署继续支持；Studio 新旧原生路径的选择仍服从 G3/J 真机验收。
 
-日志迁到 `%LOCALAPPDATA%\TiaMcp\logs\<releaseKey>` 与 `logs\studio`，已有 diagnostics 目录仍为诊断证据专用；并发进程使用 request/session/PID 区分文件。Python 默认环境为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python`，显式 `TIA_MCP_PLC_TOOLS_PYTHON` 仍优先。不自动复制执行旧私有环境、不写安装目录；缺 LocalAppData 或目录不可写按用途报 IO_FAILED/DIAGNOSTIC_WRITE_FAILED，不能回退安装目录。私人模板、报告、fixture 用显式 `--workspace-root` / 已有 workspaceRoot 参数及具体模板输入，缺失即 INVALID_ARGUMENT，不猜 cwd 或私人目录。
+日志、诊断、配置、界面设置、报告与临时文件已统一由 [数据目录](runtime-layout.md#软件自身的数据目录) 放在 `<bundle>\data`（只读安装回退到原用户目录），P6-39 按发布键与 `studio` 细分 `data\logs`，diagnostics 仍为诊断证据专用；并发进程使用 request/session/PID 区分文件。Python 默认环境为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python`，显式 `TIA_MCP_PLC_TOOLS_PYTHON` 仍优先。不自动复制执行旧私有环境、不写安装目录；缺 LocalAppData 或目录不可写按用途报 IO_FAILED/DIAGNOSTIC_WRITE_FAILED，不能回退安装目录。私人模板、报告、fixture 用显式 `--workspace-root` / 已有 workspaceRoot 参数及具体模板输入，缺失即 INVALID_ARGUMENT，不猜 cwd 或私人目录。
 
 附表 E 生成全部相关第一方文本命中位置，覆盖构建/Package-Release/Validate-Bundle/Check-Repository 必需清单、织入与反射、Studio ConfigCore/ClientProfiles、CLI 配置器、操作脚本和文档。实施先改生成源，再运行产物生成器；不手改 manifest 哈希。客户端配置的 server key、HTTP /mcp 和鉴权键不因 EXE 改名变化，命令/参数由新的产品表生成；已有用户配置先备份再显式迁移。验收包括仓库外完整包、只读安装目录、空格/中文路径、无效显式根、不同 cwd、缺引擎及 worktree 禁止安装更新。
 
@@ -207,6 +207,7 @@ lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常�
 9. 使用 bundle-root 输入，日志/Python 移至 LocalAppData，私人工作区显式指定。
 10. 原生行为按族完成真机验收后进入 4.0，未验收的族保持原行为。
 11. 发布说明最后附生成的新旧名称/参数对照表，仅作为文档。
+12. （2026-10-05 增补）工作台写操作审批、AI 调用面板、哈希链审计日志与环境体检纳入 4.0，见第 8 节。
 
 ## 7. 实施与生成证明
 
@@ -224,6 +225,48 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 ```
 
 并执行 [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) 中 source-contracts 的每一个 run 步骤；该任务均为纯源码检查。schema/产品/原生实现阶段另按[验证分层](validation.md)运行 TRX 最低数量门禁、八版构建、V4 快照与相应 L5。现在的生成表为提案事实，不替换 3.x 的契约或生成资源。
+
+## 8. 工作台与 MCP 融合（2026-10-05 增补）
+
+维护者决定将以下四项纳入 4.0（P6-44～47）。产品行为参考上游作者的商业桌面版，只借鉴思路，不引入其代码。
+数据位置沿用 master 上的 [数据目录](runtime-layout.md#软件自身的数据目录)（`<bundle>\data`）。
+
+**写操作审批（P6-44）**
+
+- 范围：经 MCP（HTTP/stdio，含 CallTool 与批次）到达完整引擎或 Foundation 宿主的每一次写调用。读写分类取自工具目录的写标记，
+  按单个调用判断：只读调用不排队，批次逐项列出写项。CLI 由本机用户直接执行，不经审批。
+- 流程：D1 已切换的族在 apply 处、仍为 current 的族在执行前，宿主把待批请求（请求 ID、tool、releaseKey、目标工程身份、
+  对象与动作清单、planHash 或参数摘要）推送给工作台并等待；用户逐条批准或拒绝。批准只对该请求 ID 与 planHash 生效一次。
+- 结果：拒绝、超时（默认 120 秒，可配置）或工作台未连接均为操作前拒绝：outcome=rejected-before-operation、
+  execution=not-started，错误码 CONFIRMATION_REQUIRED，详情区分 denied/timeout/workbench-unavailable
+  （扩展 ConfirmationRequiredDetails 时先改第 3 节）。不确定即拒绝，不放行。
+- 开关：默认开启；在 MCP 菜单关闭后只保留 D1 的 confirm/planHash 检查。状态在标题栏 MCP 状态片和每次写结果的
+  meta.warnings 中可见，设置保存在 `data\config`。
+- 通道：审批走宿主与工作台之间的本机通道（仅当前用户可连接的命名管道），不作为 MCP 工具或 HTTP 端点暴露，MCP 客户端不能自行批准。
+  威胁模型是“AI 经 MCP 工具越权写入”，不防同一用户下的恶意本机进程，文档须写明。
+- 等待审批不占用 Openness 线程，不改 Siemens 调用顺序、线程归属与会话。
+
+**AI 调用面板（P6-45）**
+
+- 工作台显示调用日志（`data\diagnostics`）：时间、宿主/版本、工具、读/写、outcome、耗时、目标摘要；展开后看参数与结果
+  （截断到上限、凭据脱敏）。待批请求在同一面板置顶。
+- 只读取宿主写入的日志，不另开采集通道；处理轮转、多进程并发写入与中断的末行。
+- 提供复制 MCP 连接信息（URL 与客户端配置片段，不含密钥明文）。
+
+**审计日志与保留（P6-46）**
+
+- 写调用的请求、批准/拒绝、开始/结束 outcome 及审批开关变化写入 `data\logs\audit`，每条记录含前一条规范 JSON 的 SHA-256；
+  轮转后新文件首条链接上一文件末条。
+- CLI 子命令和工作台按钮可校验哈希链并报告第一处断链。须写明限制：同一用户能整体删除或截断尾部，哈希链只证明中间未被改动，不证明完整。
+- 调用日志的单文件上限与保留份数可配置，默认覆盖至少一个工作日的插桩日志，面板显示当前保留的时间窗口（替代 10 MB 加一份 `.previous`）。
+
+**环境体检（P6-47）**
+
+- 工作台“环境体检”页逐项检查并给出修复方法：已安装的 TIA 版本、Openness 用户组（含需重新登录）、.NET Framework 4.8、
+  随包 .NET 运行时、各版本引擎/worker 文件、`data` 可写、HTTP 端口占用、URL 保留与防火墙，以及首次附着时 TIA 的 Openness 访问确认。
+  复用现有 doctor 检查，不新增 Siemens 写调用。
+- 一键把体检结果、最近日志和配置（密钥脱敏）打包到 `data\reports`。
+- 启动器在缺少 .NET Framework 4.8 时的中文提示另行完成，不依赖工作台。
 
 ## 附表：机器生成的当前事实与 V4 提案
 

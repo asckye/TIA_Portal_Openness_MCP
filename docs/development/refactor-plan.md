@@ -199,10 +199,14 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现 | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | todo |
 | P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测 | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | todo |
 | P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入 | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |
-| P6-40 | 更新 reference/tool-examples calls/metadata/sequences/语言例子、prompts/skills、现行文档；运行 ToolUsage/矩阵生成器 | 35、39 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |
+| P6-40 | 更新 reference/tool-examples calls/metadata/sequences/语言例子、prompts/skills、现行文档；运行 ToolUsage/矩阵生成器 | 35、39、44–47 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |
 | P6-41 | 建立最终 V4 契约快照、生成器和 CI 检查；旧事实基线归档只读，禁止用改哈希掩盖差异 | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | todo |
 | P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族 | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
 | P6-43 | **最后任务：发布说明**生成旧→新工具名/参数/产品入口对照，类型/信封/安全策略/目录变更及实际验收状态 | 42 | 对照表逐版与发布产物一致、链接可执行示例、刷新客户端工具缓存说明；仅文档，无程序转换层 | todo |
+| P6-44 | 工作台写操作审批：宿主按调用的写分类、待批队列与超时、当前用户命名管道、审批开关与 meta 披露；Studio 审批视图；ConfirmationRequiredDetails 拒绝原因（先改规范第 3 节）；见规范第 8 节 | 25、39；D1 已切换族在 apply 处接入 | T 宿主/Studio Core/GUI、V；只读不排队、批次逐项、拒绝/超时/工作台未连接均为操作前拒绝、批准一次性且绑定 planHash、MCP 客户端不能自批；N 调用不变 | todo |
+| P6-45 | 工作台 AI 调用面板：读取调用日志实时显示、详情展开（截断/脱敏）、待批置顶、复制连接信息 | 44 | T GUI/Core；轮转/并发/中断行、脱敏、中英文；不新增采集通道 | todo |
+| P6-46 | 哈希链审计日志与校验入口；调用日志保留上限/份数及时间窗口显示 | 39、44 | T；篡改/断链/跨文件轮转检测，尾部截断限制写入文档；保留按配置生效 | todo |
+| P6-47 | 工作台环境体检页与一键诊断包；复用 doctor，补 Openness 首次确认提示与 data 可写检查 | 38、39 | T GUI/Core/config；逐项结果与修复文本中英文、密钥脱敏、只读安装 | todo |
 
 并行边界：02 完成后 03/04/05/06 可各建独立 DTO/测试文件；项目公共引用由 02 预置、后续缺项由 07 集成。
 07 完成且 I 合并后，08–23 按规范附表 G 的工具文件所有权并行。
