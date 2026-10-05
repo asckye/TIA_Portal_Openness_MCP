@@ -4,6 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Extensions.AI;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -52,12 +56,75 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static McpServerTool CreateTool(MethodInfo method, McpServerToolCreateOptions? options = null)
         {
-            if (method.IsStatic) return options == null
+            // Exclude custom input contracts from SDK inference before it serializes
+            // optional null defaults. Their null-rejecting converters are unchanged.
+            var inputs = method.GetParameters().Select(p => (Parameter: p, Input: TypedToolInput.For(p.ParameterType)))
+                .Where(p => p.Input != null && p.Parameter.ParameterType != typeof(ToolArguments?)).ToArray();
+            if (inputs.Length > 0)
+            {
+                options = options == null ? new McpServerToolCreateOptions() : new McpServerToolCreateOptions
+                {
+                    Name = options.Name, Title = options.Title, Description = options.Description,
+                    Destructive = options.Destructive, Idempotent = options.Idempotent, OpenWorld = options.OpenWorld,
+                    ReadOnly = options.ReadOnly, UseStructuredContent = options.UseStructuredContent,
+                    SerializerOptions = options.SerializerOptions, SchemaCreateOptions = options.SchemaCreateOptions, Services = options.Services,
+                };
+                var schemaOptions = options.SchemaCreateOptions ?? AIJsonSchemaCreateOptions.Default;
+                options.SchemaCreateOptions = new AIJsonSchemaCreateOptions
+                {
+                    IncludeParameter = p => !inputs.Any(input => input.Parameter == p) && (schemaOptions.IncludeParameter?.Invoke(p) ?? true),
+                    IncludeSchemaKeyword = schemaOptions.IncludeSchemaKeyword,
+                    TransformOptions = schemaOptions.TransformOptions,
+                    TransformSchemaNode = schemaOptions.TransformSchemaNode,
+                };
+            }
+            McpServerTool tool;
+            if (method.IsStatic) tool = options == null
                 ? McpServerTool.Create(method)
                 : McpServerTool.Create(method, options: options);
-            Func<RequestContext<CallToolRequestParams>, object> target = request =>
-                request.Services?.GetService(method.DeclaringType!) ?? EngineServices.Get(method.DeclaringType!);
-            return McpServerTool.Create(method, target, options);
+            else
+            {
+                Func<RequestContext<CallToolRequestParams>, object> target = request =>
+                    request.Services?.GetService(method.DeclaringType!) ?? EngineServices.Get(method.DeclaringType!);
+                tool = McpServerTool.Create(method, target, options);
+            }
+            if (inputs.Length == 0) return tool;
+            var protocol = tool.ProtocolTool;
+            var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
+            var properties = schema["properties"]!.AsObject();
+            var required = schema["required"] as JsonArray ?? new JsonArray();
+            foreach (var input in inputs)
+            {
+                string name = input.Parameter.Name!;
+                var property = JsonNode.Parse(input.Input!.Schema.GetRawText())!;
+                // Type-local recursive references become local to the tool root.
+                RebaseReferences(property, "#/properties/" + name.Replace("~", "~0").Replace("/", "~1"));
+                properties[name] = property;
+                if (!input.Parameter.HasDefaultValue) required.Add(name);
+            }
+            if (required.Count > 0) schema["required"] = required;
+            return new SchemaHintedTool(tool, new Tool
+            {
+                Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,
+                InputSchema = JsonSerializer.SerializeToElement(McpServer.InlineSchema(schema)),
+                OutputSchema = protocol.OutputSchema, Annotations = protocol.Annotations, Meta = protocol.Meta,
+            });
+        }
+
+        private static void RebaseReferences(JsonNode node, string root)
+        {
+            if (node is JsonObject obj)
+            {
+                if (obj["$ref"] is JsonValue reference)
+                {
+                    string pointer = reference.GetValue<string>();
+                    if (!pointer.StartsWith("#/", StringComparison.Ordinal)) throw new ArgumentException("Only local input references are supported.");
+                    obj["$ref"] = root + pointer.Substring(1);
+                }
+                foreach (var child in obj.ToArray()) if (child.Value != null) RebaseReferences(child.Value, root);
+            }
+            else if (node is JsonArray array)
+                foreach (var child in array) if (child != null) RebaseReferences(child, root);
         }
     }
 }

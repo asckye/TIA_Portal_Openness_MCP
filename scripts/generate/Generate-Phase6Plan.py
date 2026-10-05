@@ -4,16 +4,13 @@ Run --check in a clean checkout; --self-test also exercises rejection cases.
 Only the embedded profile resource and the marked documentation block are outputs.
 """
 import argparse
-import collections, json, pathlib, re, subprocess, sys, xml.etree.ElementTree as ET
+import collections, json, pathlib, re, runpy, subprocess, sys, xml.etree.ElementTree as ET
 sys.dont_write_bytecode = True
 root = pathlib.Path(__file__).resolve().parents[2]
 read = lambda p: (root / p).read_text(encoding="utf-8-sig")
 files = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
 RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
 files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE})
-MIGRATED = {'PreflightToolCall': 'PreviewToolCall', 'ReadToolBatch': 'RunReadOnlyToolBatch',
-    'GetAuthoringGuide': 'GetToolUsage', 'GetRecipe': 'GetToolUsage',
-    **{n: n for n in ('GetToolUsage', 'FindTools', 'ListToolCategories', 'CallTool', 'PreviewToolBatch', 'ApplyToolBatch')}}
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
 tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
@@ -125,6 +122,8 @@ for p, text in engine.sources.items():
         assert decl and m[1] not in source_tools
         source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
 registered_tools = dict(source_tools)
+usage_generator = runpy.run_path(str(root / 'scripts/generate/Generate-ToolUsage.py'))
+registered_rosters, _ = usage_generator['registered_rosters'](root)
 renames = {n: rename(n) for n in names}
 current_names = {}
 for n in tools["21"]:
@@ -139,6 +138,7 @@ source_tools = {n: registered_tools[current_names[n]] for n in tools["21"]}
 source_tools["GetRecipe"] = (E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs", "GetRecipe")
 policy = read(E + "Siemens/ToolVersionPolicy.cs")
 only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
+only21 = {old for old, current in current_names.items() if old in only21 or current in only21}
 assert set(tools["20"]) == set(source_tools) - only21
 lite = set(snap["21"]["liteTools"])
 assert all(lite == set(snap[k]["liteTools"]) for k in ["20", "21"])
@@ -156,22 +156,15 @@ for f in files:
         helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
         helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
 helpers &= set(names)
-for k in keys[:6]:
-    major = 14 if k=="14sp1" else int(k.split(".")[0])
-    accepted={n for n,r in definitions.items()
-        if not (r in ("HardwareCatalog","DeviceAdd") and major<19)
-        and not (r=="SpecialExport" and major<16)
-        and not (r in ("DocumentExport","BatchDocumentExport","DocumentImport","BatchDocumentImport") and major<20)
-        and not (n=="GetPlcWatchTables" and k=="14sp1")}
-    assert accepted | helpers == set(tools[k]), (k, (accepted | helpers) ^ set(tools[k]))
+foundation_current = {k: usage_generator['resolve_names'](tools[k], registered_rosters[k], renames) for k in keys[:6]}
 for k in keys[:6]:
     for n, t in tools[k].items():
-        assert '"' + n + '"' in foundation, n
+        assert '"' + foundation_current[k][n] + '"' in foundation, n
         for p in t["inputSchema"]["properties"]:
             assert '"' + p + '"' in foundation, (n, p)
 calls = json.loads(read("reference/tool-examples/calls.json"))["profiles"]
 for k in keys:
-    expected = {current_names.get(n, n) for n in tools[k]} if k in keys[-2:] else set(tools[k])
+    expected = registered_rosters[k]
     assert expected <= set(calls[snap[k]["profile"]]), k
 typed = {}
 for n in names:
@@ -180,16 +173,42 @@ for n in names:
         for p, schema in tools[k][n]["inputSchema"]["properties"].items():
             if p.endswith("Json") or (n == "PlcBuildAndImport" and p == "json"):
                 typed.setdefault(n, {}).setdefault(p, set()).add(k)
-for n, (_, method) in source_tools.items():
-    if n in MIGRATED or current_names[n] != n: continue
+def signature(method):
     member = engine.member(method, tool=True)
     tokens, _ = engine_sources.lexer.Lexer(member).scan()
     pairs = engine_sources.lexer.matching_pairs(tokens)
-    op = next(i for i,t in enumerate(tokens) if t.value == "(")
-    sig = member[:tokens[pairs[op]].end]
-    actual = set(re.findall(r"\bstring\??\s+(\w*Json)\b", sig))
-    expected = {p for p,v in tools["21"][n]["inputSchema"]["properties"].items() if p.endswith("Json") and "string" in str(v.get("type"))}
-    assert actual == expected, (n, actual, expected)
+    op = next(i for i,t in enumerate(tokens) if t.value == "(" and tokens[i-1].value == method)
+    return member[:tokens[pairs[op]].end]
+
+
+def parameters(sig):
+    tokens, _ = engine_sources.lexer.Lexer(sig).scan()
+    pairs = engine_sources.lexer.matching_pairs(tokens)
+    op = next(i for i,t in enumerate(tokens) if t.value == '(')
+    result, part, i = {}, [], op + 1
+    while i < pairs[op]:
+        token = tokens[i]
+        if token.value == '[' and not part:
+            i = pairs[i] + 1
+            continue
+        if token.value in ('(', '['):
+            part.extend(t.value for t in tokens[i:pairs[i]+1]); i = pairs[i] + 1; continue
+        if token.value == ',' and part.count('<') == part.count('>'):
+            declaration = part[:part.index('=')] if '=' in part else part
+            result[declaration[-1]] = ''.join(declaration[:-1]); part = []
+        else: part.append(token.value)
+        i += 1
+    if part:
+        declaration = part[:part.index('=')] if '=' in part else part
+        result[declaration[-1]] = ''.join(declaration[:-1])
+    return result
+
+
+signatures = {n: signature(method) for n, (_, method) in source_tools.items() if n not in ('GetAuthoringGuide', 'GetRecipe')}
+# This is the explicit runtime marker. Return-type migration is checked together
+# with name and typed-parameter targets below; renaming alone never enables V4.
+envelope_versions = {n: 4 if re.search(r'\b(?:CallToolResult|Task<CallToolResult>)\s+\w+\s*\(', sig) else 3
+                     for n, sig in signatures.items()}
 family_groups = {
  "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
  "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
@@ -233,7 +252,6 @@ assert 'ToolRecipes.Find(topic)' in read(E + "ModelContextProtocol/Tools/McpServ
 assert 'exampleId' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert all(n in names for n in SPECIAL_NAMES | dict.fromkeys(COLLECTIONS))
 renames = {n: rename(n) for n in names}
-assert all(renames[n] == target for n, target in MIGRATED.items())
 
 def validate_mapping(mapping, release_tools, merge_groups=MERGES):
     assert set(mapping) == set(names), "every current tool must be mapped exactly once"
@@ -298,6 +316,49 @@ def shape(n, p):
     assert result not in ("BuilderSpec", "HmiDesign", "DomainSpec", "DomainSelection"), (n, p)
     return result
 
+
+def validate_parameter_transition(name, current, target, actual, expected, v4, target_shapes):
+    if not v4:
+        assert current == name, (name, 'rename without a V4 envelope')
+        legacy = {p for p, t in actual.items() if p.endswith('Json') and t in ('string', 'string?')}
+        assert legacy == {p for p in expected if p.endswith('Json')}, (name, legacy, expected)
+        if 'json' in expected: assert actual.get('json') in ('string', 'string?'), name
+        return
+    assert current == target, (name, 'V4 tool has a legacy name', current, target)
+    for old in expected:
+        new = 'spec' if old == 'json' else old[:-4]
+        assert old not in actual and new in actual, (name, old, new, actual)
+        declared = actual[new].rstrip('?')
+        wanted = re.split(r'[({（]', target_shapes[old])[0]
+        aliases = {'map<string,string>': {'AttributeMap<string>', 'Dictionary<string,string>'},
+                   'map<string,int32>': {'AttributeMap<int>', 'Dictionary<string,int>'},
+                   'map<string,bool>': {'AttributeMap<bool>', 'Dictionary<string,bool>'},
+                   'map<string,SivarcReference|null>': {'AttributeMap<SivarcReference?>', 'Dictionary<string,SivarcReference?>'},
+                   'int32[]': {'int[]'}, 'PlcArtifactSpec': {'ConstructionSpec'},
+                   'DccPartnerSpec': {'DccPartnerSpec'}, 'ToolArguments': {'ToolArguments'}}
+        permitted = aliases.get(wanted, set()) | {wanted}
+        assert declared in permitted, (name, new, declared, wanted)
+
+
+for n, sig in signatures.items():
+    actual = parameters(sig)
+    expected = {p for p in typed.get(n, {}) if '21' in typed[n][p]}
+    validate_parameter_transition(n, current_names[n], renames[n], actual, expected,
+                                  envelope_versions[n] == 4, {p: shape(n, p) for p in expected})
+
+if 'new FoundationV4Tool(' in foundation:
+    adapter = read(F + 'FoundationV4Tool.cs')
+    for k in keys[:6]:
+        for n in tools[k]:
+            assert foundation_current[k][n] == renames[n], (k, n, 'Foundation target mismatch')
+            for old in typed.get(n, {}):
+                if k not in typed[n][old]: continue
+                new = old[:-4]
+                wanted = re.split(r'[({（]', shape(n, old))[0]
+                element = wanted.removesuffix('[]')
+                assert re.search(r'<' + re.escape(wanted) + r'>|<' + re.escape(element) + r'>', adapter), (k, n, wanted)
+                assert '"' + new + '"' in adapter, (k, n, new)
+
 # Re-selected by user workflow, not inherited from the current lite roster.
 LITE_GROUPS = {
     "发现、用法与完整目录调用": "FindTools GetToolUsage ListToolCategories CallTool PreviewToolCall",
@@ -340,7 +401,8 @@ for k in keys[-2:]:
         if target in runtime_rows: continue
         arguments = json.loads(json.dumps(calls["full-engine"][current]["arguments"]))
         runtime_rows[target] = {"name": target, "currentName": current, "sourceName": old,
-            "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments}
+            "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments,
+            "envelopeVersion": envelope_versions[old]}
     runtime["releases"][k] = sorted(runtime_rows.values(), key=lambda r: r["name"])
     assert {r["currentName"] for r in runtime["releases"][k]} == {current_names[n] for n in tools[k]}
     assert all(isinstance(r["arguments"], dict) for r in runtime["releases"][k] if "lite" in r["profiles"])
@@ -677,6 +739,13 @@ out.append("台账已核对：" + "、".join("P6-"+f for f in behavior_families)
 end()
 
 def self_test():
+    validate_parameter_transition("Keep", "Keep", "Keep", {"valuesJson": "string"}, {"valuesJson"}, False, {})
+    validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
+    validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
+    for actual, v4 in (({"valuesJson": "string"}, True), ({"values": "string"}, True), ({"values": "AttributeMap<Scalar>"}, False)):
+        try: validate_parameter_transition("Keep", "Keep", "Keep", actual, {"valuesJson"}, v4, {"valuesJson": "AttributeMap<Scalar>"})
+        except AssertionError: pass
+        else: raise AssertionError("typed transition unexpectedly passed")
     rejected = 0
     for mutate in (
         lambda m: m.pop(names[0]),

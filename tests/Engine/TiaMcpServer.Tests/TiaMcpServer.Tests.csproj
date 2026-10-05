@@ -71,6 +71,7 @@
     <Compile Include="..\..\..\src\Engine\Siemens\Hmi\UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
     <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Tools\McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="McpServer.CallDiscipline.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs" Link="McpServer.Profile.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="McpServer.Exports.cs" />

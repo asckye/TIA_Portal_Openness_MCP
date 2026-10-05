@@ -103,8 +103,18 @@ REJECT_ARGUMENTS = {'SnapshotReject': True, 'snapshotReject': True}
 DUPLICATE_MARKER = ('Duplicate argument names differing only by case are ambiguous: '
                     'snapshotReject. Nothing was executed.')
 SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
-V4_INFRASTRUCTURE = {'CallTool', 'PreviewToolCall', 'FindTools', 'ListToolCategories',
-    'GetToolUsage', 'RunReadOnlyToolBatch', 'PreviewToolBatch', 'ApplyToolBatch'}
+
+
+def v4_tools(release=None):
+    """Registered names whose runtime record carries envelopeVersion 4 (the P6-07b marker)."""
+    import xml.etree.ElementTree as ET
+    resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
+    releases = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)['releases']
+    return {row['currentName'] for key, rows in releases.items() if release in (None, key)
+            for row in rows if row.get('envelopeVersion') == 4}
+
+
+V4_TOOLS = v4_tools()
 
 # Foundation has no outer ArgDiagnosticTool and no CallTool/lite bridge.
 # Reviewed host admission routines in TiaMcpServer.LegacyHost (all InvokeAsync):
@@ -282,7 +292,7 @@ def mask_raw_text(text, tool):
             take(']')
         elif raw in ('}', ']', ':', ','):
             raise ValueError('Expected value')
-        elif (tool in V4_INFRASTRUCTURE and raw.startswith('"')
+        elif (tool in V4_TOOLS and raw.startswith('"')
               and (path in (('"meta"', '"requestId"'), ('"meta"', '"timestamp"'))
                    or len(path) == 6 and path[:2] == ('"data"', '"items"') and isinstance(path[2], int)
                    and path[3:5] == ('"result"', '"meta"') and path[5] in ('"requestId"', '"timestamp"'))):
@@ -337,7 +347,7 @@ def normalize(call):
         if re.fullmatch('[0-9a-f]{32}', meta['requestId']): meta['requestId'] = '<string:requestId>'
         for item in (envelope.get('data') or {}).get('items', []):
             if isinstance(item, dict): v4_envelope(item.get('result'))
-    if call['tool'] in V4_INFRASTRUCTURE:
+    if call['tool'] in V4_TOOLS:
         protocol = result['response'].get('result', {})
         v4_envelope(protocol.get('structuredContent'))
         for block in protocol.get('content', []): v4_envelope(block.get('text'))
@@ -402,6 +412,14 @@ def body(response):
     resources.require(not decoded.get('meta', {}).get('truncated'),
                       'Response was parked; add explicit GetExport paging before recording it')
     return decoded
+
+
+def v4_rejection(response, name):
+    reply = body(response)
+    resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
+                      and reply['error']['code'] == 'INVALID_ARGUMENT'
+                      and reply['meta']['execution'] == 'not-started',
+                      name + ': missing V4 admission marker: ' + canonical(reply))
 
 
 def rejection(response, marker):
@@ -537,8 +555,10 @@ def capture_release(args, release, exe, public_api):
             selected_operations = sorted({(entry['tool'], str(entry['arguments'][key]))
                 for entry in entries.values() for key in ('action', 'operation')
                 if key in entry['arguments'] and entry['tool'] != 'GetToolUsage'})
+            v4 = v4_tools(release)
             for name in sorted(registered):
-                rejection(call(name, REJECT_ARGUMENTS), DUPLICATE_MARKER)
+                reply = call(name, REJECT_ARGUMENTS)
+                v4_rejection(reply, name) if name in v4 else rejection(reply, DUPLICATE_MARKER)
             snapshot = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
                 'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
                 'maxResponseChars': 2000000,
@@ -557,11 +577,7 @@ def capture_release(args, release, exe, public_api):
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
             bridge = recorder(rpc, entries, 'lite')
             for name in sorted(registered):
-                reply = body(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}))
-                resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
-                                  and reply['error']['code'] == 'INVALID_ARGUMENT'
-                                  and reply['meta']['execution'] == 'not-started',
-                                  name + ': missing bridge admission marker: ' + canonical(reply))
+                v4_rejection(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), name)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))

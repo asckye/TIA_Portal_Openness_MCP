@@ -13,6 +13,7 @@ namespace TiaMcp.Logic.V4.Domain
     {
         internal static readonly InputSchema Scalar = InputSchema.Scalar();
         private static readonly Dictionary<Type, InputSchema> Shapes = Build();
+        internal static bool Has(Type type) => Shapes.ContainsKey(type);
 
         public static JsonObject Get<T>() => JsonNode.Parse(V4Json.Serialize(For(typeof(T)).Json))!.AsObject();
         internal static InputSchema For(Type type)

@@ -22,6 +22,7 @@ import collections
 import importlib.util
 import json
 import unittest
+import argparse
 from pathlib import Path
 
 ROOT = str(Path(__file__).resolve().parents[2] / 'src/Engine')
@@ -243,7 +244,60 @@ def duplicate_names(src, extra_text=None):
     return {k: v for k, v in seen.items() if len(v) > 1}
 
 
-def main():
+def migration_names(root):
+    # Read the reviewed appendix without executing generators: a stale example or
+    # guidance string must not prevent this repair tool from starting.
+    document = (root / 'docs/development/phase6-review.md').read_text('utf-8-sig')
+    appendix = document.split('A. ', 1)[-1].split('B. ', 1)[0]
+    return dict(re.findall(r'^\| `([^`]+)` \| `([^`]+)` \|', appendix, re.M))
+
+
+def rewrite_guidance(source, renames, registered):
+    active = {old: new for old, new in renames.items() if old != new and old not in registered and new in registered}
+    if not active: return source, []
+    pattern = re.compile(r'\b(?:' + '|'.join(re.escape(n) for n in sorted(active, key=len, reverse=True)) + r')\b')
+    tokens, _ = text_literals.lexer.Lexer(source).scan()
+    eligible = []
+
+    def visit(items, inherited=False):
+        ranges = text_literals.sink_ranges(items, text_literals.lexer.matching_pairs(items))
+        for i, token in enumerate(items):
+            if token.kind != 'literal': continue
+            decoded = text_literals.literal_parts(token)[0]
+            sink = inherited or any(lo < i < hi and kind in ('description', 'exception', 'message', 'meta') for lo, hi, kind in ranges)
+            directed = bool(re.search(r'\b(?:[Uu]se|[Cc]all|[Ii]nvoke|[Rr]un|[Tt]ry|[Ss]ee|via)\s+', decoded))
+            # Nontrivial prose covers prompts, hints and return/refusal text. A
+            # bare identifier, enum/schema discriminator or lookup key is data.
+            prose = bool(re.search(r'\s', decoded)) and bool(pattern.search(decoded))
+            if decoded.lstrip().startswith(('{', '[')):
+                try:
+                    json.loads(decoded)
+                    prose = False
+                except ValueError:
+                    pass  # A prose example with braces is not a serialized data object.
+            if sink or directed or prose:
+                eligible.append((token.start, token.end, tuple(token.expressions)))
+            if token.expressions: visit(list(token.expressions), sink)
+    visit(tokens)
+    events, edits = [], []
+    for match in pattern.finditer(source):
+        start, end = match.span()
+        allowed = any(lo <= start and end <= hi and not any(t.start <= start < t.end for t in nested)
+                      for lo, hi, nested in eligible)
+        events.append((start, match[0], active[match[0]], allowed))
+        if allowed: edits.append((start, end, active[match[0]]))
+    # A decoded escape or concatenation may spell a name without a contiguous
+    # source span. Keep it reviewable rather than changing quoting/expressions.
+    for start, decoded, _ in guidance_literals(source):
+        for match in pattern.finditer(decoded):
+            if not any(position >= start and source.count('\n', start, position) == 0 and old == match[0]
+                       for position, old, _, _ in events):
+                events.append((start, match[0], active[match[0]], False))
+    for start, end, value in reversed(edits): source = source[:start] + value + source[end:]
+    return source, events
+
+
+def main(fix=False):
     src = load(ROOT)
     src.update(load(LOGIC_ROOT))
     src.update(load(SHARED_ROOT))
@@ -251,9 +305,23 @@ def main():
         print('找不到源码目录 %s —— 请在仓库根目录运行。' % ROOT)
         return 2
 
+    if fix:
+        registered, _ = scan(src)
+        renames = migration_names(Path(ROOT).parents[1])
+        for path, source in sorted(src.items()):
+            rewritten, events = rewrite_guidance(source, renames, registered)
+            for start, old, new, changed in events:
+                print(f"{'REWRITE' if changed else 'KEEP'} {path}:{source.count(chr(10), 0, start) + 1}: {old} -> {new}"
+                      + ('' if changed else ' (data/code/comment or non-contiguous spelling; review required)'))
+            if rewritten != source:
+                Path(path).write_bytes(rewritten.encode('utf-8'))
+                src[path] = rewritten
+
     # 哨兵 2：注入一个只差大小写的重名注册，闸门必须抓到。
-    dup_sentinel = '[McpServerTool(Name = "GETSTATE"), Description("sentinel")]'
-    if 'getstate' not in duplicate_names(src, extra_text=dup_sentinel):
+    registered, _ = scan(src)
+    sentinel_name = sorted(registered)[0].upper()
+    dup_sentinel = f'[McpServerTool(Name = "{sentinel_name}"), Description("sentinel")]'
+    if sentinel_name.lower() not in duplicate_names(src, extra_text=dup_sentinel):
         print('[FAIL] 重名哨兵没被抓到 —— 工具名唯一性检查自己坏了，它的 PASS 不可信。')
         return 2
     dups = duplicate_names(src)
@@ -286,6 +354,35 @@ def main():
 
 
 class GuidanceTests(unittest.TestCase):
+    def test_fix_guidance_only(self):
+        source = '''// Use OldTool here.
+[Description("Use OldTool and OldToolSuffix.")]
+void OldTool() { var key = "OldTool"; return $"Try OldTool {OldTool()} {"Use OldTool"}"; }
+const string Prompt = @"Call OldTool before continuing.";
+const string Hint = """See OldTool for details.""";
+'''
+        fixed, events = rewrite_guidance(source, {'OldTool': 'NewTool'}, {'NewTool'})
+        self.assertIn('// Use OldTool here.', fixed)
+        self.assertIn('var key = "OldTool"', fixed)
+        self.assertIn('void OldTool()', fixed)
+        self.assertIn('{OldTool()}', fixed)
+        self.assertIn('OldToolSuffix', fixed)
+        self.assertEqual(sum(changed for _, _, _, changed in events), 5)
+        self.assertEqual(sum(not changed for _, _, _, changed in events), 4)
+        self.assertEqual(rewrite_guidance(fixed, {'OldTool': 'NewTool'}, {'NewTool'})[0], fixed)
+
+    def test_fix_requires_removed_old_and_registered_target(self):
+        source = '[Description("Use OldTool.")]'
+        for registered in ({'OldTool', 'NewTool'}, {'OldTool'}, set()):
+            self.assertEqual(rewrite_guidance(source, {'OldTool': 'NewTool'}, registered), (source, []))
+
+    def test_fix_reports_encoded_and_split_spellings_without_touching_data(self):
+        for source in ('return "Use Old" + "Tool first.";', 'return "Use Old\\u0054ool first.";',
+                       'const string schema = """{ "enum": ["OldTool"] }""";'):
+            fixed, events = rewrite_guidance(source, {'OldTool': 'NewTool'}, {'NewTool'})
+            self.assertEqual(fixed, source)
+            self.assertTrue(events)
+            self.assertFalse(any(changed for _, _, _, changed in events))
     def test_hints_outside_description_and_split_literals(self):
         for source in ('const string Instructions = "Use GetNonexistentSentinelTool first.";',
                        'return "Call Preflight" + "ToolCall(name, argumentsJson).";',
@@ -311,4 +408,7 @@ if __name__ == '__main__':
     if '--selftest' in sys.argv or '--self-test' in sys.argv:
         result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(GuidanceTests))
         sys.exit(0 if result.wasSuccessful() else 1)
-    sys.exit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--fix', action='store_true', help='rewrite removed names in guidance literals using appendix A')
+    args = parser.parse_args()
+    sys.exit(main(args.fix))

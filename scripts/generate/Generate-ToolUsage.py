@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
+import unittest
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +14,75 @@ OUTPUT = ROOT / 'src/Shared/ToolUsageData.json'
 
 def read(path):
     return json.loads(path.read_text('utf-8-sig'))
+
+
+def appendix_names(root=ROOT):
+    text = (root / 'docs/development/phase6-review.md').read_text('utf-8-sig')
+    block = text.split('A. ', 1)[-1].split('B. ', 1)[0]
+    return dict(re.findall(r'^\| `([^`]+)` \| `([^`]+)` \|', block, re.M))
+
+
+def resolve_names(baseline, registered, targets, merged=False):
+    result = {}
+    for old in baseline:
+        candidates = {old, targets[old]} & registered
+        if merged and old in ('GetAuthoringGuide', 'GetRecipe'):
+            assert old not in registered, (old, 'merged alias still registered')
+            candidates = {'GetToolUsage'} & registered
+        assert len(candidates) == 1, (old, 'missing or double registration', candidates)
+        result[old] = next(iter(candidates))
+    assert set(result.values()) == registered, ('unmapped registrations', registered - set(result.values()))
+    return result
+
+
+def registered_rosters(root=ROOT):
+    """Source registrations, never stale build outputs or generated profile data."""
+    sys.path.insert(0, str(root / 'scripts/checks'))
+    import engine_sources
+    engine = engine_sources.EngineSources(root)
+    targets = appendix_names(root)
+    baseline = {key: read(root / f'manifest/contracts/baseline/{key}.json')['tools']
+                for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+    full = set()
+    for source in engine.sources.values():
+        full.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source))
+    mapping = resolve_names([t['name'] for t in baseline['21']], full, targets, merged=True)
+    rosters = {key: {mapping[t['name']] for t in baseline[key]} for key in ('20', '21')}
+    foundation_sources = {p.name: p.read_text('utf-8-sig') for p in (root / 'src/FoundationHost').glob('*.cs')}
+    definitions = {}
+    for line in foundation_sources['FoundationTools.cs'].splitlines():
+        match = re.match(r'\s*new\("([^"]+)"', line)
+        if match:
+            response = re.search(r',\s*"([^"]+)"\),?\s*$', line)
+            definitions[match[1]] = response[1] if response else ''
+    helpers = set()
+    for name, source in foundation_sources.items():
+        if name == 'FoundationTools.cs': continue
+        helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"', source))
+        helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"', source))
+    helpers &= targets.keys() | set(targets.values())
+    wrapped = any('new FoundationV4Tool(' in s for s in foundation_sources.values())
+    host_map = dict(re.findall(r'\["([^"]+)"\]\s*=\s*"([^"]+)"',
+                              foundation_sources.get('FoundationV4Tool.cs', '').split('internal static string Name')[0])) if wrapped else {}
+    assert all(targets[old] == new for old, new in host_map.items()), 'Foundation names differ from appendix A'
+    for key in tuple(baseline)[:6]:
+        major = 14 if key == '14sp1' else int(key.split('.')[0])
+        accepted = {n for n, response in definitions.items()
+                    if not (response in ('HardwareCatalog', 'DeviceAdd') and major < 19)
+                    and not (response == 'SpecialExport' and major < 16)
+                    and not (response in ('DocumentExport', 'BatchDocumentExport', 'DocumentImport', 'BatchDocumentImport') and major < 20)
+                    and not (n in ('GetPlcWatchTables', 'ListPlcWatchTables') and key == '14sp1')}
+        registered = {host_map.get(n, n) for n in accepted | helpers}
+        resolve_names([t['name'] for t in baseline[key]], registered, targets)
+        rosters[key] = registered
+    return rosters, mapping
+
+
+def validate_coverage(rosters, calls):
+    for profile, keys in (('full-engine', ('20', '21')), ('plc-foundation', ('14sp1', '15.1', '16', '17', '18', '19'))):
+        expected = set().union(*(rosters[k] for k in keys))
+        assert set(calls['profiles'][profile]) == expected, (profile, 'Call example coverage differs from tool roster',
+                                                          expected ^ set(calls['profiles'][profile]))
 
 
 def generate():
@@ -44,15 +115,9 @@ def generate():
                 'examples': blocks, 'text': text})
 
     full = {t['name']: t for t in read(ROOT / 'manifest/tools-list.json')['tools']}
-    profiles = ET.parse(ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx')
-    current = json.loads(profiles.find(".//data[@name='Catalog']/value").text)['releases']['21']
-    full = {row['currentName']: dict(full[row['sourceName']], name=row['currentName']) for row in current}
-    names = set(full) | {'GetToolUsage'}
-    for catalog in (ROOT / 'bin-build/multi-version').glob('tools-*.json'):
-        names.update(t['name'] for t in read(catalog)['tools'])
-    # Foundation-only contracts; explicit so generation also works in CI without build artifacts.
-    names.update(['ReadPlcTags', 'ReadPlcUserConstants', 'ReadPlcSystemConstants', 'CreatePlcTag',
-                  'CreatePlcTagTable', 'CreatePlcUserConstant', 'PlanPlcExternalSourceImport', 'DiagnosePortalConnectReadiness'])
+    rosters, current = registered_rosters()
+    full = {name: dict(full[old], name=name) for old, name in current.items()}
+    names = set().union(*rosters.values())
     domains = {
         'Portal': ['session-and-project', 'licensing-and-firewall'],
         'Project': ['session-and-project'], 'Library': ['global-library', 'libraries-and-alarms'],
@@ -154,17 +219,37 @@ def generate():
             asset['contentSha256'] = hashlib.sha256(asset['content'].encode()).hexdigest()
     meta = read(base / 'metadata.json')
     calls = read(base / 'calls.json')
-    assert set(calls['profiles']['full-engine']) | set(calls['profiles']['plc-foundation']) == names, 'Call example coverage differs from tool roster'
+    validate_coverage(rosters, calls)
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
             'calls': calls, 'sequences': read(base / 'sequences.json'), **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 
+class RosterTests(unittest.TestCase):
+    def test_migrated_and_unmigrated_names(self):
+        targets = {'BuildOld': 'BuildNew', 'ReadOld': 'GetNew', 'Typed': 'Typed'}
+        self.assertEqual(resolve_names(targets, {'BuildNew', 'ReadOld', 'Typed'}, targets),
+                         {'BuildOld': 'BuildNew', 'ReadOld': 'ReadOld', 'Typed': 'Typed'})
+        for names in ({'BuildOld', 'BuildNew', 'ReadOld', 'Typed'}, {'BuildNew', 'Typed'}, {'BuildNew', 'ReadOld', 'Typed', 'Extra'}):
+            with self.assertRaises(AssertionError): resolve_names(targets, names, targets)
+
+    def test_profile_coverage_stays_strict(self):
+        rosters = {k: {'New'} if k in ('20', '21') else {'Old'} for k in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+        calls = {'profiles': {'full-engine': {'New': {}}, 'plc-foundation': {'Old': {}}}}
+        validate_coverage(rosters, calls)
+        calls['profiles']['full-engine']['Old'] = {}
+        with self.assertRaises(AssertionError): validate_coverage(rosters, calls)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--self-test', action='store_true')
     args = parser.parse_args()
+    if args.self_test:
+        result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(RosterTests))
+        sys.exit(0 if result.wasSuccessful() else 1)
     data = generate()
     encoded = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
     if args.check:

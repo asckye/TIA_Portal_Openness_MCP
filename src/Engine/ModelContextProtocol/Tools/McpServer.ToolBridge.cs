@@ -308,7 +308,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (version.Length != 0)
                 return new Error(version, new UnsupportedCapabilityDetails(ReleaseKey, name, null));
             var schema = ToolInputSchema(name, method);
-            var error = new InputSchema(schema).Validate(arguments.Json, "arguments");
+            var error = IsInfrastructureV4(name) ? ValidateV4Arguments(method, arguments.Json, schema)
+                : new InputSchema(schema).Validate(arguments.Json, "arguments");
             if (error != null) return error;
             var parameters = method.GetParameters();
             call = new object?[parameters.Length];
