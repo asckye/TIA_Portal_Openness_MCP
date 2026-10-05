@@ -1,3 +1,6 @@
+using TiaMcp.Logic.V4.Hmi;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -34,6 +37,14 @@ namespace TiaMcpServer.ModelContextProtocol
             + "built-in CPU I/O). Returns each address as ioType + startAddress + length in ENGINE RAW VALUES "
             + "(startAddress is the byte offset: %I2.0 is startAddress 2). Use this to confirm an address before "
             + "and after changing it. Device item path looks like 'PLC_1/DI 8x24VDC_1' — get it from GetDeviceItemTree.")]
+        public CallToolResult GetDeviceItemIoAddressesV4(
+            [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath)
+            => HardwareContract.Run("GetDeviceItemIoAddresses", () =>
+            {
+                HardwareContract.RequireProject(_service.HasProject);
+                return GetDeviceItemIoAddresses(deviceItemPath);
+            }, write: false, current: false);
+
         public ResponseMessage GetDeviceItemIoAddresses(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath)
         {
@@ -111,6 +122,18 @@ namespace TiaMcpServer.ModelContextProtocol
             + "value does NOT fail compilation — the program silently reads a different module. Read back with "
             + "GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are "
             + "rejected by TIA and reported back with the reason.")]
+        public CallToolResult SetDeviceItemIoAddressV4(
+            [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
+            [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,
+            [Description("startAddress: new start address as engine raw byte offset (%I2.0 -> 2)")] int startAddress,
+            [Description("dryRun: true (default) only previews the change; set false to actually write it")] bool dryRun = true)
+            => HardwareContract.Run("SetDeviceItemIoAddress", () =>
+            {
+                HardwareContract.Address(ioType, startAddress, false);
+                HardwareContract.RequireProject(_service.HasProject);
+                return SetDeviceItemIoAddress(deviceItemPath, ioType, startAddress, dryRun);
+            }, write: !dryRun, current: false);
+
         public ResponseMessage SetDeviceItemIoAddress(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
             [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,
@@ -146,8 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                     if (match == null)
                     {
-                        // 本线没有 Outcome=Failure 这一档，「预演结论是改不了」只能抛 ——
-                        // 返回一条正常的 ResponseMessage 会被调用方读成"预检通过"。
+                        // 预演定位失败时保留异常，由 V4 边界报告读取失败。
                         var have = current.Count == 0
                             ? "（一条都没有）"
                             : string.Join(" / ", current.Select(x => x.IoType).Distinct());
@@ -185,19 +207,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 var (ok, message, before, after) =
                     _service.SetDeviceItemStartAddress(deviceItemPath, ioType, startAddress);
 
-                if (!ok)
-                {
-                    // 地址越界/重叠/模块锁定/路径不存在，Portal 已经把**具体哪一步不成立**写进 message，
-                    // 原样抛出去；绝不返回一条看起来像成功的 ResponseMessage。
-                    throw new McpException(
-                        $"SetDeviceItemIoAddress failed for '{deviceItemPath}' ({ioType} -> {startAddress}): {message}",
-                        McpErrorCode.InvalidParams);
-                }
-
                 var meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
                     ["dryRun"] = false,
+                    ["success"] = ok,
+                    ["mayHaveChanged"] = before != null,
+                    ["writeOutcomeUnknown"] = before != null && after == null,
+                    ["postStateKnown"] = after != null,
                     ["deviceItemPath"] = deviceItemPath,
                     ["ioType"] = ioType,
                     ["requestedStartAddress"] = startAddress,
@@ -206,8 +223,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["length"] = after?.Length ?? before?.Length,
                     // after 是写后读回的那一份，它才是"地址真的改了"的证据。
                     // ok=true 却读不回 after 时，改没改成答不上来 —— 这既不是成功也不是失败，
-                    // 本线没有 Unknown 这一档，所以用 verified=false + Message 里的「未验证」如实说。
-                    ["verified"] = after != null
+                    // verified 和读回证据交给 V4 边界区分失败与 unknown。
+                    ["verified"] = ok && after != null
                 };
 
                 if (after != null)
@@ -241,11 +258,42 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
 
 
-        [McpServerTool(Name="ReadDeviceAddressing"), Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification.")]
+        [McpServerTool(Name="GetDeviceAddressing"), Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification.")]
+        public CallToolResult GetDeviceAddressingV4(string[] devicePath, string[]? itemPath = null, int offset=0, int limit=100)
+            => HardwareContract.Run("GetDeviceAddressing", () =>
+            {
+                var devicePathJson = HardwareContract.Input(PathValidator.Device(), devicePath, "devicePath");
+                var itemPathJson = HardwareContract.Input(PathValidator.Item(), itemPath ?? System.Array.Empty<string>(), "itemPath");
+                HardwareServicesLogic.ValidatePagination(offset, limit);
+                HardwareContract.RequireProject(_service.HasProject);
+                return ReadDeviceAddressing(devicePathJson, itemPathJson, offset, limit);
+            }, write: false, current: false);
+
         public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson="[]", int offset=0, int limit=100)
             => _service.ReadDeviceAddressing(devicePathJson,itemPathJson,offset,limit);
 
-        [McpServerTool(Name="UpdateDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]
+        [McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]
+        public CallToolResult SetDeviceAddressV4(
+            string[] devicePath,
+            string[] itemPath,
+            [Description("ioType: None | Input | Output | Substitute | Diagnosis.")] string ioType,
+            [Description("startAddress: new start address (byte).")] int startAddress,
+            AttributeMap<Scalar>? properties = null,
+            AttributeMap<Scalar>? attributes = null,
+            string softwarePath="",
+            [Description("processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).")] string processImageObName="",
+            bool dryRun=true)
+            => HardwareContract.Run("SetDeviceAddress", () =>
+            {
+                var devicePathJson = HardwareContract.Input(PathValidator.Device(), devicePath, "devicePath");
+                var itemPathJson = HardwareContract.Input(PathValidator.Item(), itemPath, "itemPath");
+                var propertiesJson = HardwareContract.Input(HardwareContract.AddressProperties(), properties ?? HardwareContract.EmptyAttributes(), "properties");
+                var attributesJson = HardwareContract.Input(HardwareContract.Attributes(attributes), attributes ?? HardwareContract.EmptyAttributes(), "attributes");
+                HardwareContract.Address(ioType, startAddress, true);
+                HardwareContract.RequireProject(_service.HasProject);
+                return UpdateDeviceAddress(devicePathJson, itemPathJson, ioType, startAddress, propertiesJson, attributesJson, softwarePath, processImageObName, dryRun);
+            }, write: !dryRun, current: false);
+
         public ResponseMessage UpdateDeviceAddress(
             string devicePathJson,
             string itemPathJson,
@@ -263,6 +311,14 @@ namespace TiaMcpServer.ModelContextProtocol
             " Read a device's configured IP address straight from the TIA project (Openness PROFINET node) —" +
             " NOT by probing the CPU over S7 and NOT by exporting/parsing AML. Returns the primary IE IP plus all network nodes" +
             " (address, subnet, type). This is the correct, fast way to discover a PLC's IP before GoOnline/ReadPlcLiveValuesS7.")]
+        public CallToolResult GetDeviceIpAddressV4(
+            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
+            => HardwareContract.Run("GetDeviceIpAddress", () =>
+            {
+                HardwareContract.RequireProject(_service.HasProject);
+                return GetDeviceIpAddress(devicePath);
+            }, write: false, current: false);
+
         public ResponseJsonReport GetDeviceIpAddress(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
         {

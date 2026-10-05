@@ -318,7 +318,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- addressing -------------------------------------------------------------------------------------------------
         public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadDeviceAddressing", meta => {
+            => _session.RunHmiStepTool("GetDeviceAddressing", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["ownerPath"] = _session.HardwareOwnerPath(owner); meta["ownerType"] = owner.GetType().Name;
@@ -344,7 +344,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson = "{}", string attributesJson = "{}",
             string softwarePath = "", string processImageObName = "", bool dryRun = true)
-            => _session.RunHmiStepTool("UpdateDeviceAddress", meta => {
+            => _session.RunHmiStepTool("SetDeviceAddress", meta => {
                 HardwareNetworkLogic.RequireOneOf(ioType, HardwareNetworkLogic.AddressIoTypes, "ioType");
                 if (startAddress < 0) throw new ArgumentException("startAddress identifies the existing address (>= 0).");
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
@@ -389,5 +389,6 @@ namespace TiaMcpServer.Siemens.Services
             ["identifier"] = id.Identifier,
             ["controllers"] = new JsonArray(EngineeringGroupOperations.Items(id.HwIdentifierControllers).Select(c => (JsonNode)_session.HardwareOwnerPath(c)).ToArray())
         };
+        internal bool HasProject => _session.CurrentProject is object;
     }
 }

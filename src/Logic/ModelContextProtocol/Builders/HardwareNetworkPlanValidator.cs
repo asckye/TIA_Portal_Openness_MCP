@@ -55,11 +55,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         case "AttachDeviceNodeToSubnet":
                             ValidateAttach(op, i, errors, warnings);
                             break;
-                        case "SetCpuCommonSettings":
+                        case "SetPlcCpuSettings":
                             ValidateCpuSettings(op, i, errors, warnings);
                             break;
                         default:
-                            errors.Add($"operations[{i}].type '{type}' is not supported. Use EnsureSubnet, AttachDeviceNodeToSubnet, or SetCpuCommonSettings.");
+                            errors.Add($"operations[{i}].type '{type}' is not supported. Use EnsureSubnet, AttachDeviceNodeToSubnet, or SetPlcCpuSettings.");
                             break;
                     }
                 }

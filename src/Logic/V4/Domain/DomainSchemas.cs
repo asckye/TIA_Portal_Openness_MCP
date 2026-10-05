@@ -45,7 +45,7 @@ namespace TiaMcp.Logic.V4.Domain
                 ("anchorDeviceItemPath", name), ("subnetName", name), ("subnetType", name), ("ip?", text), ("mask?", text), ("gateway?", text));
             d[typeof(AttachDeviceNodeOperation)] = Object(("type", String(0, null, "AttachDeviceNodeToSubnet")),
                 ("deviceItemPath", name), ("subnetName", name), ("interfaceIndex", count), ("anchorDeviceItemPath?", name), ("ip?", text), ("mask?", text), ("gateway?", text));
-            d[typeof(CpuSettingsOperation)] = Object(("type", String(0, null, "SetCpuCommonSettings")), ("cpuPath", name), ("settings", d[typeof(CpuSettings)]));
+            d[typeof(CpuSettingsOperation)] = Object(("type", String(0, null, "SetPlcCpuSettings")), ("cpuPath", name), ("settings", d[typeof(CpuSettings)]));
             d[typeof(NetworkOperation)] = Union(d[typeof(EnsureSubnetOperation)], d[typeof(AttachDeviceNodeOperation)], d[typeof(CpuSettingsOperation)]);
             d[typeof(NetworkPlan)] = Object(("operations", Array(d[typeof(NetworkOperation)])));
             var field = String(0, null, "Title", "Comment");

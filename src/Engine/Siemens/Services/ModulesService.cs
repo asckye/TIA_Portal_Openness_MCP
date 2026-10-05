@@ -610,5 +610,6 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         #endregion
+        internal bool HasProject => _session.CurrentProject is object;
     }
 }

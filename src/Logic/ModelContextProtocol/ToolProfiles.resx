@@ -280,10 +280,19 @@
           "full"
         ],
         "arguments": {
-          "specJson": "{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}",
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
           "outputPath": "C:\\Examples\\generated\\Example.aml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "BuildFlgNetCall",
@@ -829,7 +838,7 @@
       },
       {
         "name": "CreateDevice",
-        "currentName": "AddDevice",
+        "currentName": "CreateDevice",
         "sourceName": "AddDevice",
         "profiles": [
           "full"
@@ -839,11 +848,11 @@
           "version": "V2.9",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateGsdDevice",
-        "currentName": "AddGsdDeviceWithProbe",
+        "currentName": "CreateGsdDevice",
         "sourceName": "AddGsdDeviceWithProbe",
         "profiles": [
           "full"
@@ -852,11 +861,11 @@
           "keyword": "1513",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateHardwareCatalogDevice",
-        "currentName": "AddHardwareCatalogDeviceWithProbe",
+        "currentName": "CreateHardwareCatalogDevice",
         "sourceName": "AddHardwareCatalogDeviceWithProbe",
         "profiles": [
           "full"
@@ -865,11 +874,11 @@
           "keyword": "1513",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateHardwareDevice",
-        "currentName": "AddDeviceWithFallback",
+        "currentName": "CreateHardwareDevice",
         "sourceName": "AddDeviceWithFallback",
         "profiles": [
           "full",
@@ -881,7 +890,7 @@
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateLibraryMasterCopy",
@@ -1644,7 +1653,7 @@
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiConnection",
@@ -2127,19 +2136,21 @@
       },
       {
         "name": "GetDeviceAddressing",
-        "currentName": "ReadDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceAttributes",
-        "currentName": "DumpDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
         "sourceName": "DumpDeviceAttributes",
         "profiles": [
           "full"
@@ -2147,7 +2158,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceInfo",
@@ -2159,7 +2170,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceIpAddress",
@@ -2171,7 +2182,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemInfo",
@@ -2183,7 +2194,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemIoAddresses",
@@ -2195,7 +2206,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemNetworkInfo",
@@ -2219,7 +2230,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDevicePlugLocations",
@@ -2231,7 +2242,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDriveParameters",
@@ -2768,7 +2779,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectUserManagement",
@@ -3154,7 +3165,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiConnection",
@@ -3678,14 +3689,14 @@
       },
       {
         "name": "ListDevices",
-        "currentName": "GetDevices",
+        "currentName": "ListDevices",
         "sourceName": "GetDevices",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDriveObjects",
@@ -4420,11 +4431,13 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_2\"]",
+          "devicePath": [
+            "PLC_2"
+          ],
           "action": "deleteDevice",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageHardwareUtilities",
@@ -5543,7 +5556,7 @@
           "positionNumber": 2,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PreviewToolBatch",
@@ -5990,7 +6003,7 @@
           "keyword": "1515-2 PN",
           "limit": 10
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SearchInstalledGsdDevices",
@@ -6002,7 +6015,7 @@
         "arguments": {
           "keyword": "1513"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SeedProjectFromReference",
@@ -6020,19 +6033,23 @@
       },
       {
         "name": "SetDeviceAddress",
-        "currentName": "UpdateDeviceAddress",
+        "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "ioType": "None",
           "startAddress": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemAttribute",
@@ -6046,7 +6063,7 @@
           "attributeName": "Name",
           "value": "TRUE"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemChannel",
@@ -6079,7 +6096,7 @@
           "startAddress": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetOpcUaInterfaceEnabled",
@@ -6097,16 +6114,20 @@
       },
       {
         "name": "SetPlcCpuSettings",
-        "currentName": "SetCpuCommonSettings",
+        "currentName": "SetPlcCpuSettings",
         "sourceName": "SetCpuCommonSettings",
         "profiles": [
           "full"
         ],
         "arguments": {
           "cpuPath": "PLC_1/CPU_1",
-          "settingsJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}"
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcProgram",
@@ -6433,7 +6454,7 @@
           "expectedPlcSoftwarePath": "PLC_1",
           "expectedHmiSoftwarePath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ValidateClassicHmiMinimalPackageFiles",
@@ -6823,10 +6844,19 @@
           "full"
         ],
         "arguments": {
-          "specJson": "{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}",
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
           "outputPath": "C:\\Examples\\generated\\Example.aml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "BuildFlgNetCall",
@@ -7372,7 +7402,7 @@
       },
       {
         "name": "CreateDevice",
-        "currentName": "AddDevice",
+        "currentName": "CreateDevice",
         "sourceName": "AddDevice",
         "profiles": [
           "full"
@@ -7382,11 +7412,11 @@
           "version": "V2.9",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateGsdDevice",
-        "currentName": "AddGsdDeviceWithProbe",
+        "currentName": "CreateGsdDevice",
         "sourceName": "AddGsdDeviceWithProbe",
         "profiles": [
           "full"
@@ -7395,11 +7425,11 @@
           "keyword": "1513",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateHardwareCatalogDevice",
-        "currentName": "AddHardwareCatalogDeviceWithProbe",
+        "currentName": "CreateHardwareCatalogDevice",
         "sourceName": "AddHardwareCatalogDeviceWithProbe",
         "profiles": [
           "full"
@@ -7408,11 +7438,11 @@
           "keyword": "1513",
           "deviceName": "PLC_2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateHardwareDevice",
-        "currentName": "AddDeviceWithFallback",
+        "currentName": "CreateHardwareDevice",
         "sourceName": "AddDeviceWithFallback",
         "profiles": [
           "full",
@@ -7424,7 +7454,7 @@
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateLibraryMasterCopy",
@@ -8187,7 +8217,7 @@
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportHmiConnection",
@@ -8670,19 +8700,21 @@
       },
       {
         "name": "GetDeviceAddressing",
-        "currentName": "ReadDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceAttributes",
-        "currentName": "DumpDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
         "sourceName": "DumpDeviceAttributes",
         "profiles": [
           "full"
@@ -8690,7 +8722,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceInfo",
@@ -8702,7 +8734,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceIpAddress",
@@ -8714,7 +8746,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemInfo",
@@ -8726,7 +8758,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemIoAddresses",
@@ -8738,7 +8770,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemNetworkInfo",
@@ -8762,7 +8794,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDevicePlugLocations",
@@ -8774,7 +8806,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDriveParameters",
@@ -9311,7 +9343,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectUserManagement",
@@ -9697,7 +9729,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportHmiConnection",
@@ -10233,14 +10265,14 @@
       },
       {
         "name": "ListDevices",
-        "currentName": "GetDevices",
+        "currentName": "ListDevices",
         "sourceName": "GetDevices",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDriveObjects",
@@ -11033,11 +11065,13 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_2\"]",
+          "devicePath": [
+            "PLC_2"
+          ],
           "action": "deleteDevice",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageHardwareUtilities",
@@ -12247,7 +12281,7 @@
           "positionNumber": 2,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PreviewToolBatch",
@@ -12694,7 +12728,7 @@
           "keyword": "1515-2 PN",
           "limit": 10
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SearchInstalledGsdDevices",
@@ -12706,7 +12740,7 @@
         "arguments": {
           "keyword": "1513"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SeedProjectFromReference",
@@ -12724,19 +12758,23 @@
       },
       {
         "name": "SetDeviceAddress",
-        "currentName": "UpdateDeviceAddress",
+        "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "ioType": "None",
           "startAddress": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemAttribute",
@@ -12750,7 +12788,7 @@
           "attributeName": "Name",
           "value": "TRUE"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemChannel",
@@ -12783,7 +12821,7 @@
           "startAddress": 1,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetOpcUaInterfaceEnabled",
@@ -12801,16 +12839,20 @@
       },
       {
         "name": "SetPlcCpuSettings",
-        "currentName": "SetCpuCommonSettings",
+        "currentName": "SetPlcCpuSettings",
         "sourceName": "SetCpuCommonSettings",
         "profiles": [
           "full"
         ],
         "arguments": {
           "cpuPath": "PLC_1/CPU_1",
-          "settingsJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}"
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcProgram",
@@ -13137,7 +13179,7 @@
           "expectedPlcSoftwarePath": "PLC_1",
           "expectedHmiSoftwarePath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ValidateClassicHmiMinimalPackageFiles",

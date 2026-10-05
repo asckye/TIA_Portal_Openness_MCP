@@ -102,8 +102,8 @@ IMPORTANT: always call GetProjectTree first when working with an unfamiliar proj
 Steps:
 1. Connect.
 2. CreateProject — directory='{projectDirectory}', name='{projectName}'.
-3. AddDeviceWithFallback — family='{plcFamily}', deviceName='{plcDeviceName}'.
-4. AddHardwareCatalogDeviceWithProbe — keyword='{hmiKeyword}', deviceName='{hmiDeviceName}'.
+3. CreateHardwareDevice — family='{plcFamily}', deviceName='{plcDeviceName}'.
+4. CreateHardwareCatalogDevice — keyword='{hmiKeyword}', deviceName='{hmiDeviceName}'.
 5. GetProjectTree — note the exact device-item paths.
 6. ConnectDeviceNodesToProfinetSubnet — firstRootPath='{plcDeviceName}', secondRootPath=derived from tree.
 7. SaveProject.
@@ -118,7 +118,7 @@ Use these tools in order with the parameters above.";
 
 Steps:
 1. SearchHardwareCatalog — keyword='{keyword}' to confirm exact MLFB.
-2. AddHardwareCatalogDeviceWithProbe — keyword='{keyword}', deviceName='{deviceName}'.
+2. CreateHardwareCatalogDevice — keyword='{keyword}', deviceName='{deviceName}'.
 3. GetProjectTree — discover device-item paths under '{deviceName}'.
 4. ConnectDeviceNodesToProfinetSubnet — firstRootPath='{existingPlcRoot}', secondRootPath=path from tree.
 5. SaveProject.

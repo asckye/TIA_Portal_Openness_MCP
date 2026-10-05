@@ -11,6 +11,7 @@ internal static class SessionAndHardwareShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
     {
+        HardwareContractsTests.Run(server, check);
         Assembly Api(string split,string legacy) { try { return Assembly.Load(split); } catch(FileNotFoundException) { return Assembly.Load(legacy); } }
         var core=Api("Siemens.Engineering.Base","Siemens.Engineering");
         bool v20=core.GetType("Siemens.Engineering.TextCategory")==null;

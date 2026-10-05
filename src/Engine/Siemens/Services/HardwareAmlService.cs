@@ -140,5 +140,6 @@ namespace TiaMcpServer.Siemens.Services
                 if (!ok) throw new PortalException(PortalErrorCode.ImportFailed, "CaxProvider.Import returned false; inspect the native log file.");
                 return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled or downloaded.";
             });
+        internal bool HasProject => _session.CurrentProject is object;
     }
 }

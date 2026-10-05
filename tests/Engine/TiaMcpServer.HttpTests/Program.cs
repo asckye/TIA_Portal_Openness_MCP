@@ -361,12 +361,17 @@ internal static partial class Program
             if (args.Length > 1 && args[1] == "lease-holder") return LeaseFixture(args);
             if (args.Length > 1 && args[1] == "process-leases-only") { await ProcessLeaseTests(); return 0; }
             if(args.Length > 1 && args[1] == "worker-supervisor-only") { await WorkerSupervisorTests(); return 0; }
-            if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only")) {
+            if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only" || args[1] == "hardware-contracts-only")) {
                 string api=Path.GetFullPath(args[2]);
                 AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
                     string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
                     return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
                 };
+                if(args[1] == "hardware-contracts-only") {
+                    HardwareContractsTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                    Console.WriteLine("COMPLETE: " + Passed + " hardware contract checks passed");
+                    return 0;
+                }
                 if(args[1] == "engineering-api-only") {
                     Action<bool,string> shapeCheck = (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); };
                     EngineSurfaceChecks.Run(Server, shapeCheck);

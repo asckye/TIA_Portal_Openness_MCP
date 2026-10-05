@@ -96,7 +96,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"HMI software not found: {softwarePath}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var sw = softwareContainer.Software;
@@ -130,7 +130,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"HMI software not found: {$"{softwarePath}:{screenName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var sw = softwareContainer.Software;
@@ -140,7 +140,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Screen not found: {$"{softwarePath}:{screenName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             return new ModelContextProtocol.ResponseObjectDescribe
@@ -173,7 +173,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"HMI software not found: {$"{softwarePath}:{tagTableName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var sw = softwareContainer.Software;
@@ -183,7 +183,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Tag table not found: {$"{softwarePath}:{tagTableName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             return new ModelContextProtocol.ResponseObjectDescribe
@@ -216,7 +216,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"HMI software not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var sw = sc.Software;
@@ -226,7 +226,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Tag table not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var tagsComp = table.GetType().GetProperty("Tags")?.GetValue(table);
@@ -235,7 +235,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"tagTable.Tags not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             object? tagObj = null;
@@ -261,7 +261,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Tag not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             return new ModelContextProtocol.ResponseObjectDescribe
@@ -294,7 +294,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"HMI software not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var sw = sc.Software;
@@ -304,7 +304,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Screen not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             var itemsComp = screen.GetType().GetProperty("ScreenItems")?.GetValue(screen);
@@ -313,7 +313,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"screen.ScreenItems not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             object? itemObj = null;
@@ -339,7 +339,7 @@ namespace TiaMcpServer.Siemens.Services
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"Screen item not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
-                    + "(GetProjectTree / GetDevices / GetHmiScreens / GetHmiTagTables).");
+                    + "(GetProjectTree / ListDevices / GetHmiScreens / GetHmiTagTables).");
             }
 
             return new ModelContextProtocol.ResponseObjectDescribe

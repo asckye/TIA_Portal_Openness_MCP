@@ -77,9 +77,21 @@ namespace TiaMcpServer.Tests
         public void Optional_is_not_nullable_and_int32_is_exact(string json) => Assert.NotNull(Record.Exception(() => V4Json.Deserialize<Artifact>(json)));
 
         [Theory]
-        [InlineData("{\"type\":\"SetCpuCommonSettings\",\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":{}}}}")]
+        [InlineData("{\"type\":\"SetPlcCpuSettings\",\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":{}}}}")]
         [InlineData("{\"type\":\"EnsureSubnet\",\"anchorDeviceItemPath\":\"PLC_1/CPU_1\",\"subnetName\":\"PN\",\"subnetType\":\"PN\",\"interfaceIndex\":0}")]
         public void Network_discriminator_closes_nested_fields(string operation) => Assert.NotNull(Record.Exception(() => DomainValidation.Read<NetworkPlan>("{\"operations\":[" + operation + "]}")));
+
+        [Theory]
+        [InlineData("SetPlcCpuSettings", true)]
+        [InlineData("SetCpuCommonSettings", false)]
+        public void Cpu_network_operation_uses_only_the_v4_name(string type, bool accepted)
+        {
+            string operation = "{\"type\":" + JsonSerializer.Serialize(type) + ",\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":\"CPU_1\"}}}";
+            string plan = "{\"operations\":[" + operation + "]}";
+            Assert.Equal(accepted, HardwareNetworkPlanValidator.Validate(plan)["ok"]!.GetValue<bool>());
+            Assert.Equal(accepted, DomainValidation.Contract<NetworkPlan>().Read(plan, "plan").IsValid);
+            Assert.Equal(accepted, DomainValidation.Contract<CpuSettingsOperation>().Read(operation, "operation").IsValid);
+        }
 
         [Fact]
         public void Scalars_and_steps_preserve_values_order_and_dictionary_case()

@@ -2260,7 +2260,7 @@
       }
     },
     "full-engine": {
-      "AddDevice": {
+      "CreateDevice": {
         "arguments": {
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
@@ -2269,9 +2269,10 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
-      "AddDeviceWithFallback": {
+      "CreateHardwareDevice": {
         "arguments": {
           "preferredMlfb": "6ES7 515-2AM02-0AB0",
           "preferredVersion": "V2.9",
@@ -2281,9 +2282,10 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
-      "AddGsdDeviceWithProbe": {
+      "CreateGsdDevice": {
         "arguments": {
           "keyword": "1513",
           "deviceName": "PLC_2"
@@ -2295,9 +2297,10 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
-      "AddHardwareCatalogDeviceWithProbe": {
+      "CreateHardwareCatalogDevice": {
         "arguments": {
           "keyword": "1513",
           "deviceName": "PLC_2"
@@ -2309,7 +2312,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
       "AnalyzeGlobalLibraryPackage": {
         "arguments": {
@@ -2558,7 +2562,16 @@
       },
       "BuildDeviceAmlDocument": {
         "arguments": {
-          "specJson": "{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}",
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
           "outputPath": "C:\\Examples\\generated\\Example.aml"
         },
         "parameters": {
@@ -2568,7 +2581,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "BuildFlgNetCallXml": {
         "arguments": {
@@ -3645,7 +3659,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "DumpDeviceAttributes": {
+      "GetDeviceAttributes": {
         "arguments": {
           "devicePath": "PLC_1"
         },
@@ -3656,7 +3670,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "EnsureOpennessUserGroup": {
         "arguments": {},
@@ -4215,7 +4230,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
       "ExportHmiConnection": {
         "arguments": {
@@ -4690,7 +4706,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetDeviceIpAddress": {
         "arguments": {
@@ -4698,7 +4715,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetDeviceItemInfo": {
         "arguments": {
@@ -4706,7 +4724,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetDeviceItemIoAddresses": {
         "arguments": {
@@ -4714,7 +4733,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetDeviceItemNetworkInfo": {
         "arguments": {
@@ -4734,7 +4754,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetDevicePlugLocations": {
         "arguments": {
@@ -4746,9 +4767,10 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "GetDevices": {
+      "ListDevices": {
         "arguments": {},
         "parameters": {
           "includePlcSoftware": {
@@ -4756,7 +4778,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetExport": {
         "arguments": {
@@ -5005,7 +5028,8 @@
         "arguments": {},
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "GetPutGetAccess": {
         "arguments": {
@@ -5206,7 +5230,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
       "ImportFromDocuments": {
         "arguments": {
@@ -7411,21 +7436,29 @@
       },
       "ManageHardwareObject": {
         "arguments": {
-          "devicePathJson": "[\"PLC_2\"]",
+          "devicePath": [
+            "PLC_2"
+          ],
           "action": "deleteDevice",
           "dryRun": true
         },
         "parameters": {
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "destinationDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "destinationDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "destinationItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "destinationItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "position": {
@@ -7453,7 +7486,8 @@
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "ManageHardwareUtilities": {
         "arguments": {
@@ -11724,7 +11758,8 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
       },
       "PreviewToolBatch": {
         "arguments": {
@@ -11982,16 +12017,20 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadDeviceAddressing": {
+      "GetDeviceAddressing": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]"
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "offset": {
@@ -12002,7 +12041,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "ReadDeviceItemChannels": {
         "arguments": {
@@ -13618,7 +13658,8 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "SearchInstalledGsdDevices": {
         "arguments": {
@@ -13630,7 +13671,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "SeedProjectFromReference": {
         "arguments": {
@@ -13646,18 +13688,24 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "SetCpuCommonSettings": {
+      "SetPlcCpuSettings": {
         "arguments": {
           "cpuPath": "PLC_1/CPU_1",
-          "settingsJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
         },
         "parameters": {
-          "settingsJson": {
-            "requiresBinding": true
+          "settings": {
+            "requiresBinding": true,
+            "meaning": "Exact attributes must first be read from this CPU; the example does not establish that Name is writable on a particular device."
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "SetDeviceItemAttribute": {
         "arguments": {
@@ -13667,7 +13715,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "SetDeviceItemIoAddress": {
         "arguments": {
@@ -13678,7 +13727,8 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "SetOpcUaInterfaceEnabled": {
         "arguments": {
@@ -13965,27 +14015,35 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateDeviceAddress": {
+      "SetDeviceAddress": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "ioType": "None",
           "startAddress": 1,
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "StartAddress": 2
+            },
             "requiresBinding": true
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
           "softwarePath": {
@@ -13997,7 +14055,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "UpdateDeviceItemChannel": {
         "arguments": {
@@ -14171,7 +14230,8 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
       "ValidateClassicHmiMinimalPackageFiles": {
         "arguments": {

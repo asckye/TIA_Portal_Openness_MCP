@@ -1,6 +1,5 @@
 {
   "liteTools": [
-    "AddDeviceWithFallback",
     "ArchiveSavedProject",
     "AttachToOpenProject",
     "Bootstrap",
@@ -14,6 +13,7 @@
     "CompilePlcDiagnostics",
     "Connect",
     "ConnectToProject",
+    "CreateHardwareDevice",
     "CreateProject",
     "DeleteExport",
     "DescribeHmiScreen",
@@ -25,7 +25,6 @@
     "FindTools",
     "GenerateBlocksFromExternalSource",
     "GenerateErrorReport",
-    "GetDevices",
     "GetExport",
     "GetHmiScreens",
     "GetHmiTagTables",
@@ -43,6 +42,7 @@
     "ImportPlcExternalSource",
     "ImportPlcTagTable",
     "ImportPlcType",
+    "ListDevices",
     "ListExports",
     "ListPlcBlocks",
     "ListPlcTagTables",
@@ -64,136 +64,6 @@
   "profile": "full-engine",
   "release": "21",
   "tools": [
-    {
-      "descriptionSha256": "69b83e955681cf93946da7ba28cc171d208410d685aff452aff529e7c075c41f",
-      "inputSchema": {
-        "properties": {
-          "deviceName": {
-            "description": "deviceName: name in project tree",
-            "examples": [
-              "PLC_2"
-            ],
-            "type": "string"
-          },
-          "orderNumber": {
-            "description": "orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'",
-            "examples": [
-              "6ES7 515-2AM02-0AB0"
-            ],
-            "type": "string"
-          },
-          "version": {
-            "description": "version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults",
-            "examples": [
-              "V2.9"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "orderNumber",
-          "version",
-          "deviceName"
-        ],
-        "type": "object"
-      },
-      "name": "AddDevice"
-    },
-    {
-      "descriptionSha256": "beea09e82bc06566a7a9b00bc9b8aab3e1b0a58e35454b9d27ad488520d5811a",
-      "inputSchema": {
-        "properties": {
-          "deviceName": {
-            "description": "deviceName: name in project tree",
-            "examples": [
-              "PLC_2"
-            ],
-            "type": "string"
-          },
-          "family": {
-            "default": "S7-1500",
-            "description": "family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'",
-            "examples": [
-              "S7-1500"
-            ],
-            "type": "string"
-          },
-          "preferredMlfb": {
-            "description": "preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list",
-            "examples": [
-              "6ES7 515-2AM02-0AB0"
-            ],
-            "type": "string"
-          },
-          "preferredVersion": {
-            "description": "preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions",
-            "examples": [
-              "V2.9"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "preferredMlfb",
-          "preferredVersion",
-          "deviceName"
-        ],
-        "type": "object"
-      },
-      "name": "AddDeviceWithFallback"
-    },
-    {
-      "descriptionSha256": "02275138b8a90005be4cd5c19c66260a69f00f11cd7d95315f49b48488d1baf1",
-      "inputSchema": {
-        "properties": {
-          "deviceName": {
-            "description": "deviceName: name in project tree, e.g. 'ENC_AFM60A_1'",
-            "type": "string"
-          },
-          "keyword": {
-            "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'",
-            "type": "string"
-          },
-          "preferredDap": {
-            "default": "",
-            "description": "preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty",
-            "type": "string"
-          }
-        },
-        "required": [
-          "keyword",
-          "deviceName"
-        ],
-        "type": "object"
-      },
-      "name": "AddGsdDeviceWithProbe"
-    },
-    {
-      "descriptionSha256": "6cfdd992eb0fd28742eb25dfbc0377ec02ac67b4613b069c13376fdb0f4cea4b",
-      "inputSchema": {
-        "properties": {
-          "deviceName": {
-            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'",
-            "type": "string"
-          },
-          "keyword": {
-            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'",
-            "type": "string"
-          },
-          "preferredText": {
-            "default": "",
-            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
-            "type": "string"
-          }
-        },
-        "required": [
-          "keyword",
-          "deviceName"
-        ],
-        "type": "object"
-      },
-      "name": "AddHardwareCatalogDeviceWithProbe"
-    },
     {
       "descriptionSha256": "644c54317bc3febffe45212c78936008fe83979fa902dbfe22da22a4a0753c09",
       "inputSchema": {
@@ -659,8 +529,122 @@
       "name": "BuildClassicHmiTagTableXml"
     },
     {
-      "descriptionSha256": "06d0f297bef1c12f3e0bce4c8cec3704cb40b3269178888898c42dc717236636",
+      "descriptionSha256": "60cb476fce2851556462842847e3a33bd70091748db38649b85f8d8c68096437",
       "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "additionalProperties": false,
+            "anyOf": [
+              {
+                "properties": {
+                  "builtIn": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "builtIn"
+                ]
+              },
+              {
+                "properties": {
+                  "role": {
+                    "pattern": "^\\s*(CommunicationInterface|CommunicationPort)\\s*$"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              {
+                "properties": {
+                  "typeIdentifier": {
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "typeIdentifier"
+                ]
+              }
+            ],
+            "properties": {
+              "attributes": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "builtIn": {
+                "type": "boolean"
+              },
+              "comment": {
+                "type": "string"
+              },
+              "deviceItems": {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "maxItems": 5000,
+                "type": "array"
+              },
+              "firmwareVersion": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "nodes": {
+                "items": {
+                  "$comment": "networkAddress: empty, IPAddress.TryParse-compatible address or digits; preserved by the runtime validator.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "networkAddress": {
+                      "type": "string"
+                    },
+                    "pnDeviceName": {
+                      "type": "string"
+                    },
+                    "routerAddress": {
+                      "type": "string"
+                    },
+                    "subnetMask": {
+                      "type": "string"
+                    },
+                    "subnetName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "positionNumber": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "role": {
+                "pattern": "^\\s*(Rack|DeviceItem|CommunicationInterface|CommunicationPort)\\s*$",
+                "type": "string"
+              },
+              "typeIdentifier": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
         "properties": {
           "outputPath": {
             "description": "outputPath: full file path on the TIA machine to write.",
@@ -671,14 +655,75 @@
             "description": "referenceAmlPath: full path of a reference AML file whose structure is reused.",
             "type": "string"
           },
-          "specJson": {
-            "description": "specJson: JSON object describing the document to build (see the tool description).",
-            "type": "string"
+          "spec": {
+            "$comment": "Runtime enforces at most 5000 device items across all devices and item depth 0..8. JSON depth remains 64; current H parsers have no character/string-length cap.",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "spec: JSON object describing the document to build (see the tool description).",
+            "properties": {
+              "devices": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "deviceItems": {
+                      "items": {
+                        "$ref": "#/$defs/recursive0"
+                      },
+                      "maxItems": 5000,
+                      "type": "array"
+                    },
+                    "name": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "typeIdentifier": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "typeIdentifier",
+                    "deviceItems"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "projectName": {
+                "type": "string"
+              },
+              "subnets": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "projectName",
+              "devices"
+            ],
+            "type": "object"
           }
         },
         "required": [
-          "specJson",
-          "outputPath"
+          "outputPath",
+          "spec"
         ],
         "type": "object"
       },
@@ -1720,6 +1765,140 @@
       "name": "ConnectToProject"
     },
     {
+      "descriptionSha256": "bb57969b18f835081e6db95796f97382dc940ff7e1b7da5c9486027a7eb561b4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceName": {
+            "description": "deviceName: name in project tree",
+            "examples": [
+              "PLC_2"
+            ],
+            "type": "string"
+          },
+          "orderNumber": {
+            "description": "orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'",
+            "examples": [
+              "6ES7 515-2AM02-0AB0"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "description": "version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults",
+            "examples": [
+              "V2.9"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "orderNumber",
+          "version",
+          "deviceName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateDevice"
+    },
+    {
+      "descriptionSha256": "1d7e19e37f5107d9b2d96d85be875d0e6617fbef446db2e1296766b29737c0a9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceName": {
+            "description": "deviceName: name in project tree, e.g. 'ENC_AFM60A_1'",
+            "type": "string"
+          },
+          "keyword": {
+            "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'",
+            "type": "string"
+          },
+          "preferredDap": {
+            "default": "",
+            "description": "preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword",
+          "deviceName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateGsdDevice"
+    },
+    {
+      "descriptionSha256": "19fdbf81daff1f25cf35b9fecb87e49d626af47bfdd2bee593436d9edd1ad393",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceName": {
+            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'",
+            "type": "string"
+          },
+          "keyword": {
+            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'",
+            "type": "string"
+          },
+          "preferredText": {
+            "default": "",
+            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword",
+          "deviceName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateHardwareCatalogDevice"
+    },
+    {
+      "descriptionSha256": "d992224c01b746e21d3a796267d7ae0ac40262a718fafb711e4a7fb90a9f641c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceName": {
+            "description": "deviceName: name in project tree",
+            "examples": [
+              "PLC_2"
+            ],
+            "type": "string"
+          },
+          "family": {
+            "default": "S7-1500",
+            "description": "family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'",
+            "examples": [
+              "S7-1500"
+            ],
+            "type": "string"
+          },
+          "preferredMlfb": {
+            "description": "preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list",
+            "examples": [
+              "6ES7 515-2AM02-0AB0"
+            ],
+            "type": "string"
+          },
+          "preferredVersion": {
+            "description": "preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions",
+            "examples": [
+              "V2.9"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "preferredMlfb",
+          "preferredVersion",
+          "deviceName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateHardwareDevice"
+    },
+    {
       "descriptionSha256": "d1e803bf576d488bacdb53c59de298f3474eaf9709ee61b75de23dc6d8c9afbf",
       "inputSchema": {
         "properties": {
@@ -1862,7 +2041,7 @@
       "name": "CreatePlcTypeGroup"
     },
     {
-      "descriptionSha256": "f79c0f29c50dded46806e37eb95752e677233db1ae666b06df7da6b9bb22fd7b",
+      "descriptionSha256": "64c8bfca748b8ce48f3d9b014d5e149f04767655c3e8c322e774c77add5972e4",
       "inputSchema": {
         "properties": {
           "closeForeignProject": {
@@ -2788,27 +2967,6 @@
         "type": "object"
       },
       "name": "DownloadToPlc"
-    },
-    {
-      "descriptionSha256": "ba888f97cf54dde5efa7379b0dc434a77f096e9e6998421b3f3f42425e5e2ed7",
-      "inputSchema": {
-        "properties": {
-          "devicePath": {
-            "description": "devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', '安全PLC', 'S7-1500/ET200MP station_1').",
-            "type": "string"
-          },
-          "nameFilter": {
-            "default": null,
-            "description": "nameFilter: optional case-insensitive substring to narrow attribute names (e.g. 'protection'). Empty = all.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "devicePath"
-        ],
-        "type": "object"
-      },
-      "name": "DumpDeviceAttributes"
     },
     {
       "descriptionSha256": "7e059c31a06bf45367108c59ea7d1e252807caf89ccaed786a4cfe5b3142c281",
@@ -3794,8 +3952,9 @@
       "name": "ExportBlocksAsDocuments"
     },
     {
-      "descriptionSha256": "de3c9c57ef6a7b659482a360316f9ee988dcef918a7b71cbf77f26616a9cc6af",
+      "descriptionSha256": "7ce2340f0ab6c9c135625d326d16d12201e6a3b886b2fa534b780e5bb74b9739",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "devicePath": {
             "description": "devicePath: station/device path from GetProjectTree, e.g. 'S7-1200 station_3'",
@@ -4923,8 +5082,67 @@
       "name": "GetCrossReferences"
     },
     {
+      "descriptionSha256": "25a02d00e894ac92a5fa50f67d00b723515a35f992929933901e7695e1bc8735",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDeviceAddressing"
+    },
+    {
+      "descriptionSha256": "1b50d286ef4607c7ac9cdf4f5491b63d8e5e1eb6394427dfb8a46577c869621a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "description": "devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', 'SafetyPLC', 'S7-1500/ET200MP station_1').",
+            "type": "string"
+          },
+          "nameFilter": {
+            "description": "nameFilter: optional case-insensitive substring to narrow attribute names (e.g. 'protection'). Empty = all.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDeviceAttributes"
+    },
+    {
       "descriptionSha256": "035e601f6020ca1afcc6fa823e3e443587b9869cc80bd1b0cc6b0ad5df59e9c6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "devicePath": {
             "description": "devicePath: defines the path in the project structure to the device",
@@ -4941,6 +5159,7 @@
     {
       "descriptionSha256": "de33a51073de1f6bb9c2bac4d9a6d88919120ccae08397a76989162547dd2c3a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "devicePath": {
             "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
@@ -4957,6 +5176,7 @@
     {
       "descriptionSha256": "7acbfd207124956812278114046e469ce758a9b434b0d9b5dd0230a571669815",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: defines the path in the project structure to the device item",
@@ -4973,6 +5193,7 @@
     {
       "descriptionSha256": "f995950667df230c65a2ebfcd37506513b287eec384ef537726591c099da529d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: path in the project structure to the device item",
@@ -5005,6 +5226,7 @@
     {
       "descriptionSha256": "4e3b2a1b1f1c35f7f67c97b56c2e4276d6a4171f07627e6c2bb4c2da4495f271",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: path in the project structure to the device item",
@@ -5026,6 +5248,7 @@
     {
       "descriptionSha256": "c51be0081d6dfc7b28b66f01b59f5b7aed317e6016da172cc381e0f2440563be",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name",
@@ -5043,20 +5266,6 @@
         "type": "object"
       },
       "name": "GetDevicePlugLocations"
-    },
-    {
-      "descriptionSha256": "72e8391c485609c04b1700cfa3b0e30113cce75e22bf0e578ce95875879de227",
-      "inputSchema": {
-        "properties": {
-          "includePlcSoftware": {
-            "default": false,
-            "description": "includePlcSoftware: include a structured PLC software name inventory for desktop browsing.",
-            "type": "boolean"
-          }
-        },
-        "type": "object"
-      },
-      "name": "GetDevices"
     },
     {
       "descriptionSha256": "ec8708fddcc76cfa531428505ab975270f1cdde3110289f2914dbcba34585049",
@@ -5564,6 +5773,7 @@
     {
       "descriptionSha256": "2d3e255a578801f02c1abf33bb10500ae0bbefdc786ec66cbb7b375cbfa40c70",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -5955,8 +6165,9 @@
       "name": "ImportBlocksFromDocuments"
     },
     {
-      "descriptionSha256": "56d18779184dc73ed121db46833371d476f80a25d17890a7d562c10195d0425d",
+      "descriptionSha256": "5155f54af9b8249a4accea6e0ee6a52328759e37f22e93a363b7a8203eb6d060",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmImport": {
             "default": false,
@@ -7161,6 +7372,21 @@
         "type": "object"
       },
       "name": "LintPlcSclSource"
+    },
+    {
+      "descriptionSha256": "f7d661d77aadc57b29154eaedef9b746fb792211c976ef5b8bbc6a635c2ac8e7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includePlcSoftware": {
+            "default": false,
+            "description": "includePlcSoftware: include a structured PLC software name inventory for desktop browsing.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ListDevices"
     },
     {
       "descriptionSha256": "bebc12cb51d1a37a140c927714d06ba1d6c50ed1f571321fae4652c585d0ff4c",
@@ -9109,8 +9335,9 @@
       "name": "ManageGlobalLibrary"
     },
     {
-      "descriptionSha256": "1a5700ed01fde34d599ad4fcd24bca2db31297ef81f8f7e1b774dd54168ea3cd",
+      "descriptionSha256": "c02ffc5735d47887854ae8d0b197c10e1c077b5ce56144608cd6f766610e5062",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: deleteDevice | deleteItem | moveItem | copyItem.",
@@ -9125,22 +9352,31 @@
             ],
             "type": "string"
           },
-          "destinationDevicePathJson": {
-            "default": "[]",
-            "description": "destinationDevicePathJson: for moveItem / copyItem - JSON array naming the destination station.",
-            "type": "string"
+          "destinationDevicePath": {
+            "description": "destinationDevicePath: for moveItem / copyItem - JSON array naming the destination station.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "destinationItemPathJson": {
-            "default": "[]",
-            "description": "destinationItemPathJson: for moveItem / copyItem - JSON array of device-item names of the destination container.",
-            "type": "string"
+          "destinationItemPath": {
+            "description": "destinationItemPath: for moveItem / copyItem - JSON array of device-item names of the destination container.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"].",
+          "devicePath": {
+            "description": "devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"].",
             "examples": [
-              "[\"PLC_2\"]"
+              [
+                "PLC_2"
+              ]
             ],
-            "type": "string"
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -9150,10 +9386,12 @@
             ],
             "type": "boolean"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice.",
-            "type": "string"
+          "itemPath": {
+            "description": "itemPath: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "position": {
             "default": -1,
@@ -9162,7 +9400,7 @@
           }
         },
         "required": [
-          "devicePathJson",
+          "devicePath",
           "action"
         ],
         "type": "object"
@@ -14238,11 +14476,11 @@
       "name": "PlanGlobalLibraryTemplateReuse"
     },
     {
-      "descriptionSha256": "5e5c540dc9944d679073d23adf050f20173ad662d3d514c50fdd1c9e734e0352",
+      "descriptionSha256": "991ac4c9526836e351544295e909768ce28fd21fd7583022b6a8ccb62cb50c5c",
       "inputSchema": {
         "properties": {
           "planJson": {
-            "description": "planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetCpuCommonSettings. This is offline-only and performs validation only.",
+            "description": "planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetPlcCpuSettings. This is offline-only and performs validation only.",
             "type": "string"
           }
         },
@@ -14402,8 +14640,9 @@
       "name": "PlcBuildAndImport"
     },
     {
-      "descriptionSha256": "085d14ecb4462b57fd97dfc3f1b0b6cb022e61a5da25bc17ac83cd2118a6ddc4",
+      "descriptionSha256": "d4d147c12a5148d01e0fb0e18c7606eb10576c94bc586f5b4f12f9f4d42bcd36",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name",
@@ -14908,37 +15147,6 @@
         "type": "object"
       },
       "name": "ReadDccObject"
-    },
-    {
-      "descriptionSha256": "5b86a03fc0b3e00dea9d31f985f5a76b74236ac0c7620dcd704e518fd77c4228",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadDeviceAddressing"
     },
     {
       "descriptionSha256": "f8bc9cd4b2107f1b8ac67175f43f23e2e492b640ef674ff98ce8d60c21a71ea1",
@@ -17939,6 +18147,7 @@
     {
       "descriptionSha256": "9d9005be630656f9d84f3fb18cd05ffa739f1aff7faf7cef9e67ef53c0573477",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "keyword": {
             "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'",
@@ -17953,6 +18162,7 @@
             "examples": [
               10
             ],
+            "minimum": 1,
             "type": "integer"
           }
         },
@@ -17966,6 +18176,7 @@
     {
       "descriptionSha256": "c02f4ca925ebe3c1a389e68c9938cf9afcdf7137c0b061ab1f0c9d57439af408",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "keyword": {
             "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'",
@@ -17974,6 +18185,7 @@
           "limit": {
             "default": 50,
             "description": "limit: maximum candidates to return",
+            "minimum": 1,
             "type": "integer"
           }
         },
@@ -18016,29 +18228,107 @@
       "name": "SeedProjectFromReference"
     },
     {
-      "descriptionSha256": "acafec921653b1997f3f30e7a983c5e48b1fb437e34de2d6e0e5c37aa1c7f2f0",
+      "descriptionSha256": "15e0ff6b727a533d9f41c60cbe02fd3ad1d7beb377baf54346c9da15bafff457",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "cpuPath": {
-            "description": "cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.",
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "ioType": {
+            "description": "ioType: None | Input | Output | Substitute | Diagnosis.",
+            "enum": [
+              "None",
+              "Input",
+              "Output",
+              "Substitute",
+              "Diagnosis"
+            ],
             "type": "string"
           },
-          "settingsJson": {
-            "description": "settingsJson: JSON object { \"exactAttributes\": { \"ExactAttributeNameFromReadback\": \"value\" } }. No aliases or guessed attribute names are accepted.",
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "processImageObName": {
+            "default": "",
+            "description": "processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).",
             "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "startAddress": {
+            "description": "startAddress: new start address (byte).",
+            "type": "integer"
           }
         },
         "required": [
-          "cpuPath",
-          "settingsJson"
+          "devicePath",
+          "itemPath",
+          "ioType",
+          "startAddress"
         ],
         "type": "object"
       },
-      "name": "SetCpuCommonSettings"
+      "name": "SetDeviceAddress"
     },
     {
       "descriptionSha256": "f0f246df5abab0658d8601d600fde5676ca1f4d41c06a3a6ed54462f3af7562c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "attributeName": {
             "description": "attributeName: exact attribute name from GetDeviceItemInfo/GetDeviceItemNetworkInfo",
@@ -18065,6 +18355,7 @@
     {
       "descriptionSha256": "74e192140cea17667c0bdf945270200aad51c9ca5e35660148b0f6835b38a8c2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceItemPath": {
             "description": "deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'",
@@ -18123,6 +18414,56 @@
         "type": "object"
       },
       "name": "SetOpcUaInterfaceEnabled"
+    },
+    {
+      "descriptionSha256": "312187bee64bafc0877e668e4e4331c2f30940a602a217dfe6c71bf73e6eb9d8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "cpuPath": {
+            "description": "cpuPath: real CPU device-item path resolved from GetProjectTree/GetDeviceItemTree.",
+            "type": "string"
+          },
+          "settings": {
+            "additionalProperties": false,
+            "description": "settings: JSON object { \"exactAttributes\": { \"ExactAttributeNameFromReadback\": \"value\" } }. No aliases or guessed attribute names are accepted.",
+            "minProperties": 0,
+            "properties": {
+              "exactAttributes": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "minProperties": 1,
+                "type": "object"
+              }
+            },
+            "required": [
+              "exactAttributes"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "cpuPath",
+          "settings"
+        ],
+        "type": "object"
+      },
+      "name": "SetPlcCpuSettings"
     },
     {
       "descriptionSha256": "7e8047b1ae7d03c2d525fb92ffa3cc24c5d7376c22e3382fd3b1b93330ee9ac1",
@@ -18722,69 +19063,6 @@
       "name": "UnifiedOpenPipeRequest"
     },
     {
-      "descriptionSha256": "59e1410833a84c0782ef92bc03c2d0b8106603bd625048418bbbe0a2b6a6944b",
-      "inputSchema": {
-        "properties": {
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
-          },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "ioType": {
-            "description": "ioType: None | Input | Output | Substitute | Diagnosis.",
-            "enum": [
-              "None",
-              "Input",
-              "Output",
-              "Substitute",
-              "Diagnosis"
-            ],
-            "type": "string"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "processImageObName": {
-            "default": "",
-            "description": "processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).",
-            "type": "string"
-          },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
-          },
-          "softwarePath": {
-            "default": "",
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "startAddress": {
-            "description": "startAddress: new start address (byte).",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson",
-          "ioType",
-          "startAddress"
-        ],
-        "type": "object"
-      },
-      "name": "UpdateDeviceAddress"
-    },
-    {
       "descriptionSha256": "4067fcc706092bd1bea35812485604623be0b668bbad264193fc228efddd14a9",
       "inputSchema": {
         "properties": {
@@ -19150,6 +19428,7 @@
     {
       "descriptionSha256": "65b1d4edc22c1e929bef496f93cbc4f739e09c0eb2d28a9132d9d44b8246c933",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "expectedHmiSoftwarePath": {
             "default": "HMI_RT_1",

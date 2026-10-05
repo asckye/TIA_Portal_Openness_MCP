@@ -1,3 +1,7 @@
+using TiaMcp.Logic.V4.Hmi;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
@@ -27,6 +31,15 @@ namespace TiaMcpServer.ModelContextProtocol
             + "path (e.g. 'PLC_1'). Get paths from GetDeviceItemTree. plugOnDevice=true asks the Device (station) itself instead "
             + "of a device item - that is where Startdrive drive components (Motor Modules; motors / encoders below them) plug "
             + "(official 'Creating a drive component': Device.PlugNew(\"OrderNumber:6SL3xxx-xxxxx-xxxx\", name, 65535)).")]
+        public CallToolResult GetDevicePlugLocationsV4(
+            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
+            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
+            => HardwareContract.Run("GetDevicePlugLocations", () =>
+            {
+                HardwareContract.RequireProject(_service.HasProject);
+                return GetDevicePlugLocations(deviceItemPath, plugOnDevice);
+            }, write: false, current: false);
+
         public ResponseMessage GetDevicePlugLocations(
             [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
             [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
@@ -101,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "PlugDeviceItem"), Description(
             "[L2][Hardware][WRITE] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 "
             + "6ES7221-3BD30-0XB0), signal module (SM), or communication module (CM). This is the 'InsertDeviceItem' / "
-            + "'AddSignalBoard' operation — AddDevice only creates whole stations and cannot plug boards into a CPU. "
+            + "'AddSignalBoard' operation — CreateDevice only creates whole stations and cannot plug boards into a CPU. "
             + "Defaults to dryRun=true, which runs a REAL TIA feasibility check (CanPlugNew) without writing. "
             + "Pass positionNumber=-1 to let the server pick a free slot reported by TIA; slot numbers are never "
             + "hardcoded — use GetDevicePlugLocations to see them. After a successful plug the module is read back and "
@@ -111,7 +124,21 @@ namespace TiaMcpServer.ModelContextProtocol
             + "NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: "
             + "plugOnDevice=true with the station name, orderNumber '6SL3xxx-xxxxx-xxxx' (unspecified Motor Module) or a concrete "
             + "MLFB, positionNumber 65535 (official 'Creating a drive component'); motors / encoders then plug below the Motor "
-            + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202').")]
+            + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202'). Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        public CallToolResult PlugDeviceItemV4(
+            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
+            [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
+            [Description("version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default")] string version = "",
+            [Description("positionNumber: target slot. -1 (default) = pick the first free slot TIA accepts")] int positionNumber = -1,
+            [Description("name: name for the new module. Empty = auto-generated and de-duplicated against siblings")] string name = "",
+            [Description("dryRun: true (default) only runs the CanPlugNew feasibility check; set false to actually plug")] bool dryRun = true,
+            [Description("plugOnDevice: true = plug on the Device (station) itself, the host of Startdrive drive components")] bool plugOnDevice = false)
+            => HardwareContract.Run("PlugDeviceItem", () =>
+            {
+                HardwareContract.RequireProject(_service.HasProject);
+                return PlugDeviceItem(deviceItemPath, orderNumber, version, positionNumber, name, dryRun, plugOnDevice);
+            }, write: !dryRun, current: true);
+
         public ResponseMessage PlugDeviceItem(
             [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
             [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
@@ -126,21 +153,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var r = _service.PlugSubmodule(deviceItemPath, orderNumber, version, positionNumber, name, dryRun, plugOnDevice);
 
                 // Reason=VerifyFailed 是 Portal 明写的"插完之后重新定位失败，无法确认结果"——
-                // 插没插上答不上来，既不能报成功也不能报失败。本线没有 Unknown 这一档，
-                // 所以它**不抛**，走下面 verified=false 的路径如实说「未验证」。
+                // 保留插入尝试和读回证据，由 V4 边界将未验证的写入映射为 unknown。
                 var unverified = !r.Ok && string.Equals(r.Reason, "VerifyFailed", StringComparison.Ordinal);
-
-                if (!r.Ok && !unverified)
-                {
-                    // 其余失败类别都是可判定的。attempts 是排障的全部依据，抛异常时正文里必须带上，
-                    // 否则它随 Meta 一起消失，调用方只剩一句"插不上"。
-                    var attemptText = r.Attempts.Count == 0
-                        ? ""
-                        : " | attempts: " + string.Join("; ", r.Attempts.Take(20));
-                    throw new McpException(
-                        $"PlugDeviceItem failed [{r.Reason}]: {r.Message}{attemptText}",
-                        McpErrorCode.InvalidParams);
-                }
 
                 var attempts = new JsonArray();
                 foreach (var a in r.Attempts)
@@ -154,7 +168,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["dryRun"] = dryRun,
                     // 失败类别是给调用方判定用的结构化字段，别让它只出现在中文正文里。
                     ["reason"] = r.Reason,
-                    ["verified"] = !unverified,
+                    ["success"] = r.Ok,
+                    ["mayHaveChanged"] = !dryRun && (r.Ok || r.Reason == "PlugFailed" || unverified),
+                    ["verified"] = r.Ok && !unverified,
                     ["deviceItemPath"] = deviceItemPath,
                     ["orderNumber"] = orderNumber,
                     ["version"] = version,

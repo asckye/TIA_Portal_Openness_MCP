@@ -165,9 +165,9 @@ namespace TiaMcpServer.Siemens.Services
                 var shown = attempts.Take(24).ToList();
                 var more = attempts.Count > shown.Count ? $"\n... {attempts.Count - shown.Count} more" : "";
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"AddDevice failed: no device created for OrderNumber={orderNumber} Version={version}; {attempts.Count} CreateWithItem attempt(s):\n"
+                    $"CreateDevice failed: no device created for OrderNumber={orderNumber} Version={version}; {attempts.Count} CreateWithItem attempt(s):\n"
                     + string.Join("\n", shown) + more
-                    + "\nHint: SearchHardwareCatalog / AddHardwareCatalogDeviceWithProbe report the catalog's exact TypeIdentifier (HMI panels carry the version without a 'V', e.g. '.../14.0.1.0'); pass that as orderNumber (a value starting with 'OrderNumber:' is used verbatim)."
+                    + "\nHint: SearchHardwareCatalog / CreateHardwareCatalogDevice report the catalog's exact TypeIdentifier (HMI panels carry the version without a 'V', e.g. '.../14.0.1.0'); pass that as orderNumber (a value starting with 'OrderNumber:' is used verbatim)."
                     + (lastVariantError != null ? "\nLast error detail: " + lastVariantError : ""));
             }
             catch (PortalException)
@@ -816,7 +816,8 @@ namespace TiaMcpServer.Siemens.Services
                 ["timestamp"] = DateTime.Now,
                 ["success"] = false,
                 ["deviceItemPath"] = deviceItemPath,
-                ["attributeName"] = attributeName
+                ["attributeName"] = attributeName,
+                ["mayHaveChanged"] = false
             };
 
             try
@@ -849,10 +850,12 @@ namespace TiaMcpServer.Siemens.Services
                 meta["attributeWritable"] = _session.IsAttributeWritable(info);
 
                 object typedValue = _session.CoerceAttributeValue(value, oldValue, info);
+                meta["mayHaveChanged"] = true;
+                meta["writeOutcomeUnknown"] = true;
                 di.SetAttribute(info.Name, typedValue);
 
                 object? newValue = null;
-                try { newValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
+                try { newValue = di.GetAttribute(info.Name); meta["writeOutcomeUnknown"] = false; } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["newValue"] = newValue?.ToString() ?? string.Empty;
                 // envelope: legacy-single-verdict
                 meta["success"] = true;
@@ -867,7 +870,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage SetCpuCommonSettings(string cpuPath, string settingsJson)
         {
-            var meta = ResponseMeta.Basic(DateTime.Now, false, ("cpuPath", cpuPath));
+            var meta = ResponseMeta.Basic(DateTime.Now, false, ("cpuPath", cpuPath), ("mayHaveChanged", false));
 
             try
             {
@@ -902,6 +905,7 @@ namespace TiaMcpServer.Siemens.Services
                 var infos = di.GetAttributeInfos().ToList();
                 var applied = new JsonArray();
                 var rejected = new JsonArray();
+                meta["applied"] = applied; meta["rejected"] = rejected;
 
                 foreach (var kv in exact)
                 {
@@ -928,28 +932,35 @@ namespace TiaMcpServer.Siemens.Services
                         continue;
                     }
 
+                    bool writeIssued = false;
+                    bool readbackComplete = false;
                     try
                     {
                         object? oldValue = null;
                         try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
                         var typedValue = _session.CoerceAttributeValue(value, oldValue, info);
+                        writeIssued = true; meta["mayHaveChanged"] = true;
                         di.SetAttribute(info.Name, typedValue);
                         object? newValue = null;
-                        try { newValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
+                        try { newValue = di.GetAttribute(info.Name); readbackComplete = true; } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
+                        if (!readbackComplete) { meta["writeOutcomeUnknown"] = true; meta["readbackComplete"] = false; }
                         applied.Add(new JsonObject
                         {
                             ["attribute"] = info.Name,
                             ["oldValue"] = oldValue?.ToString() ?? string.Empty,
                             ["newValue"] = newValue?.ToString() ?? string.Empty,
+                            ["readbackComplete"] = readbackComplete,
                             ["dataType"] = TryGetPropertyValue(info, "DataType", "Type")?.ToString() ?? string.Empty
                         });
                     }
                     catch (Exception ex)
                     {
+                        if (writeIssued) meta["writeOutcomeUnknown"] = true;
                         rejected.Add(new JsonObject
                         {
                             ["attribute"] = info.Name,
-                            ["reason"] = _session.FormatExceptionDetail(ex)
+                            ["reason"] = ex.GetType().Name,
+                            ["writeIssued"] = writeIssued
                         });
                     }
                 }
@@ -1089,5 +1100,6 @@ namespace TiaMcpServer.Siemens.Services
 #else
         private ProjectBase? HardwareProject => _session.CurrentProject;
 #endif
+        internal bool HasProject => _session.CurrentProject is object;
     }
 }

@@ -384,22 +384,23 @@ CASES = {
         ('GetDeviceItemTree', 'read', {'deviceItemPath': PLC}),
         ('SetDeviceItemAttribute', 'write', {'deviceItemPath': PLC, 'attributeName': 'Name', 'value': 'Item1'}),
         ('ValidateAutomationContext', 'read', {}),
-        ('SetCpuCommonSettings', 'write', {'cpuPath': PLC, 'settingsJson': '{}'}),
-        ('GetDevices', 'read', {}),
-        ('AddDevice', 'write', {'orderNumber': '6ES7513-1AM03-0AB0', 'version': 'V3.0', 'deviceName': PLC}),
-        ('AddDeviceWithFallback', 'write', {'preferredMlfb': '', 'preferredVersion': '', 'deviceName': PLC}),
+        ('SetPlcCpuSettings', 'write', {'cpuPath': PLC, 'settings': {'exactAttributes': {'Name': 'CPU'}}}),
+        ('ListDevices', 'read', {}),
+        ('CreateDevice', 'write', {'orderNumber': '6ES7513-1AM03-0AB0', 'version': 'V3.0', 'deviceName': PLC}),
+        ('CreateHardwareDevice', 'write', {'preferredMlfb': '', 'preferredVersion': '', 'deviceName': PLC}),
         # Empty keywords refuse before scanning machine-local GSDML files.
         ('SearchInstalledGsdDevices', 'empty-keyword', {'keyword': ''}),
         ('SearchHardwareCatalog', 'read', {'keyword': 'CPU'}),
-        ('AddGsdDeviceWithProbe', 'empty-keyword', {'keyword': '', 'deviceName': PLC}),
-        ('AddHardwareCatalogDeviceWithProbe', 'write', {'keyword': 'CPU', 'deviceName': PLC})],
-    'HardwareManagement': actions('ManageHardwareObject', 'deleteDevice deleteItem moveItem copyItem',
-                                  devicePathJson='["Station1"]'),
+        ('CreateGsdDevice', 'empty-keyword', {'keyword': '', 'deviceName': PLC}),
+        ('CreateHardwareCatalogDevice', 'write', {'keyword': 'CPU', 'deviceName': PLC})],
+    'HardwareManagement': [('ManageHardwareObject', action, {'devicePath': ['Station1'], 'action': action,
+        'itemPath': [] if action == 'deleteDevice' else ['CPU'], 'destinationDevicePath': ['Station2'],
+        'destinationItemPath': [], 'position': 0}) for action in ('deleteDevice', 'deleteItem', 'moveItem', 'copyItem')],
     'HardwareAml': [
         ('ExportDeviceAml', 'export', {'devicePath': PLC, 'exportPath': 'C:/domain-offline.aml'}),
         ('ImportDeviceAml', 'import', {'filePath': 'C:/domain-offline.aml', 'logFilePath': 'C:/domain-offline.log'}),
         # Relative paths refuse before any file output; the offline executor still runs.
-        ('BuildDeviceAmlDocument', 'relative-path', {'specJson': '{}', 'outputPath': 'domain-offline.aml'})],
+        ('BuildDeviceAmlDocument', 'relative-path', {'spec': {'projectName': 'P', 'devices': [{'name': 'D', 'typeIdentifier': 'System:Device.S71500', 'deviceItems': []}]}, 'outputPath': 'domain-offline.aml'})],
     'Modules': [('GetDevicePlugLocations', 'read', {'deviceItemPath': PLC}),
                 ('PlugDeviceItem', 'preview', {'deviceItemPath': PLC, 'orderNumber': '6ES7521-1BL00-0AB0', 'version': 'V2.0'})],
     'Addresses': [('GetDeviceItemIoAddresses', 'read', {'deviceItemPath': PLC}),
@@ -530,10 +531,23 @@ CASES['HardwareNetwork'] += [(name, 'deep' if deep else 'direct',
     {'plcRootPath': PLC, 'hmiRootPath': 'HmiOfflineFixture', 'deepScan': deep})
     for name in ('ProbeHardwareHmiConnectionOwnerCandidates', 'ProbeHardwareHmiConnectionWhitelistedServices')
     for deep in (False, True)]
-CASES['Addresses'] += [('ReadDeviceAddressing', 'read', HARDWARE),
-    ('UpdateDeviceAddress', 'preview', dict(HARDWARE, ioType='Input', startAddress=0)),
+CASES['Addresses'] += [('GetDeviceAddressing', 'read', {'devicePath': ['Station1'], 'itemPath': ['CPU']}),
+    ('SetDeviceAddress', 'preview', {'devicePath': ['Station1'], 'itemPath': ['CPU'], 'ioType': 'Input', 'startAddress': 0}),
     ('GetDeviceIpAddress', 'read', {'devicePath': PLC})]
-CASES['Devices'] += [('DumpDeviceAttributes', 'read', {'devicePath': PLC})]
+CASES['Devices'] += [('GetDeviceAttributes', 'read', {'devicePath': PLC})]
+CASES['Devices'] += [('SetPlcCpuSettings', 'shared-' + label, {'cpuPath': PLC, 'settings': settings})
+    for label, settings in [('null', None), ('string', '{}'), ('empty', {'exactAttributes': {}}),
+        ('unknown', {'exactAttributes': {'Name': 'CPU'}, 'unknown': True}),
+        ('nested', {'exactAttributes': {'Name': {}}})]]
+CASES['Devices'] += [('SetPlcCpuSettings', 'shared-case-duplicate',
+    {'cpuPath': PLC, 'settings': {'exactAttributes': {'Name': 'CPU'}}, 'Settings': {}})]
+CASES['HardwareAml'] += [('BuildDeviceAmlDocument', 'shared-' + label, {'spec': spec, 'outputPath': 'domain-offline.aml'})
+    for label, spec in [('null', None), ('string', '{}'), ('unknown', {'projectName': 'P', 'devices': [], 'unknown': True})]]
+CASES['Addresses'] += [('SetDeviceAddress', 'shared-' + field + '-' + label,
+    {'devicePath': ['Station1'], 'itemPath': ['CPU'], 'ioType': 'Input', 'startAddress': 0, field: value})
+    for field in ('properties', 'attributes') for label, value in [('null', None), ('string', '{}'), ('nested', {'Name': {}})]]
+CASES['Addresses'] += [('GetDeviceAddressing', 'shared-' + label, {'devicePath': ['Station1'], 'itemPath': value})
+    for label, value in [('path-null', None), ('path-string', '[]')]]
 CASES['HardwareServices'] += actions('ManagePlcProtection',
     'read setAccessLevel setAccessPassword resetAccessPassword protectMasterSecret changeMasterSecret '
     'unprotectMasterSecret resetMasterSecret protectAllConfiguration unprotectAllConfiguration',
@@ -760,7 +774,7 @@ HARDWARE_TERMINALS = {
     'ProbeHardwareHmiConnectionWhitelistedServices': 'Project is null',
     'GetProjectTopology': 'No project open.',
     'GetDeviceIpAddress': 'No project open.',
-    'DumpDeviceAttributes': 'No project open.',
+    'GetDeviceAttributes': 'No project open.',
     'GetPutGetAccess': 'No project open.',
     'SetPutGetAccess': 'No project open.',
     'ProbeGlobalLibrary': 'TIA Portal is not connected. Call Connect first.',
@@ -775,14 +789,14 @@ HARDWARE_TERMINALS = {
     'GetDeviceItemTree': 'Device item not found',
     'SetDeviceItemAttribute': 'Project is null',
     'ValidateAutomationContext': 'Automation context invalid',
-    'SetCpuCommonSettings': 'Project is null',
-    'GetDevices': 'Devices retrieved',
-    'AddDevice': 'No project is open',
-    'AddDeviceWithFallback': 'Failed to add device',
+    'SetPlcCpuSettings': 'Project is null',
+    'ListDevices': 'Devices retrieved',
+    'CreateDevice': 'No project is open',
+    'CreateHardwareDevice': 'Failed to add device',
     'SearchInstalledGsdDevices': 'Keyword is empty',
     'SearchHardwareCatalog': 'HardwareCatalog is not available',
-    'AddGsdDeviceWithProbe': 'Keyword is empty',
-    'AddHardwareCatalogDeviceWithProbe': 'HardwareCatalog is not available',
+    'CreateGsdDevice': 'Keyword is empty',
+    'CreateHardwareCatalogDevice': 'HardwareCatalog is not available',
     'ExportDeviceAml': 'No project is open',
     'BuildDeviceAmlDocument': 'Absolute output file path required',
     'GetDevicePlugLocations': '的槽位：要么没有连接项目',
@@ -853,8 +867,8 @@ def runtime_reply(reply, profile, name, case):
 HARDWARE_THROWS = {
     'GetDeviceItemNetworkInfo',
     'GetProjectTree', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree',
-    'AddDevice', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog',
-    'AddGsdDeviceWithProbe', 'AddHardwareCatalogDeviceWithProbe', 'ExportDeviceAml',
+    'CreateDevice', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog',
+    'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ExportDeviceAml',
     'GetDevicePlugLocations', 'PlugDeviceItem', 'GetDeviceItemIoAddresses', 'SetDeviceItemIoAddress',
 }
 
@@ -1289,7 +1303,25 @@ def capture(args, exe, harness, profile, isolated):
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
+                if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses') and profile == 'lite':
+                    params = {'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}}
                 reply = rpc('tools/call', params=params)
+                if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses'):
+                    result = reply['result']
+                    raw = result['content'][0]['text']
+                    body = json.loads(raw)
+                    resources.require(body['schemaVersion'] == 4 and body['ok'] is False and result['isError'] is True, raw)
+                    resources.require((body['meta']['outcome'], body['meta']['execution']) ==
+                                      (('read-failed', 'read-only') if name == 'ValidateAutomationContext'
+                                       else ('rejected-before-operation', 'not-started')), raw)
+                    resources.require(body['error']['code'] in ('PROJECT_NOT_BOUND', 'INVALID_ARGUMENT', 'PRECONDITION_FAILED', 'RESOURCE_UNAVAILABLE', 'NATIVE_OPERATION_FAILED'), raw)
+                    resources.require(body['meta']['tool'] == ('CallTool' if profile == 'lite' and case.startswith('shared-') else name), raw)
+                    if case.startswith('shared-'):
+                        resources.require(body['error']['code'] == 'INVALID_ARGUMENT', raw)
+                    reached_child = True
+                    # Reuse the existing V4 envelope-only timestamp/requestId mask.
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, 'CallTool').encode('utf-8')
+                    continue
                 if domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced'):
                     raw = runtime_reply(reply, profile, name, case)
                     reached_child |= case != 'duplicate-argument'

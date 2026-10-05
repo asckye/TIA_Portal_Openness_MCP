@@ -1507,7 +1507,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | parser/策略来源:行 | 原始边界表达式 |
 |---|---|
-| [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs):248 | `[McpServerTool(Name="UpdateDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
+| [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs):275 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):41 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
 | [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):23 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):24 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
@@ -1881,10 +1881,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:16805 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17502 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17013 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17710 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:62 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:51 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -2025,7 +2025,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | 常用 PLC 交换与编译 | 20, 21 |
 | `ConnectPortal` | `Connect` | 工程生命周期 | 20, 21 |
 | `ConnectProject` | `ConnectToProject` | 工程生命周期 | 20, 21 |
-| `CreateHardwareDevice` | `AddDeviceWithFallback` | 硬件查找和精确创建 | 20, 21 |
+| `CreateHardwareDevice` | `CreateHardwareDevice` | 硬件查找和精确创建 | 20, 21 |
 | `CreateProject` | `CreateProject` | 工程生命周期 | 20, 21 |
 | `DeleteExportHandle` | `DeleteExport` | 大结果分页与文件交付 | 20, 21 |
 | `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
@@ -2053,7 +2053,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportPlcTagTable` | `ImportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
 | `ImportPlcType` | `ImportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
 | `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
-| `ListDevices` | `GetDevices` | 工程和 PLC 定位 | 20, 21 |
+| `ListDevices` | `ListDevices` | 工程和 PLC 定位 | 20, 21 |
 | `ListExportHandles` | `ListExports` | 大结果分页与文件交付 | 20, 21 |
 | `ListHmiScreens` | `GetHmiScreens` | HMI 定位和诊断 | 20, 21 |
 | `ListHmiTagTables` | `GetHmiTagTables` | HMI 定位和诊断 | 20, 21 |

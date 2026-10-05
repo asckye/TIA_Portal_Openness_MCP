@@ -135,7 +135,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var screenPath = package["screenXmlPath"]?.ToString() ?? "";
             var steps = new JsonArray(
                 Step(1, "Create temporary TIA V21 project", "CreateProject(projectDirectory, projectName)", "只在临时目录创建项目。"),
-                Step(2, "Add temporary KTP700 Basic PN HMI", "AddHardwareCatalogDeviceWithProbe(...)", "只使用临时工程硬件。"),
+                Step(2, "Add temporary KTP700 Basic PN HMI", "CreateHardwareCatalogDevice(...)", "只使用临时工程硬件。"),
                 Step(3, "Import Classic HMI tag table first", "ImportHmiTagTable(\"HMI_RT_1\", \"\", tagTableXmlPath)", tagPath),
                 Step(4, "Import Classic HMI screen second", "ImportHmiScreen(\"HMI_RT_1\", \"\", screenXmlPath)", screenPath),
                 Step(5, "Read back HMI tags/screens/items", "GetHmiTagTables/GetHmiScreens/DescribeHmiTag/DescribeHmiScreenItem", "确认 tag、ControllerTag、动态绑定和按钮事件。"),

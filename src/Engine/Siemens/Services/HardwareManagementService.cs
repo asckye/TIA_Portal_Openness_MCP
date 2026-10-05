@@ -59,5 +59,6 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 return dryRun ? "Hardware preview; no modification." : "Hardware operation completed; project not saved or downloaded.";
             });
+        internal bool HasProject => _session.CurrentProject is object;
     }
 }

@@ -544,7 +544,7 @@
     "topic": "hardware-device",
     "purpose": "Add a device from the catalog, plug a module, and remove a temporary device again.",
     "preconditions": "connect-project done. The maintainer's rule: hardware tests only on temporary devices in the scratch project, never on existing ones.",
-    "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); AddDevice needs the exact catalog version from SearchHardwareCatalog.",
+    "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); CreateDevice needs the exact catalog version from SearchHardwareCatalog.",
     "releaseKeys": [
       "20",
       "21"
@@ -562,7 +562,7 @@
         "expect": "order numbers and versions"
       },
       {
-        "tool": "AddDevice",
+        "tool": "CreateDevice",
         "arguments": {
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
@@ -595,7 +595,9 @@
       {
         "tool": "ManageHardwareObject",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]",
+          "devicePath": [
+            "<Station>"
+          ],
           "action": "deleteDevice",
           "dryRun": true
         },
@@ -604,7 +606,9 @@
       {
         "tool": "ManageHardwareObject",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]",
+          "devicePath": [
+            "<Station>"
+          ],
           "action": "deleteDevice",
           "dryRun": false
         },
