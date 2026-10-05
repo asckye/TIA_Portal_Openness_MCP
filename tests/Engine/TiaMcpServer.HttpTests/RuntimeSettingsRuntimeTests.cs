@@ -36,8 +36,8 @@ internal static class RuntimeSettingsRuntimeTests
         }
         bool Reject(string data) { try { Update(data); return false; } catch (TargetInvocationException) { return true; } }
         var mcp = EngineSurface.For(server);
-        check(new[] { "ReadUnifiedRuntimeSettings", "UpdateUnifiedRuntimeSettings" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true)
-            && (bool)mcp.Tool("UpdateUnifiedRuntimeSettings")!.GetParameters().Single(p => p.Name == "dryRun").DefaultValue,
+        check(new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true)
+            && (bool)mcp.Tool("SetUnifiedRuntimeSettings")!.GetParameters().Single(p => p.Name == "dryRun").DefaultValue,
             "actual EXE registers runtime setting tools with preview default");
         var readMeta = Activator.CreateInstance(metaType, new object?[] { null })!;
         read.Invoke(null, new object[] { hmi, new[] { "StartScreen", "ScreenResolution" }, readMeta, Activator.CreateInstance(traceType, true)! });

@@ -41,7 +41,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (changes.Count == 0 || changes.ContainsKey("Name") || changes.ContainsKey("Parent")) throw new ArgumentException("Nonempty scalar changes required; renaming/reparenting excluded.");
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
-                if (target.GetType().Name == "HmiRuntimeSetting") throw new NotSupportedException("Use UpdateUnifiedRuntimeSettings for root settings and its confirmation/readback flow; this adapter only edits nested runtime settings.");
+                if (target.GetType().Name == "HmiRuntimeSetting") throw new NotSupportedException("Use SetUnifiedRuntimeSettings for root settings and its confirmation/readback flow; this adapter only edits nested runtime settings.");
                 // Nested parts (alarm class RaisedState, log Settings/Backup/Segment ...) and System.Drawing.Color leaves are accepted; collections still need their dedicated tools.
                 var prepared = UnifiedUiModelLogic.PrepareNested(target.GetType(), changes);
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson);

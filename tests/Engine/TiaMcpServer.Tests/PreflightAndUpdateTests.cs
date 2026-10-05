@@ -80,7 +80,7 @@ namespace TiaMcpServer.Tests
             check(PreflightLogic.Alternatives("action: read (default) or delete").Count == 0, "preflight: '(default)' is not a list");
             check(PreflightLogic.Alternatives("password: the password to set (setAccessPassword, protectMasterSecret) or the current one (changeMasterSecret); never logged.").Count == 0, "preflight: a two-item parenthesised reference is not a value list (real-machine false enum on password)");
             check(PreflightLogic.Alternatives("importOption: value (None, Override)").SequenceEqual(new[] { "None", "Override" }), "preflight: a two-item list announced as 'value (...)' is a list");
-            check(PreflightLogic.Alternatives("promptAnswersJson: answers by type name, e.g. {\"ResetModule\":\"DeleteAll\"}. Destructive prompts (InitializeMemory, OverwriteOnMemoryCard, ResetModule) default to NoAction.").Count == 0, "preflight: a list in a later sentence is not the parameter's value set (DownloadToPlc false enum)");
+            check(PreflightLogic.Alternatives("promptAnswersJson: answers by type name, e.g. {\"ResetModule\":\"DeleteAll\"}. Destructive prompts (InitializeMemory, OverwriteOnMemoryCard, ResetModule) default to NoAction.").Count == 0, "preflight: a list in a later sentence is not the parameter's value set (DownloadPlc false enum)");
             check(PreflightLogic.Alternatives("folderPath: group/folder path inside the software").Count == 0 && PreflightLogic.Alternatives("pgPcInterface: PG/PC interface name").Count == 0 && PreflightLogic.Alternatives("blockGroupPath: PLC block group path for kind=globaldb|fc.").Count == 0 && PreflightLogic.Alternatives("blockScope: optional regex (e.g. 'FC|Main')").Count == 0, "preflight: prose slashes, kind=a|b and quoted regexes are not lists (real-machine false enums)");
             check(PreflightLogic.Alternatives("subnetType: IndustrialEthernet/PROFINET/PN/IE.").Count == 4 && PreflightLogic.Alternatives("kind: udt|tagtable|globaldb|fc|fb").Count == 5, "preflight: free-standing lists still parse");
 
@@ -92,23 +92,23 @@ namespace TiaMcpServer.Tests
 
             // ---- precautions / prerequisites ----
             check(PreflightLogic.Precautions("WRITE", true).Count == 2 && PreflightLogic.Precautions("ONLINE-WRITE", false).Count == 1 && PreflightLogic.Precautions("READ", false).Count == 1 && PreflightLogic.Precautions("", false).Count == 0, "preflight: precaution text per operation class");
-            check(PreflightLogic.NeedsProject("WRITE", "ImportBlock") && !PreflightLogic.NeedsProject("SESSION", "Connect") && !PreflightLogic.NeedsProject("OFFLINE", "BuildPlcGlobalDbJson") && !PreflightLogic.NeedsProject("READ", "SearchHardwareCatalog") && !PreflightLogic.NeedsProject("ONLINE", "ReadPlcSimAdvancedTags"), "preflight: project prerequisite only for project-bound operations");
+            check(PreflightLogic.NeedsProject("WRITE", "ImportBlock") && !PreflightLogic.NeedsProject("SESSION", "Connect") && !PreflightLogic.NeedsProject("OFFLINE", "BuildPlcGlobalDbJson") && !PreflightLogic.NeedsProject("READ", "SearchHardwareCatalog") && !PreflightLogic.NeedsProject("ONLINE", "GetPlcSimAdvancedTags"), "preflight: project prerequisite only for project-bound operations");
 
             // ---- the bridge wiring on the linked tools (no portal in this suite -> prerequisites unknown) ----
             check(!PreflightLogic.NeedsProject("READ", "ReadOpennessWorkerStatus"), "worker status is independent of a TIA project");
             check(!PreflightLogic.NeedsProject("WRITE", "RestartOpennessWorker"), "worker recovery must not require connecting a faulted worker first");
-            var probe = McpServer.PreflightToolCall("updateunifiedruntimesettings", "{\"SoftwarePath\":\"HMI\",\"changesJson\":{\"BitSelection\":true},\"dryRun\":\"false\"}");
-            check(probe.Meta!["toolFound"]!.GetValue<bool>() && probe.Meta["tool"]!.GetValue<string>() == "UpdateUnifiedRuntimeSettings" && probe.Meta["ok"]!.GetValue<bool>() == false, "preflight tool: case-insensitive name resolved, missing expectedProject makes it not ok");
-            check(probe.Meta["missing"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "expectedProject" }) && probe.Meta["caseFixes"]!.AsArray().Count == 1 && probe.Meta["coercions"]!.AsArray().Count == 2, "preflight tool: missing / case fix / coercions reported");
+            var probe = McpServer.PreflightToolCall("setunifiedruntimesettings", "{\"SoftwarePath\":\"HMI\",\"changes\":{\"BitSelection\":true},\"dryRun\":\"false\"}");
+            check(probe.Meta!["toolFound"]!.GetValue<bool>() && probe.Meta["tool"]!.GetValue<string>() == "SetUnifiedRuntimeSettings" && probe.Meta["ok"]!.GetValue<bool>() == false, "preflight tool: case-insensitive name resolved, missing expectedProject makes it not ok");
+            check(probe.Meta["missing"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "expectedProject" }) && probe.Meta["caseFixes"]!.AsArray().Count == 1 && probe.Meta["coercions"]!.AsArray().Count == 1, "preflight tool: missing / case fix / coercions reported");
             check(probe.Meta["dryRun"]!["supported"]!.GetValue<bool>() && probe.Meta["dryRun"]!["effective"]!.GetValue<bool>() && probe.Meta["operation"]!.GetValue<string>() == "WRITE" && probe.Meta["domain"]!.GetValue<string>() == "HMI-Unified", "preflight tool: dryRun=false marked as executing, taxonomy read from the description");
-            check(probe.Message!.StartsWith("NOT READY") && probe.Items!.Any(i => i.StartsWith("Signature: UpdateUnifiedRuntimeSettings(softwarePath: string, expectedProject: string, changesJson: string, dryRun?: boolean = true")), "preflight tool: verdict and signature line");
+            check(probe.Message!.StartsWith("NOT READY") && probe.Items!.Any(i => i.StartsWith("Signature: SetUnifiedRuntimeSettings(softwarePath: string, expectedProject: string, changes: AttributeMap`1, dryRun?: boolean = true")), "preflight tool: verdict and signature line");
             check(probe.Meta["prerequisites"]!["needsProject"]!.GetValue<bool>() && probe.Meta["prerequisites"]!["satisfied"] == null, "preflight tool: session state unknown offline -> prerequisite undecided, not failed");
 
-            var ready = McpServer.PreflightToolCall("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changesJson\":\"{}\"}");
+            var ready = McpServer.PreflightToolCall("SetUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changes\":{}}");
             check(ready.Meta!["ok"]!.GetValue<bool>() && ready.Meta["success"]!.GetValue<bool>() && ready.Message!.StartsWith("READY") && ready.Message.Contains("preview"), "preflight tool: clean preview call is READY");
 
-            var typo = McpServer.PreflightToolCall("UpdateUnifiedRuntimeSetting", "{}");
-            check(!typo.Meta!["toolFound"]!.GetValue<bool>() && typo.Message!.Contains("UpdateUnifiedRuntimeSettings"), "preflight tool: near miss suggests the real name");
+            var typo = McpServer.PreflightToolCall("SetUnifiedRuntimeSetting", "{}");
+            check(!typo.Meta!["toolFound"]!.GetValue<bool>() && typo.Message!.Contains("SetUnifiedRuntimeSettings"), "preflight tool: near miss suggests the real name");
             var noArgs = McpServer.PreflightToolCall("ProbeResult", "");
             check(noArgs.Meta!["toolFound"]!.GetValue<bool>() && noArgs.Meta["missing"]!.AsArray().Count == 1, "preflight tool: empty arguments -> the required parameter is listed as missing");
             var badJson = McpServer.PreflightToolCall("ProbeResult", "[1,2]");
@@ -116,7 +116,7 @@ namespace TiaMcpServer.Tests
             check(!McpServer.PreflightToolCall("", "{}").Meta!["success"]!.GetValue<bool>(), "preflight tool: empty name refused");
 
             // ---- example table ----
-            check(ToolExamples.All.Count >= 70 && ToolExamples.Find("downloadtoplc") != null && ToolExamples.Find("NoSuchTool") == null, "examples: table populated, lookup case-insensitive");
+            check(ToolExamples.All.Count >= 70 && ToolExamples.Find("downloadplc") != null && ToolExamples.Find("NoSuchTool") == null, "examples: table populated, lookup case-insensitive");
             foreach (var e in ToolExamples.All)
                 check(JsonNode.Parse(e.ArgumentsJson) is JsonObject, "examples: '" + e.Tool + "' is a JSON object");
             var decorated = ToolExamples.Decorate("ListPlcBlocks", "[L1][PLC-Software][READ] List blocks.");
@@ -135,8 +135,8 @@ namespace TiaMcpServer.Tests
             check(gate.Any(p => p == "ListPlcBlocks: example uses 'regexName' which is not a parameter (exact spelling required)") && gate.Any(p => p.EndsWith("no tool of that name (example is stale)")), "examples: validation flags wrong parameter names and stale tools (sentinel)");
 
             // ---- CallTool / FindTools carry the example ----
-            var refusal = McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\"}");
-            check(refusal.Message!.Contains("missing required argument(s): expectedProject, changesJson") && refusal.Message.Contains("PreviewToolCall"), "bridge: missing-argument refusal points at PreviewToolCall");
+            var refusal = McpServer.CallTool("SetUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\"}");
+            check(refusal.Message!.Contains("missing required argument(s): expectedProject, changes") && refusal.Message.Contains("PreviewToolCall"), "bridge: missing-argument refusal points at PreviewToolCall");
 
             // ---- UpdateLogic ----
             check(UpdateLogic.ParseVersion("v2.7.57")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("2.7.57.0")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("latest") == null && UpdateLogic.ParseVersion("") == null, "update: version tags parsed");

@@ -51,6 +51,7 @@ namespace TiaMcpServer.Runtime
         public string? BeforeError;
         public bool WriteAttempted;
         public bool WriteAccepted;
+        public bool WriteOutcomeKnown;
         public JsonNode? After;
         public bool Verified;
         public string? Error;
@@ -159,16 +160,19 @@ namespace TiaMcpServer.Runtime
                     {
                         var resp = await h.PlcProgramWriteAsync(w.Name, w.ClrValue, null, ct);
                         item.WriteAccepted = resp?.Result == true;
-                        if (!item.WriteAccepted) { item.Error = "PlcProgram.Write did not return true."; continue; }
+                        item.WriteOutcomeKnown = resp != null;
+                        if (!item.WriteAccepted) { item.Error = "PlcProgram.Write did not return true."; if (resp == null) break; continue; }
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
                         item.Error = "PlcProgram.Write failed: " + Describe(ex);
-                        continue;
+                        break;
                     }
+                    item.WriteOutcomeKnown = false;
                     var after = await ReadOneAsync(h, w.Name, ct);
                     item.After = after.Value;
-                    if (after.Error != null) { item.Error = "Readback failed after write: " + after.Error; continue; }
+                    item.WriteOutcomeKnown = after.Error == null;
+                    if (after.Error != null) { item.Error = "Readback failed after write: " + after.Error; break; }
                     item.Verified = RuntimeChannelsLogic.ValuesMatch(item.Requested, item.After);
                     if (!item.Verified)
                         item.Error = $"Readback differs from the requested value (requested {item.Requested?.ToJsonString()}, read {item.After?.ToJsonString()}); the PLC program may overwrite this variable cyclically.";
@@ -266,7 +270,8 @@ namespace TiaMcpServer.Runtime
             try
             {
                 var resp = await h.PlcProgramReadAsync<object>(name, null, ct);
-                item.Value = RuntimeChannelsLogic.ToJsonNode(resp?.Result, Serialize);
+                if (resp == null) item.Error = "PlcProgram.Read returned no response.";
+                else item.Value = RuntimeChannelsLogic.ToJsonNode(resp.Result, Serialize);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -315,6 +320,10 @@ namespace TiaMcpServer.Runtime
             finally { sw.Stop(); setElapsed(result, sw.ElapsedMilliseconds); }
         }
 
+        internal static bool CanReplay<T>(T result)
+            => result is S7WebWriteResult writes ? !writes.Items.Any(item => item.WriteAttempted)
+                : result is S7WebModeChangeResult mode ? !mode.RequestAttempted : true;
+
         private static async Task RunAsync<T>(string host, string username, string password, bool ignoreCert, int budget, T result,
             Func<ApiHttpClientRequestHandler, CancellationToken, Task> body, Action<T, bool> setReused)
         {
@@ -334,7 +343,7 @@ namespace TiaMcpServer.Runtime
                         await body(session.Handler, cts.Token);
                         return;
                     }
-                    catch (Exception ex) when (attempt == 0 && reused && IsStaleToken(ex))
+                    catch (Exception ex) when (attempt == 0 && reused && CanReplay(result) && IsStaleToken(ex))
                     {
                         Forget(key, session);
                     }

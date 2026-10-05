@@ -843,7 +843,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (rows.Count == 0)
             {
-                data["note"] = "This watch table exposed no entries through Openness. It may be empty, or Openness cannot read rows authored in the TIA UI (known limitation). Read the values directly with ReadPlcLiveValuesS7 using explicit addresses.";
+                data["note"] = "This watch table exposed no entries through Openness. It may be empty, or Openness cannot read rows authored in the TIA UI (known limitation). Read the values directly with GetPlcLiveValuesS7 using explicit addresses.";
                 return new ModelContextProtocol.ResponseJsonReport { Ok = true, Message = "Watch table has 0 readable entries via Openness.", Data = data };
             }
 

@@ -34,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // online-mode lock (export/import/compile require offline)
             if (Has(m, "online mode") || Has(m, "not permitted in online") || Has(m, "supported in online"))
-                return Tip("this operation needs the target offline. Call GoOfflineAll (releases the UI's online session and all others) or GoOffline(softwarePath), then retry.");
+                return Tip("this operation needs the target offline. Call DisconnectOnlinePlcs (releases the UI's online session and all others) or DisconnectOnlinePlc(softwarePath), then retry.");
 
             // name / path not found  -> covers the wrong-softwarePath / wrong-block-name case
             if (Has(m, "not found") || Has(m, "does not exist") || Has(m, "could not be found") ||
@@ -55,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // download blocked because an interface/static-var change needs the CPU stopped
             if (Has(m, "stopmodules") || (Has(m, "download") && Has(m, "unhandled")))
-                return Tip("the change alters a block interface (e.g. a new static VAR -> instance DB rebuild), so a RUN download is refused. Call DownloadToPlc(stopBeforeDownload=true) for a brief stop-download, or do 'download software (changes only)' in the TIA UI to stay in RUN.");
+                return Tip("the change alters a block interface (e.g. a new static VAR -> instance DB rebuild), so a RUN download is refused. Call DownloadPlc(stopBeforeDownload=true) for a brief stop-download, or do 'download software (changes only)' in the TIA UI to stay in RUN.");
 
             // export refused because the software/block is inconsistent
             if (Has(m, "not consistent") || Has(m, "inconsistent") || Has(m, "isconsistent"))

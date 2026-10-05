@@ -185,7 +185,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-20 | CFC/TestSuite/V20Options/OptionalEngineering/SpecializedExchange 契约迁移；[路径清单](phase6-review.md#phase6-path-p6-20) | 03–07、I | T、V；两版能力差集；N 调用不变 | done |
 | P6-21 | DCC/Startdrive/Teamcenter 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-21) | 03–07、I | T、V；联合/动态属性；已知现场事故不标记已修复；N 调用不变 | done |
 | P6-22 | 库/Sivarc/VCI 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-22) | 03–07、I | T、V；大小写、范围、selection 限制；N 调用不变，保留 G3/J 开关门槛 | done |
-| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 `src/Runtime`、`src/Engine/Runtime` 适配边界；[路径清单](phase6-review.md#phase6-path-p6-23) | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | todo |
+| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 `src/Runtime`、`src/Engine/Runtime` 适配边界；[路径清单](phase6-review.md#phase6-path-p6-23) | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | done |
 | P6-24 | 会话/工程/诊断契约及公共 Portal、ToolCatalog、注册/项目文件串行集成；清除旧工具目录注册；[路径清单](phase6-review.md#phase6-path-p6-24) | 08–23、I | T、V 全量；生成所有权覆盖每个入口，拒绝旧名/旧参数/二次编码；N 调用不变 | todo |
 | P6-25 | CLI 和 Studio 的 V4 消费边界、错误展示、退出码；各自报告保留业务字段；[路径清单](phase6-review.md#phase6-path-p6-25) | 24 | T；CLI 0/2/3/4/5/64/70 黄金样本、Studio Loc 测试、partial/unknown 不显示成功 | todo |
 | P6-26 | 先删文本判定再统一英文 MCP 文本；错误码消费者/FindTools/稳定性与快照脚本同步；[路径清单](phase6-review.md#phase6-path-p6-26) | 25 | T、V、MCP 文案检查；无消息子串控制安全动作，原生文本作为脱敏数据 | todo |

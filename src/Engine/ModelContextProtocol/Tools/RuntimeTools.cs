@@ -1,3 +1,6 @@
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
@@ -53,10 +56,16 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ProbeS7CpuIdentity"), Description("[L2][Online-Monitoring] Read-only: connect to a physical CPU over the S7 protocol (ISO-on-TCP, port 102) and read its identification (module type, serial, names). Does NOT write, force, or change CPU mode. Use this first to confirm the IP belongs to the intended PLC before reading values. S7-1200/1500 use rack 0, slot 1.")]
-        public ResponseJsonReport ProbeS7CpuIdentity(
+        public CallToolResult ProbeS7CpuIdentityV4(
             [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
             [Description("rack: hardware rack number. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot number. S7-1200/1500 = 1; S7-300/400 often 2.")] int slot = 1)
+            => RuntimeToolContract.Run("ProbeS7CpuIdentity", true, false, () =>
+            {
+                return ProbeS7CpuIdentity(ip, rack, slot);
+            });
+
+        public ResponseJsonReport ProbeS7CpuIdentity(string ip, int rack = 0, int slot = 1)
         {
             try
             {
@@ -94,14 +103,20 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ReadPlcLiveValuesS7"), Description("[L2][Online-Monitoring] Read-only FAST live values from a physical CPU over the S7 protocol (port 102), independent of TIA Openness. Give absolute S7 addresses (DB10.DBD0:REAL, DB1.DBX2.3, M0.0, MW12, DB5.DBD8:DINT). Returns current values in one round-trip (typically tens of ms). NEVER writes/forces. Preconditions for S7-1200/1500: enable 'Permit PUT/GET access' on the CPU and read NON-optimized DBs (M/I/Q are unrestricted). Use expectModuleContains to hard-guard the target identity.")]
-        public ResponseJsonReport ReadPlcLiveValuesS7(
+        [McpServerTool(Name = "GetPlcLiveValuesS7"), Description("[L2][Online-Monitoring] Read-only FAST live values from a physical CPU over the S7 protocol (port 102), independent of TIA Openness. Give absolute S7 addresses (DB10.DBD0:REAL, DB1.DBX2.3, M0.0, MW12, DB5.DBD8:DINT). Returns current values in one round-trip (typically tens of ms). NEVER writes/forces. Preconditions for S7-1200/1500: enable 'Permit PUT/GET access' on the CPU and read NON-optimized DBs (M/I/Q are unrestricted). Use expectModuleContains to hard-guard the target identity.")]
+        public CallToolResult ReadPlcLiveValuesS7V4(
             [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
-            [Description("itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. [\"DB10.DBD0:REAL\",\"DB10.DBD4:REAL\",\"M0.0\"].")] string itemsJson,
+            [Description("items: structured string array input.")] string[] items,
             [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("expectModuleContains: optional identity guard. If set (e.g. '1211C'), the read aborts unless the CPU module type contains this substring.")] string expectModuleContains = "",
             [Description("devicePath: optional device name (e.g. 'PLC_1') for a PUT/GET precheck. When set, the read is skipped with a clear, actionable message if the CPU has remote PUT/GET access disabled, instead of failing with a TCP timeout.")] string devicePath = "")
+            => RuntimeToolContract.Run("GetPlcLiveValuesS7", true, false, () =>
+            {
+                return ReadPlcLiveValuesS7(ip, RuntimeToolContract.Names(items, "items", false), rack, slot, expectModuleContains, devicePath);
+            });
+
+        public ResponseJsonReport ReadPlcLiveValuesS7(string ip, string itemsJson, int rack = 0, int slot = 1, string expectModuleContains = "", string devicePath = "")
         {
             try
             {
@@ -122,7 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             {
                                 Ok = false,
                                 Message = $"PUT/GET access is DISABLED on '{devicePath}' (attribute '{pg["attributeName"]}'). S7 absolute DB reads will fail. " +
-                                          $"Enable it: SetPlcPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadToPlc — or read M/I/Q which are unrestricted.",
+                                          $"Enable it: SetPlcPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadPlc — or read M/I/Q which are unrestricted.",
                                 Data = new JsonObject { ["putGetAccess"] = pg, ["precheck"] = "putget-disabled" },
                                 Meta = ResponseMeta.Basic(DateTime.Now, false)
                             };
@@ -192,16 +207,22 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SamplePlcLiveValuesS7"), Description("[L2][Online-Monitoring] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as ReadPlcLiveValuesS7.")]
-        public ResponseJsonReport SamplePlcLiveValuesS7(
+        [McpServerTool(Name = "SamplePlcLiveValuesS7"), Description("[L2][Online-Monitoring] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as GetPlcLiveValuesS7.")]
+        public CallToolResult SamplePlcLiveValuesS7V4(
             [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
-            [Description("itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. [\"DB10.DBD0:REAL\",\"M0.0\"].")] string itemsJson,
+            [Description("items: structured string array input.")] string[] items,
             [Description("intervalMs: sampling period in ms (clamped to >= 20).")] int intervalMs = 100,
             [Description("durationMs: total sampling window in ms (clamped to <= 120000).")] int durationMs = 5000,
             [Description("maxSamples: hard cap on sample count (default 600, max 5000).")] int maxSamples = 600,
             [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+            => RuntimeToolContract.Run("SamplePlcLiveValuesS7", true, false, () =>
+            {
+                return SamplePlcLiveValuesS7(ip, RuntimeToolContract.Names(items, "items", false), intervalMs, durationMs, maxSamples, rack, slot, expectModuleContains);
+            });
+
+        public ResponseJsonReport SamplePlcLiveValuesS7(string ip, string itemsJson, int intervalMs = 100, int durationMs = 5000, int maxSamples = 600, int rack = 0, int slot = 1, string expectModuleContains = "")
         {
             try
             {
@@ -259,11 +280,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "TraceTagCause"), Description("[L2][Online-Monitoring] Answer 'why is tag X this value / what sets it' by static analysis of the OFFLINE project. Read-only: exports code blocks to SimaticML and finds every network that WRITES the tag (LAD coils S/R/=, or StructuredText ':=' assignments) plus the gating condition operands in those networks. Cross-reference service is not needed. Then live-read the returned gatingConditions with ReadPlcLiveValuesS7 to see which condition is currently driving the value. Tip: pass blockScope to limit which blocks are scanned (faster). NOTE: block export needs the project OFFLINE in TIA — Openness cannot export blocks while it is connected online to the PLC.")]
-        public ResponseJsonReport TraceTagCause(
+        [McpServerTool(Name = "TraceTagCause"), Description("[L2][Online-Monitoring] Answer 'why is tag X this value / what sets it' by static analysis of the OFFLINE project. Read-only: exports code blocks to SimaticML and finds every network that WRITES the tag (LAD coils S/R/=, or StructuredText ':=' assignments) plus the gating condition operands in those networks. Cross-reference service is not needed. Then live-read the returned gatingConditions with GetPlcLiveValuesS7 to see which condition is currently driving the value. Tip: pass blockScope to limit which blocks are scanned (faster). NOTE: block export needs the project OFFLINE in TIA — Openness cannot export blocks while it is connected online to the PLC. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        public CallToolResult TraceTagCauseV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.")] string softwarePath,
             [Description("tag: symbol to trace. Accepts a full path ('Crew_Data.Saddle_locationX') or a member name ('故障代码'). Quotes/whitespace are ignored.")] string tag,
             [Description("blockScope: optional regex to limit scanned code blocks by name (e.g. 'FC|Main'). Empty scans all code blocks.")] string blockScope = "")
+            => RuntimeToolContract.Run("TraceTagCause", true, true, () =>
+            {
+                return TraceTagCause(softwarePath, tag, blockScope);
+            });
+
+        public ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope = "")
         {
             try
             {
@@ -277,8 +304,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "TraceTagCauseLive"), Description("[L2][Online-Monitoring] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by going offline.")]
-        public ResponseJsonReport TraceTagCauseLive(
+        [McpServerTool(Name = "TraceTagCauseLive"), Description("[L2][Online-Monitoring] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by going offline. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        public CallToolResult TraceTagCauseLiveV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.")] string softwarePath,
             [Description("tag: symbol to trace (full path or member name; quotes/whitespace ignored).")] string tag,
             [Description("ip: CPU IP address for the live read, e.g. '192.168.0.32'.")] string ip,
@@ -286,6 +313,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("blockScope: optional regex to limit scanned code blocks by name. Empty scans all.")] string blockScope = "",
             [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+            => RuntimeToolContract.Run("TraceTagCauseLive", true, true, () =>
+            {
+                if (string.IsNullOrWhiteSpace(ip)) throw new ArgumentException("ip is required for live tracing.", nameof(ip));
+                return TraceTagCauseLive(softwarePath, tag, ip, rack, slot, blockScope, expectModuleContains);
+            });
+
+        public ResponseJsonReport TraceTagCauseLive(string softwarePath, string tag, string ip, int rack = 0, int slot = 1, string blockScope = "", string expectModuleContains = "")
         {
             try
             {
@@ -299,11 +333,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ReadPlcLiveValuesOpcUa"), Description("[L2][Online-Monitoring] Read-only live values from a CPU's OPC UA server (default opc.tcp port 4840), independent of TIA Openness. Anonymous, no-security session; reads the Value attribute of each node. NEVER writes or calls methods. Node IDs use OPC UA syntax, e.g. 'ns=3;s=\"DB10\".\"X\"' or 'i=2258'. Precondition: the CPU's OPC UA server must be enabled and the variables exposed (Runtime license on S7-1200/1500). If the server is off, connection is refused (reported cleanly).")]
-        public ResponseJsonReport ReadPlcLiveValuesOpcUa(
+        [McpServerTool(Name = "GetPlcLiveValuesOpcUa"), Description("[L2][Online-Monitoring] Read-only live values from a CPU's OPC UA server (default opc.tcp port 4840), independent of TIA Openness. Anonymous, no-security session; reads the Value attribute of each node. NEVER writes or calls methods. Node IDs use OPC UA syntax, e.g. 'ns=3;s=\"DB10\".\"X\"' or 'i=2258'. Precondition: the CPU's OPC UA server must be enabled and the variables exposed (Runtime license on S7-1200/1500). If the server is off, connection is refused (reported cleanly).")]
+        public CallToolResult ReadPlcLiveValuesOpcUaV4(
             [Description("endpointUrl: OPC UA endpoint, e.g. 'opc.tcp://192.168.0.10:4840'.")] string endpointUrl,
-            [Description("nodeIdsJson: JSON array or comma-separated list of OPC UA NodeIds, e.g. [\"ns=3;s=\\\"DB10\\\".\\\"X\\\"\",\"ns=3;s=\\\"DB10\\\".\\\"Y\\\"\"].")] string nodeIdsJson,
+            [Description("nodeIds: structured string array input.")] string[] nodeIds,
             [Description("timeoutMs: overall read timeout in milliseconds.")] int timeoutMs = 5000)
+            => RuntimeToolContract.Run("GetPlcLiveValuesOpcUa", true, false, () =>
+            {
+                return ReadPlcLiveValuesOpcUa(endpointUrl, RuntimeToolContract.Names(nodeIds, "nodeIds", false), timeoutMs);
+            });
+
+        public ResponseJsonReport ReadPlcLiveValuesOpcUa(string endpointUrl, string nodeIdsJson, int timeoutMs = 5000)
         {
             try
             {
@@ -351,12 +391,18 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetPlcRunStateS7"), Description("[L2][Online-Monitoring] Read-only: read the CPU operating mode (RUN / STOP / UNKNOWN) over the S7 protocol (port 102) — something TIA Openness cannot do. Also returns the CPU clock and a best-effort raw diagnostic-buffer dump (event IDs in hex + raw bytes; full event text needs TIA's text database, and SZL may be unavailable on some S7-1200 CPUs — reported cleanly). Never writes/forces/changes mode.")]
-        public ResponseJsonReport GetPlcRunStateS7(
+        public CallToolResult GetPlcRunStateS7V4(
             [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
             [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("maxDiagEntries: max diagnostic-buffer records to return (default 20; 0 = all returned by CPU).")] int maxDiagEntries = 20,
             [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+            => RuntimeToolContract.Run("GetPlcRunStateS7", true, false, () =>
+            {
+                return GetPlcRunStateS7(ip, rack, slot, maxDiagEntries, expectModuleContains);
+            });
+
+        public ResponseJsonReport GetPlcRunStateS7(string ip, int rack = 0, int slot = 1, int maxDiagEntries = 20, string expectModuleContains = "")
         {
             try
             {

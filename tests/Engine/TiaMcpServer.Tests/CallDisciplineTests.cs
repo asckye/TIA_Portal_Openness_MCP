@@ -85,14 +85,14 @@ namespace TiaMcpServer.Tests
             check(vm["importPath"]!.GetValue<string>().StartsWith(@"C:\Temp\") && vm["logFilePath"]!.GetValue<string>().StartsWith(@"C:\Temp\"), "derive: host paths by name");
 
             // ---- PreflightSummary (what a failed call carries) ----
-            var summary = McpServer.PreflightSummary("UpdateUnifiedRuntimeSettings", O("{\"SoftwarePath\":\"HMI\",\"changesJson\":\"{}\"}"));
+            var summary = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"SoftwarePath\":\"HMI\",\"changes\":{}}"));
             check(summary["missing"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "expectedProject" }) && summary["caseFixes"]!.AsArray().Count == 1 && summary["example"] is JsonObject && summary["exampleDerived"]!.GetValue<bool>() && summary["next"]!.GetValue<string>().StartsWith("Correct the argument problems"), "summary: missing + case fix + derived example + next step");
             check(summary["unknown"] == null && summary["typeProblems"] == null && summary["prerequisite"] == null, "summary: empty lists omitted, prerequisite unknown offline");
-            var clean = McpServer.PreflightSummary("UpdateUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changesJson\":\"{}\"}"));
+            var clean = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changes\":{}}"));
             check(clean["missing"] == null && clean["next"]!.GetValue<string>().StartsWith("The message names the cause"), "summary: clean arguments -> business-failure guidance");
             var unknownTool = McpServer.PreflightSummary("NoSuchTool", O("{}"));
             check(unknownTool["next"]!.GetValue<string>().StartsWith("No tool named 'NoSuchTool'"), "summary: unknown tool");
-            var enumSpecsTool = McpServer.PreflightSummary("UpdateUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changesJson\":\"{}\",\"dryRun\":\"maybe\"}"));
+            var enumSpecsTool = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changes\":{},\"dryRun\":\"maybe\"}"));
             check(enumSpecsTool["typeProblems"]!.AsArray().Count == 1, "summary: type problem listed");
 
             // ---- vocabulary (parameters without their own [Description]) ----
@@ -124,7 +124,7 @@ namespace TiaMcpServer.Tests
             var list = McpServer.GetRecipe("");
             check(list.Meta!["success"]!.GetValue<bool>() && list.Items!.Count() == ToolRecipes.All.Count && list.Meta["topics"]!.AsArray().Count == ToolRecipes.All.Count, "GetRecipe: empty topic lists every recipe");
             var one = McpServer.GetRecipe("download-plcsim");
-            check(one.Meta!["success"]!.GetValue<bool>() && one.Meta["steps"]!.AsArray().Count == 11 && one.Items!.Any(i => i.StartsWith("7. DownloadToPlc ")) && one.Items!.First().StartsWith("Purpose:"), "GetRecipe: numbered exact calls with expectations");
+            check(one.Meta!["success"]!.GetValue<bool>() && one.Meta["steps"]!.AsArray().Count == 11 && one.Items!.Any(i => i.StartsWith("7. DownloadPlc ")) && one.Items!.First().StartsWith("Purpose:"), "GetRecipe: numbered exact calls with expectations");
             check(!McpServer.GetRecipe("nope").Meta!["success"]!.GetValue<bool>() && McpServer.GetRecipe("nope").Message!.Contains("download-plcsim"), "GetRecipe: unknown topic lists the topics");
         }
     }

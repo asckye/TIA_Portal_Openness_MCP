@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var m = pair.Item1.Match(description!);
                 if (!m.Success) continue;
                 var before = description!.Substring(0, m.Index);
-                // The list belongs to the parameter's own (first) sentence: a period before it means another sentence, e.g. the prompt names DownloadToPlc mentions later on.
+                // The list belongs to the parameter's own (first) sentence: a period before it means another sentence, e.g. the prompt names DownloadPlc mentions later on.
                 if (before.IndexOf('.') >= 0) continue;   // also skips "e.g." lists, which are examples, not the full set
                 var list = m.Groups["list"].Value.Split(pair.Item2).Select(x => x.Trim()).Where(x => x.Length > 0).Distinct(StringComparer.Ordinal).ToList();
                 if (list.Count < 2 || list.Any(x => x.Length > 40)) continue;
@@ -228,7 +228,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (dryRunSupported) list.Add("dryRun=true (default) previews; execution also needs the confirm flag.");
                     break;
                 case "ONLINE":
-                    list.Add("Contacts a PLC / device / runtime read-only (scan, online state, compare). Needs the route (pgPcInterface / IP) to be right; ReadTransferRoutes shows the choices.");
+                    list.Add("Contacts a PLC / device / runtime read-only (scan, online state, compare). Needs the route (pgPcInterface / IP) to be right; ListTransferRoutes shows the choices.");
                     break;
                 case "EXECUTE":
                     list.Add("Runs a compile / test / self-test and returns its messages; read ErrorCount before continuing.");
@@ -257,7 +257,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE") return false;
             // Tools that read the environment rather than a project.
-            var exempt = new[] { "ReadOpennessWorkerStatus", "RestartOpennessWorker", "ReadOpennessCompatibility", "ReadNativeInvocationLog", "InspectSimaticSdCompatibility", "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
+            var exempt = new[] { "ReadOpennessWorkerStatus", "RestartOpennessWorker", "ReadOpennessCompatibility", "ReadNativeInvocationLog", "InspectSimaticSdCompatibility", "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
             return !exempt.Contains(toolName, StringComparer.OrdinalIgnoreCase);
         }
     }

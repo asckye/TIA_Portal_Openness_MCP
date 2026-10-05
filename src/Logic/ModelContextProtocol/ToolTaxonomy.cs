@@ -113,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Starts("BuildReleaseHandoffArtifacts")) return ("FILE", true);
             if (Starts("Compile", "Run") || Has("SelfTest", "ValidationSuite", "PrecheckSuite")) return ("EXECUTE", true);
             if (Starts("Download", "Upload", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags", "WritePlcSimAdvanced", "ManagePlcSimAdvanced")) return ("ONLINE-WRITE", true);
-            if (Starts("GoOnline", "GoOffline", "ScanAccessible", "MonitorPlcWatchTableS7") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
+            if (Starts("ConnectOnlinePlc", "DisconnectOnlinePlc", "ScanAccessible", "MonitorPlcWatchTableS7") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
             if (Starts("Build", "Compose", "Plan", "Analyze", "Compare", "Scan", "Extract", "Render", "Lint")) return ("OFFLINE", true);
             if (Starts("Export", "Archive", "Write", "Generate", "Save", "Rebuild", "GetExportContent", "ListExportHandles", "ClearExportHandles", "DeleteExportHandle")) return ("FILE", true);
             if (Starts("Import", "Ensure", "Apply", "Create", "Set", "Update", "Manage", "Delete", "Remove", "Add", "Plug", "Bind", "Rename", "Move", "Copy", "Assign", "Protect", "Release", "Exchange", "Configure", "Retrieve", "Sync", "Clear", "Invoke", "Migrate", "Restore", "Register", "Normalize", "Enable", "Disable", "Attach", "PlcBuild", "Repair", "Connect", "Seed", "Scaffold")) return ("WRITE", true);

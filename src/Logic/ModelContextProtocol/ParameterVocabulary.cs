@@ -71,7 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["budgetMs"] = "budgetMs: time budget in milliseconds for the walk.",
             ["version"] = "version: catalog / firmware version string, e.g. 'V2.9'.",
             ["family"] = "family: device family hint, e.g. 'S7-1200', 'S7-1500', 'WinCCUnifiedPC'.",
-            ["pgPcInterface"] = "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ReadTransferRoutes / ScanAccessibleDevices list them).",
+            ["pgPcInterface"] = "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ListTransferRoutes / ScanAccessibleDevices list them).",
             ["subnetName"] = "subnetName: subnet name, e.g. 'PN/IE_1'.",
             ["driveObjectNumber"] = "driveObjectNumber: drive object number (DO) inside the drive unit.",
             ["driveObjectIndex"] = "driveObjectIndex: 0-based index of the drive object inside the drive unit.",

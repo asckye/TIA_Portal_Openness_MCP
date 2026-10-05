@@ -3157,7 +3157,7 @@
         "21": "partial"
       },
       "tools": [
-        "DownloadToPlc",
+        "DownloadPlc",
         "UploadStationFromPlc",
         "UploadDeviceParameters"
       ],
@@ -3235,12 +3235,12 @@
         "18": [],
         "19": [],
         "20": [
-          "DownloadToPlc",
+          "DownloadPlc",
           "UploadStationFromPlc",
           "UploadDeviceParameters"
         ],
         "21": [
-          "DownloadToPlc",
+          "DownloadPlc",
           "UploadStationFromPlc",
           "UploadDeviceParameters"
         ]

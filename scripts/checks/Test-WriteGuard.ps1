@@ -23,6 +23,7 @@ function Profile-Row([string]$sourceName) {
 }
 $watch = (Profile-Row 'SetWatchTableModifyValue').currentName
 $write = (Profile-Row 'WritePlcWebVars').currentName
+$renamedWrite = (Profile-Row 'UnifiedOpenPipeRequest').currentName
 $bridgeName = (Profile-Row 'CallTool').currentName
 $previewName = (Profile-Row 'PreflightToolCall').currentName
 $readBatchName = (Profile-Row 'ReadToolBatch').currentName
@@ -70,6 +71,24 @@ foreach ($row in $onlineRows) {
     Check ($entries[$target].operation -eq 'ONLINE-WRITE') "$target retains its online-write category"
     Expect-Deny (Invoke-Call $target @{ dryRun = $false }) $target 'online roster write denied'
     Expect-Allow (Invoke-Call $target @{ dryRun = $false } @{ TIA_MCP_ALLOW_ONLINE_WRITE = '1' }) 'online roster allow switch'
+}
+
+# Use the actual generated rename, including the batch hook's forced execution policy.
+Check ($renamedWrite -ne 'UnifiedOpenPipeRequest') 'OpenPipe uses its V4 name in the real manifest'
+foreach ($dryRun in @($false, $true)) {
+    $arguments = @{ dryRun = $dryRun }
+    $direct = Invoke-Call $renamedWrite $arguments
+    $bridge = Invoke-Call $bridgeName @{ name = $renamedWrite; arguments = $arguments }
+    if ($dryRun) {
+        Expect-Allow $direct 'renamed direct preview'
+        Expect-Allow $bridge 'renamed CallTool preview'
+    } else {
+        Expect-Deny $direct $renamedWrite 'renamed direct write denied'
+        Expect-Deny $bridge $renamedWrite 'renamed CallTool write denied'
+    }
+    $operations = @(@{ name = $renamedWrite; arguments = $arguments })
+    Expect-Deny (Invoke-Call $applyBatchName @{ operations = $operations }) $renamedWrite 'renamed apply forces execution regardless of dryRun'
+    Expect-Allow (Invoke-Call $previewBatchName @{ operations = $operations }) 'renamed batch preview'
 }
 
 # The watch-table tool has no dryRun parameter; a supplied flag cannot make it safe.

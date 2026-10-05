@@ -310,7 +310,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L1][Category:Hardware][PreCondition:Connect+OpenProject]" +
             " Read a device's configured IP address straight from the TIA project (Openness PROFINET node) —" +
             " NOT by probing the CPU over S7 and NOT by exporting/parsing AML. Returns the primary IE IP plus all network nodes" +
-            " (address, subnet, type). This is the correct, fast way to discover a PLC's IP before GoOnline/ReadPlcLiveValuesS7.")]
+            " (address, subnet, type). This is the correct, fast way to discover a PLC's IP before ConnectOnlinePlc/GetPlcLiveValuesS7.")]
         public CallToolResult GetDeviceIpAddressV4(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
             => HardwareContract.Run("GetDeviceIpAddress", () =>

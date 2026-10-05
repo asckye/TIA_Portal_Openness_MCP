@@ -113,8 +113,10 @@ namespace TiaMcpServer.Tests
             check(fatal["connectionUnavailable"]!.GetValue<bool>() && fatal["exclusiveReleaseSkipped"]!.GetValue<bool>() && fatal["mayHaveChanged"]!.GetValue<bool>(), "fatal readback blocks future HMI operations and skips remote lease disposal");
             check(portal.ReadUnifiedRuntimeSettings("HMI", "Project_A").Meta!["status"]!.ToString() == "HmiReadSessionBlocked", "runtime reads respect shared HMI health block");
             HmiToolFixture.Configure(new FakeHmiToolSession { FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware() });
-            check(McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changesJson\":\"{\\\"BitSelection\\\":true}\"}").Meta!["success"]!.GetValue<bool>(), "write preview exposed through CallTool");
-            check(!McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changesJson\":\"{\\\"BitSelection\\\":true}\",\"dryRun\":false}").Meta!["success"]!.GetValue<bool>(), "CallTool propagates missing-token business failure");
+            var arguments = new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changes\":{\"BitSelection\":true}}"));
+            check(McpServer.CallTool("SetUnifiedRuntimeSettings", arguments).StructuredContent!["ok"]!.GetValue<bool>(), "write preview exposed through CallTool");
+            arguments = new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changes\":{\"BitSelection\":true},\"dryRun\":false}"));
+            check(!McpServer.CallTool("SetUnifiedRuntimeSettings", arguments).StructuredContent!["ok"]!.GetValue<bool>(), "CallTool propagates missing-token business failure");
         }
     }
 }

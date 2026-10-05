@@ -7608,8 +7608,9 @@
       "name": "CallTool"
     },
     {
-      "descriptionSha256": "a281d01bcbda0d803523420476d325efc44b161fd33e9001bf0c6d91213b3d6b",
+      "descriptionSha256": "0520b92e872c30221c72ae64313a0430bdfff101f3570b8b3b821c44badb8ac4",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "softwarePath": {
             "description": "softwarePath: path to the PLC software in the project tree, e.g. 'PLC_1'",
@@ -7948,8 +7949,9 @@
       "name": "CompareProjects"
     },
     {
-      "descriptionSha256": "f7dadc6260e1f4b705f932141ef3e335c16d491c2bbb17e9dbe7dc9a838d797e",
+      "descriptionSha256": "a27c8834eefbcfad35c54d3d0688d16c20b3034bff38899b5f7490c838e4f5d5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "maxDepth": {
             "default": 4,
@@ -11906,7 +11908,7 @@
       "name": "CompareUnifiedGraphicSelections"
     },
     {
-      "descriptionSha256": "c445d0b6b74b2698200315bd7342895199e969c52ad683d62573693f993c3928",
+      "descriptionSha256": "bbcbe4033118e88fb9ddd8eff492104c7e9ca5b74548179f3a00917c59944f6f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12139,6 +12141,67 @@
         "type": "object"
       },
       "name": "ConnectIsolated"
+    },
+    {
+      "descriptionSha256": "f1c732c63b7d1f85060fdb13cc88af8b8e853356ef2927995f65c7fff49ef034",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ipAddress": {
+            "default": "",
+            "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
+            "examples": [
+              "192.168.0.3"
+            ],
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.",
+            "type": "string"
+          },
+          "pgPcInterface": {
+            "default": "",
+            "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
+            "examples": [
+              "PLCSIM"
+            ],
+            "type": "string"
+          },
+          "rhTarget": {
+            "default": "",
+            "description": "rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "trustDeviceCertificate": {
+            "default": true,
+            "description": "trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.",
+            "type": "boolean"
+          },
+          "userName": {
+            "default": "",
+            "description": "userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.",
+            "type": "string"
+          },
+          "userType": {
+            "default": "",
+            "description": "userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ConnectOnlinePlc"
     },
     {
       "descriptionSha256": "3060113699409d6569b7977121e921a7e8cd152813e313c4d4d18d459be2a009",
@@ -12556,7 +12619,7 @@
       "name": "DecodePlcSimaticMl"
     },
     {
-      "descriptionSha256": "9f1ed20ab93ea245bb10d312341bd78c8f6d1da2db2f1dc8b126fe818cc3b35f",
+      "descriptionSha256": "8c8e31b8231edd6ea786ca86ecef6f0836ebfefdce7ca3ffa0157cc6f31ad77b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13111,7 +13174,7 @@
       "name": "DescribeObjectProperty"
     },
     {
-      "descriptionSha256": "2f3200e861f40e86c23d1118effc0d261f671bd2fa65162b23b762f5ddbe54e0",
+      "descriptionSha256": "7df7634530dbaab50eae551eb8d3cfb3dbe8e73dd5a25d64148efd395b134d64",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13252,6 +13315,35 @@
       "name": "Disconnect"
     },
     {
+      "descriptionSha256": "b6a62aafe34ee90717044559a3c9deb658db6856155bb77e2b011c610edd110c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "DisconnectOnlinePlc"
+    },
+    {
+      "descriptionSha256": "429495fb0d29111fbfd99056b578adcf83ed9d3f08d4a6f691d46097d27011d9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "DisconnectOnlinePlcs"
+    },
+    {
       "descriptionSha256": "5505dea928ea0d4e477c787b3d6f83633f69727b087d28a250aac00d020ed551",
       "inputSchema": {
         "properties": {
@@ -13269,69 +13361,9 @@
       "name": "Doctor"
     },
     {
-      "descriptionSha256": "fcf90f90b735cbf1841fd487ce2062a241d6c8b7a87afcca93ac0143edb692c2",
+      "descriptionSha256": "9dfd4e0725d4df068feb2abb57de8c7ab3c3791dce3edf6574d4dd5e6fb49be3",
       "inputSchema": {
-        "properties": {
-          "confirmDownload": {
-            "default": false,
-            "description": "confirmDownload: must be true together with dryRun=false to write the download files.",
-            "type": "boolean"
-          },
-          "destinationDirectory": {
-            "description": "destinationDirectory: folder on the TIA machine that receives the output.",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "keepActualValues": {
-            "default": true,
-            "description": "keepActualValues: true keeps the current data block values (safe default), false resets them to start values.",
-            "type": "boolean"
-          },
-          "overwriteOnMemoryCard": {
-            "default": false,
-            "description": "overwriteOnMemoryCard: true answers the OverwriteOnMemoryCard prompt with overwrite.",
-            "type": "boolean"
-          },
-          "promptAnswersJson": {
-            "default": "{}",
-            "description": "promptAnswersJson: JSON object of explicit answers to TIA prompts by prompt type name.",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "targetForSoftware": {
-            "default": "CPU",
-            "description": "targetForSoftware: folder on the TIA machine that receives the download files.",
-            "type": "string"
-          },
-          "userManagementMode": {
-            "default": "keep",
-            "description": "userManagementMode: how the UserManagementDownload prompt is answered (keep, updateKeepPassword, update).",
-            "enum": [
-              "keep",
-              "updateKeepPassword",
-              "update"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "destinationDirectory"
-        ],
-        "type": "object"
-      },
-      "name": "DownloadPlcToFolder"
-    },
-    {
-      "descriptionSha256": "0190e39160221e09a24167af1540c9d287ab7593d2ed7f2ba5b68da3b0799427",
-      "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "blockBindingPassword": {
             "default": "",
@@ -13371,10 +13403,13 @@
             ],
             "type": "string"
           },
-          "promptAnswersJson": {
-            "default": "{}",
-            "description": "promptAnswersJson: optional JSON object of explicit answers for download prompts by type name, e.g. {\"ResetModule\":\"DeleteAll\",\"OverwriteHmiData\":true}. Selection prompts take an enum name, checkbox prompts take true/false. Without an entry, destructive prompts (InitializeMemory, OverwriteOnMemoryCard, OverwriteSystemData, ResetModule, SwitchBackupToPrimary, ProtectionLevelChanged) default to NoAction/NoChange and prompts without a known default stay unanswered; Meta.promptsAnswered / Meta.promptsUnanswered list what happened.",
-            "type": "string"
+          "promptAnswers": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "promptAnswers: structured AttributeMap<string> input.",
+            "type": "object"
           },
           "rhTarget": {
             "default": "",
@@ -13422,7 +13457,72 @@
         ],
         "type": "object"
       },
-      "name": "DownloadToPlc"
+      "name": "DownloadPlc"
+    },
+    {
+      "descriptionSha256": "d5409ac0c2b2a227ef2234835b6cd9148c1d930b4590e4b4fbe7a6b0d01e4910",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmDownload": {
+            "default": false,
+            "description": "confirmDownload: must be true together with dryRun=false to write the download files.",
+            "type": "boolean"
+          },
+          "destinationDirectory": {
+            "description": "destinationDirectory: folder on the TIA machine that receives the output.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "keepActualValues": {
+            "default": true,
+            "description": "keepActualValues: true keeps the current data block values (safe default), false resets them to start values.",
+            "type": "boolean"
+          },
+          "overwriteOnMemoryCard": {
+            "default": false,
+            "description": "overwriteOnMemoryCard: true answers the OverwriteOnMemoryCard prompt with overwrite.",
+            "type": "boolean"
+          },
+          "promptAnswers": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "promptAnswers: structured AttributeMap<string> input.",
+            "type": "object"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "targetForSoftware": {
+            "default": "CPU",
+            "description": "targetForSoftware: folder on the TIA machine that receives the download files.",
+            "type": "string"
+          },
+          "userManagementMode": {
+            "default": "keep",
+            "description": "userManagementMode: how the UserManagementDownload prompt is answered (keep, updateKeepPassword, update).",
+            "enum": [
+              "keep",
+              "updateKeepPassword",
+              "update"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "destinationDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "DownloadPlcToFolder"
     },
     {
       "descriptionSha256": "7e059c31a06bf45367108c59ea7d1e252807caf89ccaed786a4cfe5b3142c281",
@@ -15735,7 +15835,7 @@
       "name": "GetDeviceInfo"
     },
     {
-      "descriptionSha256": "de33a51073de1f6bb9c2bac4d9a6d88919120ccae08397a76989162547dd2c3a",
+      "descriptionSha256": "e26d99dd556b27fdb9dea7632739a4c987ebac5dc68860835d1241d9fbea7469",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16358,8 +16458,9 @@
       "name": "GetOnlineDriveParameters"
     },
     {
-      "descriptionSha256": "c5f449178a754c319853b0068147b7cb7e2856363bb69ea58c59ba28c856b280",
+      "descriptionSha256": "5527e530bf2f26bfbfaf63cde727d432c6cabad473af7a320d899be1c073a1a9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "softwarePath": {
             "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
@@ -16503,7 +16604,7 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ReadTransferRoutes / ScanAccessibleDevices list them).",
+            "description": "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ListTransferRoutes / ScanAccessibleDevices list them).",
             "type": "string"
           },
           "softwarePath": {
@@ -16682,6 +16783,81 @@
       "name": "GetPlcCrossReferences"
     },
     {
+      "descriptionSha256": "18177b22428c3db934bb8a046be9c46ef456984ee22c14dbcee1e2cc12093155",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "endpointUrl": {
+            "description": "endpointUrl: OPC UA endpoint, e.g. 'opc.tcp://192.168.0.10:4840'.",
+            "type": "string"
+          },
+          "nodeIds": {
+            "description": "nodeIds: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: overall read timeout in milliseconds.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "endpointUrl",
+          "nodeIds"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcLiveValuesOpcUa"
+    },
+    {
+      "descriptionSha256": "870de37ab6eb1bb9d143e10cbeb8f22c9cdd789537d3fc8546bff23909c1356d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "default": "",
+            "description": "devicePath: optional device name (e.g. 'PLC_1') for a PUT/GET precheck. When set, the read is skipped with a clear, actionable message if the CPU has remote PUT/GET access disabled, instead of failing with a TCP timeout.",
+            "type": "string"
+          },
+          "expectModuleContains": {
+            "default": "",
+            "description": "expectModuleContains: optional identity guard. If set (e.g. '1211C'), the read aborts unless the CPU module type contains this substring.",
+            "type": "string"
+          },
+          "ip": {
+            "description": "ip: CPU IP address, e.g. '192.168.0.32'.",
+            "type": "string"
+          },
+          "items": {
+            "description": "items: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rack": {
+            "default": 0,
+            "description": "rack: hardware rack. S7-1200/1500 = 0.",
+            "type": "integer"
+          },
+          "slot": {
+            "default": 1,
+            "description": "slot: hardware slot. S7-1200/1500 = 1.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ip",
+          "items"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcLiveValuesS7"
+    },
+    {
       "descriptionSha256": "0eebe4137eb61915fc674541e16438d0cc22b68e71a7562d20dfa9bec201f695",
       "inputSchema": {
         "additionalProperties": false,
@@ -16744,7 +16920,7 @@
       "name": "GetPlcOpcUaConfiguration"
     },
     {
-      "descriptionSha256": "f197af32e69d298f23019e36e1aa0d6d1eeceb6bd49e1ace90cac508bb9f5b39",
+      "descriptionSha256": "70cb47853be2ffb6309d373ab3653cdeaa49675ec0dd6df85970b6425edc339d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16763,6 +16939,7 @@
     {
       "descriptionSha256": "fb7664ba603d0b981e894960291f6ec4fe57ebbc2fa4597cb1c0c77e93e3afcf",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "expectModuleContains": {
             "default": "",
@@ -16795,6 +16972,66 @@
         "type": "object"
       },
       "name": "GetPlcRunStateS7"
+    },
+    {
+      "descriptionSha256": "f5964ca62457c8dd1674d71b315cba26e3b81dfb2f32f468ea1fc18a26329e7c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "apiPath": {
+            "default": "",
+            "description": "apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.",
+            "type": "string"
+          },
+          "areaFilter": {
+            "default": "",
+            "description": "areaFilter: for listing; EArea name such as Input, Output, Marker, DataBlock; empty = all.",
+            "type": "string"
+          },
+          "instanceName": {
+            "description": "instanceName: registered PLCSIM Advanced instance.",
+            "examples": [
+              "MCP_SIM"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "default": 200,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "nameContains": {
+            "default": "",
+            "description": "nameContains: for listing; case-insensitive substring filter on the tag name.",
+            "type": "string"
+          },
+          "names": {
+            "description": "names: structured string array input.",
+            "examples": [
+              [
+                "MCP_SimDB.Cycles",
+                "MCP_SimDB.Running"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "instanceName"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcSimAdvancedTags"
     },
     {
       "descriptionSha256": "01e5ef3bfdacde979656610d01de736f5489a3462dd08d802118825c7c9dfbc1",
@@ -16902,6 +17139,88 @@
         "type": "object"
       },
       "name": "GetPlcWatchTableCurrentValuesReadOnly"
+    },
+    {
+      "descriptionSha256": "a934facb09014fb1b7927feaf62dac63d92e850ef6ba890e9a7b5edccf293cfe",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "description": "host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).",
+            "type": "string"
+          },
+          "ignoreCertificateErrors": {
+            "default": false,
+            "description": "ignoreCertificateErrors: false (default) validates the CPU certificate; true accepts any certificate for this host.",
+            "type": "boolean"
+          },
+          "password": {
+            "description": "password: that user's password. Passed to Api.Login only.",
+            "type": "string"
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: per-request timeout in ms (500..120000).",
+            "type": "integer"
+          },
+          "username": {
+            "description": "username: web server user (needs 'read diagnostics' for most values).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "username",
+          "password"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcWebDiagnostics"
+    },
+    {
+      "descriptionSha256": "82cfab998883c002c16935661ec254e313b040422d6b167864705b6cde0e538c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "description": "host: CPU web server address, IP or DNS name with optional :port, e.g. '192.168.0.1'. No scheme (always https).",
+            "type": "string"
+          },
+          "ignoreCertificateErrors": {
+            "default": false,
+            "description": "ignoreCertificateErrors: false (default) validates the CPU's TLS certificate against the Windows trust store; true accepts any certificate for this host (only for lab/PLCSIM).",
+            "type": "boolean"
+          },
+          "password": {
+            "description": "password: that user's password (empty for Anonymous). Passed to Api.Login only.",
+            "type": "string"
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: per-request timeout in ms (500..120000).",
+            "type": "integer"
+          },
+          "username": {
+            "description": "username: web server user configured in TIA (Protection & Security > User management), e.g. 'Anonymous' or 'monitor'.",
+            "type": "string"
+          },
+          "vars": {
+            "description": "vars: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "host",
+          "username",
+          "password",
+          "vars"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcWebVars"
     },
     {
       "descriptionSha256": "da2a08e5e810fd785bfd6b4c484c818806736ca4bdaf37c8f6d27a7ce7f48504",
@@ -17876,6 +18195,107 @@
       "name": "GetUnifiedPlantObject"
     },
     {
+      "descriptionSha256": "444186f2b0eceb048fef849b10b3cb713d98dcadc78d26e970d41c7da22b021a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "filter": {
+            "default": "",
+            "description": "filter: optional alarm filter expression (Runtime syntax), e.g. \"Priority >= 10\". Empty = no filter.",
+            "type": "string"
+          },
+          "languageId": {
+            "default": 1033,
+            "description": "languageId: Windows LCID for alarm texts, e.g. 1033 (en-US), 1031 (de-DE), 2052 (zh-CN).",
+            "type": "integer"
+          },
+          "maxAlarms": {
+            "default": 200,
+            "description": "maxAlarms: cap on returned alarms (1..500); the total count is always reported.",
+            "type": "integer"
+          },
+          "pipeName": {
+            "default": "\\\\.\\pipe\\HmiRuntime",
+            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.",
+            "type": "string"
+          },
+          "systemNames": {
+            "description": "systemNames: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetUnifiedRuntimeAlarms"
+    },
+    {
+      "descriptionSha256": "5140a175d75e366ab86f762376c30456addf0058c8b0af4b7aa156a218cd6e2c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedProject": {
+            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "type": "string"
+          },
+          "fields": {
+            "description": "fields: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "expectedProject"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedRuntimeSettings"
+    },
+    {
+      "descriptionSha256": "e682395987aeb11b3e45ee32a014ac76e8ecebb805a96a678390a8ba8b169ca4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "pipeName": {
+            "default": "\\\\.\\pipe\\HmiRuntime",
+            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime (bare 'HmiRuntime' also accepted). Remote machines are refused.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "tags: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tags"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedRuntimeTags"
+    },
+    {
       "descriptionSha256": "65a9a4ff9f3ac535a6e4aeb543e11e1a2dd083010f58790c836341822a78f2a3",
       "inputSchema": {
         "additionalProperties": false,
@@ -18044,93 +18464,6 @@
         "type": "object"
       },
       "name": "GetVersionControlStatus"
-    },
-    {
-      "descriptionSha256": "3328f85adbb4cb656401f0a47f12cef1e30bd63dbcccec4f131db0a7df1af4b7",
-      "inputSchema": {
-        "properties": {
-          "softwarePath": {
-            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GoOffline"
-    },
-    {
-      "descriptionSha256": "8ded3d88511264d6020cb6761a046753495c38570fece70e4ab4df365274c013",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "GoOfflineAll"
-    },
-    {
-      "descriptionSha256": "bf82ea44726c5a936a38f4aa435fa6fbedd16e62860bcec4a6ddb880de05a69c",
-      "inputSchema": {
-        "properties": {
-          "ipAddress": {
-            "default": "",
-            "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
-            "examples": [
-              "192.168.0.3"
-            ],
-            "type": "string"
-          },
-          "password": {
-            "default": "",
-            "description": "password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.",
-            "type": "string"
-          },
-          "pgPcInterface": {
-            "default": "",
-            "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ReadTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
-            "examples": [
-              "PLCSIM"
-            ],
-            "type": "string"
-          },
-          "rhTarget": {
-            "default": "",
-            "description": "rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          },
-          "trustDeviceCertificate": {
-            "default": true,
-            "description": "trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.",
-            "type": "boolean"
-          },
-          "userName": {
-            "default": "",
-            "description": "userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.",
-            "type": "string"
-          },
-          "userType": {
-            "default": "",
-            "description": "userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GoOnline"
     },
     {
       "descriptionSha256": "91425a70cd72cf9e7ca9863bc4b8066a5710dfb63d0f451f5c7088d7b92104a2",
@@ -19608,6 +19941,404 @@
       "name": "InvokeService"
     },
     {
+      "descriptionSha256": "cc4cbdf34d0fb544174a6ac71cf3217a61d3ba08924bbb0e8c27a08ad411392b",
+      "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "confirmWrite": {
+            "default": false,
+            "description": "confirmWrite: required (with dryRun=false) for any message that is not Read*/Browse*.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) validates and shows the request line without sending it.",
+            "type": "boolean"
+          },
+          "pipeName": {
+            "default": "\\\\.\\pipe\\HmiRuntime",
+            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.",
+            "type": "string"
+          },
+          "request": {
+            "description": "request: object containing message, params and optional clientCookie.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "clientCookie": {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "message": {
+                    "enum": [
+                      "ReadTag"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "tags": {
+                        "items": {
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "minItems": 0,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "tags"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "message",
+                  "params"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "clientCookie": {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "message": {
+                    "enum": [
+                      "WriteTag"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "tags": {
+                        "items": {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "name": {
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "value"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 0,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "tags"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "message",
+                  "params"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "clientCookie": {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "message": {
+                    "enum": [
+                      "ReadAlarm"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "filter": {
+                        "minLength": 0,
+                        "type": "string"
+                      },
+                      "languageId": {
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "type": "integer"
+                      },
+                      "systemNames": {
+                        "items": {
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "minItems": 0,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "systemNames",
+                      "filter",
+                      "languageId"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "message",
+                  "params"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "clientCookie": {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "message": {
+                    "enum": [
+                      "BrowseTags"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "filter": {
+                        "minLength": 0,
+                        "type": "string"
+                      },
+                      "pageSize": {
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "message",
+                  "params"
+                ],
+                "type": "object"
+              },
+              {
+                "else": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "clientCookie": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "not": {
+                        "enum": [
+                          "ReadTag",
+                          "WriteTag",
+                          "ReadAlarm",
+                          "BrowseTags"
+                        ]
+                      },
+                      "type": "string"
+                    },
+                    "params": {
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "anyOf": [
+                              {
+                                "minLength": 0,
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          {
+                            "items": {
+                              "$ref": "#/$defs/recursive0"
+                            },
+                            "type": "array"
+                          },
+                          {
+                            "additionalProperties": {
+                              "$ref": "#/$defs/recursive0"
+                            },
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      "minProperties": 0,
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                },
+                "if": {
+                  "properties": {
+                    "message": {
+                      "pattern": "^([sS][uU][bB][sS][cC][rR][iI][bB][eE]|[uU][nN][sS][uU][bB][sS][cC][rR][iI][bB][eE])"
+                    }
+                  }
+                },
+                "properties": {
+                  "message": {
+                    "minLength": 1,
+                    "not": {
+                      "enum": [
+                        "ReadTag",
+                        "WriteTag",
+                        "ReadAlarm",
+                        "BrowseTags"
+                      ]
+                    },
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        {
+                          "items": {
+                            "$ref": "#/$defs/recursive0"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "additionalProperties": {
+                            "$ref": "#/$defs/recursive0"
+                          },
+                          "type": "object"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "message"
+                ],
+                "then": true,
+                "type": "object"
+              }
+            ],
+            "x-maxDepth": 64,
+            "x-maxUtf8Bytes": 10485760
+          },
+          "timeoutMs": {
+            "default": 5000,
+            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request"
+        ],
+        "type": "object"
+      },
+      "name": "InvokeUnifiedOpenPipe"
+    },
+    {
       "descriptionSha256": "c0106328e67ec4f4660febb910f548d4ffe61f6a1af82b0afdd5aadb7309b715",
       "inputSchema": {
         "additionalProperties": false,
@@ -20223,6 +20954,34 @@
       "name": "ListPlcForceTables"
     },
     {
+      "descriptionSha256": "5e88226b8ebea82804bd109599383d04613f65aa806940870e565cbfd6adc997",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "apiPath": {
+            "default": "",
+            "description": "apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.",
+            "type": "string"
+          },
+          "includeState": {
+            "default": true,
+            "description": "includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "memberFilter": {
+            "default": "",
+            "description": "memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface'), and managerMembers lists the matching static members of SimulationRuntimeManager - a diagnostic for API differences between PLCSIM Advanced versions.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ListPlcSimAdvancedInstances"
+    },
+    {
       "descriptionSha256": "81068ca5698b87b8b5cb9954c76c576c6770ff00b6f9b163c058b75c9b3be3ab",
       "inputSchema": {
         "additionalProperties": false,
@@ -20588,6 +21347,31 @@
         "type": "object"
       },
       "name": "ListTransferAreas"
+    },
+    {
+      "descriptionSha256": "a7e8c6bcf341ac5db7179aff79b960a315f60bb694304037912aec2fbda5fae2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxItems": {
+            "default": 500,
+            "description": "maxItems: cap on route-tree rows returned.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListTransferRoutes"
     },
     {
       "descriptionSha256": "71faa0269e098988597bbf5b79add9f9d94b35921383e9f2231dfa6c233c11da",
@@ -24666,8 +25450,9 @@
       "name": "ManagePlcSafety"
     },
     {
-      "descriptionSha256": "6040cf50e924fa202cdc1b99628c2807767c7d1e8f94c692b1e65b81ef1e3853",
+      "descriptionSha256": "89e73cd70750a8470aa100dd15e1b3214730422e87ecdb9d0488655b3ab90a7d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: register | powerOn | run | stop | powerOff | memoryReset | unregister.",
@@ -24692,7 +25477,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadToPlc / GoOnline need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -29243,6 +30028,7 @@
     {
       "descriptionSha256": "d6b42f7cec5ea3d035d04f28cc99254c21b28c1b221053706d20ce0d9dc1341a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "ip": {
             "description": "ip: CPU IP address, e.g. '192.168.0.32'.",
@@ -29346,229 +30132,6 @@
       "name": "ReadOpennessWorkerStatus"
     },
     {
-      "descriptionSha256": "ce5e7e684b25da117f721df278b476c88d1eaa05788a86c2ebd1ef7ab019577e",
-      "inputSchema": {
-        "properties": {
-          "endpointUrl": {
-            "description": "endpointUrl: OPC UA endpoint, e.g. 'opc.tcp://192.168.0.10:4840'.",
-            "type": "string"
-          },
-          "nodeIdsJson": {
-            "description": "nodeIdsJson: JSON array or comma-separated list of OPC UA NodeIds, e.g. [\"ns=3;s=\\\"DB10\\\".\\\"X\\\"\",\"ns=3;s=\\\"DB10\\\".\\\"Y\\\"\"].",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: overall read timeout in milliseconds.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "endpointUrl",
-          "nodeIdsJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcLiveValuesOpcUa"
-    },
-    {
-      "descriptionSha256": "3e0a684800ccfa22a70a61738cc856ad00ace2239cd5ab38f0e9e1fd759e5258",
-      "inputSchema": {
-        "properties": {
-          "devicePath": {
-            "default": "",
-            "description": "devicePath: optional device name (e.g. 'PLC_1') for a PUT/GET precheck. When set, the read is skipped with a clear, actionable message if the CPU has remote PUT/GET access disabled, instead of failing with a TCP timeout.",
-            "type": "string"
-          },
-          "expectModuleContains": {
-            "default": "",
-            "description": "expectModuleContains: optional identity guard. If set (e.g. '1211C'), the read aborts unless the CPU module type contains this substring.",
-            "type": "string"
-          },
-          "ip": {
-            "description": "ip: CPU IP address, e.g. '192.168.0.32'.",
-            "type": "string"
-          },
-          "itemsJson": {
-            "description": "itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. [\"DB10.DBD0:REAL\",\"DB10.DBD4:REAL\",\"M0.0\"].",
-            "type": "string"
-          },
-          "rack": {
-            "default": 0,
-            "description": "rack: hardware rack. S7-1200/1500 = 0.",
-            "type": "integer"
-          },
-          "slot": {
-            "default": 1,
-            "description": "slot: hardware slot. S7-1200/1500 = 1.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "ip",
-          "itemsJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcLiveValuesS7"
-    },
-    {
-      "descriptionSha256": "68f6809b35ac85b63f2509e8bd03aa5b989d6685519bbd62e13b1fd189b68cd2",
-      "inputSchema": {
-        "properties": {
-          "apiPath": {
-            "default": "",
-            "description": "apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.",
-            "type": "string"
-          },
-          "includeState": {
-            "default": true,
-            "description": "includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.",
-            "examples": [
-              true
-            ],
-            "type": "boolean"
-          },
-          "memberFilter": {
-            "default": "",
-            "description": "memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface'), and managerMembers lists the matching static members of SimulationRuntimeManager - a diagnostic for API differences between PLCSIM Advanced versions.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadPlcSimAdvancedInstances"
-    },
-    {
-      "descriptionSha256": "a4a7539fd388d026fc3b0a9e36756c61e74f6e703c9a0ce3355a65cc334d9e68",
-      "inputSchema": {
-        "properties": {
-          "apiPath": {
-            "default": "",
-            "description": "apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.",
-            "type": "string"
-          },
-          "areaFilter": {
-            "default": "",
-            "description": "areaFilter: for listing; EArea name such as Input, Output, Marker, DataBlock; empty = all.",
-            "type": "string"
-          },
-          "instanceName": {
-            "description": "instanceName: registered PLCSIM Advanced instance.",
-            "examples": [
-              "MCP_SIM"
-            ],
-            "type": "string"
-          },
-          "limit": {
-            "default": 200,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "nameContains": {
-            "default": "",
-            "description": "nameContains: for listing; case-insensitive substring filter on the tag name.",
-            "type": "string"
-          },
-          "namesJson": {
-            "default": "",
-            "description": "namesJson: tag names to read (JSON array or comma-separated). Empty = list tags instead.",
-            "examples": [
-              "[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"
-            ],
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "instanceName"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcSimAdvancedTags"
-    },
-    {
-      "descriptionSha256": "760f90b97ca3af5cd5dc07b0370a0ae1672ce5fa670dfd34143a83e0b629610a",
-      "inputSchema": {
-        "properties": {
-          "host": {
-            "description": "host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).",
-            "type": "string"
-          },
-          "ignoreCertificateErrors": {
-            "default": false,
-            "description": "ignoreCertificateErrors: false (default) validates the CPU certificate; true accepts any certificate for this host.",
-            "type": "boolean"
-          },
-          "password": {
-            "description": "password: that user's password. Passed to Api.Login only.",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: per-request timeout in ms (500..120000).",
-            "type": "integer"
-          },
-          "username": {
-            "description": "username: web server user (needs 'read diagnostics' for most values).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "host",
-          "username",
-          "password"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcWebDiagnostics"
-    },
-    {
-      "descriptionSha256": "2b701837fbacbf14b24cf4153e1ca7e25fbf6d1cb73813799d7ece8ddb516ef1",
-      "inputSchema": {
-        "properties": {
-          "host": {
-            "description": "host: CPU web server address, IP or DNS name with optional :port, e.g. '192.168.0.1'. No scheme (always https).",
-            "type": "string"
-          },
-          "ignoreCertificateErrors": {
-            "default": false,
-            "description": "ignoreCertificateErrors: false (default) validates the CPU's TLS certificate against the Windows trust store; true accepts any certificate for this host (only for lab/PLCSIM).",
-            "type": "boolean"
-          },
-          "password": {
-            "description": "password: that user's password (empty for Anonymous). Passed to Api.Login only.",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: per-request timeout in ms (500..120000).",
-            "type": "integer"
-          },
-          "username": {
-            "description": "username: web server user configured in TIA (Protection & Security > User management), e.g. 'Anonymous' or 'monitor'.",
-            "type": "string"
-          },
-          "varsJson": {
-            "description": "varsJson: JSON array of symbolic names, e.g. [\"\\\"DB1\\\".\\\"Speed\\\"\", \"\\\"Motor_On\\\"\"], or a comma-separated list. Max 500.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "host",
-          "username",
-          "password",
-          "varsJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcWebVars"
-    },
-    {
       "descriptionSha256": "99ddafb01bd8a2fbff2ef2ebee60ad4743c9ee1b49c78d9047a1c0d6c65193cf",
       "inputSchema": {
         "properties": {
@@ -29600,121 +30163,6 @@
         "type": "object"
       },
       "name": "ReadPortalInfo"
-    },
-    {
-      "descriptionSha256": "ae1b714e6cd01274a8d1d298e8b678bd6f9ecb711378a11217f13d5cdcfd5875",
-      "inputSchema": {
-        "properties": {
-          "maxItems": {
-            "default": 500,
-            "description": "maxItems: cap on route-tree rows returned.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadTransferRoutes"
-    },
-    {
-      "descriptionSha256": "3f6cdff01289cd0f9acacd29a25c9026adb23b977184dd669fe42393eef40332",
-      "inputSchema": {
-        "properties": {
-          "filter": {
-            "default": "",
-            "description": "filter: optional alarm filter expression (Runtime syntax), e.g. \"Priority >= 10\". Empty = no filter.",
-            "type": "string"
-          },
-          "languageId": {
-            "default": 1033,
-            "description": "languageId: Windows LCID for alarm texts, e.g. 1033 (en-US), 1031 (de-DE), 2052 (zh-CN).",
-            "type": "integer"
-          },
-          "maxAlarms": {
-            "default": 200,
-            "description": "maxAlarms: cap on returned alarms (1..500); the total count is always reported.",
-            "type": "integer"
-          },
-          "pipeName": {
-            "default": "\\\\.\\pipe\\HmiRuntime",
-            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.",
-            "type": "string"
-          },
-          "systemNamesJson": {
-            "default": "[]",
-            "description": "systemNamesJson: JSON array of runtime system names, e.g. [\"HMI_RT_1\"]; empty array or empty string = all systems.",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadUnifiedRuntimeAlarms"
-    },
-    {
-      "descriptionSha256": "b8d913061db98d39f4e209e6db85e32c788322547f628c6ca43a29baaea05949",
-      "inputSchema": {
-        "properties": {
-          "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
-            "type": "string"
-          },
-          "fieldsJson": {
-            "default": "[\"StartScreen\",\"ScreenResolution\"]",
-            "description": "fieldsJson: JSON array of field names to read ('[]' = all).",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "expectedProject"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedRuntimeSettings"
-    },
-    {
-      "descriptionSha256": "3673e8fe4373234edd4289d3c677cb39da3abd8e025f073be31f615ac2aaf88f",
-      "inputSchema": {
-        "properties": {
-          "pipeName": {
-            "default": "\\\\.\\pipe\\HmiRuntime",
-            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime (bare 'HmiRuntime' also accepted). Remote machines are refused.",
-            "type": "string"
-          },
-          "tagsJson": {
-            "description": "tagsJson: JSON array of runtime tag names, e.g. [\"Tag_1\",\"Motor.Speed\"], or a comma-separated list. Max 500.",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "tagsJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedRuntimeTags"
     },
     {
       "descriptionSha256": "30582ce398c5e212a0f0659e27db9296276e140b2eff7384ddd0d44b3b75c6e6",
@@ -30142,8 +30590,9 @@
       "name": "RunPlcCompanionTool"
     },
     {
-      "descriptionSha256": "3d35d4884cf8a0188b06a4f4c68b2313ffdfe94b2bd0f65aa8e9bae70751f3db",
+      "descriptionSha256": "e3d5103dd0a6aab3a0915340eaf4f6ce83cbd7a50325c5debb0e2ccb9dc02ef5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "apiPath": {
             "default": "",
@@ -30166,16 +30615,128 @@
             ],
             "type": "boolean"
           },
-          "scenarioJson": {
-            "description": "scenarioJson: scenario object (see description). Max 500 steps.",
-            "examples": [
-              "{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}"
+          "scenario": {
+            "additionalProperties": false,
+            "description": "scenario: object containing instance, mode and ordered write, waitMs or assert steps.",
+            "minProperties": 0,
+            "properties": {
+              "instance": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "mode": {
+                "minLength": 0,
+                "pattern": "^([sS][iI][nN][gG][lL][eE][sS][tT][eE][pP]|[dD][eE][fF][aA][uU][lL][tT])$",
+                "type": "string"
+              },
+              "steps": {
+                "items": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "write": {
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "minLength": 0,
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "maxProperties": 500,
+                          "minProperties": 1,
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "write"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "waitMs": {
+                          "maximum": 60000,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "waitMs"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "assert": {
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "minLength": 0,
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "maxProperties": 500,
+                          "minProperties": 1,
+                          "type": "object"
+                        },
+                        "note": {
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "tolerance": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "assert"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 500,
+                "minItems": 1,
+                "type": "array"
+              },
+              "stopOnFailure": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "instance",
+              "steps"
             ],
-            "type": "string"
+            "type": "object"
           }
         },
         "required": [
-          "scenarioJson"
+          "scenario"
         ],
         "type": "object"
       },
@@ -30306,8 +30867,9 @@
       "name": "RunToolsInTransaction"
     },
     {
-      "descriptionSha256": "b7627ade55f306793fd6277225967671154045182004bdfc0b6f333c2d60e5c9",
+      "descriptionSha256": "5530b7f47d77c389481ace2fae3071092ee0f080777aeb187b988fe5e8a9bf97",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "durationMs": {
             "default": 5000,
@@ -30328,9 +30890,12 @@
             "description": "ip: CPU IP address, e.g. '192.168.0.32'.",
             "type": "string"
           },
-          "itemsJson": {
-            "description": "itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. [\"DB10.DBD0:REAL\",\"M0.0\"].",
-            "type": "string"
+          "items": {
+            "description": "items: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "maxSamples": {
             "default": 600,
@@ -30350,7 +30915,7 @@
         },
         "required": [
           "ip",
-          "itemsJson"
+          "items"
         ],
         "type": "object"
       },
@@ -30443,8 +31008,9 @@
       "name": "ScaffoldProject"
     },
     {
-      "descriptionSha256": "2e50711c68469f0689813389930bd7fa530734c851f4836774c19840078a27cf",
+      "descriptionSha256": "8e99fef5e0f0a097812964e34c059f0ec49f6730d29bcb2e1d4f328ab9d3cb54",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "limit": {
             "default": 100,
@@ -30452,11 +31018,13 @@
             "examples": [
               20
             ],
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: first device to return (paging).",
+            "minimum": 0,
             "type": "integer"
           },
           "pgPcInterface": {
@@ -30850,7 +31418,7 @@
       "name": "SetDeviceItemIoAddress"
     },
     {
-      "descriptionSha256": "897adbff88605f3a798931cae6729e30916b4724b5b3ba83cc2335a22b74fbce",
+      "descriptionSha256": "cb659d712f7de5425f330c75e7f0ad25d405c996ede4869e9bce6c7dc52b7efa",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30959,7 +31527,7 @@
       "name": "SetPlcProgram"
     },
     {
-      "descriptionSha256": "2d38379ef3397437d2bb34306f123a9a24b341515aa3464969936d72a776338f",
+      "descriptionSha256": "df15faaafb68be3709abfc069bad733960dfaf33c54c6ff8ee4989f8793f1002",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31031,7 +31599,7 @@
       "name": "SetPlcUnitObjectAccess"
     },
     {
-      "descriptionSha256": "048ea8cbf7b0700c4a124a556e3ee641228d74ea7e7fca5602ce5e3b1702bc83",
+      "descriptionSha256": "690e4069cb382d7a74308e43f36d61a20d4c8f6310dd10e7e52c909a81e387e2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31091,8 +31659,9 @@
       "name": "SetPlcWatchTableModifyValue"
     },
     {
-      "descriptionSha256": "5cc4f4a62daf43963195fc4f945f5da7ea4d313b454f68d647a4c4a342b9ab51",
+      "descriptionSha256": "4f8e6b6a2c521ac4c0165832d9a6ef42e0546eb60633f9e50bbecb6784e830db",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmModeChange": {
             "default": false,
@@ -31589,6 +32158,60 @@
       "name": "SetUnifiedPlantObject"
     },
     {
+      "descriptionSha256": "c49e6e4b1a966b9ff4daab17a56efc72acf30a2926dace23aaf9741e900fe334",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "changes: structured AttributeMap<Scalar> input.",
+            "type": "object"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "expectedProject": {
+            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "type": "string"
+          },
+          "expectedToken": {
+            "default": "",
+            "description": "expectedToken: the token a preceding dryRun=true call returned; passing it proves the same change is being applied.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "expectedProject",
+          "changes"
+        ],
+        "type": "object"
+      },
+      "name": "SetUnifiedRuntimeSettings"
+    },
+    {
       "descriptionSha256": "c6def0cc971e3fc186ab7ce71ea09ed004b1734f36b54631db16b5447101cedd",
       "inputSchema": {
         "properties": {
@@ -31799,8 +32422,9 @@
       "name": "SynchronizeVersionControlWorkspace"
     },
     {
-      "descriptionSha256": "8050af18069a9079097d2b30fd8a59aef82fb5b55d8879e814e2d99e6f638509",
+      "descriptionSha256": "fa17f2a1e0864863a4da3cd2e853b5c0bbb3c0219e0c17813ad2769125d5fef5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "blockScope": {
             "default": "",
@@ -31825,8 +32449,9 @@
       "name": "TraceTagCause"
     },
     {
-      "descriptionSha256": "2dc4db84d295ff7ad408603cb666d3341079c3ef2c1d2925676a26d76e5b12a8",
+      "descriptionSha256": "1594c1ecb008e83dc06c598990cfa389dcdf417945e804c43ddd05dbb8f41431",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "blockScope": {
             "default": "",
@@ -31871,78 +32496,6 @@
       "name": "TraceTagCauseLive"
     },
     {
-      "descriptionSha256": "ecba5bbf54b05fea0502156f5eebbdbca2479c906914e9bfcd4e98ccf37eabc3",
-      "inputSchema": {
-        "properties": {
-          "confirmWrite": {
-            "default": false,
-            "description": "confirmWrite: required (with dryRun=false) for any message that is not Read*/Browse*.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) validates and shows the request line without sending it.",
-            "type": "boolean"
-          },
-          "pipeName": {
-            "default": "\\\\.\\pipe\\HmiRuntime",
-            "description": "pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.",
-            "type": "string"
-          },
-          "requestJson": {
-            "description": "requestJson: single-line JSON object, e.g. {\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Motor*\",\"PageSize\":50}}. A ClientCookie is generated when missing.",
-            "type": "string"
-          },
-          "timeoutMs": {
-            "default": 5000,
-            "description": "timeoutMs: connect + response timeout in ms (500..120000).",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "requestJson"
-        ],
-        "type": "object"
-      },
-      "name": "UnifiedOpenPipeRequest"
-    },
-    {
-      "descriptionSha256": "4130a272b4e4640241be5ad5152bdf68037e805bc765c7c183035525258e62e2",
-      "inputSchema": {
-        "properties": {
-          "changesJson": {
-            "description": "changesJson: JSON object field name -> new value.",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
-            "type": "string"
-          },
-          "expectedToken": {
-            "default": "",
-            "description": "expectedToken: the token a preceding dryRun=true call returned; passing it proves the same change is being applied.",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "expectedProject",
-          "changesJson"
-        ],
-        "type": "object"
-      },
-      "name": "UpdateUnifiedRuntimeSettings"
-    },
-    {
       "descriptionSha256": "38e4478cb8aa0b1bd30541ecfd69cfaf26c14da684d2eb2c1d29536f4b6b16ee",
       "inputSchema": {
         "additionalProperties": false,
@@ -31965,26 +32518,33 @@
       "name": "UpgradeSivarcDefinitions"
     },
     {
-      "descriptionSha256": "0d9c5499ae118d58e3e91ded63e75b70cda1f969966929705d43511a0bc76ece",
+      "descriptionSha256": "89203ebbce0c3ef7b4f05bb4013695c4cb196fb287cb99c4c39ee7e034221452",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmUpload": {
             "default": false,
             "description": "confirmUpload: must be true together with dryRun=false to upload into the project; keep false until the user agreed.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "description": "devicePath: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "description": "itemPath: structured string array input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "password": {
             "default": "",
@@ -31993,13 +32553,16 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ReadTransferRoutes / ScanAccessibleDevices list them).",
+            "description": "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' (ListTransferRoutes / ScanAccessibleDevices list them).",
             "type": "string"
           },
-          "promptAnswersJson": {
-            "default": "{}",
-            "description": "promptAnswersJson: JSON object of explicit answers to TIA prompts by prompt type name.",
-            "type": "string"
+          "promptAnswers": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "promptAnswers: structured AttributeMap<string> input.",
+            "type": "object"
           },
           "targetIpAddress": {
             "description": "targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it.",
@@ -32007,8 +32570,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "targetIpAddress"
         ],
         "type": "object"
@@ -32016,8 +32579,9 @@
       "name": "UploadDeviceParameters"
     },
     {
-      "descriptionSha256": "2a8175c4ca3e40cda9be8c23af54dc0dbf51f01aab79d9ede454e3b1781053d6",
+      "descriptionSha256": "0269674123ae45825e0ec589dd52e963bbb50b55818455483270e02fa24d0ace",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmUpload": {
             "default": false,
@@ -32048,10 +32612,13 @@
             ],
             "type": "string"
           },
-          "promptAnswersJson": {
-            "default": "{}",
-            "description": "promptAnswersJson: JSON object of explicit answers to upload prompts by prompt type name.",
-            "type": "string"
+          "promptAnswers": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "promptAnswers: structured AttributeMap<string> input.",
+            "type": "object"
           },
           "targetIpAddress": {
             "description": "targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no MAC).",
@@ -32883,8 +33450,9 @@
       "name": "WritePlcSclSourceFile"
     },
     {
-      "descriptionSha256": "305f2f035894f4b465691458b14ccec8b0eb8080ef1d7521658f8fec6a27891c",
+      "descriptionSha256": "783429159f5b5cc14a59b12028e216571dd58afbef63221cd6266e2322715bdd",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "apiPath": {
             "default": "",
@@ -32914,25 +33482,54 @@
             ],
             "type": "string"
           },
-          "valuesJson": {
-            "description": "valuesJson: JSON object tag name -> value, or array of {name, value}. Max 500.",
-            "examples": [
-              "{\"MCP_SimDB.Start\":true}"
-            ],
-            "type": "string"
+          "values": {
+            "description": "values: array of {name, value} writes; scalar values only, maximum 500.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "value"
+              ],
+              "type": "object"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array"
           }
         },
         "required": [
           "instanceName",
-          "valuesJson"
+          "values"
         ],
         "type": "object"
       },
       "name": "WritePlcSimAdvancedTags"
     },
     {
-      "descriptionSha256": "00bac8edf808ddb64780a33ba472791e1a69c7298bfb0886d5b4ced2a5fd0a54",
+      "descriptionSha256": "52c1736623eccf4fb00a7fd6fab876168bb43a9133d31ab9b5471495c93f0c2f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmWrite": {
             "default": false,
@@ -32966,24 +33563,56 @@
             "description": "username: web server user with write permission.",
             "type": "string"
           },
-          "writesJson": {
-            "description": "writesJson: JSON array of {\"name\":\"\\\"DB1\\\".\\\"Setpoint\\\"\",\"value\":42.5} objects, or a JSON object {\"\\\"Tag_1\\\"\":true}. Max 500.",
-            "type": "string"
+          "writes": {
+            "description": "writes: array of {name, value} writes; scalar values only, maximum 500.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "value"
+              ],
+              "type": "object"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array"
           }
         },
         "required": [
           "host",
           "username",
           "password",
-          "writesJson"
+          "writes"
         ],
         "type": "object"
       },
       "name": "WritePlcWebVars"
     },
     {
-      "descriptionSha256": "168a4f4e167a0c15ec54229a1b3e29d5696b87f7bee78bbc09b735bcd1cd8236",
+      "descriptionSha256": "2c2bfcbe23b80898048321356cc8ef70177442b2714a7017e9b3a727a686df2c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmWrite": {
             "default": false,
@@ -33005,13 +33634,44 @@
             "description": "timeoutMs: connect + response timeout in ms (500..120000).",
             "type": "integer"
           },
-          "writesJson": {
-            "description": "writesJson: JSON array of {\"name\":\"Tag_1\",\"value\":50} objects, or a JSON object {\"Tag_1\":50,\"Flag\":true}. Max 500.",
-            "type": "string"
+          "writes": {
+            "description": "writes: array of {name, value} writes; scalar values only, maximum 500.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "value"
+              ],
+              "type": "object"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array"
           }
         },
         "required": [
-          "writesJson"
+          "writes"
         ],
         "type": "object"
       },

@@ -68,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace." +
             " Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU." +
             " interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'." +
-            " Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadToPlc. Current native policy; V4 safety behavior is not yet accepted.")]
+            " Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult SetOpcUaInterfaceEnabledV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration")] string interfaceName,

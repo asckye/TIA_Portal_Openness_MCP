@@ -414,7 +414,7 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "ReadPlcSimAdvancedInstances",
+        "tool": "ListPlcSimAdvancedInstances",
         "arguments": {
           "includeState": true
         },
@@ -443,7 +443,7 @@
         "expect": "stateAfter Run/Stop"
       },
       {
-        "tool": "ReadTransferRoutes",
+        "tool": "ListTransferRoutes",
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -464,7 +464,7 @@
         "expect": "ready"
       },
       {
-        "tool": "DownloadToPlc",
+        "tool": "DownloadPlc",
         "arguments": {
           "softwarePath": "PLC_1",
           "pgPcInterface": "PLCSIM",
@@ -473,7 +473,7 @@
         "expect": "State Success / Warning"
       },
       {
-        "tool": "GoOnline",
+        "tool": "ConnectOnlinePlc",
         "arguments": {
           "softwarePath": "PLC_1",
           "ipAddress": "<CPU IP>",
@@ -497,7 +497,7 @@
         "expect": "0 differences after a download"
       },
       {
-        "tool": "GoOffline",
+        "tool": "DisconnectOnlinePlc",
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -520,18 +520,18 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "ReadPlcSimAdvancedTags",
+        "tool": "GetPlcSimAdvancedTags",
         "arguments": {
           "instanceName": "<Instance>",
-          "namesJson": ""
+          "names": []
         },
         "expect": "tag list"
       },
       {
-        "tool": "ReadPlcSimAdvancedTags",
+        "tool": "GetPlcSimAdvancedTags",
         "arguments": {
           "instanceName": "<Instance>",
-          "namesJson": [
+          "names": [
             "<DB>.<Tag>"
           ]
         },
@@ -541,9 +541,12 @@
         "tool": "WritePlcSimAdvancedTags",
         "arguments": {
           "instanceName": "<Instance>",
-          "valuesJson": {
-            "<DB>.<Tag>": true
-          },
+          "values": [
+            {
+              "name": "<DB>.<Tag>",
+              "value": true
+            }
+          ],
           "dryRun": true
         },
         "expect": "preview"
@@ -552,9 +555,12 @@
         "tool": "WritePlcSimAdvancedTags",
         "arguments": {
           "instanceName": "<Instance>",
-          "valuesJson": {
-            "<DB>.<Tag>": true
-          },
+          "values": [
+            {
+              "name": "<DB>.<Tag>",
+              "value": true
+            }
+          ],
           "dryRun": false,
           "confirmWrite": true
         },
@@ -563,7 +569,7 @@
       {
         "tool": "RunPlcSimAdvancedTestScenario",
         "arguments": {
-          "scenarioJson": {
+          "scenario": {
             "instance": "<Instance>",
             "mode": "default",
             "steps": [
@@ -589,7 +595,7 @@
       {
         "tool": "RunPlcSimAdvancedTestScenario",
         "arguments": {
-          "scenarioJson": {
+          "scenario": {
             "instance": "<Instance>",
             "mode": "default",
             "steps": [

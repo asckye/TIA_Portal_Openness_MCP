@@ -98,7 +98,7 @@ namespace TiaMcpServer.Runtime
                     : new JsonObject { ["cachedInterface"] = false };
             }
         }
-        // Read / Write with one tag-list refresh when PLCSIM reports the tag as unknown (new download since the list was loaded).
+        // Only reads may refresh a stale tag list; an issued write is never replayed.
         public static (string type, object? value) ReadWithRefresh(PlcSimApi api, string name, object instance, string tagName)
         {
             try { return Read(api, instance, tagName); }
@@ -106,8 +106,7 @@ namespace TiaMcpServer.Runtime
         }
         public static string WriteWithRefresh(PlcSimApi api, string name, object instance, string tagName, JsonNode? value)
         {
-            try { return Write(api, instance, tagName, value); }
-            catch (InvalidOperationException ex) when (LooksLikeUnknownTag(ex)) { EnsureTagList(api, name, instance, true); return Write(api, instance, tagName, value); }
+            return Write(api, instance, tagName, value);
         }
         private static bool LooksLikeUnknownTag(Exception ex)
         {

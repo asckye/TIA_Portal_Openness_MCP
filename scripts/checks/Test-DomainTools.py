@@ -163,8 +163,8 @@ CASES = {
         ('ListUnifiedLibraryFolderEntries', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
         ('ReleaseUnifiedReadCursor', 'release-missing', {'cursor': 'domain-offline'})],
     'RuntimeSettings': [
-        ('ReadUnifiedRuntimeSettings', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
-        ('UpdateUnifiedRuntimeSettings', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'changesJson': '{"StartScreen":"/Main"}'})],
+        ('GetUnifiedRuntimeSettings', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('SetUnifiedRuntimeSettings', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'changes': {'StartScreen': '/Main'}})],
     'GraphicSelection': [
         ('GetUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNamesJson': '["Button1"]'}),
         ('CompareUnifiedGraphicSelections', 'incomplete', {'beforePagesJson': '[]', 'afterPagesJson': '[]'})],
@@ -443,11 +443,11 @@ CASES = {
            for tool, case, arguments in actions('ManageDeviceServiceObjects', values, **HARDWARE_V4,
                family=family, name='1', filePath='C:/domain-offline.xml')],
     'OnlineDownload': [(name, 'disconnected', {'softwarePath': PLC}) for name in (
-        'GetOnlineState', 'GoOffline', 'CompareSoftwareToOnline', 'CheckDownloadReadiness', 'DownloadToPlc',
-        'ReadTransferRoutes')]
-        + [('GoOnline', target or 'standard', {'softwarePath': PLC, 'rhTarget': target})
+        'GetOnlineState', 'DisconnectOnlinePlc', 'CompareSoftwareToOnline', 'CheckDownloadReadiness', 'DownloadPlc',
+        'ListTransferRoutes')]
+        + [('ConnectOnlinePlc', target or 'standard', {'softwarePath': PLC, 'rhTarget': target})
            for target in ('', 'primary', 'backup')]
-        + [('GoOfflineAll', 'disconnected', {}), ('ScanAccessibleDevices', 'disconnected', {}),
+        + [('DisconnectOnlinePlcs', 'disconnected', {}), ('ScanAccessibleDevices', 'disconnected', {}),
            ('UploadStationFromPlc', 'disconnected', {'targetIpAddress': '192.0.2.1'}),
            ('UploadDeviceParameters', 'disconnected', {'devicePath': [], 'itemPath': [],
                                                      'targetIpAddress': '192.0.2.1'}),
@@ -812,27 +812,27 @@ HARDWARE_TERMINALS = {
 # existing duplicate-argument gate before invocation, including through CallTool.
 CASES['Runtime'] = [
     ('ProbeS7CpuIdentity', 'duplicate-argument', {'ip': '', 'IP': ''}),
-    ('ReadPlcLiveValuesS7', 'empty-addresses', {'ip': '', 'itemsJson': '[]'}),
-    ('SamplePlcLiveValuesS7', 'empty-addresses', {'ip': '', 'itemsJson': '[]'}),
+    ('GetPlcLiveValuesS7', 'empty-addresses', {'ip': '', 'items': []}),
+    ('SamplePlcLiveValuesS7', 'empty-addresses', {'ip': '', 'items': []}),
     ('TraceTagCause', 'duplicate-argument', {'softwarePath': '', 'SOFTWAREPATH': '', 'tag': ''}),
     ('TraceTagCauseLive', 'empty-ip', {'softwarePath': '', 'tag': '', 'ip': ''}),
-    ('ReadPlcLiveValuesOpcUa', 'empty-nodes', {'endpointUrl': '', 'nodeIdsJson': '[]'}),
+    ('GetPlcLiveValuesOpcUa', 'empty-nodes', {'endpointUrl': '', 'nodeIds': []}),
     ('GetPlcRunStateS7', 'duplicate-argument', {'ip': '', 'IP': ''}),
 ]
 CASES['RuntimeChannel'] = [
-    ('ReadPlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'varsJson': '[]'}),
-    ('WritePlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'writesJson': '{}'}),
-    ('ReadPlcWebDiagnostics', 'empty-host', {'host': '', 'username': '', 'password': ''}),
+    ('GetPlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'vars': []}),
+    ('WritePlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'writes': []}),
+    ('GetPlcWebDiagnostics', 'empty-host', {'host': '', 'username': '', 'password': ''}),
     ('SetPlcWebOperatingMode', 'empty-host', {'host': '', 'username': '', 'password': '', 'mode': 'RUN'}),
-    ('ReadUnifiedRuntimeTags', 'empty-tags', {'tagsJson': '[]'}),
-    ('WriteUnifiedRuntimeTags', 'empty-writes', {'writesJson': '{}'}),
-    ('ReadUnifiedRuntimeAlarms', 'invalid-language', {'languageId': 0}),
-    ('UnifiedOpenPipeRequest', 'invalid-request', {'requestJson': '{}'}),
+    ('GetUnifiedRuntimeTags', 'empty-tags', {'tags': []}),
+    ('WriteUnifiedRuntimeTags', 'empty-writes', {'writes': []}),
+    ('GetUnifiedRuntimeAlarms', 'invalid-language', {'languageId': 0}),
+    ('InvokeUnifiedOpenPipe', 'invalid-request', {'request': {}}),
 ]
 CASES['PlcSimAdvanced'] = [
     (name, 'duplicate-argument', {'apiPath': '', 'APIPATH': ''}) for name in (
-        'ReadPlcSimAdvancedInstances', 'ManagePlcSimAdvancedInstance',
-        'ReadPlcSimAdvancedTags', 'WritePlcSimAdvancedTags', 'RunPlcSimAdvancedTestScenario')
+        'ListPlcSimAdvancedInstances', 'ManagePlcSimAdvancedInstance',
+        'GetPlcSimAdvancedTags', 'WritePlcSimAdvancedTags', 'RunPlcSimAdvancedTestScenario')
 ]
 
 
@@ -840,26 +840,14 @@ def runtime_reply(reply, profile, name, case):
     resources.require('result' in reply, f'{name}: missing runtime refusal: {reply}')
     result = reply['result']
     raw = result['content'][0]['text']
-    if case == 'duplicate-argument':
-        resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
-        return raw
-    resources.require(not result.get('isError'), f'{name}: changed refusal family: {raw}')
-    if profile == 'lite':
-        bridge = json.loads(raw)
-        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is True,
-                          f'{name}: runtime refusal did not return through the bridge: {raw}')
-        raw = bridge['message']
-    value = json.loads(raw)
-    resources.require(value.get('ok', value.get('Ok')) is False,
-                      f'{name}: offline input unexpectedly accepted: {raw}')
-    markers = {
-        'empty-addresses': 'No addresses supplied', 'empty-nodes': 'No node IDs supplied',
-        'empty-ip': 'ip is required', 'empty-host': 'host', 'empty-tags': 'tagsJson',
-        'empty-writes': 'writesJson', 'invalid-language': 'languageId', 'invalid-request': 'Message',
-    }
-    message = value.get('message', value.get('Message', ''))
-    resources.require(markers[case] in message, f'{name}: wrong offline refusal: {raw}')
+    body = json.loads(raw)
+    resources.require(body['schemaVersion'] == 4 and body['ok'] is False and result['isError'] is True, raw)
+    resources.require(body['meta']['outcome'] == 'rejected-before-operation'
+                      and body['meta']['execution'] == 'not-started', raw)
+    resources.require(body['error']['code'] in ('INVALID_ARGUMENT', 'PROJECT_NOT_BOUND', 'PRECONDITION_FAILED'), raw)
+    resources.require(result.get('structuredContent') == body, raw)
     return raw
+
 
 
 
@@ -1315,7 +1303,7 @@ def capture(args, exe, harness, profile, isolated):
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), **({'arguments': arguments}
-                        if domain in PLC_EXCHANGE_DOMAINS else {'argumentsJson': json.dumps(arguments)})}}
+                        if domain in PLC_EXCHANGE_DOMAINS or domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced', 'RuntimeSettings', 'OnlineDownload') else {'argumentsJson': json.dumps(arguments)})}}
                 if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses') and profile == 'lite':
                     params = {'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}}
                 reply = rpc('tools/call', params=params)
@@ -1340,7 +1328,7 @@ def capture(args, exe, harness, profile, isolated):
                     reached_child |= case != 'duplicate-argument'
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
-                if domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced'):
+                if domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced', 'RuntimeSettings', 'OnlineDownload'):
                     raw = runtime_reply(reply, profile, name, case)
                     reached_child |= case != 'duplicate-argument'
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
@@ -1400,8 +1388,6 @@ def capture(args, exe, harness, profile, isolated):
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
                 throwing = name in THROWING_GUARDS
-                disconnected_error = domain == 'OnlineDownload' and name in (
-                    'GetOnlineState', 'GoOnline', 'GoOffline', 'CompareSoftwareToOnline')
                 if throwing and profile == 'full':
                     resources.require(reply.get('result', {}).get('isError') is True, f'{name}: expected MCP error: {reply}')
                     raw = reply['result']['content'][0]['text']
@@ -1425,17 +1411,6 @@ def capture(args, exe, harness, profile, isolated):
                     resources.require(HARDWARE_TERMINALS[name] in decoded,
                                       f'{name}/{case} did not reach its offline terminal: {raw}')
                     reached_child = True
-                elif disconnected_error:
-                    resources.require('result' in reply, str(reply))
-                    raw = reply['result']['content'][0]['text']
-                    if profile == 'full':
-                        resources.require(reply['result'].get('isError') is True, str(reply))
-                    else:
-                        bridge = json.loads(raw)
-                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is False
-                                          and bridge['meta'].get('operationStatus') == 'notCompleted', raw)
-                    resources.require('no project is open' in raw, f'{name}: missing disconnected refusal: {raw}')
-                    reached_child = True
                 elif (hidden or version_action) and profile == 'full':
                     resources.require('error' in reply or reply.get('result', {}).get('isError'),
                                       f'Unavailable tool/action unexpectedly ran: {reply}')
@@ -1454,16 +1429,6 @@ def capture(args, exe, harness, profile, isolated):
                     if hidden or version_action:
                         resources.require('V20' in raw and ('unavailable' in raw or 'requires' in raw),
                                           f'{name}: missing version refusal: {raw}')
-                    elif domain == 'OnlineDownload' and name in ('GoOfflineAll', 'CheckDownloadReadiness', 'DownloadToPlc'):
-                        get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
-                        if name == 'CheckDownloadReadiness':
-                            resources.require(get('ready') is False and get('issues') == ['No project open.'], raw)
-                        else:
-                            resources.require(get('message') == 'No project open.'
-                                              and get('ok') is (name == 'GoOfflineAll'), raw)
-                        if name == 'GoOfflineAll':
-                            resources.require(get('data') == {'message': 'No project open.', 'allOffline': True, 'plcs': []}, raw)
-                        reached_child = True
                     elif domain == 'V20Options' and args.major == 21:
                         resources.require(meta.get('tool') == name and meta.get('operationSuccess') is False
                                           and 'absent from the supplied V21 SDK' in raw,

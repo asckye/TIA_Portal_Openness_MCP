@@ -15,7 +15,7 @@ internal static class SimulationDocumentationShapeChecks
         string Description(MethodInfo m) => m.GetCustomAttributes().Select(a => a.GetType().GetProperty("Description")?.GetValue(a) as string).FirstOrDefault(d => d != null) ?? "";
 
         // ---- PLCSIM Advanced: read tools have no dryRun, mutating tools default to preview + explicit confirm
-        foreach (var name in new[] { "ReadPlcSimAdvancedInstances", "ReadPlcSimAdvancedTags" })
+        foreach (var name in new[] { "ListPlcSimAdvancedInstances", "GetPlcSimAdvancedTags" })
             check(Tool(name).GetParameters().All(p => p.Name != "dryRun") && Description(Tool(name)).StartsWith("[L2][Simulation][ONLINE]", StringComparison.Ordinal), name + " read-only, tagged [Simulation][ONLINE]");
         var manage = Tool("ManagePlcSimAdvancedInstance");
         check(Equals(Default(manage, "dryRun"), true) && Equals(Default(manage, "confirmInstanceChange"), false) && Description(manage).StartsWith("[L2][Simulation][ONLINE-WRITE]", StringComparison.Ordinal), "ManagePlcSimAdvancedInstance preview + confirmInstanceChange, ONLINE-WRITE");
@@ -23,7 +23,7 @@ internal static class SimulationDocumentationShapeChecks
         check(Equals(Default(write, "dryRun"), true) && Equals(Default(write, "confirmWrite"), false) && Description(write).StartsWith("[L2][Simulation][ONLINE-WRITE]", StringComparison.Ordinal), "WritePlcSimAdvancedTags preview + confirmWrite, ONLINE-WRITE");
         var scenario = Tool("RunPlcSimAdvancedTestScenario");
         check(Equals(Default(scenario, "dryRun"), true) && Equals(Default(scenario, "confirmRun"), false) && Description(scenario).StartsWith("[L2][Simulation][EXECUTE]", StringComparison.Ordinal), "RunPlcSimAdvancedTestScenario preview + confirmRun, EXECUTE");
-        foreach (var name in new[] { "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
+        foreach (var name in new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
             check(Equals(Default(Tool(name), "apiPath"), ""), name + " auto-detects the API by default");
 
         var channel = server.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel", true)!;

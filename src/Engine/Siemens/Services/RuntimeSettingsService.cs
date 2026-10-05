@@ -56,14 +56,14 @@ namespace TiaMcpServer.Siemens.Services
                 });
         }
         public ResponseMessage ReadUnifiedRuntimeSettings(string softwarePath, string expectedProject, string fieldsJson = UnifiedRuntimeSettingsAccess.DefaultFields)
-            => RuntimeSettingsOperation("ReadUnifiedRuntimeSettings", softwarePath, expectedProject, false,
+            => RuntimeSettingsOperation("GetUnifiedRuntimeSettings", softwarePath, expectedProject, false,
                 () => UnifiedRuntimeSettingsAccess.Fields(fieldsJson), (hmi, meta, trace) =>
                 {
                     UnifiedRuntimeSettingsAccess.Read(hmi, UnifiedRuntimeSettingsAccess.Fields(fieldsJson), meta, trace);
                     return "Requested runtime settings read; inspect capabilities, failures and dataComplete. No startup setting changed.";
                 });
         public ResponseMessage UpdateUnifiedRuntimeSettings(string softwarePath, string expectedProject, string changesJson, bool dryRun = true, string expectedToken = "")
-            => RuntimeSettingsOperation("UpdateUnifiedRuntimeSettings", softwarePath, expectedProject, !dryRun,
+            => RuntimeSettingsOperation("SetUnifiedRuntimeSettings", softwarePath, expectedProject, !dryRun,
                 () => { UnifiedRuntimeSettingsAccess.Changes(changesJson); if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview expectedToken required."); },
                 (hmi, meta, trace) => UnifiedRuntimeSettingsAccess.Update(hmi, expectedProject, softwarePath,
                     UnifiedRuntimeSettingsAccess.Changes(changesJson), dryRun, expectedToken, meta, trace));

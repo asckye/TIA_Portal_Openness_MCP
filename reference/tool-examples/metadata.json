@@ -84,13 +84,13 @@
     },
     "pgPcInterface": {
       "tools": [
-        "ReadTransferRoutes"
+        "ListTransferRoutes"
       ],
       "meaning": "Use an available transfer route interface for the intended target."
     },
     "targetIpAddress": {
       "tools": [
-        "ReadTransferRoutes",
+        "ListTransferRoutes",
         "ScanAccessibleDevices"
       ],
       "meaning": "Use the intended device address from the selected route/discovery."

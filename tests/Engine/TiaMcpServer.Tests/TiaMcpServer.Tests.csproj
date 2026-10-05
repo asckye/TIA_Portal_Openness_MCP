@@ -165,6 +165,17 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs" Link="OnlineDownloadTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs" Link="PlcSimAdvancedTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs" Link="RuntimeChannelTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs" Link="RuntimeTools.cs" />
+    <Compile Include="../../../src/Runtime/S7LiveReader.cs" Link="S7LiveReader.cs" />
+    <Compile Include="../../../src/Runtime/OpcUaLiveReader.cs" Link="OpcUaLiveReader.cs" />
+    <Compile Include="../../../src/Runtime/S7WebApiChannel.cs" Link="S7WebApiChannel.cs" />
+    <Compile Include="../../../src/Runtime/UnifiedOpenPipeChannel.cs" Link="UnifiedOpenPipeChannel.cs" />
+    <PackageReference Include="Sharp7" Version="1.1.84" />
+    <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
+    <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs" Link="ReflectionTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />

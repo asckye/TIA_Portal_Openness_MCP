@@ -26,7 +26,8 @@ internal static class DomainShapeChecks
             check(methods.Length == domain.Count, domain.Name + " runtime tool count");
             foreach (var method in methods)
             {
-                check(!method.IsStatic && surface.Tool(method.Name) == method && ReferenceEquals(surface.Target(method), target),
+                var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                check(!method.IsStatic && surface.Tool(name) == method && ReferenceEquals(surface.Target(method), target),
                     domain.Name + " instance ownership: " + method.Name);
                 check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(method.Name, all) == null,
                     method.Name + " has no CLI caller or static forwarder");
@@ -89,7 +90,7 @@ internal static class DomainShapeChecks
                     check(tool.ReturnType.Name == "CallToolResult", name + " exposes the V4 envelope boundary");
                     serviceName = tool.Name;
                 }
-                if (domain.Name == "SoftwareUnitDeep" || domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl")
+                if (domain.Name == "SoftwareUnitDeep" || domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl" || domain.Name == "OnlineDownload")
                 {
                     check(tool.Name.EndsWith("V4", StringComparison.Ordinal) && tool.ReturnType.Name == "CallToolResult",
                         name + " exposes the V4 envelope boundary");

@@ -3490,6 +3490,16 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ConnectOnlinePlc": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ConnectPortal": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -4116,6 +4126,28 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "DisconnectOnlinePlc": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/online-and-download/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "DisconnectOnlinePlcs": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/online-and-download/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "DisconnectPortal": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -4133,7 +4165,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "DownloadPlcToFolder": {
+    "DownloadPlc": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
@@ -4144,7 +4176,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "DownloadToPlc": {
+    "DownloadPlcToFolder": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
@@ -5378,6 +5410,20 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetPlcLiveValuesOpcUa": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "GetPlcLiveValuesS7": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetPlcObjectFingerprints": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5427,6 +5473,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetPlcSimAdvancedTags": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetPlcTagTableConstants": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5447,6 +5500,20 @@
       "manualReferences": []
     },
     "GetPlcWatchTableCurrentValuesReadOnly": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "GetPlcWebDiagnostics": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "GetPlcWebVars": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -5993,6 +6060,46 @@
         }
       ]
     },
+    "GetUnifiedRuntimeAlarms": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "GetUnifiedRuntimeSettings": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "GetUnifiedRuntimeTags": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetUnifiedScreenBranch": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -6069,39 +6176,6 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
-    },
-    "GoOffline": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/online-and-download/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "GoOfflineAll": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/online-and-download/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "GoOnline": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/online-and-download/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
     },
     "ImportAlarmClasses": {
       "relationship": "related-api-patterns",
@@ -6535,6 +6609,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "InvokeUnifiedOpenPipe": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ListClassicHmiFaceplates": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -6793,6 +6874,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListPlcSimAdvancedInstances": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ListPlcSoftwareUnits": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -6985,6 +7073,17 @@
         "guides/skills/devices-and-hardware/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListTransferRoutes": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/online-and-download/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -8781,48 +8880,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadPlcLiveValuesOpcUa": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadPlcLiveValuesS7": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadPlcSimAdvancedInstances": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadPlcSimAdvancedTags": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadPlcWebDiagnostics": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadPlcWebVars": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadPortalInfo": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8830,57 +8887,6 @@
         "guides/skills/session-and-project/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
       ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadTransferRoutes": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/online-and-download/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadUnifiedRuntimeAlarms": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadUnifiedRuntimeSettings": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadUnifiedRuntimeTags": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -9513,6 +9519,32 @@
         }
       ]
     },
+    "SetUnifiedRuntimeSettings": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "ShowObjectInEditor": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -9583,39 +9615,6 @@
       "documents": [],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
-    },
-    "UnifiedOpenPipeRequest": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "UpdateUnifiedRuntimeSettings": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
     },
     "UpgradeSivarcDefinitions": {
       "relationship": "no-direct-official-example",
@@ -14691,7 +14690,7 @@
             "userManagementMode": {
               "exampleValue": "keep"
             },
-            "promptAnswersJson": {
+            "promptAnswers": {
               "exampleValue": "<promptAnswersJson from this operation's target or user input>",
               "requiresBinding": true
             }
@@ -14699,7 +14698,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "DownloadToPlc": {
+        "DownloadPlc": {
           "arguments": {
             "softwarePath": "PLC_1",
             "pgPcInterface": "PLCSIM",
@@ -14725,7 +14724,7 @@
             "userManagementMode": {
               "exampleValue": "keep"
             },
-            "promptAnswersJson": {
+            "promptAnswers": {
               "exampleValue": "<promptAnswersJson from this operation's target or user input>",
               "requiresBinding": true
             },
@@ -16194,7 +16193,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GoOffline": {
+        "DisconnectOnlinePlc": {
           "arguments": {
             "softwarePath": "PLC_1"
           },
@@ -16203,13 +16202,13 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "GoOfflineAll": {
+        "DisconnectOnlinePlcs": {
           "arguments": {},
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GoOnline": {
+        "ConnectOnlinePlc": {
           "arguments": {
             "softwarePath": "PLC_1",
             "ipAddress": "192.168.0.3",
@@ -23987,10 +23986,12 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcLiveValuesOpcUa": {
+        "GetPlcLiveValuesOpcUa": {
           "arguments": {
             "endpointUrl": "opc.tcp://192.0.2.10:4840",
-            "nodeIdsJson": "[\"ns=3;s=\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+            "nodeIds": [
+              "ns=3;s=\"DB_Status\".\"Ready\""
+            ]
           },
           "parameters": {
             "timeoutMs": {
@@ -24000,10 +24001,12 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcLiveValuesS7": {
+        "GetPlcLiveValuesS7": {
           "arguments": {
             "ip": "192.0.2.10",
-            "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+            "items": [
+              "DB1.DBX0.0:BOOL"
+            ]
           },
           "parameters": {
             "rack": {
@@ -24040,7 +24043,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcSimAdvancedInstances": {
+        "ListPlcSimAdvancedInstances": {
           "arguments": {
             "includeState": true
           },
@@ -24058,10 +24061,13 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "ReadPlcSimAdvancedTags": {
+        "GetPlcSimAdvancedTags": {
           "arguments": {
             "instanceName": "MCP_SIM",
-            "namesJson": "[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"
+            "names": [
+              "MCP_SimDB.Cycles",
+              "MCP_SimDB.Running"
+            ]
           },
           "parameters": {
             "areaFilter": {
@@ -24111,7 +24117,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcWebDiagnostics": {
+        "GetPlcWebDiagnostics": {
           "arguments": {
             "host": "192.0.2.10",
             "username": "<configured user>",
@@ -24134,12 +24140,14 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcWebVars": {
+        "GetPlcWebVars": {
           "arguments": {
             "host": "192.0.2.10",
             "username": "<configured user>",
             "password": "<password supplied for this target>",
-            "varsJson": "[\"\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+            "vars": [
+              "\"DB_Status\".\"Ready\""
+            ]
           },
           "parameters": {
             "username": {
@@ -24419,7 +24427,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadTransferRoutes": {
+        "ListTransferRoutes": {
           "arguments": {
             "softwarePath": "PLC_1"
           },
@@ -24689,10 +24697,10 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedRuntimeAlarms": {
+        "GetUnifiedRuntimeAlarms": {
           "arguments": {},
           "parameters": {
-            "systemNamesJson": {
+            "systemNames": {
               "exampleValue": "<systemNamesJson from this operation's target or user input>",
               "requiresBinding": true
             },
@@ -24716,22 +24724,24 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedRuntimeSettings": {
+        "GetUnifiedRuntimeSettings": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example"
           },
           "parameters": {
-            "fieldsJson": {
+            "fields": {
               "exampleValue": "[\"StartScreen\",\"ScreenResolution\"]"
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedRuntimeTags": {
+        "GetUnifiedRuntimeTags": {
           "arguments": {
-            "tagsJson": "[\"Ready\"]"
+            "tags": [
+              "Ready"
+            ]
           },
           "parameters": {
             "pipeName": {
@@ -24971,7 +24981,25 @@
         },
         "RunPlcSimAdvancedTestScenario": {
           "arguments": {
-            "scenarioJson": "{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}",
+            "scenario": {
+              "instance": "MCP_SIM",
+              "mode": "default",
+              "steps": [
+                {
+                  "write": {
+                    "MCP_SimDB.Start": true
+                  }
+                },
+                {
+                  "waitMs": 300
+                },
+                {
+                  "assert": {
+                    "MCP_SimDB.Running": true
+                  }
+                }
+              ]
+            },
             "dryRun": true,
             "confirmRun": false
           },
@@ -25047,7 +25075,9 @@
         "SamplePlcLiveValuesS7": {
           "arguments": {
             "ip": "192.0.2.10",
-            "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+            "items": [
+              "DB1.DBX0.0:BOOL"
+            ]
           },
           "parameters": {
             "intervalMs": {
@@ -25529,9 +25559,15 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "UnifiedOpenPipeRequest": {
+        "InvokeUnifiedOpenPipe": {
           "arguments": {
-            "requestJson": "{\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Ready*\",\"PageSize\":50}}",
+            "request": {
+              "message": "BrowseTags",
+              "params": {
+                "filter": "*Ready*",
+                "pageSize": 50
+              }
+            },
             "confirmWrite": false,
             "dryRun": true
           },
@@ -25710,11 +25746,14 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "UpdateUnifiedRuntimeSettings": {
+        "SetUnifiedRuntimeSettings": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
-            "changesJson": "[{\"operation\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
+            "changes": {
+              "StartScreen": "/Main",
+              "ScreenResolution": "SR_1920X1080"
+            },
             "dryRun": true
           },
           "parameters": {
@@ -25737,17 +25776,21 @@
         },
         "UploadDeviceParameters": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "targetIpAddress": "192.0.2.10",
             "confirmUpload": false,
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "pgPcInterface": {
@@ -25758,7 +25801,7 @@
               "exampleValue": "<password supplied for this target>",
               "requiresBinding": true
             },
-            "promptAnswersJson": {
+            "promptAnswers": {
               "exampleValue": "<promptAnswersJson from this operation's target or user input>",
               "requiresBinding": true
             }
@@ -25778,7 +25821,7 @@
               "exampleValue": "<password supplied for this target>",
               "requiresBinding": true
             },
-            "promptAnswersJson": {
+            "promptAnswers": {
               "exampleValue": "<promptAnswersJson from this operation's target or user input>",
               "requiresBinding": true
             }
@@ -25890,7 +25933,12 @@
         "WritePlcSimAdvancedTags": {
           "arguments": {
             "instanceName": "MCP_SIM",
-            "valuesJson": "{\"MCP_SimDB.Start\":true}",
+            "values": [
+              {
+                "name": "MCP_SimDB.Start",
+                "value": true
+              }
+            ],
             "dryRun": true,
             "confirmWrite": false
           },
@@ -25909,7 +25957,12 @@
             "host": "192.0.2.10",
             "username": "<configured user>",
             "password": "<password supplied for this target>",
-            "writesJson": "[{\"name\":\"\\\"DB_Status\\\".\\\"Ready\\\"\",\"value\":true}]",
+            "writes": [
+              {
+                "name": "\"DB_Status\".\"Ready\"",
+                "value": true
+              }
+            ],
             "confirmWrite": false,
             "dryRun": true
           },
@@ -25932,7 +25985,12 @@
         },
         "WriteUnifiedRuntimeTags": {
           "arguments": {
-            "writesJson": "[{\"name\":\"Ready\",\"value\":true}]",
+            "writes": [
+              {
+                "name": "Ready",
+                "value": true
+              }
+            ],
             "confirmWrite": false,
             "dryRun": true
           },
@@ -27044,7 +27102,7 @@
       "validation": "Contract checked; native acceptance of this revision NOT RUN.",
       "steps": [
         {
-          "tool": "ReadPlcSimAdvancedInstances",
+          "tool": "ListPlcSimAdvancedInstances",
           "arguments": {
             "includeState": true
           },
@@ -27073,7 +27131,7 @@
           "expect": "stateAfter Run/Stop"
         },
         {
-          "tool": "ReadTransferRoutes",
+          "tool": "ListTransferRoutes",
           "arguments": {
             "softwarePath": "PLC_1"
           },
@@ -27094,7 +27152,7 @@
           "expect": "ready"
         },
         {
-          "tool": "DownloadToPlc",
+          "tool": "DownloadPlc",
           "arguments": {
             "softwarePath": "PLC_1",
             "pgPcInterface": "PLCSIM",
@@ -27103,7 +27161,7 @@
           "expect": "State Success / Warning"
         },
         {
-          "tool": "GoOnline",
+          "tool": "ConnectOnlinePlc",
           "arguments": {
             "softwarePath": "PLC_1",
             "ipAddress": "<CPU IP>",
@@ -27127,7 +27185,7 @@
           "expect": "0 differences after a download"
         },
         {
-          "tool": "GoOffline",
+          "tool": "DisconnectOnlinePlc",
           "arguments": {
             "softwarePath": "PLC_1"
           },
@@ -27150,18 +27208,18 @@
       "validation": "Contract checked; native acceptance of this revision NOT RUN.",
       "steps": [
         {
-          "tool": "ReadPlcSimAdvancedTags",
+          "tool": "GetPlcSimAdvancedTags",
           "arguments": {
             "instanceName": "<Instance>",
-            "namesJson": ""
+            "names": []
           },
           "expect": "tag list"
         },
         {
-          "tool": "ReadPlcSimAdvancedTags",
+          "tool": "GetPlcSimAdvancedTags",
           "arguments": {
             "instanceName": "<Instance>",
-            "namesJson": [
+            "names": [
               "<DB>.<Tag>"
             ]
           },
@@ -27171,9 +27229,12 @@
           "tool": "WritePlcSimAdvancedTags",
           "arguments": {
             "instanceName": "<Instance>",
-            "valuesJson": {
-              "<DB>.<Tag>": true
-            },
+            "values": [
+              {
+                "name": "<DB>.<Tag>",
+                "value": true
+              }
+            ],
             "dryRun": true
           },
           "expect": "preview"
@@ -27182,9 +27243,12 @@
           "tool": "WritePlcSimAdvancedTags",
           "arguments": {
             "instanceName": "<Instance>",
-            "valuesJson": {
-              "<DB>.<Tag>": true
-            },
+            "values": [
+              {
+                "name": "<DB>.<Tag>",
+                "value": true
+              }
+            ],
             "dryRun": false,
             "confirmWrite": true
           },
@@ -27193,7 +27257,7 @@
         {
           "tool": "RunPlcSimAdvancedTestScenario",
           "arguments": {
-            "scenarioJson": {
+            "scenario": {
               "instance": "<Instance>",
               "mode": "default",
               "steps": [
@@ -27219,7 +27283,7 @@
         {
           "tool": "RunPlcSimAdvancedTestScenario",
           "arguments": {
-            "scenarioJson": {
+            "scenario": {
               "instance": "<Instance>",
               "mode": "default",
               "steps": [
@@ -27667,13 +27731,13 @@
     },
     "pgPcInterface": {
       "tools": [
-        "ReadTransferRoutes"
+        "ListTransferRoutes"
       ],
       "meaning": "Use an available transfer route interface for the intended target."
     },
     "targetIpAddress": {
       "tools": [
-        "ReadTransferRoutes",
+        "ListTransferRoutes",
         "ScanAccessibleDevices"
       ],
       "meaning": "Use the intended device address from the selected route/discovery."

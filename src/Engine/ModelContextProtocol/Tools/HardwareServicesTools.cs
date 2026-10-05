@@ -179,7 +179,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ManagePlcProtection(devicePathJson,itemPathJson,action,accessLevel,password,newPassword,confirmChange,dryRun);
             });
 
-        [McpServerTool(Name="CompileDevice"), Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadToPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="CompileDevice"), Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CompileDevice(
             [Description("devicePath: array naming the station to compile, e.g. [\"PLC_1\"].")] string[] devicePath,
             [Description("itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.")] string[] itemPath = null!)
@@ -192,8 +192,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][PreCondition:Connect+OpenProject]" +
-            " Read whether a CPU permits remote PUT/GET access — the precondition for ReadPlcLiveValuesS7 on DB areas." +
-            " If enabled=false, S7 absolute reads of DBs will fail; enable with SetPlcPutGetAccess (then hardware DownloadToPlc).")]
+            " Read whether a CPU permits remote PUT/GET access — the precondition for GetPlcLiveValuesS7 on DB areas." +
+            " If enabled=false, S7 absolute reads of DBs will fail; enable with SetPlcPutGetAccess (then hardware DownloadPlc).")]
         public CallToolResult GetPlcPutGetAccess(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
             => HardwareToolContract.Invoke("GetPlcPutGetAccess", true, false, () =>
@@ -204,7 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][WRITE][PreCondition:Connect+OpenProject]" +
             " Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads)." +
-            " This is a hardware-configuration change — you must run DownloadToPlc afterwards for it to take effect on the live CPU." +
+            " This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU." +
             " Returns before/after readback evidence. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SetPlcPutGetAccess(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,

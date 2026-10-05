@@ -480,7 +480,7 @@ namespace TiaMcpServer.Siemens.Services
                 ["attributeName"] = attrName,
                 ["before"] = before?.ToString() ?? string.Empty,
                 ["after"] = after?.ToString() ?? string.Empty,
-                ["note"] = "Hardware-config change — run DownloadToPlc (hardware) for it to take effect on the CPU."
+                ["note"] = "Hardware-config change — run DownloadPlc (hardware) for it to take effect on the CPU."
             };
         }
 

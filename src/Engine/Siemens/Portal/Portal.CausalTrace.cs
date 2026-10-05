@@ -108,7 +108,7 @@ namespace TiaMcpServer.Siemens
                 summary = $"No block writes '{tag}'. It may be set by HMI, an instruction's output, an indirect/optimized access this parser does not resolve, or the name differs from the project symbol.";
             else
                 summary = $"'{tag}' is written at {writeSites.Count} site(s). {allConditions.Count} distinct gating condition operand(s) found. " +
-                          "Live-read those with ReadPlcLiveValuesS7 to see which is currently driving the value.";
+                          "Live-read those with GetPlcLiveValuesS7 to see which is currently driving the value.";
 
             return new ModelContextProtocol.ResponseJsonReport
             {

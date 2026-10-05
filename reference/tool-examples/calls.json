@@ -3665,7 +3665,7 @@
           "userManagementMode": {
             "exampleValue": "keep"
           },
-          "promptAnswersJson": {
+          "promptAnswers": {
             "exampleValue": "<promptAnswersJson from this operation's target or user input>",
             "requiresBinding": true
           }
@@ -3673,7 +3673,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "DownloadToPlc": {
+      "DownloadPlc": {
         "arguments": {
           "softwarePath": "PLC_1",
           "pgPcInterface": "PLCSIM",
@@ -3699,7 +3699,7 @@
           "userManagementMode": {
             "exampleValue": "keep"
           },
-          "promptAnswersJson": {
+          "promptAnswers": {
             "exampleValue": "<promptAnswersJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -5168,7 +5168,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GoOffline": {
+      "DisconnectOnlinePlc": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -5177,13 +5177,13 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GoOfflineAll": {
+      "DisconnectOnlinePlcs": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GoOnline": {
+      "ConnectOnlinePlc": {
         "arguments": {
           "softwarePath": "PLC_1",
           "ipAddress": "192.168.0.3",
@@ -12961,10 +12961,12 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcLiveValuesOpcUa": {
+      "GetPlcLiveValuesOpcUa": {
         "arguments": {
           "endpointUrl": "opc.tcp://192.0.2.10:4840",
-          "nodeIdsJson": "[\"ns=3;s=\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
         },
         "parameters": {
           "timeoutMs": {
@@ -12974,10 +12976,12 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcLiveValuesS7": {
+      "GetPlcLiveValuesS7": {
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
         "parameters": {
           "rack": {
@@ -13014,7 +13018,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcSimAdvancedInstances": {
+      "ListPlcSimAdvancedInstances": {
         "arguments": {
           "includeState": true
         },
@@ -13032,10 +13036,13 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadPlcSimAdvancedTags": {
+      "GetPlcSimAdvancedTags": {
         "arguments": {
           "instanceName": "MCP_SIM",
-          "namesJson": "[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "parameters": {
           "areaFilter": {
@@ -13085,7 +13092,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcWebDiagnostics": {
+      "GetPlcWebDiagnostics": {
         "arguments": {
           "host": "192.0.2.10",
           "username": "<configured user>",
@@ -13108,12 +13115,14 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPlcWebVars": {
+      "GetPlcWebVars": {
         "arguments": {
           "host": "192.0.2.10",
           "username": "<configured user>",
           "password": "<password supplied for this target>",
-          "varsJson": "[\"\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
         },
         "parameters": {
           "username": {
@@ -13393,7 +13402,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadTransferRoutes": {
+      "ListTransferRoutes": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -13663,10 +13672,10 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedRuntimeAlarms": {
+      "GetUnifiedRuntimeAlarms": {
         "arguments": {},
         "parameters": {
-          "systemNamesJson": {
+          "systemNames": {
             "exampleValue": "<systemNamesJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -13690,22 +13699,24 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedRuntimeSettings": {
+      "GetUnifiedRuntimeSettings": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
         "parameters": {
-          "fieldsJson": {
+          "fields": {
             "exampleValue": "[\"StartScreen\",\"ScreenResolution\"]"
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedRuntimeTags": {
+      "GetUnifiedRuntimeTags": {
         "arguments": {
-          "tagsJson": "[\"Ready\"]"
+          "tags": [
+            "Ready"
+          ]
         },
         "parameters": {
           "pipeName": {
@@ -13945,7 +13956,25 @@
       },
       "RunPlcSimAdvancedTestScenario": {
         "arguments": {
-          "scenarioJson": "{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}",
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
           "dryRun": true,
           "confirmRun": false
         },
@@ -14021,7 +14050,9 @@
       "SamplePlcLiveValuesS7": {
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
         "parameters": {
           "intervalMs": {
@@ -14503,9 +14534,15 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UnifiedOpenPipeRequest": {
+      "InvokeUnifiedOpenPipe": {
         "arguments": {
-          "requestJson": "{\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Ready*\",\"PageSize\":50}}",
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
           "confirmWrite": false,
           "dryRun": true
         },
@@ -14684,11 +14721,14 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "UpdateUnifiedRuntimeSettings": {
+      "SetUnifiedRuntimeSettings": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "changesJson": "[{\"operation\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
+          "changes": {
+            "StartScreen": "/Main",
+            "ScreenResolution": "SR_1920X1080"
+          },
           "dryRun": true
         },
         "parameters": {
@@ -14711,17 +14751,21 @@
       },
       "UploadDeviceParameters": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "targetIpAddress": "192.0.2.10",
           "confirmUpload": false,
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "pgPcInterface": {
@@ -14732,7 +14776,7 @@
             "exampleValue": "<password supplied for this target>",
             "requiresBinding": true
           },
-          "promptAnswersJson": {
+          "promptAnswers": {
             "exampleValue": "<promptAnswersJson from this operation's target or user input>",
             "requiresBinding": true
           }
@@ -14752,7 +14796,7 @@
             "exampleValue": "<password supplied for this target>",
             "requiresBinding": true
           },
-          "promptAnswersJson": {
+          "promptAnswers": {
             "exampleValue": "<promptAnswersJson from this operation's target or user input>",
             "requiresBinding": true
           }
@@ -14864,7 +14908,12 @@
       "WritePlcSimAdvancedTags": {
         "arguments": {
           "instanceName": "MCP_SIM",
-          "valuesJson": "{\"MCP_SimDB.Start\":true}",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
           "dryRun": true,
           "confirmWrite": false
         },
@@ -14883,7 +14932,12 @@
           "host": "192.0.2.10",
           "username": "<configured user>",
           "password": "<password supplied for this target>",
-          "writesJson": "[{\"name\":\"\\\"DB_Status\\\".\\\"Ready\\\"\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },
@@ -14906,7 +14960,12 @@
       },
       "WriteUnifiedRuntimeTags": {
         "arguments": {
-          "writesJson": "[{\"name\":\"Ready\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },

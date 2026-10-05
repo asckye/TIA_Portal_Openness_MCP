@@ -1890,15 +1890,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30085 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:30867 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30533 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31315 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:74 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:63 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/release-build.json](../../manifest/release-build.json) | 产品:2099,2104,2454,2459; 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:6974 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:6983 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |
@@ -1991,7 +1991,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/README.md](../../src/Studio/README.md) | 产品:4 | 修改引用并回归 |
 | [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:50 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:51 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.HttpTests/README.md](../../tests/Engine/TiaMcpServer.HttpTests/README.md) | 产品:14,16 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs) | 根定位:9,13,66,67,68,87,99,101,102,103,104,116,117,120,124,126,135,136,150,151,161,164,168,171,179,180,182,183,184,185,186,187,188,191,193,198,203 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 根定位:205,228 | 修改引用并回归 |

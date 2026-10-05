@@ -87,7 +87,7 @@ namespace TiaMcpServer.Tests
             catch (InvalidOperationException ex) { threw = ex.Message == "denied"; }
             check(threw && releases == 1, "attach: refusal propagates without releasing an unacquired session");
 
-            foreach (var name in new[] { "SaveProject", "Compile", "GoOnline", "Connect", "CallTool", "ApplyToolBatch", "RunPlcCompanionTool", "ManagePlcGitRepository", "UnknownFutureTool" })
+            foreach (var name in new[] { "SaveProject", "Compile", "ConnectOnlinePlc", "Connect", "CallTool", "ApplyToolBatch", "RunPlcCompanionTool", "ManagePlcGitRepository", "UnknownFutureTool" })
             {
                 bool refused = false;
                 try { TransactionExecution.RequireSupported(name); } catch (ArgumentException) { refused = true; }

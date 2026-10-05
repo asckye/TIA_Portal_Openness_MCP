@@ -260,11 +260,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SetPlcWatchTableModifyValue"), Description(
-            "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+GoOnline]" +
+            "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+ConnectOnlinePlc]" +
             " Configure a watch table entry to write a value to a PLC variable once (or on a trigger)." +
             " This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires." +
             " Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop." +
-            " Use GoOnline before calling this for the write to reach the PLC." +
+            " Use ConnectOnlinePlc before calling this for the write to reach the PLC." +
             " SAFETY: the target is a variable in the physical CPU, not a simulation. The moment the trigger fires the value" +
             " lands on the real address — if that address is a coil, a valve, a contactor or a drive enable, the machine moves" +
             " at that instant, with no acknowledgement step. Before calling, know exactly what the address drives and confirm" +

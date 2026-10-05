@@ -291,9 +291,17 @@ internal sealed class ResponseGoldenTests
             Func<JsonObject, JsonObject, string> body = (data, meta) => { meta["operationSuccess"] = success; return "synthetic preview"; };
             Capture("plcsim/preview-" + success, surface.Invoke(plc, new object?[] { "GoldenPlcSim", true, body })!);
         }
-        // Actual public refusal: RequireInstanceName precedes API load/acquire.
-        Capture("plcsim/empty-instance", surface.Invoke(surface.Tool("ManagePlcSimAdvancedInstance"),
+        // Keep the legacy executor byte fixture and separately exercise the V4
+        // public boundary. RequireInstanceName precedes API load/acquire.
+        Capture("plcsim/empty-instance", surface.Invoke(surface.ToolMethod("ManagePlcSimAdvancedInstance"),
             new object[] { "", "run", "", 60000, false, true, "", "" })!);
+        var refusal = (CallToolResult)surface.Invoke(surface.Tool("ManagePlcSimAdvancedInstance"),
+            new object[] { "", "run", "", 60000, false, true, "", "" })!;
+        var refusalBody = refusal.StructuredContent!.AsObject();
+        check(refusal.IsError == true && refusalBody["error"]!["code"]!.GetValue<string>() == "INVALID_ARGUMENT"
+            && refusalBody["meta"]!["execution"]!.GetValue<string>() == "not-started"
+            && JsonNode.DeepEquals(JsonNode.Parse(((TextContentBlock)refusal.Content.Single()).Text), refusalBody),
+            "PLCSIM V4 refusal retains structured/text agreement without entering the API");
 
         var builder = surface.Method("BuildOfflineXmlBuilderReport", All);
         foreach (var sample in new (string Name, JsonObject Data)[] {

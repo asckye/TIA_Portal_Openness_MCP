@@ -124,7 +124,7 @@ namespace TiaMcpServer.Siemens.Services
             if (_session.IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "GoOnline: no project is open, so the online state was NOT measured. "
+                    "ConnectOnlinePlc: no project is open, so the online state was NOT measured. "
                     + "Call Connect + OpenProject (or AttachToOpenProject) first.");
             }
 
@@ -132,7 +132,7 @@ namespace TiaMcpServer.Siemens.Services
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"GoOnline: PLC software not found at '{softwarePath}', so the online state was NOT measured."
+                    $"ConnectOnlinePlc: PLC software not found at '{softwarePath}', so the online state was NOT measured."
                     + _session.AvailablePlcPathsSuffix());
             }
 
@@ -145,9 +145,9 @@ namespace TiaMcpServer.Siemens.Services
                     using var rhScope = AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
                     ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
-                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Logger?.LogWarning("GoOnline R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
+                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Logger?.LogWarning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
 #if TIA_V20
-                    if (rhAddress != null) _session.Logger?.LogWarning("GoOnline R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
+                    if (rhAddress != null) _session.Logger?.LogWarning("ConnectOnlinePlc R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
                     OnlineState rhState = rhAddress == null
@@ -184,7 +184,7 @@ namespace TiaMcpServer.Siemens.Services
                     if (selection.Error != null)
                     {
                         meta["success"] = false;
-                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "GoOnline not attempted: " + selection.Error, Meta = meta };
+                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error, Meta = meta };
                     }
                     address = selection.Address;
                     routeNote = " Route: " + selection.Description + ".";
@@ -222,7 +222,7 @@ namespace TiaMcpServer.Siemens.Services
                 try { stateNow = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* swallow(probe-optional): a failed state probe must preserve the original GoOnline failure */ }
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
                 if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
-                var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadToPlc), then go online." : "";
+                var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";
                 return new ResponseOnlineState { State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible" || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta };
             }
         }
@@ -248,7 +248,7 @@ namespace TiaMcpServer.Siemens.Services
             if (_session.IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "GoOffline: no project is open, so nothing was taken offline. "
+                    "DisconnectOnlinePlc: no project is open, so nothing was taken offline. "
                     + "Call Connect + OpenProject (or AttachToOpenProject) first.");
             }
 
@@ -256,7 +256,7 @@ namespace TiaMcpServer.Siemens.Services
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"GoOffline: PLC software not found at '{softwarePath}', so nothing was taken offline."
+                    $"DisconnectOnlinePlc: PLC software not found at '{softwarePath}', so nothing was taken offline."
                     + _session.AvailablePlcPathsSuffix());
             }
 
@@ -266,13 +266,13 @@ namespace TiaMcpServer.Siemens.Services
                 if (provider == null)
                 {
                     throw new PortalException(PortalErrorCode.OpennessError,
-                        $"GoOffline: OnlineProvider service is not available on '{softwarePath}', "
+                        $"DisconnectOnlinePlc: OnlineProvider service is not available on '{softwarePath}', "
                         + "so the offline transition was NOT performed. Any live online session is still open — "
                         + "disconnect it in the TIA Portal UI before compiling or exporting.");
                 }
 
                 provider.GoOffline();
-                return new ResponseMessage { Message = $"'{softwarePath}' is now offline." };
+                return new ResponseMessage { Message = $"'{softwarePath}' is now offline.", Meta = ResponseMeta.Basic(true) };
             }
             catch (Exception ex)
             {
@@ -290,7 +290,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var plcs = new JsonArray();
             if (_session.IsProjectNull())
-                return new JsonObject { ["message"] = "No project open.", ["allOffline"] = true, ["plcs"] = plcs };
+                return new JsonObject { ["message"] = "No project open.", ["allOffline"] = false, ["v4Rejection"] = "PROJECT_NOT_BOUND", ["plcs"] = plcs };
 
             bool allOffline = true;
             foreach (var plc in _session.GetAllPlcSoftware())
@@ -300,11 +300,12 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var provider = _session.ResolvePlcService<OnlineProvider>(plc.Name, plc);
                     entry["before"] = provider?.State.ToString() ?? "Unknown";
+                    entry["writeAttempted"] = provider != null;
                     provider?.GoOffline();
                     var after = provider?.State.ToString() ?? "Unknown";
                     entry["after"] = after;
-                    entry["ok"] = after != "Online";
-                    if (after == "Online") allOffline = false;
+                    entry["ok"] = after == "Offline";
+                    if (after != "Offline") allOffline = false;
                 }
                 catch (Exception ex)
                 {
@@ -317,7 +318,7 @@ namespace TiaMcpServer.Siemens.Services
 
             return new JsonObject
             {
-                ["message"] = $"GoOfflineAll: {plcs.Count} PLC(s) processed; allOffline={allOffline}.",
+                ["message"] = $"DisconnectOnlinePlcs: {plcs.Count} PLC(s) processed; allOffline={allOffline}.",
                 ["allOffline"] = allOffline,
                 ["plcs"] = plcs
             };
@@ -382,7 +383,7 @@ namespace TiaMcpServer.Siemens.Services
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"CompareSoftwareToOnline failed for '{softwarePath}': {tie.InnerException.Message} "
                     + "NO comparison result is available — do not read this as 'offline and online are identical'. "
-                    + "Go online first (GoOnline) and retry.", null, tie.InnerException);
+                    + "Go online first (ConnectOnlinePlc) and retry.", null, tie.InnerException);
             }
             catch (PortalException)
             {
@@ -456,7 +457,7 @@ namespace TiaMcpServer.Siemens.Services
             return state switch
             {
                 "Online" => $"'{softwarePath}' is online and reachable.",
-                "Offline" => $"'{softwarePath}' is offline. Call GoOnline first.",
+                "Offline" => $"'{softwarePath}' is offline. Call ConnectOnlinePlc first.",
                 "Connecting" => $"'{softwarePath}' is connecting...",
                 "Incompatible" => $"'{softwarePath}' online but firmware/config mismatch. Download required.",
                 "NotReachable" => $"'{softwarePath}' not reachable. Check IP address and network.",
@@ -487,13 +488,13 @@ namespace TiaMcpServer.Siemens.Services
         {
             var legitimation = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // TLS prompt record
             _session.Logger?.LogInformation(
-                "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
+                "DownloadPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
             try { rhTarget = EngineeringCredentialRules.ValidateRhTarget(rhTarget); }
             catch (ArgumentException ex) { return new ResponseDownload { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
 
             if (_session.IsProjectNull())
-                return new ResponseDownload { Ok = false, Message = "No project open." };
+                return new ResponseDownload { Ok = false, Message = "No project open.", Meta = new JsonObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
             DownloadPromptPolicy promptPolicy;
             try
@@ -550,7 +551,7 @@ namespace TiaMcpServer.Siemens.Services
                     };
 
                 object? downloadConfig = routeDiagnostics.Configuration ?? configuration;
-                _session.Logger?.LogInformation("DownloadToPlc: PG/PC route = {Route}", routeDiagnostics.Description);
+                _session.Logger?.LogInformation("DownloadPlc: PG/PC route = {Route}", routeDiagnostics.Description);
 
                 if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && rhTarget.Length == 0
                     && routeDiagnostics.Target is IConfiguration targetConfiguration)
@@ -610,7 +611,7 @@ namespace TiaMcpServer.Siemens.Services
                 // actual reason (connection/route error, not-reachable CPU, etc.).
                 var real = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null
                     ? tie.InnerException : ex;
-                _session.Logger?.LogError(real, "DownloadToPlc failed for {SoftwarePath}", softwarePath);
+                _session.Logger?.LogError(real, "DownloadPlc failed for {SoftwarePath}", softwarePath);
 
                 // A connection failure is usually the wrong PG/PC adapter on a multi-NIC PC, so
                 // always show which route was used and what else was available (issue #14).
@@ -619,7 +620,7 @@ namespace TiaMcpServer.Siemens.Services
                     : $" Route used: {routeDiagnostics.Description}."
                       + (routeDiagnostics.Candidates.Count > 1
                           ? $" Available routes: {DescribeRoutes(routeDiagnostics.Candidates)}."
-                            + " Pass pgPcInterface / targetIpAddress to DownloadToPlc to pick one explicitly."
+                            + " Pass pgPcInterface / targetIpAddress to DownloadPlc to pick one explicitly."
                           : string.Empty);
 
                 var failureMeta = promptPolicy.Summary();
@@ -1024,7 +1025,7 @@ namespace TiaMcpServer.Siemens.Services
             var issues = new List<string>();
 
             if (_session.IsProjectNull())
-                return new ResponseCheckDownload { Ready = false, Issues = new[] { "No project open." } };
+                return new ResponseCheckDownload { Ready = false, Issues = new[] { "No project open." }, Meta = new JsonObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
             var plcSoftware = _session.GetPlcSoftware(softwarePath);
             if (plcSoftware == null)
@@ -1100,7 +1101,7 @@ namespace TiaMcpServer.Siemens.Services
                     // Ordered best-first — the same ranking DownloadToPlc applies. preferred=true
                     // means the PG/PC adapter shares an IPv4 /24 with the CPU it has to reach.
                     ["downloadRoutes"] = routesJson,
-                    ["note"] = "Override the automatic pick with DownloadToPlc(pgPcInterface:…) or DownloadToPlc(targetIpAddress:…)."
+                    ["note"] = "Override the automatic pick with DownloadPlc(pgPcInterface:…) or DownloadPlc(targetIpAddress:…)."
                 }
             };
         }
@@ -1542,7 +1543,7 @@ namespace TiaMcpServer.Siemens.Services
         private static JsonArray AddressRows(ConfigurationAddressComposition addresses) => new JsonArray(EngineeringGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (JsonNode)new JsonObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
 
         public ResponseMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
-            => _session.RunHmiStepTool("ReadTransferRoutes", meta => {
+            => _session.RunHmiStepTool("ListTransferRoutes", meta => {
                 LibraryDeepLogic.ValidateBounds(1, maxItems);
                 var plc = _session.GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + _session.AvailablePlcPathsSuffix());
                 var download = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc);

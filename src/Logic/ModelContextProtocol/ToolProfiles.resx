@@ -834,7 +834,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CheckLibraryUpdates",
@@ -942,7 +942,7 @@
           "softwarePath": "PLC_1",
           "maxDepth": 4
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareUnifiedGraphicSelections",
@@ -1193,7 +1193,7 @@
       },
       {
         "name": "ConnectOnlinePlc",
-        "currentName": "GoOnline",
+        "currentName": "ConnectOnlinePlc",
         "sourceName": "GoOnline",
         "profiles": [
           "full"
@@ -1203,7 +1203,7 @@
           "ipAddress": "192.168.0.3",
           "pgPcInterface": "PLCSIM"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectPortal",
@@ -1688,7 +1688,7 @@
       },
       {
         "name": "DisconnectOnlinePlc",
-        "currentName": "GoOffline",
+        "currentName": "DisconnectOnlinePlc",
         "sourceName": "GoOffline",
         "profiles": [
           "full"
@@ -1696,17 +1696,17 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DisconnectOnlinePlcs",
-        "currentName": "GoOfflineAll",
+        "currentName": "DisconnectOnlinePlcs",
         "sourceName": "GoOfflineAll",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DisconnectPortal",
@@ -1721,7 +1721,7 @@
       },
       {
         "name": "DownloadPlc",
-        "currentName": "DownloadToPlc",
+        "currentName": "DownloadPlc",
         "sourceName": "DownloadToPlc",
         "profiles": [
           "full"
@@ -1731,7 +1731,7 @@
           "pgPcInterface": "PLCSIM",
           "targetIpAddress": "192.168.0.3"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DownloadPlcToFolder",
@@ -1746,7 +1746,7 @@
           "confirmDownload": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureOpennessUserGroup",
@@ -2852,7 +2852,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpcUaAccessControl",
@@ -2991,29 +2991,33 @@
       },
       {
         "name": "GetPlcLiveValuesOpcUa",
-        "currentName": "ReadPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
         "sourceName": "ReadPlcLiveValuesOpcUa",
         "profiles": [
           "full"
         ],
         "arguments": {
           "endpointUrl": "opc.tcp://192.0.2.10:4840",
-          "nodeIdsJson": "[\"ns=3;s=\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcLiveValuesS7",
-        "currentName": "ReadPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
         "sourceName": "ReadPlcLiveValuesS7",
         "profiles": [
           "full"
         ],
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcObjectFingerprints",
@@ -3063,20 +3067,23 @@
         "arguments": {
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcSimAdvancedTags",
-        "currentName": "ReadPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
         "sourceName": "ReadPlcSimAdvancedTags",
         "profiles": [
           "full"
         ],
         "arguments": {
           "instanceName": "MCP_SIM",
-          "namesJson": "[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcTagTableConstants",
@@ -3120,7 +3127,7 @@
       },
       {
         "name": "GetPlcWebDiagnostics",
-        "currentName": "ReadPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
         "sourceName": "ReadPlcWebDiagnostics",
         "profiles": [
           "full"
@@ -3130,11 +3137,11 @@
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWebVars",
-        "currentName": "ReadPlcWebVars",
+        "currentName": "GetPlcWebVars",
         "sourceName": "ReadPlcWebVars",
         "profiles": [
           "full"
@@ -3143,9 +3150,11 @@
           "host": "192.0.2.10",
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;",
-          "varsJson": "[\"\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPortalInfo",
@@ -3517,17 +3526,17 @@
       },
       {
         "name": "GetUnifiedRuntimeAlarms",
-        "currentName": "ReadUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
         "sourceName": "ReadUnifiedRuntimeAlarms",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeSettings",
-        "currentName": "ReadUnifiedRuntimeSettings",
+        "currentName": "GetUnifiedRuntimeSettings",
         "sourceName": "ReadUnifiedRuntimeSettings",
         "profiles": [
           "full"
@@ -3536,19 +3545,21 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeTags",
-        "currentName": "ReadUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
         "sourceName": "ReadUnifiedRuntimeTags",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "tagsJson": "[\"Ready\"]"
+          "tags": [
+            "Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedScreenBranch",
@@ -4101,17 +4112,23 @@
       },
       {
         "name": "InvokeUnifiedOpenPipe",
-        "currentName": "UnifiedOpenPipeRequest",
+        "currentName": "InvokeUnifiedOpenPipe",
         "sourceName": "UnifiedOpenPipeRequest",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "requestJson": "{\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Ready*\",\"PageSize\":50}}",
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListClassicHmiFaceplates",
@@ -4354,7 +4371,7 @@
       },
       {
         "name": "ListPlcSimAdvancedInstances",
-        "currentName": "ReadPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
         "sourceName": "ReadPlcSimAdvancedInstances",
         "profiles": [
           "full"
@@ -4362,7 +4379,7 @@
         "arguments": {
           "includeState": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSoftwareUnits",
@@ -4516,7 +4533,7 @@
       },
       {
         "name": "ListTransferRoutes",
-        "currentName": "ReadTransferRoutes",
+        "currentName": "ListTransferRoutes",
         "sourceName": "ReadTransferRoutes",
         "profiles": [
           "full"
@@ -4524,7 +4541,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedEngineeringObjects",
@@ -5358,7 +5375,7 @@
           "confirmInstanceChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSoftwareUnit",
@@ -6328,7 +6345,7 @@
         "arguments": {
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ReleaseUnifiedReadCursor",
@@ -6537,11 +6554,29 @@
           "full"
         ],
         "arguments": {
-          "scenarioJson": "{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}",
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
           "dryRun": true,
           "confirmRun": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunReadOnlyToolBatch",
@@ -6603,9 +6638,11 @@
         ],
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveExportContent",
@@ -6655,7 +6692,7 @@
           "pgPcInterface": "PLCSIM",
           "limit": 20
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ScanPlcSourceAnnotations",
@@ -6887,7 +6924,7 @@
           "confirmModeChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedGlobalScript",
@@ -7038,7 +7075,7 @@
       },
       {
         "name": "SetUnifiedRuntimeSettings",
-        "currentName": "UpdateUnifiedRuntimeSettings",
+        "currentName": "SetUnifiedRuntimeSettings",
         "sourceName": "UpdateUnifiedRuntimeSettings",
         "profiles": [
           "full"
@@ -7046,10 +7083,13 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "changesJson": "[{\"operation\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
+          "changes": {
+            "StartScreen": "/Main",
+            "ScreenResolution": "SR_1920X1080"
+          },
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ShowObjectInEditor",
@@ -7106,7 +7146,7 @@
           "softwarePath": "PLC_1",
           "tag": "DB_Status.Ready"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "TraceTagCauseLive",
@@ -7120,7 +7160,7 @@
           "tag": "DB_Status.Ready",
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UpgradeSivarcDefinitions",
@@ -7143,13 +7183,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "targetIpAddress": "192.0.2.10",
           "confirmUpload": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UploadStationFromPlc",
@@ -7164,7 +7208,7 @@
           "dryRun": true,
           "confirmUpload": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ValidateAutomationContext",
@@ -7312,11 +7356,16 @@
         ],
         "arguments": {
           "instanceName": "MCP_SIM",
-          "valuesJson": "{\"MCP_SimDB.Start\":true}",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
           "dryRun": true,
           "confirmWrite": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WritePlcWebVars",
@@ -7329,11 +7378,16 @@
           "host": "192.0.2.10",
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;",
-          "writesJson": "[{\"name\":\"\\\"DB_Status\\\".\\\"Ready\\\"\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WriteUnifiedRuntimeTags",
@@ -7343,11 +7397,16 @@
           "full"
         ],
         "arguments": {
-          "writesJson": "[{\"name\":\"Ready\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       }
     ],
     "21": [
@@ -8166,7 +8225,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CheckLibraryUpdates",
@@ -8274,7 +8333,7 @@
           "softwarePath": "PLC_1",
           "maxDepth": 4
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareUnifiedGraphicSelections",
@@ -8525,7 +8584,7 @@
       },
       {
         "name": "ConnectOnlinePlc",
-        "currentName": "GoOnline",
+        "currentName": "ConnectOnlinePlc",
         "sourceName": "GoOnline",
         "profiles": [
           "full"
@@ -8535,7 +8594,7 @@
           "ipAddress": "192.168.0.3",
           "pgPcInterface": "PLCSIM"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectPortal",
@@ -9020,7 +9079,7 @@
       },
       {
         "name": "DisconnectOnlinePlc",
-        "currentName": "GoOffline",
+        "currentName": "DisconnectOnlinePlc",
         "sourceName": "GoOffline",
         "profiles": [
           "full"
@@ -9028,17 +9087,17 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DisconnectOnlinePlcs",
-        "currentName": "GoOfflineAll",
+        "currentName": "DisconnectOnlinePlcs",
         "sourceName": "GoOfflineAll",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DisconnectPortal",
@@ -9053,7 +9112,7 @@
       },
       {
         "name": "DownloadPlc",
-        "currentName": "DownloadToPlc",
+        "currentName": "DownloadPlc",
         "sourceName": "DownloadToPlc",
         "profiles": [
           "full"
@@ -9063,7 +9122,7 @@
           "pgPcInterface": "PLCSIM",
           "targetIpAddress": "192.168.0.3"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DownloadPlcToFolder",
@@ -9078,7 +9137,7 @@
           "confirmDownload": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureOpennessUserGroup",
@@ -10184,7 +10243,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpcUaAccessControl",
@@ -10323,29 +10382,33 @@
       },
       {
         "name": "GetPlcLiveValuesOpcUa",
-        "currentName": "ReadPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
         "sourceName": "ReadPlcLiveValuesOpcUa",
         "profiles": [
           "full"
         ],
         "arguments": {
           "endpointUrl": "opc.tcp://192.0.2.10:4840",
-          "nodeIdsJson": "[\"ns=3;s=\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcLiveValuesS7",
-        "currentName": "ReadPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
         "sourceName": "ReadPlcLiveValuesS7",
         "profiles": [
           "full"
         ],
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcObjectFingerprints",
@@ -10395,20 +10458,23 @@
         "arguments": {
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcSimAdvancedTags",
-        "currentName": "ReadPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
         "sourceName": "ReadPlcSimAdvancedTags",
         "profiles": [
           "full"
         ],
         "arguments": {
           "instanceName": "MCP_SIM",
-          "namesJson": "[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcTagTableConstants",
@@ -10452,7 +10518,7 @@
       },
       {
         "name": "GetPlcWebDiagnostics",
-        "currentName": "ReadPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
         "sourceName": "ReadPlcWebDiagnostics",
         "profiles": [
           "full"
@@ -10462,11 +10528,11 @@
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcWebVars",
-        "currentName": "ReadPlcWebVars",
+        "currentName": "GetPlcWebVars",
         "sourceName": "ReadPlcWebVars",
         "profiles": [
           "full"
@@ -10475,9 +10541,11 @@
           "host": "192.0.2.10",
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;",
-          "varsJson": "[\"\\\"DB_Status\\\".\\\"Ready\\\"\"]"
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPortalInfo",
@@ -10849,17 +10917,17 @@
       },
       {
         "name": "GetUnifiedRuntimeAlarms",
-        "currentName": "ReadUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
         "sourceName": "ReadUnifiedRuntimeAlarms",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeSettings",
-        "currentName": "ReadUnifiedRuntimeSettings",
+        "currentName": "GetUnifiedRuntimeSettings",
         "sourceName": "ReadUnifiedRuntimeSettings",
         "profiles": [
           "full"
@@ -10868,19 +10936,21 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedRuntimeTags",
-        "currentName": "ReadUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
         "sourceName": "ReadUnifiedRuntimeTags",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "tagsJson": "[\"Ready\"]"
+          "tags": [
+            "Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetUnifiedScreenBranch",
@@ -11433,17 +11503,23 @@
       },
       {
         "name": "InvokeUnifiedOpenPipe",
-        "currentName": "UnifiedOpenPipeRequest",
+        "currentName": "InvokeUnifiedOpenPipe",
         "sourceName": "UnifiedOpenPipeRequest",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "requestJson": "{\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Ready*\",\"PageSize\":50}}",
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListClassicHmiFaceplates",
@@ -11700,7 +11776,7 @@
       },
       {
         "name": "ListPlcSimAdvancedInstances",
-        "currentName": "ReadPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
         "sourceName": "ReadPlcSimAdvancedInstances",
         "profiles": [
           "full"
@@ -11708,7 +11784,7 @@
         "arguments": {
           "includeState": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcSoftwareUnits",
@@ -11872,7 +11948,7 @@
       },
       {
         "name": "ListTransferRoutes",
-        "currentName": "ReadTransferRoutes",
+        "currentName": "ListTransferRoutes",
         "sourceName": "ReadTransferRoutes",
         "profiles": [
           "full"
@@ -11880,7 +11956,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListUnifiedEngineeringObjects",
@@ -12786,7 +12862,7 @@
           "confirmInstanceChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSoftwareUnit",
@@ -13831,7 +13907,7 @@
         "arguments": {
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ReleaseUnifiedReadCursor",
@@ -14040,11 +14116,29 @@
           "full"
         ],
         "arguments": {
-          "scenarioJson": "{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}",
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
           "dryRun": true,
           "confirmRun": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunReadOnlyToolBatch",
@@ -14106,9 +14200,11 @@
         ],
         "arguments": {
           "ip": "192.0.2.10",
-          "itemsJson": "[\"DB1.DBX0.0:BOOL\"]"
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveExportContent",
@@ -14158,7 +14254,7 @@
           "pgPcInterface": "PLCSIM",
           "limit": 20
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ScanPlcSourceAnnotations",
@@ -14390,7 +14486,7 @@
           "confirmModeChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetUnifiedGlobalScript",
@@ -14541,7 +14637,7 @@
       },
       {
         "name": "SetUnifiedRuntimeSettings",
-        "currentName": "UpdateUnifiedRuntimeSettings",
+        "currentName": "SetUnifiedRuntimeSettings",
         "sourceName": "UpdateUnifiedRuntimeSettings",
         "profiles": [
           "full"
@@ -14549,10 +14645,13 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "changesJson": "[{\"operation\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]",
+          "changes": {
+            "StartScreen": "/Main",
+            "ScreenResolution": "SR_1920X1080"
+          },
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ShowObjectInEditor",
@@ -14609,7 +14708,7 @@
           "softwarePath": "PLC_1",
           "tag": "DB_Status.Ready"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "TraceTagCauseLive",
@@ -14623,7 +14722,7 @@
           "tag": "DB_Status.Ready",
           "ip": "192.0.2.10"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UpgradeSivarcDefinitions",
@@ -14646,13 +14745,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "targetIpAddress": "192.0.2.10",
           "confirmUpload": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UploadStationFromPlc",
@@ -14667,7 +14770,7 @@
           "dryRun": true,
           "confirmUpload": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ValidateAutomationContext",
@@ -14815,11 +14918,16 @@
         ],
         "arguments": {
           "instanceName": "MCP_SIM",
-          "valuesJson": "{\"MCP_SimDB.Start\":true}",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
           "dryRun": true,
           "confirmWrite": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WritePlcWebVars",
@@ -14832,11 +14940,16 @@
           "host": "192.0.2.10",
           "username": "&lt;configured user&gt;",
           "password": "&lt;password supplied for this target&gt;",
-          "writesJson": "[{\"name\":\"\\\"DB_Status\\\".\\\"Ready\\\"\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WriteUnifiedRuntimeTags",
@@ -14846,11 +14959,16 @@
           "full"
         ],
         "arguments": {
-          "writesJson": "[{\"name\":\"Ready\",\"value\":true}]",
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
           "confirmWrite": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       }
     ]
   }
