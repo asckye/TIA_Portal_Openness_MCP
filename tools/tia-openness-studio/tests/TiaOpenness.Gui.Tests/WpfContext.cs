@@ -79,7 +79,17 @@ public sealed class WpfContext : IDisposable
     private Dispatcher Ui()
         => _dispatcher ?? throw new InvalidOperationException("The WPF test thread has no dispatcher.");
 
-    public void Dispose() => _dispatcher?.InvokeShutdown();
+    /// <summary>
+    /// Waits for the dispatcher to finish tearing down its windows. Returning right after the shutdown
+    /// request let the test host exit while the STA thread still ran window procedures, which the CLR
+    /// reports as a crash ("managed code after the runtime thread state has been destroyed").
+    /// </summary>
+    public void Dispose()
+    {
+        if (_dispatcher is null) return;
+        _dispatcher.InvokeShutdown();
+        _thread.Join(TimeSpan.FromSeconds(30));
+    }
 }
 
 [CollectionDefinition(WpfCollection.Name)]
