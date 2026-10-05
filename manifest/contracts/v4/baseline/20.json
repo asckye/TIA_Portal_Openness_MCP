@@ -262,16 +262,261 @@
       "name": "ApplyToolBatch"
     },
     {
-      "descriptionSha256": "d3c5113a5e23e5be6e02664c198e4950b1ba380c4c2f4bf9c78e42976c412104",
+      "descriptionSha256": "7363473dd2ccea9057917b5f919d0a8f4bd8e7139eaaaa68d783302439769be9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
           },
-          "layoutJson": {
-            "description": "layoutJson: JSON accepted by BuildUnifiedHmiLayoutDesignJson.",
-            "type": "string"
+          "layout": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "layout: JSON accepted by BuildUnifiedHmiLayoutDesign.",
+            "properties": {
+              "cellHeight": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "cellWidth": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "columns": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "gap": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "grid": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "type": {
+                            "const": "IOField"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "properties": {
+                            "propertyNames": {
+                              "enum": [
+                                "BackColor",
+                                "ForeColor",
+                                "BorderColor",
+                                "BorderWidth",
+                                "Visible",
+                                "Enabled",
+                                "Name"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "type": {
+                            "const": "Rectangle"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "content": false,
+                          "font": false,
+                          "padding": false,
+                          "properties": {
+                            "propertyNames": {
+                              "not": {
+                                "pattern": "^\\s*([Ff][Oo][Rr][Ee][Cc][Oo][Ll][Oo][Rr]|[Tt][Ee][Xx][Tt]|[Ff][Oo][Nn][Tt]|[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Pp][Aa][Dd][Dd][Ii][Nn][Gg])\\s*$"
+                              },
+                              "pattern": "\\S"
+                            }
+                          },
+                          "text": false
+                        }
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "col": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "colSpan": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "content": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "culture": {
+                      "type": "string"
+                    },
+                    "font": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "name": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "padding": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "properties": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "row": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "rowSpan": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "Text",
+                        "Button",
+                        "IOField",
+                        "Rectangle"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "left": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "screen": {
+                "additionalProperties": false,
+                "properties": {
+                  "height": {
+                    "type": "number"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "properties": {
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "propertyNames": {
+                      "not": {
+                        "enum": [
+                          "Name",
+                          "Width",
+                          "Height"
+                        ]
+                      },
+                      "pattern": "\\S"
+                    },
+                    "type": "object"
+                  },
+                  "width": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "top": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
           },
           "screenName": {
             "description": "screenName: target screen name",
@@ -281,19 +526,428 @@
         "required": [
           "hmiSoftwarePath",
           "screenName",
-          "layoutJson"
+          "layout"
         ],
         "type": "object"
       },
       "name": "ApplyUnifiedHmiLayout"
     },
     {
-      "descriptionSha256": "155b549809f9ea46697f366e3e198f28bc382cb06f2ff5fdc26a07e57d009ce0",
+      "descriptionSha256": "617c1f8a2d7f4924548b2f622df6bd7ff334acd800d587d566806b728770fe76",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "designJson": {
-            "description": "designJson: JSON object with optional screen properties and items array",
-            "type": "string"
+          "design": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "design: JSON object with optional screen properties and items array",
+            "properties": {
+              "items": {
+                "items": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "content": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "culture": {
+                          "type": "string"
+                        },
+                        "font": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "properties": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "textProperty": {
+                          "enum": [
+                            "Text",
+                            "AlternateText",
+                            "ToolTipText"
+                          ],
+                          "type": "string"
+                        },
+                        "top": {
+                          "type": "number"
+                        },
+                        "type": {
+                          "const": "Text",
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "content": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "culture": {
+                          "type": "string"
+                        },
+                        "font": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "properties": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "textProperty": {
+                          "enum": [
+                            "Text",
+                            "AlternateText",
+                            "ToolTipText"
+                          ],
+                          "type": "string"
+                        },
+                        "top": {
+                          "type": "number"
+                        },
+                        "type": {
+                          "const": "Button",
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "content": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "culture": {
+                          "type": "string"
+                        },
+                        "font": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "properties": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "enum": [
+                              "BackColor",
+                              "ForeColor",
+                              "BorderColor",
+                              "BorderWidth",
+                              "Visible",
+                              "Enabled",
+                              "Name"
+                            ]
+                          },
+                          "type": "object"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "textProperty": {
+                          "enum": [
+                            "Text",
+                            "AlternateText",
+                            "ToolTipText"
+                          ],
+                          "type": "string"
+                        },
+                        "top": {
+                          "type": "number"
+                        },
+                        "type": {
+                          "const": "IOField",
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "height": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "properties": {
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "propertyNames": {
+                            "not": {
+                              "pattern": "^\\s*([Ff][Oo][Rr][Ee][Cc][Oo][Ll][Oo][Rr]|[Tt][Ee][Xx][Tt]|[Ff][Oo][Nn][Tt]|[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Pp][Aa][Dd][Dd][Ii][Nn][Gg])\\s*$"
+                            },
+                            "pattern": "\\S"
+                          },
+                          "type": "object"
+                        },
+                        "top": {
+                          "type": "number"
+                        },
+                        "type": {
+                          "const": "Rectangle",
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "name"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              "screen": {
+                "additionalProperties": false,
+                "properties": {
+                  "height": {
+                    "type": "number"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "properties": {
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "propertyNames": {
+                      "not": {
+                        "enum": [
+                          "Name",
+                          "Width",
+                          "Height"
+                        ]
+                      },
+                      "pattern": "\\S"
+                    },
+                    "type": "object"
+                  },
+                  "width": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -305,22 +959,23 @@
           },
           "strict": {
             "default": true,
-            "description": "strict: true includes failure details in the error; false returns a partial-result summary. Both report Meta.success=false on failed writes; neither rolls back changes.",
+            "description": "strict: true includes failure details in the error; false returns a partial-result summary. Both report ok=false on failed writes; neither rolls back changes.",
             "type": "boolean"
           }
         },
         "required": [
           "hmiSoftwarePath",
           "screenName",
-          "designJson"
+          "design"
         ],
         "type": "object"
       },
-      "name": "ApplyUnifiedHmiScreenDesignJson"
+      "name": "ApplyUnifiedHmiScreenDesign"
     },
     {
-      "descriptionSha256": "df729ae771d1fc1b7c1d3bf42f876e00ec8126fc799405b37a6ae1335351176a",
+      "descriptionSha256": "39778f8014e537038d2e5766760f0ff38cf9019a33263f87795960718cd89ce6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -330,15 +985,135 @@
             "description": "screenName: target screen name",
             "type": "string"
           },
-          "themeJson": {
-            "description": "themeJson: JSON accepted by BuildUnifiedHmiThemeDesignJson.",
-            "type": "string"
+          "theme": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "theme: JSON accepted by BuildUnifiedHmiThemeDesign.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "palette": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Page"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "page": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Background"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "background": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Surface"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "surface": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Text"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "text": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Border"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "border": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "properties": {
+                  "Background": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Border": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Page": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Surface": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Text": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "palette"
+            ],
+            "type": "object"
           }
         },
         "required": [
           "hmiSoftwarePath",
           "screenName",
-          "themeJson"
+          "theme"
         ],
         "type": "object"
       },
@@ -502,8 +1277,9 @@
       "name": "AuditEngineeringExports"
     },
     {
-      "descriptionSha256": "617d4b1764ec5fc240c49153843afe1fa1364aa00f663a25adcd2304af078eda",
+      "descriptionSha256": "3d2e0bbd7be36c4ad22c2a0e4c79572046eaa268a33e407d4becd136352ca494",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "buttonName": {
             "description": "buttonName: HMI button item name",
@@ -533,8 +1309,9 @@
       "name": "BindUnifiedHmiButtonPressedTag"
     },
     {
-      "descriptionSha256": "bbe85c208e10c72824f0a2387bbee7accb2cce316560102c2567fe3e4984aae3",
+      "descriptionSha256": "41c54c3669835c3d0c537501688b640bd7bb531857f33fc0f8eac8dd0f304fc7",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "address": {
             "default": "",
@@ -6316,6 +7093,7 @@
     {
       "descriptionSha256": "8acecea66baa74cfc6f2f106d6990441ead64ea075a7e4677a5c5d36416ae5e5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "actionKind": {
             "description": "actionKind: set-bit, reset-bit, toggle-bit, open-popup, goto-screen, confirm-write",
@@ -6350,23 +7128,268 @@
       "name": "BuildUnifiedHmiButtonActionScript"
     },
     {
-      "descriptionSha256": "ee0b42262702aa65282455e5d49b037435336c4f81b0341196924def5c967ef4",
+      "descriptionSha256": "e4846a00381ac6b2fc31d9409634cd070dc0e05a16795153a885b88819893a2a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "layoutJson": {
-            "description": "layoutJson: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}.",
-            "type": "string"
+          "layout": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "layout: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}.",
+            "properties": {
+              "cellHeight": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "cellWidth": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "columns": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "gap": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "grid": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "type": {
+                            "const": "IOField"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "properties": {
+                            "propertyNames": {
+                              "enum": [
+                                "BackColor",
+                                "ForeColor",
+                                "BorderColor",
+                                "BorderWidth",
+                                "Visible",
+                                "Enabled",
+                                "Name"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "type": {
+                            "const": "Rectangle"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "content": false,
+                          "font": false,
+                          "padding": false,
+                          "properties": {
+                            "propertyNames": {
+                              "not": {
+                                "pattern": "^\\s*([Ff][Oo][Rr][Ee][Cc][Oo][Ll][Oo][Rr]|[Tt][Ee][Xx][Tt]|[Ff][Oo][Nn][Tt]|[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Pp][Aa][Dd][Dd][Ii][Nn][Gg])\\s*$"
+                              },
+                              "pattern": "\\S"
+                            }
+                          },
+                          "text": false
+                        }
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "col": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "colSpan": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "content": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "culture": {
+                      "type": "string"
+                    },
+                    "font": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "name": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "padding": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "properties": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "\\S"
+                      },
+                      "type": "object"
+                    },
+                    "row": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "rowSpan": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "Text",
+                        "Button",
+                        "IOField",
+                        "Rectangle"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "left": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "screen": {
+                "additionalProperties": false,
+                "properties": {
+                  "height": {
+                    "type": "number"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "properties": {
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "propertyNames": {
+                      "not": {
+                        "enum": [
+                          "Name",
+                          "Width",
+                          "Height"
+                        ]
+                      },
+                      "pattern": "\\S"
+                    },
+                    "type": "object"
+                  },
+                  "width": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "top": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
           }
         },
         "required": [
-          "layoutJson"
+          "layout"
         ],
         "type": "object"
       },
-      "name": "BuildUnifiedHmiLayoutDesignJson"
+      "name": "BuildUnifiedHmiLayoutDesign"
     },
     {
-      "descriptionSha256": "2a9c716ac33f899c6b8ed98d8a05acc1d26ec85ecca21c017e0cb4b762465009",
+      "descriptionSha256": "0c21848b30287b5fc1d3891839672b68fbf612bf11a680b1b1b7fcdacaf317d5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6420,20 +7443,141 @@
       "name": "BuildUnifiedHmiTemplateApplyDesignManifest"
     },
     {
-      "descriptionSha256": "3b0ae0e293aee045d805622c16eb42c224db5d14afb8d09887c984525cffde52",
+      "descriptionSha256": "92804572a9b7f86d1e4d4db458aaacf9bf811ff15b83a51181af9a578228f5c8",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "themeJson": {
-            "description": "themeJson: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8.",
-            "type": "string"
+          "theme": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "description": "theme: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "palette": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Page"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "page": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Background"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "background": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Surface"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "surface": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Text"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "text": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "not": {
+                        "required": [
+                          "Border"
+                        ]
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "border": {
+                          "pattern": "^0x[0-9a-fA-F]{8}$"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "properties": {
+                  "Background": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Border": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Page": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Surface": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  },
+                  "Text": {
+                    "pattern": "^0x[0-9a-fA-F]{8}$",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "palette"
+            ],
+            "type": "object"
           }
         },
         "required": [
-          "themeJson"
+          "theme"
         ],
         "type": "object"
       },
-      "name": "BuildUnifiedHmiThemeDesignJson"
+      "name": "BuildUnifiedHmiThemeDesign"
     },
     {
       "descriptionSha256": "dbc9ebc2c2fa376e98cca8f53fe036fe4c800634d9b22a4e1fe1fa44feba33c5",
@@ -8117,6 +9261,7 @@
     {
       "descriptionSha256": "0257fd7afbdb906bc3ab3e1a795b1e5dbaffc74fc9a4deba8608dd479a8897cc",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "buttonName": {
             "description": "buttonName: HMI button item name",
@@ -8153,6 +9298,7 @@
     {
       "descriptionSha256": "6925ed0f8653fdbd9f6bda689648d1650c41fc4e3542876c07c9c467eb4edb02",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "depth": {
             "default": 2,
@@ -8359,42 +9505,6 @@
       "name": "EnsureOpennessUserGroup"
     },
     {
-      "descriptionSha256": "40d49eca274d824787da63217a2519e0975a864f110343ea660c46f38b3f64c5",
-      "inputSchema": {
-        "properties": {
-          "connectionName": {
-            "default": "HMI_Connection_1",
-            "description": "connectionName: Unified HMI connection object name (default 'HMI_Connection_1')",
-            "type": "string"
-          },
-          "hmiSoftwarePath": {
-            "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
-            "type": "string"
-          },
-          "plcName": {
-            "default": "PLC_1",
-            "description": "plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')",
-            "type": "string"
-          },
-          "screenName": {
-            "default": "Main",
-            "description": "screenName: target screen name (default 'Main')",
-            "type": "string"
-          },
-          "tagTableName": {
-            "default": "默认变量表",
-            "description": "tagTableName: target HMI tag table name (default '默认变量表')",
-            "type": "string"
-          }
-        },
-        "required": [
-          "hmiSoftwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "EnsureStartStopUnifiedHmi"
-    },
-    {
       "descriptionSha256": "8392e1125795266f63746c4f71f6e59703d3ca741f486443bbf33658e37ceffb",
       "inputSchema": {
         "additionalProperties": false,
@@ -8422,8 +9532,9 @@
       "name": "EnsureSubnet"
     },
     {
-      "descriptionSha256": "02d5fa1a2d3bb6991c4ac20747c8ef6d7b6cf16823c64f6a82e76d348e75bb96",
+      "descriptionSha256": "4b67f338473c911cce02ead17b843894f1cf2b38f6fc6e4444cf01f2d1777ee0",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "actionKind": {
             "description": "actionKind: set-bit, reset-bit, or toggle-bit",
@@ -8468,8 +9579,9 @@
       "name": "EnsureUnifiedHmiButtonAction"
     },
     {
-      "descriptionSha256": "5773a32f79b6cc0cbda89043125b8cde4df7e1b2a5d31252131ab10a510b6912",
+      "descriptionSha256": "ceda8668880fa0ebdf88c2f5e05cff67b5f3fef7963b273e6bbcf92734a38b0c",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "buttonName": {
             "description": "buttonName: HMI button item name",
@@ -8499,8 +9611,9 @@
       "name": "EnsureUnifiedHmiButtonEventHandler"
     },
     {
-      "descriptionSha256": "deecde85e42377f581baee0772ba9997eef5182749d1d2118a6c27fee56457ae",
+      "descriptionSha256": "8d04b19ef59d7b081c663ee11f5fd9cf164dd247cb21fd00d156047661b864e5",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "connectionName": {
             "default": "HMI_Connection_1",
@@ -8525,8 +9638,9 @@
       "name": "EnsureUnifiedHmiConnection"
     },
     {
-      "descriptionSha256": "c60fad2fbd774475b4ad842e7a93e7bd68fcbb587de95f1bbfe15c6d6e9351b9",
+      "descriptionSha256": "2aab46cf42a17861c94a24299a97fe09568d010b0091fdf5618afad6f01096f9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dynamizationType": {
             "default": "",
@@ -8561,8 +9675,9 @@
       "name": "EnsureUnifiedHmiDynamization"
     },
     {
-      "descriptionSha256": "b5c723d5b7da2e3a195f90082f5cc17c930c69b37e4a212fefcffc637d61dac9",
+      "descriptionSha256": "da300f71ec9866ddab6f18eed3bf2e9db3ce14f34e90e361cdbd05b6ce012475",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "height": {
             "default": 0,
@@ -8592,8 +9707,9 @@
       "name": "EnsureUnifiedHmiScreen"
     },
     {
-      "descriptionSha256": "4740427a516947bd8a74d746a5c4da6b974a90f458816041de514392c509104e",
+      "descriptionSha256": "7f3481ef214951b0093b14cb3d72d4126a9a18ade384d204be9fe6a3dd467090",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "height": {
             "default": 40,
@@ -8648,8 +9764,9 @@
       "name": "EnsureUnifiedHmiScreenItem"
     },
     {
-      "descriptionSha256": "c1b2bbbcb0b4a912f11f4af004e8ca02309923d4aa7ab278416db3356b38ea57",
+      "descriptionSha256": "7fcac34a1952710dc7cbc1ce3a25b4e90823e1014bed7987e4cc322c3731a365",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "address": {
             "default": "",
@@ -8704,8 +9821,9 @@
       "name": "EnsureUnifiedHmiTag"
     },
     {
-      "descriptionSha256": "11446f48cd8d4f5bc723daef3d34cf19dccb636efdfb8973c9514272f8ca41d4",
+      "descriptionSha256": "a391a8e2a4f2f9ee1b6095c2ff99dd3474fe0e6611c162a5f3f31257914ae2ad",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -11728,6 +12846,84 @@
       "name": "GetToolUsage"
     },
     {
+      "descriptionSha256": "6d795cd88a0f878c4c5a3217a01aa0c1c58d82b53f8181ca454af8e17eead0e1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "description": "category: the category - the tool description lists the accepted values.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedAlarmCommon"
+    },
+    {
+      "descriptionSha256": "a0df2e577cdb7ce006dae179dc8794c96fc9d907495bca6865345b80303283c9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "description": "category: the category - the tool description lists the accepted values.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedAuditSettings"
+    },
+    {
       "descriptionSha256": "778e4939882d2e2019e6563ccd9dcb7b2f194f8ac4f5e5e0695ac366a7116819",
       "inputSchema": {
         "properties": {
@@ -11752,6 +12948,101 @@
         "type": "object"
       },
       "name": "GetUnifiedCrossReferences"
+    },
+    {
+      "descriptionSha256": "4aa5bb0704d4de43800953896a6dadf7191f630b9596eecd4a357c47449f8dc7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "hmiSoftwarePath": {
+            "description": "hmiSoftwarePath: the HMI software path from GetProjectTree (e.g. 'HMI_RT_1').",
+            "type": "string"
+          },
+          "itemName": {
+            "description": "itemName: exact name of the item.",
+            "type": "string"
+          },
+          "screenName": {
+            "description": "screenName: exact screen name.",
+            "type": "string"
+          },
+          "textProperty": {
+            "default": "Text",
+            "description": "textProperty: name of the multilingual text property to read ('' = all).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hmiSoftwarePath",
+          "screenName",
+          "itemName"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedHmiTexts"
+    },
+    {
+      "descriptionSha256": "f7790d7ecdaec3f8b5e8101c332f696f5f85a39f1a44e24aa39cfc42cdefa510",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetUnifiedObjectEvents"
     },
     {
       "descriptionSha256": "41e2b3a450342aa1fe5c0783306dd9789ee6a94c9bbf115279baf8fd1711e01b",
@@ -13974,10 +15265,12 @@
     {
       "descriptionSha256": "7ead6b3c274f8bdaad930e750e3b93653b60e8a842f71543cecaf109551e9504",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "limit": {
             "default": 500,
             "description": "limit: max returned type lines",
+            "minimum": 1,
             "type": "integer"
           },
           "nameContains": {
@@ -19931,8 +21224,9 @@
       "name": "ManageUnifiedCwcPackage"
     },
     {
-      "descriptionSha256": "836445eb3b20205e793563ea275f070ba632fb36805d07dc48cafc38d0024d64",
+      "descriptionSha256": "0fad88bb3c9a6e3d9bd3f4712cfac69ace08230b01ea6c41b0f0e0af78996da2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -19960,19 +21254,106 @@
             "description": "dynamizationKind: dynamization kind (see the tool description).",
             "type": "string"
           },
-          "mappingEntriesJson": {
-            "default": "[]",
-            "description": "mappingEntriesJson: JSON array of mapping entries.",
-            "type": "string"
+          "mappingEntries": {
+            "description": "mappingEntries: JSON array of mapping entries.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "Simple",
+                    "Range",
+                    "Bitmask"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "properties": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "minLength": 0,
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "maxProperties": 50,
+                  "minProperties": 0,
+                  "type": "object"
+                }
+              },
+              "required": [
+                "kind",
+                "properties"
+              ],
+              "type": "object"
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "type": "array"
           },
-          "objectPathJson": {
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "propertyName": {
             "description": "propertyName: exact name of the property.",
@@ -19985,8 +21366,8 @@
         },
         "required": [
           "softwarePath",
-          "objectPathJson",
-          "propertyName"
+          "propertyName",
+          "objectPath"
         ],
         "type": "object"
       },
@@ -20096,8 +21477,9 @@
       "name": "ManageUnifiedEvent"
     },
     {
-      "descriptionSha256": "69ac93b64d299370e54a2515cee97f1775b271f20b5f1a2270ddd0b1b061721a",
+      "descriptionSha256": "e9b6d0774ea9c19170a705de040d8fd54b79a2ad7d055a2e565345859b729490",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "create | rename | deleteEmpty. ",
@@ -20148,6 +21530,7 @@
     {
       "descriptionSha256": "9ae414f215279ce728769722ae0376e22a554797ae5397dbf5d686b2b7430466",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20174,10 +21557,26 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "entryJson": {
-            "default": "{}",
-            "description": "entryJson: JSON object of the entry's properties.",
-            "type": "string"
+          "entry": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "entry: JSON object of the entry's properties.",
+            "type": "object"
           },
           "entryKey": {
             "default": "",
@@ -20250,8 +21649,9 @@
       "name": "ManageUnifiedLoggingTag"
     },
     {
-      "descriptionSha256": "982cacb407b49b73872c3872720ee59de139c9b7188c6d185936bbe7bacc3527",
+      "descriptionSha256": "5cc464449b018f70053405897d28f6169c9dd8d911571752defe69c4e1965764",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20279,9 +21679,38 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "objectPathJson": {
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
           },
           "partIndex": {
             "default": -1,
@@ -20298,10 +21727,25 @@
             "description": "partName: exact name of the part.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -20310,7 +21754,7 @@
         },
         "required": [
           "softwarePath",
-          "objectPathJson"
+          "objectPath"
         ],
         "type": "object"
       },
@@ -20403,8 +21847,9 @@
       "name": "ManageUnifiedPlantNode"
     },
     {
-      "descriptionSha256": "f1296351e9bfc1f7bd72f1b15cf4df025fe179f792d7ce0dea3a77437c4e7a16",
+      "descriptionSha256": "0718d8bfc029df90784825d5952ada5a3d40e6500b49568cd2cef9f6c90ea41b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20451,17 +21896,62 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "minLength": 0,
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "maxProperties": 50,
+                  "minProperties": 0,
+                  "type": "object"
+                }
+              ]
+            },
+            "maxProperties": 50,
+            "minProperties": 0,
+            "type": "object"
           },
           "screenPath": {
             "description": "screenPath: screen path inside the HMI, e.g. '/Group/Main'.",
@@ -20481,8 +21971,9 @@
       "name": "ManageUnifiedScreenItem"
     },
     {
-      "descriptionSha256": "44dacce6620d9cf0431c131d50fe07b6446ab959d342c0feae715f152308b6fc",
+      "descriptionSha256": "22acfe6a7f30038c8bd18412d712f7d65ef962be21322103152be50569b50c3d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20512,14 +22003,58 @@
             "description": "name: exact name of the object (case-sensitive).",
             "type": "string"
           },
-          "objectPathJson": {
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -20528,7 +22063,7 @@
         },
         "required": [
           "softwarePath",
-          "objectPathJson"
+          "objectPath"
         ],
         "type": "object"
       },
@@ -22403,78 +23938,6 @@
       "name": "ReadTransferRoutes"
     },
     {
-      "descriptionSha256": "85c652f8281e5de1f8d413e32b4832c15c8121e3a1db7b2223f78e6fb72b6572",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "description": "category: the category - the tool description lists the accepted values.",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "category"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedAlarmCommon"
-    },
-    {
-      "descriptionSha256": "a511a57b50dbe1ad2a31b15df5700502ab55b9a783dce2458d6a673a524fb5ef",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "description": "category: the category - the tool description lists the accepted values.",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "category"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedAuditSettings"
-    },
-    {
       "descriptionSha256": "d4bf870019dd1d20f41da068dfe329b9e595fc2686be35ee946963719ca6f9d1",
       "inputSchema": {
         "properties": {
@@ -22716,37 +24179,6 @@
       "name": "ReadUnifiedHmiDynamization"
     },
     {
-      "descriptionSha256": "4e615494a9752fabf3778eb187fa32ffc4b7e48d1e3acf4fc989f207a83bd8ed",
-      "inputSchema": {
-        "properties": {
-          "hmiSoftwarePath": {
-            "description": "hmiSoftwarePath: the HMI software path from GetProjectTree (e.g. 'HMI_RT_1').",
-            "type": "string"
-          },
-          "itemName": {
-            "description": "itemName: exact name of the item.",
-            "type": "string"
-          },
-          "screenName": {
-            "description": "screenName: exact screen name.",
-            "type": "string"
-          },
-          "textProperty": {
-            "default": "Text",
-            "description": "textProperty: name of the multilingual text property to read ('' = all).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "hmiSoftwarePath",
-          "screenName",
-          "itemName"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedHmiTexts"
-    },
-    {
       "descriptionSha256": "49d3f51537b92949f52699c058666c58ab52dc55f92d42583f2dce060e8cfece",
       "inputSchema": {
         "properties": {
@@ -22791,37 +24223,6 @@
         "type": "object"
       },
       "name": "ReadUnifiedLibraryType"
-    },
-    {
-      "descriptionSha256": "7e303636b51662972085f8a562c75f50f0a92a953ed286d735ed5917f7593319",
-      "inputSchema": {
-        "properties": {
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "objectPathJson": {
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "objectPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadUnifiedObjectEvents"
     },
     {
       "descriptionSha256": "b745d98d86d2c0edb69f7001326ae440ad1e2071f5251ec6a39001b082a29479",
@@ -23373,6 +24774,7 @@
     {
       "descriptionSha256": "93a1efacf3c668108256062ec4284b1b972d0931f5f0c7e921bf738274c35050",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -24477,8 +25879,9 @@
       "name": "SetPlcWebOperatingMode"
     },
     {
-      "descriptionSha256": "60d7d30fcf04a9cc9521c6810dc773aad0d601f3135cfe782f2783778248d012",
+      "descriptionSha256": "243b222ffc26b5a21c966dc816a7ab169c9f9d1877b23088507c336c1c3033e1",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "async": {
             "default": false,
@@ -24526,6 +25929,43 @@
         "type": "object"
       },
       "name": "SetUnifiedHmiButtonEventScriptCode"
+    },
+    {
+      "descriptionSha256": "8b5fc1647ef211666a38320aee0afe7382851fe9c319a1b60c1e123b0ba4d301",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "connectionName": {
+            "default": "HMI_Connection_1",
+            "description": "connectionName: Unified HMI connection object name (default 'HMI_Connection_1')",
+            "type": "string"
+          },
+          "hmiSoftwarePath": {
+            "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
+            "type": "string"
+          },
+          "plcName": {
+            "default": "PLC_1",
+            "description": "plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')",
+            "type": "string"
+          },
+          "screenName": {
+            "default": "Main",
+            "description": "screenName: target screen name (default 'Main')",
+            "type": "string"
+          },
+          "tagTableName": {
+            "default": "默认变量表",
+            "description": "tagTableName: target HMI tag table name (default '默认变量表')",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hmiSoftwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "SetUnifiedHmiRuntimeState"
     },
     {
       "descriptionSha256": "eab37d6e91f089cfab015761b22c442965c796e2ee31648a6ee0408fe7b21180",

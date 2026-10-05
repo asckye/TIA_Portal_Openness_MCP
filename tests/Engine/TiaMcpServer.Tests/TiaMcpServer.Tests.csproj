@@ -123,6 +123,9 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs" Link="AlarmsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs" Link="OpcUaTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />

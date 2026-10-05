@@ -586,7 +586,7 @@ snapshots.RAW_MASK_RULES += [
     for name in ('AnalyzeGlobalLibraryPackage', 'AnalyzeHmiTemplateReference', 'AnalyzeUnifiedHmiTemplateLayout')
     for key in ('data', 'Data')]
 # Unified HMI: exact offline/disconnected fixtures for every moved tool.
-CASES.update({'UnifiedHmi': [('EnsureStartStopUnifiedHmi', 'offline', {'hmiSoftwarePath': 'HMI_RT_1'}),
+CASES.update({'UnifiedHmi': [('SetUnifiedHmiRuntimeState', 'offline', {'hmiSoftwarePath': 'HMI_RT_1'}),
                 ('EnsureUnifiedHmiScreen', 'offline', {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main'}),
                 ('EnsureUnifiedHmiTagTable', 'offline', {'hmiSoftwarePath': 'HMI_RT_1', 'tagTableName': 'Tags'}),
                 ('EnsureUnifiedHmiTag',
@@ -596,20 +596,20 @@ CASES.update({'UnifiedHmi': [('EnsureStartStopUnifiedHmi', 'offline', {'hmiSoftw
                 ('EnsureUnifiedHmiScreenItem',
                  'offline',
                  {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'itemName': 'Button1'}),
-                ('ReadUnifiedHmiTexts',
+                ('GetUnifiedHmiTexts',
                  'offline',
                  {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'itemName': 'Button1'}),
-                ('ApplyUnifiedHmiScreenDesignJson',
+                ('ApplyUnifiedHmiScreenDesign',
                  'offline',
-                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'designJson': '{}'}),
-                ('BuildUnifiedHmiThemeDesignJson', 'offline', {'themeJson': '{}'}),
-                ('BuildUnifiedHmiLayoutDesignJson', 'offline', {'layoutJson': '{"items":[]}'}),
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'design': {'items': []}}),
+                ('BuildUnifiedHmiThemeDesign', 'offline', {'theme': {'palette': {}}}),
+                ('BuildUnifiedHmiLayoutDesign', 'offline', {'layout': {'items': []}}),
                 ('ApplyUnifiedHmiTheme',
                  'offline',
-                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'themeJson': '{}'}),
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'theme': {'palette': {}}}),
                 ('ApplyUnifiedHmiLayout',
                  'offline',
-                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'layoutJson': '{"items":[]}'}),
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'layout': {'items': []}}),
                 ('BindUnifiedHmiButtonPressedTag',
                  'offline',
                  {'hmiSoftwarePath': 'HMI_RT_1',
@@ -710,19 +710,19 @@ CASES.update({'UnifiedHmi': [('EnsureStartStopUnifiedHmi', 'offline', {'hmiSoftw
                              'name': 'Object1',
                              'nodeId': 'ns=1;s=Alarm',
                              'connection': 'Connection1'})],
- 'UnifiedUiModel': [('ReadUnifiedObjectEvents', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
-                    ('ManageUnifiedObjectParts', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+ 'UnifiedUiModel': [('GetUnifiedObjectEvents', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPath': []}),
+                    ('ManageUnifiedObjectParts', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPath': []}),
                     ('ManageUnifiedDynamization',
                      'offline',
-                     {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]', 'propertyName': 'Visible'}),
-                    ('ManageUnifiedScreenLayout', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                     {'softwarePath': 'HMI_RT_1', 'objectPath': [], 'propertyName': 'Visible'}),
+                    ('ManageUnifiedScreenLayout', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPath': []}),
                     ('ManageUnifiedListEntries',
                      'offline',
                      {'softwarePath': 'HMI_RT_1', 'category': 'textLists', 'listName': 'List1'}),
-                    ('ReadUnifiedAlarmCommon',
+                    ('GetUnifiedAlarmCommon',
                      'offline',
                      {'softwarePath': 'HMI_RT_1', 'category': 'alarmClasses'}),
-                    ('ReadUnifiedAuditSettings',
+                    ('GetUnifiedAuditSettings',
                      'offline',
                      {'softwarePath': 'HMI_RT_1', 'category': 'auditTrails'})],
  'UnifiedScreenItems': [('DescribeUnifiedScreenItemType', 'offline', {'itemType': 'Button', 'depth': 1}),
@@ -1174,7 +1174,7 @@ def unified_reply(reply, profile, name):
     value = json.loads(raw)
     get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
     meta = get('meta') or {}
-    if name in ('BuildUnifiedHmiThemeDesignJson', 'BuildUnifiedHmiLayoutDesignJson',
+    if name in ('BuildUnifiedHmiThemeDesign', 'BuildUnifiedHmiLayoutDesign',
                 'RunHmiActionScriptRecipeSafetySelfTest'):
         resources.require(get('ok') is True and meta.get('success') is True and meta.get('offlineOnly') is True, raw)
     elif name == 'BuildUnifiedHmiButtonActionScript':
@@ -1194,10 +1194,10 @@ def unified_reply(reply, profile, name):
                           and meta.get('status') == 'InvalidState' and meta.get('error') == 'Project is null', raw)
     else:
         resources.require(get('message') == 'Project is null' and meta.get('success') is False, raw)
-        if name == 'EnsureStartStopUnifiedHmi':
+        if name == 'SetUnifiedHmiRuntimeState':
             resources.require(meta.get('steps') == [{'step': 'precheck', 'ok': False, 'detail': 'Project is null'}], raw)
         else:
-            expected = 'ApplyUnifiedHmiScreenDesignJson' if name in ('ApplyUnifiedHmiTheme', 'ApplyUnifiedHmiLayout') else name
+            expected = 'ApplyUnifiedHmiScreenDesign' if name in ('ApplyUnifiedHmiTheme', 'ApplyUnifiedHmiLayout') else name
             resources.require(meta.get('tool') == expected and meta.get('status') == 'InvalidState'
                               and meta.get('operationSuccess') is False, raw)
     return raw

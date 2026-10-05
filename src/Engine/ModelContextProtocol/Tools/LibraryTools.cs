@@ -270,10 +270,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["recommendedMcpTools"] = new JsonArray(
                         "AnalyzeGlobalLibraryPackage",
                         "ProbeGlobalLibrary",
-                        "BuildUnifiedHmiThemeDesignJson",
-                        "BuildUnifiedHmiLayoutDesignJson",
+                        "BuildUnifiedHmiThemeDesign",
+                        "BuildUnifiedHmiLayoutDesign",
                         "BuildUnifiedHmiTemplateApplyDesign",
-                        "ApplyUnifiedHmiScreenDesignJson",
+                        "ApplyUnifiedHmiScreenDesign",
                         "EnsureUnifiedHmiButtonAction"),
                     ["validationGates"] = new JsonArray(
                         "Template plan has offline package evidence.",
@@ -285,7 +285,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "Analyze global library/package structure and string hints without importing content.",
                         "Use ProbeGlobalLibrary only as read-only evidence when TIA is available; do not claim direct MasterCopy import unless readback succeeds.",
                         "Map reusable UI intent to Unified HMI native tools: theme, layout, template apply design, and button action recipes.",
-                        "Apply generated design with ApplyUnifiedHmiScreenDesignJson and verify with item readback plus action SyntaxCheck.",
+                        "Apply generated design with ApplyUnifiedHmiScreenDesign and verify with item readback plus action SyntaxCheck.",
                         "Bind controls only to declared PLC symbols or DB members discovered from project exports/readback."),
                     ["analysis"] = analysis
                 };

@@ -2407,17 +2407,47 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview",
-          "layoutJson": "{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"TextBox\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}"
+          "layout": {
+            "columns": 1,
+            "cellWidth": 160,
+            "cellHeight": 40,
+            "items": [
+              {
+                "name": "StatusText",
+                "type": "Text",
+                "row": 0,
+                "col": 0,
+                "text": "Ready"
+              }
+            ]
+          }
         },
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ApplyUnifiedHmiScreenDesignJson": {
+      "ApplyUnifiedHmiScreenDesign": {
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview",
-          "designJson": "{\"Screen\":{\"Name\":\"Overview\",\"Width\":800,\"Height\":480},\"Items\":[{\"Type\":\"Text\",\"Name\":\"StatusText\",\"Left\":20,\"Top\":20,\"Width\":160,\"Height\":40,\"Text\":\"Ready\"}]}"
+          "design": {
+            "screen": {
+              "name": "Overview",
+              "width": 800,
+              "height": 480
+            },
+            "items": [
+              {
+                "type": "Text",
+                "name": "StatusText",
+                "left": 20,
+                "top": 20,
+                "width": 160,
+                "height": 40,
+                "text": "Ready"
+              }
+            ]
+          }
         },
         "parameters": {
           "strict": {
@@ -2431,7 +2461,15 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview",
-          "themeJson": "{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}}"
+          "theme": {
+            "name": "Example",
+            "palette": {
+              "Page": "0xFFFFFFFF",
+              "Surface": "0xFFF4F6F8",
+              "Text": "0xFF202020",
+              "Border": "0xFF808080"
+            }
+          }
         },
         "parameters": {},
         "operations": {},
@@ -2639,9 +2677,22 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "BuildUnifiedHmiLayoutDesignJson": {
+      "BuildUnifiedHmiLayoutDesign": {
         "arguments": {
-          "layoutJson": "{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"TextBox\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}"
+          "layout": {
+            "columns": 1,
+            "cellWidth": 160,
+            "cellHeight": 40,
+            "items": [
+              {
+                "name": "StatusText",
+                "type": "Text",
+                "row": 0,
+                "col": 0,
+                "text": "Ready"
+              }
+            ]
+          }
         },
         "parameters": {},
         "operations": {},
@@ -2662,9 +2713,17 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "BuildUnifiedHmiThemeDesignJson": {
+      "BuildUnifiedHmiThemeDesign": {
         "arguments": {
-          "themeJson": "{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}}"
+          "theme": {
+            "name": "Example",
+            "palette": {
+              "Page": "0xFFFFFFFF",
+              "Surface": "0xFFF4F6F8",
+              "Text": "0xFF202020",
+              "Border": "0xFF808080"
+            }
+          }
         },
         "parameters": {},
         "operations": {},
@@ -3544,7 +3603,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "EnsureStartStopUnifiedHmi": {
+      "SetUnifiedHmiRuntimeState": {
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1"
         },
@@ -11026,7 +11085,19 @@
       "ManageUnifiedDynamization": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
           "propertyName": "Visible",
           "confirmDelete": false,
           "dryRun": true,
@@ -11037,12 +11108,14 @@
             "exampleValue": "<dynamizationKind from this operation's target or user input>",
             "requiresBinding": true
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
-          "mappingEntriesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "mappingEntries": {
+            "exampleValue": [],
             "requiresBinding": true
           }
         },
@@ -11053,13 +11126,17 @@
           "create": {
             "arguments": {
               "action": "create",
-              "propertiesJson": "{\"<writable property for the selected dynamizationKind>\":\"<typed value from read/self-description>\"}"
+              "properties": {
+                "<writable property for the selected dynamizationKind>": "<typed value from read/self-description>"
+              }
             }
           },
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "delete": {
@@ -11194,8 +11271,10 @@
             "exampleValue": "<entryKey from this operation's target or user input>",
             "requiresBinding": true
           },
-          "entryJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "entry": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -11266,7 +11345,19 @@
       "ManageUnifiedObjectParts": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -11286,8 +11377,10 @@
             "exampleValue": "<partKind from this operation's target or user input>",
             "requiresBinding": true
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -11305,7 +11398,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "collectionProperty": "<collection property returned by read>",
               "partName": "Part_1"
             }
@@ -11390,10 +11485,6 @@
           "itemType": {
             "exampleValue": "T4TiaProject"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-            "requiresBinding": true
-          },
           "depth": {
             "exampleValue": 2
           },
@@ -11405,6 +11496,12 @@
           },
           "containedType": {
             "exampleValue": "<containedType from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -11430,8 +11527,11 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"Left\":20,\"Top\":20}",
-              "itemName": "StatusText"
+              "itemName": "StatusText",
+              "properties": {
+                "Left": 20,
+                "Top": 20
+              }
             }
           },
           "delete": {
@@ -11446,7 +11546,15 @@
       "ManageUnifiedScreenLayout": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"}]",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            }
+          ],
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -11455,8 +11563,10 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -11468,7 +11578,14 @@
             "arguments": {
               "action": "create",
               "name": "Overview_2",
-              "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\"}]"
+              "objectPath": [
+                {
+                  "property": "ScreenFolder"
+                },
+                {
+                  "property": "Screens"
+                }
+              ]
             }
           },
           "rename": {
@@ -11479,7 +11596,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "name": "Example_1"
             }
           },
@@ -12825,7 +12944,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadUnifiedAlarmCommon": {
+      "GetUnifiedAlarmCommon": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "category": "alarmClasses"
@@ -12844,7 +12963,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedAuditSettings": {
+      "GetUnifiedAuditSettings": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "category": "alarmAuditClasses"
@@ -12974,7 +13093,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedHmiTexts": {
+      "GetUnifiedHmiTexts": {
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview",
@@ -13013,10 +13132,22 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadUnifiedObjectEvents": {
+      "GetUnifiedObjectEvents": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "parameters": {
           "offset": {

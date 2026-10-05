@@ -157,8 +157,8 @@ FOUNDATION_MARKERS = {
 # come from GetToolUsage, not another independently maintained example catalog.
 PURE_EXAMPLES = (
     'BuildClassicHmiScreen', 'BuildClassicHmiTagTable',
-    'BuildClassicHmiMinimalPackage', 'BuildUnifiedHmiLayoutDesignJson',
-    'BuildUnifiedHmiThemeDesignJson', 'PlanHardwareNetworkConfiguration',
+    'BuildClassicHmiMinimalPackage', 'BuildUnifiedHmiLayoutDesign',
+    'BuildUnifiedHmiThemeDesign', 'PlanHardwareNetworkConfiguration',
     'BuildPlcAliasAlarmLad', 'AnalyzePlcSclSource',
 )
 

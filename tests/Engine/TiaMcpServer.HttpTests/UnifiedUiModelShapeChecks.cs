@@ -21,7 +21,7 @@ internal static class UnifiedUiModelShapeChecks
             check(p?.GetMethod?.IsPublic==true && (!writable || p.SetMethod?.IsPublic==true),t+"."+name+(writable?" writable":""));
         }
         const string Ui="Siemens.Engineering.HmiUnified.UI.";
-        // Events (ReadUnifiedObjectEvents)
+        // Events (GetUnifiedObjectEvents)
         Property(Ui+"Screens.HmiScreen","EventHandlers"); Property(Ui+"Screens.HmiScreen","PropertyEventHandlers");
         Property(Ui+"Base.HmiScreenItemBase","PropertyEventHandlers"); Property(Ui+"Base.HmiScreenItemBase","Dynamizations");
         Property(Ui+"Events.PropertyEventHandler","EventType"); Property(Ui+"Events.PropertyEventHandler","PropertyName"); Property(Ui+"Events.PropertyEventHandler","Script");
@@ -95,13 +95,13 @@ internal static class UnifiedUiModelShapeChecks
         }
         if(hmi.GetProperty("HmiGraphicLists")==null) Console.WriteLine("CAPABILITY HmiGraphicLists absent on V"+core.GetName().Version!.Major+"; graphicLists must return NotSupported.");
         else Method("Siemens.Engineering.HmiUnified.TextGraphicList.HmiGraphicListComposition","Find",new[]{typeof(string)});
-        // Alarm common (ReadUnifiedAlarmCommon)
+        // Alarm common (GetUnifiedAlarmCommon)
         foreach(var state in new[]{"RaisedState","AcknowledgedState","ClearedState","AcknowledgedClearedState"}) Property("Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmClass",state);
         foreach(var field in new[]{"BackColor","TextColor","Flashing"}) Property("Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.AlarmStatusVisuals",field,true);
         foreach(var field in new[]{"AlarmClass","Origin","Area","Priority","Id","RaisedStateTag","AuditClass"}) Property("Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.AlarmBase",field,true);
         foreach(var text in new[]{"EventText","InfoText","EventText1","EventText9"}) check(T("Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.AlarmBase").GetProperty(text)?.PropertyType.Name=="MultilingualText","AlarmBase."+text+" is MultilingualText");
         foreach(var e in new[]{"HmiAlarmStateMachine","HmiDiscreteAlarmTriggerMode","HmiAlarmCondition"}) check(T("Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon."+e).IsEnum,e+" enum");
-        // Audit (ReadUnifiedAuditSettings)
+        // Audit (GetUnifiedAuditSettings)
         check(hmi.GetProperty("HmiAlarmAuditClass")!=null && hmi.GetProperty("AuditTrails")!=null,"HmiSoftware audit entry points");
         foreach(var field in new[]{"CommentRequired","ConfirmationMode","DisplayName","IsGmpEnabled","Name","RequiredFunctionRights"}) Property("Siemens.Engineering.HmiUnified.HmiAudit.HmiAuditClass",field);
         check(T("Siemens.Engineering.HmiUnified.HmiAudit.AuditConfirmationMode").IsEnum,"AuditConfirmationMode enum");
@@ -115,7 +115,7 @@ internal static class UnifiedUiModelShapeChecks
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),name+" delete requires explicit confirmation");
         }
-        foreach(var name in new[]{"ReadUnifiedObjectEvents","ReadUnifiedAlarmCommon","ReadUnifiedAuditSettings"})
+        foreach(var name in new[]{"GetUnifiedObjectEvents","GetUnifiedAlarmCommon","GetUnifiedAuditSettings"})
             check(tools.Tool(name)!.GetParameters().Any(p=>p.Name=="limit") && !tools.Tool(name)!.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read");
         if(v20) Console.WriteLine("CAPABILITY V20: Unified UI model checked against merged Siemens.Engineering; properties exposed only as dynamic attributes are refused by the CLR-setter rule.");
     }

@@ -2,6 +2,9 @@ using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using ModelContextProtocol.Protocol;
 using System.Reflection;
 
 internal static class UnifiedHmiDomainShapeChecks
@@ -41,17 +44,25 @@ internal static class UnifiedHmiDomainShapeChecks
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                 check(!tool.IsStatic && surface.Tool(name) == tool && ReferenceEquals(surface.Target(tool), toolTarget),
                     name + " resolves to the instance tool singleton");
-                var method = service.GetMethod(name, all);
+                bool migrated = new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems", "UnifiedUiModel" }.Contains(domain.Name);
+                if (migrated)
+                {
+                    check(tool.ReturnType == typeof(CallToolResult), name + " returns the V4 envelope");
+                    check(!tool.GetParameters().Any(p => p.Name!.EndsWith("Json", StringComparison.Ordinal)), name + " exposes typed arguments");
+                }
+                var implementation = LegacyNames.TryGetValue(name, out var legacy) ? legacy : name;
+                var method = service.GetMethod(implementation, all);
                 if (method != null)
                 {
-                    check(portal.GetMethod(name, all) == null && surface.Method(name) == method,
+                    check(portal.GetMethod(implementation, all) == null && surface.Method(implementation) == method,
                         name + " implementation belongs to its service");
                     var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-                    bool callsService = domain.Name == "UnifiedExchange"
+                    bool calls = domain.Name == "UnifiedExchange"
                         ? DomainShapeChecks.HmiCallsService(tool, method, tools, new HashSet<MethodBase>())
+                        : migrated ? CallsService(tool, method, tools, new HashSet<MethodBase>())
                         : Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                             (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
-                    EngineSurface.CheckIl(check, callsService,
+                    EngineSurface.CheckIl(check, calls,
                         name + " tool calls the migrated service", tool, method);
                 }
                 var forwarder = facade.GetMethod(name, all);
@@ -67,5 +78,46 @@ internal static class UnifiedHmiDomainShapeChecks
         check(surface.Field("UnifiedAssembly", all).DeclaringType == portal
             && ReferenceEquals(contract.GetProperty("UnifiedAssembly")!.GetValue(session), surface.Field("UnifiedAssembly", all).GetValue(null)),
             "Unified assembly initialization remains on the kernel for the loaded-assembly API inventory");
+    }
+
+    private static readonly Dictionary<string, string> LegacyNames = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["SetUnifiedHmiRuntimeState"] = "EnsureStartStopUnifiedHmi",
+        ["GetUnifiedHmiTexts"] = "ReadUnifiedHmiTexts",
+        ["ApplyUnifiedHmiScreenDesign"] = "ApplyUnifiedHmiScreenDesignJson",
+        ["BuildUnifiedHmiThemeDesign"] = "BuildUnifiedHmiThemeDesignJson",
+        ["BuildUnifiedHmiLayoutDesign"] = "BuildUnifiedHmiLayoutDesignJson",
+        ["GetUnifiedObjectEvents"] = "ReadUnifiedObjectEvents",
+        ["GetUnifiedAlarmCommon"] = "ReadUnifiedAlarmCommon",
+        ["GetUnifiedAuditSettings"] = "ReadUnifiedAuditSettings"
+    };
+    private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.FieldType == typeof(OpCode)).Select(f => (OpCode)f.GetValue(null)!).ToDictionary(op => op.Value);
+
+    // Follow only this tool's adapters and captured delegates. Do not execute any
+    // code or accept a service call belonging to an unrelated tool method.
+    private static bool CallsService(MethodBase caller, MethodInfo service, Type owner, HashSet<MethodBase> seen)
+    {
+        if (!seen.Add(caller)) return false;
+        var il = caller.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
+        for (int i = 0; i < il.Length;)
+        {
+            short code = il[i++] == 0xfe ? (short)(0xfe00 | il[i++]) : (short)il[i - 1];
+            var op = OpCodesByValue[code];
+            if (op.OperandType == OperandType.InlineMethod)
+            {
+                var target = caller.Module.ResolveMethod(BitConverter.ToInt32(il, i));
+                if (target == service) return true;
+                var declaring = target!.DeclaringType;
+                while (declaring != null && declaring != owner) declaring = declaring.DeclaringType;
+                if (declaring == owner && CallsService(target, service, owner, seen)) return true;
+            }
+            i += op.OperandType == OperandType.InlineNone ? 0
+                : op.OperandType == OperandType.ShortInlineBrTarget || op.OperandType == OperandType.ShortInlineI || op.OperandType == OperandType.ShortInlineVar ? 1
+                : op.OperandType == OperandType.InlineVar ? 2
+                : op.OperandType == OperandType.InlineI8 || op.OperandType == OperandType.InlineR ? 8
+                : op.OperandType == OperandType.InlineSwitch ? 4 + 4 * BitConverter.ToInt32(il, i) : 4;
+        }
+        return false;
     }
 }

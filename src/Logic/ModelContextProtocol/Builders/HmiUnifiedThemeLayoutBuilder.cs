@@ -36,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["defaultItemProperties"] = itemDefaults
                 },
                 ["offlineOnly"] = true,
-                ["applyTool"] = "ApplyUnifiedHmiScreenDesignJson"
+                ["applyTool"] = "ApplyUnifiedHmiScreenDesign"
             };
         }
 
@@ -100,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["cellHeight"] = cellHeight
                 },
                 ["offlineOnly"] = true,
-                ["applyTool"] = "ApplyUnifiedHmiScreenDesignJson"
+                ["applyTool"] = "ApplyUnifiedHmiScreenDesign"
             };
         }
 
@@ -139,7 +139,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["theme"] = themeDesign["theme"]?.DeepClone(),
                 ["layout"] = layoutDesign["layout"]?.DeepClone(),
                 ["offlineOnly"] = true,
-                ["applyTool"] = "ApplyUnifiedHmiScreenDesignJson"
+                ["applyTool"] = "ApplyUnifiedHmiScreenDesign"
             };
         }
 

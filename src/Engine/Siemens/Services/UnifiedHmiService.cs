@@ -95,6 +95,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 if (_session.IsProjectNull())
                 {
+                    meta["v4Rejection"] = "PROJECT_NOT_BOUND";
                     Step("precheck", false, "Project is null");
                     return new ResponseMessage { Message = "Project is null", Meta = meta };
                 }
@@ -102,6 +103,7 @@ namespace TiaMcpServer.Siemens.Services
                 var sc = _session.GetSoftwareContainer(hmiSoftwarePath);
                 if (sc?.Software == null)
                 {
+                    meta["v4Rejection"] = "NOT_FOUND";
                     Step("resolveSoftware", false, $"SoftwareContainer not found at '{hmiSoftwarePath}'");
                     return new ResponseMessage { Message = "HMI software not found", Meta = meta };
                 }
@@ -113,6 +115,7 @@ namespace TiaMcpServer.Siemens.Services
                 var screen = HmiScreenTraversal.FindByName(sw, screenName);
                 if (screen == null)
                 {
+                    meta["v4Rejection"] = "NOT_FOUND";
                     Step("findScreen", false, $"Screen '{screenName}' not found");
                     return new ResponseMessage { Message = "Screen not found", Meta = meta };
                 }
@@ -121,6 +124,7 @@ namespace TiaMcpServer.Siemens.Services
                 var tagTable = _session.TryFindByNameInCollection(sw, new[] { "TagTables" }, tagTableName);
                 if (tagTable == null)
                 {
+                    meta["v4Rejection"] = "NOT_FOUND";
                     Step("findTagTable", false, $"TagTable '{tagTableName}' not found");
                     return new ResponseMessage { Message = "Tag table not found", Meta = meta };
                 }
@@ -1112,7 +1116,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ReadUnifiedHmiTexts(string hmiSoftwarePath, string screenName, string itemName, string textProperty)
         {
-            return _session.RunHmiStepTool("ReadUnifiedHmiTexts", meta =>
+            return _session.RunHmiStepTool("GetUnifiedHmiTexts", meta =>
             {
                 var item = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, itemName);
                 var text = TryGetPropertyValue(item, textProperty)
@@ -1126,7 +1130,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ApplyUnifiedHmiScreenDesignJson(string hmiSoftwarePath, string screenName, string designJson, bool strict = true)
         {
-            return _session.RunHmiStepTool("ApplyUnifiedHmiScreenDesignJson", meta =>
+            return _session.RunHmiStepTool("ApplyUnifiedHmiScreenDesign", meta =>
             {
                 if (string.IsNullOrWhiteSpace(designJson))
                 {

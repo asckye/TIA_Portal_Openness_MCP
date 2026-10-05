@@ -136,8 +136,10 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert plan['Valid'] and plan['Order'] == ['UDT_Status', 'FB_Motor'], built
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
-            built = call(name, args)['meta']
-            assert built['ok'] and built['event'] == 'Down' and 'SetBitInTag' in built['script'] and 'Ready' in built['script'], built
+            built = call(name, args)
+            recipe = built['data']['evidence']
+            assert built['schemaVersion'] == 4 and built['ok'] and built['error'] is None, built
+            assert recipe['ok'] and recipe['event'] == 'Down' and 'SetBitInTag' in recipe['script'] and 'Ready' in recipe['script'], built
             offline_calls.append(name)
     assert not problems, problems
     if verify_documents:

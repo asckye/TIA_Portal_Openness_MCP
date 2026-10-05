@@ -674,7 +674,7 @@ END_DATA_BLOCK
                     result["applyFailures"] = applyFailureCount;
                     if (applyFailureCount > 0)
                     {
-                        result["error"] = "ApplyUnifiedHmiScreenDesignJson reported failed writes: " + applyFailureCount;
+                        result["error"] = "ApplyUnifiedHmiScreenDesign reported failed writes: " + applyFailureCount;
                     }
 
                     var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
@@ -792,7 +792,7 @@ END_DATA_BLOCK
                     result["applyFailures"] = applyFailures;
                     if (applyFailures > 0)
                     {
-                        ((List<string>)result["errors"]!).Add("ApplyUnifiedHmiScreenDesignJson reported failed writes: " + applyFailures);
+                        ((List<string>)result["errors"]!).Add("ApplyUnifiedHmiScreenDesign reported failed writes: " + applyFailures);
                         results.Add(result);
                         continue;
                     }
@@ -1297,7 +1297,7 @@ END_DATA_BLOCK
                     result["applyFailures"] = applyFailures;
                     if (applyFailures > 0)
                     {
-                        ((List<string>)result["errors"]!).Add("ApplyUnifiedHmiScreenDesignJson reported failed writes: " + applyFailures);
+                        ((List<string>)result["errors"]!).Add("ApplyUnifiedHmiScreenDesign reported failed writes: " + applyFailures);
                     }
 
                     var screens = EngineServices.Get<HmiExchangeTools>().GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();

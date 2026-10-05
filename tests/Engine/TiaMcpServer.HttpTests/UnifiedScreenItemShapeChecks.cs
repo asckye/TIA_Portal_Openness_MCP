@@ -7,8 +7,7 @@ using System.Web.Script.Serialization;
 
 // Native members used by the Unified screen item family (Siemens/Services/UnifiedScreenItemsService.cs), verified against the installed
 // API, plus the engine's own reflective catalog run against that API so every concrete item type is accounted for.
-// JSON results of the engine are read back through their ToJsonString() and System.Web's serializer, so the harness
-// stays free of the engine's System.Text.Json version.
+// Native catalog nodes are read through ToJsonString(); registered tools expose the shared V4 envelope.
 internal static class UnifiedScreenItemShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
@@ -73,6 +72,18 @@ internal static class UnifiedScreenItemShapeChecks
         var tools=EngineSurface.For(server);
         check(Equals(tools.Tool("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),"ManageUnifiedScreenItem defaults to preview");
         check(Equals(tools.Tool("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),"ManageUnifiedScreenItem requires explicit confirmDelete");
+        var manage = tools.Tool("ManageUnifiedScreenItem")!;
+        var properties = manage.GetParameters().Single(p => p.Name == "properties");
+        check(properties.ParameterType.FullName == "TiaMcp.Logic.V4.Inputs.CompositeAttributeMap"
+            && !manage.GetParameters().Any(p => p.Name == "propertiesJson"), "ManageUnifiedScreenItem accepts the composite typed map");
+        check(manage.ReturnType == typeof(ModelContextProtocol.Protocol.CallToolResult), "ManageUnifiedScreenItem returns the V4 envelope");
+        var validate = manage.DeclaringType!.GetMethod("ValidateProperties", BindingFlags.NonPublic | BindingFlags.Static)!;
+        object Map(string json) => System.Text.Json.JsonSerializer.Deserialize(json, properties.ParameterType)!;
+        check(validate.Invoke(null, new[] { T(unified,ui+"Shapes.HmiCircle"), Map("{\"Radius\":14}") }) == null,
+            "screen item domain admits the loaded API's writable Radius");
+        foreach (var json in new[] { "{\"Name\":\"Renamed\"}", "{\"Unknown\":14}", "{\"Parent\":{\"Name\":\"Changed\"}}" })
+            check(validate.Invoke(null, new[] { T(unified,ui+"Shapes.HmiCircle"), Map(json) }) != null,
+                "screen item domain rejects renames, unknown fields and backlinks: " + json);
         check(tools.Tool("DescribeUnifiedScreenItemType")!.GetParameters().All(p=>p.Name!="softwarePath"),"DescribeUnifiedScreenItemType needs no project");
     }
 }

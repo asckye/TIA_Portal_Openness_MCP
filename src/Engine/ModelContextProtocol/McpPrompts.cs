@@ -380,13 +380,13 @@ Use the CompilePlcDiagnostics tool with:
 Steps:
 1. EnsureUnifiedHmiConnection — hmiSoftwarePath='{hmiSoftwarePath}', connectionName='{connectionName}', plcName='{plcName}'.
 2. EnsureUnifiedHmiScreen — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
-3. EnsureUnifiedHmiTagTable — hmiSoftwarePath='{hmiSoftwarePath}', tagTableName='默认变量表'.
+3. EnsureUnifiedHmiTagTable — hmiSoftwarePath='{hmiSoftwarePath}', tagTableName='<exact existing tag table name>'.
 4. EnsureUnifiedHmiTag (repeat for each tag) — bind each tag to a PLC DB variable.
-5. ApplyUnifiedHmiScreenDesignJson — apply complete layout JSON (controls with positions, text, properties).
+5. ApplyUnifiedHmiScreenDesign — apply complete layout JSON (controls with positions, text, properties).
 6. EnsureUnifiedHmiDynamization (optional) — bind controls to HMI tags for live values.
 7. SaveProject.
 
-Typical designJson structure:
+Typical design object:
 {{
   ""items"": [
     {{ ""name"": ""BTN_Start"", ""type"": ""Button"", ""left"": 50,  ""top"": 50, ""width"": 120, ""height"": 40, ""text"": ""Start"" }},
@@ -403,7 +403,7 @@ Typical designJson structure:
 
 Steps:
 1. GetHmiProgramInfo — softwarePath='{hmiSoftwarePath}' — confirm it is Unified HMI.
-2. EnsureStartStopUnifiedHmi — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
+2. SetUnifiedHmiRuntimeState — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
    This creates tags: StartPB / StopPB / EStop / RunOut (all Bool) and matching UI items.
 3. SaveProject.
 
@@ -416,11 +416,11 @@ For custom layouts, use CreateUnifiedHmiPage instead.";
             return $@"Apply a grid layout to a Unified HMI screen.
 
 Steps:
-1. BuildUnifiedHmiLayoutDesignJson — provide layoutJson:
+1. BuildUnifiedHmiLayoutDesign — provide a layout object:
    {{
-     ""grid"": true, ""columns"": 4, ""cellWidth"": 150, ""cellHeight"": 60, ""gap"": 10,
+     ""grid"": 8, ""columns"": 4, ""cellWidth"": 150, ""cellHeight"": 60, ""gap"": 10,
      ""items"": [
-       {{ ""name"": ""LBL_Title"", ""type"": ""Rectangle"", ""row"": 0, ""col"": 0, ""colSpan"": 4, ""text"": ""Motor Control"" }},
+       {{ ""name"": ""LBL_Title"", ""type"": ""Text"", ""row"": 0, ""col"": 0, ""colSpan"": 4, ""text"": ""Motor Control"" }},
        {{ ""name"": ""BTN_Start"", ""type"": ""Button"",    ""row"": 1, ""col"": 0, ""text"": ""Start"" }},
        {{ ""name"": ""BTN_Stop"",  ""type"": ""Button"",    ""row"": 1, ""col"": 1, ""text"": ""Stop""  }}
      ]

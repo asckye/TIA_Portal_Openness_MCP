@@ -13,7 +13,7 @@ namespace TiaMcpServer.Siemens.Services
         public UnifiedUiModelService(IEngineeringSession session) => _session = session;
 
         public ResponseMessage ReadUnifiedObjectEvents(string softwarePath, string objectPathJson, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadUnifiedObjectEvents", meta => {
+            => _session.RunHmiStepTool("GetUnifiedObjectEvents", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
                 var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var capabilities = UnifiedUiModelLogic.EventCapabilities(target);
@@ -237,7 +237,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadUnifiedAlarmCommon(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadUnifiedAlarmCommon", meta => {
+            => _session.RunHmiStepTool("GetUnifiedAlarmCommon", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
                 var collection = EngineeringGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), UnifiedUiModelLogic.AlarmCommonCollection(category));
                 var items = string.IsNullOrEmpty(name) ? EngineeringGroupOperations.Items(collection).ToArray()
@@ -269,7 +269,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadUnifiedAuditSettings(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadUnifiedAuditSettings", meta => {
+            => _session.RunHmiStepTool("GetUnifiedAuditSettings", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
                 var root = _session.ExactUnifiedRoot(softwarePath);
                 var propertyName = UnifiedUiModelLogic.AuditCollection(category);

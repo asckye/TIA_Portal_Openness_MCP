@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using Siemens.Engineering.HmiUnified;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.Siemens.Services
 {
@@ -77,13 +79,19 @@ namespace TiaMcpServer.Siemens.Services
                     if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "Screen item not found: " + itemName);
                     meta["item"] = ScreenItemSnapshot(existing, depth); meta["itemType"] = existing.GetType().FullName; meta["apiCallSuccess"] = true;
                     meta["dataComplete"] = meta["item"]!["dataComplete"]!.GetValue<bool>();
-                    meta["scope"] = "Scalars and colors at every level, parts and collections to depth, every MultilingualText language, feature interfaces, event/dynamization counts. Events: ReadUnifiedObjectEvents; dynamizations: ManageUnifiedDynamization.";
+                    meta["scope"] = "Scalars and colors at every level, parts and collections to depth, every MultilingualText language, feature interfaces, event/dynamization counts. Events: GetUnifiedObjectEvents; dynamizations: ManageUnifiedDynamization.";
                     return "Screen item read.";
                 }
                 if (action == "create" && existing != null) throw new InvalidOperationException("Screen item already exists: " + itemName);
                 if (action != "create" && existing == null) throw new PortalException(PortalErrorCode.NotFound, "Screen item not found: " + itemName);
                 var type = action == "create" ? UnifiedScreenItemLogic.ResolveItemType(_session.UnifiedAssembly, itemType) : existing!.GetType();
                 meta["itemType"] = type.FullName;
+                var invalid = UnifiedScreenItemsTools.ValidateProperties(type, V4Json.Deserialize<CompositeAttributeMap>(propertiesJson));
+                if (invalid != null)
+                {
+                    meta["v4ArgumentError"] = JsonNode.Parse(V4Json.Serialize(invalid));
+                    return "Screen item properties rejected before any native write.";
+                }
                 // Native HmiScreenItemBaseComposition: Create<T>(name) and Create<T>(name, containedType) for faceplate / custom widget containers.
                 var create = action == "create" ? UnifiedUiModelLogic.GenericCreate(items, type, string.IsNullOrEmpty(containedType) ? 1 : 2) : null;
                 if (action == "create") meta["containedType"] = string.IsNullOrEmpty(containedType) ? null : containedType;

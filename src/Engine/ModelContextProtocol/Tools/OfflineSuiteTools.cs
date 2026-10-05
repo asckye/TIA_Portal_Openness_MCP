@@ -420,7 +420,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildUnifiedHmiTemplateApplyDesign"), Description("[L2][HMI-Unified]Offline-only helper: convert one Unified HMI template JSON file into the execution JSON accepted by ApplyUnifiedHmiScreenDesignJson, with layout QA attached. It does not connect to TIA Portal or modify projects.")]
+        [McpServerTool(Name = "BuildUnifiedHmiTemplateApplyDesign"), Description("[L2][HMI-Unified]Offline-only helper: convert one Unified HMI template JSON file into the execution JSON accepted by ApplyUnifiedHmiScreenDesign, with layout QA attached. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult BuildUnifiedHmiTemplateApplyDesignJsonV4(
             [Description("templateFile: full path to a Unified HMI template JSON file")] string templateFile,
             [Description("fallbackWidth: width used only if the template omits Screen.Width")] int fallbackWidth = 800,
@@ -530,7 +530,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["policy"] = new JsonObject
                     {
                         ["fullPayloadTool"] = "BuildUnifiedHmiTemplateApplyDesign",
-                        ["applyTool"] = "ApplyUnifiedHmiScreenDesignJson",
+                        ["applyTool"] = "ApplyUnifiedHmiScreenDesign",
                         ["rule"] = "Use this manifest as a pre-apply gate; inspect a full payload for any template before writing it to TIA."
                     },
                     ["templates"] = rows

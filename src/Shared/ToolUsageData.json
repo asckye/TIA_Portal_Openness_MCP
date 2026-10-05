@@ -2776,7 +2776,7 @@
         }
       ]
     },
-    "ApplyUnifiedHmiScreenDesignJson": {
+    "ApplyUnifiedHmiScreenDesign": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -3156,7 +3156,7 @@
         }
       ]
     },
-    "BuildUnifiedHmiLayoutDesignJson": {
+    "BuildUnifiedHmiLayoutDesign": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -3234,7 +3234,7 @@
         }
       ]
     },
-    "BuildUnifiedHmiThemeDesignJson": {
+    "BuildUnifiedHmiThemeDesign": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -4165,32 +4165,6 @@
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
-    },
-    "EnsureStartStopUnifiedHmi": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
     },
     "EnsureSubnet": {
       "relationship": "related-api-patterns",
@@ -5541,6 +5515,58 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetUnifiedAlarmCommon": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "GetUnifiedAuditSettings": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "GetUnifiedCrossReferences": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -5563,6 +5589,67 @@
           "title": "HMISoftware example index",
           "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
           "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "GetUnifiedHmiTexts": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "GetUnifiedObjectEvents": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-events-21",
+          "topic": "hmi-events",
+          "releaseKey": "21",
+          "title": "Property event handlers",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/propertyeventhandlers/description-propertyeventhandlers",
+          "projectSummary": "Use the correct screen/item owner and property event type.",
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
@@ -8444,58 +8531,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadUnifiedAlarmCommon": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadUnifiedAuditSettings": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
     "ReadUnifiedEngineeringObjects": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -8670,32 +8705,6 @@
         }
       ]
     },
-    "ReadUnifiedHmiTexts": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
     "ReadUnifiedLibraryType": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -8718,41 +8727,6 @@
           "title": "HMISoftware example index",
           "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
           "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadUnifiedObjectEvents": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-unified-20",
-          "topic": "hmi-unified",
-          "releaseKey": "20",
-          "title": "Description HMISoftware (RT Unified)",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
-          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-unified-21",
-          "topic": "hmi-unified",
-          "releaseKey": "21",
-          "title": "HMISoftware example index",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
-          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "hmi-events-21",
-          "topic": "hmi-events",
-          "releaseKey": "21",
-          "title": "Property event handlers",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/propertyeventhandlers/description-propertyeventhandlers",
-          "projectSummary": "Use the correct screen/item owner and property event type.",
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
@@ -9379,6 +9353,32 @@
           "title": "Property event handlers",
           "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/propertyeventhandlers/description-propertyeventhandlers",
           "projectSummary": "Use the correct screen/item owner and property event type.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "SetUnifiedHmiRuntimeState": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-unified-20",
+          "topic": "hmi-unified",
+          "releaseKey": "20",
+          "title": "Description HMISoftware (RT Unified)",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+          "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "hmi-unified-21",
+          "topic": "hmi-unified",
+          "releaseKey": "21",
+          "title": "HMISoftware example index",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+          "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
@@ -13433,17 +13433,47 @@
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
             "screenName": "Overview",
-            "layoutJson": "{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"TextBox\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}"
+            "layout": {
+              "columns": 1,
+              "cellWidth": 160,
+              "cellHeight": 40,
+              "items": [
+                {
+                  "name": "StatusText",
+                  "type": "Text",
+                  "row": 0,
+                  "col": 0,
+                  "text": "Ready"
+                }
+              ]
+            }
           },
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ApplyUnifiedHmiScreenDesignJson": {
+        "ApplyUnifiedHmiScreenDesign": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
             "screenName": "Overview",
-            "designJson": "{\"Screen\":{\"Name\":\"Overview\",\"Width\":800,\"Height\":480},\"Items\":[{\"Type\":\"Text\",\"Name\":\"StatusText\",\"Left\":20,\"Top\":20,\"Width\":160,\"Height\":40,\"Text\":\"Ready\"}]}"
+            "design": {
+              "screen": {
+                "name": "Overview",
+                "width": 800,
+                "height": 480
+              },
+              "items": [
+                {
+                  "type": "Text",
+                  "name": "StatusText",
+                  "left": 20,
+                  "top": 20,
+                  "width": 160,
+                  "height": 40,
+                  "text": "Ready"
+                }
+              ]
+            }
           },
           "parameters": {
             "strict": {
@@ -13457,7 +13487,15 @@
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
             "screenName": "Overview",
-            "themeJson": "{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}}"
+            "theme": {
+              "name": "Example",
+              "palette": {
+                "Page": "0xFFFFFFFF",
+                "Surface": "0xFFF4F6F8",
+                "Text": "0xFF202020",
+                "Border": "0xFF808080"
+              }
+            }
           },
           "parameters": {},
           "operations": {},
@@ -13665,9 +13703,22 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "BuildUnifiedHmiLayoutDesignJson": {
+        "BuildUnifiedHmiLayoutDesign": {
           "arguments": {
-            "layoutJson": "{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"TextBox\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}"
+            "layout": {
+              "columns": 1,
+              "cellWidth": 160,
+              "cellHeight": 40,
+              "items": [
+                {
+                  "name": "StatusText",
+                  "type": "Text",
+                  "row": 0,
+                  "col": 0,
+                  "text": "Ready"
+                }
+              ]
+            }
           },
           "parameters": {},
           "operations": {},
@@ -13688,9 +13739,17 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "BuildUnifiedHmiThemeDesignJson": {
+        "BuildUnifiedHmiThemeDesign": {
           "arguments": {
-            "themeJson": "{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}}"
+            "theme": {
+              "name": "Example",
+              "palette": {
+                "Page": "0xFFFFFFFF",
+                "Surface": "0xFFF4F6F8",
+                "Text": "0xFF202020",
+                "Border": "0xFF808080"
+              }
+            }
           },
           "parameters": {},
           "operations": {},
@@ -14570,7 +14629,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "EnsureStartStopUnifiedHmi": {
+        "SetUnifiedHmiRuntimeState": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1"
           },
@@ -22052,7 +22111,19 @@
         "ManageUnifiedDynamization": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+            "objectPath": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "StartButton"
+              }
+            ],
             "propertyName": "Visible",
             "confirmDelete": false,
             "dryRun": true,
@@ -22063,12 +22134,14 @@
               "exampleValue": "<dynamizationKind from this operation's target or user input>",
               "requiresBinding": true
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
-            "mappingEntriesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "mappingEntries": {
+              "exampleValue": [],
               "requiresBinding": true
             }
           },
@@ -22079,13 +22152,17 @@
             "create": {
               "arguments": {
                 "action": "create",
-                "propertiesJson": "{\"<writable property for the selected dynamizationKind>\":\"<typed value from read/self-description>\"}"
+                "properties": {
+                  "<writable property for the selected dynamizationKind>": "<typed value from read/self-description>"
+                }
               }
             },
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "delete": {
@@ -22220,8 +22297,10 @@
               "exampleValue": "<entryKey from this operation's target or user input>",
               "requiresBinding": true
             },
-            "entryJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "entry": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -22292,7 +22371,19 @@
         "ManageUnifiedObjectParts": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+            "objectPath": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "StartButton"
+              }
+            ],
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
@@ -22312,8 +22403,10 @@
               "exampleValue": "<partKind from this operation's target or user input>",
               "requiresBinding": true
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -22331,7 +22424,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "collectionProperty": "<collection property returned by read>",
                 "partName": "Part_1"
               }
@@ -22416,10 +22511,6 @@
             "itemType": {
               "exampleValue": "T4TiaProject"
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
-              "requiresBinding": true
-            },
             "depth": {
               "exampleValue": 2
             },
@@ -22431,6 +22522,12 @@
             },
             "containedType": {
               "exampleValue": "<containedType from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -22456,8 +22553,11 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"Left\":20,\"Top\":20}",
-                "itemName": "StatusText"
+                "itemName": "StatusText",
+                "properties": {
+                  "Left": 20,
+                  "Top": 20
+                }
               }
             },
             "delete": {
@@ -22472,7 +22572,15 @@
         "ManageUnifiedScreenLayout": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"}]",
+            "objectPath": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              }
+            ],
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
@@ -22481,8 +22589,10 @@
             "name": {
               "exampleValue": "Example_1"
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -22494,7 +22604,14 @@
               "arguments": {
                 "action": "create",
                 "name": "Overview_2",
-                "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\"}]"
+                "objectPath": [
+                  {
+                    "property": "ScreenFolder"
+                  },
+                  {
+                    "property": "Screens"
+                  }
+                ]
               }
             },
             "rename": {
@@ -22505,7 +22622,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "name": "Example_1"
               }
             },
@@ -23851,7 +23970,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "ReadUnifiedAlarmCommon": {
+        "GetUnifiedAlarmCommon": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "category": "alarmClasses"
@@ -23870,7 +23989,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedAuditSettings": {
+        "GetUnifiedAuditSettings": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "category": "alarmAuditClasses"
@@ -24000,7 +24119,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedHmiTexts": {
+        "GetUnifiedHmiTexts": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
             "screenName": "Overview",
@@ -24039,10 +24158,22 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadUnifiedObjectEvents": {
+        "GetUnifiedObjectEvents": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "objectPathJson": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]"
+            "objectPath": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "StartButton"
+              }
+            ]
           },
           "parameters": {
             "offset": {
