@@ -307,6 +307,8 @@ EXACT_SHAPES = {
     ("InstantiatePlcXmlTemplates","rowsJson"): "TemplateRow[]",
     ("PatchPlcBlockDocument","changesJson"): "BlockEdit[]",
     ("ManageUnifiedScreenItem","propertiesJson"): "CompositeAttributeMap",
+    # EngineeringObjectAddress.Parse navigates named nested rule folders ({property,name?}[]).
+    ("ManageSiVArcRule","collectionPathJson"): "PropertyStep[]",
 }
 
 def shape(n, p):

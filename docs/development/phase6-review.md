@@ -1051,7 +1051,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageSafetyFunctionCondition` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
 | `ManageSafetyFunctionCondition` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
 | `ManageSafetyGlobalSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
-| `ManageSiVArcRule` | 20, 21 | `collectionPathJson` → `collectionPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSiVArcRule` | 20, 21 | `collectionPathJson` → `collectionPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
 | `ManageSiVArcRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
