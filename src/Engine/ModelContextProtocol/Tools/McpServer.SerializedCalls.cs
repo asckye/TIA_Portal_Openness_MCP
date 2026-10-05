@@ -9,6 +9,48 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         static partial void RecordBridgeEvent(string id, string name, string phase) => InvocationJournal.Write(id, name, phase);
+        static partial void StartCallProjection(string id, System.Reflection.MethodInfo method, object?[] arguments, ref System.IDisposable? observation)
+        {
+            try
+            {
+                var parameters = method.GetParameters();
+                string tool = ((McpServerToolAttribute?)System.Attribute.GetCustomAttribute(method, typeof(McpServerToolAttribute)))?.Name ?? method.Name;
+                observation = InvocationJournal.Observe(id, tool, "engine", ReleaseKey, IsWriteTool(method), () =>
+                {
+                    var values = new Dictionary<string, object?>();
+                    for (int i = 0; i < parameters.Length; i++)
+                        if (!IsInfrastructureParameter(parameters[i].ParameterType)) values[parameters[i].Name!] = arguments[i];
+                    return System.Text.Json.JsonSerializer.Serialize(values, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+                });
+            }
+            catch (System.Exception) /* swallow(logging-failure): diagnostic reflection must not change the existing dispatch boundary */ { }
+        }
+        static partial void EndCallProjection(System.IDisposable? observation, object? result)
+        {
+            if (observation is InvocationJournal.CallSpan span)
+                span.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+        }
+        static partial void RecordAdmissionRejection(RequestContext<CallToolRequestParams> request, CallToolResult result)
+        {
+            try
+            {
+                RecordCallRejection(request.Params?.Name ?? "", new TiaMcp.Logic.V4.Inputs.ToolArguments(
+                    System.Text.Json.JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())), result);
+            }
+            catch (System.Exception) /* swallow(logging-failure): journal adaptation cannot replace an existing admission response */ { }
+        }
+        static partial void RecordCallRejection(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, CallToolResult result)
+        {
+            try
+            {
+                var methods = AllToolMethods();
+                bool known = name != null && methods.ContainsKey(name);
+                using var journal = InvocationJournal.Observe(System.Guid.NewGuid().ToString("N"), known ? name! : "CallTool", "engine", ReleaseKey,
+                    known && IsWriteTool(methods[name!]), () => arguments.Json.GetRawText());
+                journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+            }
+            catch (System.Exception) /* swallow(logging-failure): journal failures cannot replace an existing rejection response */ { }
+        }
         static partial void ValidateRuntimeBinding(System.Reflection.MethodInfo method)
         {
             // The bridge has already selected an attributed overload. Looking it up
@@ -50,11 +92,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch /* swallow(parse-fallback): malformed optional correlation metadata uses a new journal id without leaking the call gate */ { /* Malformed optional metadata must not leak the serialization gate. */ }
             }
             string id = InvocationJournal.Begin(ProtocolTool.Name, correlation);
+            using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, "engine", McpServer.ReleaseKey,
+                McpServer.IsWriteTool(ProtocolTool.Name),
+                () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             try
             {
                 McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
                 var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 ExitFaultedWorker(id);
+                journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
                 return result;
             }

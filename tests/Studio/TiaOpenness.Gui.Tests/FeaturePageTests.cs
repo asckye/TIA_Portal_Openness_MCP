@@ -98,7 +98,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
             model.Search = ""; model.ReleaseOnly = true; model.Release = "21"; Assert.Empty(model.Calls);
             model.Release = "14sp1"; Assert.Equal(4, model.Calls.Count);
             model.ToggleFollow(); journal.Replace([]); Assert.Equal(4, model.Calls.Count);
-            Assert.False(model.FollowLatest); model.ToggleFollow(); Assert.True(model.CallsEmpty);
+            Assert.False(model.FollowLatest); model.ToggleFollow(); Assert.True(Assert.Single(model.Calls).Pending);
         });
     }
 

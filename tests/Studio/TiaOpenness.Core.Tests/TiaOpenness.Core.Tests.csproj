@@ -15,4 +15,9 @@
     <EmbeddedResource Include="../V4Supplemental.json" Link="V4Supplemental.json" />
     <EmbeddedResource Include="../../../manifest/contracts/v4/responses/*.json" LinkBase="V4Snapshots" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Journal/PortalFailureClassifier.cs" />
+  </ItemGroup>
 </Project>

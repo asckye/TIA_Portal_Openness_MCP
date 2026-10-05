@@ -91,8 +91,17 @@ internal static class AdapterIntegrationChecks
             for (int i = 0; i < 2; i++) tool.InvokeAsync(null!, CancellationToken.None).AsTask().GetAwaiter().GetResult();
             var files = Directory.GetFiles(scratch, "calls-*.jsonl");
             check(files.Length == 1, "Engine tool and adapter native span share exactly one journal file");
-            var rows = File.ReadAllLines(files.Single()).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
+            var all = File.ReadAllLines(files.Single()).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
+            // The Workbench call panel reads separate callProjection rows from the same sink; the diagnostic rows stay exact.
+            var rows = all.Where(row => row["callProjection"] == null).ToArray();
+            var projections = all.Where(row => row["callProjection"] != null).ToArray();
             check(rows.Length == 8, "Two engine calls each flush tool/native BEFORE and RETURNED rows");
+            check(projections.Length == 4
+                && projections.All(row => row["tool"]!.GetValue<string>() == "AdapterJournalFixture")
+                && projections.GroupBy(row => row["id"]!.GetValue<string>()).All(call =>
+                    call.Select(row => row["phase"]!.GetValue<string>()).SequenceEqual(new[] { "BEFORE", "RETURNED" }))
+                && projections.Select(row => row["id"]!.GetValue<string>()).Distinct().Count() == 2,
+                "Each engine call adds one BEFORE/RETURNED call-projection pair with its own correlation id");
             for (int i = 0; i < 2; i++)
             {
                 var call = rows.Skip(i * 4).Take(4).ToArray();

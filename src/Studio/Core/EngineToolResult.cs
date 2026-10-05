@@ -18,10 +18,13 @@ namespace TiaOpenness.Core
             && (Meta.Execution == Execution.ReadOnly || Meta.Execution == Execution.Completed)
             && Meta.Completeness == Completeness.Complete;
 
-        public string DisplayOutcome => Meta.Outcome == Outcome.Unknown || Meta.Completeness == Completeness.Unknown ? "unknown"
-            : Meta.Outcome == Outcome.Partial || Meta.Completeness == Completeness.Partial ? "partial"
-            : Meta.Outcome == Outcome.Succeeded && !IsCompleteSuccess ? "read-failed"
-            : WireName(Meta.Outcome);
+        public string DisplayOutcome => Classify(Envelope.Ok, Meta.Outcome, Meta.Execution, Meta.Completeness);
+
+        public static string Classify(bool ok, Outcome outcome, Execution execution, Completeness completeness)
+            => outcome == Outcome.Unknown || completeness == Completeness.Unknown ? "unknown"
+            : outcome == Outcome.Partial || completeness == Completeness.Partial ? "partial"
+            : outcome == Outcome.Succeeded && !(ok && (execution == Execution.ReadOnly || execution == Execution.Completed)
+                && completeness == Completeness.Complete) ? "read-failed" : WireName(outcome);
 
         public string ErrorCode => Error == null ? null : WireName(Error.Code);
         public JsonElement? ErrorDetails => Error == null ? (JsonElement?)null

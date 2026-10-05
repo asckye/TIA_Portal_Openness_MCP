@@ -2012,6 +2012,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150; 根定位:45,57 | 修改引用并回归 |
 | [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,47 | 修改引用并回归 |
 | [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
+| [src/Studio/Gui/Services/CallJournalService.cs](../../src/Studio/Gui/Services/CallJournalService.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/Gui/Services/DiagnosticBundleService.cs](../../src/Studio/Gui/Services/DiagnosticBundleService.cs) | 写入/工作区:207 | 修改引用并回归 |
 | [src/Studio/Gui/Services/EnvironmentCheckService.cs](../../src/Studio/Gui/Services/EnvironmentCheckService.cs) | 产品:9; 根定位:108 | 修改引用并回归 |
 | [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:18 | 修改引用并回归 |
@@ -2032,6 +2033,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj](../../tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj) | 根定位:6 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/WorkbenchEnvironmentChecksTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/WorkbenchEnvironmentChecksTests.cs) | 产品:122 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/CallJournalPanelTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/CallJournalPanelTests.cs) | 产品:35 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs) | 产品:6 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs) | 产品:9 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34; 根定位:14,74,164 | 修改引用并回归 |
@@ -2042,7 +2044,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:69 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 157 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 159 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 

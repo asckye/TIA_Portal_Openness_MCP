@@ -18,7 +18,7 @@ public partial class MainWindow
 
     private void InitializeFeaturePages()
     {
-        ConfigureFeaturePages(new CallJournalServiceStub(), new AuditLogServiceStub(), new EnvironmentCheckService());
+        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogServiceStub(), new EnvironmentCheckService());
         Approvals.NewRequest += OnNewApproval;
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }
@@ -31,6 +31,7 @@ public partial class MainWindow
             Features.DrawerRequested -= OnFeatureDrawer;
             Features.Feedback -= OnFeatureFeedback;
             Features.Dispose();
+            (Features.Journal as IDisposable)?.Dispose();
         }
         if (notification != null) { _approvalNotification.Dispose(); _approvalNotification = notification; }
         Features = new FeaturePagesViewModel(Approvals, journal, audit, environment, _diagnostics, now) { Release = _model.SelectedReleaseKey };
@@ -41,7 +42,11 @@ public partial class MainWindow
 
     private void OnFeatureReleaseChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MainViewModel.SelectedReleaseKey)) Features.Release = _model.SelectedReleaseKey;
+        if (e.PropertyName == nameof(MainViewModel.SelectedReleaseKey))
+        {
+            Features.Release = _model.SelectedReleaseKey;
+            if (Features.Journal is CallJournalService journal) journal.SetRelease(_model.SelectedReleaseKey);
+        }
     }
 
     private void OnFeatureDrawer(object? sender, string drawer) => OpenDrawer(drawer);
@@ -75,6 +80,6 @@ public partial class MainWindow
         Features.DrawerRequested -= OnFeatureDrawer;
         Features.Feedback -= OnFeatureFeedback;
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext = CallDetailContent.DataContext = null;
-        Features.Dispose(); _approvalNotification.Dispose();
+        Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); _approvalNotification.Dispose();
     }
 }

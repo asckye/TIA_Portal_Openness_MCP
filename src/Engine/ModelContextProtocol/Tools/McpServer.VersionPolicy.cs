@@ -17,6 +17,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
         static partial void ValidateV4Admission(RequestContext<CallToolRequestParams> request, ref CallToolResult? result);
+        internal static void RecordAdmissionProjection(RequestContext<CallToolRequestParams> request, CallToolResult result)
+            => RecordAdmissionRejection(request, result);
+        static partial void RecordAdmissionRejection(RequestContext<CallToolRequestParams> request, CallToolResult result);
 
         private static IList<McpServerTool> WrapWithVersionPolicy(IList<McpServerTool> tools)
             => tools.Where(t => VersionToolProblem(t.ProtocolTool.Name).Length == 0)
@@ -35,7 +38,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             var refusal = McpServer.V4Admission(request);
-            if (refusal != null) return new ValueTask<CallToolResult>(refusal);
+            if (refusal != null)
+            {
+                McpServer.RecordAdmissionProjection(request, refusal);
+                return new ValueTask<CallToolResult>(refusal);
+            }
             return inner.InvokeAsync(request, cancellationToken);
         }
     }

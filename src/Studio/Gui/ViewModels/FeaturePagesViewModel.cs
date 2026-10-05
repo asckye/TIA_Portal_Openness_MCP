@@ -56,7 +56,19 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string ReleaseFilter => Loc.Current.T("Calls.ReleaseOnly", TiaMcp.Versioning.TiaVersionCatalog.Get(Release).DisplayName);
     public bool FollowLatest => _pausedCalls == null;
     public string FollowLabel => Loc.Current[FollowLatest ? "Calls.Follow" : "Calls.Paused"];
-    private IReadOnlyList<CallRecord> Snapshot => _pausedCalls ?? Journal.Calls;
+    private IReadOnlyList<CallRecord> Snapshot
+    {
+        get
+        {
+            var calls = _pausedCalls ?? Journal.Calls;
+            var pending = Approvals.Requests.Where(r => r.State == ApprovalState.Pending).ToArray();
+            return calls.Where(c => !pending.Any(r => r.Id == c.RequestId)).Concat(pending.Select(r => new CallRecord(r.Id,
+                r.Deadline.AddSeconds(-r.TimeoutSeconds), r.Host, r.Release,
+                r.Operations.Count == 1 ? r.Operations[0].Tool : Loc.Current.T("Calls.PendingOperations", r.Operations.Count),
+                true, CallResult.Pending, null, r.Project + " · " + r.Plc, r.ParametersJson,
+                LocalizedText.Key("Calls.Pending"), "", LocalizedText.Empty, LocalizedText.Key("Approval.Pending")))).ToArray();
+        }
+    }
     public IReadOnlyList<CallRow> Calls => Snapshot
         .Where(c => !WriteOnly || c.IsWrite)
         .Where(c => !FailOnly || c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown)
@@ -67,7 +79,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool CallsEmpty => Calls.Count == 0;
     public string CallsCount => Loc.Current.T("Calls.Count", Snapshot.Count, Approvals.PendingCount);
     public string CallEmptyTitle => Loc.Current[Snapshot.Count == 0 ? "Calls.EmptyTitle" : "Calls.NoMatches"];
-    public CallRow? SelectedCall => Snapshot.FirstOrDefault(c => c.RequestId == _selectedCall) is { } call ? new(call) : null;
+    public CallRow? SelectedCall => Snapshot.FirstOrDefault(c => c.JournalKey == _selectedCall) is { } call ? new(call) : null;
     public string Address => string.IsNullOrEmpty(Journal.Connection.Address) ? Loc.Current["Feature.NotConnected"] : Journal.Connection.Address;
     public string Transport => string.IsNullOrEmpty(Journal.Connection.Transport) ? "—" : Journal.Connection.Transport;
     public string ConnectionJson => FeatureJson.Redact(Journal.Connection.ConfigurationJson);
@@ -80,7 +92,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public int Remaining(ApprovalRequest request) => Math.Clamp((int)Math.Ceiling((request.Deadline - _now()).TotalSeconds), 0, request.TimeoutSeconds);
     public void ToggleFollow() { _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; Raise(null); }
     public void OpenApprovals() => DrawerRequested?.Invoke(this, "Approvals");
-    public void OpenCall(CallRow row) { _selectedCall = row.Record.RequestId; Raise(nameof(SelectedCall)); DrawerRequested?.Invoke(this, "CallDetail"); }
+    public void OpenCall(CallRow row) { _selectedCall = row.Record.JournalKey; Raise(nameof(SelectedCall)); DrawerRequested?.Invoke(this, "CallDetail"); }
     public void Decide(ApprovalRow row, bool approve) => Run(() =>
     {
         bool accepted = approve ? Approvals.Approve(row.Request.Id) : Approvals.Deny(row.Request.Id);
@@ -178,7 +190,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 public sealed record CallRow(CallRecord Record)
 {
     public string Time => Record.Time.ToLocalTime().ToString("HH:mm:ss");
-    public string Host => Record.Host;
+    public string Host => Record.Host + (Record.Release.Length == 0 ? "" : " · " + Record.Release);
     public string Tool => Record.Tool;
     public string ReadWrite => Loc.Current[Record.IsWrite ? "Calls.Write" : "Calls.Read"];
     public FeatureTone WriteTone => Record.IsWrite ? FeatureTone.Warning : FeatureTone.Muted;
@@ -196,8 +208,18 @@ public sealed record CallRow(CallRecord Record)
     }];
     public string Duration => Record.DurationMs is { } ms ? ms.ToString("N0") + " ms" : "—";
     public string Target => Record.Target;
-    public string Parameters => FeatureJson.Redact(Record.ParametersJson);
-    public string Summary => Record.Summary.Resolve();
+    public string Parameters => Record.ParametersTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ParametersJson) : FeatureJson.Redact(Record.ParametersJson);
+    public string ResultJson => Record.ResultTruncated ? TiaOpenness.Shared.CallJournalPayload.Bound(Record.ResultJson) : FeatureJson.Redact(Record.ResultJson);
+    public string PreviewNote => Loc.Current[Record.ParametersTruncated || Record.ResultTruncated ? "Calls.PreviewTruncated" : "Calls.PreviewRedacted"];
+    public string Summary => Record.Outcome.Length == 0 ? Record.Summary.Resolve() : Loc.Current.T("Calls.JournalSummary", Result,
+        Loc.Current[Record.Execution switch
+        {
+            "not-started" => "Calls.Execution.NotStarted", "read-only" => "Calls.Execution.ReadOnly", "completed" => "Calls.Execution.Completed",
+            "partial" => "Calls.Execution.Partial", _ => "Calls.Execution.Unknown"
+        }], Loc.Current[Record.Completeness switch
+        {
+            "complete" => "Calls.Completeness.Complete", "partial" => "Calls.Completeness.Partial", "none" => "Calls.Completeness.None", _ => "Calls.Completeness.Unknown"
+        }]);
     public string Error => Record.ErrorCode + (EngineResultText.Error(Record.ErrorCode) is { Length: > 0 } localized
         ? "\n" + localized : Record.ErrorMessage.Resolve().Length > 0 ? "\n" + Record.ErrorMessage.Resolve() : "");
     public bool HasError => Error.Length > 0;

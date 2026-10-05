@@ -276,7 +276,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
         {
             var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
-            if (error != null) return V4Reject("CallTool", error);
+            if (error != null)
+            {
+                var rejected = V4Reject("CallTool", error);
+                RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
+                return rejected;
+            }
             if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
                 return V4Reject("CallTool", InvalidInput("name"));
             try { return ToolResult(InvokeToolMethod(method!, call!)); }
@@ -563,6 +568,12 @@ namespace TiaMcpServer.ModelContextProtocol
             => method.GetCustomAttribute<ToolClassificationAttribute>()?.Value
                ?? ToolMetadata.Find(method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name);
 
+        /// <summary>Write and online-write tools by their typed classification; descriptions never decide.</summary>
+        internal static bool IsWriteTool(MethodInfo method) => IsWrite(ClassificationOf(method));
+        internal static bool IsWriteTool(string name) => IsWrite(ToolMetadata.Find(name));
+        private static bool IsWrite(ToolMetadata.Classification? classification)
+            => classification?.Operation is "WRITE" or "ONLINE-WRITE";
+
         /// <summary>Build gate: every recipe step must name a real tool and fit its signature.</summary>
         public static IReadOnlyList<string> ValidateToolRecipes()
         {
@@ -621,6 +632,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string id = Guid.NewGuid().ToString("N");
             RecordBridgeEvent(id, method.Name, "BEFORE");
+            IDisposable? observation = null;
+            StartCallProjection(id, method, call, ref observation);
             try
             {
                 var parameters = method.GetParameters();
@@ -640,12 +653,17 @@ namespace TiaMcpServer.ModelContextProtocol
                     result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
                 }
                 RecordBridgeEvent(id, method.Name, "RETURNED");
+                EndCallProjection(observation, result);
                 return result;
             }
             catch { RecordBridgeEvent(id, method.Name, "THREW"); throw; }
+            finally { observation?.Dispose(); }
         }
 
         static partial void RecordBridgeEvent(string id, string name, string phase);
+        static partial void StartCallProjection(string id, MethodInfo method, object?[] arguments, ref IDisposable? observation);
+        static partial void EndCallProjection(IDisposable? observation, object? result);
+        static partial void RecordCallRejection(string name, ToolArguments arguments, CallToolResult result);
         static partial void ValidateRuntimeBinding(MethodInfo method);
 
         private static int CommonPrefixLength(string a, string b)

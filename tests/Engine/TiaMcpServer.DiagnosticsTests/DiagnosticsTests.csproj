@@ -23,4 +23,7 @@
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
+  </ItemGroup>
 </Project>

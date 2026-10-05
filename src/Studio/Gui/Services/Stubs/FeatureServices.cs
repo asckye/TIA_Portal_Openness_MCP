@@ -5,7 +5,7 @@ using TiaOpenness.Gui.Localization;
 
 namespace TiaOpenness.Gui.Services.Stubs;
 
-// Stub until P6-45: no journal or MCP connection is attached.
+// Empty journal fixture; the workbench constructs CallJournalService.
 public sealed class CallJournalServiceStub : ObservableObject, ICallJournalService
 {
     public IReadOnlyList<CallRecord> Calls => Array.Empty<CallRecord>();

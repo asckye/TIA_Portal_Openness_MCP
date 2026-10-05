@@ -124,21 +124,28 @@ internal sealed class FoundationV4Tool : McpServerTool
     {
         string id = Meta.Correlate(null);
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
+        using var journal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
+            inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
+        CallToolResult Recorded(CallToolResult result)
+        {
+            journal.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
+            return result;
+        }
         try
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
-            if (validation.Error != null && importCandidate) return FoundationV4Result.ImportCandidate(PlcImportSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted));
-            if (validation.Error != null) return deviceCandidate
+            if (validation.Error != null && importCandidate) return Recorded(FoundationV4Result.ImportCandidate(PlcImportSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
+            if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
-                : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true });
-            if (deviceCandidate) return await ((FoundationTool)inner).InvokeDeviceCandidateAsync(args, release, id, cancellationToken);
-            if (importCandidate) return await ((FoundationTool)inner).InvokeImportCandidateAsync(args, release, tool.Name, id, cancellationToken);
+                : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (deviceCandidate) return Recorded(await ((FoundationTool)inner).InvokeDeviceCandidateAsync(args, release, id, cancellationToken));
+            if (importCandidate) return Recorded(await ((FoundationTool)inner).InvokeImportCandidateAsync(args, release, tool.Name, id, cancellationToken));
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             if (parameter != null)
             {
                 var input = convert!(args[parameter]);
-                if (input.Error != null) return FoundationV4Result.Reject(release, tool.Name, id, input.Error);
+                if (input.Error != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id, input.Error));
                 adapted.Remove(parameter);
                 adapted[parameter + "Json"] = JsonSerializer.SerializeToElement(input.Json);
             }
@@ -146,20 +153,20 @@ internal sealed class FoundationV4Tool : McpServerTool
             request.Params = new CallToolRequestParams { Name = inner.ProtocolTool.Name, Arguments = adapted };
             try
             {
-                if (inner is FoundationTool foundation) return await foundation.InvokeV4Async(request, release, id, cancellationToken);
+                if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
-                return FoundationV4Result.Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args);
+                return Recorded(FoundationV4Result.Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }
             finally { request.Params = original; }
         }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
-        { return FoundationV4Result.Reject(release, tool.Name, id, new Error("Request cancelled before completion.", new CancelledDetails("host"))); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error("Request cancelled before completion.", new CancelledDetails("host")))); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
-        { return FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments")); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
         catch (Exception ex) when (ex is ArgumentException or JsonException or InvalidOperationException)
-        { return FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments")); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
-        { return FoundationV4Result.HostFailure(release, tool.Name, id); }
+        { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
     }
 }

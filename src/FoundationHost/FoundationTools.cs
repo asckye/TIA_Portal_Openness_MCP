@@ -93,6 +93,8 @@ internal sealed class FoundationTool : McpServerTool
     private readonly IFoundationWorker worker;
     private readonly Tool tool;
     internal bool IsNative => definition.ResponseMember != "PlcRender";
+    internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
+        || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";
     internal FoundationTool(Definition definition, IFoundationWorker worker)
     {
         if(definition.Arguments.Any(a=>a.Name=="dryRun")) definition=definition with { Arguments=definition.Arguments.Concat(new[]{new Argument("confirm","boolean",false,false),new Argument("expectedProjectFile","string",false,"")}).ToArray() };

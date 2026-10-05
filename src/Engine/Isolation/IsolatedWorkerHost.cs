@@ -118,6 +118,13 @@ namespace TiaMcpServer.Isolation
                 bool controlBridge = tool.Name == "CallTool" && request.Params?.Arguments != null &&
                     request.Params.Arguments.TryGetValue("name", out var target) && target.ValueKind == JsonValueKind.String && IsControl(target.GetString());
                 if (IsControl(tool.Name) || controlBridge) return await local.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+                using var journal = InvocationJournal.Observe(Guid.NewGuid().ToString("N"), tool.Name, "engine", McpServer.ReleaseKey,
+                    McpServer.IsWriteTool(tool.Name), () => JsonSerializer.Serialize(request.Params?.Arguments, McpJsonUtilities.DefaultOptions));
+                CallToolResult Recorded(CallToolResult result)
+                {
+                    journal.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
+                    return result;
+                }
                 var supervisor = Current ?? throw new InvalidOperationException("Worker host stopped.");
                 try
                 {
@@ -134,11 +141,11 @@ namespace TiaMcpServer.Isolation
                         catch /* swallow(fail-open-guard): optional progress delivery must not interrupt the worker response reader */ { }
                     };
                     var envelope = await supervisor.CallAsync(parameters, progress, cancellationToken).ConfigureAwait(false);
-                    if (envelope["error"] != null) return Error("Worker rejected the request: " + envelope["error"]!.ToJsonString(), false, supervisor);
-                    return JsonSerializer.Deserialize<CallToolResult>(envelope["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
-                        ?? throw new InvalidDataException("Worker returned no tool result.");
+                    if (envelope["error"] != null) return Recorded(Error("Worker rejected the request: " + envelope["error"]!.ToJsonString(), false, supervisor));
+                    return Recorded(JsonSerializer.Deserialize<CallToolResult>(envelope["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
+                        ?? throw new InvalidDataException("Worker returned no tool result."));
                 }
-                catch (WorkerCallException ex) { return Error(ex.Message, ex.OutcomeUnknown, supervisor); }
+                catch (WorkerCallException ex) { return Recorded(Error(ex.Message, ex.OutcomeUnknown, supervisor)); }
             }
             private static CallToolResult Error(string message, bool unknown, OpennessWorkerSupervisor supervisor) => new CallToolResult {
                 IsError = true,

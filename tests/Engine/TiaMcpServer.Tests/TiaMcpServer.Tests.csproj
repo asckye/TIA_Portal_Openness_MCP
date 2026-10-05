@@ -186,4 +186,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
+  </ItemGroup>
 </Project>

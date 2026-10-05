@@ -18,7 +18,16 @@ public sealed record ApprovalRequest(string Id, string Client, string Transport,
 
 public sealed record CallRecord(string RequestId, DateTimeOffset Time, string Host, string Release, string Tool,
     bool IsWrite, CallResult Result, int? DurationMs, string Target, string ParametersJson,
-    LocalizedText Summary, string ErrorCode, LocalizedText ErrorMessage, LocalizedText ApprovalRecord);
+    LocalizedText Summary, string ErrorCode, LocalizedText ErrorMessage, LocalizedText ApprovalRecord)
+{
+    public string JournalKey { get; init; } = RequestId;
+    public string ResultJson { get; init; } = "null";
+    public string Outcome { get; init; } = "";
+    public string Execution { get; init; } = "";
+    public string Completeness { get; init; } = "";
+    public bool ParametersTruncated { get; init; }
+    public bool ResultTruncated { get; init; }
+}
 
 public sealed record ConnectionInfo(string Address, string Transport, string ConfigurationJson);
 

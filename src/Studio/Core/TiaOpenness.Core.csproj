@@ -24,4 +24,7 @@
     <Compile Include="../../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <InternalsVisibleTo Include="TiaOpenness.Core.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
+  </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // No native getters and no arguments/content: logging cannot re-enter Openness or expose credentials.
+    // No native getters: logging cannot re-enter Openness. Call payloads use the separate privacy projection.
     internal static partial class InvocationJournal
     {
         private static readonly object Sync = new object();

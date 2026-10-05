@@ -57,6 +57,13 @@ namespace TiaMcpConfigurator
 
     public static class ClientProfiles
     {
+        public static string ConnectionSnippet(string address, int port)
+        {
+            var profile = new ClientProfile("claude-code", "Claude Code", "", "");
+            var servers = new Dictionary<string, object> { { ServerName(profile, true), Entry(profile, true, address, port, "••••", "", "21", "") } };
+            return ConfigCore.Json().Serialize(new Dictionary<string, object> { { RootKey(profile), servers } });
+        }
+
         public static string ClientLabel(string client)
         {
             switch (client)
