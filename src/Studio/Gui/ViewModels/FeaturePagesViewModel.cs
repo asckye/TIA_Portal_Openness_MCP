@@ -125,7 +125,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string DiagnosticPath => Diagnostics.Progress.Path;
     internal Action<string> CopyText { get; set; } = System.Windows.Clipboard.SetText;
     public void Copy(string text) => Run(() => { CopyText(text); return LocalizedText.Empty; });
-    public void Export() => Run(() => LocalizedText.Key(Diagnostics.Export()));
+    public void Export() => Run(() => { string message = Diagnostics.Export(); return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message); });
     public void Run(Func<LocalizedText> action)
     {
         try { var result = action(); if (result.Resolve().Length > 0) Feedback?.Invoke(this, result); }

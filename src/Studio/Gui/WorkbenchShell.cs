@@ -19,7 +19,7 @@ public partial class MainWindow
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
     {
         Approvals = approvals ?? new ApprovalServiceStub();
-        _diagnostics = diagnostics ?? new DiagnosticBundleServiceStub();
+        _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals);
         SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;

@@ -18,7 +18,7 @@ public partial class MainWindow
 
     private void InitializeFeaturePages()
     {
-        ConfigureFeaturePages(new CallJournalServiceStub(), new AuditLogServiceStub(), new EnvironmentCheckServiceStub());
+        ConfigureFeaturePages(new CallJournalServiceStub(), new AuditLogServiceStub(), new EnvironmentCheckService());
         Approvals.NewRequest += OnNewApproval;
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }

@@ -12,6 +12,7 @@ using System.Windows.Shell;
 using System.Windows.Threading;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.ViewModels;
 using Xunit;
@@ -90,11 +91,12 @@ public sealed partial class UnifiedDesktopTests
     }
 
     [Fact]
-    public void Approval_off_requires_confirmation_and_stub_diagnostics_report_unavailable()
+    public void Approval_off_requires_confirmation_and_diagnostics_button_starts_export()
     {
         wpf.Run(() =>
         {
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false);
+            var diagnostics = new FeaturePageFixtures.Diagnostics();
+            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, diagnostics: diagnostics);
             try
             {
                 window.OpenSettings();
@@ -115,8 +117,8 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl((RadioButton)settings.FindName("ApprovalOn"));
                 Assert.True(window.Approvals.Enabled);
                 ClickControl((Button)window.FindName("ExportDiagnostics"));
-                Assert.Equal(Loc.Current["Shell.DiagnosticsNotConnected"], ((TextBlock)window.FindName("ToastMessage")).Text);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
+                Assert.Equal(DiagnosticState.Running, diagnostics.Progress.State);
+                Assert.True(window.Features.DiagnosticRunning);
             }
             finally { window.Close(); }
         });

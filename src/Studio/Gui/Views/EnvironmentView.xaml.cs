@@ -6,7 +6,16 @@ namespace TiaOpenness.Gui.Views;
 
 public partial class EnvironmentView : UserControl
 {
-    public EnvironmentView() { InitializeComponent(); DataContext = null; }
+    private bool _checked;
+    public EnvironmentView()
+    {
+        InitializeComponent(); DataContext = null;
+        IsVisibleChanged += (_, _) =>
+        {
+            if (!IsVisible || _checked || DataContext is not FeaturePagesViewModel) return;
+            _checked = true; Model.Run(Model.Environment.Recheck);
+        };
+    }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private void OnRecheck(object sender, RoutedEventArgs e) => Model.Run(Model.Environment.Recheck);
     private void OnGenerate(object sender, RoutedEventArgs e) => Model.Export();
