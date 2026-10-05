@@ -200,42 +200,42 @@ CASES = {
         + actions('ManagePlcBlockWriteProtection', 'read define protect unprotect change remove',
                   softwarePath=PLC, blockPath='Block1')
         + actions('ManageProjectCompilationSettings', 'read update'),
-    'Dcc': [('ReadDccCharts', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
+    'Dcc': [('ListDccCharts', 'read', {'devicePath': [], 'itemPath': []})]
         + actions('ManageDccChart', 'read readSequence create update delete export exportAll import optimizeSequence showEditor',
-                  devicePathJson='[]', itemPathJson='[]', chartName='Chart1')
+                  devicePath=[], itemPath=[], chartName='Chart1')
         + actions('ManageDccBlock', 'read create update delete setAsPredecessor',
-                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', blockName='Block1')
+                  devicePath=[], itemPath=[], chartPath='Chart1', blockName='Block1')
         + actions('ManageDccPin', 'read update connect disconnect publish unpublish updateParameter',
-                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', blockName='Block1', pinName='Pin1')
+                  devicePath=[], itemPath=[], chartPath='Chart1', blockName='Block1', pinName='Pin1')
         + actions('ManageDccChartInterface', 'read create update delete',
-                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', interfaceName='Interface1')
+                  devicePath=[], itemPath=[], chartPath='Chart1', interfaceName='Interface1')
         + actions('ManageDccChartPartition', 'read create update delete',
-                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', partitionName='Partition1')
+                  devicePath=[], itemPath=[], chartPath='Chart1', partitionName='Partition1')
         + actions('ManageDcbLibraries', 'read import')
-        + [('ReadDccObject', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})],
+        + [('GetDccObject', 'read', {'devicePath': [], 'itemPath': []})],
     'Teamcenter': actions('ManageTeamcenterConnection', 'read connect connectSso disconnect')
         + actions('ManageTeamcenterDataset', 'checkout checkin cancelCheckout search download')
         + actions('ManageTeamcenterWorkflow', 'readCustomAttributes save saveWithProxyObject saveToItem saveToItemWithProxyObject '
                   'saveAsNewItem saveAsNewItemWithProxyObject saveAsNewRevision saveAsNewRevisionWithProxyObject'),
-    'Startdrive': [('ReadDriveObjects', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'}),
-                  ('ReadDriveParameters', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
-        + actions('ManageStartdriveParameter', 'read write', devicePathJson='[]', itemPathJson='[]',
+    'Startdrive': [('ListDriveObjects', 'read', {'devicePath': [], 'itemPath': []}),
+                  ('GetDriveParameters', 'read', {'devicePath': [], 'itemPath': []})]
+        + actions('ManageStartdriveParameter', 'read write', devicePath=[], itemPath=[],
                   driveObjectNumber=0, parameter='p2051[0]')
         + actions('ManageDriveTelegrams', 'read check insert erase changeNumber changeSize connectTechnologyObject',
-                  devicePathJson='[]', itemPathJson='[]')
+                  devicePath=[], itemPath=[])
         + actions('ManageDriveFunctions', 'read changeDriveObjectType changeActivationState activateFunction deactivateFunction '
                   'setSIAxisType setMotorCode setSimoGearMlfb updateCheckSums setMotorType readMotorConfiguration '
                   'projectMotorConfiguration setEquivalentCircuitDiagramData setEncoder readEncoderConfiguration '
-                  'setEncoderType projectEncoderConfiguration', devicePathJson='[]', itemPathJson='[]')
+                  'setEncoderType projectEncoderConfiguration', devicePath=[], itemPath=[])
         + actions('ManageDriveSecurity', 'read activateUmac deactivateUmac activateEncryption deactivateEncryption',
-                  devicePathJson='[]', itemPathJson='[]')
+                  devicePath=[], itemPath=[])
         + actions('ManageTechnologyExtensions', 'read activate deactivate readPackages install installAndGetIdentifier uninstall')
-        + actions('ManageDriveHardwareModule', 'read changeType setPositionNumber', devicePathJson='[]', itemPathJson='[]')
+        + actions('ManageDriveHardwareModule', 'read changeType setPositionNumber', devicePath=[], itemPath=[])
         + actions('ManageDriveSafetyAcceptanceTest', 'read setActive resetTestFunctions createProtocol',
-                  devicePathJson='[]', itemPathJson='[]')
-        + [('ReadOnlineDriveParameters', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
+                  devicePath=[], itemPath=[])
+        + [('GetOnlineDriveParameters', 'read', {'devicePath': [], 'itemPath': []})]
         + actions('ManageOnlineDriveFunctions', 'read performFactoryReset performRamToRomCopy changeActivationState',
-                  devicePathJson='[]', itemPathJson='[]'),
+                  devicePath=[], itemPath=[]),
     'SafetyManagement': actions('ManagePlcSafety',
         'read createRuntimeGroup deleteRuntimeGroup updateRuntimeGroup updateSettings generateGlobalFIOStatusBlock '
         'cleanSystemGeneratedObjects generateBaseId login logoff setPassword revokePassword', softwarePath=PLC)

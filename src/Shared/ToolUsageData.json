@@ -5003,6 +5003,16 @@
         }
       ]
     },
+    "GetDccObject": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/drive-control-charts/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetDeviceAddressing": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5121,6 +5131,24 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetDriveParameters": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/parameters/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.WithExtensions.Startdrive/ParameterSnippets.cs",
+        "guides/skills/drive-objects/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [],
+      "manualsByRelease": {
+        "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
+        "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
+      }
+    },
     "GetExportContent": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -5201,6 +5229,24 @@
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
+    },
+    "GetOnlineDriveParameters": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/parameters/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.WithExtensions.Startdrive/ParameterSnippets.cs",
+        "guides/skills/drive-objects/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [],
+      "manualsByRelease": {
+        "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
+        "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
+      }
     },
     "GetOnlineState": {
       "relationship": "related-api-patterns",
@@ -6255,6 +6301,16 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListDccCharts": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/drive-control-charts/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ListDeviceItemChannels": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -6275,6 +6331,19 @@
         "guides/skills/devices-and-hardware/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListDriveObjects": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/drive-objects/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs",
         "guides/skills/hardware-and-modules/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
       ],
@@ -8315,57 +8384,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadDccCharts": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/drive-control-charts/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadDccObject": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/drive-control-charts/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadDriveObjects": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/drive-objects/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadDriveParameters": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/parameters/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.WithExtensions.Startdrive/ParameterSnippets.cs",
-        "guides/skills/drive-objects/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [],
-      "manualsByRelease": {
-        "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
-        "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
-      }
-    },
     "ReadHmiScreenSnapshot": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -8399,24 +8417,6 @@
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
-    },
-    "ReadOnlineDriveParameters": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/parameters/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.WithExtensions.Startdrive/ParameterSnippets.cs",
-        "guides/skills/drive-objects/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/DriveObjectSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/StartdriveSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [],
-      "manualsByRelease": {
-        "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
-        "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
-      }
     },
     "ReadOpennessCompatibility": {
       "relationship": "no-direct-official-example",
@@ -17204,14 +17204,20 @@
         "ManageDcbLibraries": {
           "arguments": {
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
               "requiresBinding": true
             },
@@ -17240,8 +17246,12 @@
         },
         "ManageDccBlock": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "chartPath": "Chart_1",
             "confirmDelete": false,
             "dryRun": true,
@@ -17249,20 +17259,20 @@
             "blockName": "FC_Example"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "blockType": {
-              "exampleValue": "<block type from ReadDccCharts>",
+              "exampleValue": "<block type from ListDccCharts>",
               "requiresBinding": true
             },
             "libraryName": {
               "exampleValue": ""
             },
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
@@ -17284,14 +17294,16 @@
               "arguments": {
                 "action": "create",
                 "blockName": "ADD_1",
-                "blockType": "<exact block type from ReadDccCharts>",
+                "blockType": "<exact block type from ListDccCharts>",
                 "libraryName": "<library containing this block type>"
               }
             },
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "delete": {
@@ -17310,17 +17322,21 @@
         },
         "ManageDccChart": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "confirmDelete": false,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "chartName": {
@@ -17333,7 +17349,7 @@
               "exampleValue": "<importOptions from this operation's target or user input>",
               "requiresBinding": true
             },
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
@@ -17365,7 +17381,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "chartName": "Chart_1"
               }
             },
@@ -17409,18 +17427,22 @@
         },
         "ManageDccChartInterface": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "chartPath": "Chart_1",
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "interfaceName": {
@@ -17432,7 +17454,7 @@
             "sourcePin": {
               "exampleValue": "OUT"
             },
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
@@ -17458,7 +17480,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "interfaceName": "Server interface_1"
               }
             },
@@ -17473,24 +17497,28 @@
         },
         "ManageDccChartPartition": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "chartPath": "Chart_1",
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "partitionName": {
               "exampleValue": "Partition_1"
             },
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
@@ -17514,7 +17542,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "partitionName": "Partition_1"
               }
             },
@@ -17529,8 +17559,12 @@
         },
         "ManageDccPin": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "chartPath": "Chart_1",
             "blockName": "FC_Example",
             "pinName": "IN1",
@@ -17538,17 +17572,17 @@
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
-            "partnerJson": {
+            "partner": {
               "exampleValue": "{\"block\":\"ADD_2\",\"pin\":\"IN1\"}"
             },
             "setAsSignal": {
@@ -17574,19 +17608,27 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"Comment\":\"Example pin\"}"
+                "properties": {
+                  "Comment": "Example pin"
+                }
               }
             },
             "connect": {
               "arguments": {
                 "action": "connect",
-                "partnerJson": "{\"block\":\"ADD_2\",\"pin\":\"IN1\"}"
+                "partner": {
+                  "block": "ADD_2",
+                  "pin": "IN1"
+                }
               }
             },
             "disconnect": {
               "arguments": {
                 "action": "disconnect",
-                "partnerJson": "{\"block\":\"ADD_2\",\"pin\":\"IN1\"}"
+                "partner": {
+                  "block": "ADD_2",
+                  "pin": "IN1"
+                }
               }
             },
             "publish": {
@@ -17603,7 +17645,9 @@
             "updateParameter": {
               "arguments": {
                 "action": "updateParameter",
-                "partnerJson": "{\"ParameterText\":\"Example\"}"
+                "partner": {
+                  "ParameterText": "Example"
+                }
               }
             }
           },
@@ -17830,16 +17874,20 @@
         },
         "ManageDriveFunctions": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -17848,7 +17896,7 @@
             "driveObjectIndex": {
               "exampleValue": -1
             },
-            "valueJson": {
+            "value": {
               "exampleValue": "true"
             }
           },
@@ -17859,43 +17907,58 @@
             "changeDriveObjectType": {
               "arguments": {
                 "action": "changeDriveObjectType",
-                "valueJson": "{\"driveObjectType\":\"<from read PossibleDriveObjectTypes>\"}"
+                "value": {
+                  "driveObjectType": "<from read PossibleDriveObjectTypes>"
+                }
               }
             },
             "changeActivationState": {
               "arguments": {
                 "action": "changeActivationState",
-                "valueJson": "{\"activationState\":\"Activate\"}"
+                "value": {
+                  "activationState": "Activate"
+                }
               }
             },
             "activateFunction": {
               "arguments": {
                 "action": "activateFunction",
-                "valueJson": "{\"functionKey\":\"BasicPositioner\"}"
+                "value": {
+                  "functionKey": "BasicPositioner"
+                }
               }
             },
             "deactivateFunction": {
               "arguments": {
                 "action": "deactivateFunction",
-                "valueJson": "{\"functionKey\":\"BasicPositioner\"}"
+                "value": {
+                  "functionKey": "BasicPositioner"
+                }
               }
             },
             "setSIAxisType": {
               "arguments": {
                 "action": "setSIAxisType",
-                "valueJson": "{\"rotaryLinear\":\"Rotary\"}"
+                "value": {
+                  "rotaryLinear": "Rotary"
+                }
               }
             },
             "setMotorCode": {
               "arguments": {
                 "action": "setMotorCode",
-                "valueJson": "{\"motorCode\":1,\"motorDataSet\":0}"
+                "value": {
+                  "motorCode": 1,
+                  "motorDataSet": 0
+                }
               }
             },
             "setSimoGearMlfb": {
               "arguments": {
                 "action": "setSimoGearMlfb",
-                "valueJson": "{\"mlfb\":\"<motor catalog MLFB>\"}"
+                "value": {
+                  "mlfb": "<motor catalog MLFB>"
+                }
               }
             },
             "updateCheckSums": {
@@ -17906,49 +17969,78 @@
             "setMotorType": {
               "arguments": {
                 "action": "setMotorType",
-                "valueJson": "{\"motorType\":\"<MotorType from this hardware configuration>\",\"dataSet\":0}"
+                "value": {
+                  "motorType": "<MotorType from this hardware configuration>",
+                  "dataSet": 0
+                }
               }
             },
             "readMotorConfiguration": {
               "arguments": {
                 "action": "readMotorConfiguration",
-                "valueJson": "{\"dataSet\":0}"
+                "value": {
+                  "dataSet": 0
+                }
               }
             },
             "projectMotorConfiguration": {
               "arguments": {
                 "action": "projectMotorConfiguration",
-                "valueJson": "{\"dataSet\":0,\"entries\":{\"<required configuration entry>\":\"<typed value>\"}}"
+                "value": {
+                  "dataSet": 0,
+                  "entries": {
+                    "<required configuration entry>": "<typed value>"
+                  }
+                }
               }
             },
             "setEquivalentCircuitDiagramData": {
               "arguments": {
                 "action": "setEquivalentCircuitDiagramData",
-                "valueJson": "{\"dataSet\":0,\"equivalentCircuitDiagram\":true}"
+                "value": {
+                  "dataSet": 0,
+                  "equivalentCircuitDiagram": true
+                }
               }
             },
             "setEncoder": {
               "arguments": {
                 "action": "setEncoder",
-                "valueJson": "{\"encoderInterface\":\"<supported EncoderInterface>\",\"encoderType\":\"<supported EncoderType>\",\"absoluteIncremental\":\"<AbsoluteIncrementalFlag>\",\"rotaryLinear\":\"Rotary\",\"encoderNumber\":1}"
+                "value": {
+                  "encoderInterface": "<supported EncoderInterface>",
+                  "encoderType": "<supported EncoderType>",
+                  "absoluteIncremental": "<AbsoluteIncrementalFlag>",
+                  "rotaryLinear": "Rotary",
+                  "encoderNumber": 1
+                }
               }
             },
             "readEncoderConfiguration": {
               "arguments": {
                 "action": "readEncoderConfiguration",
-                "valueJson": "{\"encoderNumber\":1}"
+                "value": {
+                  "encoderNumber": 1
+                }
               }
             },
             "setEncoderType": {
               "arguments": {
                 "action": "setEncoderType",
-                "valueJson": "{\"encoderNumber\":1,\"rotaryLinear\":\"Rotary\"}"
+                "value": {
+                  "encoderNumber": 1,
+                  "rotaryLinear": "Rotary"
+                }
               }
             },
             "projectEncoderConfiguration": {
               "arguments": {
                 "action": "projectEncoderConfiguration",
-                "valueJson": "{\"encoderNumber\":1,\"entries\":{\"<required configuration entry>\":\"<typed value>\"}}"
+                "value": {
+                  "encoderNumber": 1,
+                  "entries": {
+                    "<required configuration entry>": "<typed value>"
+                  }
+                }
               }
             }
           },
@@ -17956,16 +18048,20 @@
         },
         "ManageDriveHardwareModule": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "typeIdentifier": {
@@ -17997,16 +18093,20 @@
         },
         "ManageDriveSafetyAcceptanceTest": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "identifier": {
@@ -18048,16 +18148,20 @@
         },
         "ManageDriveSecurity": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -18102,17 +18206,20 @@
         },
         "ManageDriveTelegrams": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
-            "action": "read",
-            "objectPath": "Axis_1"
+            "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -18996,16 +19103,20 @@
         },
         "ManageOnlineDriveFunctions": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "confirmOnline": false,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -21309,8 +21420,12 @@
         },
         "ManageStartdriveParameter": {
           "arguments": {
-            "devicePathJson": "[\"<exact drive device>\"]",
-            "itemPathJson": "[\"<exact drive/control unit item>\"]",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ],
             "driveObjectNumber": 0,
             "parameter": "p1070[0]",
             "driveObjectIndex": 0,
@@ -21318,21 +21433,23 @@
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "valueJson": {
+            "value": {
               "exampleValue": "true",
               "examples": [
                 {
-                  "valueJson": "0.5",
+                  "value": 0.5,
                   "meaning": "A scalar only for a scalar parameter of the matching native type."
                 },
                 {
-                  "valueJson": "{\"bicoSource\":\"r2050[0]\"}",
+                  "value": {
+                    "bicoSource": "r2050[0]"
+                  },
                   "meaning": "A BICO connection source; replace with an existing compatible source in this drive, not its current numerical value."
                 }
               ]
@@ -21345,7 +21462,9 @@
             "write": {
               "arguments": {
                 "action": "write",
-                "valueJson": "{\"bicoSource\":\"<exact source parameter name from this drive>\"}"
+                "value": {
+                  "bicoSource": "<exact source parameter name from this drive>"
+                }
               }
             }
           },
@@ -21615,13 +21734,13 @@
             "localCacheOption": {
               "exampleValue": "Overwrite"
             },
-            "itemDetailsJson": {
+            "itemDetails": {
               "exampleValue": "{\"itemName\":\"Example\",\"teamcenterItemType\":\"T4TiaProject\"}"
             },
-            "revisionDetailsJson": {
+            "revisionDetails": {
               "exampleValue": "{\"revisionId\":\"B\",\"comment\":\"Example revision\"}"
             },
-            "customAttributesJson": {
+            "customAttributes": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             }
@@ -21658,25 +21777,37 @@
             "saveAsNewItem": {
               "arguments": {
                 "action": "saveAsNewItem",
-                "itemDetailsJson": "{\"itemName\":\"Example\",\"teamcenterItemType\":\"T4TiaProject\"}"
+                "itemDetails": {
+                  "itemName": "Example",
+                  "teamcenterItemType": "T4TiaProject"
+                }
               }
             },
             "saveAsNewItemWithProxyObject": {
               "arguments": {
                 "action": "saveAsNewItemWithProxyObject",
-                "itemDetailsJson": "{\"itemName\":\"Example\",\"teamcenterItemType\":\"T4TiaProject\"}"
+                "itemDetails": {
+                  "itemName": "Example",
+                  "teamcenterItemType": "T4TiaProject"
+                }
               }
             },
             "saveAsNewRevision": {
               "arguments": {
                 "action": "saveAsNewRevision",
-                "revisionDetailsJson": "{\"revisionId\":\"B\",\"comment\":\"Example revision\"}"
+                "revisionDetails": {
+                  "revisionId": "B",
+                  "comment": "Example revision"
+                }
               }
             },
             "saveAsNewRevisionWithProxyObject": {
               "arguments": {
                 "action": "saveAsNewRevisionWithProxyObject",
-                "revisionDetailsJson": "{\"revisionId\":\"B\",\"comment\":\"Example revision\"}"
+                "revisionDetails": {
+                  "revisionId": "B",
+                  "comment": "Example revision"
+                }
               }
             }
           },
@@ -21686,14 +21817,20 @@
           "arguments": {
             "confirmUninstallInUse": false,
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
               "requiresBinding": true
             },
@@ -23112,16 +23249,20 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadDccCharts": {
+        "ListDccCharts": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -23149,21 +23290,25 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadDccObject": {
+        "GetDccObject": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "objectPathJson": {
+            "objectPath": {
               "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
-              "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
+              "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
             },
             "offset": {
               "exampleValue": 0
@@ -23253,20 +23398,24 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadDriveObjects": {
+        "ListDriveObjects": {
           "arguments": {
-            "devicePathJson": "[\"<exact drive device>\"]",
-            "itemPathJson": "[\"<exact drive/control unit item>\"]",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ],
             "includeTelegrams": false,
             "includeFunctions": false,
             "includeTechnologyExtensions": false,
             "includeDcc": false
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             }
           },
@@ -23274,27 +23423,33 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "ReadDriveParameters": {
+        "GetDriveParameters": {
           "arguments": {
-            "devicePathJson": "[\"<exact drive device>\"]",
-            "itemPathJson": "[\"<exact drive/control unit item>\"]",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ],
             "driveObjectNumber": 0,
             "driveObjectIndex": 0,
             "source": "write",
-            "namesJson": "[\"p1070[0]\"]",
+            "names": [
+              "p1070[0]"
+            ],
             "includeValue": false,
             "includeBits": false,
             "includeEnumValues": false
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "numbersJson": {
-              "exampleValue": "<numbersJson from this operation's target or user input>",
+            "numbers": {
+              "exampleValue": "<numbers from this operation's target or user input>",
               "requiresBinding": true
             },
             "offset": {
@@ -23494,16 +23649,20 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadOnlineDriveParameters": {
+        "GetOnlineDriveParameters": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "driveObjectNumber": {
@@ -23512,12 +23671,12 @@
             "driveObjectIndex": {
               "exampleValue": -1
             },
-            "namesJson": {
-              "exampleValue": "<namesJson from this operation's target or user input>",
+            "names": {
+              "exampleValue": "<names from this operation's target or user input>",
               "requiresBinding": true
             },
-            "numbersJson": {
-              "exampleValue": "<numbersJson from this operation's target or user input>",
+            "numbers": {
+              "exampleValue": "<numbers from this operation's target or user input>",
               "requiresBinding": true
             },
             "includeBits": {
@@ -26158,15 +26317,19 @@
         {
           "tool": "ManageStartdriveParameter",
           "arguments": {
-            "devicePathJson": "[\"<exact drive device>\"]",
-            "itemPathJson": "[\"<exact drive/control unit item>\"]",
+            "devicePath": [
+              "<exact drive device>"
+            ],
+            "itemPath": [
+              "<exact drive/control unit item>"
+            ],
             "driveObjectNumber": 0,
             "driveObjectIndex": 0,
             "parameter": "p1070[0]",
             "action": "read",
             "dryRun": true
           },
-          "expect": "For the requested target only, meta.before.value has a BICO source or scalar/null; stop on failure."
+          "expect": "For the requested target only, data.evidence.before.value has a BICO source or scalar/null; stop on failure."
         }
       ]
     },
@@ -27228,7 +27391,7 @@
   },
   "toolNotes": {
     "ManageStartdriveParameter": {
-      "input": "devicePathJson and itemPathJson are JSON strings of names from GetProjectTree. Select the intended drive object from ReadDriveObjects. parameter is the exact parameter name, including index.",
+      "input": "devicePath and itemPath are arrays of names from GetProjectTree. Select the intended drive object from ListDriveObjects. parameter is the exact parameter name, including index.",
       "resultCases": [
         {
           "example": {
@@ -27467,12 +27630,12 @@
       ],
       "profile": "full-engine"
     },
-    "ReadDriveParameters": {
+    "GetDriveParameters": {
       "profile": "full-engine",
       "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
       "nativeReadsPossible": true
     },
-    "ReadOnlineDriveParameters": {
+    "GetOnlineDriveParameters": {
       "profile": "full-engine",
       "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
       "nativeReadsPossible": true

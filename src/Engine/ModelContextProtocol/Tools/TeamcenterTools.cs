@@ -1,3 +1,9 @@
+using System;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4.Domain;
+using ModelContextProtocol.Protocol;
+using TiaMcpServer.Siemens;
 using System.ComponentModel;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens.Services;
@@ -12,8 +18,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public TeamcenterTools(TeamcenterService teamcenter) => _teamcenter = teamcenter;
 
-        [McpServerTool(Name="ManageTeamcenterConnection"), Description("[L2][VersionControl][WRITE] Teamcenter Gateway connection of this engine session (TiaPortal.GetService<TeamcenterConnectionProvider>): read (connected, group, role, SHA-256 prefix of the session token, provider availability), connect (Connect(userName, password as SecureString - never logged, group, role, hostUrl, instance)), connectSso (ConnectSSO(hostUrl, instance, loginUrl, applicationId); without an active SSO session Teamcenter prompts in a browser), disconnect (Disconnect(info)). One connection per session; the info object stays in engine memory for ManageTeamcenterDataset / ManageTeamcenterWorkflow. Default preview; project unchanged.")]
-        public ResponseMessage ManageTeamcenterConnection(
+        [McpServerTool(Name="ManageTeamcenterConnection"), Description("[L2][VersionControl][WRITE] Teamcenter Gateway connection of this engine session (TiaPortal.GetService<TeamcenterConnectionProvider>): read (connected, group, role, SHA-256 prefix of the session token, provider availability), connect (Connect(userName, password as SecureString - never logged, group, role, hostUrl, instance)), connectSso (ConnectSSO(hostUrl, instance, loginUrl, applicationId); without an active SSO session Teamcenter prompts in a browser), disconnect (Disconnect(info)). One connection per session; the info object stays in engine memory for ManageTeamcenterDataset / ManageTeamcenterWorkflow. Default preview; project unchanged. Current native policy; V4 native acceptance is pending.")]
+        public CallToolResult ManageTeamcenterConnection(
             [Description("action: the operation to perform - read | connect | connectSso | disconnect.")] string action="read",
             [Description("userName: user name.")] string userName="",
             string password="",
@@ -24,9 +30,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("loginUrl: SSO login URL.")] string loginUrl="",
             [Description("applicationId: SSO application id.")] string applicationId="",
             bool dryRun=true)
-            => _teamcenter.ManageTeamcenterConnection(action,userName,password,group,role,hostUrl,instance,loginUrl,applicationId,dryRun);
-        [McpServerTool(Name="ManageTeamcenterDataset"), Description("[L2][VersionControl][WRITE] Teamcenter datasets with the active connection: checkout / checkin / cancelCheckout (TcGatewayLockProvider.CheckoutDataset / CheckinDataset / CancelCheckoutDataset(info, itemId, revisionId, datasetType T4TiaProjectDataset | T4TiaLibraryDataset, datasetName)), search (TcGatewaySearchAndDownloadProvider.Search(info, itemType Project | GlobalLibrary, tiaObjectName, itemId, itemName, revisionId; wildcards allowed, at least one of the three names) -> item ids with revision ids), download (Download(info, itemId, revisionId, itemType, localCacheOption Overwrite | DoNotOverwrite) -> starter file path in the Teamcenter cache; nothing is opened automatically). Default preview (search runs directly); the local project is unchanged.")]
-        public ResponseMessage ManageTeamcenterDataset(
+            => DriveToolContract.Run("ManageTeamcenterConnection", !dryRun && action != "read", true, () =>
+            {
+                DriveToolContract.Check(() =>
+                {
+                    TeamcenterLogic.ValidateConnectionRequest(action, userName, password, group, role, hostUrl, instance, loginUrl, applicationId, dryRun);
+                });
+                return _teamcenter.ManageTeamcenterConnection(action,userName,password,group,role,hostUrl,instance,loginUrl,applicationId,dryRun);
+            });
+        [McpServerTool(Name="ManageTeamcenterDataset"), Description("[L2][VersionControl][WRITE] Teamcenter datasets with the active connection: checkout / checkin / cancelCheckout (TcGatewayLockProvider.CheckoutDataset / CheckinDataset / CancelCheckoutDataset(info, itemId, revisionId, datasetType T4TiaProjectDataset | T4TiaLibraryDataset, datasetName)), search (TcGatewaySearchAndDownloadProvider.Search(info, itemType Project | GlobalLibrary, tiaObjectName, itemId, itemName, revisionId; wildcards allowed, at least one of the three names) -> item ids with revision ids), download (Download(info, itemId, revisionId, itemType, localCacheOption Overwrite | DoNotOverwrite) -> starter file path in the Teamcenter cache; nothing is opened automatically). Default preview (search runs directly); the local project is unchanged. Current native policy; V4 native acceptance is pending.")]
+        public CallToolResult ManageTeamcenterDataset(
             [Description("action: the operation to perform - checkout | checkin | cancelCheckout | search | download.")] string action,
             [Description("itemId: Teamcenter item id.")] string itemId="",
             [Description("revisionId: Teamcenter revision id.")] string revisionId="",
@@ -37,9 +50,16 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemName="",
             [Description("localCacheOption: Overwrite | DoNotOverwrite.")] string localCacheOption="",
             bool dryRun=true)
-            => _teamcenter.ManageTeamcenterDataset(action,itemId,revisionId,datasetType,datasetName,itemType,tiaObjectName,itemName,localCacheOption,dryRun);
-        [McpServerTool(Name="ManageTeamcenterWorkflow"), Description("[L2][VersionControl][WRITE] Save the open project (target project) or an open global library (target globalLibrary + libraryName) to Teamcenter through TcGatewayWorkflowProvider: readCustomAttributes (GetTeamcenterCustomAttributes(info, itemType e.g. T4TiaProject) -> name, data type, default, required, bounds, list of values), save / saveWithProxyObject (Save / SaveWithProxyObject(info, localCacheOption Overwrite | DoNotOverwrite)), saveToItem / saveToItemWithProxyObject (itemId, revisionId, localCacheOption), saveAsNewItem / saveAsNewItemWithProxyObject (itemDetailsJson {itemId, itemName*, revisionId, teamcenterItemType*, comment, teamcenterFolder, teamcenterProject [..]} via ItemDetailsDelegate), saveAsNewRevision / saveAsNewRevisionWithProxyObject (revisionDetailsJson {revisionId, comment} via RevisionDetailsDelegate; itemType names the mapped attribute type when customAttributesJson is given). customAttributesJson {name: value} sets mapped TeamcenterProperty values with SetValue + ErrorCallback before saving. Every save action saves the open object through the gateway and needs confirmSave=true; returns the native ItemInfo. Default preview.")]
-        public ResponseMessage ManageTeamcenterWorkflow(
+            => DriveToolContract.Run("ManageTeamcenterDataset", !dryRun && action != "search", true, () =>
+            {
+                DriveToolContract.Check(() =>
+                {
+                    TeamcenterLogic.ValidateDatasetRequest(action, itemId, revisionId, datasetType, datasetName, itemType, tiaObjectName, itemName, localCacheOption, dryRun);
+                });
+                return _teamcenter.ManageTeamcenterDataset(action,itemId,revisionId,datasetType,datasetName,itemType,tiaObjectName,itemName,localCacheOption,dryRun);
+            });
+        [McpServerTool(Name="ManageTeamcenterWorkflow"), Description("[L2][VersionControl][WRITE] Save the open project (target project) or an open global library (target globalLibrary + libraryName) to Teamcenter through TcGatewayWorkflowProvider: readCustomAttributes (GetTeamcenterCustomAttributes(info, itemType e.g. T4TiaProject) -> name, data type, default, required, bounds, list of values), save / saveWithProxyObject (Save / SaveWithProxyObject(info, localCacheOption Overwrite | DoNotOverwrite)), saveToItem / saveToItemWithProxyObject (itemId, revisionId, localCacheOption), saveAsNewItem / saveAsNewItemWithProxyObject (itemDetails {itemId, itemName*, revisionId, teamcenterItemType*, comment, teamcenterFolder, teamcenterProject [..]} via ItemDetailsDelegate), saveAsNewRevision / saveAsNewRevisionWithProxyObject (revisionDetails {revisionId, comment} via RevisionDetailsDelegate; itemType names the mapped attribute type when customAttributes is given). customAttributes {name: value} sets mapped TeamcenterProperty values with SetValue + ErrorCallback before saving. Every save action saves the open object through the gateway and needs confirmSave=true; returns the native ItemInfo. Default preview. Current native policy; V4 native acceptance is pending.")]
+        public CallToolResult ManageTeamcenterWorkflow(
             [Description("action: the operation to perform - readCustomAttributes | save | saveWithProxyObject | saveToItem | saveToItemWithProxyObject | saveAsNewItem | saveAsNewItemWithProxyObject | saveAsNewRevision | saveAsNewRevisionWithProxyObject.")] string action,
             [Description("target: the target of the action (see the tool description).")] string target="project",
             string libraryName="",
@@ -47,11 +67,22 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("itemId: Teamcenter item id.")] string itemId="",
             [Description("revisionId: Teamcenter revision id.")] string revisionId="",
             [Description("localCacheOption: Overwrite | DoNotOverwrite.")] string localCacheOption="",
-            [Description("itemDetailsJson: JSON object of item details (see the tool description).")] string itemDetailsJson="{}",
-            [Description("revisionDetailsJson: JSON object of revision details.")] string revisionDetailsJson="{}",
-            [Description("customAttributesJson: JSON object attribute name -> value.")] string customAttributesJson="{}",
+            [Description("itemDetails: JSON object of item details (see the tool description).")] TeamcenterItemSpec itemDetails = null!,
+            [Description("revisionDetails: JSON object of revision details.")] TeamcenterRevisionSpec revisionDetails = null!,
+            [Description("customAttributes: JSON object attribute name -> value.")] AttributeMap<Scalar> customAttributes = null!,
             [Description("confirmSave: must be true together with dryRun=false to save to Teamcenter.")] bool confirmSave=false,
             bool dryRun=true)
-            => _teamcenter.ManageTeamcenterWorkflow(action,target,libraryName,itemType,itemId,revisionId,localCacheOption,itemDetailsJson,revisionDetailsJson,customAttributesJson,confirmSave,dryRun);
+            => DriveToolContract.Run("ManageTeamcenterWorkflow", !dryRun && action != "readCustomAttributes", true, () =>
+            {
+                string itemDetailsJson = itemDetails?.Json.GetRawText() ?? "{}";
+                string revisionDetailsJson = revisionDetails?.Json.GetRawText() ?? "{}";
+                string customAttributesJson = DriveToolContract.Attributes(customAttributes);
+                DriveToolContract.Check(() =>
+                {
+                    DomainValidation.Teamcenter(itemDetails, revisionDetails, action, McpServer.ReleaseKey, true, false);
+                    TeamcenterLogic.ValidateWorkflowRequest(action, target, libraryName, itemType, itemId, revisionId, localCacheOption, itemDetailsJson, revisionDetailsJson, customAttributesJson, confirmSave, dryRun);
+                });
+                return _teamcenter.ManageTeamcenterWorkflow(action,target,libraryName,itemType,itemId,revisionId,localCacheOption,itemDetailsJson,revisionDetailsJson,customAttributesJson,confirmSave,dryRun);
+            });
     }
 }

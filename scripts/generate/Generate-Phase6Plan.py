@@ -298,6 +298,8 @@ PARAM_SHAPES = {
 }
 EXACT_SHAPES = {
     ("ManagePlcCertificate", "subjectAlternativeNamesJson"): "SubjectAlternativeName[]",
+    ("ReadDriveParameters", "numbersJson"): "ParameterRef[]",
+    ("ReadOnlineDriveParameters", "numbersJson"): "ParameterRef[]",
     ("CallTool","argumentsJson"): "ToolArguments(target inputSchema)",
     ("PreflightToolCall","argumentsJson"): "ToolArguments(target inputSchema)",
     ("RunPlcCompanionTool","argumentsJson"): "string[]",

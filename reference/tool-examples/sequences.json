@@ -29,15 +29,19 @@
       {
         "tool": "ManageStartdriveParameter",
         "arguments": {
-          "devicePathJson": "[\"<exact drive device>\"]",
-          "itemPathJson": "[\"<exact drive/control unit item>\"]",
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ],
           "driveObjectNumber": 0,
           "driveObjectIndex": 0,
           "parameter": "p1070[0]",
           "action": "read",
           "dryRun": true
         },
-        "expect": "For the requested target only, meta.before.value has a BICO source or scalar/null; stop on failure."
+        "expect": "For the requested target only, data.evidence.before.value has a BICO source or scalar/null; stop on failure."
       }
     ]
   },

@@ -2774,7 +2774,7 @@
         "21": "partial"
       },
       "tools": [
-        "ReadDccCharts",
+        "ListDccCharts",
         "ManageDccChart",
         "ManageDccBlock",
         "ManageDccPin"
@@ -2844,13 +2844,13 @@
         "18": [],
         "19": [],
         "20": [
-          "ReadDccCharts",
+          "ListDccCharts",
           "ManageDccChart",
           "ManageDccBlock",
           "ManageDccPin"
         ],
         "21": [
-          "ReadDccCharts",
+          "ListDccCharts",
           "ManageDccChart",
           "ManageDccBlock",
           "ManageDccPin"

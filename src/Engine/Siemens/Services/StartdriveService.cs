@@ -168,7 +168,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadDriveObjects(string devicePathJson, string itemPathJson, bool includeTelegrams = true, bool includeFunctions = true, bool includeTechnologyExtensions = true, bool includeDcc = true)
-            => _session.RunHmiStepTool("ReadDriveObjects", meta =>
+            => _session.RunHmiStepTool("ListDriveObjects", meta =>
             {
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 var container = _session.ExactDriveContainer(item);
@@ -185,7 +185,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ReadDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string source = "read", string namesJson = "[]", string numbersJson = "[]",
             bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
-            => _session.RunHmiStepTool("ReadDriveParameters", meta =>
+            => _session.RunHmiStepTool("GetDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest(source, namesJson, numbersJson, offset, limit);
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
@@ -595,7 +595,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- online (connected drive) --------------------------------------------------------------------------------------------
         public ResponseMessage ReadOnlineDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string namesJson = "[]", string numbersJson = "[]", bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
-            => _session.RunHmiStepTool("ReadOnlineDriveParameters", meta =>
+            => _session.RunHmiStepTool("GetOnlineDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest("read", namesJson, numbersJson, offset, limit);
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);

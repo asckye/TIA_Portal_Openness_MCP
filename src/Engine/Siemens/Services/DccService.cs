@@ -149,7 +149,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadDccCharts(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string chartPath = "", int maxDepth = 3, bool includeBlocks = true, bool includePins = false, bool includeLibraries = true)
-            => _session.RunHmiStepTool("ReadDccCharts", meta => DccStep(meta, () =>
+            => _session.RunHmiStepTool("ListDccCharts", meta => DccStep(meta, () =>
             {
                 if (maxDepth < 1 || maxDepth > 8) throw new ArgumentException("maxDepth 1..8 required.");
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
@@ -185,7 +185,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (chart != null) meta["before"] = ChartRow(chart, 1, 1, false, false);
                 switch (action)
                 {
-                    case "read": return "DCC chart read; use ReadDccCharts for the nested tree. No modification.";
+                    case "read": return "DCC chart read; use ListDccCharts for the nested tree. No modification.";
                     case "readSequence": meta["sequence"] = chart == null ? SequenceRows(container.Charts.GetChartSequence()) : SequenceRows(chart.GetRunSequence()); return chart == null ? "DCC charts in execution order (GetChartSequence); no modification." : "Run sequence of the chart (GetRunSequence); no modification.";
                 }
                 FileInfo? file = null;
@@ -417,7 +417,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // Generic property-path reader for arbitrary DCC sub-paths after typed drive resolution.
         public ResponseMessage ReadDccObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string objectPathJson = "[]", int offset = 0, int limit = 100, int driveObjectIndex = -1)
-            => _session.RunHmiStepTool("ReadDccObject", meta => DccStep(meta, () =>
+            => _session.RunHmiStepTool("GetDccObject", meta => DccStep(meta, () =>
             {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("Invalid pagination.");
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);

@@ -150,7 +150,7 @@
   },
   "toolNotes": {
     "ManageStartdriveParameter": {
-      "input": "devicePathJson and itemPathJson are JSON strings of names from GetProjectTree. Select the intended drive object from ReadDriveObjects. parameter is the exact parameter name, including index.",
+      "input": "devicePath and itemPath are arrays of names from GetProjectTree. Select the intended drive object from ListDriveObjects. parameter is the exact parameter name, including index.",
       "resultCases": [
         {
           "example": {
@@ -389,12 +389,12 @@
       ],
       "profile": "full-engine"
     },
-    "ReadDriveParameters": {
+    "GetDriveParameters": {
       "profile": "full-engine",
       "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
       "nativeReadsPossible": true
     },
-    "ReadOnlineDriveParameters": {
+    "GetOnlineDriveParameters": {
       "profile": "full-engine",
       "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
       "nativeReadsPossible": true

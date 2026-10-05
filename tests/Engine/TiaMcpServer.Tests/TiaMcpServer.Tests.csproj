@@ -128,6 +128,9 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/DccTools.cs" Link="DccTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs" Link="StartdriveTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />

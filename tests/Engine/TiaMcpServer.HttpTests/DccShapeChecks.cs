@@ -84,8 +84,8 @@ internal static class DccShapeChecks
         check(known.Length==39 && exceptions.All(t=>known.Contains(t)),"Portal.KnownDccExceptions names all 39 DCC exception classes");
 
         // ---- server side ----
-        foreach(var tool in new[]{"ReadDccCharts","ManageDccChart","ManageDccBlock","ManageDccPin","ManageDccChartInterface","ManageDccChartPartition","ManageDcbLibraries","ReadDccObject"})
-            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        foreach(var tool in new[]{"ListDccCharts","ManageDccChart","ManageDccBlock","ManageDccPin","ManageDccChartInterface","ManageDccChartPartition","ManageDcbLibraries","GetDccObject"})
+            check(portal.Tool(tool).ReturnType.FullName=="ModelContextProtocol.Protocol.CallToolResult","V4 tool "+tool+" is registered once with an envelope");
         check(portal.Method("ManageDccChart")!.GetParameters().Any(p=>p.Name=="confirmDelete") && portal.Method("ManageDccChart")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageDccChart takes confirmDelete and driveObjectIndex");
     }
 }

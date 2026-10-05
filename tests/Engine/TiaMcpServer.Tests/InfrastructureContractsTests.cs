@@ -55,7 +55,7 @@ namespace TiaMcpServer.Tests
         public InfrastructureContractsTests()
         {
             BatchProbes.Calls.Clear();
-            var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolUsageTools), typeof(BatchProbes), typeof(ToolBridgeProbes) });
+            var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolUsageTools), typeof(BatchProbes), typeof(ToolBridgeProbes), typeof(DcbVersionProbe) });
             McpServer.ConfigureToolBridge(catalog, () => true, new HashSet<string> { "CallTool" });
             EngineServices.SetServiceProvider(new ServiceCollection().AddEngine(false, catalog)
                 .AddSingleton<Siemens.Portal>().AddSingleton<SessionTools>().BuildServiceProvider());

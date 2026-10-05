@@ -168,8 +168,8 @@ internal static class StartdriveShapeChecks
 
         // ---- server side ----
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ReadDriveObjects","ReadDriveParameters","ManageStartdriveParameter","ManageDriveTelegrams","ManageDriveFunctions","ManageDriveSecurity","ManageTechnologyExtensions","ManageDriveHardwareModule","ManageDriveSafetyAcceptanceTest","ReadOnlineDriveParameters","ManageOnlineDriveFunctions"})
-            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        foreach(var tool in new[]{"ListDriveObjects","GetDriveParameters","ManageStartdriveParameter","ManageDriveTelegrams","ManageDriveFunctions","ManageDriveSecurity","ManageTechnologyExtensions","ManageDriveHardwareModule","ManageDriveSafetyAcceptanceTest","GetOnlineDriveParameters","ManageOnlineDriveFunctions"})
+            check(portal.Tool(tool).ReturnType.FullName=="ModelContextProtocol.Protocol.CallToolResult","V4 tool "+tool+" is registered once with an envelope");
         check(portal.Method("ManageStartdriveParameter")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageStartdriveParameter takes driveObjectIndex (G120: DriveObjectNumber not retrievable)");
         check(portal.Method("ReadDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue") && portal.Method("ReadOnlineDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue"),"ReadDriveParameters / ReadOnlineDriveParameters take includeValue (2.7.40: Value read last and on request)");
         check(portal.Method("GetPortalProcessHealth")!=null,"Portal.GetPortalProcessHealth exists (2.7.40: bound TIA process liveness after a crash)");

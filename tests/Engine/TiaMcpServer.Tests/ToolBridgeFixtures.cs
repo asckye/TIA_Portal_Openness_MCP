@@ -31,14 +31,20 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseMessage { public string? Message { get; set; } public JsonObject? Meta { get; set; } }
     public class ResponseStringList : ResponseMessage { public IEnumerable<string>? Items { get; set; } }
+    // Explicit fixture catalogs load this probe; assembly discovery loads the real DCC tool.
+    public static class DcbVersionProbe
+    {
+        [McpServerTool(Name = "ManageDcbLibraries")]
+        public static ResponseMessage ProbeVersionedDcb(string action = "read", string[] devicePath = null!,
+            string[] itemPath = null!, ushort driveObjectNumber = 0, int driveObjectIndex = -1,
+            string filePath = "", bool dryRun = true)
+        { ToolBridgeProbes.VersionProbeCalls++; return ToolBridgeProbes.ProbeResult(true); }
+    }
     [McpServerToolType]
     public static class ToolBridgeProbes
     {
         internal static int VersionProbeCalls;
         // Application-boundary fixtures, not fabricated Siemens SDK classes.
-        [global::ModelContextProtocol.Server.McpServerTool(Name = "ManageDcbLibraries")]
-        public static ResponseMessage ProbeVersionedDcb(string action = "read")
-        { VersionProbeCalls++; return ProbeResult(true); }
         [global::ModelContextProtocol.Server.McpServerTool(Name = "ListSafetyActivationTests")]
         public static ResponseMessage ProbeVersionedSafety()
         { VersionProbeCalls++; return ProbeResult(true); }
@@ -56,7 +62,7 @@ namespace TiaMcpServer.Tests
 {
     internal static class ToolBridgeFixture
     {
-        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) });
+        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(DcbVersionProbe), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) });
 
         internal static void Configure(bool lite = false)
         {
@@ -139,7 +145,8 @@ namespace TiaMcpServer.Tests
                 typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools),
                 typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools),
                 typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(UnifiedUiModelTools),
-                typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools)
+                typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools),
+                typeof(DccTools), typeof(StartdriveTools), typeof(TeamcenterTools)
             }).Methods, ToolCatalog.Engine.Methods);
         }
 

@@ -81,7 +81,7 @@ internal static class TeamcenterShapeChecks
 
         // ---- server side ----
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ManageTeamcenterConnection","ManageTeamcenterDataset","ManageTeamcenterWorkflow"}) check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        foreach(var tool in new[]{"ManageTeamcenterConnection","ManageTeamcenterDataset","ManageTeamcenterWorkflow"}) check(portal.Tool(tool).ReturnType.FullName=="ModelContextProtocol.Protocol.CallToolResult","V4 tool "+tool+" is registered once with an envelope");
         check(Equals(portal.Method("ManageTeamcenterWorkflow")!.GetParameters().Single(p=>p.Name=="confirmSave").DefaultValue,false),"ManageTeamcenterWorkflow saves need confirmSave");
     }
 }

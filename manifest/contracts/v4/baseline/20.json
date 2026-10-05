@@ -11654,6 +11654,87 @@
       "name": "GetClassicHmiScreenTree"
     },
     {
+      "descriptionSha256": "c729619edf5e3dd1d4c0b6ba750fcc4ea2f130a2b4c941eebf5be4e1b7d296ba",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "driveObjectIndex": {
+            "default": -1,
+            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
+            "type": "integer"
+          },
+          "driveObjectNumber": {
+            "default": 0,
+            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
+            "type": "integer"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectPath": {
+            "items": {
+              "additionalProperties": false,
+              "not": {
+                "required": [
+                  "name",
+                  "index"
+                ]
+              },
+              "properties": {
+                "index": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "property": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ],
+              "type": "object"
+            },
+            "maxItems": 24,
+            "minItems": 0,
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDccObject"
+    },
+    {
       "descriptionSha256": "25a02d00e894ac92a5fa50f67d00b723515a35f992929933901e7695e1bc8735",
       "inputSchema": {
         "additionalProperties": false,
@@ -11839,6 +11920,144 @@
         "type": "object"
       },
       "name": "GetDevicePlugLocations"
+    },
+    {
+      "descriptionSha256": "de80fcdcdb7247e7cc800b61bf68034b9b04a14970cf16fe40b6f4f8cfdc1fc6",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "examples": [
+              [
+                "<exact drive device>"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "driveObjectIndex": {
+            "default": -1,
+            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          },
+          "driveObjectNumber": {
+            "default": 0,
+            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          },
+          "includeBits": {
+            "default": false,
+            "description": "includeBits: true also returns the bit definitions of bit-coded parameters.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeEnumValues": {
+            "default": false,
+            "description": "includeEnumValues: true also returns the enumeration values of enum parameters.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeValue": {
+            "default": true,
+            "description": "includeValue: true also reads the current value of every parameter.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "itemPath": {
+            "examples": [
+              [
+                "<exact drive/control unit item>"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "names": {
+            "description": "names: Array of exact parameter names.",
+            "examples": [
+              [
+                "p1070[0]"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "numbers": {
+            "description": "numbers: Array of {number, arrayIndex?}; omitted arrayIndex means -1.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "arrayIndex": {
+                  "maximum": 32767,
+                  "minimum": -1,
+                  "type": "integer"
+                },
+                "number": {
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "number"
+              ],
+              "type": "object"
+            },
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "source": {
+            "default": "read",
+            "description": "source: read | write.",
+            "enum": [
+              "read",
+              "write"
+            ],
+            "examples": [
+              "write"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDriveParameters"
     },
     {
       "descriptionSha256": "2747b1249d3f02221ddff8936f2a4a95ca68555aa93454bef7f94b1ee6d24d9f",
@@ -12082,6 +12301,102 @@
         "type": "object"
       },
       "name": "GetObjectProperty"
+    },
+    {
+      "descriptionSha256": "f21f1e5edd95ce2e3f306abb7f3a286e6a04e0bc4f641eaabe0bdbb4ecb27404",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "driveObjectIndex": {
+            "default": -1,
+            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
+            "type": "integer"
+          },
+          "driveObjectNumber": {
+            "default": 0,
+            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
+            "type": "integer"
+          },
+          "includeBits": {
+            "default": false,
+            "description": "includeBits: true also returns the bit definitions of bit-coded parameters.",
+            "type": "boolean"
+          },
+          "includeEnumValues": {
+            "default": false,
+            "description": "includeEnumValues: true also returns the enumeration values of enum parameters.",
+            "type": "boolean"
+          },
+          "includeValue": {
+            "default": true,
+            "description": "includeValue: true also reads the current value of every parameter.",
+            "type": "boolean"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "names": {
+            "description": "names: Array of exact parameter names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "numbers": {
+            "description": "numbers: Array of {number, arrayIndex?}; omitted arrayIndex means -1.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "arrayIndex": {
+                  "maximum": 32767,
+                  "minimum": -1,
+                  "type": "integer"
+                },
+                "number": {
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "number"
+              ],
+              "type": "object"
+            },
+            "maxItems": 200,
+            "minItems": 0,
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetOnlineDriveParameters"
     },
     {
       "descriptionSha256": "c5f449178a754c319853b0068147b7cb7e2856363bb69ea58c59ba28c856b280",
@@ -14729,6 +15044,67 @@
       "name": "ListClassicHmiScripts"
     },
     {
+      "descriptionSha256": "c528cd399f67c76039500a6cab2a22616da6b62cee4e404fe3a6b155ad08d3d2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "chartPath": {
+            "default": "",
+            "description": "chartPath: 'Folder/Chart' path of the chart.",
+            "type": "string"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "driveObjectIndex": {
+            "default": -1,
+            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
+            "type": "integer"
+          },
+          "driveObjectNumber": {
+            "default": 0,
+            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
+            "type": "integer"
+          },
+          "includeBlocks": {
+            "default": true,
+            "description": "includeBlocks: true also returns the blocks of each chart / group.",
+            "type": "boolean"
+          },
+          "includeLibraries": {
+            "default": true,
+            "description": "includeLibraries: true also returns the DCB libraries.",
+            "type": "boolean"
+          },
+          "includePins": {
+            "default": false,
+            "description": "includePins: true also returns block pins.",
+            "type": "boolean"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxDepth": {
+            "default": 3,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "ListDccCharts"
+    },
+    {
       "descriptionSha256": "5eda8f31b29a2700ed309e2da44c4829fccc79227f39f3f9e7e5cbaf2ad936de",
       "inputSchema": {
         "additionalProperties": false,
@@ -14821,6 +15197,74 @@
         "type": "object"
       },
       "name": "ListDevices"
+    },
+    {
+      "descriptionSha256": "86d1286fe98900a97969746266c74e93c59c1a61a1c83768fa145708137d1495",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "examples": [
+              [
+                "<exact drive device>"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "includeDcc": {
+            "default": true,
+            "description": "includeDcc: true also returns the DCC charts.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeFunctions": {
+            "default": true,
+            "description": "includeFunctions: true also returns the drive functions.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeTechnologyExtensions": {
+            "default": true,
+            "description": "includeTechnologyExtensions: true also returns the technology extensions.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeTelegrams": {
+            "default": true,
+            "description": "includeTelegrams: true also returns the telegrams.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "itemPath": {
+            "examples": [
+              [
+                "<exact drive/control unit item>"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "ListDriveObjects"
     },
     {
       "descriptionSha256": "7b59733c4a08f535300090d430e4de53cafaeab5bca633ac2d6a4bb139b3c539",
@@ -15961,8 +16405,9 @@
       "name": "ManageClassicHmiTextGraphicList"
     },
     {
-      "descriptionSha256": "31d8d0ce32f38239b24e0e815a1767e156725e04ff7f908c25b280192e4711b6",
+      "descriptionSha256": "515a882d736ea9ad2906f700667b31283135878cabf9aaf22624a82c72df09a9",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -15973,10 +16418,11 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -15998,10 +16444,11 @@
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
             "type": "string"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -16009,8 +16456,9 @@
       "name": "ManageDcbLibraries"
     },
     {
-      "descriptionSha256": "a69be3427968b98eefc67f1b476854759c3527566532bdb449c62d2c06c9cb00",
+      "descriptionSha256": "84ff31a224755e030afb1d0fa3886dd3ef8ba5bb1271fd0e601350c464dec828",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16043,9 +16491,11 @@
             "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16062,19 +16512,36 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "libraryName": {
             "default": "",
             "description": "libraryName: name of the global library ('' = the project library).",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "sequenceIndex": {
             "default": -1,
@@ -16083,8 +16550,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "chartPath"
         ],
         "type": "object"
@@ -16092,8 +16559,9 @@
       "name": "ManageDccBlock"
     },
     {
-      "descriptionSha256": "83c2f3e27c50b2cdff984148642e72eefa2dc69044a4aa95a3a45216502c7741",
+      "descriptionSha256": "0a3ba27b1090a6a33e79a72ec6710239cdeb68886f74c374fe78e96612a923e4",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16122,9 +16590,11 @@
             "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16151,14 +16621,31 @@
             "description": "importOptions: import option name (Override replaces objects of the same name; the tool description lists the values).",
             "type": "string"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "sequenceIndex": {
             "default": -1,
@@ -16167,16 +16654,17 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
       "name": "ManageDccChart"
     },
     {
-      "descriptionSha256": "8e0b3e7b878bb1957c7a27b14677d5816119a2dc8da5e02a7b83c9a484b0f7ef",
+      "descriptionSha256": "32e1bad8247163d8aef96caf537e183e844756809069d79c599da9e84459bf35",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16198,9 +16686,11 @@
             "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16222,14 +16712,31 @@
             "description": "interfaceName: exact chart interface name.",
             "type": "string"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "sourceBlock": {
             "default": "",
@@ -16243,8 +16750,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "chartPath"
         ],
         "type": "object"
@@ -16252,8 +16759,9 @@
       "name": "ManageDccChartInterface"
     },
     {
-      "descriptionSha256": "048bb2a253bfdda15562da5b3b78a28b319c491068f76ed53b60fd5f56030b0d",
+      "descriptionSha256": "0a0a829e839ec48dce02573c8b20743ea97739dee6e0e57a6fe9d29eebba5f56",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16275,9 +16783,11 @@
             "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16294,24 +16804,41 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "partitionName": {
             "default": "",
             "description": "partitionName: exact partition name.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "chartPath"
         ],
         "type": "object"
@@ -16319,8 +16846,9 @@
       "name": "ManageDccChartPartition"
     },
     {
-      "descriptionSha256": "565a255bf194a044618bf297f9ed9eb6e95b3e6d393b7a02e3e020e8be16f186",
+      "descriptionSha256": "174e85f62c39c840be6fc07060550454be3fe10c9bea76c1d7ee2264ee1a2258",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16349,9 +16877,11 @@
             "description": "chartPath: 'Folder/Chart' path of the chart.",
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16368,28 +16898,81 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "parameterNumber": {
             "default": -1,
             "description": "parameterNumber: drive parameter number (p / r number without the letter).",
             "type": "integer"
           },
-          "partnerJson": {
-            "default": "{}",
-            "description": "partnerJson: JSON object naming the partner pin {block, pin} (or the parameter for updateParameter).",
-            "type": "string"
+          "partner": {
+            "description": "partner: Partner {block, pin} or {chartInterface}; only for connect / disconnect.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "block": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "pin": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "block",
+                  "pin"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "chartInterface": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "chartInterface"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "pinName": {
             "description": "pinName: exact pin name on the block.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "setAsSignal": {
             "default": false,
@@ -16398,8 +16981,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "chartPath",
           "blockName",
           "pinName"
@@ -16624,8 +17207,44 @@
       "name": "ManageDeviceUsers"
     },
     {
-      "descriptionSha256": "dac40ae0c9abac5af86ce2b8ad6007329f2d19a2731ab294a21c6ff532cb3bea",
+      "descriptionSha256": "9593118c54462244b70aced785f3824e8846f0392361a525057d0f3c7f8541b2",
       "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16651,9 +17270,11 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16670,27 +17291,61 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "valueJson": {
-            "default": "{}",
-            "description": "valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects).",
-            "type": "string"
+          "value": {
+            "description": "value: the value to write, as JSON (number, string, boolean or object as the parameter expects).",
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ],
+            "x-maxDepth": 62,
+            "x-maxUtf8Bytes": 10485760
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
       "name": "ManageDriveFunctions"
     },
     {
-      "descriptionSha256": "615859510144831b11937433cc51f4fd0b5772a39035c3af7d89113d5e6897a8",
+      "descriptionSha256": "511c8b5ad6f8d8546c387b424fd368d8df6dbac60d4740a403feeeaeaab30e23",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16702,18 +17357,22 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "positionNumber": {
             "default": -1,
@@ -16727,16 +17386,17 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
       "name": "ManageDriveHardwareModule"
     },
     {
-      "descriptionSha256": "2fa66ccb38dc6dc151f8309908a75a2169199c676f55aecccaeccd0c91379b11",
+      "descriptionSha256": "c28cca49f0d0d3465393918a45ac647df44da5521fcdce99356b4d3c65e94e97",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16750,9 +17410,11 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -16769,9 +17431,11 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "password": {
             "default": "",
@@ -16780,16 +17444,17 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
       "name": "ManageDriveSecurity"
     },
     {
-      "descriptionSha256": "f2c4cce68f7431b0c81452121bb6cd60e0a80dfb5f23300c56275d314d228519",
+      "descriptionSha256": "c49377481696e15c8306173f8a78c33b31218bbbf4e196e8a27eadc12f8e0217",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -16815,9 +17480,11 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "direction": {
             "default": "",
@@ -16861,9 +17528,11 @@
             ],
             "type": "string"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "keepOriginalAddress": {
             "default": true,
@@ -16916,8 +17585,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
@@ -17996,8 +18665,9 @@
       "name": "ManageNetworkDomain"
     },
     {
-      "descriptionSha256": "350d7ddb9019b6a8831e845db66012bb498296a8b2b6d53108986e2254e1beb2",
+      "descriptionSha256": "af80897745753977d43d1c8aacd4fbbbc56633c3c9ac6452b9b7b8abb95ead6e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -18026,9 +18696,11 @@
             "description": "confirmOnline: must be true together with dryRun=false to execute the online drive function.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -18040,9 +18712,11 @@
             "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
             "type": "integer"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "resetMode": {
             "default": "",
@@ -18056,8 +18730,8 @@
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson"
+          "devicePath",
+          "itemPath"
         ],
         "type": "object"
       },
@@ -20480,8 +21154,44 @@
       "name": "ManageSivarcTableRule"
     },
     {
-      "descriptionSha256": "8abdf46a70715648df7da44f2447cc33e3fa9b1425ea2368286d9628e8d1e6ab",
+      "descriptionSha256": "61b9cfa08473e2e15d7581d29ed2548566c9beebae5b6c146f6898d7448a4beb",
       "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20495,12 +21205,16 @@
             ],
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
+          "devicePath": {
             "examples": [
-              "[\"<exact drive device>\"]"
+              [
+                "<exact drive device>"
+              ]
             ],
-            "type": "string"
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -20525,12 +21239,16 @@
             ],
             "type": "boolean"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
+          "itemPath": {
             "examples": [
-              "[\"<exact drive/control unit item>\"]"
+              [
+                "<exact drive/control unit item>"
+              ]
             ],
-            "type": "string"
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "parameter": {
             "description": "parameter: exact parameter name.",
@@ -20539,15 +21257,46 @@
             ],
             "type": "string"
           },
-          "valueJson": {
-            "default": "null",
-            "description": "valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects).",
-            "type": "string"
+          "value": {
+            "description": "value: the value to write, as JSON (number, string, boolean or object as the parameter expects).",
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ],
+            "x-maxDepth": 62,
+            "x-maxUtf8Bytes": 10485760
           }
         },
         "required": [
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "driveObjectNumber",
           "parameter"
         ],
@@ -20667,8 +21416,9 @@
       "name": "ManageSyslogServers"
     },
     {
-      "descriptionSha256": "6df3ff58bb1963a9cad0abe71a77e4d6fb02e1c87fc43bb3c8aa25a7a6fa01d1",
+      "descriptionSha256": "314c9c7fa4daee711688459028464dc2b5eb7c43e43cce61be370b62cc18d878",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20732,8 +21482,9 @@
       "name": "ManageTeamcenterConnection"
     },
     {
-      "descriptionSha256": "842a786615367f2d7dbff1b2376fbc03adb6aed7bdb27645f96676f348a5687a",
+      "descriptionSha256": "b32fa45626c48aca8a247921a0d26885c7f08d3754a7bba4505a3e059af30cd6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - checkout | checkin | cancelCheckout | search | download.",
@@ -20815,8 +21566,9 @@
       "name": "ManageTeamcenterDataset"
     },
     {
-      "descriptionSha256": "358e70c00ea492c8d3a8ab5cbd67f704969bad5c9c78967825fba782ebd295fa",
+      "descriptionSha256": "e2fa2b84478ffa3f3e1438c3d50e7b8c269f56e231226a64e0b87b7c439550c6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - readCustomAttributes | save | saveWithProxyObject | saveToItem | saveToItemWithProxyObject | saveAsNewItem | saveAsNewItemWithProxyObject | saveAsNewRevision | saveAsNewRevisionWithProxyObject.",
@@ -20838,20 +21590,77 @@
             "description": "confirmSave: must be true together with dryRun=false to save to Teamcenter.",
             "type": "boolean"
           },
-          "customAttributesJson": {
-            "default": "{}",
-            "description": "customAttributesJson: JSON object attribute name -> value.",
-            "type": "string"
+          "customAttributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "customAttributes: JSON object attribute name -> value.",
+            "type": "object"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemDetailsJson": {
-            "default": "{}",
-            "description": "itemDetailsJson: JSON object of item details (see the tool description).",
-            "type": "string"
+          "itemDetails": {
+            "additionalProperties": false,
+            "description": "itemDetails: JSON object of item details (see the tool description).",
+            "minProperties": 0,
+            "properties": {
+              "comment": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "itemId": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "itemName": {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              "revisionId": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "teamcenterFolder": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "teamcenterItemType": {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              "teamcenterProject": {
+                "items": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "itemName",
+              "teamcenterItemType"
+            ],
+            "type": "object"
           },
           "itemId": {
             "default": "",
@@ -20878,10 +21687,22 @@
             ],
             "type": "string"
           },
-          "revisionDetailsJson": {
-            "default": "{}",
-            "description": "revisionDetailsJson: JSON object of revision details.",
-            "type": "string"
+          "revisionDetails": {
+            "additionalProperties": false,
+            "description": "revisionDetails: JSON object of revision details.",
+            "minProperties": 0,
+            "properties": {
+              "comment": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "revisionId": {
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
           },
           "revisionId": {
             "default": "",
@@ -20902,8 +21723,9 @@
       "name": "ManageTeamcenterWorkflow"
     },
     {
-      "descriptionSha256": "28166e8b8dc192ab8f73d1e9031a50676f98abfb276b40c43dd80c205dcc04fa",
+      "descriptionSha256": "30ecd3f6d5814c058dd3325fc545a788840c4c896df6266f0b2f4e9861a0d2e4",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20924,10 +21746,11 @@
             "description": "confirmUninstallInUse: must be true to uninstall a technology extension that is still in use.",
             "type": "boolean"
           },
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "driveObjectIndex": {
             "default": -1,
@@ -20959,10 +21782,11 @@
             "description": "includeParameters: true also returns parameters.",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -23330,269 +24154,6 @@
       "name": "ProbeS7CpuIdentity"
     },
     {
-      "descriptionSha256": "285ff3c625109d601dbb8a49cae32f63c6214d84fc930143297c35126fddda13",
-      "inputSchema": {
-        "properties": {
-          "chartPath": {
-            "default": "",
-            "description": "chartPath: 'Folder/Chart' path of the chart.",
-            "type": "string"
-          },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "driveObjectIndex": {
-            "default": -1,
-            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
-            "type": "integer"
-          },
-          "driveObjectNumber": {
-            "default": 0,
-            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
-            "type": "integer"
-          },
-          "includeBlocks": {
-            "default": true,
-            "description": "includeBlocks: true also returns the blocks of each chart / group.",
-            "type": "boolean"
-          },
-          "includeLibraries": {
-            "default": true,
-            "description": "includeLibraries: true also returns the DCB libraries.",
-            "type": "boolean"
-          },
-          "includePins": {
-            "default": false,
-            "description": "includePins: true also returns block pins.",
-            "type": "boolean"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "maxDepth": {
-            "default": 3,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadDccCharts"
-    },
-    {
-      "descriptionSha256": "3555657cdf8635f21752b7ba25df0a0888a44c374c8472212e1d851c3c88b19b",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "driveObjectIndex": {
-            "default": -1,
-            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
-            "type": "integer"
-          },
-          "driveObjectNumber": {
-            "default": 0,
-            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
-            "type": "integer"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "objectPathJson": {
-            "default": "[]",
-            "description": "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadDccObject"
-    },
-    {
-      "descriptionSha256": "fd937cb8d22eb03681e5daacccd8597d84423e4d2597bfaceb459930f6207f94",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "examples": [
-              "[\"<exact drive device>\"]"
-            ],
-            "type": "string"
-          },
-          "includeDcc": {
-            "default": true,
-            "description": "includeDcc: true also returns the DCC charts.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeFunctions": {
-            "default": true,
-            "description": "includeFunctions: true also returns the drive functions.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeTechnologyExtensions": {
-            "default": true,
-            "description": "includeTechnologyExtensions: true also returns the technology extensions.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeTelegrams": {
-            "default": true,
-            "description": "includeTelegrams: true also returns the telegrams.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "examples": [
-              "[\"<exact drive/control unit item>\"]"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadDriveObjects"
-    },
-    {
-      "descriptionSha256": "1196d068d239432e99a86ca4badf050249086b7f3572cd89f300acd2130199b5",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "examples": [
-              "[\"<exact drive device>\"]"
-            ],
-            "type": "string"
-          },
-          "driveObjectIndex": {
-            "default": -1,
-            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
-            "examples": [
-              0
-            ],
-            "type": "integer"
-          },
-          "driveObjectNumber": {
-            "default": 0,
-            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
-            "examples": [
-              0
-            ],
-            "type": "integer"
-          },
-          "includeBits": {
-            "default": false,
-            "description": "includeBits: true also returns the bit definitions of bit-coded parameters.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeEnumValues": {
-            "default": false,
-            "description": "includeEnumValues: true also returns the enumeration values of enum parameters.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeValue": {
-            "default": true,
-            "description": "includeValue: true also reads the current value of every parameter.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "examples": [
-              "[\"<exact drive/control unit item>\"]"
-            ],
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "namesJson": {
-            "default": "[]",
-            "description": "namesJson: JSON array of exact names (or a comma-separated list where the tool says so).",
-            "examples": [
-              "[\"p1070[0]\"]"
-            ],
-            "type": "string"
-          },
-          "numbersJson": {
-            "default": "[]",
-            "description": "numbersJson: JSON array of parameter numbers.",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "source": {
-            "default": "read",
-            "description": "source: read | write.",
-            "enum": [
-              "read",
-              "write"
-            ],
-            "examples": [
-              "write"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadDriveParameters"
-    },
-    {
       "descriptionSha256": "6843b0bd1b73c4f525b73a0e38cbb75a5b2ed6accdf3dc6cacdee3326c85ce85",
       "inputSchema": {
         "properties": {
@@ -23685,72 +24246,6 @@
         "type": "object"
       },
       "name": "ReadObjectIdentifier"
-    },
-    {
-      "descriptionSha256": "a19d5d30e5e33997334f9ed5a2032e93b8f8d213e3a6fafba7f5068c43ae523a",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "driveObjectIndex": {
-            "default": -1,
-            "description": "driveObjectIndex: 0-based index of the drive object inside the drive unit.",
-            "type": "integer"
-          },
-          "driveObjectNumber": {
-            "default": 0,
-            "description": "driveObjectNumber: drive object number (DO) inside the drive unit.",
-            "type": "integer"
-          },
-          "includeBits": {
-            "default": false,
-            "description": "includeBits: true also returns the bit definitions of bit-coded parameters.",
-            "type": "boolean"
-          },
-          "includeEnumValues": {
-            "default": false,
-            "description": "includeEnumValues: true also returns the enumeration values of enum parameters.",
-            "type": "boolean"
-          },
-          "includeValue": {
-            "default": true,
-            "description": "includeValue: true also reads the current value of every parameter.",
-            "type": "boolean"
-          },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "namesJson": {
-            "default": "[]",
-            "description": "namesJson: JSON array of exact names (or a comma-separated list where the tool says so).",
-            "type": "string"
-          },
-          "numbersJson": {
-            "default": "[]",
-            "description": "numbersJson: JSON array of parameter numbers.",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePathJson",
-          "itemPathJson"
-        ],
-        "type": "object"
-      },
-      "name": "ReadOnlineDriveParameters"
     },
     {
       "descriptionSha256": "9075f9a84c1b8b61e664a1b2b1edae85deaccb5e75552594fbea171141f2d8e7",

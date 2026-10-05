@@ -2396,16 +2396,20 @@
       },
       {
         "name": "GetDccObject",
-        "currentName": "ReadDccObject",
+        "currentName": "GetDccObject",
         "sourceName": "ReadDccObject",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceAddressing",
@@ -2519,23 +2523,29 @@
       },
       {
         "name": "GetDriveParameters",
-        "currentName": "ReadDriveParameters",
+        "currentName": "GetDriveParameters",
         "sourceName": "ReadDriveParameters",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "driveObjectNumber": 0,
           "driveObjectIndex": 0,
           "source": "write",
-          "namesJson": "[\"p1070[0]\"]",
+          "names": [
+            "p1070[0]"
+          ],
           "includeValue": false,
           "includeBits": false,
           "includeEnumValues": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetEnvironmentDiagnostics",
@@ -2674,16 +2684,20 @@
       },
       {
         "name": "GetOnlineDriveParameters",
-        "currentName": "ReadOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
         "sourceName": "ReadOnlineDriveParameters",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOnlineState",
@@ -3960,16 +3974,20 @@
       },
       {
         "name": "ListDccCharts",
-        "currentName": "ReadDccCharts",
+        "currentName": "ListDccCharts",
         "sourceName": "ReadDccCharts",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDeviceItemChannels",
@@ -4001,20 +4019,24 @@
       },
       {
         "name": "ListDriveObjects",
-        "currentName": "ReadDriveObjects",
+        "currentName": "ListDriveObjects",
         "sourceName": "ReadDriveObjects",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "includeTelegrams": false,
           "includeFunctions": false,
           "includeTechnologyExtensions": false,
           "includeDcc": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListExportHandles",
@@ -4517,9 +4539,15 @@
         ],
         "arguments": {
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccBlock",
@@ -4529,15 +4557,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
           "blockName": "FC_Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChart",
@@ -4547,13 +4579,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "confirmDelete": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChartInterface",
@@ -4563,14 +4599,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChartPartition",
@@ -4580,14 +4620,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccPin",
@@ -4597,15 +4641,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "blockName": "FC_Example",
           "pinName": "IN1",
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceServiceObjects",
@@ -4670,12 +4718,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveHardwareModule",
@@ -4685,12 +4737,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveSecurity",
@@ -4700,12 +4756,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveTelegrams",
@@ -4715,13 +4775,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
-          "action": "read",
-          "objectPath": "Axis_1"
+          "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageGlobalLibrary",
@@ -4904,12 +4967,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "confirmOnline": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOpcUaAccessControl",
@@ -5389,15 +5456,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "driveObjectNumber": 0,
           "parameter": "p1070[0]",
           "driveObjectIndex": 0,
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSyslogServers",
@@ -5424,7 +5495,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterDataset",
@@ -5438,7 +5509,7 @@
           "itemId": "&lt;Teamcenter item id&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterWorkflow",
@@ -5453,7 +5524,7 @@
           "confirmSave": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTechnologyExtensions",
@@ -5465,9 +5536,15 @@
         "arguments": {
           "confirmUninstallInUse": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTechnologyObject",
@@ -9396,16 +9473,20 @@
       },
       {
         "name": "GetDccObject",
-        "currentName": "ReadDccObject",
+        "currentName": "GetDccObject",
         "sourceName": "ReadDccObject",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceAddressing",
@@ -9519,23 +9600,29 @@
       },
       {
         "name": "GetDriveParameters",
-        "currentName": "ReadDriveParameters",
+        "currentName": "GetDriveParameters",
         "sourceName": "ReadDriveParameters",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "driveObjectNumber": 0,
           "driveObjectIndex": 0,
           "source": "write",
-          "namesJson": "[\"p1070[0]\"]",
+          "names": [
+            "p1070[0]"
+          ],
           "includeValue": false,
           "includeBits": false,
           "includeEnumValues": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetEnvironmentDiagnostics",
@@ -9674,16 +9761,20 @@
       },
       {
         "name": "GetOnlineDriveParameters",
-        "currentName": "ReadOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
         "sourceName": "ReadOnlineDriveParameters",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOnlineState",
@@ -10974,16 +11065,20 @@
       },
       {
         "name": "ListDccCharts",
-        "currentName": "ReadDccCharts",
+        "currentName": "ListDccCharts",
         "sourceName": "ReadDccCharts",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDeviceItemChannels",
@@ -11015,20 +11110,24 @@
       },
       {
         "name": "ListDriveObjects",
-        "currentName": "ReadDriveObjects",
+        "currentName": "ListDriveObjects",
         "sourceName": "ReadDriveObjects",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "includeTelegrams": false,
           "includeFunctions": false,
           "includeTechnologyExtensions": false,
           "includeDcc": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListExportHandles",
@@ -11578,9 +11677,15 @@
         ],
         "arguments": {
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccBlock",
@@ -11590,15 +11695,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
           "blockName": "FC_Example"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChart",
@@ -11608,13 +11717,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "confirmDelete": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChartInterface",
@@ -11624,14 +11737,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccChartPartition",
@@ -11641,14 +11758,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDccPin",
@@ -11658,15 +11779,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "chartPath": "Chart_1",
           "blockName": "FC_Example",
           "pinName": "IN1",
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceServiceObjects",
@@ -11731,12 +11856,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveHardwareModule",
@@ -11746,12 +11875,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveSafetyAcceptanceTest",
@@ -11761,12 +11894,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveSecurity",
@@ -11776,12 +11913,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveTelegrams",
@@ -11791,13 +11932,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
-          "action": "read",
-          "objectPath": "Axis_1"
+          "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageGlobalLibrary",
@@ -11980,12 +12124,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "confirmOnline": false,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOpcUaAccessControl",
@@ -12556,15 +12704,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact drive device&gt;\"]",
-          "itemPathJson": "[\"&lt;exact drive/control unit item&gt;\"]",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
           "driveObjectNumber": 0,
           "parameter": "p1070[0]",
           "driveObjectIndex": 0,
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSyslogServers",
@@ -12591,7 +12743,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterDataset",
@@ -12605,7 +12757,7 @@
           "itemId": "&lt;Teamcenter item id&gt;",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTeamcenterWorkflow",
@@ -12620,7 +12772,7 @@
           "confirmSave": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTechnologyExtensions",
@@ -12632,9 +12784,15 @@
         "arguments": {
           "confirmUninstallInUse": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageTechnologyObject",

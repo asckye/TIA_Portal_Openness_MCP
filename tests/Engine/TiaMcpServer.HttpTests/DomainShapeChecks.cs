@@ -83,6 +83,12 @@ internal static class DomainShapeChecks
                 }
                 var implementation = tool;
                 var serviceName = name;
+                var driveContract = domain.Name == "Dcc" || domain.Name == "Startdrive" || domain.Name == "Teamcenter";
+                if (driveContract)
+                {
+                    check(tool.ReturnType.Name == "CallToolResult", name + " exposes the V4 envelope boundary");
+                    serviceName = tool.Name;
+                }
                 if (domain.Name == "SoftwareUnitDeep" || domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl")
                 {
                     check(tool.Name.EndsWith("V4", StringComparison.Ordinal) && tool.ReturnType.Name == "CallToolResult",
@@ -111,6 +117,14 @@ internal static class DomainShapeChecks
                 MethodInfo method;
                 try { method = surface.Method(serviceName); }
                 catch (AmbiguousMatchException) { method = surface.Method(serviceName, implementation.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
+                if (driveContract)
+                    implementation = EngineSurface.MethodFamily(tool).FirstOrDefault(callback => {
+                        if (!callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal)) return false;
+                        var body = callback.GetMethodBody()?.GetILAsByteArray();
+                        return body != null && Enumerable.Range(0, Math.Max(0, body.Length - 4)).Any(index =>
+                            (body[index] == 0x28 || body[index] == 0x6f)
+                            && BitConverter.ToInt32(body, index + 1) == method.MetadataToken);
+                    }) ?? tool;
                 var target = surface.Target(method);
                 var toolTarget = surface.Target(tool);
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic

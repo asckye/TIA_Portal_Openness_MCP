@@ -204,7 +204,7 @@ def generate():
             elif domain in ('HMI', 'HMI-Classic'):
                 manual_topics = ['hmi-classic']
         mappings[name]['manualReferences'] = [m for m in manuals if m['topic'] in manual_topics]
-        if name in ('ManageStartdriveParameter', 'ReadDriveParameters', 'ReadOnlineDriveParameters'):
+        if name in ('ManageStartdriveParameter', 'GetDriveParameters', 'GetOnlineDriveParameters'):
             mappings[name]['manualsByRelease'] = {key: f'https://docs.tia.siemens.cloud/r/en-us/v{key}/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters' for key in ('20', '21')}
     ids = {d['id'] for d in documents}
     assert all(set(m['documents']) <= ids for m in mappings.values())

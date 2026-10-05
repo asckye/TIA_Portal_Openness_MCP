@@ -1130,7 +1130,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `int32[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadHardwareFeatures` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
 | `ReadHardwareFeatures` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
 | `ReadIoSystems` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
@@ -1140,7 +1140,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadOnlineDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadOnlineDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadOnlineDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadOnlineDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `int32[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadPlcLiveValuesOpcUa` | 20, 21 | `nodeIdsJson` → `nodeIds` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `ReadPlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `ReadPlcSimAdvancedTags` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
@@ -1890,8 +1890,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:25013 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:25790 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:25508 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:26290 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:74 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:63 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
