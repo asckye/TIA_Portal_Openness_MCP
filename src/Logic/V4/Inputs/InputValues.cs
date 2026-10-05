@@ -12,6 +12,11 @@ namespace TiaMcp.Logic.V4.Inputs
     public readonly struct Scalar
     {
         public JsonElement Json { get; }
+        public JsonValueKind Kind => Json.ValueKind;
+        public string? String => Kind == JsonValueKind.String ? Json.GetString() : null;
+        public bool? Boolean => Kind == JsonValueKind.True || Kind == JsonValueKind.False ? Json.GetBoolean() : (bool?)null;
+        public double? Number => Kind == JsonValueKind.Number ? Json.GetDouble() : (double?)null;
+        public override string ToString() => Kind == JsonValueKind.Null ? "null" : Json.ToString();
         public Scalar(JsonElement value)
         {
             if (value.ValueKind == JsonValueKind.Object || value.ValueKind == JsonValueKind.Array)
@@ -25,6 +30,11 @@ namespace TiaMcp.Logic.V4.Inputs
     public readonly struct NativeValue
     {
         public JsonElement Json { get; }
+        public JsonValueKind Kind => Json.ValueKind;
+        public Scalar Scalar => new Scalar(Json);
+        public IReadOnlyList<NativeValue> Items => Array.AsReadOnly(Json.EnumerateArray().Select(value => new NativeValue(value)).ToArray());
+        public IReadOnlyDictionary<string, NativeValue> Properties => new AttributeMap<NativeValue>(
+            Json.EnumerateObject().Select(p => new KeyValuePair<string, NativeValue>(p.Name, new NativeValue(p.Value))));
         public NativeValue(JsonElement value) { new InputBudget().Check(value); Json = value.Clone(); }
     }
 

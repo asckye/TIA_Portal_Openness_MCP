@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 namespace TiaMcp.Logic.V4.Inputs
@@ -26,15 +27,23 @@ namespace TiaMcp.Logic.V4.Inputs
         public int Depth { get; }
         public int? StringLength { get; }
         public int? Items { get; }
-        public InputBudget(int? characters = null, int depth = V4Json.MaximumInputDepth, int? stringLength = null, int? items = null)
+        public int? Utf8Bytes { get; }
+        public InputBudget(int? characters = null, int depth = V4Json.MaximumInputDepth, int? stringLength = null, int? items = null, int? utf8Bytes = null)
         {
-            if (characters < 0 || depth < 1 || depth > V4Json.MaximumInputDepth || stringLength < 0 || items < 0)
+            if (characters < 0 || depth < 1 || depth > V4Json.MaximumInputDepth || stringLength < 0 || items < 0 || utf8Bytes < 0)
                 throw new ArgumentOutOfRangeException(nameof(characters));
-            Characters = characters; Depth = depth; StringLength = stringLength; Items = items;
+            Characters = characters; Depth = depth; StringLength = stringLength; Items = items; Utf8Bytes = utf8Bytes;
+        }
+
+        internal void CheckText(string text)
+        {
+            InputGuard.Limit(text.Length, Characters);
+            if (Utf8Bytes.HasValue) InputGuard.Limit(Encoding.UTF8.GetByteCount(text), Utf8Bytes);
         }
 
         internal void Check(JsonElement value)
         {
+            if (Utf8Bytes.HasValue) InputGuard.Limit(Encoding.UTF8.GetByteCount(value.GetRawText()), Utf8Bytes);
             var pending = new Stack<(JsonElement Value, int Depth)>();
             pending.Push((value, 0));
             while (pending.Count > 0)
@@ -64,7 +73,7 @@ namespace TiaMcp.Logic.V4.Inputs
                 }
                 else if (node.ValueKind == JsonValueKind.String) InputGuard.Limit(node.GetString()!.Length, StringLength);
             }
-            InputGuard.Limit(V4Json.Serialize(value).Length, Characters);
+            CheckText(V4Json.Serialize(value));
         }
     }
 
@@ -92,7 +101,7 @@ namespace TiaMcp.Logic.V4.Inputs
             if (json == null) return Read(default(JsonElement), parameter, optional);
             try
             {
-                InputGuard.Limit(json.Length, Budget.Characters);
+                Budget.CheckText(json);
                 return Read(V4Json.ParseInput(json), parameter, optional);
             }
             catch (InputRejection rejection) { return Failure(InputPresence.Value, rejection.ToError(parameter)); }

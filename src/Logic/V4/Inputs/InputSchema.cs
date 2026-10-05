@@ -14,7 +14,7 @@ namespace TiaMcp.Logic.V4.Inputs
         private static readonly string[] Keywords = { "type", "enum", "const", "properties", "required", "additionalProperties",
             "items", "minItems", "maxItems", "uniqueItems", "minProperties", "maxProperties", "propertyNames", "minLength", "maxLength",
             "pattern", "minimum", "maximum", "anyOf", "oneOf", "allOf", "not", "if", "then", "else",
-            "title", "description", "default", "examples", "$schema", "$comment", "$defs", "$ref" };
+            "title", "description", "default", "examples", "$schema", "$comment", "$defs", "$ref", "x-maxUtf8Bytes", "x-maxDepth" };
         public JsonElement Json { get; }
         public InputSchema(JsonElement schema)
         {
@@ -99,6 +99,11 @@ namespace TiaMcp.Logic.V4.Inputs
                         foreach (var property in field.Value.EnumerateObject()) Verify(property.Value, root);
                         break;
                     case "$ref": _ = Definition(root, ReferenceName(field.Value)); break;
+                    case "x-maxUtf8Bytes": case "x-maxDepth":
+                        if (!field.Value.TryGetInt32(out int limit) || limit < (field.Name == "x-maxDepth" ? 1 : 0)
+                            || field.Name == "x-maxDepth" && limit > V4Json.MaximumInputDepth)
+                            throw new ArgumentException("Invalid schema budget.");
+                        break;
                     case "items": case "additionalProperties": case "propertyNames": case "not":
                     case "if": case "then": case "else": Verify(field.Value, root); break;
                     case "anyOf": case "oneOf": case "allOf":
@@ -169,6 +174,9 @@ namespace TiaMcp.Logic.V4.Inputs
             if (schema.ValueKind == JsonValueKind.True) return;
             InputGuard.Require(schema.ValueKind != JsonValueKind.False && value.ValueKind != JsonValueKind.Undefined);
             if (schema.TryGetProperty("$ref", out var reference)) Check(Definition(root, ReferenceName(reference)), value, root);
+            if (schema.TryGetProperty("x-maxUtf8Bytes", out var bytes) || schema.TryGetProperty("x-maxDepth", out _))
+                new InputBudget(depth: schema.TryGetProperty("x-maxDepth", out var depth) ? depth.GetInt32() : V4Json.MaximumInputDepth,
+                    utf8Bytes: bytes.ValueKind == JsonValueKind.Number ? bytes.GetInt32() : (int?)null).Check(value);
             if (schema.TryGetProperty("type", out var type))
                 InputGuard.Require(type.ValueKind == JsonValueKind.Array ? type.EnumerateArray().Any(t => IsType(value, t.GetString()!)) : IsType(value, type.GetString()!));
             if (schema.TryGetProperty("enum", out var allowed))

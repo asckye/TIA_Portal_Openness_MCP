@@ -15,6 +15,8 @@ insert a default. `Scalar` and a nullable `NativeValuePolicy` explicitly admit n
 Defaults and requiredness must come from the release's tool schema at integration.
 Strings are never parsed a second time: a string cannot stand in for an array or
 object. Where a native scalar string is allowed, its contents remain literal text.
+`Scalar` exposes its kind and scalar values; `NativeValue` exposes its kind, scalar,
+items and properties as read-only projections without a second value model.
 
 All serialization uses `V4Json`, including converters' supplied options. The one
 new internal `V4Json.ParseInput` hook uses a bounded reader depth of 65 (the largest
@@ -51,7 +53,9 @@ the executable legacy samples.
 `InputBudget` bounds raw text length **before parsing**, and also measures characters
 on compact V4 JSON **before** business trimming for every entry point. Whitespace
 cannot bypass the raw cap, nor can compact escaping bypass the normalized cap.
-It also enforces depth, per-string length and per-container item counts. The existing
+It also enforces depth, per-string length and per-container item counts. An optional
+`utf8Bytes` budget checks raw text and compact V4 JSON using the same guards; OpenPipe
+needs this in addition to character limits. The existing
 Foundation budget can be declared as `new InputBudget(262144, 16, 4096, 1000)` by
 the builder-family tasks; this task does not create their types. Output/XML budgets
 remain the builders' responsibility. Standard schema keywords express shapes,
@@ -65,7 +69,9 @@ the existing HMI schemas. Missing or remote references, non-consuming reference
 cycles, unsupported pointer forms and other unsupported keywords (including
 formats) fail at construction. No remote schema fetching occurs. Callers must
 provide a supported schema or add reviewed support before wiring additional
-keywords. `ToolTarget.BusinessValidation` is also required when the
+keywords. `x-maxUtf8Bytes` and `x-maxDepth` enforce the declared budgets through
+`InputBudget`; they are not documentation-only annotations.
+`ToolTarget.BusinessValidation` is also required when the
 target has constraints beyond its schema; target budgets are checked independently
 of the batch's budget. All policies are scoped to the caller's action and release;
 these adapters do not imply a capability exists on every CPU/release.
@@ -76,6 +82,10 @@ mapping as the typed normalizer. HMI uses this hook for aggregate AML item/depth
 budgets so the contract returns `LIMIT_EXCEEDED` while its existing direct DTO
 constructors retain their `ArgumentException` behavior. The callback must not
 invoke native operations or alter input; normalization still runs after construction.
+Domain uses the same callback for OpenPipe protocol admission. Its conditional
+schema admits streaming request shapes to that callback so the existing
+`NotSupported` refusal retains priority over invalid Params, while ordinary expert
+requests keep their closed object shape.
 
 Before using R with a native collection, the integration must construct the
 admission graph from the supported SDK surface and call `ValidateTraversal` while
