@@ -95,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["EXECUTE"] = "执行编译、测试或自检并返回结果",
         };
 
-        private static readonly string[] SessionNames = { "Bootstrap", "Connect", "ConnectIsolated", "Disconnect", "GetState", "Doctor", "EnsureOpennessUserGroup", "ListPortalProcessProjects", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "AttachToOpenProject", "OpenProject", "CloseProject", "SaveProject", "OpenSession", "CloseSession" };
+        private static readonly string[] SessionNames = { "Bootstrap", "Connect", "ConnectIsolated", "Disconnect", "GetState", "Doctor", "EnsureOpennessUserGroup", "ListPortalProcessProjects", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "AttachToOpenProject", "OpenProject", "CloseProject", "SaveProject", "OpenSession", "CloseSession", "InitializeEnvironment", "ConnectIsolatedPortal", "DisconnectPortal", "GetSessionState", "GetEnvironmentDiagnostics", "AttachOpenProject" };
 
         /// <summary>
         /// 描述未标注操作类型时按工具名推断。只用于清单/分类展示（标记 inferred），不改变工具行为；
@@ -108,9 +108,12 @@ namespace TiaMcpServer.ModelContextProtocol
             bool Starts(params string[] prefixes) => prefixes.Any(p => name.StartsWith(p, StringComparison.Ordinal));
             bool Has(params string[] parts) => parts.Any(p => name.IndexOf(p, StringComparison.Ordinal) >= 0);
             if (SessionNames.Contains(name)) return ("SESSION", true);
+            // Preserve operations when V4 names cross a general verb rule.
+            if (Starts("BuildAndImportPlcArtifact", "BuildProjectScaffold")) return ("WRITE", true);
+            if (Starts("BuildReleaseHandoffArtifacts")) return ("FILE", true);
             if (Starts("Compile", "Run") || Has("SelfTest", "ValidationSuite", "PrecheckSuite")) return ("EXECUTE", true);
             if (Starts("Download", "Upload", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags", "WritePlcSimAdvanced", "ManagePlcSimAdvanced")) return ("ONLINE-WRITE", true);
-            if (Starts("GoOnline", "GoOffline", "ScanAccessible") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
+            if (Starts("GoOnline", "GoOffline", "ScanAccessible", "MonitorPlcWatchTableS7") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
             if (Starts("Build", "Compose", "Plan", "Analyze", "Compare", "Scan", "Extract", "Render", "Lint")) return ("OFFLINE", true);
             if (Starts("Export", "Archive", "Write", "Generate", "Save", "Rebuild", "GetExportContent", "ListExportHandles", "ClearExportHandles", "DeleteExportHandle")) return ("FILE", true);
             if (Starts("Import", "Ensure", "Apply", "Create", "Set", "Update", "Manage", "Delete", "Remove", "Add", "Plug", "Bind", "Rename", "Move", "Copy", "Assign", "Protect", "Release", "Exchange", "Configure", "Retrieve", "Sync", "Clear", "Invoke", "Migrate", "Restore", "Register", "Normalize", "Enable", "Disable", "Attach", "PlcBuild", "Repair", "Connect", "Seed", "Scaffold")) return ("WRITE", true);

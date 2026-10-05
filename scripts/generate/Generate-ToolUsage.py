@@ -115,8 +115,9 @@ def generate():
                 'examples': blocks, 'text': text})
 
     full = {t['name']: t for t in read(ROOT / 'manifest/tools-list.json')['tools']}
-    rosters, current = registered_rosters()
-    full = {name: dict(full[old], name=name) for old, name in current.items()}
+    rosters, _ = registered_rosters()
+    # The guard manifest follows the current roster, including the merged guides.
+    assert set(full) == rosters['21'], 'tools-list.json is stale; regenerate it from the current engine'
     names = set().union(*rosters.values())
     domains = {
         'Portal': ['session-and-project', 'licensing-and-firewall'],

@@ -1861,7 +1861,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 |---|---|---|
 | [.claude-plugin/plugin.json](../../.claude-plugin/plugin.json) | 产品:12 | 修改引用并回归 |
 | [.github/SUPPORT.md](../../.github/SUPPORT.md) | 产品:10 | 修改引用并回归 |
-| [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:48 | 修改引用并回归 |
+| [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:52 | 修改引用并回归 |
 | [.github/workflows/validate.yml](../../.github/workflows/validate.yml) | 产品:8 | 修改引用并回归 |
 | [README.md](../../README.md) | 产品:17,18,19 | 修改引用并回归 |
 | [README.zh-CN.md](../../README.zh-CN.md) | 产品:17,18,19 | 修改引用并回归 |
@@ -1882,7 +1882,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/licenses/THIRD-PARTY-NOTICES.md](../../docs/licenses/THIRD-PARTY-NOTICES.md) | 产品:39 | 修改引用并回归 |
 | [docs/reference/ecosystem-tools.md](../../docs/reference/ecosystem-tools.md) | 根定位:50 | 修改引用并回归 |
 | [docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) | 产品:36 | 修改引用并回归 |
-| [docs/reference/tool-matrix.md](../../docs/reference/tool-matrix.md) | 产品:89 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [docs/reference/tool-matrix.md](../../docs/reference/tool-matrix.md) | 产品:87 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 产品:48 | 历史证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 产品:24,76 | 历史证据只读保留，不作为 V4 改写目标 |
 | [manifest/configurator-build.json](../../manifest/configurator-build.json) | 产品:6; 根定位:15 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1898,7 +1898,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/release-build.json](../../manifest/release-build.json) | 产品:2099,2104,2454,2459; 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7139 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:6974 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |

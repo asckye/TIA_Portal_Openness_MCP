@@ -39,6 +39,10 @@ jobs:
           python-version: '3.12'
       - name: Official example catalog must match pinned sources
         run: python3 scripts/generate/Generate-ToolUsage.py --check
+      - name: Write guard roster and operation categories
+        run: |
+          python3 scripts/checks/Check-ToolsList.py --self-test
+          python3 scripts/checks/Check-ToolsList.py
       - name: Descriptions must not name unregistered tools
         run: python3 scripts/checks/Check-DeadToolReferences.py
       - name: Repository, layout, exception, comment, MCP text and response-envelope contracts
