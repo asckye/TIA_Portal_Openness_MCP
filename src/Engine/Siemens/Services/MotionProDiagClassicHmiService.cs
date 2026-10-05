@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens.Services
             => OptionalOfficialService(owner, typeName, out var state) ?? throw new NotSupportedException(typeName + " is " + state + " for " + owner.GetType().FullName + ".");
 
         public ResponseMessage ReadMotionAxisConfiguration(string softwarePath, string objectPath, bool includeParameters = false, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadMotionAxisConfiguration", meta => {
+            => RunTool("GetMotionAxisConfiguration", meta => {
                 Logic.RequirePagination(offset, limit);
                 var target = _session.ExactTechnology(softwarePath, objectPath, false);
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = objectPath; meta["object"] = EngineeringScalarProperties.Read(target);
@@ -62,6 +62,7 @@ namespace TiaMcpServer.Siemens.Services
                     var parameters = EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(target, "Parameters")).ToArray();
                     var page = parameters.Skip(offset).Take(limit).Select(p => p is TechnologicalParameter tp ? (JsonObject)_session.ParameterRow(tp) : EngineeringScalarProperties.Read(p)).ToArray();
                     meta["parameters"] = new JsonArray(page.Cast<JsonNode>().ToArray()); meta["parameterCount"] = parameters.Length;
+                    meta["offset"] = offset; meta["limit"] = limit; meta["total"] = parameters.Length;
                     meta["nextOffset"] = offset + page.Length < parameters.Length ? offset + page.Length : (int?)null;
                     complete &= offset == 0 && page.Length == parameters.Length && page.All(p => p["dataComplete"]?.GetValue<bool>() ?? !p.ContainsKey("valueError"));
                 }
@@ -72,7 +73,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageMotionAxis(string softwarePath, string objectPath, string action, string aspect = "", string name = "", string targetJson = "{}",
             string propertiesJson = "{}", int sensorIndex = 0, bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageMotionAxis", meta => {
+            => RunTool("ManageMotionAxis", meta => {
                 var category = Logic.MotionCategory(action, aspect);
                 bool writing = action != "read" && !dryRun;
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
@@ -84,7 +85,7 @@ namespace TiaMcpServer.Siemens.Services
                     var states = new JsonObject();
                     foreach (var typeName in Logic.ReadableMotionServices) { OptionalOfficialService(to, typeName, out var state); states[typeName] = state; }
                     meta["serviceStates"] = states; meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
-                    return "Technology object summary read; ReadMotionAxisConfiguration returns service detail.";
+                    return "Technology object summary read; GetMotionAxisConfiguration returns service detail.";
                 }
                 if (category == "masterValue")
                 {
@@ -298,7 +299,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManagePlcSupervision(string softwarePath, string action, string blockPath = "", string providerKind = "supervision", string compositionName = "",
             string entryName = "", string typeName = "", string filePath = "", string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManagePlcSupervision", meta => {
+            => RunTool("ManagePlcSupervision", meta => {
                 Logic.RequireAction(action, Logic.SupervisionActions);
                 if (providerKind != "supervision" && providerKind != "settings") throw new ArgumentException("providerKind must be supervision/settings.");
                 Logic.RequirePagination(offset, limit);
@@ -413,6 +414,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var rows = items.Skip(offset).Take(limit).Select(project).ToArray();
             meta["records"] = new JsonArray(rows); meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Length;
+            meta["offset"] = offset; meta["limit"] = limit; meta["total"] = items.Length;
             meta["nextOffset"] = offset + rows.Length < items.Length ? offset + rows.Length : (int?)null;
             meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Length == items.Length && rows.All(r => r!["dataComplete"]?.GetValue<bool>() != false);
             return meta;
@@ -466,7 +468,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         public ResponseMessage ReadClassicHmiScripts(string softwarePath, string folderPath = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadClassicHmiScripts", meta => {
+            => RunTool("ListClassicHmiScripts", meta => {
                 Logic.RequirePagination(offset, limit);
                 var hmi = _session.ExactClassicHmi(softwarePath);
                 var root = ClassicScriptFolder(hmi, EngineeringGroupOperations.Parts(folderPath, true));
@@ -494,7 +496,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageClassicHmiScript(string softwarePath, string scriptPath, string action, string filePath = "", string importOptions = "None",
             string attributesJson = "{}", bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiScript", meta => {
+            => RunTool("ManageClassicHmiScript", meta => {
                 Logic.RequireAction(action, Logic.ScriptActions);
                 bool write = action != "read" && action != "export";
                 bool writing = write && !dryRun;
@@ -565,7 +567,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageClassicHmiCycle(string softwarePath, string action, string cycleName = "", string filePath = "", string importOptions = "None",
             string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiCycle", meta => {
+            => RunTool("ManageClassicHmiCycle", meta => {
                 Logic.RequireAction(action, Logic.CycleActions); Logic.RequirePagination(offset, limit);
                 bool write = action != "read" && action != "export";
                 bool writing = write && !dryRun;
@@ -601,7 +603,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ManageClassicHmiTextGraphicList(string softwarePath, string listKind, string action, string listName = "", string compositionName = "", string entryName = "",
             string typeName = "", string filePath = "", string importOptions = "None", string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiTextGraphicList", meta => {
+            => RunTool("ManageClassicHmiTextGraphicList", meta => {
                 Logic.RequireAction(action, Logic.ListActions); Logic.RequirePagination(offset, limit);
                 if (!Logic.ListKinds.ContainsKey(listKind)) throw new ArgumentException("listKind must be text/graphic.");
                 bool write = action is "createEntry" or "deleteEntry" or "import" or "delete" or "setAttributes";
@@ -669,7 +671,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadClassicHmiGlobalization(string softwarePath, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadClassicHmiGlobalization", meta => {
+            => RunTool("GetClassicHmiGlobalization", meta => {
                 Logic.RequirePagination(offset, limit);
                 var hmi = _session.ExactClassicHmi(softwarePath);
                 var provider = RequireOfficialService(hmi, Logic.GraphicsProvider);
@@ -681,7 +683,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadClassicHmiFaceplates(string kind = "faceplate", string libraryName = "", string folderPath = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadClassicHmiFaceplates", meta => {
+            => RunTool("ListClassicHmiFaceplates", meta => {
                 Logic.RequirePagination(offset, limit);
                 if (kind != "all" && !Logic.LibraryTypeKinds.ContainsKey(kind)) throw new ArgumentException("kind must be faceplate/vbScript/cScript/all.");
                 var wanted = kind == "all" ? Logic.LibraryTypeKinds.Values.ToArray() : new[] { Logic.LibraryTypeKinds[kind] };
@@ -710,7 +712,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         // ---- ProDiag CSV export -------------------------------------------------------------------------------------------------------------------
         public ResponseMessage ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName = "", string unitKind = "unit", bool dryRun = true)
-            => _session.RunHmiStepTool("ExportPlcProDiagInfo", meta => {
+            => RunTool("ExportPlcProDiagInfo", meta => {
                 ProDiagExportRules.ValidateProDiagRequest(blockPath, directoryPath, unitName, unitKind);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
@@ -731,7 +733,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ExchangeMotionCamData(string softwarePath,string objectPath,string action,string filePath,string format="",string separator="",int pointCount=0,bool dryRun=true)
-            =>_session.RunHmiStepTool("ExchangeMotionCamData",meta=>{
+            =>RunTool("ExchangeMotionCamData",meta=>{
                 var method=action switch {"import"=>"LoadCamData","importBinary"=>"LoadCamDataBinary","export"=>"SaveCamData","exportBinary"=>"SaveCamDataBinary","exportPoints"=>"SaveCamDataPointList",_=>throw new ArgumentException("Invalid cam exchange action.")};
                 bool write=action.StartsWith("import",StringComparison.Ordinal);
                 using var access=write&&!dryRun ? _session.AcquireHmiEditAccess() : null;
@@ -753,7 +755,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ConfigureMotionHardwareConnection(string softwarePath,string objectPath,string interfaceKind,string action,int inputBitAddress=0,int outputBitAddress=0,string connectOption="Default",int sensorIndex=0,bool dryRun=true)
-            =>_session.RunHmiStepTool("ConfigureMotionHardwareConnection",meta=>{
+            =>RunTool("ConfigureMotionHardwareConnection",meta=>{
                 if (!new[] { "read", "connect", "disconnect" }.Contains(action)) throw new ArgumentException("action must be one of: read/connect/disconnect (case-sensitive).");
                 bool write=action!="read"&&!dryRun;using var access=write ? _session.AcquireHmiEditAccess() : null;
                 var target=_session.ExactTechnology(softwarePath,objectPath,write);
@@ -784,5 +786,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["after"]=_session.InterfaceRow(selected);meta["mappingVerified"]=_session.IsConnectedTyped(selected)==(action=="connect");
                 return "Offline motion hardware mapping changed; inspect native readback. No save/compile/download or motion command.";
             });
+        private ResponseMessage RunTool(string tool, Func<JsonObject, string> action, bool requiresProject = true)
+            => _session.RunHmiStepTool(tool, meta => ClassicMotionToolContract.Capture(meta, action), requiresProject);
     }
 }

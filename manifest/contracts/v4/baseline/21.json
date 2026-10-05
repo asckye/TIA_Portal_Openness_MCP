@@ -6938,8 +6938,9 @@
       "name": "CompilePlcSoftware"
     },
     {
-      "descriptionSha256": "b9b7a3d28c574254a4b72e1bbfb5b27371c15844136886296959ea4e811ea3e0",
+      "descriptionSha256": "417d93307e9cae86d3b66ef7aa4c626644305585522bd010ec81a5b5500ca0ae",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - read | connect | disconnect.",
@@ -8778,8 +8779,9 @@
       "name": "ExchangeCfcCharts"
     },
     {
-      "descriptionSha256": "01abcb9667e9b2a6c9b9538bb4a2d683551e02301d9a5ee69c0ab944eee59b31",
+      "descriptionSha256": "21ea995c6dfa19cfbb660561445df2c29a9f9c0c35c7a2e7b61b495deaf34ef1",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "export | import | exportBinary | importBinary | exportPoints. Text, native binary or point-list exchange.",
@@ -9588,8 +9590,9 @@
       "name": "ExportPlcBlocksDocuments"
     },
     {
-      "descriptionSha256": "b05c8006f84ba2908cf7037622b5bc6fffc64770dd1bf6c408906a3c36df390e",
+      "descriptionSha256": "2725bb93bb28895651a457fe86ffd39f6348dca81c0d0b55a520ce1ed2deb43d",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "blockPath": {
             "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
@@ -10427,6 +10430,74 @@
       "name": "GenerateSiVArc"
     },
     {
+      "descriptionSha256": "5c6537023ac93fc5ce4aaa7eaa5fe0a1de87b458e2d63d8913b027a81d626bf8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetClassicHmiGlobalization"
+    },
+    {
+      "descriptionSha256": "0e44c74a022e8cec5d615b6cfcd45bc986f202c617b959f0c75d9256df0ce514",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "kind": {
+            "default": "all",
+            "description": "kind: all | screens | popups | templates | slideins.",
+            "enum": [
+              "all",
+              "screens",
+              "popups",
+              "templates",
+              "slideins"
+            ],
+            "type": "string"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetClassicHmiScreenTree"
+    },
+    {
       "descriptionSha256": "25a02d00e894ac92a5fa50f67d00b723515a35f992929933901e7695e1bc8735",
       "inputSchema": {
         "additionalProperties": false,
@@ -10771,6 +10842,45 @@
         "type": "object"
       },
       "name": "GetHmiTags"
+    },
+    {
+      "descriptionSha256": "d7753f3a5c577216dd758d242007d4fe7a8e0469a708beb2a0eacde18163b20e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeParameters": {
+            "default": false,
+            "description": "includeParameters: true also returns parameters.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetMotionAxisConfiguration"
     },
     {
       "descriptionSha256": "6c7a860cc4f91baead8a921527d6efc7c8b7b45781f731726fd73ca3e1f96ecf",
@@ -13031,6 +13141,83 @@
       "name": "InvokeService"
     },
     {
+      "descriptionSha256": "c0106328e67ec4f4660febb910f548d4ffe61f6a1af82b0afdd5aadb7309b715",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "kind": {
+            "default": "faceplate",
+            "description": "kind: faceplate | vbScript | cScript | all.",
+            "enum": [
+              "faceplate",
+              "vbScript",
+              "cScript",
+              "all"
+            ],
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ListClassicHmiFaceplates"
+    },
+    {
+      "descriptionSha256": "a20ee6b20bf54ee72baf4e4a0a3853a7d46716db9551e81044e3dbccb3b682ee",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListClassicHmiScripts"
+    },
+    {
       "descriptionSha256": "6885729dfd8e5801e99111c302f91547d2b89dd5d216f7a0d62f498ae90017b9",
       "inputSchema": {
         "additionalProperties": false,
@@ -13785,8 +13972,9 @@
       "name": "ManageCfcChartProtection"
     },
     {
-      "descriptionSha256": "b2cdce99972ed32679ee557607fdb9654f1151deae3f62a04e1ba2c5624bbd18",
+      "descriptionSha256": "7d9c1ece0ed0ad40c2ab5d5eea63176f89d570cf9202f750e6f8f90930ca9fc6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "read | export | import | delete | setAttributes. ",
@@ -13799,10 +13987,25 @@
             ],
             "type": "string"
           },
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "confirmDelete": {
             "default": false,
@@ -13832,11 +14035,13 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "softwarePath": {
@@ -13853,8 +14058,9 @@
       "name": "ManageClassicHmiCycle"
     },
     {
-      "descriptionSha256": "050384024ac132fedf6602be4b9e50ffaa86e802df1329a7145d356eea65b046",
+      "descriptionSha256": "269f928249219586abd1697f6ad4853e4c514575cdbf02bf064720046d61e596",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -13911,8 +14117,9 @@
       "name": "ManageClassicHmiFolder"
     },
     {
-      "descriptionSha256": "0fa93fe134258b29b89e62eea9721f487a1b5e9c7deee8ca269eec17334ba996",
+      "descriptionSha256": "4b13488b485871d612e6ecc58363a0d387d610b15df1259f483f5fcb96ccdbc3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "list",
@@ -13968,8 +14175,9 @@
       "name": "ManageClassicHmiGraphic"
     },
     {
-      "descriptionSha256": "c3ccabf2ab7ddf8c243fd7312b10cc62ff1f86e8e17227123d7afa17ad792c9f",
+      "descriptionSha256": "0ccf5a422b2fd51a9a5424b75e2ee2b9dbd1165292ea3c62534a802195b8311e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -14036,8 +14244,9 @@
       "name": "ManageClassicHmiScreenObject"
     },
     {
-      "descriptionSha256": "2f52ca5ed96571739a7789823200cf39fe4fa48d366251651b2c88b7f0ee13c8",
+      "descriptionSha256": "7a3f45abe3718427bdbade985365fcb8766a16e12093b47298e4c5fbc9b8b331",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "read | export | import | delete | createFolder | deleteFolder | setAttributes. ",
@@ -14052,10 +14261,25 @@
             ],
             "type": "string"
           },
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "confirmDelete": {
             "default": false,
@@ -14096,8 +14320,9 @@
       "name": "ManageClassicHmiScript"
     },
     {
-      "descriptionSha256": "05030beeccb010a75860ff80292e1b5947dbfddfdb3da13c7857f652b9c125ca",
+      "descriptionSha256": "4791c0253329625222f5cda900f0e00e28b990d84efcfa22f988d91e0f1ead03",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "read | readEntries | createEntry | deleteEntry | export | import | delete | setAttributes. ",
@@ -14113,10 +14338,25 @@
             ],
             "type": "string"
           },
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "compositionName": {
             "default": "",
@@ -14151,6 +14391,7 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "listKind": {
@@ -14169,6 +14410,7 @@
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "softwarePath": {
@@ -15882,8 +16124,9 @@
       "name": "ManageLibraryTypeVersion"
     },
     {
-      "descriptionSha256": "45a63e66c944c5e7729504fcc6a8025837883f863065e9fe547f7a226334d1f2",
+      "descriptionSha256": "f63c7611ede3af5f87f795d8f25b753d16c466059572c6bd6b7b07f77847af93",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "read | addMasterValue | removeMasterValue | createMapping | updateMapping | deleteMapping | connect | disconnect | connectIdent. ",
@@ -15924,10 +16167,25 @@
             "description": "objectPath: path of the object inside the software ('Group/Name').",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "sensorIndex": {
             "default": 0,
@@ -15938,10 +16196,230 @@
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           },
-          "targetJson": {
-            "default": "{}",
-            "description": "targetJson: JSON object naming the target (see the tool description).",
-            "type": "string"
+          "target": {
+            "description": "target: Object naming the target (see the tool description).",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "connectOption": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "secondItemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "secondItemPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "channelIndex": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "channelIndex"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "channelIoType": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "channelNumber": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "channelType": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "channelType",
+                  "channelIoType",
+                  "channelNumber"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "dbMemberPath": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "dbMemberPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "plcTagPath": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plcTagPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "address": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "address"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "connectOption": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "inputBitAddress": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "outputBitAddress": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "inputBitAddress",
+                  "outputBitAddress"
+                ],
+                "type": "object"
+              }
+            ]
           }
         },
         "required": [
@@ -17480,8 +17958,9 @@
       "name": "ManagePlcSoftwareUnit"
     },
     {
-      "descriptionSha256": "e906a16329ee017632d77323084677401eb950ebbe96fc3cd02162e8071ce316",
+      "descriptionSha256": "66ececdb4530d9f2104a114eefc3555f006434876f63bce49391911032e49ab4",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "read | readComposition | createEntry | deleteEntry | setAttributes | exportSettings | importSettings. ",
@@ -17496,10 +17975,25 @@
             ],
             "type": "string"
           },
-          "attributesJson": {
-            "default": "{}",
-            "description": "attributesJson: JSON object attribute name -> value to write.",
-            "type": "string"
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "blockPath": {
             "default": "",
@@ -17534,11 +18028,13 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "providerKind": {
@@ -21356,141 +21852,6 @@
       "name": "ProbeS7CpuIdentity"
     },
     {
-      "descriptionSha256": "0598e5532f15053957b08256d978a96817a0d6e8ef602fc1a34bb67959394cc9",
-      "inputSchema": {
-        "properties": {
-          "folderPath": {
-            "default": "",
-            "description": "folderPath: group / folder path inside the software ('' = root).",
-            "type": "string"
-          },
-          "kind": {
-            "default": "faceplate",
-            "description": "kind: faceplate | vbScript | cScript | all.",
-            "enum": [
-              "faceplate",
-              "vbScript",
-              "cScript",
-              "all"
-            ],
-            "type": "string"
-          },
-          "libraryName": {
-            "default": "",
-            "description": "libraryName: name of the global library ('' = the project library).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadClassicHmiFaceplates"
-    },
-    {
-      "descriptionSha256": "2070f5a210fd5f17fd0ee50bac3e6f6e60372df6e07ac6a9c085d7c5fb73fce2",
-      "inputSchema": {
-        "properties": {
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadClassicHmiGlobalization"
-    },
-    {
-      "descriptionSha256": "25d0fe842a3cfb668c563193660bd72cf0a2e3b83263dcfdd1536a79c75fb851",
-      "inputSchema": {
-        "properties": {
-          "folderPath": {
-            "default": "",
-            "description": "folderPath: group / folder path inside the software ('' = root).",
-            "type": "string"
-          },
-          "kind": {
-            "default": "all",
-            "description": "kind: all | screens | popups | templates | slideins.",
-            "enum": [
-              "all",
-              "screens",
-              "popups",
-              "templates",
-              "slideins"
-            ],
-            "type": "string"
-          },
-          "maxDepth": {
-            "default": 4,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadClassicHmiScreenTree"
-    },
-    {
-      "descriptionSha256": "d6b177e66d107a711b33a37f6049ad56d0c05c8a455d5fc95ff583981b90ad2c",
-      "inputSchema": {
-        "properties": {
-          "folderPath": {
-            "default": "",
-            "description": "folderPath: group / folder path inside the software ('' = root).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadClassicHmiScripts"
-    },
-    {
       "descriptionSha256": "285ff3c625109d601dbb8a49cae32f63c6214d84fc930143297c35126fddda13",
       "inputSchema": {
         "properties": {
@@ -21851,42 +22212,6 @@
         "type": "object"
       },
       "name": "ReadLibraryType"
-    },
-    {
-      "descriptionSha256": "a4f29d4c3107b40de5bd99e47c21c7f50f802ac7d2c2f7b7630f4474a31bb926",
-      "inputSchema": {
-        "properties": {
-          "includeParameters": {
-            "default": false,
-            "description": "includeParameters: true also returns parameters.",
-            "type": "boolean"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "objectPath": {
-            "description": "objectPath: path of the object inside the software ('Group/Name').",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "objectPath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadMotionAxisConfiguration"
     },
     {
       "descriptionSha256": "a08f3d0efe3ae487341530585b2dff743b4ebdffcfe28b344bf2435e6285f023",

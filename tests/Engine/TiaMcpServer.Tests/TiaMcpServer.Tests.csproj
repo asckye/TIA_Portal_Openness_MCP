@@ -79,6 +79,8 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs" Link="ClassicHmiFoldersTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs" Link="HardwareNetworkTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />

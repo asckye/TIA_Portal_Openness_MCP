@@ -51,8 +51,8 @@ plan = [
     S("ManagePlcExternalSources", softwarePath=P, action="deleteGroup", name="", unitName="", unitKind="unit", groupPath="MCP_X/Sub3", filePath="", libraryName="", masterCopyPath="", copyMode="", generateOption="", targetKind="", targetGroupPath="", newName="", confirmDelete=True, dryRun=False, expect="any"),
     S("DeletePlcExternalSource", softwarePath=P, externalSourceName="mcp46_FC", expect="any"),
     # supervisions with the real providerKind
-    S("ManagePlcSupervision", softwarePath=P, action="read", blockPath="", providerKind="settings", compositionName="", entryName="", typeName="", filePath="", attributesJson="{}", offset=0, limit=20, expect="any", keys=["attributes", "compositions"]),
-    S("ManagePlcSupervision", softwarePath=P, action="read", blockPath="MCP_G/MCP_FB", providerKind="supervision", compositionName="", entryName="", typeName="", filePath="", attributesJson="{}", offset=0, limit=20, expect="any", keys=["attributes", "compositions"]),
+    S("ManagePlcSupervision", softwarePath=P, action="read", blockPath="", providerKind="settings", compositionName="", entryName="", typeName="", filePath="", attributes={}, offset=0, limit=20, expect="any", keys=["attributes", "compositions"]),
+    S("ManagePlcSupervision", softwarePath=P, action="read", blockPath="MCP_G/MCP_FB", providerKind="supervision", compositionName="", entryName="", typeName="", filePath="", attributes={}, offset=0, limit=20, expect="any", keys=["attributes", "compositions"]),
     S("ExchangePlcSupervisions", softwarePath=P, action="export", filePath=D + r"\mcp46_prodiag.xlsx", importOptions="None", dryRun=False, expect="any", keys=["nativeState"]),
     # watch table via a hand-written SimaticML file
     S("WritePlcSclSourceFile", sclContent=WT, outputPath=D + r"\mcp46_wt.xml", keys=["path"]),
@@ -67,8 +67,8 @@ plan = [
     S("GetTechnologyObjects", softwarePath=P),
     S("ReadTechnologyObjectTree", softwarePath=P),
     S("ManageTechnologyObject", softwarePath=P, objectPath="MCP_Axis", action="read", typeIdentifier="", version="", parameter="", valueJson="null", dryRun=True, expect="any", keys=["before"]),
-    S("ReadMotionAxisConfiguration", softwarePath=P, objectPath="MCP_Axis", includeParameters=True, offset=0, limit=30, expect="any", keys=["values", "parameters"]),
-    S("ManageMotionAxis", softwarePath=P, objectPath="MCP_Axis", action="read", aspect="", name="", targetJson="", propertiesJson="{}", sensorIndex=-1, confirmDelete=False, dryRun=True, expect="any", keys=["before"]),
+    S("GetMotionAxisConfiguration", softwarePath=P, objectPath="MCP_Axis", includeParameters=True, offset=0, limit=30, expect="any", keys=["values", "parameters"]),
+    S("ManageMotionAxis", softwarePath=P, objectPath="MCP_Axis", action="read", aspect="", name="", properties={}, sensorIndex=-1, confirmDelete=False, dryRun=True, expect="any", keys=["before"]),
     S("ConfigureMotionHardwareConnection", softwarePath=P, objectPath="MCP_Axis", interfaceKind="actor", action="read", inputBitAddress="", outputBitAddress="", connectOption="", sensorIndex=0, dryRun=True, expect="any", keys=["before"]),
     S("ExchangeMotionCamData", softwarePath=P, objectPath="MCP_Axis", action="export", filePath=D + r"\mcp46_cam.txt", format="text", separator=";", pointCount=100, dryRun=True, expect="any", note="axis, not a cam"),
     S("ExportTechnologyObject", softwarePath=P, toName="MCP_Axis", exportPath=D + r"\mcp46_axis.xml", expect="any"),

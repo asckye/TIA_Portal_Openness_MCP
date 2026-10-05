@@ -329,7 +329,7 @@ CASES = {
         + actions('ManageSivarcScreenLayout', 'export import', softwarePath=PLC, screenName='Screen1', filePath='C:/domain-offline.xml')
         + [('UpgradeSivarcDefinitions', 'upgrade', {'softwarePath': PLC}),
            ('GenerateSiVArc', 'generate', {'hmiDeviceName': 'HMI1', 'plcSoftwarePathsJson': '["PLC1"]', 'generationOptions': 'None'})],
-    'ClassicHmiFolders': [('ReadClassicHmiScreenTree', kind, {'softwarePath': PLC, 'kind': kind})
+    'ClassicHmiFolders': [('GetClassicHmiScreenTree', kind, {'softwarePath': PLC, 'kind': kind})
                          for kind in ('all', 'screens', 'popups', 'templates', 'slideins')]
         + actions('ManageClassicHmiScreenObject', 'read export import delete', softwarePath=PLC,
                   objectKind='popup', objectPath='Screen1', filePath='C:/domain-offline.xml')
@@ -337,7 +337,7 @@ CASES = {
                   folderKind='scripts', folderPath='Folder1', newName='Folder2')
         + actions('ManageClassicHmiGraphic', 'list read export import delete', softwarePath=PLC,
                   name='Graphic1', filePath='C:/domain-offline.xml'),
-    'MotionProDiagClassicHmi': [('ReadMotionAxisConfiguration', 'read', {'softwarePath': PLC, 'objectPath': 'Axis1'})]
+    'MotionProDiagClassicHmi': [('GetMotionAxisConfiguration', 'read', {'softwarePath': PLC, 'objectPath': 'Axis1'})]
         + actions('ManageMotionAxis', 'read connectIdent', softwarePath=PLC, objectPath='Axis1')
         + actions('ManageMotionAxis', 'addMasterValue removeMasterValue', softwarePath=PLC,
                   objectPath='Axis1', aspect='synchronousSetPoint', name='Axis2')
@@ -346,15 +346,15 @@ CASES = {
         + actions('ManageMotionAxis', 'connect disconnect', softwarePath=PLC, objectPath='Axis1', aspect='actor')
         + actions('ManagePlcSupervision', 'read readComposition createEntry deleteEntry setAttributes exportSettings importSettings',
                   softwarePath=PLC, filePath='C:/domain-offline.dat')
-        + [('ReadClassicHmiScripts', 'read', {'softwarePath': PLC})]
+        + [('ListClassicHmiScripts', 'read', {'softwarePath': PLC})]
         + actions('ManageClassicHmiScript', 'read export import delete createFolder deleteFolder setAttributes',
                   softwarePath=PLC, scriptPath='Script1', filePath='C:/domain-offline.xml')
         + actions('ManageClassicHmiCycle', 'read export import delete setAttributes',
                   softwarePath=PLC, cycleName='Cycle1', filePath='C:/domain-offline.xml')
         + actions('ManageClassicHmiTextGraphicList', 'read readEntries createEntry deleteEntry export import delete setAttributes',
                   softwarePath=PLC, listKind='text', listName='List1', filePath='C:/domain-offline.xml')
-        + [('ReadClassicHmiGlobalization', 'read', {'softwarePath': PLC}),
-           ('ReadClassicHmiFaceplates', 'read', {}),
+        + [('GetClassicHmiGlobalization', 'read', {'softwarePath': PLC}),
+           ('ListClassicHmiFaceplates', 'read', {}),
            ('ExportPlcProDiagInfo', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'directoryPath': 'C:/domain-offline'})],
     'Alarms': [(name, 'export', {'softwarePath': PLC, 'exportPath': 'C:/domain-offline.' + extension})
                for name, extension in (('ExportAlarmClasses', 'dat'), ('ExportAlarmTextLists', 'xlsx'), ('ExportAlarmInstanceTexts', 'xlsx'))]

@@ -4995,6 +4995,40 @@
         }
       ]
     },
+    "GetClassicHmiGlobalization": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "GetClassicHmiScreenTree": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "GetDeviceAddressing": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5217,6 +5251,16 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
+    },
+    "GetMotionAxisConfiguration": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/technology-objects/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
     },
     "GetObjectProperty": {
       "relationship": "related-api-patterns",
@@ -6092,6 +6136,40 @@
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
+    },
+    "ListClassicHmiFaceplates": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "ListClassicHmiScripts": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "hmi-classic-21",
+          "topic": "hmi-classic",
+          "releaseKey": "21",
+          "title": "Using the code examples: HmiTarget and screens",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
     },
     "ListCommunicationConnections": {
       "relationship": "related-api-patterns",
@@ -8024,74 +8102,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadClassicHmiFaceplates": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadClassicHmiGlobalization": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadClassicHmiScreenTree": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadClassicHmiScripts": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "hmi-classic-21",
-          "topic": "hmi-classic",
-          "releaseKey": "21",
-          "title": "Using the code examples: HmiTarget and screens",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
-          "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
     "ReadDccCharts": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8180,16 +8190,6 @@
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
         "guides/skills/libraries-and-alarms/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadMotionAxisConfiguration": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/technology-objects/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -16740,8 +16740,10 @@
             "importOptions": {
               "exampleValue": "None"
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
               "requiresBinding": true
             },
             "offset": {
@@ -16778,7 +16780,9 @@
             "setAttributes": {
               "arguments": {
                 "action": "setAttributes",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             }
           },
@@ -16923,8 +16927,10 @@
             "importOptions": {
               "exampleValue": "None"
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
               "requiresBinding": true
             }
           },
@@ -16962,7 +16968,9 @@
             "setAttributes": {
               "arguments": {
                 "action": "setAttributes",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             }
           },
@@ -16998,8 +17006,10 @@
             "importOptions": {
               "exampleValue": "None"
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
               "requiresBinding": true
             },
             "offset": {
@@ -17023,7 +17033,9 @@
                 "action": "createEntry",
                 "entryName": "<entryName from this operation's target or user input>",
                 "typeName": "<typeName from this operation's target or user input>",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "deleteEntry": {
@@ -17054,7 +17066,9 @@
             "setAttributes": {
               "arguments": {
                 "action": "setAttributes",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             }
           },
@@ -18668,12 +18682,21 @@
             "name": {
               "exampleValue": "Example_1"
             },
-            "targetJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "target": {
+              "exampleValue": {
+                "devicePath": [
+                  "PLC_1"
+                ],
+                "itemPath": [
+                  "CPU_1"
+                ]
+              },
               "requiresBinding": true
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
               "requiresBinding": true
             },
             "sensorIndex": {
@@ -18687,51 +18710,70 @@
             "addMasterValue": {
               "arguments": {
                 "action": "addMasterValue",
-                "name": "ExampleMapping",
-                "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+                "name": "MasterAxis",
+                "aspect": "synchronousSetPoint"
               }
             },
             "removeMasterValue": {
               "arguments": {
-                "action": "removeMasterValue"
+                "action": "removeMasterValue",
+                "aspect": "synchronousSetPoint",
+                "name": "MasterAxis"
               }
             },
             "createMapping": {
               "arguments": {
                 "action": "createMapping",
                 "name": "ExampleMapping",
-                "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+                "aspect": "toMapping"
               }
             },
             "updateMapping": {
               "arguments": {
                 "action": "updateMapping",
                 "name": "ExampleMapping",
-                "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+                "aspect": "toMapping"
               }
             },
             "deleteMapping": {
               "arguments": {
-                "action": "deleteMapping"
+                "action": "deleteMapping",
+                "aspect": "toMapping"
               }
             },
             "connect": {
               "arguments": {
                 "action": "connect",
                 "name": "ExampleMapping",
-                "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+                "target": {
+                  "devicePath": [
+                    "PLC_1"
+                  ],
+                  "itemPath": [
+                    "CPU_1"
+                  ]
+                },
+                "aspect": "actor"
               }
             },
             "disconnect": {
               "arguments": {
-                "action": "disconnect"
+                "action": "disconnect",
+                "aspect": "actor"
               }
             },
             "connectIdent": {
               "arguments": {
                 "action": "connectIdent",
                 "name": "ExampleMapping",
-                "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+                "target": {
+                  "devicePath": [
+                    "PLC_1"
+                  ],
+                  "itemPath": [
+                    "CPU_1"
+                  ]
+                }
               }
             }
           },
@@ -20003,8 +20045,10 @@
             "filePath": {
               "exampleValue": "C:\\Examples\\exports\\Main.xml"
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
               "requiresBinding": true
             },
             "offset": {
@@ -20028,7 +20072,9 @@
                 "action": "createEntry",
                 "entryName": "<entryName from this operation's target or user input>",
                 "typeName": "<typeName from this operation's target or user input>",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "deleteEntry": {
@@ -20039,7 +20085,9 @@
             "setAttributes": {
               "arguments": {
                 "action": "setAttributes",
-                "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "attributes": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "exportSettings": {
@@ -22736,7 +22784,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadClassicHmiFaceplates": {
+        "ListClassicHmiFaceplates": {
           "arguments": {},
           "parameters": {
             "kind": {
@@ -22758,7 +22806,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadClassicHmiGlobalization": {
+        "GetClassicHmiGlobalization": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -22773,7 +22821,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadClassicHmiScreenTree": {
+        "GetClassicHmiScreenTree": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -22791,7 +22839,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadClassicHmiScripts": {
+        "ListClassicHmiScripts": {
           "arguments": {
             "softwarePath": "HMI_RT_1"
           },
@@ -23146,7 +23194,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadMotionAxisConfiguration": {
+        "GetMotionAxisConfiguration": {
           "arguments": {
             "softwarePath": "PLC_1",
             "objectPath": "Axis_1"

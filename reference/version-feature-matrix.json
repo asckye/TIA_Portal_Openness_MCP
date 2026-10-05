@@ -2179,7 +2179,7 @@
         "21": "partial"
       },
       "tools": [
-        "ReadClassicHmiScreenTree",
+        "GetClassicHmiScreenTree",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ExportHmiScreen",
@@ -2250,14 +2250,14 @@
         "18": [],
         "19": [],
         "20": [
-          "ReadClassicHmiScreenTree",
+          "GetClassicHmiScreenTree",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ExportHmiScreen",
           "ImportHmiScreen"
         ],
         "21": [
-          "ReadClassicHmiScreenTree",
+          "GetClassicHmiScreenTree",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ExportHmiScreen",

@@ -97,7 +97,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ReadClassicHmiScreenTree -----------------------------------------------------------------------------------------------------
         public ResponseMessage ReadClassicHmiScreenTree(string softwarePath, string kind = "all", string folderPath = "", int maxDepth = 4)
-            => _session.RunHmiStepTool("ReadClassicHmiScreenTree", meta => {
+            => RunTool("GetClassicHmiScreenTree", meta => {
                 Logic.ValidateTreeRequest(kind, folderPath, maxDepth);
                 var hmi = _session.ExactClassicHmi(softwarePath);
                 meta["softwarePath"] = softwarePath; meta["kind"] = kind; meta["folderPath"] = folderPath;
@@ -117,7 +117,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ManageClassicHmiScreenObject ------------------------------------------------------------------------------------------------
         public ResponseMessage ManageClassicHmiScreenObject(string softwarePath, string objectKind, string objectPath = "", string action = "read", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiScreenObject", meta => {
+            => RunTool("ManageClassicHmiScreenObject", meta => {
                 bool writing = Logic.ValidateObjectRequest(objectKind, objectPath, action, filePath, importOptions, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var hmi = _session.ExactClassicHmi(softwarePath);
@@ -194,7 +194,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ManageClassicHmiFolder -------------------------------------------------------------------------------------------------------
         public ResponseMessage ManageClassicHmiFolder(string softwarePath, string folderKind, string folderPath = "", string action = "read", string newName = "", bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiFolder", meta => {
+            => RunTool("ManageClassicHmiFolder", meta => {
                 bool writing = Logic.ValidateFolderRequest(folderKind, folderPath, action, newName, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var hmi = _session.ExactClassicHmi(softwarePath);
@@ -263,7 +263,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- ManageClassicHmiGraphic (V21 GraphicsProvider) ----------------------------------------------------------------------------------
         public ResponseMessage ManageClassicHmiGraphic(string softwarePath, string action = "list", string name = "", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageClassicHmiGraphic", meta => {
+            => RunTool("ManageClassicHmiGraphic", meta => {
                 bool writing = Logic.ValidateGraphicRequest(action, name, filePath, importOptions, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var hmi = _session.ExactClassicHmi(softwarePath);
@@ -299,6 +299,8 @@ namespace TiaMcpServer.Siemens.Services
                 return "Multilingual graphic deleted and absence verified; project not saved.";
 #endif
             });
+        private ResponseMessage RunTool(string tool, Func<JsonObject, string> action, bool requiresProject = true)
+            => _session.RunHmiStepTool(tool, meta => ClassicMotionToolContract.Capture(meta, action), requiresProject);
     }
 }
 

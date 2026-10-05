@@ -5714,8 +5714,10 @@
           "importOptions": {
             "exampleValue": "None"
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "Name": "Example_1"
+            },
             "requiresBinding": true
           },
           "offset": {
@@ -5752,7 +5754,9 @@
           "setAttributes": {
             "arguments": {
               "action": "setAttributes",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           }
         },
@@ -5897,8 +5901,10 @@
           "importOptions": {
             "exampleValue": "None"
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "Name": "Example_1"
+            },
             "requiresBinding": true
           }
         },
@@ -5936,7 +5942,9 @@
           "setAttributes": {
             "arguments": {
               "action": "setAttributes",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           }
         },
@@ -5972,8 +5980,10 @@
           "importOptions": {
             "exampleValue": "None"
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "Name": "Example_1"
+            },
             "requiresBinding": true
           },
           "offset": {
@@ -5997,7 +6007,9 @@
               "action": "createEntry",
               "entryName": "<entryName from this operation's target or user input>",
               "typeName": "<typeName from this operation's target or user input>",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "deleteEntry": {
@@ -6028,7 +6040,9 @@
           "setAttributes": {
             "arguments": {
               "action": "setAttributes",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           }
         },
@@ -7642,12 +7656,21 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "targetJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "target": {
+            "exampleValue": {
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "CPU_1"
+              ]
+            },
             "requiresBinding": true
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "Name": "Example_1"
+            },
             "requiresBinding": true
           },
           "sensorIndex": {
@@ -7661,51 +7684,70 @@
           "addMasterValue": {
             "arguments": {
               "action": "addMasterValue",
-              "name": "ExampleMapping",
-              "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+              "name": "MasterAxis",
+              "aspect": "synchronousSetPoint"
             }
           },
           "removeMasterValue": {
             "arguments": {
-              "action": "removeMasterValue"
+              "action": "removeMasterValue",
+              "aspect": "synchronousSetPoint",
+              "name": "MasterAxis"
             }
           },
           "createMapping": {
             "arguments": {
               "action": "createMapping",
               "name": "ExampleMapping",
-              "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+              "aspect": "toMapping"
             }
           },
           "updateMapping": {
             "arguments": {
               "action": "updateMapping",
               "name": "ExampleMapping",
-              "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+              "aspect": "toMapping"
             }
           },
           "deleteMapping": {
             "arguments": {
-              "action": "deleteMapping"
+              "action": "deleteMapping",
+              "aspect": "toMapping"
             }
           },
           "connect": {
             "arguments": {
               "action": "connect",
               "name": "ExampleMapping",
-              "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+              "target": {
+                "devicePath": [
+                  "PLC_1"
+                ],
+                "itemPath": [
+                  "CPU_1"
+                ]
+              },
+              "aspect": "actor"
             }
           },
           "disconnect": {
             "arguments": {
-              "action": "disconnect"
+              "action": "disconnect",
+              "aspect": "actor"
             }
           },
           "connectIdent": {
             "arguments": {
               "action": "connectIdent",
               "name": "ExampleMapping",
-              "targetJson": "{\"<target selector required by this action>\":\"<exact target identity>\"}"
+              "target": {
+                "devicePath": [
+                  "PLC_1"
+                ],
+                "itemPath": [
+                  "CPU_1"
+                ]
+              }
             }
           }
         },
@@ -8977,8 +9019,10 @@
           "filePath": {
             "exampleValue": "C:\\Examples\\exports\\Main.xml"
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "Name": "Example_1"
+            },
             "requiresBinding": true
           },
           "offset": {
@@ -9002,7 +9046,9 @@
               "action": "createEntry",
               "entryName": "<entryName from this operation's target or user input>",
               "typeName": "<typeName from this operation's target or user input>",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "deleteEntry": {
@@ -9013,7 +9059,9 @@
           "setAttributes": {
             "arguments": {
               "action": "setAttributes",
-              "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "attributes": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "exportSettings": {
@@ -11710,7 +11758,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadClassicHmiFaceplates": {
+      "ListClassicHmiFaceplates": {
         "arguments": {},
         "parameters": {
           "kind": {
@@ -11732,7 +11780,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadClassicHmiGlobalization": {
+      "GetClassicHmiGlobalization": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -11747,7 +11795,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadClassicHmiScreenTree": {
+      "GetClassicHmiScreenTree": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -11765,7 +11813,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadClassicHmiScripts": {
+      "ListClassicHmiScripts": {
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
@@ -12120,7 +12168,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadMotionAxisConfiguration": {
+      "GetMotionAxisConfiguration": {
         "arguments": {
           "softwarePath": "PLC_1",
           "objectPath": "Axis_1"

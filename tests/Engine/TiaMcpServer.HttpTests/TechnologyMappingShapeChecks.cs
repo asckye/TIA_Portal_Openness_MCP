@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 // Native members used by Portal.TechnologyMapping.cs, TechnologyObjectsService.cs and the typed technology-object operations of
-// ReadMotionAxisConfiguration / ManageMotionAxis / ManageTechnologyObject / ConfigureMotionHardwareConnection, verified member by
+// GetMotionAxisConfiguration / ManageMotionAxis / ManageTechnologyObject / ConfigureMotionHardwareConnection, verified member by
 // member against the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base / Siemens.Engineering.Step7) PublicAPI.
 internal static class TechnologyMappingShapeChecks
 {

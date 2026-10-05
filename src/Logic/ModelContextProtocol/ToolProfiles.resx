@@ -964,7 +964,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectDeviceNodesToProfinetSubnet",
@@ -1715,7 +1715,7 @@
           "format": "MCD",
           "separator": "Tab"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangePlcAlarmTextLists",
@@ -2002,7 +2002,7 @@
           "directoryPath": "C:\\Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcTagTable",
@@ -2311,7 +2311,7 @@
       },
       {
         "name": "GetClassicHmiGlobalization",
-        "currentName": "ReadClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
         "sourceName": "ReadClassicHmiGlobalization",
         "profiles": [
           "full"
@@ -2319,11 +2319,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetClassicHmiScreenTree",
-        "currentName": "ReadClassicHmiScreenTree",
+        "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
         "profiles": [
           "full"
@@ -2331,7 +2331,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDccObject",
@@ -2564,7 +2564,7 @@
       },
       {
         "name": "GetMotionAxisConfiguration",
-        "currentName": "ReadMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
         "sourceName": "ReadMotionAxisConfiguration",
         "profiles": [
           "full"
@@ -2573,7 +2573,7 @@
           "softwarePath": "PLC_1",
           "objectPath": "Axis_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetNativeInvocationLog",
@@ -3865,17 +3865,17 @@
       },
       {
         "name": "ListClassicHmiFaceplates",
-        "currentName": "ReadClassicHmiFaceplates",
+        "currentName": "ListClassicHmiFaceplates",
         "sourceName": "ReadClassicHmiFaceplates",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListClassicHmiScripts",
-        "currentName": "ReadClassicHmiScripts",
+        "currentName": "ListClassicHmiScripts",
         "sourceName": "ReadClassicHmiScripts",
         "profiles": [
           "full"
@@ -3883,7 +3883,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDccCharts",
@@ -4368,7 +4368,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiFolder",
@@ -4384,7 +4384,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiScreenObject",
@@ -4401,7 +4401,7 @@
           "action": "read",
           "objectPath": "Popup_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiScript",
@@ -4417,7 +4417,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiTextGraphicList",
@@ -4433,7 +4433,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDcbLibraries",
@@ -4788,7 +4788,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageMultiuserSession",
@@ -5078,7 +5078,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcTableEntries",
@@ -7843,7 +7843,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectDeviceNodesToProfinetSubnet",
@@ -8594,7 +8594,7 @@
           "format": "MCD",
           "separator": "Tab"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangePlcAlarmTextLists",
@@ -8881,7 +8881,7 @@
           "directoryPath": "C:\\Examples",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcTagTable",
@@ -9190,7 +9190,7 @@
       },
       {
         "name": "GetClassicHmiGlobalization",
-        "currentName": "ReadClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
         "sourceName": "ReadClassicHmiGlobalization",
         "profiles": [
           "full"
@@ -9198,11 +9198,11 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetClassicHmiScreenTree",
-        "currentName": "ReadClassicHmiScreenTree",
+        "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
         "profiles": [
           "full"
@@ -9210,7 +9210,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDccObject",
@@ -9443,7 +9443,7 @@
       },
       {
         "name": "GetMotionAxisConfiguration",
-        "currentName": "ReadMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
         "sourceName": "ReadMotionAxisConfiguration",
         "profiles": [
           "full"
@@ -9452,7 +9452,7 @@
           "softwarePath": "PLC_1",
           "objectPath": "Axis_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetNativeInvocationLog",
@@ -10744,17 +10744,17 @@
       },
       {
         "name": "ListClassicHmiFaceplates",
-        "currentName": "ReadClassicHmiFaceplates",
+        "currentName": "ListClassicHmiFaceplates",
         "sourceName": "ReadClassicHmiFaceplates",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListClassicHmiScripts",
-        "currentName": "ReadClassicHmiScripts",
+        "currentName": "ListClassicHmiScripts",
         "sourceName": "ReadClassicHmiScripts",
         "profiles": [
           "full"
@@ -10762,7 +10762,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListCommunicationConnections",
@@ -11271,7 +11271,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiFolder",
@@ -11287,7 +11287,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiGraphic",
@@ -11302,7 +11302,7 @@
           "dryRun": true,
           "action": "list"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiScreenObject",
@@ -11319,7 +11319,7 @@
           "action": "read",
           "objectPath": "Popup_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiScript",
@@ -11335,7 +11335,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageClassicHmiTextGraphicList",
@@ -11351,7 +11351,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageCommunicationConnection",
@@ -11743,7 +11743,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageMultiuserSession",
@@ -12049,7 +12049,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcTableEntries",

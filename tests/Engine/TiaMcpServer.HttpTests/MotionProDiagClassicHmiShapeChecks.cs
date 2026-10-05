@@ -1,6 +1,11 @@
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Text.Json.Nodes;
 
 internal static class MotionProDiagClassicHmiShapeChecks
 {
@@ -101,7 +106,7 @@ internal static class MotionProDiagClassicHmiShapeChecks
             var c=T(wincc,"Siemens.Engineering.Hmi.TextGraphicList."+list+"Composition"); Method(c,"Import",typeof(System.IO.FileInfo),importOptions);
             check(c.GetMethod("Create",new[]{typeof(string)})==null,list+"Composition has no Create(string)");
         }
-        var graphics=Optional(wincc,"Siemens.Engineering.Hmi.Globalization.GraphicsProvider","ReadClassicHmiGlobalization must return NotSupported on V20.");
+        var graphics=Optional(wincc,"Siemens.Engineering.Hmi.Globalization.GraphicsProvider","GetClassicHmiGlobalization must return NotSupported on V20.");
         if(graphics!=null) { Service(graphics); Property(graphics,"Graphics"); Property(T(wincc,"Siemens.Engineering.Hmi.Globalization.MultiLingualGraphic"),"Name"); }
         var libraryType=T(core,"Siemens.Engineering.Library.Types.LibraryType"); Property(libraryType,"Versions");
         foreach(var kind in new[]{"Siemens.Engineering.Hmi.Faceplate.FaceplateLibraryType","Siemens.Engineering.Hmi.RuntimeScripting.VBScriptLibraryType","Siemens.Engineering.Hmi.RuntimeScripting.CScriptLibraryType"})
@@ -114,29 +119,49 @@ internal static class MotionProDiagClassicHmiShapeChecks
             check(Equals(method.GetParameters().Last().Name,"dryRun") && Equals(method.GetParameters().Last().DefaultValue,true),name+" defaults to preview with dryRun last");
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),name+" deletion requires explicit confirmation");
         }
-        foreach(var name in new[]{"ReadMotionAxisConfiguration","ReadClassicHmiScripts","ReadClassicHmiGlobalization","ReadClassicHmiFaceplates"})
+        foreach(var name in new[]{"GetMotionAxisConfiguration","ListClassicHmiScripts","GetClassicHmiGlobalization","ListClassicHmiFaceplates"})
             check(tools.Tool(name)!=null && tools.Tool(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is a read-only tool");
+        check(tools.Tool("ManageMotionAxis").GetParameters().Single(p=>p.Name=="target").ParameterType.FullName
+            =="TiaMcp.Logic.V4.Domain.MotionTarget","ManageMotionAxis uses the shared target union");
+        foreach(var entry in new[]{("ManageMotionAxis","properties"),("ManagePlcSupervision","attributes"),
+            ("ManageClassicHmiScript","attributes"),("ManageClassicHmiCycle","attributes"),("ManageClassicHmiTextGraphicList","attributes")})
+        {
+            var parameter=tools.Tool(entry.Item1).GetParameters().Single(p=>p.Name==entry.Item2);
+            var type=parameter.ParameterType;
+            check(type.IsGenericType && type.GetGenericTypeDefinition().FullName=="TiaMcp.Logic.V4.Inputs.AttributeMap`1"
+                && type.GetGenericArguments().Single().FullName=="TiaMcp.Logic.V4.Inputs.Scalar",
+                entry.Item1+" uses a typed scalar map: "+entry.Item2);
+            check(parameter.HasDefaultValue && parameter.DefaultValue==null,entry.Item1+" preserves omitted optional attributes");
+        }
 
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
         foreach (var domain in new[] {
             (Name: "ClassicHmiFolders", Field: "_classicHmiFolders", Tools: new[] {
-                "ReadClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
+                "GetClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
             (Name: "MotionProDiagClassicHmi", Field: "_motionProDiagClassicHmi", Tools: new[] {
-                "ReadMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ReadClassicHmiScripts",
+                "GetMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ListClassicHmiScripts",
                 "ManageClassicHmiScript", "ManageClassicHmiCycle", "ManageClassicHmiTextGraphicList",
-                "ReadClassicHmiGlobalization", "ReadClassicHmiFaceplates", "ExportPlcProDiagInfo",
+                "GetClassicHmiGlobalization", "ListClassicHmiFaceplates", "ExportPlcProDiagInfo",
                 "ExchangeMotionCamData", "ConfigureMotionHardwareConnection" }) })
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
             var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
+            var registered = toolType.GetMethods(all).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
+                .Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name).OrderBy(name => name).ToArray();
+            check(registered.SequenceEqual(domain.Tools.OrderBy(name => name)), domain.Name + " registers exactly the V4 names without aliases");
             foreach (var type in new[] { service, toolType })
                 check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
                     type.FullName + " is a non-disposable singleton class");
             foreach (var name in domain.Tools)
             {
-                var method = tools.Method(name);
+                var serviceName = name == "GetClassicHmiScreenTree" ? "ReadClassicHmiScreenTree"
+                    : name == "GetMotionAxisConfiguration" ? "ReadMotionAxisConfiguration"
+                    : name == "ListClassicHmiScripts" ? "ReadClassicHmiScripts"
+                    : name == "GetClassicHmiGlobalization" ? "ReadClassicHmiGlobalization"
+                    : name == "ListClassicHmiFaceplates" ? "ReadClassicHmiFaceplates" : name;
+                var method = tools.Method(serviceName);
                 var tool = tools.Tool(name);
                 var target = tools.Target(method);
                 check(method.DeclaringType == service && tool.DeclaringType == toolType && !tool.IsStatic
@@ -145,13 +170,59 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 check(session != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
                     && ReferenceEquals(toolType.GetField(domain.Field, all)!.GetValue(tools.Target(tool)), target),
                     domain.Name + " tool uses the service with the shared session: " + name);
-                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-                bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                bool callsService = CallsService(tool, method, toolType, new HashSet<MethodBase>());
                 EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls its service: " + name, tool, method);
+                var unrelated = service.GetMethods().First(m => m.DeclaringType == service && m != method);
+                check(!CallsService(tool, unrelated, toolType, new HashSet<MethodBase>()),
+                    domain.Name + " service-call check excludes unrelated tool delegates: " + name);
                 check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
                     domain.Name + " tool needs no static CLI forwarder: " + name);
+                check(tool.ReturnType == typeof(CallToolResult) && tool.GetParameters().All(p =>
+                    p.Name != "targetJson" && p.Name != "propertiesJson" && p.Name != "attributesJson"),
+                    name + " exposes the V4 transport and parameter names");
+                // The harness has no bound project; every write retains its default preview.
+                var arguments = tool.GetParameters().Select(p => p.HasDefaultValue ? p.DefaultValue : "offline-target").ToArray();
+                var response = (CallToolResult)tools.Invoke(tool, arguments)!;
+                var body = response.StructuredContent!.AsObject();
+                check(response.IsError == true && (bool?)body["ok"] == false
+                    && (string?)body["error"]?["code"] == "PROJECT_NOT_BOUND"
+                    && (string?)body["meta"]?["tool"] == name
+                    && (string?)body["meta"]?["outcome"] == "rejected-before-operation"
+                    && (string?)body["meta"]?["execution"] == "not-started"
+                    && (string?)body["meta"]?["completeness"] == "none",
+                    name + " returns an unbound-project V4 refusal before native work");
+                check(response.Content.Single() is TextContentBlock text
+                    && JsonNode.DeepEquals(body, JsonNode.Parse(text.Text)), name + " text and structured envelopes agree");
             }
         }
+    }
+
+    private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.FieldType == typeof(OpCode)).Select(f => (OpCode)f.GetValue(null)!).ToDictionary(op => op.Value);
+
+    // Follow this tool's reachable adapters and captured delegates, not every method on the type.
+    private static bool CallsService(MethodBase caller, MethodInfo service, Type owner, HashSet<MethodBase> seen)
+    {
+        if (!seen.Add(caller)) return false;
+        var il = caller.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
+        for (int i = 0; i < il.Length;)
+        {
+            short code = il[i++] == 0xfe ? (short)(0xfe00 | il[i++]) : (short)il[i - 1];
+            var op = OpCodesByValue[code];
+            if (op.OperandType == OperandType.InlineMethod)
+            {
+                var target = caller.Module.ResolveMethod(BitConverter.ToInt32(il, i));
+                if (target == service) return true;
+                var declaring = target!.DeclaringType;
+                while (declaring != null && declaring != owner) declaring = declaring.DeclaringType;
+                if (declaring == owner && CallsService(target, service, owner, seen)) return true;
+            }
+            i += op.OperandType == OperandType.InlineNone ? 0
+                : op.OperandType == OperandType.ShortInlineBrTarget || op.OperandType == OperandType.ShortInlineI || op.OperandType == OperandType.ShortInlineVar ? 1
+                : op.OperandType == OperandType.InlineVar ? 2
+                : op.OperandType == OperandType.InlineI8 || op.OperandType == OperandType.InlineR ? 8
+                : op.OperandType == OperandType.InlineSwitch ? 4 + 4 * BitConverter.ToInt32(il, i) : 4;
+        }
+        return false;
     }
 }
