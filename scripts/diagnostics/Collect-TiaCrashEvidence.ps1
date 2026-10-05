@@ -29,7 +29,7 @@ foreach ($query in @(
     } catch { if ($_.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*') { $errors.Add('Event query: '+$_.Exception.Message) } }
 }
 $processes=@()
-try { $processes=@(Get-Process -Name 'Siemens.Automation.Portal','TiaMcpServer' -ErrorAction SilentlyContinue | ForEach-Object {
+try { $processes=@(Get-Process -Name 'Siemens.Automation.Portal','TiaMcp.Engine.V20','TiaMcp.Engine.V21','TiaMcp.FoundationHost' -ErrorAction SilentlyContinue | ForEach-Object {
     try { [ordered]@{pid=$_.Id; name=$_.ProcessName; startUtc=$_.StartTime.ToUniversalTime().ToString('o')} } catch { $errors.Add('Process metadata: '+$_.Exception.Message) }
 }) } catch { $errors.Add('Processes: '+$_.Exception.Message) }
 $journals=@()
@@ -48,7 +48,7 @@ $dumps=@()
 $dumpDirectory=Join-Path $env:LOCALAPPDATA 'CrashDumps'
 try {
     if (Test-Path -LiteralPath $dumpDirectory -PathType Container) {
-        $dumps=@(Get-ChildItem -LiteralPath $dumpDirectory -File -Filter '*.dmp' | Where-Object {$_.LastWriteTimeUtc -ge $since -and $_.Name -match '^(Siemens\.Automation\.Portal|TiaMcpServer)\.'} | Select-Object -First 50 | ForEach-Object {
+        $dumps=@(Get-ChildItem -LiteralPath $dumpDirectory -File -Filter '*.dmp' | Where-Object {$_.LastWriteTimeUtc -ge $since -and $_.Name -match '^(Siemens\.Automation\.Portal|TiaMcp\.Engine\.V(?:20|21)|TiaMcp\.FoundationHost)\.'} | Select-Object -First 50 | ForEach-Object {
             @{path=$_.FullName; bytes=$_.Length; modifiedUtc=$_.LastWriteTimeUtc.ToString('o')}
         })
     }

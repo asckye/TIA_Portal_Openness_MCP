@@ -1,6 +1,6 @@
 """Build the complete public delivery ZIP from the clean, committed tree plus the local build outputs.
 
-Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaMcpConfigurator.exe are not tracked in Git:
+Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaOpenness.exe are not tracked in Git:
 Build-Release.ps1 produces them locally and records their hashes in manifest/release-build.json and
 manifest/configurator-build.json, which ARE committed. Packaging filters tracked files through
 scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. Release.ps1 uploads the ZIP.
@@ -57,6 +57,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--git', default='git')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
+    parser.add_argument('--local', action='store_true', help='Build a review-only bundle from this worktree without committing; all binary and validation gates still apply')
     parser.add_argument('--dry-run', action='store_true', help='List the filtered working tree without build outputs, clean-tree checks or publication')
     parser.add_argument('--include-untracked', action='store_true', help='Dry run only: also preview new, non-ignored files awaiting review')
     parser.add_argument('--stage-directory', type=Path, help='Dry run only: copy the filtered tree into a new worktree-local directory')
@@ -75,12 +76,12 @@ def main():
         return
     require(not args.include_untracked and args.stage_directory is None, 'Preview options require --dry-run')
     subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py')], check=True)
-    require(not git('status', '--porcelain', '--untracked-files=normal').strip(),
+    require(args.local or not git('status', '--porcelain', '--untracked-files=normal').strip(),
             'Review and commit the source and manifests before packaging')
     commit = git('rev-parse', 'HEAD').decode().strip()
     files = {}
-    require(not any((name.startswith('runtime/') and name != 'runtime/README.md') or name == 'TiaMcpConfigurator.exe' for name in tracked),
-            'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaMcpConfigurator.exe')
+    require(not any((name.startswith('runtime/') and name != 'runtime/README.md') or name == 'TiaOpenness.exe' for name in tracked),
+            'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaOpenness.exe')
     # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
     # configurator - never "whatever is on disk" (an engine started locally leaves TiaMcpServer.startup.log there).
     metadata = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))
@@ -100,7 +101,7 @@ def main():
             if row['path'] not in existing:
                 inventory.append(row)
                 existing[row['path']] = row['sha256']
-    binaries = ['TiaMcpConfigurator.exe'] + sorted(row['path'] for row in inventory)
+    binaries = ['TiaOpenness.exe'] + sorted(row['path'] for row in inventory)
     on_disk = {p.relative_to(root).as_posix() for p in (root / 'runtime').rglob('*') if p.is_file() and p.name != 'README.md'}
     for extra in sorted(on_disk - set(binaries)):
         print(f'note: {extra} is on disk but not in the validated runtime inventory; left out of the package')
@@ -112,9 +113,9 @@ def main():
                 f'Unexpected release file: {name}')
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
-    required_exes = ['TiaMcpConfigurator.exe', 'runtime/v20/TiaMcpServer.exe', 'runtime/v21/TiaMcpServer.exe']
+    required_exes = ['TiaOpenness.exe', 'runtime/v20/TiaMcp.Engine.V20.exe', 'runtime/v21/TiaMcp.Engine.V21.exe']
     if multi is not None:
-        required_exes += [f'runtime/v{key}/TiaMcpServer.exe' for key in multi['studioReleaseKeys'][:6]]
+        required_exes += [f'runtime/v{key}/TiaMcp.FoundationHost.exe' for key in multi['studioReleaseKeys'][:6]]
         required_exes += ['runtime/studio/TiaOpenness.exe']
         pin = json.loads((root / 'scripts/build/bundled-dotnet.json').read_text(encoding='utf-8'))
         required_exes += [f"runtime/dotnet/host/fxr/{pin['version']}/hostfxr.dll", 'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt']
@@ -184,7 +185,7 @@ def main():
         for stability in proofs:
             require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
                     f'V{major} local stability validation missing')
-            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/TiaMcpServer.exe']),
+            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/TiaMcp.Engine.V{major}.exe']),
                     f'V{major} stability test used a different runtime')
             for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
                                 ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
@@ -227,7 +228,7 @@ def main():
                 'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
                 'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
                 'src/Adapters.Contracts/packages.lock.json',
-                'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
+                'TiaOpenness.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
                 'src/Studio/Launcher/Launcher.cs',
                 'src/Studio/Gui/Themes/Glass.xaml',
                 'src/Studio/Gui/Controls/GlassLogView.cs',
@@ -302,6 +303,8 @@ def main():
     digest = sha(archive.read_bytes())
     archive.with_suffix('.sha256').write_text(digest + '  ' + archive.name + '\n', encoding='ascii')
     result = {'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
+    if args.local:
+        result['sourceState'] = 'worktree; local review only, not for publication'
     (out / 'package-result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(json.dumps(result))
 

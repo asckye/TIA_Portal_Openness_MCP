@@ -48,7 +48,7 @@ internal static class DomainShapeChecks
             check(server.GetType("TiaMcpServer.Runtime." + name) != null && runtime.GetType("TiaMcpServer.Runtime." + name) == null,
                 name + " stays in the engine");
         check(!runtime.GetReferencedAssemblies().Any(reference => reference.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)
-            || reference.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.Ordinal) || reference.Name == "TiaMcpServer"),
+            || reference.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.Ordinal) || reference.Name.StartsWith("TiaMcp.Engine.", StringComparison.Ordinal)),
             "Runtime assembly has no engineering dependency");
         check(!runtime.GetTypes().Any(type => type.FullName!.Contains("NativeCall")), "Runtime assembly is not woven");
         var domains = new[] {

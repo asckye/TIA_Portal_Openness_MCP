@@ -11,7 +11,7 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\checks\Validate-Bundle.ps1 -BundleRoot "D:\kits\TIA_MCP_交付包"
 .PARAMETER NoBinaries
     Source checkout without build outputs (CI, or a fresh clone before Build-Release.ps1): since 2.8.1 runtime\v20,
-    runtime\v21 and TiaMcpConfigurator.exe are not tracked in Git, so their presence, versions and hashes are skipped;
+    runtime\v21 and TiaOpenness.exe are not tracked in Git, so their presence, versions and hashes are skipped;
     manifests, versions, launchers' syntax and the recorded source hashes are still checked.
 .PARAMETER PackageMode
     Validate an extracted runtime-only delivery with no development tree. Also detected when Version.props is absent.
@@ -111,7 +111,7 @@ if ($Strict) {
     }
 }
 foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.prefixes)) {
-    if ($NoBinaries -and ($path -eq 'TiaMcpConfigurator.exe' -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
+    if ($NoBinaries -and ($path -eq 'TiaOpenness.exe' -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
     if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
     else { Fail "Missing delivery resource: $path" }
 }
@@ -125,7 +125,7 @@ if ($PackageMode) {
 
 if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at release time; recorded source-file checks skipped" -ForegroundColor Cyan }
 
-if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
+if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaOpenness.exe are build outputs, not checked here" -ForegroundColor Cyan }
 # Check-BundleLayout.py compares the code table with this enforced resource list.
 # The embedded V21 catalog is also shipped as readable reference documentation.
 $bundleResourcePaths = @(
@@ -152,7 +152,7 @@ foreach ($guiFile in @(
     'src/Adapters/Native/Plc/PlcServices.cs',
     'src/Engine/ModelContextProtocol/InvocationJournal.Adapter.cs',
     'tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs',
-    'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
+    'TiaOpenness.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
     'src/Studio/Launcher/Launcher.cs',
     'src/Studio/Gui/Themes/Glass.xaml',
     'src/Studio/Gui/Controls/GlassLogView.cs',
@@ -179,7 +179,7 @@ foreach ($guiFile in @(
     'tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs'
 )) {
     if ($PackageMode -and -not (IsDeliveryFile $guiFile)) { continue }
-    if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
+    if ($NoBinaries -and $guiFile -eq 'TiaOpenness.exe') { continue }
     if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
     else { Fail "Missing GUI entry: $guiFile" }
 }
@@ -235,10 +235,10 @@ if (!$NoBinaries) {
 if (-not $PackageMode -and !(Test-Path -LiteralPath (Join-Path $root 'src/Studio/Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
 
 # The checkout and delivery use the same canonical runtime paths.
-$exe = Join-Path $root 'runtime/v21/TiaMcpServer.exe'
+$exe = Join-Path $root 'runtime/v21/TiaMcp.Engine.V21.exe'
 if ($NoBinaries) { $exe = $null }
 elseif (!(Test-Path -LiteralPath $exe)) { Fail "Missing V21 runtime: $exe"; $exe=$null }
-else { Ok "TiaMcpServer.exe present ($exe)" }
+else { Ok "TiaMcp.Engine.V21.exe present ($exe)" }
 
 # Sentinel: every launcher must point at an engine that actually exists in this checkout.
 # The .cmd/.bat files and this script drifted apart once already — the validator checked one
@@ -252,9 +252,9 @@ foreach ($rel in $launchers) {
     if (-not (Test-Path -LiteralPath $lp)) { Fail ("Missing launcher: " + $rel); continue }
     $ldir = Split-Path -Parent $lp
     $text = Get-Content -LiteralPath $lp -Raw -Encoding UTF8
-    $refs = @([regex]::Matches($text, '%~dp0([^"%]*TiaMcpServer\.exe)') |
+    $refs = @([regex]::Matches($text, '%~dp0([^"%]*TiaMcp\.Engine\.V(?:20|21)\.exe)') |
               ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
-    if ($refs.Count -eq 0) { Fail ($rel + ': references no TiaMcpServer.exe path'); continue }
+    if ($refs.Count -eq 0) { Fail ($rel + ': references no TiaMcp.Engine.V21.exe path'); continue }
     if ($NoBinaries) { Ok ($rel + ' -> ' + ($refs -join ' ; ') + ' (existence not checked without binaries)'); continue }
     $anyPresent = $false
     foreach ($r in $refs) { if (Test-Path -LiteralPath (Join-Path $ldir $r)) { $anyPresent = $true } }
@@ -426,7 +426,7 @@ if ((Test-Path -LiteralPath $changelog) -and ($PackageMode -or (Test-Path -Liter
         }
 
         # The shipped engine is a binary, so a stale runtime/ is invisible in a diff.
-        $exe = Join-Path $root "runtime\v21\TiaMcpServer.exe"
+        $exe = Join-Path $root "runtime\v21\TiaMcp.Engine.V21.exe"
         if (-not $NoBinaries -and (Test-Path -LiteralPath $exe)) {
             $fileVersion = (Get-Item -LiteralPath $exe).VersionInfo.FileVersion
             if ($fileVersion -ne $build.fileVersion) {
@@ -467,7 +467,8 @@ if ($Strict -and -not $PendingRelease -and (Test-Path -LiteralPath (Join-Path $r
         if (($multi.studioReleaseKeys -join ',') -ne '14sp1,15.1,16,17,18,19,20,21') { Fail 'Eight Studio/MCP release keys required' }
         if (-not $NoBinaries) {
             foreach ($key in $multi.studioReleaseKeys) {
-                $engine = Join-Path $root "runtime/v$key/TiaMcpServer.exe"
+                $engineName = if ($key -in '20','21') { "TiaMcp.Engine.V$key.exe" } else { 'TiaMcp.FoundationHost.exe' }
+                $engine = Join-Path $root "runtime/v$key/$engineName"
                 if (-not (Test-Path -LiteralPath $engine)) { Fail "V$key runtime missing" }
                 elseif ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$key runtime version is stale" }
                 if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/studio/bridge/adapters/v$key/TiaOpenness.Openness.dll"))) { Fail "Studio V$key adapter missing" }
@@ -507,7 +508,7 @@ if ($Strict -and -not $PendingRelease -and (Test-Path -LiteralPath (Join-Path $r
     foreach ($major in @(20,21)) {
         if (($sourceRelease + '.0') -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
         if ($NoBinaries) { continue }
-        $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
+        $engine = Join-Path $root "runtime/v$major/TiaMcp.Engine.V$major.exe"
         if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
         if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
     }

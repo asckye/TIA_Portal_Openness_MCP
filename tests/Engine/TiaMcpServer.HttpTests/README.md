@@ -11,9 +11,9 @@ The test HTTP listener binds only to localhost with a temporary test key.
 ```powershell
 dotnet build tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj -c Release
 $tests = 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
-& $tests 'runtime/v21/TiaMcpServer.exe'
+& $tests 'runtime/v21/TiaMcp.Engine.V21.exe'
 $fileVersion = (Get-Content 'manifest/release-build.json' -Raw | ConvertFrom-Json).fileVersion
-& $tests 'runtime/v21/TiaMcpServer.exe' hmi-only 21 $fileVersion
+& $tests 'runtime/v21/TiaMcp.Engine.V21.exe' hmi-only 21 $fileVersion
 ```
 
 Use the V20 executable and `hmi-only 20 $fileVersion` to check a V20 build. These reflection checks target the V20/V21 full engines; foundation protocol checks are run by `Build-MultiVersion.ps1`.

@@ -163,7 +163,7 @@ class LayoutChecks(unittest.TestCase):
 
     def test_delivery_includes_runtime_resources_and_plugin(self):
         rules = load_delivery(ROOT)
-        for path in ('TiaMcpConfigurator.exe', 'runtime/v21/TiaMcpServer.exe',
+        for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',
                      'plugin/skill/SKILL.md',

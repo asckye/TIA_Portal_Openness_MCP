@@ -126,7 +126,7 @@ def main():
     exe = gui['executable']['path']
     if check(exe in content, f'{exe} missing from ZIP'):
         check(sha(content[exe]) == gui['executable']['sha256'], f'{exe} differs from manifest/configurator-build.json')
-    check(not any((n.startswith('runtime/') and n != 'runtime/README.md') or n == 'TiaMcpConfigurator.exe' for n in tree),
+    check(not any((n.startswith('runtime/') and n != 'runtime/README.md') or n == 'TiaOpenness.exe' for n in tree),
           'binaries are tracked in Git although the 2.8.1 policy keeps them out')
 
     # 4. Exact set equality also rejects verification tools, development files and old extras.
@@ -166,17 +166,17 @@ class AssetChecks(unittest.TestCase):
         rules = (Path(__file__).resolve().parents[2] / layout.DELIVERY_RULES).read_bytes()
         self.tree = {layout.DELIVERY_RULES: rules, 'README.md': b'User documentation\n',
                      'Version.props': b'excluded compiler input', 'tools/source.cs': b'excluded source'}
-        self.runtime = {'runtime/v21/TiaMcpServer.exe': b'engine',
+        self.runtime = {'runtime/v21/TiaMcp.Engine.V21.exe': b'engine',
                         'runtime/verification/NativeCallWeaver.dll': b'release-only verifier'}
         build = {'runtimeFiles': [{'path': n, 'sha256': sha(b)} for n, b in self.runtime.items()]}
-        gui = {'executable': {'path': 'TiaMcpConfigurator.exe', 'sha256': sha(b'launcher')}}
+        gui = {'executable': {'path': 'TiaOpenness.exe', 'sha256': sha(b'launcher')}}
         self.tree['manifest/release-build.json'] = json.dumps(build).encode()
         self.tree['manifest/configurator-build.json'] = json.dumps(gui).encode()
         delivery = {'package': self.package, 'engineBuildSha256': sha(self.tree['manifest/release-build.json']),
                     'configuratorBuildSha256': sha(self.tree['manifest/configurator-build.json'])}
         self.tree['manifest/delivery.json'] = json.dumps(delivery).encode()
         self.content = {n: b for n, b in self.tree.items() if layout.delivered(n, json.loads(rules))}
-        self.content.update({'runtime/v21/TiaMcpServer.exe': b'engine', 'TiaMcpConfigurator.exe': b'launcher'})
+        self.content.update({'runtime/v21/TiaMcp.Engine.V21.exe': b'engine', 'TiaOpenness.exe': b'launcher'})
 
     def tearDown(self):
         self.assertEqual(self.root.resolve().parent, self.parent.resolve())
@@ -220,9 +220,9 @@ class AssetChecks(unittest.TestCase):
         self.assertEqual(self.verify()[0], 1)
 
     def test_missing_or_modified_binary_fails(self):
-        del self.content['runtime/v21/TiaMcpServer.exe']
+        del self.content['runtime/v21/TiaMcp.Engine.V21.exe']
         self.assertEqual(self.verify()[0], 1)
-        self.content['runtime/v21/TiaMcpServer.exe'] = b'changed'
+        self.content['runtime/v21/TiaMcp.Engine.V21.exe'] = b'changed'
         self.assertEqual(self.verify()[0], 1)
 
     def test_sidecar_digest_fails(self):

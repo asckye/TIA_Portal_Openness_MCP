@@ -32,7 +32,7 @@ if len(sys.argv) < 2:
 
 PROJECT = str(pathlib.Path(sys.argv[1]).resolve())
 EXE = str(pathlib.Path(sys.argv[2]).resolve() if len(sys.argv) > 2
-          else ROOT / "runtime" / "v21" / "TiaMcpServer.exe")
+          else ROOT / "runtime" / "v21" / "TiaMcp.Engine.V21.exe")
 
 # 只调只读工具：前缀白名单 + 关键词黑名单双重过滤。
 # 宁可漏掉几个也不能误调写操作 —— 这个脚本是拿真项目跑的。

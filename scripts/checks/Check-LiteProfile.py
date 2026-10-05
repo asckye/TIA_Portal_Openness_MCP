@@ -11,7 +11,7 @@ It also guards the check itself. When lite became the default, "full" was still 
 by *unsetting* the env var — so both probes returned the same ~48 tools and every assertion here
 passed vacuously. full must now be requested explicitly AND come back strictly larger.
 
-Usage:  python scripts/checks/Check-LiteProfile.py [path-to-TiaMcpServer.exe]
+Usage:  python scripts/checks/Check-LiteProfile.py [path-to-TiaMcp.Engine.V21.exe]
 Exit 0 = lite is self-sufficient, fits the host cap, and can reach everything else.
 """
 import json
@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-EXE = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "runtime" / "v21" / "TiaMcpServer.exe"
+EXE = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "runtime" / "v21" / "TiaMcp.Engine.V21.exe"
 
 # The documented golden path: orientation -> connect/open -> read -> author -> compile -> save.
 # Every name here is referenced by the server instructions, README or GetAuthoringGuide, so a

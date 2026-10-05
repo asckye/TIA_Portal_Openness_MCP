@@ -78,7 +78,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | done |
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
-| P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
+| P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
 | P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
 | P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；当时两个 TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
 | P1-07 | 目录整理第一批：设计验收页归入 `docs/development/design-qa.md`；启动器归入 `src/Studio/Launcher`；Glass 资源归入 `src/Studio/Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。G7 解耦已完成，目录重组的 G7 阻塞已解除；整体目录重组仍在阶段 4 完成后进行 | done |
@@ -198,7 +198,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-33 | D1 编译离线前提与 Safety 会话对称清理候选与切换；[路径清单](phase6-review.md#phase6-path-p6-33) | 32、I；发布切换等待 L5-COMPILE | T、N；不自动下线、清理失败、根/叶诊断、各入口目标范围 | todo |
 | P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |
 | P6-35 | 汇总逐版/逐族行为能力与 V4 schema 缺省；未验收族保持 current，并重新生成实际发布快照；[路径清单](phase6-review.md#phase6-path-p6-35) | 26；已进入发布的 27–34 必须对应 L5 通过；其余明确延期 | T、V；schema 不广告未实现安全策略、UNVERIFIED_BEHAVIOR 可见；不改 G3/J 默认开关 | todo |
-| P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | todo |
+| P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | done |
 | P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | todo |
 | P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测；[路径清单](phase6-review.md#phase6-path-p6-38) | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | todo |
 | P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |

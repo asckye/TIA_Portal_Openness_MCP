@@ -37,12 +37,20 @@ function Dump([string]$Assembly, [string]$Inventory, [string]$Directory, [string
     Run 'python' @($checker,'--config',$configPath,'--dump',$Assembly,'--inventory',$Inventory,'--output',$Directory) (Join-Path $out "$Label-dump.log")
     return Join-Path $Directory ((Split-Path $Assembly -Leaf) + '.il.json')
 }
+function Engine-Executable([string]$Directory) {
+    $current = Join-Path $Directory "TiaMcp.Engine.V$key.exe"
+    if (Test-Path -LiteralPath $current) { return $current }
+    # Historical baseline evidence uses the filename produced by that source revision.
+    $recorded = @(Get-ChildItem -LiteralPath $Directory -File -Filter '*.exe')
+    if ($recorded.Count -ne 1) { throw "Expected one historical engine executable: $Directory" }
+    return $recorded[0].FullName
+}
 function Verify-Variant([string]$Directory, [string]$Label) {
     $weaver = Join-Path $Directory 'weaver/NativeCallWeaver.dll'
     Run 'dotnet' @($weaver,'verify',(Join-Path $Directory "TiaMcp.Adapter.$key.dll"),
         (Join-Path $Directory 'adapter-inventory.json')) (Join-Path $out "$Label-adapter-verify.log")
     if ($engine) {
-        Run 'dotnet' @($weaver,'verify',(Join-Path $Directory 'TiaMcpServer.exe'),
+        Run 'dotnet' @($weaver,'verify',(Engine-Executable $Directory),
             (Join-Path $Directory 'engine-inventory.json')) (Join-Path $out "$Label-engine-verify.log")
     }
 }
@@ -129,7 +137,7 @@ try {
         if ($engine) {
             $default = Join-Path $out "default/v$key"
             $oldDefault = Join-Path $baseline "default/v$key"
-            $oldDefaultEngine = Dump (Join-Path $oldDefault 'TiaMcpServer.exe') (Join-Path $oldDefault 'engine-inventory.json') (Join-Path $out "il/baseline-default-v$key") "baseline-default-v$key-engine"
+            $oldDefaultEngine = Dump (Engine-Executable $oldDefault) (Join-Path $oldDefault 'engine-inventory.json') (Join-Path $out "il/baseline-default-v$key") "baseline-default-v$key-engine"
             $oldDefaultAdapter = Dump (Join-Path $oldDefault "TiaMcp.Adapter.$key.dll") (Join-Path $oldDefault 'adapter-inventory.json') (Join-Path $out "il/baseline-default-v$key") "baseline-default-v$key-adapter"
             $defaultAdapter = Dump (Join-Path $default "TiaMcp.Adapter.$key.dll") (Join-Path $default 'adapter-inventory.json') (Join-Path $out "il/default-v$key") "default-v$key-adapter"
             $arguments += @('--baseline-default-engine',$oldDefaultEngine,
@@ -137,9 +145,9 @@ try {
                 '--baseline-default-adapter',$oldDefaultAdapter,
                 '--baseline-default-adapter-inventory',(Join-Path $oldDefault 'adapter-inventory.json'),
                 '--default-adapter',$defaultAdapter)
-            $oldEngine = Dump (Join-Path $old 'TiaMcpServer.exe') (Join-Path $old 'engine-inventory.json') (Join-Path $out "il/baseline-shared-v$key") "baseline-v$key-engine"
-            $defaultEngine = Dump (Join-Path $default 'TiaMcpServer.exe') (Join-Path $default 'engine-inventory.json') (Join-Path $out "il/default-v$key") "default-v$key-engine"
-            $newEngine = Dump (Join-Path $current 'TiaMcpServer.exe') (Join-Path $current 'engine-inventory.json') (Join-Path $out "il/shared-v$key") "shared-v$key-engine"
+            $oldEngine = Dump (Engine-Executable $old) (Join-Path $old 'engine-inventory.json') (Join-Path $out "il/baseline-shared-v$key") "baseline-v$key-engine"
+            $defaultEngine = Dump (Join-Path $default "TiaMcp.Engine.V$key.exe") (Join-Path $default 'engine-inventory.json') (Join-Path $out "il/default-v$key") "default-v$key-engine"
+            $newEngine = Dump (Join-Path $current "TiaMcp.Engine.V$key.exe") (Join-Path $current 'engine-inventory.json') (Join-Path $out "il/shared-v$key") "shared-v$key-engine"
             $arguments += @('--baseline-engine',$oldEngine,'--default-engine',$defaultEngine,'--shared-engine',$newEngine,
                 '--baseline-engine-inventory',(Join-Path $old 'engine-inventory.json'),
                 '--default-engine-inventory',(Join-Path $default 'engine-inventory.json'),

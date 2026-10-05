@@ -736,9 +736,9 @@ for p, target, ks, directory in [
     (E+"TiaMcpServer.V21.csproj", "TiaMcp.Engine.V21", "21", "runtime/v21/"),
 ]:
     tree = ET.fromstring(read(p))
-    old = tree.findtext('.//AssemblyName')
-    assert old == "TiaMcpServer"
-    rows.append([link(p), ks, old+" → "+target, directory+target+".exe", tree.findtext('.//TargetFramework')])
+    assembly = tree.findtext('.//AssemblyName')
+    assert assembly == target
+    rows.append([link(p), ks, assembly, directory+target+".exe", tree.findtext('.//TargetFramework')])
 table(["项目", "发布键", "AssemblyName", "4.0 安装 EXE", "框架不变"], rows)
 table(["公共库/桌面项目", "当前目标框架（源码属性）"],
       [[link(p), ET.fromstring(read(p)).findtext('.//TargetFrameworks') or ET.fromstring(read(p)).findtext('.//TargetFramework')]
@@ -767,7 +767,7 @@ layout_policies = [
     (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "R7 bin/bin-v20/v数字候选", "版本目录表 + 精确新产品名"),
     (E+"Cli/McpConfigInstaller.cs", "FindSiblingExe", "目标引擎缺失时使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
     (S+"Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
-    (S+"Gui/Configuration/ConfigCore.cs", "TiaMcpServer.exe", "根无标记仍保留候选", "严格根校验、新产品目录"),
+    (S+"Gui/Configuration/ConfigCore.cs", "TiaMcp.Engine.V", "根无标记仍保留候选；产品输出名已迁移", "严格根校验、新产品目录"),
     (S+"Gui/Configuration/UpdateCheck.cs", "FindResource", "解析失败仍拼传入根", "严格资源解析，worktree 更新保护保留"),
     (S+"Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
     (S+"Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
@@ -795,7 +795,7 @@ section("E. 布局、构建、打包、校验、Studio 和文档修改位置（�
 # Scan tracked first-party text, including tests/metadata needing regeneration.
 # Exclude this proposal to avoid self-referential line churn and historical data.
 SCAN_TERMS = {
-    "产品": r"TiaMcpServer(?:\.exe|\.dll|\.exe\.config|\.deps\.json|\.runtimeconfig\.json|[\"'<])|TiaMcpConfigurator",
+    "产品": r"TiaMcp\.(?:FoundationHost|Engine\.V(?:20|21))|TiaOpenness(?:\.Launcher)?\.exe|TiaMcpServer(?:[\"'<])|TiaMcpConfigurator",
     "根定位": r"TIA_MCP_REPOSITORY_ROOT|FindBundleRoot|FindInstallRoot|FindSiblingExe|BundleLayout|RepositoryRoot",
     "写入/工作区": r"ecosystem-python|DiagLogPathLocal|startup\.log|\.crash\.log|GetWorkspaceRoot|TMP_EXPORT|TIA_MCP_AI_PACK",
 }
@@ -942,6 +942,10 @@ def main():
     package = json.loads(package_path.read_text(encoding='utf-8-sig'))
     roster = json.loads(read('manifest/tools-list.json'))
     assert {t['name'] for t in roster['tools']} == registered_rosters['21'], 'Regenerate tools-list before package counts'
+    package['entrypoints']['mcpServerExe'] = 'runtime/v21/TiaMcp.Engine.V21.exe'
+    package['entrypoints']['configurator'] = 'TiaOpenness.exe'
+    package['cli']['exe'] = 'runtime/v21/TiaMcp.Engine.V21.exe'
+    package['cli']['description'] = 'Call runtime/v21/TiaMcp.Engine.V21.exe or runtime/v20/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.'
     package['capabilities']['mcpToolCount'] = len(roster['tools'])
     package['capabilities']['mcpToolLayers'] = dict(collections.Counter(t['layer'] for t in roster['tools']))
     package['capabilities']['liteProfile']['toolCount'] = len(lite_proposal['releases']['21'])

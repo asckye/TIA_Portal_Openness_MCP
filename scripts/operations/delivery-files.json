@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "include": {
     "files": [
-      "TiaMcpConfigurator.exe",
+      "TiaOpenness.exe",
       "runtime/README.md",
       "manifest/package-manifest.json",
       "manifest/delivery.json",

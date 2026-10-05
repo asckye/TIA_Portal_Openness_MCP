@@ -241,7 +241,11 @@ foreach($major in @($PipelineMajor)) {
     $built=Join-Path $source $(if($major -eq 20){'bin-v20/Release/net48'}else{'bin/Release/net48'})
     $runtime=Join-Path $repo "runtime/v$major"
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
-    $payload=@(Get-ChildItem -LiteralPath $built -File | Where-Object {$_.Extension -in '.exe','.dll','.config' -and $_.Name -notlike 'Siemens.Engineering*'})
+    $payload=@(Get-ChildItem -LiteralPath $built -File | Where-Object {
+        $_.Extension -in '.exe','.dll','.config' -and $_.Name -notlike 'Siemens.Engineering*' -and
+        ($_.Extension -ne '.exe' -or $_.Name -ceq "TiaMcp.Engine.V$major.exe") -and
+        ($_.Extension -ne '.config' -or $_.Name -ceq "TiaMcp.Engine.V$major.exe.config")
+    })
     if ('TiaMcp.Runtime.dll' -notin $payload.Name) { throw "V$major runtime channel assembly missing from build output" }
     foreach ($name in @("TiaMcp.Adapter.$major.dll",'TiaMcp.Adapters.Contracts.dll')) {
         if ($name -notin $payload.Name) { throw "V$major shared adapter dependency missing: $name" }
@@ -251,7 +255,7 @@ foreach($major in @($PipelineMajor)) {
     foreach($file in Get-ChildItem -LiteralPath $runtime -File | Where-Object {$_.Extension -in '.exe','.dll','.config'}){if($file.Name -notin $payload.Name){throw "Review obsolete runtime file: $($file.FullName)"}}
     $payload | Copy-Item -Destination $runtime -Force
     } finally {if($locked){$buildMutex.ReleaseMutex()};$buildMutex.Dispose()}
-    $exe=Join-Path $runtime 'TiaMcpServer.exe'
+    $exe=Join-Path $runtime "TiaMcp.Engine.V$major.exe"
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
     Run $harness @($exe,'example-library-only') "example-library-v$major.log"
     $coveragePath=Join-Path $out "native-call-coverage-v$major.json"
@@ -379,7 +383,7 @@ try {
     foreach($job in $jobs){if($job.State -eq 'Running'){Stop-Job $job};Remove-Job $job -Force}
 }
 # Validate the shipped V21 assembly as well as the early production-source fixtures.
-$exe=Join-Path $repo 'runtime/v21/TiaMcpServer.exe';$api=$V21ReferenceRoot
+$exe=Join-Path $repo 'runtime/v21/TiaMcp.Engine.V21.exe';$api=$V21ReferenceRoot
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api,'-Exe',$exe) 'route-selection-v21.log'
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1'),'-Exe',$exe) 'match-plc-name-v21.log'
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'

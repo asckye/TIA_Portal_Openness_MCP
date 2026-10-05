@@ -8,7 +8,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     // The pure part of CheckForUpdate - version parsing / comparison and the GitHub "latest release" JSON.
     // The engine only REPORTS; replacing the files is scripts/operations/Update-Engine.ps1, which refuses while any
-    // TiaMcpServer.exe runs: all engines must stop before their files are replaced.
+    // TiaMcp.Engine.V21.exe runs: all engines must stop before their files are replaced.
     public static class UpdateLogic
     {
         public const string DefaultRepository = "asckye/TIA_Portal_Openness_MCP";
@@ -136,7 +136,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var updater = updaterPresent && updaterPath != null ? updaterPath : UpdaterRelativePath;
             return new[]
             {
-                "1. Stop every TiaMcpServer.exe (and TiaMcpConfigurator.exe) on the TIA machine - the updater refuses while one runs; it never kills them.",
+                "1. Stop every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe (and TiaOpenness.exe) on the TIA machine - the updater refuses while one runs; it never kills them.",
                 "2. On that machine (it needs access to github.com): powershell -NoProfile -ExecutionPolicy Bypass -File \"" + updater + "\" - downloads the ZIP + .sha256, verifies, backs up the current install to .previous, replaces runtime/manifest and overlays the rest.",
                 "3. Start the engine again and call InitializeEnvironment - serverVersion must show the new version. -Rollback restores the previous install.",
             };

@@ -33,7 +33,7 @@
 `GetBlockInfo`（一个已有块）；再用不存在的块名调用 `GetBlockInfo`，应返回错误，随后再次 `GetBlocks` 仍正常（会话未失效、调用未重放）；
 最后 `Disconnect`，应确认 worker 已断开。
 
-**B Studio 桥接（协议 2、桥接 JSON）**：用候选包根目录的 `TiaMcpConfigurator.exe` 打开工作台并选择该版本；工程操作页连接已打开的 TIA、
+**B Studio 桥接（协议 2、桥接 JSON）**：用候选包根目录的 `TiaOpenness.exe` 打开工作台并选择该版本；工程操作页连接已打开的 TIA、
 打开测试工程副本、读取块列表、导出一个块到桌面文件夹（文件生成）；再导出到不存在的目录，界面应显示原错误文本，随后再次读取块列表
 仍正常；最后断开并关闭工作台，确认桥接进程（任务管理器中的 `TiaOpenness.Bridge`）已退出。
 

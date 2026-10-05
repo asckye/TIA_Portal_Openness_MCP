@@ -659,7 +659,7 @@ def capture(args):
         executables[release] = Path(path).resolve()
     snapshots = {}
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcpServer.exe')
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         if release in FULL_RELEASES:
             api = api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':

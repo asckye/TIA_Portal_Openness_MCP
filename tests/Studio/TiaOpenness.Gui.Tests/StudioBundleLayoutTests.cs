@@ -31,9 +31,9 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
         Put(root, "scripts/operations/Update-Engine.ps1");
         foreach (var version in TiaVersionCatalog.Runnable)
         {
-            if (installed) Put(root, "runtime/" + version.RuntimeDirectory + "/TiaMcpServer.exe");
+            if (installed) Put(root, "runtime/" + version.RuntimeDirectory + "/" + (version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe"));
             if (development && version.IsFullEngine)
-                Put(root, "src/Engine/" + version.EngineOutputDirectory + "/Release/net48/TiaMcpServer.exe");
+                Put(root, "src/Engine/" + version.EngineOutputDirectory + "/Release/net48/TiaMcp.Engine.V" + version.MajorVersion + ".exe");
         }
     }
 

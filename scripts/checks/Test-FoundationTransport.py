@@ -153,7 +153,7 @@ def main():
         for key in KEYS:
             logfile = temp / f'{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
-            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcpServer.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
             with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
                 client = Stdio(command, env, stderr)
                 try:
@@ -178,7 +178,7 @@ def main():
             url = f'http://127.0.0.1:{number}'
             logfile = temp / f'http-{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
-            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcpServer.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
             with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
                 p = subprocess.Popen(command, env=env, stderr=stderr, stdout=stderr)
                 try:

@@ -5,7 +5,7 @@
 在具有匹配 TIA、许可证、Openness 用户组和已获准测试程序的 Windows 环境中，先生成计划：
 
 ```powershell
-python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\TiaMcpServer.exe' --major 21 --output 'D:\TIA_TestResults\new-run'
+python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\TiaMcp.Engine.V21.exe' --major 21 --output 'D:\TIA_TestResults\new-run'
 ```
 
 默认只显示计划，不启动进程或创建目录。确认处于获准的测试环境后，同一命令显式增加 `--run-live --confirm-new-portal` 才会执行。V20 使用对应 EXE 和 `--major 20`；输出目录必须不存在。

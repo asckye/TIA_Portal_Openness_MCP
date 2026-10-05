@@ -49,7 +49,7 @@
   <g transform="translate(261,100)">
     <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
     <rect width="217" height="6" rx="3" fill="#1F4E89"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">TiaMcpServer.exe</text>
+    <text x="108.5" y="34" class="h2" text-anchor="middle">TiaMcp.Engine.V21.exe</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
       <tspan x="108.5" dy="0">V14 SP1&#8211;V19: foundation</tspan>
       <tspan x="108.5" dy="1.7em">V20/V21: full engines</tspan>

@@ -28,7 +28,10 @@ $manifest.bundleVersion=$Release
 $manifest.packageName=$package
 $manifest.fileVersion=$build.fileVersion
 $manifest.refreshedAt=$delivery.generatedAt
-$manifest.entrypoints | Add-Member -Force NoteProperty configurator 'TiaMcpConfigurator.exe'
+$manifest.entrypoints | Add-Member -Force NoteProperty configurator 'TiaOpenness.exe'
+$manifest.entrypoints.mcpServerExe='runtime/v21/TiaMcp.Engine.V21.exe'
+$manifest.cli.exe='runtime/v21/TiaMcp.Engine.V21.exe'
+$manifest.cli.description='Call runtime/v21/TiaMcp.Engine.V21.exe or runtime/v20/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.'
 $manifest.validationStatus="Delivery $Release; engine $($build.release) validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending"
 WriteJson $manifestPath $manifest
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts/checks/Validate-Bundle.ps1') -Strict

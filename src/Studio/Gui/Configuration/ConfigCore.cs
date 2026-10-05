@@ -76,9 +76,9 @@ namespace TiaMcpConfigurator
             // retain the original candidates when an incomplete bundle has no marker.
             root = TiaOpenness.Shared.BundleLayout.FindRoot(null, root) ?? root;
             var candidates = version.IsFullEngine ? new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe"),
-                Path.Combine(root, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") } : new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe") };
+                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.Engine.V" + version.MajorVersion + ".exe"),
+                Path.Combine(root, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe") } : new[] {
+                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.FoundationHost.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
             if (path == null) throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", version.DisplayName));
             return path;

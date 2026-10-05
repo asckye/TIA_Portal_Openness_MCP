@@ -10,14 +10,14 @@
 
 | 想做什么 | 打开什么 | 是否需要 AI 客户端 |
 |---|---|---|
-| 用中文告诉 AI，让它查看、修改 TIA 工程 | 根目录 `TiaMcpConfigurator.exe`，完成配置后在 AI 客户端中操作 | 需要支持 MCP 的客户端 |
-| 自己点击界面，浏览、导出、导入、编译 | 同一个 `TiaMcpConfigurator.exe` 的 **工程操作** 页面 | 不需要，直接调用 Openness |
+| 用中文告诉 AI，让它查看、修改 TIA 工程 | 根目录 `TiaOpenness.exe`，完成配置后在 AI 客户端中操作 | 需要支持 MCP 的客户端 |
+| 自己点击界面，浏览、导出、导入、编译 | 同一个 `TiaOpenness.exe` 的 **工程操作** 页面 | 不需要，直接调用 Openness |
 | 暂时没有安装 TIA，先熟悉 Studio 页面 | 使用下面的演示命令 | 不需要 |
 
 演示：在完整解压的交付包文件夹中打开 PowerShell，运行：
 
 ```powershell
-.\TiaMcpConfigurator.exe --mock --lang zh
+.\TiaOpenness.exe --mock --lang zh
 ```
 
 演示数据是模拟数据，连接、导入和编译结果不能用于判断真实工程是否成功。正式操作时，关闭演示窗口，再打开工作台的 **工程操作** 页面。
@@ -25,7 +25,7 @@
 ## 2. 下载、解压和准备环境
 
 1. 当前统一工作台使用源码构建产物，构建方式见[验证流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md)。[已发布 v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) 仍是合并前界面；该 ZIP 不包含本页新增的顶部页面切换。后续正式包仍应完整下载 ZIP 和同名 `.sha256`，GitHub 的 `Source code` 不含运行二进制。
-2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaMcpConfigurator.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
+2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaOpenness.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
 3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制引擎或 Studio 的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
 4. 用 TIA 打开一个练习工程，确认 TIA 自己能正常查看和编译。首次练习建议使用工程副本，并只打开这一份目标工程。
 
@@ -58,7 +58,7 @@ V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供完整引擎，包含更�
 
 ### 情况 A：TIA 和 AI 在同一台电脑
 
-1. 双击根目录 `TiaMcpConfigurator.exe`。需要中文时，在窗口顶部切换语言。
+1. 双击根目录 `TiaOpenness.exe`。需要中文时，在窗口顶部切换语言。
 2. 顶部选择 **同一台电脑**。
 3. 选择 TIA 版本，点击 **自动检测**。没找到时，点击 **浏览**，选择 TIA 安装根目录，例如 `C:\Program Files\Siemens\Automation\Portal V21`，不要选它下面的 `Bin`。
 4. 在 AI 客户端卡片中，选择自己实际安装、准备使用的客户端。点击所选客户端的说明，确认卡片对应的软件；模型品牌名称不一定就是聊天网页或桌面 App。
@@ -77,7 +77,7 @@ V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供完整引擎，包含更�
 
 **再在运行 AI 的宿主机上：**
 
-1. 在宿主机完整解压交付目录后打开 `TiaMcpConfigurator.exe`，通过 **视图 → MCP 与客户端**（Ctrl+2）进入配置页；不能只复制入口 EXE。此处使用包内附带的 .NET 10 运行时，不需要 TIA。
+1. 在宿主机完整解压交付目录后打开 `TiaOpenness.exe`，通过 **视图 → MCP 与客户端**（Ctrl+2）进入配置页；不能只复制入口 EXE。此处使用包内附带的 .NET 10 运行时，不需要 TIA。
 2. 同样选择 **虚拟机 ↔ 宿主机**，填写虚拟机的地址、端口和刚才生成的同一把密钥。这里填的是虚拟机地址，不是宿主机地址或 `localhost`。
 3. 选择 AI 客户端，点击 **测试连接**。成功表示网络、鉴权和 MCP 服务可用，下一步仍需连接 TIA 工程。
 4. 完全退出 AI 客户端，点击 **写入客户端配置**，再重启客户端并新建会话。服务名是 `tia-portal-vm`。
@@ -135,7 +135,7 @@ V14 SP1 的生成 API 不返回生成对象列表，因此应查看导入前后�
 
 Studio 不需要配置 MCP，也不需要 AI 客户端。下面使用中文界面中的名称。
 
-1. 双击同一个 `TiaMcpConfigurator.exe`，通过 **视图 → 工程操作**（Ctrl+1）进入工程页，在 **工具 → 语言** 中选择中文。标题栏在应用名旁显示当前页面。
+1. 双击同一个 `TiaOpenness.exe`，通过 **视图 → 工程操作**（Ctrl+1）进入工程页，在 **工具 → 语言** 中选择中文。标题栏在应用名旁显示当前页面。
 2. 在连接前选择准确 TIA 版本。连接后需要更换版本时，关闭并重新打开 Studio，再选择新版本。
 3. 点击 **项目** 打开连接选项，先执行 **环境检查**，处理缺少的运行环境或安装路径。
 4. 首次练习保持 **无界面** 关闭，先在 TIA 中打开练习工程，再点击 **连接**，这样能看到首次 Openness 访问提示。

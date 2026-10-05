@@ -4,7 +4,7 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-05 06:39:13
+- 生成时间：2026-10-05 07:46:14
 - 引擎文件版本：3.3.0.0
 - 工具数量：488
 
@@ -84,7 +84,7 @@
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
-| `CheckProductUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. |
+| `CheckProductUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. |
 | `GetEnvironmentDiagnostics` | L0 | SESSION* | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. |
 | `GetOpennessWorkerStatus` | L0 | READ | Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Isolation requires --isolate-openness; a healthy worker is not proof of native TIA stability. |
 | `RestartOpennessWorker` | L0 | WRITE | Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. Does not kill TIA; an interrupted native operation can have an unknown outcome. |

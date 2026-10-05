@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
-  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><AssemblyName>TiaMcpServer</AssemblyName><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><AssemblyName>TiaMcp.FoundationHost</AssemblyName><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <PropertyGroup>
     <!-- Published apphosts look for the bundled runtime/dotnet first (scripts/build/bundled-dotnet.json), then an installed .NET. -->
     <AppHostRelativeDotNet>../dotnet</AppHostRelativeDotNet>

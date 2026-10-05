@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
     <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
-    <AssemblyName>TiaMcpServer</AssemblyName>
+    <AssemblyName>TiaMcp.Engine.V20</AssemblyName>
     <BaseOutputPath>.\bin-v20</BaseOutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>

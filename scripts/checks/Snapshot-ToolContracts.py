@@ -1,7 +1,7 @@
 """Capture offline tool contracts and reject incompatible input schema changes.
 
 capture starts each built runtime without TIA: V20/V21 through the release host harness over STDIO
-(full and lite profiles), V14 SP1-V19 through `TiaMcpServer.exe --catalog`. The foundation host needs
+(full and lite profiles), V14 SP1-V19 through `TiaMcp.FoundationHost.exe --catalog`. The foundation host needs
 the ASP.NET Core 10 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
 private runtime before running capture. compare exits 1 on any breaking change.
 """
@@ -45,7 +45,7 @@ def capture(args):
             raise ValueError('Duplicate executable override for V' + release)
         executables[release] = Path(path).resolve()
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcpServer.exe')
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         snapshot = {'release': release}
         if release in ('20', '21'):
             public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)

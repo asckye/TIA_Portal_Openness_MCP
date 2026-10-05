@@ -13,7 +13,7 @@ namespace TiaMcpConfigurator
     // the update band of the configurator. Everything that can be tested without network or UI lives here;
     // the update itself stays in scripts\operations\Update-Engine.ps1 (stop, download + verify, back up, replace),
     // which the configurator launches in its own PowerShell window after closing itself - the updater refuses while
-    // TiaMcpConfigurator.exe runs because it replaces that file too.
+    // TiaOpenness.exe runs because it replaces that file too.
     public sealed class UpdateInfo
     {
         public string Installed { get; set; }
@@ -147,10 +147,11 @@ namespace TiaMcpConfigurator
         public static List<string> RunningEngines()
         {
             var list = new List<string>();
-            foreach (var p in Process.GetProcessesByName("TiaMcpServer"))
+            foreach (string name in new[] { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21", "TiaMcp.FoundationHost" })
+            foreach (var p in Process.GetProcessesByName(name))
             {
                 string path = ""; try { path = p.MainModule.FileName; } catch /* swallow(env-probe): an unavailable process module path still leaves the engine PID visible in the updater check */ { }
-                list.Add("TiaMcpServer.exe PID " + p.Id + (path.Length > 0 ? "（" + path + "）" : ""));
+                list.Add(name + ".exe PID " + p.Id + (path.Length > 0 ? "（" + path + "）" : ""));
             }
             return list;
         }

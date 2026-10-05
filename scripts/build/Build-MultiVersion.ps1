@@ -54,7 +54,7 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     $workerBuild=Join-Path $repo "src/Worker/bin/$key/Release/$framework"
     Get-ChildItem -LiteralPath $workerBuild -File | Where-Object {$_.Extension -in '.exe','.dll','.config'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $worker -Force}
     if(@(Get-ChildItem -LiteralPath $worker -Filter 'TiaMcp.Adapter.*.dll').Count -ne 1){throw "Exactly one matching adapter is required: $key"}
-    & (Join-Path $runtime 'TiaMcpServer.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
+    & (Join-Path $runtime 'TiaMcp.FoundationHost.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
     if($LASTEXITCODE){throw "Catalog failed: $key"}
     $catalog=Get-Content -LiteralPath (Join-Path $logs "tools-$key.json") -Raw | ConvertFrom-Json
     $records+=@{releaseKey=$key;profile='plc-foundation';toolCount=$catalog.tools.Count;nativeAcceptance='NOT RUN'}
@@ -77,7 +77,7 @@ function Assert-BundledRuntime([string]$Exe,[string[]]$Arguments,[string]$Name) 
     $fxr=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet/host/fxr'))
     if(!(Select-String -LiteralPath $trace -SimpleMatch -Pattern "Resolved fxr [$fxr" -Quiet)){throw "$Name does not load the bundled .NET runtime; see $trace"}
 }
-Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcpServer.exe') @('--catalog') 'foundation-host'
+Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcp.FoundationHost.exe') @('--catalog') 'foundation-host'
 # The elevated network helper path exits at once with a handled error, so it proves the GUI host without a window.
 Assert-BundledRuntime (Join-Path $studioOutput 'TiaOpenness.exe') @('--network','127.0.0.1','not-a-port','S-1-5-18') 'studio'
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}

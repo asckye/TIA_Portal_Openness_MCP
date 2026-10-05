@@ -50,7 +50,7 @@ TIA_V21_PublicAPI/
 # 引擎与配置器的二进制不入库（2.8.1 起，维护者决定）：本机 Build-Release.ps1 生成，发布 ZIP 由 Release.ps1 直接上传到 GitHub Release
 /runtime/v20/
 /runtime/v21/
-/TiaMcpConfigurator.exe
+/TiaOpenness.exe
 
 # Per-release compile-only foundation outputs; never distribute Siemens references.
 /tests/Engine/TiaMcpServer.ApiCompileChecks/bin/

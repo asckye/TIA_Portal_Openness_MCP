@@ -33,14 +33,14 @@ namespace TiaMcpServer.Tests
             if (templates) Directory.CreateDirectory(At(root, "templates"));
             if (tools) Directory.CreateDirectory(At(root, "src"));
             foreach (string version in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
-                Put(root, "runtime/v" + version + "/TiaMcpServer.exe");
+                Put(root, "runtime/v" + version + "/" + (version == "20" || version == "21" ? "TiaMcp.Engine.V" + version + ".exe" : "TiaMcp.FoundationHost.exe"));
         }
 
         private static void DevelopmentEngines(string root)
         {
             foreach (string bin in new[] { "bin", "bin-v20" })
             foreach (string configuration in new[] { "Release", "Debug" })
-                Put(root, "src/Engine/" + bin + "/" + configuration + "/net48/TiaMcpServer.exe");
+                Put(root, "src/Engine/" + bin + "/" + configuration + "/net48/TiaMcp.Engine.V" + (bin == "bin" ? "21" : "20") + ".exe");
         }
 
         private static void EqualLookup(Func<string?> before, Func<string?> after)
@@ -76,7 +76,7 @@ namespace TiaMcpServer.Tests
                         Assert.Equal(bundle.Replace('\\', '/'), SpecLoader.FindBundleRoot(directory, repositoryRoot));
                     else
                         EqualLookup(() => OldBundleRoot(directory, repositoryRoot), () => SpecLoader.FindBundleRoot(directory, repositoryRoot));
-                    foreach (string name in new[] { "TiaMcpServer.exe", "tIaMcPsErVeR.ExE", "missing.exe" })
+                    foreach (string name in new[] { "TiaMcp.Engine.V20.exe", "TiaMcp.Engine.V21.exe", "tIaMcP.EnGiNe.V21.ExE", "missing.exe" })
                     foreach (int version in new[] { 14, 15, 16, 17, 18, 19, 20, 21, 22 })
                     {
                         string own = Path.Combine(directory, name);
@@ -253,7 +253,7 @@ namespace TiaMcpServer.Tests
             try
             {
                 string own = ownExePath();
-                string exeName = Path.GetFileName(own);
+                string exeName = target.IsFullEngine ? "TiaMcp.Engine.V" + target.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe";
                 string dir = Path.GetDirectoryName(own) ?? "";
                 var candidates = new List<string>();
 

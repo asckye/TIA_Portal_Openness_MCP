@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
-    <AssemblyName>TiaMcpServer</AssemblyName>
+    <AssemblyName>TiaMcp.Engine.V21</AssemblyName>
     <RootNamespace>TiaMcpServer</RootNamespace>
     <BaseOutputPath>.\bin</BaseOutputPath>
     <PlatformTarget>x64</PlatformTarget>

@@ -47,7 +47,7 @@ def main():
         assert sha(data) == row['sha256'], 'Binary changed after testing: ' + name
         files[name] = data
     for key in multi['studioReleaseKeys']:
-        assert f'runtime/v{key}/TiaMcpServer.exe' in files
+        assert f"runtime/v{key}/{'TiaMcp.Engine.V' + key if key in ('20', '21') else 'TiaMcp.FoundationHost'}.exe" in files
         assert f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
     files['MULTIVERSION-BUILD.json'] = json.dumps({'commit': commit, 'nativeAcceptance': 'NOT RUN for newly enabled targets', 'buildRecord': 'manifest/multi-version-build.json', 'toolMatrix': 'manifest/version-tools.json'}, indent=2).encode()

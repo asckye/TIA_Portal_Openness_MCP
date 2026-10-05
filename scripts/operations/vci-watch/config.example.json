@@ -1,5 +1,5 @@
 {
-  "enginePath": "C:\\path\\to\\TIA_Portal_Openness_MCP\\runtime\\v21\\TiaMcpServer.exe",
+  "enginePath": "C:\\path\\to\\TIA_Portal_Openness_MCP\\runtime\\v21\\TiaMcp.Engine.V21.exe",
   "tiaMajorVersion": 21,
   "projectFolder": "C:\\path\\to\\YourProject",
   "workspaceFolder": "C:\\path\\to\\your-git-worktree",

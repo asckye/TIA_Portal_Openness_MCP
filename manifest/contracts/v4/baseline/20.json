@@ -7678,7 +7678,7 @@
       "name": "CheckLibraryUpdates"
     },
     {
-      "descriptionSha256": "76e77fe827e6ec44e35cd0ee55f6e9f48c3893ccea5fba7fd49126b77bc2e295",
+      "descriptionSha256": "006ecec83893d53eee37bb6712c460dc9f1610c21e6afc190ca19f4c43a6b1b5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

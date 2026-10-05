@@ -149,7 +149,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["screenXmlPath"] = screenPath,
                 ["steps"] = steps,
                 ["executionBlockedByDefault"] = true,
-                ["recommendedCli"] = "TiaMcpServer.exe --tia-major-version 21 --project-directory <temp> --project-name <probe> --probe-ktp700-basic-hmi-import",
+                ["recommendedCli"] = "TiaMcp.Engine.V21.exe --tia-major-version 21 --project-directory <temp> --project-name <probe> --probe-ktp700-basic-hmi-import",
                 ["note"] = "当前预检只生成执行计划；真正执行应在临时工程中导入本预检输出的 tag table 与 screen XML，并读回验证。"
             };
         }

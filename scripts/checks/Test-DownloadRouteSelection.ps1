@@ -13,9 +13,10 @@
 param([string]$PublicApiDirectory = '', [string]$Exe = '', [switch]$SourceOnly, [string]$Python = 'python', [string]$Dotnet = 'dotnet')   # 显式 PublicAPI 目录；未给时回退到注册表
 $ErrorActionPreference = "Stop"
 
+$exeName = if ($Exe -and -not $SourceOnly) { Split-Path -Leaf $Exe } else { "TiaMcp.Engine.V21.exe" }
 $srcDir = if ($Exe) { Split-Path -Parent (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21" }
-if (-not $SourceOnly -and -not (Test-Path -LiteralPath (Join-Path $srcDir "TiaMcpServer.exe"))) {
-  Write-Host "FAIL: build the V21 exe first (not found: $srcDir\TiaMcpServer.exe)"; exit 1
+if (-not $SourceOnly -and -not (Test-Path -LiteralPath (Join-Path $srcDir $exeName))) {
+  Write-Host "FAIL: build the V21 exe first (not found: $srcDir\$exeName)"; exit 1
 }
 $tmp = Join-Path $env:TEMP ("tia_routetest_{0}" -f [guid]::NewGuid().ToString("N"))
 $tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
@@ -101,7 +102,7 @@ public static class FakeBuilder {
 "@
 
 try {
-  $asm = [Reflection.Assembly]::LoadFrom((Join-Path $tmp "TiaMcpServer.exe"))
+  $asm = [Reflection.Assembly]::LoadFrom((Join-Path $tmp $exeName))
   # Since the engine split the route selection lives in OnlineDownloadService; its reflection helpers come
   # from the session kernel, so the service gets an uninitialized Portal (no TIA, no constructor side effects).
   $portal = $asm.GetType("TiaMcpServer.Siemens.Portal")

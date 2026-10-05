@@ -5,7 +5,7 @@ name: validate-bundle
 # runners don't have. This offline check validates bundle integrity instead
 # (required files, JSON parse, blueprint list, tool roster, build records and
 # version consistency). Source hashes are regenerated and fully verified at
-# release time. Since 2.8.1 the engine runtimes and TiaMcpConfigurator.exe are not
+# release time. Since 2.8.1 the engine runtimes and TiaOpenness.exe are not
 # tracked in Git (the maintainer builds them locally and Release.ps1 uploads the
 # delivery ZIP), so the checks run with --no-binaries / -NoBinaries here; the
 # uploaded ZIP is verified by the "Verify published release" workflow.

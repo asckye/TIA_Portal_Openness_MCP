@@ -1,7 +1,7 @@
 # TIA Openness Studio
 
 The English/Chinese WPF desktop now hosts both **Engineering** and **MCP & clients** in
-one .NET 10 main window. The root `TiaMcpConfigurator.exe` is a compatibility launcher
+one .NET 10 main window. The root `TiaOpenness.exe` is the Studio launcher (`TiaOpenness.Launcher` assembly)
 for this desktop, not a second configuration application. Configuration code is compiled
 into the GUI and the page remains alive while the engineering view is shown. Version,
 language and appearance are shared; a running service or active engineering bridge locks

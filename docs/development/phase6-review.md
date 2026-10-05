@@ -184,7 +184,7 @@ lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常�
 
 名单按 releaseKey + contractVersion + profile 内嵌；直接调用、FindTools、GetToolUsage、CallTool 使用同一完整目录及版本门禁，lite 只控制 tools/list 的广告成员。发现和分页/导出入口始终可达。Foundation **继续不设 lite**，也不新增它今天没有的 CallTool 或完整引擎能力。P6-07 将名单和过渡名称映射嵌入正式资源；运行时按当前注册名称广告。
 
-产品输出采用 `TiaMcp.FoundationHost.exe`、`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`；AssemblyName 同步，关联 .dll/.exe.config/.deps.json/.runtimeconfig.json 按实际构建产物同步。发布键目录与开发输出目录不变，源命名空间不为这次改名批量移动。根 `TiaOpenness.exe` 为正式 Studio 启动器，启动 `runtime/studio/TiaOpenness.exe`；根启动器的 AssemblyName 为 TiaOpenness.Launcher，构建复制为根 EXE，避免同基名程序集身份混淆。删除根 `TiaMcpConfigurator.exe`；Bridge、worker、adapter 名称保持现有职责。
+产品输出采用 `TiaMcp.FoundationHost.exe`、`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`；AssemblyName 同步，关联 .dll/.exe.config/.deps.json/.runtimeconfig.json 按实际构建产物同步。发布键目录与开发输出目录不变，源命名空间不为这次改名批量移动。根 `TiaOpenness.exe` 为正式 Studio 启动器，启动 `runtime/studio/TiaOpenness.exe`；根启动器的 AssemblyName 为 TiaOpenness.Launcher，构建复制为根 EXE，避免同基名程序集身份混淆。删除旧根配置器入口；Bridge、worker、adapter 名称保持现有职责。
 
 所有入口接受 `--bundle-root <absolute-path>` / `TIA_MCP_BUNDLE_ROOT`。选择顺序：显式 CLI → 环境变量 → BundleLayout 的已知安装/开发锚点；CLI 与环境变量并存时 CLI 优先。显式值无效立即报错，不向别处查找。根必须含 manifest/package-manifest.json，资源必须在该根，缺失返回 RESOURCE_UNAVAILABLE；删除任意祖先仓库、templates/tools、TMP_EXPORT、同级引擎找不到时改用自身等探测。Foundation 的 release-key.txt、显式 --worker-exe、正式相邻 bridge/adapters 部署继续支持；Studio 新旧原生路径的选择仍服从 G3/J 真机验收。
 
@@ -203,7 +203,7 @@ lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常�
 5. PLC 空路径仅在工程内唯一 PLC 时选择，多 PLC 列候选并拒绝。
 6. 按明确标准重新筛选约 60 个 lite 工具，以数据文件维护，每个成员有示例。
 7. 三个同名程序改为 FoundationHost / Engine.V20 / Engine.V21。
-8. 根目录使用新产品名启动器打开 Studio，删除 TiaMcpConfigurator.exe。
+8. 根目录使用新产品名启动器打开 Studio，删除旧根配置器入口。
 9. 使用 bundle-root 输入，私人工作区显式指定；原决定的日志/Python LocalAppData 目标中，日志已由后续 data 目录政策取代，Python 目标不变（第 5 节）。
 10. 原生行为按族完成真机验收后进入 4.0，未验收的族保持原行为。
 11. 发布说明最后附生成的新旧名称/参数对照表，仅作为文档。
@@ -1830,9 +1830,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 项目 | 发布键 | AssemblyName | 4.0 安装 EXE | 框架不变 |
 |---|---|---|---|---|
-| [TiaMcpServer.LegacyHost.csproj](../../src/FoundationHost/TiaMcpServer.LegacyHost.csproj) | 14sp1–19 | TiaMcpServer → TiaMcp.FoundationHost | runtime/v<key>/TiaMcp.FoundationHost.exe | net10.0 |
-| [TiaMcpServer.V20.csproj](../../src/Engine/TiaMcpServer.V20.csproj) | 20 | TiaMcpServer → TiaMcp.Engine.V20 | runtime/v20/TiaMcp.Engine.V20.exe | net48 |
-| [TiaMcpServer.V21.csproj](../../src/Engine/TiaMcpServer.V21.csproj) | 21 | TiaMcpServer → TiaMcp.Engine.V21 | runtime/v21/TiaMcp.Engine.V21.exe | net48 |
+| [TiaMcpServer.LegacyHost.csproj](../../src/FoundationHost/TiaMcpServer.LegacyHost.csproj) | 14sp1–19 | TiaMcp.FoundationHost | runtime/v<key>/TiaMcp.FoundationHost.exe | net10.0 |
+| [TiaMcpServer.V20.csproj](../../src/Engine/TiaMcpServer.V20.csproj) | 20 | TiaMcp.Engine.V20 | runtime/v20/TiaMcp.Engine.V20.exe | net48 |
+| [TiaMcpServer.V21.csproj](../../src/Engine/TiaMcpServer.V21.csproj) | 21 | TiaMcp.Engine.V21 | runtime/v21/TiaMcp.Engine.V21.exe | net48 |
 
 | 公共库/桌面项目 | 当前目标框架（源码属性） |
 |---|---|
@@ -1862,7 +1862,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs):35 `FindSiblingExe` | R7 bin/bin-v20/v数字候选 | 版本目录表 + 精确新产品名 |
 | [Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs):88 `FindSiblingExe` | 目标引擎缺失时使用自身 | 缺版本引擎报 RESOURCE_UNAVAILABLE |
 | [Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs):27 `FindBundleRoot` | R11 向祖先寻找包标记 | 显式根或已知锚点 |
-| [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):79 `TiaMcpServer.exe` | 根无标记仍保留候选 | 严格根校验、新产品目录 |
+| [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):79 `TiaMcp.Engine.V` | 根无标记仍保留候选；产品输出名已迁移 | 严格根校验、新产品目录 |
 | [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):45 `FindResource` | 解析失败仍拼传入根 | 严格资源解析，worktree 更新保护保留 |
 | [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):156 `BundleLayout` | R13 相对开发 Debug/Release 猜测 | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
@@ -1907,7 +1907,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/getting-started/cursor.example.json](../../docs/getting-started/cursor.example.json) | 产品:4,5 | 修改引用并回归 |
 | [docs/licenses/THIRD-PARTY-NOTICES.md](../../docs/licenses/THIRD-PARTY-NOTICES.md) | 产品:39 | 修改引用并回归 |
 | [docs/reference/ecosystem-tools.md](../../docs/reference/ecosystem-tools.md) | 根定位:50 | 修改引用并回归 |
-| [docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) | 产品:36 | 修改引用并回归 |
+| [docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) | 产品:36,93 | 修改引用并回归 |
 | [docs/reference/tool-matrix.md](../../docs/reference/tool-matrix.md) | 产品:87 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 产品:48 | 历史证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 产品:24,76 | 历史证据只读保留，不作为 V4 改写目标 |
@@ -1920,39 +1920,38 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31414 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:75 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:64 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/release-build.json](../../manifest/release-build.json) | 产品:2099,2104,2454,2459; 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2629; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,73,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/release-build.json](../../manifest/release-build.json) | 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7025 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
-| [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |
-| [scripts/build/Build-MultiVersion.ps1](../../scripts/build/Build-MultiVersion.ps1) | 产品:57,80 | 修改引用并回归 |
-| [scripts/build/Build-Release.ps1](../../scripts/build/Build-Release.ps1) | 产品:254,382 | 修改引用并回归 |
+| [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,33,68; 根定位:11 | 修改引用并回归 |
+| [scripts/build/Build-MultiVersion.ps1](../../scripts/build/Build-MultiVersion.ps1) | 产品:57,70,80,82 | 修改引用并回归 |
+| [scripts/build/Build-Release.ps1](../../scripts/build/Build-Release.ps1) | 产品:386 | 修改引用并回归 |
+| [scripts/build/Build-Studio.ps1](../../scripts/build/Build-Studio.ps1) | 产品:83 | 修改引用并回归 |
 | [scripts/build/Package-MultiVersion.py](../../scripts/build/Package-MultiVersion.py) | 产品:50 | 修改引用并回归 |
-| [scripts/build/Package-Release.py](../../scripts/build/Package-Release.py) | 产品:3,82,83,103,115,117,187,230; 根定位:23,213,225,226,227; 写入/工作区:85 | 修改引用并回归 |
-| [scripts/build/Prepare-Delivery.ps1](../../scripts/build/Prepare-Delivery.ps1) | 产品:31 | 修改引用并回归 |
-| [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:18,58,359,360,493; 根定位:253 | 修改引用并回归 |
+| [scripts/build/Package-Release.py](../../scripts/build/Package-Release.py) | 产品:3,83,84,104,116,118,119,231; 根定位:23,214,226,227,228; 写入/工作区:86 | 修改引用并回归 |
+| [scripts/build/Prepare-Delivery.ps1](../../scripts/build/Prepare-Delivery.ps1) | 产品:31,32,33,34 | 修改引用并回归 |
+| [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:18,58,357,359,360,493; 根定位:253 | 修改引用并回归 |
 | [scripts/build/Test-ReleasePrerequisites.ps1](../../scripts/build/Test-ReleasePrerequisites.ps1) | 产品:119; 写入/工作区:186 | 修改引用并回归 |
-| [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 产品:166; 根定位:14,100,104 | 修改引用并回归 |
+| [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 产品:166,195,197,198; 根定位:14,100,104 | 修改引用并回归 |
 | [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,24 | 修改引用并回归 |
-| [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
-| [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
+| [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:343 | 修改引用并回归 |
+| [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:83,84,241; 根定位:13,182,183,184,228 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:662 | 修改引用并回归 |
-| [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
-| [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
+| [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22 | 修改引用并回归 |
+| [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:16 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
 | [scripts/checks/Test-EcosystemAssembly.ps1](../../scripts/checks/Test-EcosystemAssembly.ps1) | 根定位:7 | 修改引用并回归 |
 | [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:156,181 | 修改引用并回归 |
 | [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:13 | 修改引用并回归 |
-| [scripts/checks/Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1) | 产品:45,132,140,141,142 | 修改引用并回归 |
 | [scripts/checks/Test-V21Ecosystem.py](../../scripts/checks/Test-V21Ecosystem.py) | 根定位:69 | 修改引用并回归 |
 | [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:107 | 修改引用并回归 |
-| [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,114,128,155,182,238,241,257,429,470,510; 根定位:129,147,148,149 | 修改引用并回归 |
+| [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,114,128,155,182,238,241,257,429,470,476; 根定位:129,147,148,149 | 修改引用并回归 |
 | [scripts/checks/Verify-ReleaseAsset.py](../../scripts/checks/Verify-ReleaseAsset.py) | 产品:129,169,172,179,223,225; 根定位:27 | 修改引用并回归 |
-| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 产品:5153; 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4868,4877,4886,4895,4904,4913,5166,5328,5470 | 修改引用并回归 |
+| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4868,4877,4886,4895,4904,4913,5147,5309,5451 | 修改引用并回归 |
 | [scripts/diagnostics/Collect-TiaCrashEvidence.ps1](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) | 产品:32 | 修改引用并回归 |
 | [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:35 | 修改引用并回归 |
 | [scripts/ecosystem/Install-PlcTools.ps1](../../scripts/ecosystem/Install-PlcTools.ps1) | 根定位:13; 写入/工作区:4 | 修改引用并回归 |
@@ -1976,8 +1975,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:37; 写入/工作区:38 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:73; 写入/工作区:74 | 修改引用并回归 |
 | [src/Engine/Program.cs](../../src/Engine/Program.cs) | 产品:644; 写入/工作区:26,862 | 修改引用并回归 |
-| [src/Engine/Runtime/EnvironmentDoctor.cs](../../src/Engine/Runtime/EnvironmentDoctor.cs) | 产品:111,112; 根定位:93 | 修改引用并回归 |
-| [src/Engine/Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs) | 根定位:35,36,39,49,111 | 修改引用并回归 |
+| [src/Engine/Runtime/EnvironmentDoctor.cs](../../src/Engine/Runtime/EnvironmentDoctor.cs) | 根定位:93 | 修改引用并回归 |
+| [src/Engine/Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs) | 产品:45; 根定位:35,36,39,49,111 | 修改引用并回归 |
 | [src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs](../../src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs) | 产品:122 | 修改引用并回归 |
 | [src/Engine/TiaMcpServer.V20.csproj](../../src/Engine/TiaMcpServer.V20.csproj) | 产品:10 | 修改引用并回归 |
 | [src/Engine/TiaMcpServer.V21.csproj](../../src/Engine/TiaMcpServer.V21.csproj) | 产品:8,9 | 修改引用并回归 |
@@ -1992,7 +1991,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs](../../src/Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs) | 写入/工作区:97,230 | 修改引用并回归 |
 | [src/Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs](../../src/Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs) | 写入/工作区:271,368 | 修改引用并回归 |
 | [src/Logic/ModelContextProtocol/UpdateLogic.cs](../../src/Logic/ModelContextProtocol/UpdateLogic.cs) | 产品:11,139 | 修改引用并回归 |
-| [src/Logic/Properties/AssemblyInfo.cs](../../src/Logic/Properties/AssemblyInfo.cs) | 产品:3 | 修改引用并回归 |
+| [src/Logic/Properties/AssemblyInfo.cs](../../src/Logic/Properties/AssemblyInfo.cs) | 产品:3,4,5 | 修改引用并回归 |
 | [src/Logic/TiaMcp.Logic.csproj](../../src/Logic/TiaMcp.Logic.csproj) | 根定位:13 | 修改引用并回归 |
 | [src/Runtime/OpcUaLiveReader.cs](../../src/Runtime/OpcUaLiveReader.cs) | 产品:47 | 修改引用并回归 |
 | [src/Shared/BundleLayout.cs](../../src/Shared/BundleLayout.cs) | 根定位:24,26 | 修改引用并回归 |
@@ -2005,42 +2004,42 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Core/TiaOpenness.Core.csproj](../../src/Studio/Core/TiaOpenness.Core.csproj) | 根定位:23 | 修改引用并回归 |
 | [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:70; 写入/工作区:16 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ClientProfiles.cs](../../src/Studio/Gui/Configuration/ClientProfiles.cs) | 产品:12 | 修改引用并回归 |
-| [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18,79,80,81; 根定位:77 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18,81; 根定位:77 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationPreview.cs](../../src/Studio/Gui/Configuration/ConfigurationPreview.cs) | 产品:3 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationView.xaml](../../src/Studio/Gui/Configuration/ConfigurationView.xaml) | 产品:1 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationView.xaml.cs](../../src/Studio/Gui/Configuration/ConfigurationView.xaml.cs) | 产品:21 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ModernJson.cs](../../src/Studio/Gui/Configuration/ModernJson.cs) | 产品:8 | 修改引用并回归 |
-| [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150,153; 根定位:45,57 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150; 根定位:45,57 | 修改引用并回归 |
 | [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,47 | 修改引用并回归 |
 | [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
 | [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:18 | 修改引用并回归 |
 | [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
-| [src/Studio/README.md](../../src/Studio/README.md) | 产品:4 | 修改引用并回归 |
+| [src/Studio/Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs) | 产品:29 | 修改引用并回归 |
+| [src/Studio/README.md](../../src/Studio/README.md) | 产品:4,27,46 | 修改引用并回归 |
 | [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:51 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.HttpTests/README.md](../../tests/Engine/TiaMcpServer.HttpTests/README.md) | 产品:14,16 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs) | 根定位:9,13,66,67,68,87,99,101,102,103,104,116,117,120,124,126,135,136,150,151,161,164,168,171,179,180,182,183,184,185,186,187,188,191,193,198,203 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 根定位:205,228 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,79,112,113,204,205,210,215 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,43,79; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,79,256; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16937,36687 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:161 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,426,442,444,472 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,60,426,442,444,472 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj](../../tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj) | 根定位:6 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs) | 产品:6 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs) | 产品:9 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34,36; 根定位:14,74,164 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs) | 产品:6,26,27,28; 根定位:15 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34; 根定位:14,74,164 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs) | 产品:6,28; 根定位:15 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs) | 产品:112 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:92,246,278,279,280 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs) | 产品:39 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:68 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 154 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 153 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 

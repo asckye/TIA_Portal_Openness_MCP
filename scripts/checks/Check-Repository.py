@@ -33,10 +33,85 @@ def local_target(root, source, target):
     return None
 
 
+def product_name_errors(root, names):
+    # Frozen contracts and publication/native evidence retain the names they measured.
+    historical = ('manifest/contracts/', 'manifest/history/', 'manifest/publication-',
+                  'docs/releases/', 'docs/archive/', 'docs/development/evidence/',
+                  'reference/siemens-openness/', 'reference/siemens-code-snippets/', 'third_party/')
+    evidence = {'CHANGELOG.md', 'manifest/ecosystem-validation.json',
+                'manifest/release-build.json', 'manifest/multi-version-build.json', 'manifest/configurator-build.json'}
+    old_engine = 'TiaMcp' + 'Server'
+    old_launcher = 'TiaMcp' + 'Configurator'
+    pattern = re.compile(old_engine + r'\.(?:exe|dll|deps\.json|runtimeconfig\.json)\b|'
+                         + old_launcher + r'\.exe\b', re.I)
+    identity = re.compile(r'(?:Get-Process|GetProcessesByName|InternalsVisibleTo|Assembly\.Load|<AssemblyName>|-match).*'
+                          + r'(?:' + old_engine + '|' + old_launcher + r')(?:[\"\x27<)|])', re.I)
+    extensions = {'.cs', '.csproj', '.props', '.targets', '.ps1', '.psm1', '.py', '.md', '.json',
+                  '.yml', '.yaml', '.config', '.bat', '.cmd', '.sh', '.toml', '.xml', '.xaml', '.svg'}
+    errors = []
+    for name in sorted(set(names)):
+        if name.startswith(historical) or name in evidence or SKIP.intersection(Path(name).parts):
+            continue
+        if pattern.search(name):
+            errors.append('Retired product filename: ' + name)
+        if Path(name).suffix.lower() not in extensions and name != '.gitignore':
+            continue
+        path = root / name
+        if not path.is_file():
+            continue
+        for line, text in enumerate(path.read_text(encoding='utf-8-sig').splitlines(), 1):
+            if name == 'docs/development/handoff.md' and text == ('- one WPF/.NET 10 workbench (configurator and Studio merged; `'
+                    + old_launcher + '.exe` remains the launcher) with menus'):
+                continue
+            if pattern.search(text) or identity.search(text):
+                errors.append(f'{name}:{line}: retired product reference')
+    return errors
+
+
+def product_name_self_test():
+    import uuid
+    scratch = ROOT / 'bin-build' / ('product-names-' + uuid.uuid4().hex)
+    scratch.mkdir(parents=True)
+    try:
+        root = scratch
+        old_engine = 'TiaMcp' + 'Server'
+        old = old_engine + '.exe'
+        launcher = 'TiaMcp' + 'Configurator.exe'
+        cases = {'scripts/start.ps1': old, 'src/find.cs': old.upper(),
+                 'docs/current.md': launcher, 'manifest/current.json': old,
+                 'docs/releases/v3.md': old, 'manifest/contracts/v4/responses/21.json': old,
+                 'src/namespace.cs': 'namespace TiaMcpServer; namespace TiaMcpConfigurator;',
+                 'scripts/current.ps1': 'TiaMcp.Engine.V20.exe TiaMcp.Engine.V21.exe TiaMcp.FoundationHost.exe TiaOpenness.exe',
+                 'scripts/process.ps1': 'Get-Process -Name "' + old_engine + '"',
+                 'src/identity.csproj': '<AssemblyName>' + old_engine + '</AssemblyName>',
+                 'scripts/dumps.ps1': "-match '^(Portal|" + old_engine + r")\.'"}
+        for name, value in cases.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(value, encoding='utf-8')
+        errors = product_name_errors(root, cases)
+        assert len(errors) == 7, errors
+        assert len(product_name_errors(root, ['runtime/v21/' + old])) == 1
+        print('Product-name self-tests: 12 passed, 0 failed.')
+    finally:
+        assert scratch.resolve().parent == (ROOT / 'bin-build').resolve()
+        for path in sorted(scratch.rglob('*'), key=lambda p: len(p.parts), reverse=True):
+            if path.is_file():
+                path.unlink()
+            else:
+                path.rmdir()
+        scratch.rmdir()
+
+
 def check(root, no_binaries=False, package_mode=False):
     rules = layout.load_delivery(root)
     package_mode = package_mode or not (root / 'Version.props').is_file()
     errors = []
+    if (root / '.git').exists():
+        names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root).decode('utf-8').split('\0')
+    else:
+        names = (path.relative_to(root).as_posix() for path in root.rglob('*') if path.is_file())
+    errors.extend(product_name_errors(root, filter(None, names)))
     count = 0
     for source in documents(root):
         count += 1
@@ -135,8 +210,8 @@ def check(root, no_binaries=False, package_mode=False):
     for name in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat'):
         if (root / name).exists():
             errors.append('Replaced launcher returned: ' + name)
-    for version in ('v20', 'v21'):
-        required(f'runtime/{version}/TiaMcpServer.exe', 'runtime')
+    for version in ('20', '21'):
+        required(f'runtime/v{version}/TiaMcp.Engine.V{version}.exe', 'runtime')
     swallowed = Path(__file__).with_name('Check-SwallowedExceptions.py')
     result = subprocess.run([sys.executable, str(swallowed), '--root', str(root)])
     if result.returncode:
@@ -160,10 +235,14 @@ def check(root, no_binaries=False, package_mode=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT)
+    parser.add_argument('--self-test', action='store_true', help='Exercise retired product reference rejection and historical/namespace exemptions')
     parser.add_argument('--package-mode', action='store_true', help='Validate the runtime-only delivery, also detected when Version.props is absent')
     parser.add_argument('--no-binaries', action='store_true',
-                        help='source checkout without build outputs: skip the existence of runtime/*/TiaMcpServer.exe and TiaMcpConfigurator.exe (not tracked since 2.8.1)')
+                        help='source checkout without build outputs: skip the existence of runtime/*/TiaMcp.Engine.V21.exe and TiaOpenness.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
+    if args.self_test:
+        product_name_self_test()
+        return 0
     # Negative sentinel: a broken link and a traversal must fail; a valid file must pass.
     source = args.root / 'docs/README.md'
     assert local_target(args.root, source, '../README.md') is None

@@ -27,8 +27,10 @@ $attributes += '[assembly: AssemblyFileVersion("' + $release + '.0")]'
 $attributes += '[assembly: AssemblyInformationalVersion("' + $release + '")]'
 $attributes += '[assembly: AssemblyMetadata("TiaMcpRelease", "' + $release + '")]'
 [IO.File]::WriteAllText($metadata, "using System.Reflection;`n" + ($attributes -join "`n"), [Text.UTF8Encoding]::new($false))
-& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references (Join-Path $studio 'Launcher/Launcher.cs') $processArguments $metadata
+$launcher = Join-Path $resourceOutput 'TiaOpenness.Launcher.exe'
+& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$launcher" @references (Join-Path $studio 'Launcher/Launcher.cs') $processArguments $metadata
 if ($LASTEXITCODE -ne 0) { throw 'Configurator build failed.' }
+Copy-Item -LiteralPath $launcher -Destination (Join-Path $root 'TiaOpenness.exe') -Force
 if ($Test) {
     $output = Join-Path $root 'bin-build\configurator-tests'
     New-Item -ItemType Directory -Force -Path $output | Out-Null
@@ -63,7 +65,7 @@ if ($Test) {
         generatedAt=[DateTimeOffset]::UtcNow.ToString('o')
         testsPassed=[int]$match.Groups[1].Value
         realTiaAcceptance='NOT PERFORMED; isolated client configuration and WPF tests only'
-        executable=[ordered]@{ path='TiaMcpConfigurator.exe'; sha256=(Get-FileHash (Join-Path $root 'TiaMcpConfigurator.exe')).Hash.ToLowerInvariant() }
+        executable=[ordered]@{ path='TiaOpenness.exe'; sha256=(Get-FileHash (Join-Path $root 'TiaOpenness.exe')).Hash.ToLowerInvariant() }
         sourceFiles=$sourceFiles
     }
     [IO.File]::WriteAllText((Join-Path $root 'manifest/configurator-build.json'), ($record | ConvertTo-Json -Depth 6).Replace("`r`n", "`n"), [Text.UTF8Encoding]::new($false))

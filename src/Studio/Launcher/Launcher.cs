@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows;
 using Microsoft.Win32;
 
-// Compatibility filename, single desktop application. Configuration is embedded
+// Root Studio launcher, single desktop application. Configuration is embedded
 // in that application's main window; this bootstrapper has no separate UI.
 internal static class DesktopLauncher
 {

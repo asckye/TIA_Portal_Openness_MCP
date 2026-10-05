@@ -4,11 +4,11 @@
 
 | Release | Executable | Profile |
 |---|---|---|
-| V14 SP1 | `runtime/v14sp1/TiaMcpServer.exe` | PLC foundation |
-| V15.1 | `runtime/v15.1/TiaMcpServer.exe` | PLC foundation |
-| V16–V19 | `runtime/v16` through `runtime/v19`, `TiaMcpServer.exe` | PLC foundation |
-| V20/V21 | `runtime/v20` and `runtime/v21`, `TiaMcpServer.exe` | Full engine |
-| Unified desktop | Root `TiaMcpConfigurator.exe` launches `runtime/studio/TiaOpenness.exe` | Engineering and MCP configuration in one window; eight Openness adapters |
+| V14 SP1 | `runtime/v14sp1/TiaMcp.FoundationHost.exe` | PLC foundation |
+| V15.1 | `runtime/v15.1/TiaMcp.FoundationHost.exe` | PLC foundation |
+| V16–V19 | `runtime/v16` through `runtime/v19`, `TiaMcp.FoundationHost.exe` | PLC foundation |
+| V20/V21 | `runtime/v20/TiaMcp.Engine.V20.exe` and `runtime/v21/TiaMcp.Engine.V21.exe` | Full engine |
+| Unified desktop | Root `TiaOpenness.exe` launches `runtime/studio/TiaOpenness.exe` | Engineering and MCP configuration in one window; eight Openness adapters |
 
 Keep each runtime's dependencies and `worker` directory together. V14 SP1 and V15.1
 must retain their exact keys; original V14 and V15 are outside the target set.

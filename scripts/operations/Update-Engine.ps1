@@ -4,11 +4,11 @@
   Update this TIA MCP delivery in place from the latest GitHub release, with the engine stopped.
 
 .DESCRIPTION
-  Runs from inside an unpacked delivery (the folder holding manifest\delivery.json, runtime\, TiaMcpConfigurator.exe ...).
+  Runs from inside an unpacked delivery (the folder holding manifest\delivery.json, runtime\, TiaOpenness.exe ...).
   The maintainer chose "stop, then update" over a self-replacing hot update, so the script:
 
     1. Reads the installed version from manifest\delivery.json.
-    2. REFUSES while any TiaMcpServer.exe or TiaMcpConfigurator.exe is running (lists the PIDs; never kills them).
+    2. REFUSES while any TiaMcp.Engine.V20.exe, TiaMcp.Engine.V21.exe, TiaMcp.FoundationHost.exe or TiaOpenness.exe is running (lists the PIDs; never kills them).
     3. Finds the release: GitHub API releases/latest (or -Version vX.Y.Z), falling back to the release page when the
        API is rate-limited. The TIA machine needs internet access to github.com.
     4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts under <root>\data\temp\ when
@@ -26,7 +26,7 @@
 
   The configurator's "Update engine" menu item (2.8.0) runs this same script in its own window after closing itself:
   -WaitForPid <pid> waits for that configurator process to exit before the running-process check, and
-  -RelaunchConfigurator starts TiaMcpConfigurator.exe from the install root again when the script ends.
+  -RelaunchConfigurator starts TiaOpenness.exe from the install root again when the script ends.
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\operations\Update-Engine.ps1 -Check
@@ -54,7 +54,7 @@ $ErrorActionPreference = 'Stop'
 function Say([string]$text) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $text) }
 function Relaunch() {
     if (-not $RelaunchConfigurator -or -not $root) { return }
-    $exe = Join-Path $root 'TiaMcpConfigurator.exe'
+    $exe = Join-Path $root 'TiaOpenness.exe'
     if (Test-Path -LiteralPath $exe) { Say ('reopening ' + $exe); Start-Process -FilePath $exe -WorkingDirectory $root }
 }
 function Fail([string]$text) { Write-Host ("FAIL: " + $text) -ForegroundColor Red; Relaunch; exit 1 }
@@ -170,7 +170,7 @@ if ($SelfTest) {
             try { $null = OwnedPath $fixture $relative } catch { $rejected = $true }
             AssertTest $rejected ('reject ' + $relative)
         }
-        AssertTest (InDelivery 'runtime/v21/TiaMcpServer.exe' $rules) 'include runtime'
+        AssertTest (InDelivery 'runtime/v21/TiaMcp.Engine.V21.exe' $rules) 'include runtime'
         AssertTest (-not (InDelivery 'runtime/verification/NativeCallWeaver.dll' $rules)) 'exclude verifier'
         $backup = Join-Path $fixture 'backup'
         New-Item -ItemType Directory -Path $backup | Out-Null
@@ -234,7 +234,7 @@ if ($WaitForPid -gt 0) {
 
 function Running() {
     $list = @()
-    foreach ($n in 'TiaMcpServer', 'TiaMcpConfigurator') {
+    foreach ($n in 'TiaMcp.Engine.V20', 'TiaMcp.Engine.V21', 'TiaMcp.FoundationHost', 'TiaOpenness') {
         foreach ($p in @(Get-Process -Name $n -ErrorAction SilentlyContinue)) {
             $path = ''; try { $path = $p.Path } catch { }
             $list += ($n + '.exe PID ' + $p.Id + ($(if ($path) { ' (' + $path + ')' } else { '' })))
@@ -389,7 +389,7 @@ Expand-Archive -LiteralPath $zipFile -DestinationPath $extract -Force
 $top = @(Get-ChildItem -LiteralPath $extract -Directory)
 $package = $(if ($top.Count -eq 1 -and (Test-Path -LiteralPath (Join-Path $top[0].FullName 'manifest\delivery.json'))) { $top[0].FullName } elseif (Test-Path -LiteralPath (Join-Path $extract 'manifest\delivery.json')) { $extract } else { '' })
 if (-not $package) { Fail 'the ZIP does not contain a delivery (no manifest\delivery.json at its root)' }
-foreach ($must in 'runtime\v21\TiaMcpServer.exe', 'runtime\v20\TiaMcpServer.exe', 'TiaMcpConfigurator.exe', 'manifest\package-manifest.json') {
+foreach ($must in 'runtime\v21\TiaMcp.Engine.V21.exe', 'runtime\v20\TiaMcp.Engine.V20.exe', 'TiaOpenness.exe', 'manifest\package-manifest.json') {
     if (-not (Test-Path -LiteralPath (Join-Path $package $must))) { Fail ('package is incomplete: missing ' + $must) }
 }
 $rules = ReadDeliveryRules $package
@@ -435,6 +435,6 @@ Remove-Item -LiteralPath $work -Recurse -Force
 RemoveTree $extract
 
 $now = Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json
-$exeVersion = (Get-Item -LiteralPath (Join-Path $root 'runtime\v21\TiaMcpServer.exe')).VersionInfo.FileVersion
-Say ("DONE: " + $installed + " -> " + $now.release + " (runtime\v21\TiaMcpServer.exe " + $exeVersion + "). Start the engine and call Bootstrap to confirm serverVersion; -Rollback restores " + $installedPackage + ".")
+$exeVersion = (Get-Item -LiteralPath (Join-Path $root 'runtime\v21\TiaMcp.Engine.V21.exe')).VersionInfo.FileVersion
+Say ("DONE: " + $installed + " -> " + $now.release + " (runtime\v21\TiaMcp.Engine.V21.exe " + $exeVersion + "). Start the engine and call Bootstrap to confirm serverVersion; -Rollback restores " + $installedPackage + ".")
 Relaunch

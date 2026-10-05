@@ -7,7 +7,7 @@ Support requests may be written in English or Chinese.
 1. For a V20/V21 full engine, run doctor on the TIA computer. For older foundation releases, use Studio Doctor or the connected host's environment tools and their GetToolUsage examples:
 
    ```bat
-   runtime\v21\TiaMcpServer.exe doctor
+   runtime\v21\TiaMcp.Engine.V21.exe doctor
    ```
 
 2. Read the docs for your question:

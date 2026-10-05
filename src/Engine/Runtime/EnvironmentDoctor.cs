@@ -108,8 +108,8 @@ namespace TiaMcpServer.Runtime
                 NameZh = "引擎 exe 与 TIA 版本匹配",
                 DetailEn = $"exe built for V{compiled}" + (detected != null ? $", machine has V{detected}" : ", machine version unknown"),
                 DetailZh = $"该 exe 为 V{compiled} 构建" + (detected != null ? $"，本机装的是 V{detected}" : "，本机版本未知"),
-                FixEn = !supported ? unsupported : (ok || detected == null ? null : $"Use runtime\\v{detected}\\TiaMcpServer.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
-                FixZh = !supported ? unsupported : (ok || detected == null ? null : $"改用交付包里的 runtime\\v{detected}\\TiaMcpServer.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
+                FixEn = !supported ? unsupported : (ok || detected == null ? null : $"Use runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
+                FixZh = !supported ? unsupported : (ok || detected == null ? null : $"改用交付包里的 runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
             };
         }
 

@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
             try
             {
                 string own = ownExePath();
-                string exeName = Path.GetFileName(own);
+                string exeName = target.IsFullEngine ? "TiaMcp.Engine.V" + target.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe";
                 string dir = Path.GetDirectoryName(own) ?? "";
                 var candidates = new List<string>();
 

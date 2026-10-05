@@ -1,9 +1,9 @@
 {
     "package":  "TIA_MCP_Delivery_v2.7.2-asckye.6-defects.1",
-    "generatedAt":  "2026-10-05T13:39:13.3116105+00:00",
+    "generatedAt":  "2026-10-05T14:42:56.0156555+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.3.0.0",
-    "exeSha256":  "fe5b4351a9886bf79fde2f69257931c31f025d15d4d751c1e87e075620d4f285",
+    "exeSha256":  "fc8d2990c58fe4522a47c684d12553083f08cd05dc35186dc67fbdc22d09bde0",
     "toolCount":  488,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
@@ -7022,7 +7022,7 @@
                                          "repository",
                                          "timeoutSeconds"
                                      ],
-                      "description":  "[L0][Diagnostics][SESSION] Read-only update check: compares this engine\u0027s version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.",
+                      "description":  "[L0][Diagnostics][SESSION] Read-only update check: compares this engine\u0027s version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.",
                       "example":  "{}"
                   },
                   {

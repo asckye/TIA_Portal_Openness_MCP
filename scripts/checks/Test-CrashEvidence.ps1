@@ -19,7 +19,9 @@ try {
     [IO.File]::WriteAllText((Join-Path $journals 'calls-offline.jsonl'),'{"id":"fixture","phase":"BEFORE"}')
     $dumps=Join-Path $scratch 'CrashDumps'
     New-Item -ItemType Directory -Path $dumps | Out-Null
-    [IO.File]::WriteAllText((Join-Path $dumps 'TiaMcpServer.exe.1.dmp'),'not a real dump')
+    $dumpNames=@('TiaMcp.Engine.V20.exe.1.dmp','TiaMcp.Engine.V21.exe.1.dmp','TiaMcp.FoundationHost.exe.1.dmp')
+    foreach($name in $dumpNames){[IO.File]::WriteAllText((Join-Path $dumps $name),'not a real dump')}
+    [IO.File]::WriteAllText((Join-Path $dumps 'unrelated.exe.1.dmp'),'not a product dump')
     $output=Join-Path $scratch 'captured'
     $null=& $collector -OutputDirectory $output -JournalDirectory $journals -PlanOnly
     Check (!(Test-Path -LiteralPath $output) -and $evidenceFixture.queries -eq 0) 'PlanOnly read events or wrote output'
@@ -27,7 +29,7 @@ try {
     $evidence=Get-Content -LiteralPath (Join-Path $output 'evidence.json') -Raw | ConvertFrom-Json
     Check ($evidence.complete -and $evidenceFixture.queries -eq 3 -and $evidence.events.Count -eq 3) ('Event query evidence incomplete: '+($evidence | ConvertTo-Json -Depth 8)+' queries='+$evidenceFixture.queries)
     Check ($evidence.journals.Count -eq 1 -and $evidence.journals[0].sha256.Length -eq 64) 'Journal not copied and hashed'
-    Check ($evidence.dumpInventory.Count -eq 1 -and !(Test-Path -LiteralPath (Join-Path $output 'TiaMcpServer.exe.1.dmp'))) 'Dump content was copied'
+    Check ($evidence.dumpInventory.Count -eq 3 -and @($dumpNames | Where-Object {Test-Path -LiteralPath (Join-Path $output $_)}).Count -eq 0) 'Product dump inventory incomplete or dump content was copied'
     $refused=$false
     try { & $collector -OutputDirectory $output -JournalDirectory $journals } catch {$refused=$true}
     Check $refused 'Existing evidence was overwritten'

@@ -13,7 +13,7 @@
 - `Portal`：87 个 partial、约 3.1 万行的有状态单例；工具约 440 处调用。工具文件与 Portal partial 基本一一对应。
 - `Program`：单文件 CLI 宿主；报告、探针和 HMI 模板逻辑分别位于 `Cli/` 下的四个内部静态类，仍在引擎程序集。CLI 通过 `EngineServices` 取得所属工具或服务实例，不再经过静态工具转发。
 - `#if TIA_V20` 共 62 处，全部位于 Portal 方法体内，V20/V21 方法签名一致。
-- 原生调用织入只插桩 `TiaMcpServer.exe` 自身（`@(IntermediateAssembly)`），所有调用西门子 API 的代码必须留在引擎程序集。
+- 原生调用织入只插桩 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe` 自身（`@(IntermediateAssembly)`），所有调用西门子 API 的代码必须留在引擎程序集。
 
 ## 领域划分
 

@@ -69,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "CheckProductUpdate"), Description(
             "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +
             "(name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, " +
-            "run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). " +
+            "run by the maintainer with every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe stopped (it refuses while one runs; -Rollback restores the previous install). " +
             "The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.")]
         public static Task<CallToolResult> CheckProductUpdateV4(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,

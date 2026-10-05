@@ -56,7 +56,7 @@
   "entrypoints": {
     "readme": "README.md",
     "skill": "plugin/skill/SKILL.md",
-    "mcpServerExe": "runtime/v21/TiaMcpServer.exe",
+    "mcpServerExe": "runtime/v21/TiaMcp.Engine.V21.exe",
     "cursorExample": "docs/getting-started/cursor.example.json",
     "toolRoster": "manifest/tools-list.json",
     "toolMatrix": "docs/reference/tool-matrix.md",
@@ -73,11 +73,11 @@
     "studio": "runtime/studio/TiaOpenness.exe",
     "versionToolMatrix": "manifest/version-tools.json",
     "beginnerGuide": "docs/getting-started/beginners.zh-CN.md",
-    "configurator": "TiaMcpConfigurator.exe"
+    "configurator": "TiaOpenness.exe"
   },
   "cli": {
-    "description": "Call runtime/v21/TiaMcpServer.exe or runtime/v20/TiaMcpServer.exe with a CLI verb. JSON/YAML generation requires no MCP client.",
-    "exe": "runtime/v21/TiaMcpServer.exe",
+    "description": "Call runtime/v21/TiaMcp.Engine.V21.exe or runtime/v20/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.",
+    "exe": "runtime/v21/TiaMcp.Engine.V21.exe",
     "verbs": [
       "gen",
       "patch",

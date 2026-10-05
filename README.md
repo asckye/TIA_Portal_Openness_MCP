@@ -14,9 +14,9 @@ Download the complete **TIA_MCP_Delivery** ZIP from Releases and extract the ent
 
 The delivery package contains runtime files, user documentation, templates, the Claude Code plugin and ecosystem resources. Development sources, build scripts and validation tools remain in the source repository.
 
-- **AI client:** open `TiaMcpConfigurator.exe`, choose **MCP & clients**, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
-- **Engineering:** open the same `TiaMcpConfigurator.exe`, switch to **Engineering**, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
-- **Studio demonstration:** run `TiaMcpConfigurator.exe --mock --lang en` from the extracted package. Results are synthetic.
+- **AI client:** open `TiaOpenness.exe`, choose **MCP & clients**, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
+- **Engineering:** open the same `TiaOpenness.exe`, switch to **Engineering**, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
+- **Studio demonstration:** run `TiaOpenness.exe --mock --lang en` from the extracted package. Results are synthetic.
 
 The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installation, VM paths, PLC selection and a first SCL import/compile exercise.
 

@@ -61,12 +61,12 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 | V21 生态目录查询 | `ReadV21EcosystemCatalog` 在 V20/V21 引擎均直接读取程序集资源 `TiaMcp.V21Ecosystem.json` | 不读取磁盘副本或根覆盖；包内 JSON 缺失仍可查询 |
 | R2：引擎 `FindInstallRoot` / `CheckForUpdate` | 解析器识别的 `runtime/<RuntimeDirectory>` 安装锚点，且根下存在 `DeliveryManifest`；更新脚本相对此根定位 | 从基目录起最多检查 4 层的 `DeliveryManifest`；失败返回 null。开发输出不因解析器识别根而成为安装包；不读取仓库根环境变量 |
 | R3：CLI `SpecLoader.FindBundleRoot` | 解析安装/开发根，只要求根下有 `templates`；替换 `__BUNDLE__`，根路径斜杠转为 `/` | 未识别布局保留原来从基目录起最多检查 12 层的 `templates` 与 `tools` 两个目录；失败返回 null，token 保留。忽略仓库根环境变量 |
-| R7：`EngineRouter.FindSiblingExe`；改道、doctor、CLI 配置 | 在 V20/V21 安装输出中按目标版本的 `RuntimeDirectory` 找同名 EXE；完整引擎 Release 开发输出按目标 `EngineOutputDirectory` 找同名 EXE | 原 `bin`/`bin-v20` 的 `Release/net48` 匹配，再检查当前 `v` 加数字目录的同级目标；候选必须存在且不是自身。失败返回 null；`McpConfigInstaller` 在当前版本或找不到同级引擎时使用自身 EXE。忽略仓库根环境变量 |
+| R7：`EngineRouter.FindSiblingExe`；改道、doctor、CLI 配置 | 在 V20/V21 安装输出中按目标版本的 `RuntimeDirectory` 找对应产品 EXE；完整引擎 Release 开发输出按目标 `EngineOutputDirectory` 找对应产品 EXE | 原 `bin`/`bin-v20` 的 `Release/net48` 匹配，再检查当前 `v` 加数字目录的同级目标；候选必须存在且不是自身。失败返回 null；`McpConfigInstaller` 在当前版本或找不到同级引擎时使用自身 EXE。忽略仓库根环境变量 |
 | R10：Foundation LegacyHost | 版本参数与 EXE 旁存在的 `release-key.txt` 校验一致；未指定版本时读该文件。`--worker-exe` 优先，否则使用 EXE 旁 `worker` 中的对应版本 worker | 沿用宿主自身的安装布局和参数校验，不经过 `BundleLayout`，不搜索仓库 |
 | R11：Studio 配置页根 | `ShowConfiguration(bundleRoot)` 的显式值优先，否则 `FindBundleRoot` 调用解析器 | 未识别时逐级向上找 `PackageManifest`；失败抛原 `DirectoryNotFoundException` |
-| R11：`ConfigCore.Engine` | 校验配置页传入的根，先查 `runtime/<RuntimeDirectory>/TiaMcpServer.exe`；V20/V21 再查对应的 `E/<EngineOutputDirectory>/Release/net48/TiaMcpServer.exe` | 根标记缺失仍保留传入根及同一组候选；失败抛原 `FileNotFoundException`。Foundation 版本没有源码输出候选 |
+| R11：`ConfigCore.Engine` | 校验配置页传入的根，先查 `runtime/<RuntimeDirectory>/TiaMcp.FoundationHost.exe`（Foundation）或 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`（完整引擎）；V20/V21 再查对应的 `E/<EngineOutputDirectory>/Release/net48/TiaMcp.Engine.V<major>.exe` | 根标记缺失仍保留传入根及同一组候选；失败抛原 `FileNotFoundException`。Foundation 版本没有源码输出候选 |
 | R11：Studio `UpdateCheck` | 安装版本由 `FindResource(DeliveryManifest, …, root)` 读取；更新脚本由显式根定位 | 解析失败仍使用传入根下的原路径。`.git` 文件和目录都判为源码工作区，禁用安装更新 |
-| R12：兼容 Launcher | 根目录的 `TiaMcpConfigurator.exe` 只查自身目录下 `runtime/studio/TiaOpenness.exe` | C# 5 启动器不链接解析器，无其他相对候选；缺文件沿用原提示 |
+| R12：根 Launcher | 根目录的 `TiaOpenness.exe` 只查自身目录下 `runtime/studio/TiaOpenness.exe` | C# 5 启动器不链接解析器，无其他相对候选；缺文件沿用原提示 |
 | R13：`BridgeClient` | 显式 `bridgeExePath` 优先；否则识别安装/开发锚点，依次查调用方基目录旁和 `bridge` 子目录内的 `TiaOpenness.Bridge.exe` | 保留同样的两个本地候选，再查原相对开发路径下的 Bridge Debug、Release 输出；失败返回 null |
 | R14：Studio `SessionFactoryLoader` | 默认构建识别 `runtime/studio/bridge`，从桥接基目录下 `adapters/v<key>/TiaOpenness.Openness.dll` 加载 | 开发桥接和未识别布局仍用同一相邻适配器路径，不搜索其他根；缺文件返回原不可用会话工厂 |
 

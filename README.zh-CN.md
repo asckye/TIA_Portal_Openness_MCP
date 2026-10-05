@@ -14,9 +14,9 @@
 
 交付包只包含运行文件、用户文档、模板、Claude Code 插件及生态资源；开发源码、构建脚本和验证工具保留在源码仓库。
 
-- **用 AI 操作：**双击 `TiaMcpConfigurator.exe`，在 **MCP 与客户端** 页面选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
-- **自己操作：**打开同一个 `TiaMcpConfigurator.exe`，切换到 **工程操作**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
-- **先看演示：**在包根目录运行 `TiaMcpConfigurator.exe --mock --lang zh`。演示使用模拟数据。
+- **用 AI 操作：**双击 `TiaOpenness.exe`，在 **MCP 与客户端** 页面选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
+- **自己操作：**打开同一个 `TiaOpenness.exe`，切换到 **工程操作**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
+- **先看演示：**在包根目录运行 `TiaOpenness.exe --mock --lang zh`。演示使用模拟数据。
 
 按[新手使用指南](docs/getting-started/beginners.zh-CN.md)完成安装、连接和第一个 SCL 导入编译练习；具体客户端配置见[配置指南](docs/getting-started/configuration.md)。
 

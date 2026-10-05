@@ -15,7 +15,7 @@
     3. Early source/documentation gates; reuse matching records or run concurrent V20/V21 pipelines and the multi-version build.
     4. Post-build repository/binary/hash gates, including Validate-Bundle.ps1 -Strict.
     5. One commit "Release X.Y.Z: <summary>" (source + docs + manifest/* + tool-matrix.md). The binaries (runtime/v20,
-       runtime/v21, TiaMcpConfigurator.exe) are NOT tracked since 2.8.1; Package-Release.py builds the delivery ZIP from
+       runtime/v21, TiaOpenness.exe) are NOT tracked since 2.8.1; Package-Release.py builds the delivery ZIP from
        the commit plus the local binaries and Verify-ReleaseAsset.py proves the ZIP equals the tree + the recorded hashes.
     6. Push, wait for validate-bundle + offline-checks (GitHub API with the same token as the upload).
     7. Annotated tag vX.Y.Z, push it, then Publish-Release.ps1 uploads the ZIP + .sha256 from this machine (draft ->
@@ -55,7 +55,7 @@
 .PARAMETER DryRun
   Bump + build + gates only; show what would be committed, commit nothing.
 .PARAMETER KillStrayEngine
-  Kill a TiaMcpServer.exe left behind on this host (it locks runtime\v21\TiaMcpServer.exe) instead of refusing.
+  Kill a TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe left behind on this host (it locks runtime\v21\TiaMcp.Engine.V21.exe) instead of refusing.
 .PARAMETER Resume
   The release commit exists locally. Recheck prerequisites, early gates and hashes. Matching records skip rebuild/commit;
   changed inputs (or NoReuse) return to the build/commit path. Archive old output and package from the current HEAD.
@@ -354,10 +354,10 @@ if ($branch -ne 'master') { Fail ("current branch is " + $branch + ", releases g
 $behind = (& $Git rev-list --count "master..origin/master").Trim()
 if ($behind -ne '0') { Fail ("origin/master has " + $behind + " commit(s) this checkout lacks; pull first") }
 
-$stray = Get-Process -Name TiaMcpServer -ErrorAction SilentlyContinue
+$stray = Get-Process -Name 'TiaMcp.Engine.V20','TiaMcp.Engine.V21','TiaMcp.FoundationHost' -ErrorAction SilentlyContinue
 if ($stray) {
-    if ($KillStrayEngine) { $stray | Stop-Process -Force; Start-Sleep -Seconds 2; Say 'killed stray TiaMcpServer.exe' }
-    else { Fail ('TiaMcpServer.exe is running on this host (PID ' + ($stray.Id -join ',') + ') and would lock runtime\v21; stop it or pass -KillStrayEngine') }
+    if ($KillStrayEngine) { $stray | Stop-Process -Force; Start-Sleep -Seconds 2; Say 'killed stray TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe' }
+    else { Fail ('TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe is running on this host (PID ' + ($stray.Id -join ',') + ') and would lock runtime\v21; stop it or pass -KillStrayEngine') }
 }
 
 $changelog = Join-Path $repo 'CHANGELOG.md'
@@ -490,7 +490,7 @@ if ($DryRun) {
 }
 if ($changedPaths.Count) { & $Git add -- @changedPaths }
 $staged = @(& $Git diff --cached --name-only)
-$binariesStaged = @($staged | Where-Object { ($_ -like 'runtime/*' -and $_ -ne 'runtime/README.md') -or $_ -eq 'TiaMcpConfigurator.exe' })
+$binariesStaged = @($staged | Where-Object { ($_ -like 'runtime/*' -and $_ -ne 'runtime/README.md') -or $_ -eq 'TiaOpenness.exe' })
 if ($binariesStaged) { & $Git reset -q; Fail ('binaries must not be committed (2.8.1 policy): ' + ($binariesStaged -join ', ')) }
 $others = (& $Git status --porcelain) | Where-Object { $_ -match '^\?\?' }
 if ($others) { Say ("untracked files left out (add them by hand if they belong to the release): " + (($others | ForEach-Object { $_.Substring(3) }) -join ', ')) }

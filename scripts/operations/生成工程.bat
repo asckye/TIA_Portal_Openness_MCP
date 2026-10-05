@@ -3,8 +3,8 @@ chcp 65001 >nul
 setlocal
 rem 把一个 spec.yaml / spec.json 拖到本文件图标上即可生成博途工程。
 rem 默认用 V21 exe；若不存在则回退到 V20 exe（仅按文件是否存在选择；使用 V20 时请直接调用 runtime\v20 下的 EXE）。
-set "EXE=%~dp0..\..\runtime\v21\TiaMcpServer.exe"
-if not exist "%EXE%" set "EXE=%~dp0..\..\runtime\v20\TiaMcpServer.exe"
+set "EXE=%~dp0..\..\runtime\v21\TiaMcp.Engine.V21.exe"
+if not exist "%EXE%" set "EXE=%~dp0..\..\runtime\v20\TiaMcp.Engine.V20.exe"
 if not exist "%EXE%" (
   echo 找不到 tia 可执行文件（runtime\v21 和 runtime\v20 均不存在）。
   echo 请确认本 .bat 位于交付包/仓库的 scripts\operations\ 目录内（整包解压或完整克隆）。

@@ -116,7 +116,7 @@ out.write_text(text,encoding='utf-8')
     $compiler = Join-Path $Matches[2] ($Matches[1] + '/Roslyn/bincore/csc.dll')
     $framework = Join-Path ${env:ProgramFiles(x86)} 'Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
     if (-not (Test-Path -LiteralPath $framework)) { throw '.NET Framework 4.8 targeting pack is required' }
-    $fixture = Join-Path $Directory 'TiaMcpServer.exe'
+    $fixture = Join-Path $Directory 'TiaMcp.Engine.V21.exe'
     $compilerArgs = @('/nologo','/target:library','/nullable:enable','/langversion:latest','/nostdlib+',('/out:"'+$fixture+'"'),('"'+$sourcePath+'"'))
     $compilerArgs += Get-ChildItem -LiteralPath $framework -Filter '*.dll' -File | Where-Object { $_.Name -notin 'System.EnterpriseServices.Wrapper.dll','System.EnterpriseServices.Thunk.dll' } | ForEach-Object { '/reference:"'+$_.FullName+'"' }
     if ($Kind -eq 'route') {

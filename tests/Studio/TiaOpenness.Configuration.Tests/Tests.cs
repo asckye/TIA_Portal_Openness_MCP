@@ -53,11 +53,11 @@ namespace TiaMcpConfigurator
             {
                 Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, version.Key), version.DisplayName + " missing runtime is rejected");
                 if (version.IsFullEngine) {
-                string sourceEngine = Path.Combine(temp, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe");
+                string sourceEngine = Path.Combine(temp, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(sourceEngine)); File.WriteAllText(sourceEngine, "stub");
                 Assert(ConfigCore.Engine(temp, version.Key) == sourceEngine, version.DisplayName + " uses its catalog source-tree fallback");
                 }
-                string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe");
+                string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(runtimeEngine)); File.WriteAllText(runtimeEngine, "stub");
                 Assert(ConfigCore.Engine(temp, version.Key) == runtimeEngine, version.DisplayName + " packaged runtime takes precedence over source output");
                 var settings = new ServerSettings { Version = version.MajorVersion, ReleaseKey = version.Key };
@@ -423,7 +423,7 @@ namespace TiaMcpConfigurator
                         var entry = (Dictionary<string, object>)map[ClientProfiles.ServerName(profile, true)];
                         Assert((string)entry[ClientProfiles.UrlKey(profile)] == "http://192.0.2.10:8765/mcp", profile.Name + " native HTTP schema");
                     }
-                    ClientProfiles.Save(testProfile, false, null, 0, null, @"C:\bundle space\runtime\v21\TiaMcpServer.exe", 21, @"C:\Siemens\Portal V21");
+                    ClientProfiles.Save(testProfile, false, null, 0, null, @"C:\bundle space\runtime\v21\TiaMcp.Engine.V21.exe", 21, @"C:\Siemens\Portal V21");
                     Assert(File.ReadAllText(testProfile.Path).Contains("--tia-portal-location"), profile.Name + " local stdio saves explicit TIA path");
                 }
                 // 国产模型入口的客户端各自有独立 schema，泛型循环只核对了 URL 字段；这里盯住会被静默接受但客户端读不懂的形状。
@@ -439,9 +439,9 @@ namespace TiaMcpConfigurator
                 Assert(brands.All(x => x.CategoryBase == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").CategoryBase == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").CategoryBase == "CLI" && agent.CategoryBase == "Desktop", "brand cards show the client they write to; native cards show only the kind");
                 var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, null, 21, null);
                 Assert((string)openRemote["type"] == "remote" && (bool)openRemote["enabled"] && (string)openRemote["url"] == "http://192.0.2.10:8765/mcp", "OpenCode remote entry carries type=remote and enabled");
-                var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, @"C:\r\TiaMcpServer.exe", 21, @"C:\Siemens\Portal V21");
+                var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, @"C:\r\TiaMcp.Engine.V21.exe", 21, @"C:\Siemens\Portal V21");
                 var openCommand = (string[])openLocal["command"];
-                Assert((string)openLocal["type"] == "local" && openCommand[0] == @"C:\r\TiaMcpServer.exe" && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
+                Assert((string)openLocal["type"] == "local" && openCommand[0] == @"C:\r\TiaMcp.Engine.V21.exe" && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
                 Assert(ClientProfiles.RootKey(brands[0]) == "mcp" && ClientProfiles.RootKey(profiles.First(x => x.Id == "qwen")) == "mcpServers", "OpenCode servers live under 'mcp', the CLIs under 'mcpServers'");
                 string originalToml = "model = \"keep\"\r\n[mcp_servers.\"tia-portal-vm\"] # old\r\nurl = \"old\"\r\n[mcp_servers.\"tia-portal-vm\".http_headers]\r\nAuthorization = \"oldsecret\"\r\n[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n";
                 string changedToml = ClientProfiles.MergeToml(originalToml, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null);
@@ -469,7 +469,7 @@ namespace TiaMcpConfigurator
                 string launch = UpdateCheck.LaunchArguments(@"C:\TIA MCP\scripts\operations\Update-Engine.ps1", @"C:\TIA MCP\", 4242);
                 Assert(launch.StartsWith("-NoProfile -ExecutionPolicy Bypass -NoExit -File \"C:\\TIA MCP\\scripts\\operations\\Update-Engine.ps1\" -InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator"), "update: the updater is launched visibly with the install root (no trailing backslash), the caller pid and the relaunch switch");
                 Assert(UpdateCheck.Launch(delivery, 1).FileName.EndsWith("powershell.exe") && UpdateCheck.Launch(delivery, 1).UseShellExecute && UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: Windows PowerShell runs scripts\\operations\\Update-Engine.ps1 from the install root");
-                Assert(UpdateCheck.RunningEngines().All(x => x.StartsWith("TiaMcpServer.exe PID ")), "update: running engines are listed by pid (the updater refuses while any runs)");
+                Assert(UpdateCheck.RunningEngines().All(x => new[] { "TiaMcp.Engine.V20.exe PID ", "TiaMcp.Engine.V21.exe PID ", "TiaMcp.FoundationHost.exe PID " }.Any(x.StartsWith)), "update: running engines are listed by pid (the updater refuses while any runs)");
                 WorkbenchUiTests(output);
                 if (passed < 182) throw new Exception("Expected at least 182 configuration checks.");
                 Console.WriteLine("Passed: " + passed); return 0;

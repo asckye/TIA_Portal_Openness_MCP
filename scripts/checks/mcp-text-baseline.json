@@ -5140,25 +5140,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "6edd77fadd18f7ca979cf337c61a655c75cb8531c7e6321f0aa77d1a304a2693",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
-      "line": 116,
-      "cjk": 28,
-      "literal": [
-        "$",
-        1,
-        [
-          "改用交付包里的 runtime\\\\v",
-          null,
-          "\\\\TiaMcpServer.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version ",
-          null,
-          "。"
-        ]
-      ],
-      "reason": "Existing NameZh/DetailZh/FixZh values in the bilingual doctor result table."
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "6f3783117360f1d6bb02d5c31b728ad82b4c3480784787b54453d9357b1138b8",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs",
       "line": 113,
@@ -6742,6 +6723,27 @@
       "cjk": 22,
       "literal": "\"- 只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
       "reason": "Existing generated offline HMI validation report data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "e2b77275a9b10232363645e22557a0ace0966e9e6b23c40f0223496d4f6c60db",
+      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "line": 116,
+      "cjk": 28,
+      "literal": [
+        "$",
+        1,
+        [
+          "改用交付包里的 runtime\\\\v",
+          null,
+          "\\\\TiaMcp.Engine.V",
+          null,
+          ".exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version ",
+          null,
+          "。"
+        ]
+      ],
+      "reason": "Existing NameZh/DetailZh/FixZh values in the bilingual doctor result table."
     },
     {
       "kind": "other-literal",

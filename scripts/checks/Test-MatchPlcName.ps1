@@ -10,7 +10,7 @@
 param([string]$Exe = '', [switch]$SourceOnly, [string]$Python = 'python', [string]$Dotnet = 'dotnet')
 $ErrorActionPreference = "Stop"
 
-$srcExe = if ($Exe) { (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21\TiaMcpServer.exe" }
+$srcExe = if ($Exe) { (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21\TiaMcp.Engine.V21.exe" }
 if (-not $SourceOnly -and -not (Test-Path -LiteralPath $srcExe)) {
   Write-Host "FAIL: build the V21 exe first (not found: $srcExe)"; exit 1
 }

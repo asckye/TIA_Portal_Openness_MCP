@@ -27,7 +27,7 @@
 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` | 构建生成的八个 MCP 运行目录 |
 | `runtime/studio` | 统一桌面程序及 `bridge/adapters` 内的八版适配器 |
 | `runtime/dotnet` | 构建时由 `scripts/build/Get-BundledDotnet.ps1` 从微软官方压缩包展开的 .NET 10 运行时，不入 Git |
-| `TiaMcpConfigurator.exe` | 统一工作台入口（保留原文件名），不再打开独立配置器窗口 |
+| `TiaOpenness.exe` | 统一工作台入口（程序集名 `TiaOpenness.Launcher`），不再打开独立配置器窗口 |
 | `reference/tool-examples` | 可编辑的调用、语言文件、返回解释和调用顺序 |
 | `reference/siemens-openness`、`reference/siemens-code-snippets` | 固定来源的官方示例与授权记录 |
 | `reference/version-feature-matrix.json` | 按版本区分实现、缺口和原生验收的功能证据 |

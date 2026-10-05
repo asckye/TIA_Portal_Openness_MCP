@@ -410,8 +410,8 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 ```powershell
 $engine = 'src/Engine'
 $harness = 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
-$legacy = 'src/FoundationHost/bin/Release/net10.0/TiaMcpServer.exe'
-python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-8-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcpServer.exe" --exe "21=$engine/bin/Release/net48/TiaMcpServer.exe" --temp-root TiaMcp_Output/responses-temp --output TiaMcp_Output/responses
+$legacy = 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
+python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-8-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe" --exe "21=$engine/bin/Release/net48/TiaMcp.Engine.V21.exe" --temp-root TiaMcp_Output/responses-temp --output TiaMcp_Output/responses
 python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/responses --current TiaMcp_Output/responses
 ```
 
@@ -432,7 +432,7 @@ compare 报告每版 changed/added/removed 数及变化调用的首个差异路�
 实际范围和结果由完整构建记录保存。
 
 ```powershell
-python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcpServer.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
 ```
 
 输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
