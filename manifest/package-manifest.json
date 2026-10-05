@@ -17,7 +17,7 @@
                                                  21
                                              ],
                    "publicApiPathExample":  "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48",
-                   "runtimeRequirement":  "Full engines: .NET Framework 4.8; foundation hosts: .NET 8 and ASP.NET Core 8 plus matching Framework worker; Studio: .NET 10 Desktop Runtime",
+                   "runtimeRequirement":  "Target computers need only .NET Framework 4.8 (full engines and Openness workers); foundation hosts and the workbench use the bundled .NET 10 runtime in runtime/dotnet",
                    "windowsGroupRequirement":  "Siemens TIA Openness",
                    "newCliFlags":  [
                                        "--tia-portal-location \u003cpath\u003e",
