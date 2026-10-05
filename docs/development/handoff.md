@@ -21,8 +21,11 @@ acceptance remains **NOT RUN**.
 
 The v3.3.0 release also carries `TIA_MCP_Runtime_v3.3.0_20261003.zip`: the same 3.3.0 files without the source tree and
 development files (every file byte-identical to the full package, which stays the update channel; not separately
-re-accepted). There are no further 3.3.x releases: the 3.3.x improvements and the former 3.3.1 work go into 4.0, and the
-release pipeline is reworked first (see the [roadmap](roadmap.md)). On master the software's own files already live in a
+re-accepted). There are no further 3.3.x releases: the 3.3.x improvements and the former 3.3.1 work go into 4.0 (see the
+[roadmap](roadmap.md)). The release pipeline rework is on master (cheap gates first, build reuse, parallel V20/V21
+pipelines, prerequisite check), and the frozen step-I domains (P4-I2, P4-I3, P4-I4a, P4-I4b) and P6-02 are merged with
+their native evidence regenerated on master. Next: the move-only [directory reorganization](layout-proposal-4.0.md),
+then phase 6. On master the software's own files already live in a
 writable `<bundle>\data` folder with per-user fallback, and packaging, published-asset verification, bundle checks and the
 updater follow the runtime-only delivery set in `scripts/operations/delivery-files.json`. All testing of these changes is
 deferred to the 4.0 final candidate.
