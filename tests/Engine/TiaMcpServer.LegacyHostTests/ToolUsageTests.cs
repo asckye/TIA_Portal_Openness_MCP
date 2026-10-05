@@ -20,21 +20,21 @@ internal static class ToolUsageTests
             {
                 var response = await Call(JsonSerializer.Serialize(new { toolName = tool.ProtocolTool.Name }));
                 check(response.IsError != true, "usage retrieval: " + release + "/" + tool.ProtocolTool.Name);
-                var usage = JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!["usage"]!;
+                var usage = JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!["data"]!;
                 check(usage["releaseKey"]!.GetValue<string>() == release, "usage has exact release");
                 check(JsonNode.DeepEquals(usage["inputSchema"], JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())), "usage reflects actual schema");
                 if(release is not ("20" or "21"))
                     check((string?)usage["example"]!["kind"]=="parameterized-call-example", "every deployed foundation tool has a maintained call example: "+release+"/"+tool.ProtocolTool.Name+" ("+(string?)usage["example"]!["kind"]+")");
-                if(tool.ProtocolTool.Name is "BuildPlcUdtXml" or "BuildPlcGlobalDbXml")
+                if(tool.ProtocolTool.Name is "BuildPlcUdt" or "BuildPlcGlobalDb")
                     check((string?)usage["example"]!["request"]!["params"]!["arguments"]!["outputReleaseKey"]==release,
                         "declaration example chooses the exact target release, including 14sp1 and 15.1");
             }
-            var connect = JsonNode.Parse(((TextContentBlock)(await Call("{\"toolName\":\"Connect\"}")).Content.Single()).Text)!["usage"]!;
+            var connect = JsonNode.Parse(((TextContentBlock)(await Call("{\"toolName\":\"ConnectPortal\"}")).Content.Single()).Text)!["data"]!;
             var arguments = connect["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             check(arguments.Count == 1 && arguments.ContainsKey("processId"), "foundation Connect must not reuse full-engine projectName example");
             check((await Call("{\"toolName\":\"ManageStartdriveParameter\"}")).IsError == true, "foundation must reject unavailable full-engine usage");
             check((await Call("{\"offset\":-1}")).IsError == true, "invalid page is an error");
-            check((await Call("{\"toolName\":\"Connect\",\"query\":\"x\"}")).IsError == true, "conflicting selectors rejected");
+            check((await Call("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}")).IsError == true, "conflicting selectors rejected");
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");
         }
         var docId = "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs";

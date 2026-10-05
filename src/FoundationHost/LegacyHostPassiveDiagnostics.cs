@@ -18,13 +18,13 @@ internal static class LegacyHostPassiveDiagnostics
         var names = tools.Select(t => t.ProtocolTool.Name).ToArray();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
-        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(d.Name, StringComparer.Ordinal) && WorkerOperations.Names.Contains(d.Operation));
+        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && WorkerOperations.Names.Contains(d.Operation));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))
         {
             var name = tool.ProtocolTool.Name;
             if (name.Length > 128) throw new InvalidOperationException();
-            var definition = FoundationTools.Definitions.SingleOrDefault(d => d.Name == name);
+            var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
             roster.Add(new JsonObject { ["name"] = name, ["execution"] = definition == null ? "host-only" : "worker-protocol", ["wiredOperation"] = definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) });
         }
         var probes = new JsonObject();
@@ -58,7 +58,7 @@ internal static class LegacyHostToolRegistry
         tools.Add(new ImportOrderTool());
         tools.AddRange(LegacyHostPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools));
         tools.Add(new ToolUsageTool(releaseKey, () => tools));
-        for (int i = 0; i < tools.Count; i++) tools[i] = new UsageHintTool(tools[i]);
+        for (int i = 0; i < tools.Count; i++) tools[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey));
         return tools.AsReadOnly();
     }
 }

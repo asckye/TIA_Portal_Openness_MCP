@@ -22,12 +22,12 @@ internal static class PassiveHostDiagnosticsTests
         {
             var worker = new ForbiddenWorker();
             var registry = LegacyHostToolRegistry.Create(worker, release.Key, native);
-            foreach (var name in new[] { "Bootstrap", "RunCapabilitySelfTest" })
+            foreach (var name in new[] { "InitializeEnvironment", "RunCapabilitySelfTest" })
             {
                 var tool = registry.Single(t => t.ProtocolTool.Name == name);
                 var response = await tool.InvokeAsync(Request(name));
                 var text = ((TextContentBlock)response.Content.Single()).Text;
-                var result = JsonNode.Parse(text)!;
+                var result = JsonNode.Parse(text)!["data"]!;
                 check(response.IsError != true, "passive structural self-check succeeds");
                 check(result["selectedRelease"]!["key"]!.GetValue<string>() == release.Key, "exact release identity");
                 check(result["host"]!["nativeCallsDisabledByConfiguration"]!.GetValue<bool>() == !native, "configured native gate truthful");

@@ -79,7 +79,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 sent=true;
                 var detail=failure.Message;
                 if(failure.EvidenceJson!="null") detail+="; failure evidence: "+failure.EvidenceJson;
-                throw new WorkerOperationException(detail,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown");
+                throw new WorkerOperationException(detail,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown",failure.EvidenceJson);
             }
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
@@ -91,7 +91,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         catch(Exception ex)
         {
             if(channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
+            ex.Data["foundationRequestSent"] = sent;
             outcome.Failed(sent,ex);
+            ex.Data["foundationSessionPoisoned"] = outcome.Poisoned;
             if(outcome.Poisoned) channel?.Invalidate(ex);
             throw;
         }

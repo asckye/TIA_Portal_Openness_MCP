@@ -1896,12 +1896,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:647 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:654 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
 | [scripts/checks/Test-EcosystemAssembly.ps1](../../scripts/checks/Test-EcosystemAssembly.ps1) | 根定位:7 | 修改引用并回归 |
-| [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:133,157 | 修改引用并回归 |
+| [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:156,181 | 修改引用并回归 |
 | [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:13 | 修改引用并回归 |
 | [scripts/checks/Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1) | 产品:45,132,140,141,142 | 修改引用并回归 |
 | [scripts/checks/Test-V21Ecosystem.py](../../scripts/checks/Test-V21Ecosystem.py) | 根定位:69 | 修改引用并回归 |

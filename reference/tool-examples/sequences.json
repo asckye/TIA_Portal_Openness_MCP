@@ -777,7 +777,7 @@
     "topic": "plc-scl-block",
     "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
     "preconditions": "Intended TIA/project already attached. An operator-reviewed ASCII FC_Add.scl is on the TIA host; generation may overwrite same-named PLC objects.",
-    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the complete source. V14 SP1 returns no generated object list; the later overload reports native objects. No automatic save or download. Normal native generation rejection is Status=failed and keeps the session usable; correct the source and preview again. Status=outcome-unknown requires project inspection.",
+    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -791,9 +791,9 @@
     "validation": "Contract checked; native acceptance NOT RUN.",
     "steps": [
       {
-        "tool": "GetState",
+        "tool": "GetSessionState",
         "arguments": {},
-        "expect": "Intended exact project already attached; copy ProjectFile."
+        "expect": "Intended exact project already attached; copy data.projectFile."
       },
       {
         "tool": "GetProjectTree",
@@ -808,7 +808,7 @@
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true
         },
-        "expect": "Status=planned; review source/target and copy this operation's PlanHash."
+        "expect": "data.status=planned; review source/target and copy this operation's data.planHash."
       },
       {
         "tool": "ImportPlcExternalSource",
@@ -818,10 +818,10 @@
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetState>",
+          "expectedProjectFile": "<ProjectFile from GetSessionState>",
           "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
         },
-        "expect": "Status=completed, Executed=true; retain returned SourceName. No generation/compile yet."
+        "expect": "data.status=completed, data.executed=true; retain returned data.sourceName. No generation/compile yet."
       },
       {
         "tool": "GenerateBlocksFromExternalSource",
@@ -830,7 +830,7 @@
           "externalSourceName": "<exact SourceName from completed import>",
           "dryRun": true
         },
-        "expect": "Status=planned; review source/target and copy this operation's PlanHash."
+        "expect": "data.status=planned; review source/target and copy this operation's data.planHash."
       },
       {
         "tool": "GenerateBlocksFromExternalSource",
@@ -839,31 +839,31 @@
           "externalSourceName": "<exact SourceName from completed import>",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetState>",
+          "expectedProjectFile": "<ProjectFile from GetSessionState>",
           "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
         },
-        "expect": "Status=completed; inspect GeneratedObjects or V14 SP1 inventory observations. Same-named PLC objects may be overwritten. Compilation remains notRun."
+        "expect": "data.status=completed; inspect data.generatedObjects or V14 SP1 inventory observations. Same-named PLC objects may be overwritten. Compilation remains notRun."
       },
       {
-        "tool": "CompileAndDiagnosePlc",
+        "tool": "CompilePlcDiagnostics",
         "arguments": {
           "softwarePath": "PLC_1",
           "dryRun": true
         },
-        "expect": "Preview only; state/counts are null and meta.executed=false."
+        "expect": "Preview only; state/counts are null and meta.execution=read-only."
       },
       {
-        "tool": "CompileAndDiagnosePlc",
+        "tool": "CompilePlcDiagnostics",
         "arguments": {
           "softwarePath": "PLC_1",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetState>"
+          "expectedProjectFile": "<ProjectFile from GetSessionState>"
         },
-        "expect": "All project devices must be offline; check native compiler state, errorCount and nested rawMessages. Do not treat transport success as compile success. Inspect meta.offlineStateNotExposedByDevices for devices whose state cannot be confirmed by these PLC services."
+        "expect": "All project devices must be offline; check native compiler state, errorCount and nested rawMessages. Do not treat transport success as compile success. Inspect data.offlineStateNotExposedByDevices for devices whose state cannot be confirmed by these PLC services. meta.outcome=failed when native diagnostics contain errors, including nested messages."
       },
       {
-        "tool": "GetBlockInfo",
+        "tool": "GetPlcBlockInfo",
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "FC_Add"

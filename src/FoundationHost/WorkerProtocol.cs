@@ -2,9 +2,11 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.LegacyHost;
 
-internal sealed class WorkerOperationException(string message,int code,string outcome) : Exception(message)
+internal sealed class WorkerOperationException(string message,int code,string outcome,string? evidenceJson = null) : Exception(message)
 {
     internal int Code { get; }=code;
+    internal string Outcome { get; }=outcome;
+    internal string? EvidenceJson { get; }=evidenceJson;
     internal bool KnownNoMutation { get; }=outcome is "rejected-before-operation" or "read-failed";
 }
 internal sealed class WorkerOutcomeState

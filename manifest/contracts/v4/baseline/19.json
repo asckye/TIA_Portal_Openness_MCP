@@ -1,0 +1,4356 @@
+{
+  "profile": "plc-foundation",
+  "release": "19",
+  "tools": [
+    {
+      "descriptionSha256": "73bb3c2851afd55b56a820e1ade3faa48723469c5ed8161989e5ece80efcd1bc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedProjectFile": {
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "projectName": {
+            "description": "Exact foundation argument: projectName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectName",
+          "expectedProjectFile"
+        ],
+        "type": "object"
+      },
+      "name": "AttachOpenProject"
+    },
+    {
+      "descriptionSha256": "8f88b2bfb68befe9ce1e1d627ceb99acd5fa0128ae06e4e76b57ed1ff0c7e3d9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "flgNet": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "callName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "parameters": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "dataType": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "section": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "sourceKind": {
+                          "enum": [
+                            "global",
+                            "local"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "symbolPath": {
+                          "items": {
+                            "maxLength": 4096,
+                            "minLength": 0,
+                            "pattern": "\\S",
+                            "type": "string"
+                          },
+                          "maxItems": 1000,
+                          "minItems": 0,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "section",
+                        "dataType",
+                        "symbolPath"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "constantValue": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "dataType": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "section": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "sourceKind": {
+                          "enum": [
+                            "constant"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "section",
+                        "dataType",
+                        "sourceKind",
+                        "constantValue"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "callName",
+              "parameters"
+            ],
+            "type": "object"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "flgNet",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildFlgNetCall"
+    },
+    {
+      "descriptionSha256": "d70f6af1d5ab4097053c883e72cad655ed467b2591f341ec9ca9f190fa41b819",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fbBlock": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "blockName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "blockNumber": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "commentZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "inouts": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "inputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "networkCommentZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "networkTitleZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "outputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "statics": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "structuredText": {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "firstUid": {
+                    "maximum": 2147483647,
+                    "minimum": -2147483648,
+                    "type": "integer"
+                  },
+                  "operations": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "assign"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "target": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "target",
+                                "source"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "literalValue": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "assign"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "target": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "target",
+                                "literalValue"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "condition": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "if",
+                                "elsif"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "condition"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "else",
+                                "endif"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "op": {
+                              "enum": [
+                                "symbol",
+                                "global",
+                                "local"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "literal"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "value": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "value"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "token"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "text": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "text"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "count": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "blank"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "op": {
+                              "enum": [
+                                "newline"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "items": {
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "sym": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "sym"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "token": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "token"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "lit": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "lit"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "raw": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "raw"
+                                    ],
+                                    "type": "object"
+                                  }
+                                ]
+                              },
+                              "maxItems": 1000,
+                              "minItems": 0,
+                              "type": "array"
+                            },
+                            "op": {
+                              "enum": [
+                                "line"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "items"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "operations"
+                ],
+                "type": "object"
+              },
+              "temps": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "titleZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [
+              "blockName",
+              "blockNumber",
+              "structuredText"
+            ],
+            "type": "object"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "fbBlock",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcFbBlock"
+    },
+    {
+      "descriptionSha256": "ae81db676c343c1b163dbc422700ff80e3c242389e832567c1c1577cd85333f8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fcBlock": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "blockName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "blockNumber": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "commentZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "inputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "networkCommentZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "networkTitleZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "outputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "structuredText": {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "firstUid": {
+                    "maximum": 2147483647,
+                    "minimum": -2147483648,
+                    "type": "integer"
+                  },
+                  "operations": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "assign"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "target": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "target",
+                                "source"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "literalValue": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "assign"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "target": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "target",
+                                "literalValue"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "condition": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "if",
+                                "elsif"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "condition"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "else",
+                                "endif"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "op": {
+                              "enum": [
+                                "symbol",
+                                "global",
+                                "local"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "literal"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "value": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "value"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "token"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "text": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "text"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "count": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "blank"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "op": {
+                              "enum": [
+                                "newline"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "items": {
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "sym": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "sym"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "token": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "token"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "lit": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "lit"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "minProperties": 0,
+                                    "properties": {
+                                      "raw": {
+                                        "maxLength": 4096,
+                                        "minLength": 0,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "raw"
+                                    ],
+                                    "type": "object"
+                                  }
+                                ]
+                              },
+                              "maxItems": 1000,
+                              "minItems": 0,
+                              "type": "array"
+                            },
+                            "op": {
+                              "enum": [
+                                "line"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "items"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "operations"
+                ],
+                "type": "object"
+              },
+              "titleZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [
+              "blockName",
+              "blockNumber",
+              "inputs",
+              "outputs",
+              "structuredText"
+            ],
+            "type": "object"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "fcBlock",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcFcBlock"
+    },
+    {
+      "descriptionSha256": "caf5f68bb7deb53db06da7f2b7f75d89c68145c3752a628a0ac34e4d96969bca",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "globalDb": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "dbName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "dbNumber": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "staticMembers": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "externalWritable": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "startValue": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "externalWritable": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "startValue": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "dbName",
+              "dbNumber",
+              "staticMembers"
+            ],
+            "type": "object"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit candidate output release; independent of host selection. GlobalDB supports 14sp1, 15.1 and 16-21; StructuredText remains V21 only. No XML conversion.",
+            "enum": [
+              "14sp1",
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "globalDb",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcGlobalDb"
+    },
+    {
+      "descriptionSha256": "2a578ce55391684d9d16548ef0c3a993303f9d529df03c76c9e6f1d53151ca34",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ladFcBlock": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "blockName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "blockNumber": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "commentZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              },
+              "inputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "networks": {
+                "items": {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "call": {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "callName": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "parameters": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "dataType": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "section": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "sourceKind": {
+                                    "enum": [
+                                      "global",
+                                      "local"
+                                    ],
+                                    "minLength": 0,
+                                    "type": "string"
+                                  },
+                                  "symbolPath": {
+                                    "items": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    },
+                                    "maxItems": 1000,
+                                    "minItems": 0,
+                                    "type": "array"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "section",
+                                  "dataType",
+                                  "symbolPath"
+                                ],
+                                "type": "object"
+                              },
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "constantValue": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "type": "string"
+                                  },
+                                  "dataType": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "section": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "sourceKind": {
+                                    "enum": [
+                                      "constant"
+                                    ],
+                                    "minLength": 0,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "section",
+                                  "dataType",
+                                  "sourceKind",
+                                  "constantValue"
+                                ],
+                                "type": "object"
+                              }
+                            ]
+                          },
+                          "maxItems": 1000,
+                          "minItems": 0,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "callName",
+                        "parameters"
+                      ],
+                      "type": "object"
+                    },
+                    "commentZhCn": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "titleZhCn": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "call"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "outputs": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "titleZhCn": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [
+              "blockName",
+              "blockNumber",
+              "networks"
+            ],
+            "type": "object"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "ladFcBlock",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcLadFcBlock"
+    },
+    {
+      "descriptionSha256": "c900081e140954363e6c2ca35c9a35de4dd5c856574a41d684bba38ff187b9ad",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedOrigin": {
+            "description": "Required caller attestation of snapshot ownership and immutability during the read; not authentication or proof of export provenance.",
+            "enum": [
+              "caller-owned-immutable-export-snapshot"
+            ],
+            "type": "string"
+          },
+          "files": {
+            "description": "Exact slash-separated relative XML file paths. No traversal, globbing, case aliases or recursive discovery. <=1 MiB/file, <=8 MiB total.",
+            "items": {
+              "maxLength": 512,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "type": "array"
+          },
+          "inputRoot": {
+            "description": "Existing absolute caller-owned immutable snapshot directory; no root directory or symlink/reparse-point ancestry.",
+            "maxLength": 4096,
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputRoot",
+          "files",
+          "expectedOrigin"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcSymbolManifestFromPath"
+    },
+    {
+      "descriptionSha256": "4cd762edad8356bc153b4c37a736c03ae8a4ff27fced459a4659a35fbf3051c5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "outputReleaseKey": {
+            "description": "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          },
+          "tagTable": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "tableName": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "tags": {
+                "items": {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "dataTypeName": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "logicalAddress": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "dataTypeName",
+                    "logicalAddress"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "tableName",
+              "tags"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "tagTable",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcTagTable"
+    },
+    {
+      "descriptionSha256": "b6f6ed14799b20734b24d0d2c74bc044fe9b8eb8c6d74a27de577edd40c9db63",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "outputReleaseKey": {
+            "description": "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate.",
+            "enum": [
+              "14sp1",
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "type": "string"
+          },
+          "udt": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "members": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "comment": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "externalWritable": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "commentZhCn": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "datatype": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "externalWritable": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "datatype"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              },
+              "name": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [
+              "members"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "udt",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcUdt"
+    },
+    {
+      "descriptionSha256": "7a78207538e77cca941010665df6c9a3b394fc803aebe14d64199d5c474c2df9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "innerOnly": {
+            "default": false,
+            "description": "Return inner XML in StructuredText/v4 namespace context instead of the enclosing StructuredText element.",
+            "type": "boolean"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit candidate output release; independent of host selection. GlobalDB supports 14sp1, 15.1 and 16-21; StructuredText remains V21 only. No XML conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          },
+          "structuredText": {
+            "additionalProperties": false,
+            "minProperties": 0,
+            "properties": {
+              "firstUid": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "operations": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "op": {
+                              "enum": [
+                                "assign"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "source": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "target": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "target",
+                            "source"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "indent": {
+                              "maximum": 2147483647,
+                              "minimum": -2147483648,
+                              "type": "integer"
+                            },
+                            "literalValue": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "op": {
+                              "enum": [
+                                "assign"
+                              ],
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "target": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "op",
+                            "target",
+                            "literalValue"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "condition": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "op": {
+                          "enum": [
+                            "if",
+                            "elsif"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op",
+                        "condition"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "op": {
+                          "enum": [
+                            "else",
+                            "endif"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "op": {
+                          "enum": [
+                            "symbol",
+                            "global",
+                            "local"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "op": {
+                          "enum": [
+                            "literal"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "value": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "op": {
+                          "enum": [
+                            "token"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "text": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op",
+                        "text"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "count": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "op": {
+                          "enum": [
+                            "blank"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "newline"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "indent": {
+                          "maximum": 2147483647,
+                          "minimum": -2147483648,
+                          "type": "integer"
+                        },
+                        "items": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "sym": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "sym"
+                                ],
+                                "type": "object"
+                              },
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "token": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "token"
+                                ],
+                                "type": "object"
+                              },
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "lit": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "lit"
+                                ],
+                                "type": "object"
+                              },
+                              {
+                                "additionalProperties": false,
+                                "minProperties": 0,
+                                "properties": {
+                                  "raw": {
+                                    "maxLength": 4096,
+                                    "minLength": 0,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "raw"
+                                ],
+                                "type": "object"
+                              }
+                            ]
+                          },
+                          "maxItems": 1000,
+                          "minItems": 0,
+                          "type": "array"
+                        },
+                        "op": {
+                          "enum": [
+                            "line"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "op",
+                        "items"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxItems": 1000,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "operations"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "structuredText",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildStructuredText"
+    },
+    {
+      "descriptionSha256": "9729d6fc9085302435d3036caf8d3ad2bafe276f4a913e54195ea793f350fd8e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "CloseProject"
+    },
+    {
+      "descriptionSha256": "5d8e1f45eae8d0efc8120e3d0e305e9e8076e87a655cb8a840ad8f8bc95fdb51",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "Exact foundation argument: password",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompilePlcDiagnostics"
+    },
+    {
+      "descriptionSha256": "d1874332c1d272f0d974e1ec088b7920d9faca6f5c3fcbe1bec78c87295944ab",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "Exact foundation argument: password",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompilePlcSoftware"
+    },
+    {
+      "descriptionSha256": "b532af353e204f185187a720eac0e9093de735db0a495ffdf21d9e58490fb16f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "processId": {
+            "description": "Exact foundation argument: processId",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "processId"
+        ],
+        "type": "object"
+      },
+      "name": "ConnectPortal"
+    },
+    {
+      "descriptionSha256": "4cdc84d9e525ea4fdd34dfbd1b748233223d9d0dfbcda40d970099ff50d5fe63",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "deviceName": {
+            "description": "Exact foundation argument: deviceName",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "family": {
+            "default": "S7-1500",
+            "description": "Exact foundation argument: family",
+            "type": "string"
+          },
+          "preferredMlfb": {
+            "description": "Exact foundation argument: preferredMlfb",
+            "type": "string"
+          },
+          "preferredVersion": {
+            "description": "Exact foundation argument: preferredVersion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preferredMlfb",
+          "preferredVersion",
+          "deviceName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateHardwareDevice"
+    },
+    {
+      "descriptionSha256": "a9880270f1f2159581fcf2b834859c40f7e8758d74333e5f6469df6f37cbf9c5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "description": "Exact foundation argument: address",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dataType": {
+            "description": "Exact foundation argument: dataType",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table",
+          "name",
+          "dataType",
+          "address"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcTag"
+    },
+    {
+      "descriptionSha256": "fa9ebda5da626e0f9cfb5f10188ce4323794220bff98d708780e0c51c4da09f9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "group": {
+            "description": "Exact foundation argument: group",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "group",
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcTagTable"
+    },
+    {
+      "descriptionSha256": "9a0e9a3af8b81d5e4faba053f3f8a729a373d01c46b74654a40f6296ac34c0da",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dataType": {
+            "description": "Exact foundation argument: dataType",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          },
+          "value": {
+            "description": "Exact foundation argument: value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table",
+          "name",
+          "dataType",
+          "value"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcUserConstant"
+    },
+    {
+      "descriptionSha256": "9d2068ed49234d06f163be737d8f3a94abbe1e139208b9a8904a0fd69d2463a9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "directoryPath": {
+            "description": "Exact foundation argument: directoryPath",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "projectName": {
+            "description": "Exact foundation argument: projectName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directoryPath",
+          "projectName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateProject"
+    },
+    {
+      "descriptionSha256": "5452edf554f742dd1fb78af2e6a05884d0fcbd238d57ab328d3610a6325007e2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "externalSourceName": {
+            "description": "Exact foundation argument: externalSourceName",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "externalSourceName"
+        ],
+        "type": "object"
+      },
+      "name": "DeletePlcExternalSource"
+    },
+    {
+      "descriptionSha256": "27cbd610137b12ad0cf00e6d8f7550f15feb0c9f4923317d29f22c4e3900f6b3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "DisconnectPortal"
+    },
+    {
+      "descriptionSha256": "859d7117295654294b387e7eda69439e8d7c10c546deb237b880e080fe51074a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact foundation argument: blockPath",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "Exact foundation argument: preservePath",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcBlock"
+    },
+    {
+      "descriptionSha256": "31362c187557700579a972ad9455cb905ead55c69d43d8672279ec278a02c3b3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedInventoryHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedInventoryHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": false,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcBlocks"
+    },
+    {
+      "descriptionSha256": "86ba7802b603e27b7da200c0a434f9410bbc6aa1051848c78ba0b0dc480b3618",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "Exact foundation argument: tagTableName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcTagTable"
+    },
+    {
+      "descriptionSha256": "fab351187e2e4ded380b259c8c4c57160dc60dd3d17928c849c5c29a76fceb0d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "Exact foundation argument: preservePath",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "Exact foundation argument: typePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath",
+          "typePath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcType"
+    },
+    {
+      "descriptionSha256": "cffb4e9d08e192df77dd6ce8bf704c0134bc50a76be4630211d1ee396cb72e6c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedInventoryHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedInventoryHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": false,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcTypes"
+    },
+    {
+      "descriptionSha256": "955667a1a4787809ba6855b42e61bd1f48fe7f31fb121f5237ae9a89bc01e07a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "watchTableName": {
+            "description": "Exact foundation argument: watchTableName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "watchTableName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcWatchTable"
+    },
+    {
+      "descriptionSha256": "cee59219f29fb8b7a0c1686052f1344ba61db5be7ad04122ee9a2298bb17d72d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "toName": {
+            "description": "Exact foundation argument: toName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "toName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportTechnologyObject"
+    },
+    {
+      "descriptionSha256": "012119a28814618d1f6d66df31ea4605cdea111d9f00426d99dce29feff66cb8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "externalSourceName": {
+            "description": "Exact foundation argument: externalSourceName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "externalSourceName"
+        ],
+        "type": "object"
+      },
+      "name": "GenerateBlocksFromExternalSource"
+    },
+    {
+      "descriptionSha256": "8f2c141cd38f7a74da8869e92738874b8e5599cb84f533b7d6fe631ad279a34d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcBlockHierarchy"
+    },
+    {
+      "descriptionSha256": "5ab0ee9ec058c152675acad8ea9110737cf261d980b3f9519a12d9a73f66059a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact foundation argument: blockPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcBlockInfo"
+    },
+    {
+      "descriptionSha256": "f309b68a5e1e5f614948409603993363182678b9d1dc18c3dccc79f0ea8178ad",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "Exact foundation argument: typePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "typePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcTypeInfo"
+    },
+    {
+      "descriptionSha256": "9452c27a1a7dea252d46cf1d767e0a987b448834a6121ac5a017c8a30de363bb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "processId": {
+            "description": "Exact foundation argument: processId",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "processId"
+        ],
+        "type": "object"
+      },
+      "name": "GetPortalConnectionReadiness"
+    },
+    {
+      "descriptionSha256": "fdde66b749f68030ade532c9587db197e1f81ebe6bd1333c2f3b2fb76256dcbd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetProjectInfo"
+    },
+    {
+      "descriptionSha256": "9b1fa05b840f7cd9783083485da854c7ade5480fe2e587ef498abcef36bc3f7d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetProjectTree"
+    },
+    {
+      "descriptionSha256": "39d408b77645519f948e579f801779279b947774977126744c2199ddb9df4d87",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetSessionState"
+    },
+    {
+      "descriptionSha256": "7b17fe6899d9446f794a85d3e8bf97523f0ee5e7cbe084789cb3644e83410390",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetSoftwareInfo"
+    },
+    {
+      "descriptionSha256": "97d12daf8985b2f3962ea52f3b408963eeb0abfce98a4adb4139b219e848dd45",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetSoftwareTree"
+    },
+    {
+      "descriptionSha256": "a2476ec8bff2bef1e69d466153a51094b1f7bac9389adfa9348ac32e970f4743",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "documentId": {
+            "default": "",
+            "description": "Exact reference ID from a tool's officialReference.documents or search.",
+            "type": "string"
+          },
+          "exampleId": {
+            "default": "",
+            "description": "Exact example ID; reads complete files or steps with release requirements.",
+            "type": "string"
+          },
+          "exampleKind": {
+            "default": "all",
+            "enum": [
+              "all",
+              "sequence",
+              "language"
+            ],
+            "type": "string"
+          },
+          "language": {
+            "default": "",
+            "description": "Programming language/format from the library, e.g. scl or udt.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 80,
+            "maximum": 200,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "operation": {
+            "default": "",
+            "description": "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead.",
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "description": "Words to search in official source text.",
+            "type": "string"
+          },
+          "toolName": {
+            "default": "",
+            "description": "Exact available tool name. Do not combine with query or documentId.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetToolUsage"
+    },
+    {
+      "descriptionSha256": "cfda8b0c4547f1720d29f13581779aaa6b3ecc707e53d5a593bd42f51d8ffbab",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcBlock"
+    },
+    {
+      "descriptionSha256": "ca0b59ef21b7c92988cbed248ed93b0a515519ff3e341fa1d812a41aec7b1ba0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dir": {
+            "description": "Exact foundation argument: dir",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importOrder": {
+            "default": [],
+            "description": "Exact foundation argument: importOrder",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcBlocksFromDirectory"
+    },
+    {
+      "descriptionSha256": "8c28f35f52df50f5ff3e48e8606e57f18d6e86ca5947c9ba7c453c1862aafa5b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "filePath": {
+            "description": "Exact foundation argument: filePath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcExternalSource"
+    },
+    {
+      "descriptionSha256": "f4643075c55d7e6da6783f3259f135c7d999afd11e7414ec202d5bf0d7e577ac",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockGroupPath": {
+            "default": "",
+            "description": "Exact foundation argument: blockGroupPath",
+            "type": "string"
+          },
+          "compileAfter": {
+            "default": false,
+            "description": "Exact foundation argument: compileAfter",
+            "type": "boolean"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "importOrder": {
+            "default": [],
+            "description": "Exact foundation argument: importOrder",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "sourceDir": {
+            "description": "Exact foundation argument: sourceDir",
+            "type": "string"
+          },
+          "stopOnImportFailure": {
+            "default": true,
+            "description": "Exact foundation argument: stopOnImportFailure",
+            "type": "boolean"
+          },
+          "tagFolderPath": {
+            "default": "",
+            "description": "Exact foundation argument: tagFolderPath",
+            "type": "string"
+          },
+          "technologyFolderPath": {
+            "default": "",
+            "description": "Exact foundation argument: technologyFolderPath",
+            "type": "string"
+          },
+          "typeGroupPath": {
+            "default": "",
+            "description": "Exact foundation argument: typeGroupPath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "sourceDir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcProgramFromDirectory"
+    },
+    {
+      "descriptionSha256": "d18d0cb028807c66f302827444b79a861dd24cf1081570c73bbaf14fcdb444fd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "Exact foundation argument: folderPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcTagTable"
+    },
+    {
+      "descriptionSha256": "f7f558e0cefce5214ee3ea17eee9ae74b2aa5fe090c2eac566e867624eda76a3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcType"
+    },
+    {
+      "descriptionSha256": "b9bff2fa4d1bb21f62380aa6f0fac1426a45f6a91e4d42a9490552d3c1d5d166",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "InitializeEnvironment"
+    },
+    {
+      "descriptionSha256": "1b8b9b262e11f058ddc4801dec94c57bb1328a794f69faa1a0251b063c9985e1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcBlocks"
+    },
+    {
+      "descriptionSha256": "f68ae0f74c5e6f98b8e98fce73591ead7fb108427a5052d921e44dd871f750dd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcExternalSources"
+    },
+    {
+      "descriptionSha256": "7ebac435e6ad941eea66e599e7d60a281c19d6e0ef947475ceeba54692c678b5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcSystemConstants"
+    },
+    {
+      "descriptionSha256": "967a8ab708d801007ab94cc489ae0e83c16f3fd69a4c072dcda0ceaf2330f8a8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcTagTables"
+    },
+    {
+      "descriptionSha256": "589247ecde784f8b3bdd98487b88f270c26249fd1848c083a1b317c375d21fa2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcTags"
+    },
+    {
+      "descriptionSha256": "56bc7e05220feb9a39459ebac7b51d636617762e20d8bdc2cf747f522248f832",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcTypes"
+    },
+    {
+      "descriptionSha256": "af7b8332b829ecd6b57371797d915f59ea11b3bbe3e0dfba976aed88bd701ddd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcUserConstants"
+    },
+    {
+      "descriptionSha256": "d6b8c70938473049386b616b936e63a163ca7d1bbe141a45dfaee0bcec596b8a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcWatchTables"
+    },
+    {
+      "descriptionSha256": "8ea291d187aa8c1e6848ae564e5a73a8c78fac16b2e641be088b2341590ce3e9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "ListPortalProcessProjects"
+    },
+    {
+      "descriptionSha256": "7520f28f29e7d5e06edaa4b84326da5798491c4eccd5cf9bb026693e7c396a91",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListTechnologyObjects"
+    },
+    {
+      "descriptionSha256": "fe0998f301d141758417803831f556e25dbb3c8f5282523775b1767ffa96cd01",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "path": {
+            "description": "Exact foundation argument: path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "OpenProject"
+    },
+    {
+      "descriptionSha256": "32ec3feb22dc510ee9911a9ffb68ddfeced06130b97fb5642f4a3e39776dc721",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "dependencies": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "maxItems": 256,
+                  "minItems": 0,
+                  "type": "array"
+                },
+                "id": {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "priority": {
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer"
+                },
+                "target": {
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "type": "object"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "artifacts"
+        ],
+        "type": "object"
+      },
+      "name": "PlanArtifactImportOrder"
+    },
+    {
+      "descriptionSha256": "380e67b48e44488bfa4b3d12551f330d343bf686e31e5f2676af861db5a0fa32",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "allowedFilePath": {
+            "description": "Exact foundation argument: allowedFilePath",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "filePath": {
+            "description": "Exact foundation argument: filePath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "filePath",
+          "allowedFilePath"
+        ],
+        "type": "object"
+      },
+      "name": "PlanPlcExternalSourceImport"
+    },
+    {
+      "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "connectIfNeeded": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeProjectTree": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "inspectPortalProcesses": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "RunCapabilitySelfTest"
+    },
+    {
+      "descriptionSha256": "9303ff80e27042c2b0020bf1d65f41bf0780b30043bc9cae2e4097c32f0ea110",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "SaveProject"
+    },
+    {
+      "descriptionSha256": "300560b5fc5b62eeb2f5e03fbf623f97e88807b646852679ef9e3d841c59faad",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {
+            "description": "Exact foundation argument: keyword",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Exact foundation argument: limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "keyword"
+        ],
+        "type": "object"
+      },
+      "name": "SearchHardwareCatalog"
+    }
+  ]
+}

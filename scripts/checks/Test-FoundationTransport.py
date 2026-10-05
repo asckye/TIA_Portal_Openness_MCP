@@ -88,7 +88,11 @@ class Http:
 def tool(client, name, args=None):
     result = client.call('tools/call', {'name': name, 'arguments': args or {}})
     assert not result.get('isError'), result
-    return json.loads(result['content'][0]['text'])
+    body = json.loads(result['content'][0]['text'])
+    assert body == result['structuredContent']
+    assert body['schemaVersion'] == 4 and body['ok'] and body['error'] is None
+    assert body['meta']['tool'] == name and body['meta']['outcome'] == 'succeeded'
+    return body
 
 
 def exercise(client, key, logfile, expected_before):
@@ -96,21 +100,39 @@ def exercise(client, key, logfile, expected_before):
     assert 'GetToolUsage' in initialized.get('instructions', '')
     tools = client.call('tools/list', {})['tools']
     names = {t['name'] for t in tools}
-    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key))
-    assert {'Connect', 'Disconnect', 'GetProjectTree', 'PlanArtifactImportOrder'} <= names
-    assert ('GetPlcWatchTables' in names) == (key != '14sp1')
+    def usage_call(name, args):
+        body = tool(client, name, args)
+        if name == 'PlanArtifactImportOrder':
+            return {'Valid': body['data']['valid'], 'Order': body['data']['order']}
+        return body
+    USAGE_REPORTS.append(check_usage(usage_call, tools, key))
+    assert 'CallTool' not in names and 'Bootstrap' not in names and 'Connect' not in names
+    for name in names:
+        refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})
+        body = json.loads(refused['content'][0]['text'])
+        assert refused['isError'] and body == refused['structuredContent']
+        assert body['meta']['outcome'] == 'rejected-before-operation' and body['meta']['execution'] == 'not-started'
+        assert body['error']['code'] == 'INVALID_ARGUMENT'
+    for name in ('BuildPlcUdt', 'BuildPlcGlobalDb', 'BuildPlcTagTable', 'BuildStructuredText',
+                 'BuildFlgNetCall', 'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock'):
+        usage = tool(client, 'GetToolUsage', {'toolName': name})['data']
+        built = tool(client, name, usage['example']['request']['params']['arguments'])
+        assert built['data']['xml'] and not built['data']['schemaValidated'] and not built['data']['importValidated']
+        assert any(w['code'] == 'CANDIDATE_ONLY' for w in built['meta']['warnings'])
+    assert {'ConnectPortal', 'DisconnectPortal', 'GetProjectTree', 'PlanArtifactImportOrder'} <= names
+    assert ('ListPlcWatchTables' in names) == (key != '14sp1')
     assert ('SearchHardwareCatalog' in names) == (key == '19')
     assert 'ExportAsDocuments' not in names
-    tool(client, 'Bootstrap')
-    plan = tool(client, 'PlanArtifactImportOrder', {'artifactsJson': json.dumps([{'Id': 'FB_生产', 'Dependencies': ['UDT_数据']}, {'Id': 'UDT_数据'}])})
-    assert plan['Valid'] and plan['Order'] == ['UDT_数据', 'FB_生产'], plan
-    cycle = tool(client, 'PlanArtifactImportOrder', {'artifactsJson': '[{"Id":"A","Dependencies":["A"]}]'})
-    assert not cycle['Valid'] and not cycle['Order']
+    tool(client, 'InitializeEnvironment')
+    plan = tool(client, 'PlanArtifactImportOrder', {'artifacts': [{'id': 'FB_生产', 'dependencies': ['UDT_数据']}, {'id': 'UDT_数据'}]})['data']
+    assert plan['valid'] and plan['order'] == ['UDT_数据', 'FB_生产'], plan
+    cycle = client.call('tools/call', {'name': 'PlanArtifactImportOrder', 'arguments': {'artifacts': [{'id': 'A', 'dependencies': ['A']}]}})
+    assert cycle['isError'] and json.loads(cycle['content'][0]['text'])['error']['code'] == 'INVALID_ARGUMENT'
     assert len(logfile.read_text('utf-8').splitlines()) == expected_before if logfile.exists() else expected_before == 0
-    attached = tool(client, 'Connect', {'processId': 31415})
+    attached = tool(client, 'ConnectPortal', {'processId': 31415})
     assert '31415' in json.dumps(attached)
     assert '生产线' in json.dumps(tool(client, 'GetProjectTree'), ensure_ascii=False)
-    assert tool(client, 'Disconnect')['WorkerAcknowledged'] is True
+    assert tool(client, 'DisconnectPortal')['data']['workerAcknowledged'] is True
     client.close()
     return len(names)
 
@@ -120,6 +142,7 @@ def main():
     parser.add_argument('--fixture', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
+    parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
@@ -130,7 +153,7 @@ def main():
         for key in KEYS:
             logfile = temp / f'{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
-            command = [str(ROOT / f'runtime/v{key}/TiaMcpServer.exe'), '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcpServer.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
             with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
                 client = Stdio(command, env, stderr)
                 try:
@@ -149,52 +172,53 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        with socket.socket() as port:
-            port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
-        url = f'http://127.0.0.1:{number}'
-        logfile = temp / 'http.jsonl'
-        env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
-        command = [str(ROOT / 'runtime/v19/TiaMcpServer.exe'), '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
-        with (args.output / 'http.log').open('w', encoding='utf-8') as stderr:
-            p = subprocess.Popen(command, env=env, stderr=stderr, stdout=stderr)
-            try:
-                first, second = Http(url), Http(url)
-                # Hosted runners can start the host slowly; an early exit fails at once with the host log.
-                deadline = time.monotonic() + 60
-                while True:
-                    try:
-                        with first.request('/mcp/health', auth=False) as response:
-                            assert json.load(response)['releaseKey'] == '19'
-                        break
-                    except urllib.error.URLError:
-                        if p.poll() is not None or time.monotonic() >= deadline:
-                            stderr.flush()
-                            log = (args.output / 'http.log').read_text('utf-8', errors='replace')[-4000:]
-                            raise AssertionError(f'HTTP host not listening (exit={p.poll()}): {log}')
-                        time.sleep(.1)
+        for key in KEYS:
+            with socket.socket() as port:
+                port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
+            url = f'http://127.0.0.1:{number}'
+            logfile = temp / f'http-{key}.jsonl'
+            env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
+            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcpServer.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
+            with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
+                p = subprocess.Popen(command, env=env, stderr=stderr, stdout=stderr)
                 try:
-                    first.request('/mcp/ready', auth=False)
-                    raise AssertionError('Unauthenticated readiness accepted')
-                except urllib.error.HTTPError as error:
-                    assert error.code == 401
-                with first.request('/mcp/ready') as response:
-                    assert json.load(response)['mcpHostReady']
-                exercise(first, '19', logfile, 0)
-                # Wait for session deletion to close the first synthetic child.
-                deadline = time.monotonic() + 10
-                while '"exit"' not in logfile.read_text('utf-8'):
-                    assert time.monotonic() < deadline
-                    time.sleep(.05)
-                exercise(second, '19', logfile, len(logfile.read_text('utf-8').splitlines()))
-                assert first.sid and second.sid and first.sid != second.sid
-                starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
-                assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
-                assert starts[0]['args'][3] != starts[1]['args'][3]
-            finally:
-                p.terminate(); p.wait(10)
+                    first, second = Http(url), Http(url)
+                    # Hosted runners can start the host slowly; an early exit fails at once with the host log.
+                    deadline = time.monotonic() + 60
+                    while True:
+                        try:
+                            with first.request('/mcp/health', auth=False) as response:
+                                assert json.load(response)['releaseKey'] == key
+                            break
+                        except urllib.error.URLError:
+                            if p.poll() is not None or time.monotonic() >= deadline:
+                                stderr.flush()
+                                log = (args.output / f'http-{key}.log').read_text('utf-8', errors='replace')[-4000:]
+                                raise AssertionError(f'HTTP host not listening (exit={p.poll()}): {log}')
+                            time.sleep(.1)
+                    try:
+                        first.request('/mcp/ready', auth=False)
+                        raise AssertionError('Unauthenticated readiness accepted')
+                    except urllib.error.HTTPError as error:
+                        assert error.code == 401
+                    with first.request('/mcp/ready') as response:
+                        assert json.load(response)['mcpHostReady']
+                    exercise(first, key, logfile, 0)
+                    # Wait for session deletion to close the first synthetic child.
+                    deadline = time.monotonic() + 10
+                    while '"exit"' not in logfile.read_text('utf-8'):
+                        assert time.monotonic() < deadline
+                        time.sleep(.05)
+                    exercise(second, key, logfile, len(logfile.read_text('utf-8').splitlines()))
+                    assert first.sid and second.sid and first.sid != second.sid
+                    starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
+                    assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
+                    assert starts[0]['args'][3] != starts[1]['args'][3]
+                finally:
+                    p.terminate(); p.wait(10)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
-    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
-    print('PASS: six STDIO releases, two isolated HTTP sessions, dependency planning and Chinese worker roundtrip; native TIA NOT RUN')
+    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 12, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
+    print('PASS: six STDIO releases, twelve isolated HTTP sessions across six releases, dependency planning and Chinese worker roundtrip; native TIA NOT RUN')
 
 
 if __name__ == '__main__':

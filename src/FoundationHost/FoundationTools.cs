@@ -98,11 +98,17 @@ internal sealed class FoundationTool : McpServerTool
         tool=new Tool { Name=definition.Name, Description="[PLC foundation; native unverified] "+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
     public override Tool ProtocolTool=>tool;
-    public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
+    public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
+        => InvokeCoreAsync(request, cancellationToken);
+    internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)
+        => InvokeCoreAsync(request, cancellationToken, release, id);
+    private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken, string? release = null, string? id = null)
     {
+        bool dispatched = false;
+        var values = new JsonObject();
+        JsonNode? raw = null;
         try
         {
-            var values=new JsonObject();
             if(request.Params?.Arguments != null) foreach(var pair in request.Params.Arguments)
             {
                 var spec=definition.Arguments.SingleOrDefault(p=>p.Name==pair.Key) ?? throw new ArgumentException("Unknown/case-mismatched argument: "+pair.Key);
@@ -135,7 +141,9 @@ internal sealed class FoundationTool : McpServerTool
             if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.");
             if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.");
             cancellationToken.ThrowIfCancellationRequested();
+            dispatched = true;
             var result=await worker.Call(definition.Operation,values,cancellationToken);
+            raw = result?.DeepClone();
             if(definition.ResponseMember is "Connection" or "Projects" or "Bind" or "ProjectMutation" or "ProjectTree") result=V17ProjectEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]?.GetValue<bool>() ?? false);
             else if(definition.ResponseMember=="HardwareCatalog") result=HardwareCatalogContract.Validate(result,values);
             else if(definition.ResponseMember=="Disconnect") result=DisconnectContract.Validate(result);
@@ -157,8 +165,11 @@ internal sealed class FoundationTool : McpServerTool
             else if(definition.ResponseMember=="SupplementaryRead") result=SupplementaryReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember=="SoftwareRead") result=SoftwareReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember!=null) result=V17ReadEnvelope.Wrap(definition.Name,definition.ResponseMember,result);
+            if (release != null) return FoundationV4Result.Worker(release, definition, id!, values, raw, result);
             return new CallToolResult { Content=new List<ContentBlock>{new TextContentBlock { Text=result?.ToJsonString() ?? "null" }} };
         }
+        catch (Exception ex) when (release != null)
+        { return FoundationV4Result.Failure(release, FoundationV4Tool.Name(definition.Name), id!, dispatched, FoundationV4Result.IsMutation(definition, values), raw, ex); }
         catch(OperationCanceledException) { throw; }
         catch(McpException) { throw; }
         catch(Exception ex) when(definition.ResponseMember!=null)

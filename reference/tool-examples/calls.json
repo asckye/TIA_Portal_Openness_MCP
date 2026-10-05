@@ -13,7 +13,7 @@
   "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device.",
   "profiles": {
     "plc-foundation": {
-      "AddDeviceWithFallback": {
+      "CreateHardwareDevice": {
         "arguments": {
           "preferredMlfb": "6ES7513-1AM03-0AB0",
           "preferredVersion": "<exact catalog version>",
@@ -43,7 +43,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -52,21 +52,22 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "AttachToOpenProject": {
+      "AttachOpenProject": {
         "arguments": {
           "projectName": "Example",
           "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
@@ -76,43 +77,58 @@
             "meaning": "Supply projectName according to this tool description; values below refer to the example project."
           },
           "expectedProjectFile": {
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState.",
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState.",
             "exampleValue": "C:\\Examples\\Example.ap{extension}"
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "Bootstrap": {
+      "InitializeEnvironment": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationPassiveDiagnostic",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read checks.passed and probes. Probes marked not-probed cannot establish installed TIA, permission or native compatibility."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "BuildFlgNetCallXml": {
+      "BuildFlgNetCall": {
         "arguments": {
-          "flgNetJson": "{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "flgNet": {
+            "callName": "FC_Ready",
+            "parameters": [
+              {
+                "name": "Ready",
+                "section": "Output",
+                "dataType": "Bool",
+                "symbolPath": [
+                  "DB_Status",
+                  "Ready"
+                ]
+              }
+            ]
+          }
         },
         "parameters": {
-          "flgNetJson": {
-            "meaning": "Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md."
+          "flgNet": {
+            "meaning": "Typed flgNet value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -123,41 +139,32 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "BuildPlcGlobalDbXml": {
+      "BuildPlcGlobalDb": {
         "arguments": {
-          "globalDbJson": "{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}",
-          "outputReleaseKey": "{release}"
+          "outputReleaseKey": "{release}",
+          "globalDb": {
+            "dbName": "DB_Status",
+            "dbNumber": 10,
+            "staticMembers": [
+              {
+                "name": "Ready",
+                "datatype": "Bool",
+                "startValue": "FALSE"
+              }
+            ]
+          }
         },
         "parameters": {
-          "globalDbJson": {
-            "meaning": "JSON {dbName,dbNumber:positive integer,staticMembers:[{name,datatype,externalWritable?:boolean,commentZhCn?:string,startValue?:string}]}; flat members, 1..1000 rows, strings <=4096. Aliases documented in legacy-offline-composition-candidate.md."
+          "globalDb": {
+            "meaning": "Typed globalDb value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "exampleValue": "{release}",
@@ -169,34 +176,15 @@
         "executionTest": "offline-in-memory",
         "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "BuildPlcSymbolManifestFromXmlPath": {
+      "BuildPlcSymbolManifestFromPath": {
         "arguments": {
           "inputRoot": "C:\\Examples\\snapshot",
           "files": [
@@ -219,22 +207,32 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "BuildPlcTagTableXml": {
+      "BuildPlcTagTable": {
         "arguments": {
-          "tagTableJson": "{\"tableName\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "tagTable": {
+            "tableName": "ExampleTags",
+            "tags": [
+              {
+                "name": "Ready",
+                "dataTypeName": "Bool",
+                "logicalAddress": "%M0.0"
+              }
+            ]
+          }
         },
         "parameters": {
-          "tagTableJson": {
-            "meaning": "tagTableJson"
+          "tagTable": {
+            "meaning": "Typed tagTable value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -245,41 +243,31 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "BuildPlcUdtXml": {
+      "BuildPlcUdt": {
         "arguments": {
-          "udtJson": "{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}",
-          "outputReleaseKey": "{release}"
+          "outputReleaseKey": "{release}",
+          "udt": {
+            "name": "UDT_Status",
+            "members": [
+              {
+                "name": "Ready",
+                "datatype": "Bool",
+                "comment": "Ready state"
+              }
+            ]
+          }
         },
         "parameters": {
-          "udtJson": {
-            "meaning": "udtJson"
+          "udt": {
+            "meaning": "Typed udt value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "exampleValue": "{release}",
@@ -291,41 +279,30 @@
         "executionTest": "offline-in-memory",
         "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "BuildStructuredTextXml": {
+      "BuildStructuredText": {
         "arguments": {
-          "structuredTextJson": "{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "structuredText": {
+            "operations": [
+              {
+                "op": "assign",
+                "target": "#Ready",
+                "literalValue": "TRUE"
+              }
+            ]
+          }
         },
         "parameters": {
-          "structuredTextJson": {
-            "meaning": "JSON {firstUid?:1..1000000000,operations:[{op,...}]}; if/elsif/else/endif, assignment (target and exactly one source or value), token, blank, newline, global/local/symbol/literal, line items. 1..1000 rows; strings <=4096; no unknown, duplicate or conflicting fields. Candidate generation, not SCL validation."
+          "structuredText": {
+            "meaning": "Typed structuredText value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -340,31 +317,12 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
       "CloseProject": {
@@ -375,7 +333,7 @@
         "parameters": {
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -384,20 +342,21 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "CompileAndDiagnosePlc": {
+      "CompilePlcDiagnostics": {
         "arguments": {
           "softwarePath": "PLC_1",
           "dryRun": true,
@@ -414,7 +373,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -423,50 +382,22 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically.",
         "resultContract": {
-          "type": "FoundationCompileDiagnosis",
-          "fields": {
-            "message": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string|null"
-            },
-            "errorCount": {
-              "type": "integer|null"
-            },
-            "warningCount": {
-              "type": "integer|null"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "info": {
-              "type": "array"
-            },
-            "rawMessages": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Preview is not compilation. After execution inspect errors and rawMessages including nested diagnostics; do not sum overlapping native counts.",
-          "Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "CompileSoftware": {
+      "CompilePlcSoftware": {
         "arguments": {
           "softwarePath": "PLC_1",
           "dryRun": true,
@@ -483,7 +414,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -492,48 +423,48 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically.",
         "resultContract": {
-          "type": "FoundationCompile",
-          "fields": {
-            "message": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string|null"
-            },
-            "errorCount": {
-              "type": "integer|null"
-            },
-            "warningCount": {
-              "type": "integer|null"
-            },
-            "messages": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Preview has null counts/state and meta.executed=false. Actual success requires native state/counts and inspection of nested messages; summary counts overlap.",
-          "Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ComposePlcFbBlockXml": {
+      "BuildPlcFbBlock": {
         "arguments": {
-          "fbBlockJson": "{\"blockName\":\"FB_Ready\",\"blockNumber\":11,\"inputs\":[],\"outputs\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "fbBlock": {
+            "blockName": "FB_Ready",
+            "blockNumber": 11,
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "Ready",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "assign",
+                  "target": "#Ready",
+                  "literalValue": "TRUE"
+                }
+              ]
+            }
+          }
         },
         "parameters": {
-          "fbBlockJson": {
-            "meaning": "JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md."
+          "fbBlock": {
+            "meaning": "Typed fbBlock value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -544,41 +475,41 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "ComposePlcFcBlockXml": {
+      "BuildPlcFcBlock": {
         "arguments": {
-          "fcBlockJson": "{\"blockName\":\"FC_Ready\",\"blockNumber\":10,\"inputs\":[],\"outputs\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "fcBlock": {
+            "blockName": "FC_Ready",
+            "blockNumber": 10,
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "Ready",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "assign",
+                  "target": "#Ready",
+                  "literalValue": "TRUE"
+                }
+              ]
+            }
+          }
         },
         "parameters": {
-          "fcBlockJson": {
-            "meaning": "JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md."
+          "fcBlock": {
+            "meaning": "Typed fcBlock value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -589,41 +520,43 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "ComposePlcLadFcBlockXml": {
+      "BuildPlcLadFcBlock": {
         "arguments": {
-          "ladFcBlockJson": "{\"blockName\":\"FC_Lad\",\"blockNumber\":12,\"networks\":[{\"callJson\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "21",
+          "ladFcBlock": {
+            "blockName": "FC_Lad",
+            "blockNumber": 12,
+            "networks": [
+              {
+                "call": {
+                  "callName": "FC_Ready",
+                  "parameters": [
+                    {
+                      "name": "Ready",
+                      "section": "Output",
+                      "dataType": "Bool",
+                      "symbolPath": [
+                        "DB_Status",
+                        "Ready"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
         },
         "parameters": {
-          "ladFcBlockJson": {
-            "meaning": "Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md."
+          "ladFcBlock": {
+            "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
           },
           "outputReleaseKey": {
             "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
@@ -634,34 +567,15 @@
         "executionTest": "offline-in-memory",
         "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
         "resultContract": {
-          "type": "FoundationCandidateXml",
-          "fields": {
-            "xml": {
-              "type": "string"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "data": {
-              "type": "object"
-            },
-            "errors": {
-              "type": "array"
-            },
-            "warnings": {
-              "type": "array"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check generated XML and errors/warnings. meta.schemaValidated/importValidated are false; output remains a V21 candidate independently of the host."
+          "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics."
         ]
       },
-      "Connect": {
+      "ConnectPortal": {
         "arguments": {
           "processId": 12345
         },
@@ -673,31 +587,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationAttachment",
-          "fields": {
-            "message": {
-              "type": "string"
-            },
-            "stage": {
-              "type": "string"
-            },
-            "strategy": {
-              "type": "string"
-            },
-            "attemptedPids": {
-              "type": "array"
-            },
-            "launchMode": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Check stage=attached, attemptedPids and meta.ownsPortal=false. Binding an open project is a separate AttachToOpenProject call."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "CreatePlcTag": {
@@ -715,7 +611,7 @@
             "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from GetPlcTagTables."
+            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
           },
           "name": {
             "meaning": "Supply name according to this tool description; values below refer to the example project."
@@ -728,7 +624,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -737,17 +633,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "CreatePlcTagTable": {
@@ -770,7 +667,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -779,17 +676,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "CreatePlcUserConstant": {
@@ -807,7 +705,7 @@
             "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from GetPlcTagTables."
+            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
           },
           "name": {
             "meaning": "Supply name according to this tool description; values below refer to the example project."
@@ -820,7 +718,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -829,17 +727,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "CreateProject": {
@@ -858,7 +757,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -867,17 +766,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "DeletePlcExternalSource": {
@@ -905,7 +805,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -914,21 +814,22 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "DiagnosePortalConnectReadiness": {
+      "GetPortalConnectionReadiness": {
         "arguments": {
           "processId": 12345
         },
@@ -940,51 +841,31 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationProcessDiagnosis",
-          "fields": {
-            "ReleaseKey": {
-              "type": "string"
-            },
-            "ProcessId": {
-              "type": "integer"
-            },
-            "ProcessFound": {
-              "type": "boolean"
-            },
-            "Readiness": {
-              "type": "string"
-            },
-            "PermissionStatus": {
-              "type": "string"
-            },
-            "Reason": {
-              "type": "string"
-            },
-            "Process": {
-              "type": "object|null"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "ProcessFound does not mean ready: permission is not-probed and readiness remains unknown until explicit attachment."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "Disconnect": {
+      "DisconnectPortal": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ExportBlock": {
+      "ExportPlcBlock": {
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
@@ -1000,7 +881,7 @@
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "preservePath": {
             "exampleValue": false,
@@ -1008,7 +889,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1017,23 +898,24 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ],
         "releaseNotes": {
           "14sp1": "SCL XML contains only interfaces in this release; it is not a full SCL program backup or restore."
         }
       },
-      "ExportBlocks": {
+      "ExportPlcBlocks": {
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "Examples",
@@ -1049,7 +931,7 @@
             "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "recursive": {
             "exampleValue": false,
@@ -1066,7 +948,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1075,34 +957,19 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedInventoryHash": "<expectedInventoryHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationBatchExport",
-          "fields": {
-            "Executed": {
-              "type": "boolean"
-            },
-            "InventoryComplete": {
-              "type": "boolean"
-            },
-            "InventoryHash": {
-              "type": "string"
-            },
-            "Items": {
-              "type": "array"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Inspect every Items[].Status and OutputFile; inconsistent/failed/not-attempted is not complete export. Copy InventoryHash to expectedInventoryHash for apply."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ExportPlcTagTable": {
@@ -1121,11 +988,11 @@
             "meaning": "Supply tagTableName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1134,17 +1001,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ExportPlcWatchTable": {
@@ -1163,7 +1031,7 @@
             "meaning": "Supply watchTableName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "expectedPlanHash": {
             "exampleValue": "<expectedPlanHash from this same preview>",
@@ -1172,7 +1040,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1181,18 +1049,19 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ExportTechnologyObject": {
@@ -1211,7 +1080,7 @@
             "meaning": "Supply toName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "expectedPlanHash": {
             "exampleValue": "<expectedPlanHash from this same preview>",
@@ -1220,7 +1089,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1229,21 +1098,22 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ExportType": {
+      "ExportPlcType": {
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
@@ -1256,7 +1126,7 @@
             "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "typePath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=typePath."
@@ -1267,7 +1137,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1276,20 +1146,21 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ExportTypes": {
+      "ExportPlcTypes": {
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "Examples",
@@ -1305,7 +1176,7 @@
             "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportBlock/ExportType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
           },
           "recursive": {
             "exampleValue": false,
@@ -1322,7 +1193,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1331,37 +1202,22 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedInventoryHash": "<expectedInventoryHash from this preview>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationBatchExport",
-          "fields": {
-            "Executed": {
-              "type": "boolean"
-            },
-            "InventoryComplete": {
-              "type": "boolean"
-            },
-            "InventoryHash": {
-              "type": "string"
-            },
-            "Items": {
-              "type": "array"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Inspect every Items[].Status and OutputFile; inconsistent/failed/not-attempted is not complete export. Copy InventoryHash to expectedInventoryHash for apply."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetBlockInfo": {
+      "GetPlcBlockInfo": {
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main"
@@ -1377,31 +1233,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationObjectDetails",
-          "fields": {
-            "name": {
-              "type": "string"
-            },
-            "typeName": {
-              "type": "string"
-            },
-            "attributes": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read returned attributes and object identity; missing optional attributes do not imply zero/false."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetBlocks": {
+      "ListPlcBlocks": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1418,25 +1259,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetBlocksWithHierarchy": {
+      "GetPlcBlockHierarchy": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1448,25 +1280,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationHierarchy",
-          "fields": {
-            "root": {
-              "type": "object"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Traverse root including nested and empty user groups; select the returned exact relative paths."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetPlcExternalSources": {
+      "ListPlcExternalSources": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1478,25 +1301,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetPlcTagTables": {
+      "ListPlcTagTables": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1508,25 +1322,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetPlcWatchTables": {
+      "ListPlcWatchTables": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1538,46 +1343,28 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetProject": {
+      "GetProjectInfo": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "GetProjectTree": {
@@ -1586,22 +1373,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationProjectTree",
-          "fields": {
-            "message": {
-              "type": "string"
-            },
-            "tree": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read exact device/software identities from tree before selecting targets."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "GetSoftwareInfo": {
@@ -1616,28 +1394,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationSoftwareInfo",
-          "fields": {
-            "name": {
-              "type": "string"
-            },
-            "attributes": {
-              "type": "array"
-            },
-            "description": {
-              "type": "string|null"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Attributes are engineering metadata. Preserve value types and AccessMode; this is not online data."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "GetSoftwareTree": {
@@ -1652,64 +1415,31 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationSoftwareTree",
-          "fields": {
-            "tree": {
-              "type": "string"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use meta.paths[].objectPath as the value for its selectorParameter. This tree excludes system groups and software units."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetState": {
+      "GetSessionState": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationCachedState",
-          "fields": {
-            "ReleaseKey": {
-              "type": "string"
-            },
-            "IsAttached": {
-              "type": "boolean"
-            },
-            "ProcessId": {
-              "type": "integer|null"
-            },
-            "ProjectFile": {
-              "type": "string|null"
-            },
-            "OwnsProject": {
-              "type": "boolean"
-            },
-            "IsLocalSession": {
-              "type": "boolean"
-            },
-            "IdentityStatus": {
-              "type": "string"
-            },
-            "RuntimeConnectionStatus": {
-              "type": "string"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "IsAttached is cached; RuntimeConnectionStatus=not-probed is not live readiness. ProjectFile is the execution identity."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetTechnologyObjects": {
+      "ListTechnologyObjects": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1721,36 +1451,18 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationTechnologyMetadata",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "ok": {
-              "type": "boolean"
-            },
-            "softwarePath": {
-              "type": "string"
-            },
-            "count": {
-              "type": "integer"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "meta.unavailableAttributes lists unavailable optional metadata. Root-only through V18; V19 adds user groups. No live values."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "GetToolUsage": {
         "arguments": {
-          "toolName": "GetBlocks"
+          "toolName": "ListPlcBlocks"
         },
         "parameters": {
           "toolName": {
@@ -1788,15 +1500,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetTypeInfo": {
+      "GetPlcTypeInfo": {
         "arguments": {
           "softwarePath": "PLC_1",
           "typePath": "UDT_Status"
@@ -1812,31 +1525,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationObjectDetails",
-          "fields": {
-            "name": {
-              "type": "string"
-            },
-            "typeName": {
-              "type": "string"
-            },
-            "attributes": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read returned attributes and object identity; missing optional attributes do not imply zero/false."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "GetTypes": {
+      "ListPlcTypes": {
         "arguments": {
           "softwarePath": "PLC_1"
         },
@@ -1853,25 +1551,16 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationItems",
-          "fields": {
-            "items": {
-              "type": "array"
-            },
-            "message": {
-              "type": "string"
-            },
-            "meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read items together with scope/path metadata. Empty items is a successful empty inventory only when the call itself succeeds."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ImportBlock": {
+      "ImportPlcBlock": {
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "Examples",
@@ -1895,7 +1584,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1904,23 +1593,24 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ],
         "releaseNotes": {
           "14sp1": "SCL XML contains only interfaces in this release; it is not a full SCL program backup or restore."
         }
       },
-      "ImportBlocksFromDirectory": {
+      "ImportPlcBlocksFromDirectory": {
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "Examples",
@@ -1962,7 +1652,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -1971,7 +1661,7 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>",
             "importOrder": [
               "<all paths in reviewed dependency order>"
@@ -1980,37 +1670,13 @@
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationBatchImport",
-          "fields": {
-            "Executed": {
-              "type": "boolean"
-            },
-            "ProjectFile": {
-              "type": "string"
-            },
-            "SoftwarePath": {
-              "type": "string"
-            },
-            "PlanHash": {
-              "type": "string"
-            },
-            "Items": {
-              "type": "array"
-            },
-            "ImportedCount": {
-              "type": "integer"
-            },
-            "FailedCount": {
-              "type": "integer"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Items[].Status is planned/imported/failed/not-attempted. Inspect ReturnedObjects against Planned; partial results matter. Use PlanHash and reviewed RelativePath order for apply. RequiresSessionReset reports uncertain native outcome."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ImportPlcProgramFromDirectory": {
@@ -2079,7 +1745,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2088,7 +1754,7 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>",
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>",
             "expectedPlanHash": "<expectedPlanHash from this preview>",
             "importOrder": [
               "<all paths in reviewed dependency order>"
@@ -2097,37 +1763,13 @@
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationBatchImport",
-          "fields": {
-            "Executed": {
-              "type": "boolean"
-            },
-            "ProjectFile": {
-              "type": "string"
-            },
-            "SoftwarePath": {
-              "type": "string"
-            },
-            "PlanHash": {
-              "type": "string"
-            },
-            "Items": {
-              "type": "array"
-            },
-            "ImportedCount": {
-              "type": "integer"
-            },
-            "FailedCount": {
-              "type": "integer"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Items[].Status is planned/imported/failed/not-attempted. Inspect ReturnedObjects against Planned; partial results matter. Use PlanHash and reviewed RelativePath order for apply. RequiresSessionReset reports uncertain native outcome."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ImportPlcTagTable": {
@@ -2154,7 +1796,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2163,20 +1805,21 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ImportType": {
+      "ImportPlcType": {
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "Examples",
@@ -2200,7 +1843,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2209,17 +1852,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ListPortalProcessProjects": {
@@ -2228,22 +1872,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationProcessList",
-          "fields": {
-            "ReleaseKey": {
-              "type": "string"
-            },
-            "Processes": {
-              "type": "array"
-            },
-            "IdentityStrategy": {
-              "type": "string"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Processes use ProcessId, ProjectPath, SnapshotAcquisitionTime, OsStartTimeUtc and OsIdentityStatus. A metadata match does not prove attachment permission."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "OpenProject": {
@@ -2258,7 +1893,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2267,48 +1902,50 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "PlanArtifactImportOrder": {
         "arguments": {
-          "artifactsJson": "[{\"Id\":\"UDT_Status\"},{\"Id\":\"FB_Motor\",\"Dependencies\":[\"UDT_Status\"]}]"
+          "artifacts": [
+            {
+              "id": "UDT_Status"
+            },
+            {
+              "id": "FB_Motor",
+              "dependencies": [
+                "UDT_Status"
+              ]
+            }
+          ]
         },
         "parameters": {
-          "artifactsJson": {
-            "meaning": "artifactsJson"
+          "artifacts": {
+            "meaning": "Typed artifacts value with exact camelCase fields; see inputSchema."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "executionTest": "offline-in-memory",
         "resultContract": {
-          "type": "FoundationImportOrder",
-          "fields": {
-            "Valid": {
-              "type": "boolean"
-            },
-            "Order": {
-              "type": "array"
-            },
-            "Issues": {
-              "type": "array"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Valid describes only declared graph order. Dependencies are caller-supplied; this does not inspect files or import them."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "PlanPlcExternalSourceImport": {
@@ -2340,7 +1977,7 @@
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2350,15 +1987,16 @@
           "meaning": "This foundation tool plans only; no execution route is implemented."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ReadPlcSystemConstants": {
+      "ListPlcSystemConstants": {
         "arguments": {
           "plc": "PLC_1",
           "table": "Default tag table"
@@ -2368,22 +2006,23 @@
             "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from GetPlcTagTables."
+            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "The result is a PascalCase array. Value is a declaration address or constant source text, not a live PLC value.",
         "resultContract": {
-          "type": "FoundationDeclarations",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Top-level array with Name, DataType, Value. Tags Value is logical address; constants Value is raw declaration text, not an evaluated or live value."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ReadPlcTags": {
+      "ListPlcTags": {
         "arguments": {
           "plc": "PLC_1",
           "table": "Default tag table"
@@ -2393,22 +2032,23 @@
             "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from GetPlcTagTables."
+            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "The result is a PascalCase array. Value is a declaration address or constant source text, not a live PLC value.",
         "resultContract": {
-          "type": "FoundationDeclarations",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Top-level array with Name, DataType, Value. Tags Value is logical address; constants Value is raw declaration text, not an evaluated or live value."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
-      "ReadPlcUserConstants": {
+      "ListPlcUserConstants": {
         "arguments": {
           "plc": "PLC_1",
           "table": "Default tag table"
@@ -2418,19 +2058,20 @@
             "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from GetPlcTagTables."
+            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "The result is a PascalCase array. Value is a declaration address or constant source text, not a live PLC value.",
         "resultContract": {
-          "type": "FoundationDeclarations",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Top-level array with Name, DataType, Value. Tags Value is logical address; constants Value is raw declaration text, not an evaluated or live value."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "RunCapabilitySelfTest": {
@@ -2453,12 +2094,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationPassiveDiagnostic",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Read checks.passed and probes. Probes marked not-probed cannot establish installed TIA, permission or native compatibility."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "SaveProject": {
@@ -2469,7 +2111,7 @@
         "parameters": {
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
-            "meaning": "Copy the exact ProjectFile returned by this foundation GetState."
+            "meaning": "Copy the exact ProjectFile returned by this foundation GetSessionState."
           }
         },
         "operations": {},
@@ -2478,17 +2120,18 @@
           "arguments": {
             "dryRun": false,
             "confirm": true,
-            "expectedProjectFile": "<exact bound file returned by GetState>"
+            "expectedProjectFile": "<exact bound file returned by GetSessionState>"
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
         "resultContract": {
-          "type": "FoundationOperation",
-          "fields": {},
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact operation result and description. Preview/Executed=false is planning only; inspect affected identities, native outcome and any partial results before treating a mutation as complete."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "SearchHardwareCatalog": {
@@ -2507,25 +2150,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
-          "type": "FoundationHardwareCatalog",
-          "fields": {
-            "Keyword": {
-              "type": "string"
-            },
-            "Count": {
-              "type": "integer"
-            },
-            "Items": {
-              "type": "array"
-            },
-            "Meta": {
-              "type": "object"
-            }
-          },
-          "scope": "Selected fields of the foundation wire result; other operation fields may be present."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Inspect Meta.complete/truncated; Items contain exact ArticleNumber, TypeIdentifier and Version. A catalog match is not insertion compatibility."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "ImportPlcExternalSource": {
@@ -2571,81 +2202,13 @@
         },
         "note": "Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups. Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code. Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically.",
         "resultContract": {
-          "type": "FoundationExternalSourceWorkflow",
-          "fields": {
-            "Operation": {
-              "type": "string"
-            },
-            "Status": {
-              "type": "string"
-            },
-            "Attempted": {
-              "type": "boolean"
-            },
-            "Executed": {
-              "type": "boolean"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            },
-            "Error": {
-              "type": "string"
-            },
-            "Release": {
-              "type": "string"
-            },
-            "ProjectFile": {
-              "type": "string"
-            },
-            "ProcessId": {
-              "type": "integer"
-            },
-            "SoftwarePath": {
-              "type": "string"
-            },
-            "GroupPath": {
-              "type": "string"
-            },
-            "SourceName": {
-              "type": "string"
-            },
-            "PlanHash": {
-              "type": "string"
-            },
-            "Compilation": {
-              "type": "string"
-            },
-            "Save": {
-              "type": "string"
-            },
-            "Download": {
-              "type": "string"
-            },
-            "FilePath": {
-              "type": "string"
-            },
-            "RequestedSourceName": {
-              "type": "string"
-            },
-            "InputSha256": {
-              "type": "string"
-            },
-            "ByteCount": {
-              "type": "integer"
-            },
-            "SourceNamesAfter": {
-              "type": "array"
-            },
-            "Generation": {
-              "type": "string"
-            }
-          },
-          "scope": "PascalCase raw worker result; generation object rows expose Kind, Path, Name, TypeName, ProgrammingLanguage, IsConsistent and ModifiedDate."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups.",
-          "Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code.",
-          "Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       },
       "GenerateBlocksFromExternalSource": {
@@ -2684,94 +2247,15 @@
           },
           "meaning": "Review the intended source/PLC and the preview. Reuse the exact project and this operation's PlanHash; import and generation have separate plans."
         },
-        "note": "Use the exact SourceName returned by import or GetPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution. Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompileAndDiagnosePlc and inspect state, aggregate counts and nested diagnostics. V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list. Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import. Status=outcome-unknown requires inspection; do not repeat generation automatically.",
+        "note": "Use the exact SourceName returned by import or ListPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution. Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompilePlcDiagnostics and inspect state, aggregate counts and nested diagnostics. V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list. Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import. Status=outcome-unknown requires inspection; do not repeat generation automatically.",
         "resultContract": {
-          "type": "FoundationExternalSourceWorkflow",
-          "fields": {
-            "Operation": {
-              "type": "string"
-            },
-            "Status": {
-              "type": "string"
-            },
-            "Attempted": {
-              "type": "boolean"
-            },
-            "Executed": {
-              "type": "boolean"
-            },
-            "RequiresSessionReset": {
-              "type": "boolean"
-            },
-            "Error": {
-              "type": "string"
-            },
-            "Release": {
-              "type": "string"
-            },
-            "ProjectFile": {
-              "type": "string"
-            },
-            "ProcessId": {
-              "type": "integer"
-            },
-            "SoftwarePath": {
-              "type": "string"
-            },
-            "GroupPath": {
-              "type": "string"
-            },
-            "SourceName": {
-              "type": "string"
-            },
-            "PlanHash": {
-              "type": "string"
-            },
-            "Compilation": {
-              "type": "string"
-            },
-            "Save": {
-              "type": "string"
-            },
-            "Download": {
-              "type": "string"
-            },
-            "SourceIdentity": {
-              "type": "string"
-            },
-            "GenerationOption": {
-              "type": "string"
-            },
-            "ResultBasis": {
-              "type": "string"
-            },
-            "MayOverwriteExistingBlocks": {
-              "type": "boolean"
-            },
-            "SourceContentReviewed": {
-              "type": "boolean"
-            },
-            "ObjectsBefore": {
-              "type": "array"
-            },
-            "ObjectsAfter": {
-              "type": "array"
-            },
-            "GeneratedObjects": {
-              "type": "array"
-            },
-            "ObservedChanges": {
-              "type": "array"
-            }
-          },
-          "scope": "PascalCase raw worker result; generation object rows expose Kind, Path, Name, TypeName, ProgrammingLanguage, IsConsistent and ModifiedDate."
+          "type": "Envelope",
+          "schemaVersion": 4,
+          "scope": "data retains Foundation domain fields, execution evidence and candidate validation states; meta records the outcome, execution, completeness and current native behavior policy."
         },
         "resultReading": [
-          "Use the exact SourceName returned by import or GetPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution.",
-          "Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompileAndDiagnosePlc and inspect state, aggregate counts and nested diagnostics.",
-          "V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list.",
-          "Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import.",
-          "Status=outcome-unknown requires inspection; do not repeat generation automatically."
+          "Read ok, error and meta.outcome/execution/completeness first. Unknown outcomes require inspection and session reset; do not replay.",
+          "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance."
         ]
       }
     },

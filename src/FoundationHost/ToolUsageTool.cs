@@ -35,6 +35,7 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                 ["operation"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead." },
                 ["language"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Programming language/format from the library, e.g. scl or udt." },
                 ["exampleId"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact example ID; reads complete files or steps with release requirements." },
+                ["exampleKind"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("all", "sequence", "language"), ["default"] = "all" },
                 ["offset"] = new JsonObject { ["type"] = "integer", ["default"] = 0, ["minimum"] = 0 },
                 ["limit"] = new JsonObject { ["type"] = "integer", ["default"] = 80, ["minimum"] = 1, ["maximum"] = 200 }
             } }) };
@@ -45,11 +46,12 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
         try
         {
             var args = request.Params?.Arguments;
-            if (args != null && args.Keys.Except(new[] { "toolName", "query", "documentId", "offset", "limit", "operation", "language", "exampleId" }).Any()) throw new ArgumentException("Unknown argument.");
+            if (args != null && args.Keys.Except(new[] { "toolName", "query", "documentId", "offset", "limit", "operation", "language", "exampleId", "exampleKind" }).Any()) throw new ArgumentException("Unknown argument.");
             string Text(string key) => args != null && args.TryGetValue(key, out var value) ? value.GetString() ?? "" : "";
             int Number(string key, int fallback) => args != null && args.TryGetValue(key, out var value) ? value.GetInt32() : fallback;
             var name = Text("toolName"); var query = Text("query"); var id = Text("documentId");
             var operation = Text("operation"); var language = Text("language"); var exampleId = Text("exampleId");
+            var exampleKind = Text("exampleKind"); if (exampleKind.Length == 0) exampleKind = "all";
             if ((name.Length > 0 || operation.Length > 0 || language.Length > 0 || exampleId.Length > 0) && (query.Length > 0 || id.Length > 0))
                 throw new ArgumentException("Select a tool/language/example, or search/read official references.");
             if (operation.Length > 0 && name.Length == 0) throw new ArgumentException("operation requires toolName.");
@@ -64,11 +66,14 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     ?? throw new ArgumentException("Tool is not available in this release: " + name);
                 usage = ToolUsageCatalog.Describe(target.Name, releaseKey, "plc-foundation", target.Description ?? "",
                     (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
-                if (language.Length > 0 || exampleId.Length > 0)
-                    usage["examples"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name)["examples"]!.DeepClone();
+                usage["outputSchema"] = JsonNode.Parse(target.OutputSchema!.Value.GetRawText());
+                usage["resultContract"] = new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4 };
+                foreach (var key in new[] { "parameterSources", "interpretation" })
+                    if (usage[key] != null) usage[key] = JsonNode.Parse(FoundationV4Tool.Guidance(usage[key]!.ToJsonString()));
+                usage["examples"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!.DeepClone();
             }
-            else if (language.Length > 0 || exampleId.Length > 0)
-                usage = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId);
+            else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
+                usage = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
             else
             {
                 usage = ToolUsageCatalog.ReadReference(query, id, offset, limit);

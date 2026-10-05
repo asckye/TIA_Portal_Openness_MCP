@@ -170,7 +170,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-05 | 新建 H 的 Classic/Unified/AML 类型，控件联合各自收窄；限定 H DTO 文件；[路径清单](phase6-review.md#phase6-path-p6-05) | 02 | T；布局/屏幕/包样本和非法属性，Classic 与 Unified 不互换 | done |
 | P6-06 | 新建 D/X 领域联合与选择 DTO，列出每个 parser 的字段/枚举/schema；限定 D/X DTO 文件；[路径清单](phase6-review.md#phase6-path-p6-06) | 02 | T；全部 B 表项有具体类型，动作判别及 snapshot 身份/完整性保留 | done |
 | P6-07 | 基础设施工具契约：桥接、批次、分页、指南合并、目录与 lite 数据接线；工具文件见附表 G；不改领域服务；[路径清单](phase6-review.md#phase6-path-p6-07) | 03–06 | T、V；合并映射逐 topic、CallTool 对象信封、60 项提案示例、完整目录仍可达 | done |
-| P6-08 | Foundation 宿主名称/输入/结果适配（不改 EXE 名和 adapter 行为）；按 F7 保留 evidence、Executed、候选输出状态；[路径清单](phase6-review.md#phase6-path-p6-08) | 03–07、I | T foundation/transport、六版 V；schema 更窄、无新增 HMI/CallTool/lite；N 调用不变 | todo |
+| P6-08 | Foundation 宿主名称/输入/结果适配（不改 EXE 名和 adapter 行为）；按 F7 保留 evidence、Executed、候选输出状态；[路径清单](phase6-review.md#phase6-path-p6-08) | 03–07、I | T foundation/transport、六版 V；schema 更窄、无新增 HMI/CallTool/lite；N 调用不变 | done |
 | P6-09 | 离线构造、审计、模板、生态、Git、文档生成工具迁移；文件见附表 G；[路径清单](phase6-review.md#phase6-path-p6-09) | 03–07、I | T、V；生成文件内容不变、预算与输出版本限制，修改只在本组 | todo |
 | P6-10 | PLC 块/软件/类型/表工具名称/类型/信封迁移；同名服务及独占规则；[路径清单](phase6-review.md#phase6-path-p6-10) | 03–07、I | T、V；N 调用不变，compile 两入口不误合并 | todo |
 | P6-11 | PLC 文档/原生交换/外部源/补丁工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-11) | 03–07、I | T、V；partial/unknown 和 observation 保全；N 调用不变 | todo |

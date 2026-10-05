@@ -117,46 +117,40 @@ def v4_tools(release=None):
 V4_TOOLS = v4_tools()
 
 # Foundation has no outer ArgDiagnosticTool and no CallTool/lite bridge.
-# Reviewed host admission routines in TiaMcpServer.LegacyHost (all InvokeAsync):
-# FoundationTools.cs::FoundationTool rejects unknown/case-mismatched keys before
-# defaults, contract validation and worker.Call. These names use that class:
+# FoundationV4Tool.InvokeAsync applies typed contracts and the closed input schema
+# before invoking any existing worker/builder. Both rejection keys are unknown;
+# every reviewed entry must return INVALID_ARGUMENT/not-started in a V4 envelope.
 FOUNDATION_WORKER_TOOLS = set('''
-GetState ListPortalProcessProjects DiagnosePortalConnectReadiness
-AddDeviceWithFallback SearchHardwareCatalog GetPlcWatchTables GetTechnologyObjects
-GetSoftwareInfo GetSoftwareTree GetBlockInfo GetTypeInfo Connect GetProject
-AttachToOpenProject OpenProject CreateProject SaveProject CloseProject GetProjectTree
-GetBlocks GetBlocksWithHierarchy Disconnect GetTypes GetPlcTagTables
-DeletePlcExternalSource PlanPlcExternalSourceImport GetPlcExternalSources
-ImportPlcExternalSource GenerateBlocksFromExternalSource ReadPlcTags
-ReadPlcUserConstants ReadPlcSystemConstants ImportBlocksFromDirectory
+GetSessionState ListPortalProcessProjects GetPortalConnectionReadiness
+CreateHardwareDevice SearchHardwareCatalog ListPlcWatchTables ListTechnologyObjects
+GetSoftwareInfo GetSoftwareTree GetPlcBlockInfo GetPlcTypeInfo ConnectPortal GetProjectInfo
+AttachOpenProject OpenProject CreateProject SaveProject CloseProject GetProjectTree
+ListPlcBlocks GetPlcBlockHierarchy DisconnectPortal ListPlcTypes ListPlcTagTables
+DeletePlcExternalSource PlanPlcExternalSourceImport ListPlcExternalSources
+ImportPlcExternalSource GenerateBlocksFromExternalSource ListPlcTags
+ListPlcUserConstants ListPlcSystemConstants ImportPlcBlocksFromDirectory
 ImportPlcProgramFromDirectory ExportBlocksAsDocuments ImportBlocksFromDocuments
 ImportFromDocuments ExportAsDocuments ExportPlcWatchTable ExportTechnologyObject
-ExportBlocks ExportTypes ExportBlock ExportType ExportPlcTagTable ImportBlock
-ImportType ImportPlcTagTable CreatePlcTagTable CreatePlcTag CreatePlcUserConstant
-CompileSoftware CompileAndDiagnosePlc
+ExportPlcBlocks ExportPlcTypes ExportPlcBlock ExportPlcType ExportPlcTagTable ImportPlcBlock
+ImportPlcType ImportPlcTagTable CreatePlcTagTable CreatePlcTag CreatePlcUserConstant
+CompilePlcSoftware CompilePlcDiagnostics
 '''.split())
 
-# The following named handlers reject unknown keys/counts before their builder,
-# filesystem reader, planner or catalog delegate runs. Their catch blocks replace
-# the original argument exception with the exact public marker listed here.
-# Files: OfflineXmlTools.cs, OfflineCompositionTools.cs,
-# OfflineBlockCompositionTools.cs, OfflineLadderTools.cs,
-# OfflineSymbolManifestTools.cs, ImportOrderTool.cs, ToolUsageTool.cs,
-# LegacyHostPassiveDiagnosticTools.cs. UsageHintTool only forwards InvokeAsync.
+# Host-only handlers share the same V4 refusal at that boundary.
 FOUNDATION_MARKERS = {
-    'BuildPlcUdtXml': 'Invalid offline XML builder input.',
-    'BuildPlcTagTableXml': 'Invalid offline XML builder input.',
-    'BuildPlcGlobalDbXml': 'Invalid offline composition input.',
-    'BuildStructuredTextXml': 'Invalid offline composition input.',
-    'ComposePlcFcBlockXml': 'Invalid offline block composition input.',
-    'ComposePlcFbBlockXml': 'Invalid offline block composition input.',
-    'BuildFlgNetCallXml': 'Invalid offline ladder input.',
-    'ComposePlcLadFcBlockXml': 'Invalid offline ladder input.',
-    'BuildPlcSymbolManifestFromXmlPath': 'Expected inputRoot, an explicit files array and expectedOrigin.',
-    'PlanArtifactImportOrder': 'artifactsJson string is required.',
-    'GetToolUsage': 'Unknown argument.',
-    'Bootstrap': 'Unsupported passive diagnostic argument.',
-    'RunCapabilitySelfTest': 'Unsupported passive diagnostic argument.',
+    'BuildPlcUdt': 'INVALID_ARGUMENT',
+    'BuildPlcTagTable': 'INVALID_ARGUMENT',
+    'BuildPlcGlobalDb': 'INVALID_ARGUMENT',
+    'BuildStructuredText': 'INVALID_ARGUMENT',
+    'BuildPlcFcBlock': 'INVALID_ARGUMENT',
+    'BuildPlcFbBlock': 'INVALID_ARGUMENT',
+    'BuildFlgNetCall': 'INVALID_ARGUMENT',
+    'BuildPlcLadFcBlock': 'INVALID_ARGUMENT',
+    'BuildPlcSymbolManifestFromPath': 'INVALID_ARGUMENT',
+    'PlanArtifactImportOrder': 'INVALID_ARGUMENT',
+    'GetToolUsage': 'INVALID_ARGUMENT',
+    'InitializeEnvironment': 'INVALID_ARGUMENT',
+    'RunCapabilitySelfTest': 'INVALID_ARGUMENT',
 }
 
 # Pure in-memory tools beyond check_usage's ten builders/planners. Exact inputs
@@ -587,8 +581,21 @@ def capture_release(args, release, exe, public_api):
         return snapshot
 
 
+@contextmanager
+def foundation_v4_capture():
+    # Foundation has no ToolProfiles rows. Enable the existing V4 correlation
+    # masks only during this profile's capture; full-engine capture is unchanged.
+    previous = V4_TOOLS.copy()
+    V4_TOOLS.update(FOUNDATION_WORKER_TOOLS | set(FOUNDATION_MARKERS))
+    try:
+        yield
+    finally:
+        V4_TOOLS.clear()
+        V4_TOOLS.update(previous)
+
+
 def capture_foundation(args, release, exe):
-    with scratch_directory(args.temp_root) as scratch:
+    with foundation_v4_capture(), scratch_directory(args.temp_root) as scratch:
         # Shared server launcher accepts release keys verbatim. LegacyHost
         # HostOptions.Parse accepts --tia-major-version/--tia-portal-location;
         # no harness, --catalog, worker executable or native-session flag is used.
@@ -602,21 +609,21 @@ def capture_foundation(args, release, exe):
             call = recorder(rpc, entries, 'plc-foundation')
             for tool in sorted(tools, key=lambda t: t['name']):
                 name = tool['name']
-                marker = ('Unknown/case-mismatched argument: SnapshotReject'
+                marker = ('INVALID_ARGUMENT'
                           if name in FOUNDATION_WORKER_TOOLS else FOUNDATION_MARKERS.get(name))
                 props = tool['inputSchema'].get('properties', {})
                 if marker is None or any(key.lower() == 'snapshotreject' for key in props):
                     skipped[name] = 'No reviewed host argument rejection before the worker/builder; not invoked.'
                     continue
-                rejection(call(name, REJECT_ARGUMENTS), marker)
+                v4_rejection(call(name, REJECT_ARGUMENTS), name)
                 rejected.append(name)
             # Only these two passive tools call the pure registration inspector.
-            # Foundation GetState is NOT passive in the host: FoundationTool maps
+            # Foundation GetSessionState is NOT passive in the host: FoundationTool maps
             # it to worker.Call("ReadState"); WorkerClient.Call starts a worker
-            # when process is null. Do not try a valid GetState call here.
-            passive = ['Bootstrap', 'RunCapabilitySelfTest']
+            # when process is null. Do not try a valid GetSessionState call here.
+            passive = ['InitializeEnvironment', 'RunCapabilitySelfTest']
             for name in passive:
-                reply = body(call(name, {}))
+                reply = body(call(name, {}))['data']
                 resources.require(reply['sideEffects']['workerInvoked'] is False
                                   and reply['sideEffects']['tiaLaunchedOrAttached'] is False
                                   and reply['checks']['passed'] is True,
@@ -627,7 +634,7 @@ def capture_foundation(args, release, exe):
                 'release': release, 'profiles': ['plc-foundation'], 'transport': 'stdio',
                 'coverage': {'registeredTools': len(tools), 'calledTools': sorted(set(rejected) | set(passive)),
                     'directRejectedTools': rejected, 'directSkipped': skipped, 'passiveTools': passive,
-                    'passiveSkipped': {'GetState': 'Requires worker ReadState; no worker is started by this capture.'},
+                    'passiveSkipped': {'GetSessionState': 'Requires worker ReadState; no worker is started by this capture.'},
                     'bridgeRejectedTools': [],
                     'bridgeSkipped': {name: 'Foundation does not advertise CallTool or a lite bridge.' for name in names}},
                 'calls': [compact(entries[key]) for key in sorted(entries)]}
