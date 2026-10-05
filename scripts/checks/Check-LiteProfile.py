@@ -36,7 +36,7 @@ REQUIRED = [
     "GetBlocks", "GetBlocksWithHierarchy", "GetBlockInfo", "DescribeBlockLogic",
     "GetCrossReferences", "GetPlcTagTables",
     # author (golden path: SD documents preferred, SCL external source alternative)
-    "ScaffoldProject", "PlcBuildAndImport", "WritePlcSclSourceFile",
+    "ScaffoldProject", "BuildAndImportPlcArtifact", "WritePlcSclSourceFile",
     "ImportFromDocuments", "ExportAsDocuments",
     "ImportBlocksFromDocuments", "ExportBlocksAsDocuments",
     "GenerateBlocksFromExternalSource",

@@ -1,3 +1,5 @@
+using TiaMcp.Logic.V4.Domain;
+using ModelContextProtocol.Protocol;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -9,9 +11,17 @@ using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
     [McpServerToolType]
-    public sealed class QualityAuditTools
+    internal sealed class QualityAuditTools
     {
-        [McpServerTool(Name = "AuditEngineeringExports"), Description("[L2][Validation][FILE] Independent offline engineering quality checks: block names (optional regex policy), duplicate names, block/network comments, metadata, network count, plus configurable XML XPath rules for hardware, library or other export metadata. rulesJson=[{id,files?:regex,xpath:element-selector,minCount?:0,maxCount?:number,valuePattern?:regex,severity?:info|warning|error}]. Use local-name() in XPath for namespaced XML. Unmatched rules are explicitly notEvaluated. Bounded 1000 files/2000 findings; failures and truncation mark dataComplete=false. Optional NEW absolute .html or .pdf report; PDF requires the companion Python environment (ReportLab). success means the audit executed; qualityPassed is the policy verdict. Does not query native cross references, connect to TIA, certify hardware or compile.")]
+        [McpServerTool(Name = "AuditEngineeringExports"), Description("[L2][Validation][FILE] Independent offline engineering quality checks: block names (optional regex policy), duplicate names, block/network comments, metadata, network count, plus configurable XML XPath rules for hardware, library or other export metadata. rules=[{id,files?:regex,xpath:element-selector,minCount?:0,maxCount?:number,valuePattern?:regex,severity?:info|warning|error}]. Use local-name() in XPath for namespaced XML. Unmatched rules are explicitly notEvaluated. Bounded 1000 files/2000 findings; failures and truncation mark dataComplete=false. Optional NEW absolute .html or .pdf report; PDF requires the companion Python environment (ReportLab). success means the audit executed; qualityPassed is the policy verdict. Does not query native cross references, connect to TIA, certify hardware or compile.")]
+        public CallToolResult AuditEngineeringExportsV4(
+            [Description("Existing absolute directory of exported XML/SCL/S7DCL/AML files.")] string directoryPath,
+            [Description("rules: XPathRule[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] XPathRule[]? rules = null,
+            [Description("Optional regex naming policy; empty disables naming-policy findings.")] string blockNamePattern = "",
+            [Description("Maximum networks per block before a warning, 1..10000.")] int maxNetworks = 100,
+            [Description("Optional new absolute .html/.pdf report path; empty returns JSON only.")] string reportPath = "")
+            => OfflineContracts.Run("AuditEngineeringExports", () => AuditEngineeringExports(directoryPath, OfflineContracts.Domain(rules, "[]"), blockNamePattern, maxNetworks, reportPath), writes: !string.IsNullOrWhiteSpace(reportPath), current: false);
+
         public ResponseMessage AuditEngineeringExports([Description("Existing absolute directory of exported XML/SCL/S7DCL/AML files.")] string directoryPath, [Description("JSON array of explicit XPath count/value policies; unmatched rules are unevaluated.")] string rulesJson = "[]", [Description("Optional regex naming policy; empty disables naming-policy findings.")] string blockNamePattern = "", [Description("Maximum networks per block before a warning, 1..10000.")] int maxNetworks = 100, [Description("Optional new absolute .html/.pdf report path; empty returns JSON only.")] string reportPath = "")
             => OfflineToolExecution.RunOfflineAnalysisTool("AuditEngineeringExports", meta =>
             {

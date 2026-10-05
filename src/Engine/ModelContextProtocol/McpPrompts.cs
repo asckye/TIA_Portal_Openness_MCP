@@ -276,9 +276,9 @@ Goal: {description}
 
 Steps:
 1. GetSoftwareTree — softwarePath='{softwarePath}' — find an appropriate group path.
-2. ComposePlcFbBlockXml — fbBlockJson with name='{fbName}', number={fbNumber}, inputs/outputs/statics matching the description.
+2. BuildPlcFbBlock — fbBlockJson with name='{fbName}', number={fbNumber}, inputs/outputs/statics matching the description.
    - dryRun=true first to validate XML.
-3. PlcBuildAndImport — kind='fb', softwarePath='{softwarePath}', dryRun=false, compileAfter=true.
+3. BuildAndImportPlcArtifact — kind='fb', softwarePath='{softwarePath}', dryRun=false, compileAfter=true.
 4. CompilePlcDiagnostics — verify 0 errors.
 5. GetPlcBlockInfo — softwarePath='{softwarePath}', blockPath='Program blocks/{fbName}' — confirm import.
 
@@ -292,7 +292,7 @@ If compile errors occur: export the failed block, inspect the XML, fix the inter
 
 Steps:
 1. GetSoftwareTree — softwarePath='{softwarePath}'.
-2. ComposePlcFbBlockXml — provide fbBlockJson:
+2. BuildPlcFbBlock — provide fbBlockJson:
    {{
      ""blockName"": ""{fbName}"",
      ""blockNumber"": {fbNumber},
@@ -301,7 +301,7 @@ Steps:
      ""statics"": [{{ ""name"": ""..."", ""datatype"": ""..."" }}],
      ""structuredText"": {{ ""operations"": [...] }}
    }}
-3. PlcBuildAndImport — kind='fb', softwarePath='{softwarePath}', dryRun=true then dryRun=false.
+3. BuildAndImportPlcArtifact — kind='fb', softwarePath='{softwarePath}', dryRun=true then dryRun=false.
 4. CompilePlcDiagnostics.
 5. GetPlcBlockInfo — readback confirmation.";
         }
@@ -312,13 +312,13 @@ Steps:
             return $@"Create a new PLC Global Data Block (GlobalDB).
 
 Steps:
-1. BuildPlcGlobalDbXml or PlcBuildAndImport — kind='globaldb':
+1. BuildPlcGlobalDb or BuildAndImportPlcArtifact — kind='globaldb':
    {{
      ""dbName"": ""{dbName}"",
      ""dbNumber"": {dbNumber},
      ""staticMembers"": [{{ ""name"": ""..."", ""datatype"": ""..."", ""startValue"": ""..."" }}]
    }}
-2. PlcBuildAndImport — kind='globaldb', softwarePath='{softwarePath}', dryRun=false.
+2. BuildAndImportPlcArtifact — kind='globaldb', softwarePath='{softwarePath}', dryRun=false.
 3. CompilePlcDiagnostics.
 4. GetPlcBlockInfo — readback.";
         }
@@ -329,7 +329,7 @@ Steps:
             return $@"Create a new PLC tag table with I/O address assignments.
 
 Steps:
-1. BuildPlcTagTableXml or PlcBuildAndImport — kind='tagtable':
+1. BuildPlcTagTable or BuildAndImportPlcArtifact — kind='tagtable':
    {{
      ""tableName"": ""{tableName}"",
      ""tags"": [
@@ -337,7 +337,7 @@ Steps:
        {{ ""name"": ""..."", ""dataTypeName"": ""Bool"", ""logicalAddress"": ""%Q0.0"" }}
      ]
    }}
-2. PlcBuildAndImport — kind='tagtable', softwarePath='{softwarePath}', dryRun=false.
+2. BuildAndImportPlcArtifact — kind='tagtable', softwarePath='{softwarePath}', dryRun=false.
 3. CompilePlcDiagnostics.";
         }
 
@@ -439,7 +439,7 @@ Steps:
             return $@"Create a Classic/Basic WinCC HMI screen.
 
 Steps:
-1. BuildClassicHmiScreenXml — designJson with Screen and Items (Text/Button/IOField/Lamp/Rectangle).
+1. BuildClassicHmiScreen — designJson with Screen and Items (Text/Button/IOField/Lamp/Rectangle).
 2. WriteClassicHmiMinimalPackageFiles — write screen XML and tag table to disk.
 3. ValidateClassicHmiMinimalPackageFiles — verify package is well-formed.
 4. ImportHmiScreen — hmiSoftwarePath='{hmiSoftwarePath}', importPath=written XML file.

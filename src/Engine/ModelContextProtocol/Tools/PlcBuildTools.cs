@@ -1,3 +1,4 @@
+using TiaMcp.Logic.V4.Construction;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -29,7 +30,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public PlcBuildTools(IEngineeringSession service) => _session = service;
 
-        [McpServerTool(Name = "PlcBuildAndImport"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence.")]
+        [McpServerTool(Name = "BuildAndImportPlcArtifact"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence. Native behaviorPolicy remains current; V4 native acceptance is pending.")]
+        public CallToolResult PlcBuildAndImportV4(
+            [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
+            [Description("kind: udt|tagtable|globaldb|fc|fb")] string kind,
+            [Description("spec: PlcArtifactSpec(kind). Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] PlcArtifactSpec spec,
+            [Description("typeGroupPath: PLC data type group path for kind=udt.")] string typeGroupPath = "",
+            [Description("tagFolderPath: PLC tag table group path for kind=tagtable.")] string tagFolderPath = "",
+            [Description("blockGroupPath: PLC block group path for kind=globaldb|fc.")] string blockGroupPath = "",
+            [Description("compileAfter: compile PLC after import when dryRun=false.")] bool compileAfter = true,
+            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true)
+            => OfflineContracts.Run("BuildAndImportPlcArtifact", () => PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, dryRun), writes: true, current: true);
+
         public ResponsePlcProgramImport PlcBuildAndImport(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
             [Description("kind: udt|tagtable|globaldb|fc|fb")] string kind,
@@ -38,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("tagFolderPath: PLC tag table group path for kind=tagtable.")] string tagFolderPath = "",
             [Description("blockGroupPath: PLC block group path for kind=globaldb|fc.")] string blockGroupPath = "",
             [Description("compileAfter: compile PLC after import when dryRun=false.")] bool compileAfter = true,
-            [Description("dryRun: true builds XML and returns the import plan without importing/compiling.")] bool dryRun = true)
+            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true)
         {
             var failed = new List<ImportFailure>();
             var importedTypes = new List<string>();
@@ -52,6 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var capability = AnalyzePlcBuildCapability(normalizedKind, json);
                 var build = BuildPlcArtifact(normalizedKind, json);
                 var xml = build["xml"]?.ToString() ?? "";
+                ConstructionAdapter.VerifyOutput(xml, false);
                 var objectName = ResolveBuiltPlcObjectName(xml);
                 var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
                 Directory.CreateDirectory(tempDir);
@@ -105,7 +118,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error running PlcBuildAndImport: {ex.Message}", ex, McpErrorCode.InvalidParams);
+                throw new McpException($"Unexpected error running BuildAndImportPlcArtifact: {ex.Message}", ex, McpErrorCode.InvalidParams);
             }
         }
 

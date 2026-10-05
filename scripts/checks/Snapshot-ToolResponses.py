@@ -156,23 +156,23 @@ FOUNDATION_MARKERS = {
 # Pure in-memory tools beyond check_usage's ten builders/planners. Exact inputs
 # come from GetToolUsage, not another independently maintained example catalog.
 PURE_EXAMPLES = (
-    'BuildClassicHmiScreenXml', 'BuildClassicHmiTagTableXml',
+    'BuildClassicHmiScreen', 'BuildClassicHmiTagTable',
     'BuildClassicHmiMinimalPackage', 'BuildUnifiedHmiLayoutDesignJson',
     'BuildUnifiedHmiThemeDesignJson', 'PlanHardwareNetworkConfiguration',
-    'ComposePlcAliasAlarmLad', 'LintPlcSclSource',
+    'BuildPlcAliasAlarmLad', 'AnalyzePlcSclSource',
 )
 
 # Reviewed passive resource calls. These literal inputs never start a worker,
 # execute guide content, or contact a network service. Keep the bin layout for
 # CheckForUpdate: its four-parent delivery probe must return null (asserted below).
 PASSIVE_RESOURCE_CALLS = (
-    ('ReadOpennessGuidance', {},
+    ('GetOpennessGuidance', {},
      'Lists bundled document IDs and line counts; no absolute paths in output.'),
-    ('ReadOpennessGuidance', {'query': 'hardware'},
+    ('GetOpennessGuidance', {'query': 'hardware'},
      'Searches bundled Markdown as data; returns only IDs and line counts.'),
-    ('ReadOpennessGuidance', {'document': 'blocks/SKILL.md', 'limit': 20},
+    ('GetOpennessGuidance', {'document': 'blocks/SKILL.md', 'limit': 20},
      'Reads a fixed page of a bundled document; never executes its instructions.'),
-    ('ReadV21EcosystemCatalog', {},
+    ('GetV21EcosystemCatalog', {},
      'Reads the dated local JSON survey; no network lookup or native calls.'),
     ('CheckForUpdate', {'repository': 'x'},
      'Invalid owner/name returns before HTTP; bin layout has no installRoot.'),
@@ -222,7 +222,7 @@ RAW_MASK_RULES = [
      'reason': 'Response envelope wall clock (DateTime.Now).'},
     *[{'tool': tool, 'path': ['data', 'timestamp'],
        'reason': 'Classic HMI builder DateTime.Now.ToString("O").'}
-      for tool in ('BuildClassicHmiScreenXml', 'BuildClassicHmiTagTableXml',
+      for tool in ('BuildClassicHmiScreen', 'BuildClassicHmiTagTable',
                    'BuildClassicHmiMinimalPackage')],
     *[{'tool': 'BuildClassicHmiMinimalPackage', 'path': ['data', part, 'timestamp'],
        'reason': 'Embedded Classic HMI builder DateTime.Now.ToString("O").'}
@@ -318,14 +318,20 @@ def raw_text_blocks(reply, tool):
 def normalize(call):
     result = json.loads(canonical(call))
     paths = [('meta', 'timestamp')]
-    if call['tool'] in ('BuildClassicHmiScreenXml', 'BuildClassicHmiTagTableXml',
+    if call['tool'] in ('BuildClassicHmiScreen', 'BuildClassicHmiTagTable',
                         'BuildClassicHmiMinimalPackage'):
         paths.append(('data', 'timestamp'))
     if call['tool'] == 'BuildClassicHmiMinimalPackage':
         paths.extend([('data', 'screen', 'timestamp'), ('data', 'tagTable', 'timestamp')])
     # Only actual MCP result content: never recurse into arguments, usage
     # examples, XML strings, error text, source hashes or arbitrary nested JSON.
-    for block in result['response'].get('result', {}).get('content', []):
+    response = result['response'].get('result', {})
+    blocks = list(response.get('content', []))
+    if call['tool'] in ('BuildClassicHmiScreen', 'BuildClassicHmiTagTable', 'BuildClassicHmiMinimalPackage'):
+        # P6-09 exposes the same builder data in structuredContent and text.
+        # Apply only the existing Classic HMI timestamp paths to that copy.
+        blocks.append({'text': response.get('structuredContent')})
+    for block in blocks:
         for path in paths:
             parent = block.get('text')
             for key in path[:-1]:
@@ -507,7 +513,7 @@ def capture_release(args, release, exe, public_api):
                                       and result['message'].startswith("repository must be 'owner/name'"),
                                       'Expected bin-layout update refusal before HTTP: ' + reason)
                 else:
-                    resources.require(meta['success'] is True and meta['total'] > 0,
+                    resources.require(result['ok'] is True and result['data']['total'] > 0,
                                       'Expected successful offline resource read: ' + reason)
 
             # The existing audit performs schema/operation checks and executes its
@@ -540,7 +546,7 @@ def capture_release(args, release, exe, public_api):
             # Safe targets ensure even a diagnostic regression cannot attach TIA.
             call('GetState', {'unknownParameter': True})
             call('FindTools', {'query': 'PLC', 'limit': {'wrong': 'type'}})
-            call('BuildPlcUdtXml', {})
+            call('BuildPlcUdt', {})
             if release == '20':
                 for name in V21_ONLY:
                     call(name, {})
@@ -861,6 +867,23 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_classic_hmi_structured_timestamps(self):
+        first, second = '2026-10-03T11:12:13Z', '2026-10-04T11:12:13Z'
+        for tool, data in (
+                ('BuildClassicHmiScreen', {'timestamp': first}),
+                ('BuildClassicHmiTagTable', {'timestamp': first}),
+                ('BuildClassicHmiMinimalPackage', {'screen': {'timestamp': first}, 'tagTable': {'timestamp': first}})):
+            with self.subTest(tool=tool):
+                call = {'tool': tool, 'response': {'result': {'structuredContent': {'data': data}}}}
+                changed = json.loads(json.dumps(call).replace(first, second))
+                self.assertEqual(normalize(call), normalize(changed))
+                # The same field in another tool or a source string stays visible.
+                call['tool'] = changed['tool'] = 'GetToolUsage'
+                self.assertNotEqual(normalize(call), normalize(changed))
+        source = {'tool': 'BuildClassicHmiScreen', 'response': {'result': {
+            'structuredContent': {'data': {'xml': '<Time>' + first + '</Time>'}}}}}
+        self.assertEqual(normalize(source), source)
+
     def test_v4_correlation_masks_only_actual_envelopes(self):
         first, second = 'a' * 32, 'b' * 32
         sample = '{"schemaVersion":4,"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + first + '"},"data":{"example":{"requestId":"' + first + '"}}}'

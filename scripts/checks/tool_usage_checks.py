@@ -97,15 +97,16 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
         # Consume the SAME example returned to AI callers, with exact source args.
         # Nothing outside this literal allowlist can execute during this audit.
-        offline_xml = {'BuildPlcUdtXml', 'BuildPlcTagTableXml', 'BuildPlcGlobalDbXml',
-                       'BuildStructuredTextXml', 'BuildFlgNetCallXml', 'ComposePlcFcBlockXml',
-                       'ComposePlcFbBlockXml', 'ComposePlcLadFcBlockXml'}
+        offline_xml = {'BuildPlcUdt', 'BuildPlcTagTable', 'BuildPlcGlobalDb',
+                       'BuildStructuredText', 'BuildFlgNetCall', 'BuildPlcFcBlock',
+                       'BuildPlcFbBlock', 'BuildPlcLadFcBlock'}
         if exhaustive and name in offline_xml:
             built = call(name, args)
             assert built.get('ok', True) and built.get('meta', {}).get('success', True), (name, built)
-            root = ET.fromstring(built['xml'])
+            payload = built['data'] if built.get('schemaVersion') == 4 else built
+            root = ET.fromstring(payload['xml'])
             assert len(list(root.iter())) > 3, name + ': empty XML'
-            if name in ('BuildPlcUdtXml', 'BuildPlcGlobalDbXml'):
+            if name in ('BuildPlcUdt', 'BuildPlcGlobalDb'):
                 target = args['outputReleaseKey']
                 assert target == str(release), (name, target, release)
                 engineering, interface = {
@@ -116,21 +117,22 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
                 namespace = f'http://www.siemens.com/automation/Openness/SW/Interface/v{interface}'
                 assert root.find('Engineering').attrib['version'] == engineering, (name, target)
                 assert root.find('.//{' + namespace + '}Sections') is not None, (name, namespace)
-                assert built['data']['outputReleaseKey'] == target, built
-                assert built['data']['interfaceNamespace'] == namespace, built
+                details = payload if built.get('schemaVersion') == 4 else built['data']
+                assert details['outputReleaseKey'] == target, built
+                assert details['interfaceNamespace'] == namespace, built
                 assert (root.find('.//AttributeList/Namespace') is not None) == (int(target[:2]) >= 18), (name, target)
-            if name == 'BuildPlcUdtXml':
+            if name == 'BuildPlcUdt':
                 assert any(e.tag.endswith('Member') and e.attrib.get('Name') == 'Ready' and e.attrib.get('Datatype') == 'Bool' for e in root.iter())
-            if name == 'BuildPlcTagTableXml':
+            if name == 'BuildPlcTagTable':
                 assert any(e.tag.endswith('LogicalAddress') and e.text == '%M0.0' for e in root.iter())
-            if name in ('BuildStructuredTextXml', 'ComposePlcFcBlockXml', 'ComposePlcFbBlockXml'):
+            if name in ('BuildStructuredText', 'BuildPlcFcBlock', 'BuildPlcFbBlock'):
                 assert any(e.tag.endswith('Token') and e.attrib.get('Text') == ':=' for e in root.iter())
-            if name in ('BuildFlgNetCallXml', 'ComposePlcLadFcBlockXml'):
+            if name in ('BuildFlgNetCall', 'BuildPlcLadFcBlock'):
                 assert any(e.tag.endswith('CallInfo') and e.attrib.get('Name') == 'FC_Ready' for e in root.iter())
             offline_calls.append(name)
         if exhaustive and name == 'PlanArtifactImportOrder':
             built = call(name, args)
-            plan = built.get('meta', {}).get('plan', built)
+            plan = built['data']['plan'] if built.get('schemaVersion') == 4 else built.get('meta', {}).get('plan', built)
             assert plan['Valid'] and plan['Order'] == ['UDT_Status', 'FB_Motor'], built
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
@@ -180,9 +182,9 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
                 assert set(target.get('required', [])) <= set(values) <= set(target['properties']), (summary['id'], step)
             if example['id'] in ('udt-builder-json', 'db-builder-json') and str(release) in ('20', '21'):
                 data = json.loads(example['files'][0]['content'])['json']
-                tool, argument = ('BuildPlcUdtXml', 'udtJson') if example['id'] == 'udt-builder-json' else ('BuildPlcGlobalDbXml', 'globalDbJson')
-                built = call(tool, {argument: json.dumps(data, ensure_ascii=False)})
-                xml = built['xml']
+                tool, argument = ('BuildPlcUdt', 'udt') if example['id'] == 'udt-builder-json' else ('BuildPlcGlobalDb', 'globalDb')
+                built = call(tool, {argument: data})
+                xml = built['data']['xml'] if built.get('schemaVersion') == 4 else built['xml']
                 root = ET.fromstring(xml)
                 assert any(e.tag.endswith('Name') and e.text == (data.get('udtName') or data.get('dbName') or data.get('name')) for e in root.iter()), example['id']
                 builder_examples += 1

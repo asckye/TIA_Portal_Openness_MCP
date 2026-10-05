@@ -54,20 +54,20 @@ internal static class PilotToolChecks
         var surface = EngineSurface.For(server);
         var domains = new Dictionary<string, string[]>
         {
-            ["EcosystemTools"] = new[] { "RenderPlcVisualDiff", "ReadOpennessGuidance", "RunPlcCompanionTool" },
-            ["V21EcosystemTools"] = new[] { "ReadV21EcosystemCatalog", "ValidatePlcXmlSchemas", "ManageUnifiedCwcPackage", "DecodePlcSimaticMl" },
+            ["EcosystemTools"] = new[] { "RenderPlcVisualDiff", "GetOpennessGuidance", "RunPlcCompanionTool" },
+            ["V21EcosystemTools"] = new[] { "GetV21EcosystemCatalog", "ValidatePlcDocumentSchemas", "ManageUnifiedCwcPackage", "DecodePlcSimaticMl" },
             ["GitWorkflowTools"] = new[] { "ManagePlcGitRepository" },
-            ["TemplateTools"] = new[] { "ComposePlcAliasAlarmLad", "InstantiatePlcXmlTemplates" },
+            ["TemplateTools"] = new[] { "BuildPlcAliasAlarmLad", "InstantiatePlcTemplates" },
             ["QualityAuditTools"] = new[] { "AuditEngineeringExports" },
             ["ImportOrderTools"] = new[] { "PlanArtifactImportOrder" },
             ["ToolUsageTools"] = new[] { "GetToolUsage" },
             ["OfflineSuiteTools"] = new[]
             {
-                "BuildClassicHmiTagTableXml", "BuildClassicHmiMinimalPackage", "WriteClassicHmiMinimalPackageFiles",
-                "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync", "BuildPlcSymbolManifestFromXmlPath",
+                "BuildClassicHmiTagTable", "BuildClassicHmiMinimalPackage", "WriteClassicHmiMinimalPackageFiles",
+                "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync", "BuildPlcSymbolManifestFromPath",
                 "RunClassicHmiOfflineValidationSuite", "RunOfflineReleaseValidationSuite", "BuildReleaseDiagnosticReport",
-                "BuildReleaseRunbook", "BuildReleaseManifest", "RebuildReleaseHandoffArtifacts", "RunClassicHmiTemporaryImportPreflight",
-                "RunHmiTemplatePlcSyncPrecheckSuite", "BuildUnifiedHmiTemplateApplyDesignJson", "BuildUnifiedHmiTemplateApplyDesignManifest"
+                "BuildReleaseRunbook", "BuildReleaseManifest", "BuildReleaseHandoffArtifacts", "RunClassicHmiTemporaryImportPreflight",
+                "RunHmiTemplatePlcSyncPrecheckSuite", "BuildUnifiedHmiTemplateApplyDesign", "BuildUnifiedHmiTemplateApplyDesignManifest"
             }
         };
         foreach (var domain in domains)

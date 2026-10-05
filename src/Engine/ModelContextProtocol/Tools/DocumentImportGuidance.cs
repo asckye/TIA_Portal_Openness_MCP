@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "要 12 段就写 12 个 NETWORK。\r\n"
             + "4) 编码必须 UTF-8 **带 BOM**。别把 BOM 的转义序列当成六个字符写进文件正文 —— "
             + "那是转义没生效，不是 BOM。\r\n"
-            + "5) 只需要 DB / UDT / 变量表的话，改走 PlcBuildAndImport 的 JSON 路，完全绕开 .s7dcl。";
+            + "5) For DBs, UDTs or tag tables, use BuildAndImportPlcArtifact with a structured spec to bypass .s7dcl.";
 
 
         #endregion

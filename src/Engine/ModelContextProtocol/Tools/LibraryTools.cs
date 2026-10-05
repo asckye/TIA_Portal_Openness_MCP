@@ -272,7 +272,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "ProbeGlobalLibrary",
                         "BuildUnifiedHmiThemeDesignJson",
                         "BuildUnifiedHmiLayoutDesignJson",
-                        "BuildUnifiedHmiTemplateApplyDesignJson",
+                        "BuildUnifiedHmiTemplateApplyDesign",
                         "ApplyUnifiedHmiScreenDesignJson",
                         "EnsureUnifiedHmiButtonAction"),
                     ["validationGates"] = new JsonArray(

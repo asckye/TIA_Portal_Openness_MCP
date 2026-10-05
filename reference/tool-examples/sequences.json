@@ -189,7 +189,7 @@
     "topic": "plc-builder",
     "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
     "preconditions": "connect-project done.",
-    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see PlcBuildAndImport's example).",
+    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example).",
     "releaseKeys": [
       "20",
       "21"
@@ -199,25 +199,89 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "PlcBuildAndImport",
+        "tool": "BuildAndImportPlcArtifact",
         "arguments": {
           "softwarePath": "PLC_1",
           "kind": "fc",
-          "json": "<BuildPlc* JSON as a string>",
-          "dryRun": true
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
-        "expect": "WrittenFiles / Discovered* clean, Failed empty"
+        "expect": "Inspect ok, error and meta.outcome/execution/completeness; WrittenFiles / Discovered* clean, Failed empty"
       },
       {
-        "tool": "PlcBuildAndImport",
+        "tool": "BuildAndImportPlcArtifact",
         "arguments": {
           "softwarePath": "PLC_1",
           "kind": "fc",
-          "json": "<same JSON>",
           "dryRun": false,
-          "compileAfter": true
+          "compileAfter": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
-        "expect": "Compile.ErrorCount 0"
+        "expect": "Inspect ok, error and meta.outcome/execution/completeness; Compile.ErrorCount 0"
       },
       {
         "tool": "SaveProject",

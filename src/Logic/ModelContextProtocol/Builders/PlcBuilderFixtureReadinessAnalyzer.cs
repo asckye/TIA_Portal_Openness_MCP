@@ -202,7 +202,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             return new JsonArray
             {
-                "第一步实现 BuildUdtXml 或 BuildPlcTagTableXml，并使用本报告中的 UDT/变量表样本做 XML 解析回归。",
+                "First implement BuildUdtXml or BuildPlcTagTable and verify XML parsing with the UDT/tag-table samples in this report.",
                 "第二步实现 StructuredTextBuilder，只覆盖赋值、IF、调用、变量访问的最小集合。",
                 "第三步再处理 FlgNetBuilder，必须用 LAD/FlgNet 金样本验证 Wire、NameCon、IdentCon 引用闭合。"
             };

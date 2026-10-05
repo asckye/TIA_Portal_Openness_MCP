@@ -74,7 +74,7 @@
       "tools": [
         "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
-        "BuildPlcGlobalDbXml",
+        "BuildPlcGlobalDb",
         "ImportPlcBlock"
       ]
     },
@@ -86,7 +86,7 @@
       ],
       "tools": [
         "ManagePlcDocuments",
-        "BuildPlcUdtXml",
+        "BuildPlcUdt",
         "ImportPlcType"
       ]
     },
@@ -998,7 +998,7 @@
         }
       ],
       "tools": [
-        "BuildPlcGlobalDbXml",
+        "BuildPlcGlobalDb",
         "ImportPlcBlock"
       ],
       "notes": [
@@ -1026,7 +1026,7 @@
         }
       ],
       "tools": [
-        "BuildPlcUdtXml",
+        "BuildPlcUdt",
         "ImportPlcType"
       ],
       "notes": [

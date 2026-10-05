@@ -21,7 +21,7 @@ namespace TiaMcpServer.Siemens.Services
         public EngineeringAuditService(IEngineeringSession session) => _session = session;
 
         public ResponseMessage ReadPlcBlockScopes(string softwarePath, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadPlcBlockScopes", meta => {
+            => _session.RunHmiStepTool(nameof(EngineeringAuditService.ReadPlcBlockScopes), meta => {
                 if (offset < 0 || limit < 1 || limit > 1000) throw new ArgumentException("offset >= 0; limit 1..1000.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var rows = new List<JsonNode>();

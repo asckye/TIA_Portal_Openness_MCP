@@ -1,3 +1,4 @@
+using TiaMcp.Logic.V4.Hmi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -24,7 +25,11 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region plc software - OfflineSuites
 
-        [McpServerTool(Name = "BuildClassicHmiTagTableXml"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI tag table XML document from structured JSON. Supports plain HMI tags and symbolic PLC bindings through Connection + ControllerTag/PlcTag. It does not connect to TIA Portal, import tags, or modify projects.")]
+        [McpServerTool(Name = "BuildClassicHmiTagTable"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI tag table XML document from structured JSON. Supports plain HMI tags and symbolic PLC bindings through Connection + ControllerTag/PlcTag. It does not connect to TIA Portal, import tags, or modify projects.")]
+        public CallToolResult BuildClassicHmiTagTableXmlV4(
+            [Description("table: ClassicTagTableSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicTagTableSpec table)
+            => OfflineContracts.Run("BuildClassicHmiTagTable", () => BuildClassicHmiTagTableXml(table.ToBuilderInput().ToJsonString()), writes: false, current: false);
+
         public ResponseXmlBuild BuildClassicHmiTagTableXml(
             [Description("tableJson: JSON object with Name/TableName and Tags[]. Tag fields: Name, DataType, Length, optional Connection and ControllerTag/PlcTag.")] string tableJson)
         {
@@ -39,6 +44,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildClassicHmiMinimalPackage"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package from structured JSON. It returns tag-table XML, screen XML, import order, and readiness checks that screen item tag references are declared in the tag table. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
+        public CallToolResult BuildClassicHmiMinimalPackageV4(
+            [Description("package: ClassicPackageSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicPackageSpec package)
+            => OfflineContracts.Run("BuildClassicHmiMinimalPackage", () => BuildClassicHmiMinimalPackage(package.ToBuilderInput().ToJsonString()), writes: false, current: false);
+
         public ResponseJsonReport BuildClassicHmiMinimalPackage(
             [Description("packageJson: JSON object with Name, ScreenDesign, and TagTable. Screen items may reference HMI tags through Tag/HmiTag/ProcessValueTag or Properties.*Tag.")] string packageJson)
         {
@@ -61,6 +70,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "WriteClassicHmiMinimalPackageFiles"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
+        public CallToolResult WriteClassicHmiMinimalPackageFilesV4(
+            [Description("package: ClassicPackageSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicPackageSpec package,
+            [Description("outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written.")] string outputDirectory)
+            => OfflineContracts.Run("WriteClassicHmiMinimalPackageFiles", () => WriteClassicHmiMinimalPackageFiles(package.ToBuilderInput().ToJsonString(), outputDirectory), writes: true, current: false);
+
         public ResponseJsonReport WriteClassicHmiMinimalPackageFiles(
             [Description("packageJson: JSON object with Name, ScreenDesign, and TagTable.")] string packageJson,
             [Description("outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written.")] string outputDirectory)
@@ -95,6 +109,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ValidateClassicHmiMinimalPackageFiles"), Description("[L2][HMI-Classic]Offline-only helper: validate an already written Classic/Basic HMI minimal package folder or manifest. It reads manifest/XML, checks parseability and HMI tag references, and does not connect to TIA Portal or modify projects.")]
+        public CallToolResult ValidateClassicHmiMinimalPackageFilesV4(
+            [Description("path: package output directory or *_manifest.json path to validate.")] string path)
+            => OfflineContracts.Run("ValidateClassicHmiMinimalPackageFiles", () => ValidateClassicHmiMinimalPackageFiles(path), writes: false, current: false);
+
         public ResponseJsonReport ValidateClassicHmiMinimalPackageFiles(
             [Description("path: package output directory or *_manifest.json path to validate.")] string path)
         {
@@ -117,6 +135,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ValidateClassicHmiMinimalPackagePlcSync"), Description("[L2][HMI-Classic]Offline-only helper: validate that Classic/Basic HMI tag-table ControllerTag/PlcTag bindings exist in a caller-provided exact PLC symbol list. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult ValidateClassicHmiMinimalPackagePlcSyncV4(
+            [Description("path: package output directory or *_manifest.json path to validate.")] string path,
+            [Description("plcSymbols: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[] plcSymbols)
+            => OfflineContracts.Run("ValidateClassicHmiMinimalPackagePlcSync", () => ValidateClassicHmiMinimalPackagePlcSync(path, OfflineContracts.Names(plcSymbols, null)), writes: false, current: false);
+
         public ResponseJsonReport ValidateClassicHmiMinimalPackagePlcSync(
             [Description("path: package output directory or *_manifest.json path to validate.")] string path,
             [Description("plcSymbolsJson: JSON array of exact PLC symbols, or object with Symbols[]. Example: [\"DB1_MotorData.Motor.Start\"].")] string plcSymbolsJson)
@@ -139,7 +162,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcSymbolManifestFromXmlPath"), Description("[L2][PLC-Builders]Offline-only helper: extract a PLC symbol manifest from PLC tag table and GlobalDB XML files or directories. It does not connect to TIA Portal or modify projects.")]
+        [McpServerTool(Name = "BuildPlcSymbolManifestFromPath"), Description("[L2][PLC-Builders]Offline-only helper: extract a PLC symbol manifest from PLC tag table and GlobalDB XML files or directories. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildPlcSymbolManifestFromXmlPathV4(
+            [Description("path: XML file or directory containing PLC tag table / GlobalDB XML exports.")] string path)
+            => OfflineContracts.Run("BuildPlcSymbolManifestFromPath", () => BuildPlcSymbolManifestFromXmlPath(path), writes: false, current: false);
+
         public ResponseJsonReport BuildPlcSymbolManifestFromXmlPath(
             [Description("path: XML file or directory containing PLC tag table / GlobalDB XML exports.")] string path)
         {
@@ -162,6 +189,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunClassicHmiOfflineValidationSuite"), Description("[L2][HMI-Classic]Offline-only helper: run the Classic/Basic HMI validation suite covering PLC symbol extraction, HMI package generation, HMI tag references, and PLC-HMI sync positive/negative gates. It writes reports only to the requested report directory.")]
+        public CallToolResult RunClassicHmiOfflineValidationSuiteV4(
+            [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
+            => OfflineContracts.Run("RunClassicHmiOfflineValidationSuite", () => RunClassicHmiOfflineValidationSuite(reportDirectory), writes: true, current: false);
+
         public ResponseJsonReport RunClassicHmiOfflineValidationSuite(
             [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
         {
@@ -184,6 +215,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunOfflineReleaseValidationSuite"), Description("[L2][Validation]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult RunOfflineReleaseValidationSuiteV4(
+            [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
+            [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
+            => OfflineContracts.Run("RunOfflineReleaseValidationSuite", () => RunOfflineReleaseValidationSuite(workspaceRoot, reportDirectory), writes: true, current: false);
+
         public ResponseJsonReport RunOfflineReleaseValidationSuite(
             [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
             [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
@@ -208,6 +244,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
         [McpServerTool(Name = "BuildReleaseDiagnosticReport"), Description("[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildReleaseDiagnosticReportV4(
+            [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
+            => OfflineContracts.Run("BuildReleaseDiagnosticReport", () => BuildReleaseDiagnosticReport(offlineReleaseSuiteJsonPath), writes: false, current: false);
+
         public ResponseJsonReport BuildReleaseDiagnosticReport(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
         {
@@ -233,6 +273,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildReleaseRunbook"), Description("[L2][Reports]Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildReleaseRunbookV4(
+            [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
+            => OfflineContracts.Run("BuildReleaseRunbook", () => BuildReleaseRunbook(offlineReleaseSuiteJsonPath), writes: false, current: false);
+
         public ResponseJsonReport BuildReleaseRunbook(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
         {
@@ -259,6 +303,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildReleaseManifest"), Description("[L2][Reports]Build an offline machine-readable release manifest from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildReleaseManifestV4(
+            [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
+            => OfflineContracts.Run("BuildReleaseManifest", () => BuildReleaseManifest(offlineReleaseSuiteJsonPath), writes: false, current: false);
+
         public ResponseJsonReport BuildReleaseManifest(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
         {
@@ -285,7 +333,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "RebuildReleaseHandoffArtifacts"), Description("[L2][Reports]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal.")]
+        [McpServerTool(Name = "BuildReleaseHandoffArtifacts"), Description("[L2][Reports]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal.")]
+        public CallToolResult RebuildReleaseHandoffArtifactsV4(
+            [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath,
+            [Description("outputDirectory: directory where rebuilt handoff artifacts will be written.")] string outputDirectory)
+            => OfflineContracts.Run("BuildReleaseHandoffArtifacts", () => RebuildReleaseHandoffArtifacts(offlineReleaseSuiteJsonPath, outputDirectory), writes: true, current: false);
+
         public ResponseJsonReport RebuildReleaseHandoffArtifacts(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath,
             [Description("outputDirectory: directory where rebuilt handoff artifacts will be written.")] string outputDirectory)
@@ -308,6 +361,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunClassicHmiTemporaryImportPreflight"), Description("[L2][HMI-Classic]Offline-only helper: run the Classic/Basic HMI temporary-import preflight. It checks TIA V21 environment, Openness group, package files, PLC-HMI sync, and emits an import/readback plan without connecting to TIA Portal or creating projects.")]
+        public CallToolResult RunClassicHmiTemporaryImportPreflightV4(
+            [Description("workspaceRoot: repository/workspace root.")] string workspaceRoot,
+            [Description("reportDirectory: directory where preflight files and reports will be written.")] string reportDirectory)
+            => OfflineContracts.Run("RunClassicHmiTemporaryImportPreflight", () => RunClassicHmiTemporaryImportPreflight(workspaceRoot, reportDirectory), writes: true, current: false);
+
         public ResponseJsonReport RunClassicHmiTemporaryImportPreflight(
             [Description("workspaceRoot: repository/workspace root.")] string workspaceRoot,
             [Description("reportDirectory: directory where preflight files and reports will be written.")] string reportDirectory)
@@ -331,6 +389,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunHmiTemplatePlcSyncPrecheckSuite"), Description("[L2][Validation]Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult RunHmiTemplatePlcSyncPrecheckSuiteV4(
+            [Description("templateDirectory: directory containing Unified HMI template JSON files.")] string templateDirectory,
+            [Description("plcXmlPath: PLC XML file or directory exported from TIA, containing tag tables and/or GlobalDB XML.")] string plcXmlPath,
+            [Description("reportDirectory: directory where reports will be written.")] string reportDirectory,
+            [Description("mappingFilePath: optional explicit mapping file produced by the mapping skeleton flow.")] string mappingFilePath = "")
+            => OfflineContracts.Run("RunHmiTemplatePlcSyncPrecheckSuite", () => RunHmiTemplatePlcSyncPrecheckSuite(templateDirectory, plcXmlPath, reportDirectory, mappingFilePath), writes: true, current: false);
+
         public ResponseJsonReport RunHmiTemplatePlcSyncPrecheckSuite(
             [Description("templateDirectory: directory containing Unified HMI template JSON files.")] string templateDirectory,
             [Description("plcXmlPath: PLC XML file or directory exported from TIA, containing tag tables and/or GlobalDB XML.")] string plcXmlPath,
@@ -355,7 +420,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildUnifiedHmiTemplateApplyDesignJson"), Description("[L2][HMI-Unified]Offline-only helper: convert one Unified HMI template JSON file into the execution JSON accepted by ApplyUnifiedHmiScreenDesignJson, with layout QA attached. It does not connect to TIA Portal or modify projects.")]
+        [McpServerTool(Name = "BuildUnifiedHmiTemplateApplyDesign"), Description("[L2][HMI-Unified]Offline-only helper: convert one Unified HMI template JSON file into the execution JSON accepted by ApplyUnifiedHmiScreenDesignJson, with layout QA attached. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildUnifiedHmiTemplateApplyDesignJsonV4(
+            [Description("templateFile: full path to a Unified HMI template JSON file")] string templateFile,
+            [Description("fallbackWidth: width used only if the template omits Screen.Width")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used only if the template omits Screen.Height")] int fallbackHeight = 480)
+            => OfflineContracts.Run("BuildUnifiedHmiTemplateApplyDesign", () => BuildUnifiedHmiTemplateApplyDesignJson(templateFile, fallbackWidth, fallbackHeight), writes: false, current: false);
+
         public ResponseJsonReport BuildUnifiedHmiTemplateApplyDesignJson(
             [Description("templateFile: full path to a Unified HMI template JSON file")] string templateFile,
             [Description("fallbackWidth: width used only if the template omits Screen.Width")] int fallbackWidth = 800,
@@ -399,6 +470,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildUnifiedHmiTemplateApplyDesignManifest"), Description("[L2][HMI-Unified]Offline-only helper: build a directory-level manifest for Unified HMI templates. It summarizes layout QA and execution-design readiness for every unified_*.json template without returning full apply payloads. It does not connect to TIA Portal or modify projects.")]
+        public CallToolResult BuildUnifiedHmiTemplateApplyDesignManifestV4(
+            [Description("templateDirectory: directory containing Unified HMI JSON templates")] string templateDirectory,
+            [Description("fallbackWidth: width used only if a template omits Screen.Width")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used only if a template omits Screen.Height")] int fallbackHeight = 480)
+            => OfflineContracts.Run("BuildUnifiedHmiTemplateApplyDesignManifest", () => BuildUnifiedHmiTemplateApplyDesignManifest(templateDirectory, fallbackWidth, fallbackHeight), writes: false, current: false);
+
         public ResponseJsonReport BuildUnifiedHmiTemplateApplyDesignManifest(
             [Description("templateDirectory: directory containing Unified HMI JSON templates")] string templateDirectory,
             [Description("fallbackWidth: width used only if a template omits Screen.Width")] int fallbackWidth = 800,
@@ -452,7 +529,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["ok"] = failed == 0,
                     ["policy"] = new JsonObject
                     {
-                        ["fullPayloadTool"] = "BuildUnifiedHmiTemplateApplyDesignJson",
+                        ["fullPayloadTool"] = "BuildUnifiedHmiTemplateApplyDesign",
                         ["applyTool"] = "ApplyUnifiedHmiScreenDesignJson",
                         ["rule"] = "Use this manifest as a pre-apply gate; inspect a full payload for any template before writing it to TIA."
                     },
@@ -518,7 +595,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["actionCount"] = GetManifestInt(referenceRow, "actionCount"),
                 ["eventReadiness"] = eventReadiness,
                 ["recommendedNextAction"] = ok
-                    ? "Inspect full payload with BuildUnifiedHmiTemplateApplyDesignJson, then apply in a temporary TIA project before using a real project."
+                    ? "Inspect full payload with BuildUnifiedHmiTemplateApplyDesign, then apply in a temporary TIA project before using a real project."
                     : "Fix blocking layout/template findings before applying to TIA."
             };
             row["eventRecommendedNextAction"] = eventReadiness["recommendedNextAction"]?.DeepClone();

@@ -1508,16 +1508,17 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | parser/策略来源:行 | 原始边界表达式 |
 |---|---|
 | [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs):275 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):41 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):63 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
 | [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):23 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
-| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):24 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
-| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):37 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
-| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):41 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
-| [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):16 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):35 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):48 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):52 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
+| [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):29 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
+| [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):149 | `if (response is ResponseXmlBuild xml && xml.Xml != null && xml.Xml.Length > 1048576)` |
 | [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):136 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
-| [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]` |
+| [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):516 | `if (conflicts.Count > 16)` |
-| [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):122 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
+| [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):149 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 | [ModelContextProtocol/Tools/SivarcTools.cs](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs):37 | `[McpServerTool(Name="ManageSivarcTableRule"), Description("[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSiVArcRule differs only in case and stays for arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace\|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None\|And\|Equal\|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} \| {kind:masterCopy\|libraryType\|masterCopyFolder\|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock ('may not be null', 2.7.39 real project) - assign another block instead}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves.")]` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):20 | `[McpServerTool(Name="ManageUnifiedScreenItem"), Description("[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial propertiesJson), update, delete (confirmDelete=true). propertiesJson nests parts as objects ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization.")]` |
 | [Siemens/DeviceServiceObjectRules.cs](../../src/Engine/Siemens/DeviceServiceObjectRules.cs):42 | `if ((properties["ServiceGroupName"]!.ToString()).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");` |
@@ -1747,7 +1748,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 239 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 240 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1836,7 +1837,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):42 `DiagnosticsDirectory` | data/diagnostics 调用日志；10 MiB + 一份 previous | P6-45 读取；P6-46 配置保留与时间窗口，审计另存 logs/audit |
 | [Program.cs](../../src/Engine/Program.cs):26 `DiagLogPathLocal` | 主日志经 DataLocations；启动日志仍在安装目录 | 数据根 logs/<releaseKey>；只读安装沿用用户目录回退 |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):16 `.crash.log` | Studio 安装目录崩溃日志 | 数据根 logs/studio；只读安装沿用用户目录回退 |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):44 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):66 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
 | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):53 `GetWorkspaceRoot` | TMP_EXPORT/src/cwd 探测 | 显式 workspace/fixture 根 |
 | [Cli/HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs):63 `TIA_MCP_AI_PACK` | 私有 HMI 模板默认输入 | 显式模板路径 |
 | [ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../src/Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs):55 `TMP_EXPORT` | 私有套件夹具探测 | 显式 fixture 根，workspaceRoot 不猜测 |
@@ -1881,10 +1882,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17430 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:18150 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:62 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:51 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:22757 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:23477 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:74 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:63 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1905,7 +1906,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:657 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:663 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
@@ -1935,11 +1936,11 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs](../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs) | 产品:152 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs](../../src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs) | 写入/工作区:30 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) | 产品:497 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:31,43; 写入/工作区:44 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:45,65; 写入/工作区:66 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs) | 产品:70; 根定位:46,47,50,55,81 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:188 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:27; 写入/工作区:28 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:47; 写入/工作区:48 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:219,224 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:37; 写入/工作区:38 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:73; 写入/工作区:74 | 修改引用并回归 |
 | [src/Engine/Program.cs](../../src/Engine/Program.cs) | 产品:643; 写入/工作区:26,861 | 修改引用并回归 |
 | [src/Engine/Runtime/EnvironmentDoctor.cs](../../src/Engine/Runtime/EnvironmentDoctor.cs) | 产品:111,112; 根定位:93 | 修改引用并回归 |
 | [src/Engine/Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs) | 根定位:35,36,39,49,111 | 修改引用并回归 |
@@ -2015,9 +2016,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 |---|---|---|---|
 | `ArchiveSavedProject` | `ArchiveSavedProject` | 工程生命周期 | 20, 21 |
 | `AttachOpenProject` | `AttachToOpenProject` | 工程生命周期 | 20, 21 |
-| `BuildPlcGlobalDb` | `BuildPlcGlobalDbXml` | 离线构造与规划 | 20, 21 |
-| `BuildPlcTagTable` | `BuildPlcTagTableXml` | 离线构造与规划 | 20, 21 |
-| `BuildPlcUdt` | `BuildPlcUdtXml` | 离线构造与规划 | 20, 21 |
+| `BuildPlcGlobalDb` | `BuildPlcGlobalDb` | 离线构造与规划 | 20, 21 |
+| `BuildPlcTagTable` | `BuildPlcTagTable` | 离线构造与规划 | 20, 21 |
+| `BuildPlcUdt` | `BuildPlcUdt` | 离线构造与规划 | 20, 21 |
 | `CallTool` | `CallTool` | 发现、用法与完整目录调用 | 20, 21 |
 | `ClearExportHandles` | `ClearExportHandles` | 大结果分页与文件交付 | 20, 21 |
 | `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
@@ -2071,7 +2072,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `SaveProject` | `SaveProject` | 工程生命周期 | 20, 21 |
 | `SearchHardwareCatalog` | `SearchHardwareCatalog` | 硬件查找和精确创建 | 20, 21 |
 | `ValidateAutomationContext` | `ValidateAutomationContext` | 环境与会话诊断 | 20, 21 |
-| `ValidatePlcDocumentSchemas` | `ValidatePlcXmlSchemas` | 离线构造与规划 | 20, 21 |
+| `ValidatePlcDocumentSchemas` | `ValidatePlcDocumentSchemas` | 离线构造与规划 | 20, 21 |
 | `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 常用 PLC 交换与编译 | 20, 21 |
 
 数据文件：[ToolProfiles.resx](../../src/Logic/ModelContextProtocol/ToolProfiles.resx)。Catalog JSON 按 contractVersion、releaseKey 记录 V4/current/source 名称、profiles 和 arguments；参数示例取自 reference/tool-examples/calls.json，按当前契约转换并逐版验证。Foundation 继续不设 lite。

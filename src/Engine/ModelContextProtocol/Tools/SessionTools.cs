@@ -254,7 +254,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         "Connect", "Disconnect", "AttachToOpenProject", "OpenProject", "CreateProject",
                         "SaveProject", "CloseProject", "GetProjectTree", "GetSoftwareTree",
-                        "PlcBuildAndImport", "CompilePlcSoftware", "DownloadToPlc", "GoOnline", "GoOffline"
+                        "BuildAndImportPlcArtifact", "CompilePlcSoftware", "DownloadToPlc", "GoOnline", "GoOffline"
                     },
                     L2Count = McpServer.GetMcpToolNames().Count(),
                 };

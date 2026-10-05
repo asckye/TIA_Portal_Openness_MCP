@@ -56,7 +56,7 @@ internal static class EngineeringAuditRuntimeChecks
         check(!(bool)recoverable.Invoke(null, new object[] { new TargetInvocationException(fatal) })!, "wrapped native NonRecoverableException is never swallowed by the audit reader");
 
         var mcp = EngineSurface.For(server);
-        foreach (var name in new[] { "ReadPlcBlockScopes", "ManagePlcBlockDocuments", "ReadOpennessCompatibility", "InspectSimaticSdCompatibility", "ReadNativeInvocationLog",
+        foreach (var name in new[] { "GetPlcBlockScopes", "ManagePlcBlockDocuments", "ReadOpennessCompatibility", "InspectSimaticSdCompatibility", "ReadNativeInvocationLog",
             "ManageSinumerikArchive", "ImportSinumerikAlarmTexts", "ManageSinumerikSafetyMode", "InitializeSimotionScripting", "ExportScadaData" })
             check(mcp.Tool(name) != null && mcp.Tool(name)!.GetCustomAttributesData().Any(a => a.AttributeType.Name == "McpServerToolAttribute"), "new tool attributed in actual EXE: " + name);
 

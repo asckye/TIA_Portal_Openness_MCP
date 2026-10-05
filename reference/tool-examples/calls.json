@@ -2535,30 +2535,42 @@
       },
       "BuildClassicHmiMinimalPackage": {
         "arguments": {
-          "packageJson": "{\"Name\":\"Example\",\"ScreenDesign\":{\"Screen\":{\"Name\":\"Overview\",\"Width\":800,\"Height\":480},\"Items\":[{\"Type\":\"Text\",\"Name\":\"StatusText\",\"Left\":20,\"Top\":20,\"Width\":160,\"Height\":40,\"Text\":\"Ready\"}]},\"TagTable\":{\"Name\":\"ExampleTags\",\"Tags\":[{\"Name\":\"Ready\",\"DataType\":\"Bool\",\"Length\":1}]}}"
+          "package": {
+            "name": "Example",
+            "screenDesign": {
+              "screen": {
+                "name": "Overview",
+                "width": 800,
+                "height": 480
+              },
+              "items": [
+                {
+                  "type": "Text",
+                  "name": "StatusText",
+                  "left": 20,
+                  "top": 20,
+                  "width": 160,
+                  "height": 40,
+                  "text": "Ready"
+                }
+              ]
+            },
+            "tagTable": {
+              "name": "ExampleTags",
+              "tags": [
+                {
+                  "name": "Ready",
+                  "dataType": "Bool",
+                  "length": "1"
+                }
+              ]
+            }
+          }
         },
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "Package combines the screen and tag builders with independently selected XML formats. Inspect both outputs; no cross-version import acceptance is implied."
-      },
-      "BuildClassicHmiScreenXml": {
-        "arguments": {
-          "designJson": "{\"Screen\":{\"Name\":\"Overview\",\"Width\":800,\"Height\":480},\"Items\":[{\"Type\":\"Text\",\"Name\":\"StatusText\",\"Left\":20,\"Top\":20,\"Width\":160,\"Height\":40,\"Text\":\"Ready\"}]}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "Default screen engineering format is V18; this builder does not infer the running engine version. Inspect output and validate against a native target-version export."
-      },
-      "BuildClassicHmiTagTableXml": {
-        "arguments": {
-          "tableJson": "{\"Name\":\"ExampleTags\",\"Tags\":[{\"Name\":\"Ready\",\"DataType\":\"Bool\",\"Length\":1}]}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "Default tag-table engineering format is V21, including on V20. Generated XML is not native-import verification."
       },
       "BuildDeviceAmlDocument": {
         "arguments": {
@@ -2584,66 +2596,6 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "BuildFlgNetCallXml": {
-        "arguments": {
-          "flgNetJson": "{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
-      },
-      "BuildPlcGlobalDbXml": {
-        "arguments": {
-          "globalDbJson": "{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}",
-          "outputReleaseKey": "{release}"
-        },
-        "parameters": {
-          "outputReleaseKey": {
-            "exampleValue": "{release}",
-            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
-      },
-      "BuildPlcSymbolManifestFromXmlPath": {
-        "arguments": {
-          "path": "C:\\Examples\\snapshot"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "BuildPlcTagTableXml": {
-        "arguments": {
-          "tagTableJson": "{\"tableName\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
-      },
-      "BuildPlcUdtXml": {
-        "arguments": {
-          "udtJson": "{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}",
-          "outputReleaseKey": "{release}"
-        },
-        "parameters": {
-          "outputReleaseKey": {
-            "exampleValue": "{release}",
-            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
-      },
       "BuildReleaseDiagnosticReport": {
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
@@ -2667,20 +2619,6 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "BuildStructuredTextXml": {
-        "arguments": {
-          "structuredTextJson": "{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}"
-        },
-        "parameters": {
-          "innerOnly": {
-            "exampleValue": false
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
       },
       "BuildUnifiedHmiButtonActionScript": {
         "arguments": {
@@ -2706,21 +2644,6 @@
           "layoutJson": "{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"TextBox\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}"
         },
         "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "BuildUnifiedHmiTemplateApplyDesignJson": {
-        "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
-        },
-        "parameters": {
-          "fallbackWidth": {
-            "exampleValue": 800
-          },
-          "fallbackHeight": {
-            "exampleValue": 480
-          }
-        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
@@ -3026,46 +2949,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
-      },
-      "ComposePlcAliasAlarmLad": {
-        "arguments": {
-          "blockName": "FC_Example",
-          "blockNumber": 1,
-          "rowsJson": "[{\"source\":[\"Input\"],\"destination\":[\"DB_Status\",\"Ready\"]}]"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ComposePlcFbBlockXml": {
-        "arguments": {
-          "fbBlockJson": "{\"blockName\":\"FB_Ready\",\"blockNumber\":11,\"inputs\":[],\"outputs\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
-      },
-      "ComposePlcFcBlockXml": {
-        "arguments": {
-          "fcBlockJson": "{\"blockName\":\"FC_Ready\",\"blockNumber\":10,\"inputs\":[],\"outputs\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
-      },
-      "ComposePlcLadFcBlockXml": {
-        "arguments": {
-          "ladFcBlockJson": "{\"blockName\":\"FC_Lad\",\"blockNumber\":12,\"networks\":[{\"callJson\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}]}"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
       },
       "ConfigureMotionHardwareConnection": {
         "arguments": {
@@ -5548,17 +5431,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "InstantiatePlcXmlTemplates": {
-        "arguments": {
-          "templatePath": "C:\\Examples\\templates\\Block.xml",
-          "rowsJson": "[{\"fileName\":\"Example.xml\",\"values\":{\"Name\":\"Example\"}}]",
-          "outputDirectory": "C:\\Examples\\generated",
-          "dryRun": true
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "InvokeObject": {
         "arguments": {
           "objectKind": "Project",
@@ -5610,25 +5482,6 @@
           },
           "allowWrite": {
             "exampleValue": false
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "LintPlcSclSource": {
-        "arguments": {
-          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
-        },
-        "parameters": {
-          "filePath": {
-            "exampleValue": "C:\\Examples\\exports\\Main.xml"
-          },
-          "rulesJson": {
-            "exampleValue": "<rulesJson from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "limit": {
-            "exampleValue": 500
           }
         },
         "operations": {},
@@ -11640,7 +11493,17 @@
       },
       "PlanArtifactImportOrder": {
         "arguments": {
-          "artifactsJson": "[{\"Id\":\"UDT_Status\"},{\"Id\":\"FB_Motor\",\"Dependencies\":[\"UDT_Status\"]}]"
+          "artifacts": [
+            {
+              "id": "UDT_Status"
+            },
+            {
+              "id": "FB_Motor",
+              "dependencies": [
+                "UDT_Status"
+              ]
+            }
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -11710,34 +11573,6 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "PlcBuildAndImport": {
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "kind": "fc",
-          "json": "{\"blockName\":\"FC_DryRun\",\"blockNumber\":12,\"inputs\":[{\"name\":\"Start\",\"datatype\":\"Bool\"}],\"outputs\":[{\"name\":\"Run\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"if\",\"condition\":\"Start\"},{\"op\":\"assignment\",\"target\":\"Run\",\"value\":\"TRUE\",\"indent\":2},{\"op\":\"endif\"}]}}",
-          "dryRun": true
-        },
-        "parameters": {
-          "typeGroupPath": {
-            "exampleValue": "<typeGroupPath from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "tagFolderPath": {
-            "exampleValue": "<tagFolderPath from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "blockGroupPath": {
-            "exampleValue": "<blockGroupPath from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "compileAfter": {
-            "exampleValue": true
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
       },
       "PlugDeviceItem": {
         "arguments": {
@@ -12402,45 +12237,9 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadOpennessGuidance": {
-        "arguments": {},
-        "parameters": {
-          "query": {
-            "exampleValue": "<query from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "document": {
-            "exampleValue": "<document from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "offset": {
-            "exampleValue": 0
-          },
-          "limit": {
-            "exampleValue": 100
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "ReadOpennessWorkerStatus": {
         "arguments": {},
         "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ReadPlcBlockScopes": {
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "parameters": {
-          "offset": {
-            "exampleValue": 0
-          },
-          "limit": {
-            "exampleValue": 100
-          }
-        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
@@ -13231,35 +13030,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadV21EcosystemCatalog": {
-        "arguments": {},
-        "parameters": {
-          "query": {
-            "exampleValue": "<query from this operation's target or user input>",
-            "requiresBinding": true
-          },
-          "source": {
-            "exampleValue": "all"
-          },
-          "offset": {
-            "exampleValue": 0
-          },
-          "limit": {
-            "exampleValue": 50
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "RebuildReleaseHandoffArtifacts": {
-        "arguments": {
-          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
-          "outputDirectory": "C:\\Examples\\generated"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "ReleaseUnifiedReadCursor": {
         "arguments": {
           "cursor": "<cursor from the preceding read>"
@@ -13481,7 +13251,7 @@
         "arguments": {
           "operations": [
             {
-              "name": "ReadOpennessGuidance",
+              "name": "GetOpennessGuidance",
               "arguments": {
                 "query": "threading"
               }
@@ -14231,16 +14001,9 @@
       "ValidateClassicHmiMinimalPackagePlcSync": {
         "arguments": {
           "path": "C:\\Examples\\classic-package",
-          "plcSymbolsJson": "[\"DB_Status.Ready\"]"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "ValidatePlcXmlSchemas": {
-        "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
-          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+          "plcSymbols": [
+            "DB_Status.Ready"
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -14257,8 +14020,38 @@
       },
       "WriteClassicHmiMinimalPackageFiles": {
         "arguments": {
-          "packageJson": "{\"Name\":\"Example\",\"ScreenDesign\":{\"Screen\":{\"Name\":\"Overview\",\"Width\":800,\"Height\":480},\"Items\":[{\"Type\":\"Text\",\"Name\":\"StatusText\",\"Left\":20,\"Top\":20,\"Width\":160,\"Height\":40,\"Text\":\"Ready\"}]},\"TagTable\":{\"Name\":\"ExampleTags\",\"Tags\":[{\"Name\":\"Ready\",\"DataType\":\"Bool\",\"Length\":1}]}}",
-          "outputDirectory": "C:\\Examples\\generated"
+          "outputDirectory": "C:\\Examples\\generated",
+          "package": {
+            "name": "Example",
+            "screenDesign": {
+              "screen": {
+                "name": "Overview",
+                "width": 800,
+                "height": 480
+              },
+              "items": [
+                {
+                  "type": "Text",
+                  "name": "StatusText",
+                  "left": 20,
+                  "top": 20,
+                  "width": 160,
+                  "height": 40,
+                  "text": "Ready"
+                }
+              ]
+            },
+            "tagTable": {
+              "name": "ExampleTags",
+              "tags": [
+                {
+                  "name": "Ready",
+                  "dataType": "Bool",
+                  "length": "1"
+                }
+              ]
+            }
+          }
         },
         "parameters": {},
         "operations": {},
@@ -14510,6 +14303,468 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
+      },
+      "BuildClassicHmiScreen": {
+        "arguments": {
+          "design": {
+            "screen": {
+              "name": "Overview",
+              "width": 800,
+              "height": 480
+            },
+            "items": [
+              {
+                "type": "Text",
+                "name": "StatusText",
+                "left": 20,
+                "top": 20,
+                "width": 160,
+                "height": 40,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "Default screen engineering format is V18; this builder does not infer the running engine version. Inspect output and validate against a native target-version export."
+      },
+      "BuildClassicHmiTagTable": {
+        "arguments": {
+          "table": {
+            "name": "ExampleTags",
+            "tags": [
+              {
+                "name": "Ready",
+                "dataType": "Bool",
+                "length": "1"
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "Default tag-table engineering format is V21, including on V20. Generated XML is not native-import verification."
+      },
+      "BuildFlgNetCall": {
+        "arguments": {
+          "flgNet": {
+            "callName": "FC_Ready",
+            "parameters": [
+              {
+                "name": "Ready",
+                "section": "Output",
+                "dataType": "Bool",
+                "symbolPath": [
+                  "DB_Status",
+                  "Ready"
+                ]
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "BuildPlcGlobalDb": {
+        "arguments": {
+          "outputReleaseKey": "{release}",
+          "globalDb": {
+            "dbName": "DB_Status",
+            "dbNumber": 10,
+            "staticMembers": [
+              {
+                "name": "Ready",
+                "datatype": "Bool",
+                "startValue": "FALSE"
+              }
+            ]
+          }
+        },
+        "parameters": {
+          "outputReleaseKey": {
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
+      },
+      "BuildPlcSymbolManifestFromPath": {
+        "arguments": {
+          "path": "C:\\Examples\\snapshot"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "BuildPlcTagTable": {
+        "arguments": {
+          "tagTable": {
+            "tableName": "ExampleTags",
+            "tags": [
+              {
+                "name": "Ready",
+                "dataTypeName": "Bool",
+                "logicalAddress": "%M0.0"
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "BuildPlcUdt": {
+        "arguments": {
+          "outputReleaseKey": "{release}",
+          "udt": {
+            "name": "UDT_Status",
+            "members": [
+              {
+                "name": "Ready",
+                "datatype": "Bool",
+                "comment": "Ready state"
+              }
+            ]
+          }
+        },
+        "parameters": {
+          "outputReleaseKey": {
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
+      },
+      "BuildStructuredText": {
+        "arguments": {
+          "structuredText": {
+            "operations": [
+              {
+                "op": "assign",
+                "target": "#Ready",
+                "literalValue": "TRUE"
+              }
+            ]
+          }
+        },
+        "parameters": {
+          "innerOnly": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "BuildUnifiedHmiTemplateApplyDesign": {
+        "arguments": {
+          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+        },
+        "parameters": {
+          "fallbackWidth": {
+            "exampleValue": 800
+          },
+          "fallbackHeight": {
+            "exampleValue": 480
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "BuildPlcAliasAlarmLad": {
+        "arguments": {
+          "blockName": "FC_Example",
+          "blockNumber": 1,
+          "rows": [
+            {
+              "source": [
+                "Input"
+              ],
+              "destination": [
+                "DB_Status",
+                "Ready"
+              ]
+            }
+          ]
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "BuildPlcFbBlock": {
+        "arguments": {
+          "fbBlock": {
+            "blockName": "FB_Ready",
+            "blockNumber": 11,
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "Ready",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "assign",
+                  "target": "#Ready",
+                  "literalValue": "TRUE"
+                }
+              ]
+            }
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "BuildPlcFcBlock": {
+        "arguments": {
+          "fcBlock": {
+            "blockName": "FC_Ready",
+            "blockNumber": 10,
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "Ready",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "assign",
+                  "target": "#Ready",
+                  "literalValue": "TRUE"
+                }
+              ]
+            }
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "BuildPlcLadFcBlock": {
+        "arguments": {
+          "ladFcBlock": {
+            "blockName": "FC_Lad",
+            "blockNumber": 12,
+            "networks": [
+              {
+                "call": {
+                  "callName": "FC_Ready",
+                  "parameters": [
+                    {
+                      "name": "Ready",
+                      "section": "Output",
+                      "dataType": "Bool",
+                      "symbolPath": [
+                        "DB_Status",
+                        "Ready"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "executionTest": "offline-in-memory",
+        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+      },
+      "InstantiatePlcTemplates": {
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "AnalyzePlcSclSource": {
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "parameters": {
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          },
+          "rulesJson": {
+            "exampleValue": "<rulesJson from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "limit": {
+            "exampleValue": 500
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "BuildAndImportPlcArtifact": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
+        },
+        "parameters": {
+          "typeGroupPath": {
+            "exampleValue": "<typeGroupPath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "tagFolderPath": {
+            "exampleValue": "<tagFolderPath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "blockGroupPath": {
+            "exampleValue": "<blockGroupPath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "compileAfter": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
+      },
+      "GetOpennessGuidance": {
+        "arguments": {},
+        "parameters": {
+          "query": {
+            "exampleValue": "<query from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "document": {
+            "exampleValue": "<document from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetPlcBlockScopes": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetV21EcosystemCatalog": {
+        "arguments": {},
+        "parameters": {
+          "query": {
+            "exampleValue": "<query from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "source": {
+            "exampleValue": "all"
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 50
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "BuildReleaseHandoffArtifacts": {
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "ValidatePlcDocumentSchemas": {
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       }
     }
   }

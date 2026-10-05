@@ -205,7 +205,8 @@
     },
     "ManagePlcBlockDocuments": {
       "result": "For import, inspect meta.result state, imported object names and native messages. Compare the requested object names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
-      "profile": "full-engine"
+      "profile": "full-engine",
+      "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     },
     "ExchangeUnifiedScriptModules": {
       "input": "Global module exchange uses a directory package exported by the selected TIA release. Keep the .hmi.js, .hmi.yml and companion files together. moduleName is for export only.",
@@ -465,6 +466,24 @@
         "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
         "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf"
       ]
+    },
+    "BuildPlcUdt": {
+      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward.",
+      "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
+        "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf"
+      ],
+      "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
+    },
+    "BuildPlcGlobalDb": {
+      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward.",
+      "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
+        "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf"
+      ],
+      "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     }
   }
 }

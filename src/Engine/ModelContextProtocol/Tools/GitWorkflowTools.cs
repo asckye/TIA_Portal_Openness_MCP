@@ -1,3 +1,4 @@
+using ModelContextProtocol.Protocol;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +13,17 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class GitWorkflowTools
     {
-        [McpServerTool(Name = "ManagePlcGitRepository"), Description("[L2][VersionControl][FILE] Git workflow for a local PLC export/VCI repository: status, history, diff, show, stage or commit. Calls git.exe directly without a shell. Read actions never fetch/pull/push or change branches. show requires a revision and exactly one relative file path. stage/commit require an explicit filesJson array and dryRun=false; commit includes only selected files using --only, never unrelated staged content. A commit can run repository Git hooks; commit failure may leave selected paths staged. No remote publication or TIA actions. For graphical comparison export two revisions to files and use RenderPlcVisualDiff.")]
+        [McpServerTool(Name = "ManagePlcGitRepository"), Description("[L2][VersionControl][FILE] Git workflow for a local PLC export/VCI repository: status, history, diff, show, stage or commit. Calls git.exe directly without a shell. Read actions never fetch/pull/push or change branches. show requires a revision and exactly one relative file path. stage/commit require an explicit files array and dryRun=false; commit includes only selected files using --only, never unrelated staged content. A commit can run repository Git hooks; commit failure may leave selected paths staged. No remote publication or TIA actions. For graphical comparison export two revisions to files and use RenderPlcVisualDiff.")]
+        public Task<CallToolResult> ManagePlcGitRepositoryV4(
+            [Description("Existing absolute Git working tree directory for exported PLC files.")] string repositoryPath,
+            [Description("status | history | diff | show | stage | commit. status/history/diff/show/stage/commit.")] string action = "status",
+            [Description("files: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] string[]? files = null,
+            [Description("Git revision used by show, default HEAD.")] string revision = "HEAD",
+            [Description("Commit message; required for commit.")] string message = "",
+            [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true,
+            [Description("Maximum returned items; see tool limits.")] int limit = 30)
+            => OfflineContracts.RunAsync("ManagePlcGitRepository", () => ManagePlcGitRepository(repositoryPath, action, OfflineContracts.Names(files, "[]"), revision, message, dryRun, limit), writes: (action == "stage" || action == "commit") && !dryRun, current: false);
+
         public async Task<ResponseMessage> ManagePlcGitRepository([Description("Existing absolute Git working tree directory for exported PLC files.")] string repositoryPath, [Description("status | history | diff | show | stage | commit. status/history/diff/show/stage/commit.")] string action = "status", [Description("JSON array of explicit repository-relative file paths.")] string filesJson = "[]", [Description("Git revision used by show, default HEAD.")] string revision = "HEAD", [Description("Commit message; required for commit.")] string message = "", [Description("true previews without executing the requested write/action; false executes.")] bool dryRun = true, [Description("Maximum returned items; see tool limits.")] int limit = 30)
         {
             var meta = ResponseMeta.Unstamped(false, ("action", action), ("offlineOnly", true));
@@ -45,6 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["selectedFiles"] = nodes.DeepClone();
                 // envelope: legacy-single-verdict
                 if ((action == "stage" || action == "commit") && dryRun) { meta["success"] = true; meta["executed"] = false; return new ResponseMessage { Message = "Git change preview; selected files only.", Meta = meta }; }
+                meta["dispatchStarted"] = true;
                 var result = await EcosystemFiles.Run("git.exe", args, root, input, 60).ConfigureAwait(false);
                 if (action == "commit" && result["success"]?.GetValue<bool>() == true)
                 {

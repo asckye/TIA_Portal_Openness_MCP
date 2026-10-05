@@ -469,7 +469,7 @@ CASES = {
         ('SaveExportContent', 'missing', {'exportId': 'domain-missing', 'outputPath': 'unused.xml'}),
         ('DeleteExportHandle', 'missing', {'exportId': 'domain-missing'}),
         ('ClearExportHandles', 'empty', {})],
-    'EngineeringAudit': [('ReadPlcBlockScopes', 'disconnected', {'softwarePath': PLC})]
+    'EngineeringAudit': [('GetPlcBlockScopes', 'disconnected', {'softwarePath': PLC})]
         + actions('ManagePlcBlockDocuments', 'list read export import', softwarePath=PLC),
     'EngineeringDiagnostics': [('InspectSimaticSdCompatibility', 'invalid-version', {'filePath': '', 'tiaMajor': 19}),
            ('ReadOpennessCompatibility', 'metadata', {}),
@@ -478,13 +478,13 @@ CASES = {
         ('ComparePlcBlockDocuments', 'invalid-page', {'offset': -1}),
         ('ScanPlcSourceAnnotations', 'invalid-page', {'directory': '', 'offset': -1}),
         ('ExtractPlcBlockMetrics', 'invalid-page', {'path': '', 'offset': -1})],
-    'XmlBuilder': [(name, 'invalid-json', {parameter: '{'}) for name, parameter in (
-        ('BuildClassicHmiScreenXml', 'designJson'), ('BuildPlcUdtXml', 'udtJson'),
-        ('BuildPlcTagTableXml', 'tagTableJson'), ('BuildPlcGlobalDbXml', 'globalDbJson'),
-        ('BuildStructuredTextXml', 'structuredTextJson'), ('BuildFlgNetCallXml', 'flgNetJson'),
-        ('ComposePlcFcBlockXml', 'fcBlockJson'), ('ComposePlcFbBlockXml', 'fbBlockJson'),
-        ('ComposePlcLadFcBlockXml', 'ladFcBlockJson'))],
-    'PlcBuild': [('PlcBuildAndImport', 'invalid-kind', {'softwarePath': PLC, 'kind': 'invalid', 'json': '{}'})],
+    'XmlBuilder': [(name, 'encoded-input', {parameter: '{'}) for name, parameter in (
+        ('BuildClassicHmiScreen', 'design'), ('BuildPlcUdt', 'udt'),
+        ('BuildPlcTagTable', 'tagTable'), ('BuildPlcGlobalDb', 'globalDb'),
+        ('BuildStructuredText', 'structuredText'), ('BuildFlgNetCall', 'flgNet'),
+        ('BuildPlcFcBlock', 'fcBlock'), ('BuildPlcFbBlock', 'fbBlock'),
+        ('BuildPlcLadFcBlock', 'ladFcBlock'))],
+    'PlcBuild': [('BuildAndImportPlcArtifact', 'invalid-kind', {'softwarePath': PLC, 'kind': 'invalid', 'spec': {'members': []}})],
     'SoftwareUnitManagement': [('SetPlcUnitObjectAccess', 'disconnected',
         {'softwarePath': PLC, 'unitName': 'Unit1', 'objectKind': 'block', 'objectPath': 'FC1', 'access': 'Published'})],
     'Types': [('GetPlcTypeInfo', 'read', {'softwarePath': PLC, 'typePath': 'Type1'}),
@@ -510,7 +510,7 @@ CASES = {
         + [('ListPlcSystemGroups', 'read', {'softwarePath': PLC})],
     'PlcDocumentation': [('RenderPlcBlockDocument', 'missing-input', {}),
         ('GeneratePlcDocumentation', 'missing-output', {'directory': '', 'outputPath': ''}),
-        ('LintPlcSclSource', 'lint', {'sourceText': 'FUNCTION Test : Void\nBEGIN\nEND_FUNCTION'})],
+        ('AnalyzePlcSclSource', 'lint', {'sourceText': 'FUNCTION Test : Void\nBEGIN\nEND_FUNCTION'})],
     'NativeExchange': actions('ManageProjectLanguage', 'read activate deactivate setEditing setReference', culture='en-US')
         + [('CreatePlcInstanceDb', 'preview', {'softwarePath': PLC, 'fbPath': 'FB1', 'name': 'DB1'}),
            ('GeneratePlcSourceFromBlocks', 'preview', {'softwarePath': PLC, 'blockPaths': ['Block1'], 'filePath': 'C:/domain-offline.scl'}),
@@ -1090,8 +1090,8 @@ SOFTWARE_REPLY_MARKERS = {
     'InspectSimaticSdCompatibility': ("An error occurred invoking 'InspectSimaticSdCompatibility'", 'tiaMajor must be 20/21'),
     'ReadOpennessCompatibility': 'installedPatch', 'ReadNativeInvocationLog': 'take',
     **{name: 'InvalidParams' for name in ('ComparePlcBlockDocuments', 'ScanPlcSourceAnnotations', 'ExtractPlcBlockMetrics')},
-    **{name: 'JSON' for name, _, _ in CASES['XmlBuilder']},
-    'PlcBuildAndImport': 'kind'
+    **{name: 'INVALID_ARGUMENT' for name, _, _ in CASES['XmlBuilder']},
+    'BuildAndImportPlcArtifact': 'INVALID_ARGUMENT'
 }
 
 
@@ -1124,7 +1124,8 @@ SOURCE_TOOL_GUARDS = {
     'ExportPlcType': 'No project is open', 'ImportPlcType': 'No project is open',
     'SeedProjectFromReference': 'Project is null',
     'RenderPlcBlockDocument': 'Exactly one of filePath or blockPath',
-    'GeneratePlcDocumentation': 'Absolute output file path required', 'LintPlcSclSource': 'findingCount'
+    'GeneratePlcDocumentation': 'Absolute output file path required', 'AnalyzePlcSclSource': 'findingCount',
+    'RetrieveProjectArchive': 'Connect to TIA first.'
 }
 
 

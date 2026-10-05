@@ -419,7 +419,7 @@ Used by `tia gen` (build from zero) and `tia patch` (upsert into existing).
   hmiFamily       string  default WinCCUnifiedPC.
   hmiSoftwarePath string  blank = auto-probe.
   connectionName  string  default HMI_Connection_1.
-  udt[]           objects same shape as BuildPlcUdt / PlcBuildAndImport.
+  udt[]           objects same shape as BuildPlcUdt / BuildAndImportPlcArtifact.
   globalDb[]      objects same shape as BuildPlcGlobalDb.
   tagTable[]      objects same shape as BuildPlcTagTable.
   sclSourceFiles[] strings .scl external-source file paths.
