@@ -3305,7 +3305,7 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "GetBlocks",
+          "toolName": "ListPlcBlocks",
           "exampleKind": "all"
         },
         "envelopeVersion": 4
@@ -4210,7 +4210,7 @@
           "lite"
         ],
         "arguments": {
-          "tool": "GetBlocks",
+          "tool": "ListPlcBlocks",
           "limit": 10
         },
         "envelopeVersion": 4
@@ -6261,7 +6261,7 @@
           "lite"
         ],
         "arguments": {
-          "name": "GetBlocks",
+          "name": "ListPlcBlocks",
           "arguments": {
             "softwarePath": "PLC_1"
           }
@@ -10637,7 +10637,7 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "GetBlocks",
+          "toolName": "ListPlcBlocks",
           "exampleKind": "all"
         },
         "envelopeVersion": 4
@@ -11556,7 +11556,7 @@
           "lite"
         ],
         "arguments": {
-          "tool": "GetBlocks",
+          "tool": "ListPlcBlocks",
           "limit": 10
         },
         "envelopeVersion": 4
@@ -13764,7 +13764,7 @@
           "lite"
         ],
         "arguments": {
-          "name": "GetBlocks",
+          "name": "ListPlcBlocks",
           "arguments": {
             "softwarePath": "PLC_1"
           }

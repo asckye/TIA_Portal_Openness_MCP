@@ -5091,7 +5091,7 @@
       },
       "GetToolUsage": {
         "arguments": {
-          "toolName": "GetBlocks",
+          "toolName": "ListPlcBlocks",
           "exampleKind": "all"
         },
         "parameters": {
@@ -12304,7 +12304,7 @@
       },
       "PreviewToolCall": {
         "arguments": {
-          "name": "GetBlocks",
+          "name": "ListPlcBlocks",
           "arguments": {
             "softwarePath": "PLC_1"
           }
@@ -15049,7 +15049,7 @@
       },
       "ListExportHandles": {
         "arguments": {
-          "tool": "GetBlocks",
+          "tool": "ListPlcBlocks",
           "limit": 10
         },
         "parameters": {},
