@@ -21,6 +21,42 @@ E = "src/Engine/"
 L = "src/Logic/"
 F = "src/FoundationHost/"
 S = "src/Studio/"
+A = "src/Adapters/"
+SH = "src/Shared/"
+TE = "tests/Engine/"
+TS = "tests/Studio/"
+# D334 moved sources, not product identities. Resolve every inventory entry
+# against tracked files so a stale pre-move path cannot silently disappear.
+def validate_paths(paths):
+    for p in paths:
+        assert p in files or any(f.startswith(p.rstrip('/') + '/') for f in files), ("untracked inventory path", p)
+
+validate_paths([E, L, F, S, A, SH, TE, TS, "build-tools/native-call-weaver", "plugin/skill"])
+primitive_paths = []
+for p in sorted(f for f in files if f.startswith(SH + "shared-native/") and f.endswith(".props")):
+    for item in ET.fromstring(read(p)).iter("TiaSharedNativePrimitive"):
+        include = item.attrib["Include"].replace("$(MSBuildThisFileDirectory)", "")
+        primitive_paths.append(((root / p).parent / include).resolve().relative_to(root).as_posix())
+validate_paths(primitive_paths)
+assert len(primitive_paths) == len(set(primitive_paths)) == 5
+step_i = {
+    "p4-i1": ("VersionControl", "Vci/VersionControlPrimitives.cs"),
+    "p4-i2": ("PlcTables TechnologyObjects", "Plc/WatchTechnologyPrimitives.cs"),
+    "p4-i3": ("Devices", "Hardware/HardwarePrimitives.cs"),
+    "p4-i4a": ("PlcBlocks PlcSoftware Types", "Plc/PlcBlockPrimitives.cs"),
+    "p4-i4b": ("Documents PlcExternalSources", "Plc/PlcDocumentPrimitives.cs"),
+}
+for task, (services, primitive) in step_i.items():
+    assert A + "Native/" + primitive in primitive_paths
+    validate_paths([E + "Siemens/Services/" + s + "Service.cs" for s in services.split()])
+    assert json.loads(read("docs/development/evidence/" + task + "-native-evidence.json"))["accepted"] is True
+shared_paths = ET.fromstring(read(SH + "TiaSharedAdapterPaths.props"))
+assert shared_paths.findtext(".//TiaSharedAdapterPaths") == "false"
+behavior_families = "DEVICE IMPORT EXPORT SESSION CLOSE SOURCE COMPILE FALLBACK".split()
+ledger = read("docs/reference/real-machine-ledger.md")
+for fam in behavior_families:
+    rows = re.findall(r"^\| P6-" + fam + r" .*", ledger, re.M)
+    assert len(rows) == 1 and "**NOT RUN**" in rows[0], (fam, rows)
 sys.path.insert(0, str(root / "scripts/checks"))
 import engine_sources
 engine = engine_sources.EngineSources(root)
@@ -277,7 +313,7 @@ def table(headers, rows):
     out.extend("| " + " | ".join(str(x).replace("|", r"\|").replace("\n", " ") for x in row) + " |" for row in rows)
     out.append("")
 def link(p, label=None):
-    assert (root / p).is_file() or p == "scripts/generate/phase6-lite.proposal.json", p
+    assert (root / p).exists(), p
     return "[" + (label or p.removeprefix(E).removeprefix(L).removeprefix(F).removeprefix(S)) + "](../../" + p + ")"
 def section(title):
     out.extend(["<details>", "<summary>" + title + "</summary>", ""])
@@ -317,6 +353,59 @@ for task, stems in MIGRATION_GROUPS.items():
         assert (root / path).is_file(), path
         owners[path] = task
 assert set(p for p,m in source_tools.values()) <= set(owners), sorted(set(p for p,m in source_tools.values()) - set(owners))
+
+# Existing entry points and ownership roots, not permission to edit whole trees.
+# New files are created only by the named future task within these roots.
+TASK_PATHS = {
+    "P6-01": ["scripts/generate/Generate-Phase6Plan.py", "scripts/generate/phase6-lite.proposal.json", "docs/development/phase6-review.md", "docs/development/refactor-plan.md", "docs/reference/real-machine-ledger.md"],
+    "P6-02": [L+"V4", L+"TiaMcp.Logic.csproj", TE+"TiaMcpServer.Tests/V4EnvelopeTests.cs"],
+    "P6-03": [L+"V4", L+"Siemens/ArgumentRules.cs", TE+"TiaMcpServer.Tests"],
+    "P6-04": [L+"V4", L+"ModelContextProtocol/Builders", F+"OfflineCompositionBuilders.cs", F+"OfflineBlockCompositionBuilders.cs", F+"OfflineLadderBuilders.cs", F+"OfflineXmlBuilders.cs", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests"],
+    "P6-05": [L+"V4", L+"ModelContextProtocol/Builders", TE+"TiaMcpServer.Tests"],
+    "P6-06": [L+"V4", E+"Siemens", L+"Siemens", TE+"TiaMcpServer.Tests"],
+    "P6-08": [F, TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.TransportFixture", "scripts/checks/Test-FoundationTransport.py"],
+    "P6-25": [E+"Cli", S+"Client", S+"Core", S+"Gui/ViewModels", S+"Gui/Localization", TE+"TiaMcpServer.Tests", TS],
+    "P6-26": [E+"ModelContextProtocol", F, S+"Gui/Localization", "scripts/checks/Check-McpText.py", "scripts/checks/mcp-text-baseline.json", "scripts/checks/Test-LocalStability.py", "scripts/checks/Snapshot-ToolContracts.py", "scripts/checks/Snapshot-ToolResponses.py"],
+    "P6-27": [E+"Siemens/Services/DevicesService.cs", A+"Native/Hardware", F+"DeviceAddContract.cs", TE+"TiaMcpServer.DeviceAddTests", TE+"TiaMcpServer.HardwareCatalogTests"],
+    "P6-28": [E+"Siemens/Services/PlcBlocksService.cs", E+"Siemens/Services/TypesService.cs", E+"Siemens/Services/PlcTablesService.cs", A+"Native/Plc", A+"Policy/PlcBlockXmlPolicy.cs", F+"BatchImportContract.cs", TE+"TiaMcpServer.LegacyHostTests"],
+    "P6-29": [E+"Siemens/Services/NativeExchangeService.cs", E+"Siemens/Services/DocumentsService.cs", E+"Siemens/EngineeringExport.cs", A+"Native/Plc", F+"BatchExportContract.cs", F+"BatchDocumentExportContract.cs", F+"SpecialExportContract.cs"],
+    "P6-30": [E+"Siemens/Portal", A+"Native/Session", A+"Policy/PlcLifecyclePolicy.cs", F+"WorkerClient.cs", S+"Core/Adapters"],
+    "P6-31": [E+"Siemens/Portal", A+"Native/Session", A+"Policy/PlcLifecyclePolicy.cs", F+"DisconnectContract.cs", S+"Core/Adapters"],
+    "P6-32": [E+"Siemens/PlcBlockLookup.cs", E+"Siemens/Services/PlcExternalSourcesService.cs", A+"Native/Plc", F+"ExternalSourcePlanContract.cs", F+"ExternalSourceWorkflowContract.cs", F+"ExternalSourceDeleteContract.cs"],
+    "P6-33": [E+"Siemens/Services/PlcSoftwareService.cs", E+"Siemens/Services/PlcBlocksService.cs", E+"Siemens/Services/HmiDescribeService.cs", E+"Siemens/Services/HardwareServicesService.cs", A+"Native/Plc/PlcBlockPrimitives.cs", F+"V17CompileEnvelope.cs"],
+    "P6-34": [E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", E+"Siemens/Services/OnlineDownloadService.cs", E+"Siemens/Services/VersionControlService.cs", A+"Native/Vci"],
+    "P6-35": [E+"Siemens/ToolVersionPolicy.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", F+"FoundationTools.cs", "reference/version-feature-matrix.json", "docs/reference/real-machine-ledger.md", "scripts/checks/Snapshot-ToolContracts.py", "scripts/checks/Snapshot-ToolResponses.py"],
+    "P6-36": [E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", F+"TiaMcpServer.LegacyHost.csproj", S+"Launcher/Launcher.cs", "scripts/build", "scripts/checks", "build-tools/native-call-weaver", "scripts/operations/delivery-files.json"],
+    "P6-37": [SH+"BundleLayout.cs", E+"Program.cs", E+"Cli", E+"Siemens/EngineRouter.cs", F+"HostOptions.cs", F+"Program.cs", L+"ModelContextProtocol/Builders/EcosystemFiles.cs", TE+"TiaMcpServer.Tests/BundleLayoutTests.cs"],
+    "P6-38": [S+"Gui/Configuration", S+"Gui/ConfigurationPage.cs", S+"Client/BridgeClient.cs", S+"Core/Abstractions/SessionFactoryLoader.cs", S+"Core/Adapters/SessionFactoryLoader.cs", TS],
+    "P6-39": [SH+"DataLocations.cs", SH+"InvocationJournal.cs", E+"Program.cs", E+"Cli/ReportBuilders.cs", E+"Cli/HmiTemplateBuilder.cs", E+"ModelContextProtocol/Tools/EcosystemTools.cs", L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", S+"Gui/App.xaml.cs", "scripts/ecosystem/Install-PlcTools.ps1"],
+    "P6-40": ["reference/tool-examples", E+"ModelContextProtocol/McpPrompts.cs", "plugin/skill", "docs", "scripts/generate/Generate-ToolUsage.py", "scripts/generate/Generate-ToolCapabilityMatrix.ps1", SH+"ToolUsageData.json", "docs/reference/tool-matrix.md"],
+    "P6-41": ["manifest/contracts", "scripts/checks/Snapshot-ToolContracts.py", "scripts/checks/Snapshot-ToolResponses.py", "scripts/generate/Generate-Phase6Plan.py", ".github/workflows/offline-checks.yml", "scripts/checks/Check-Repository.py", "scripts/checks/Validate-Bundle.ps1", "scripts/build/Package-Release.py"],
+    "P6-42": ["scripts/build/Build-MultiVersion.ps1", "scripts/checks/Test-DotnetSuites.py", "tests/test-suites.json", "scripts/checks/Validate-Bundle.ps1", "docs/reference/real-machine-ledger.md"],
+    "P6-43": ["docs/releases", "docs/development/phase6-review.md", "reference/tool-examples", "manifest/contracts"],
+    "P6-44": [E+"Program.cs", E+"ModelContextProtocol/Tools/McpServer.SerializedCalls.cs", E+"ModelContextProtocol/Tools/McpServer.ToolBridge.cs", E+"ModelContextProtocol/Tools/McpServer.Batch.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", F+"Program.cs", F+"FoundationTools.cs", L+"V4/Error.cs", L+"V4/V4Json.cs", L+"V4/V4Validation.cs", SH, S+"Core", S+"Gui/MainWindow.xaml", S+"Gui/MainWindow.xaml.cs", S+"Gui/ViewModels", S+"Gui/Services", S+"Gui/Settings/UiSettings.cs", S+"Gui/Localization", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TS],
+    "P6-45": [SH+"InvocationJournal.cs", E+"ModelContextProtocol/InvocationJournal.cs", S+"Core", S+"Gui/MainWindow.xaml", S+"Gui/ViewModels", S+"Gui/Controls", S+"Gui/Configuration/ClientProfiles.cs", S+"Gui/Localization", TS],
+    "P6-46": [SH+"InvocationJournal.cs", SH+"NativeCallDiagnostics.Journal.cs", SH+"DataLocations.cs", E+"ModelContextProtocol/InvocationJournal.cs", E+"Cli/CliCommands.cs", S+"Core", S+"Gui/Settings/UiSettings.cs", S+"Gui/ViewModels", TE+"TiaMcpServer.DiagnosticsTests", TS],
+    "P6-47": [E+"Runtime/EnvironmentDoctor.cs", E+"ModelContextProtocol/Tools/McpServer.Doctor.cs", F+"LegacyHostPassiveDiagnostics.cs", S+"Core/Environment/OpennessDoctor.cs", SH+"OpennessEnvironment.cs", SH+"DataLocations.cs", S+"Gui/MainWindow.xaml", S+"Gui/ViewModels", S+"Gui/Configuration", S+"Gui/Localization", TS],
+    "P6-48": [L+"ModelContextProtocol/Builders/PlcVisualComparison.cs", L+"ModelContextProtocol/Builders/LadTextRenderer.cs", E+"ModelContextProtocol/Tools/EcosystemTools.cs", E+"ModelContextProtocol/Tools/PlcBlocksTools.cs", F+"FoundationTools.cs", S+"Gui/MainWindow.xaml", S+"Gui/ViewModels", S+"Gui/Localization", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TS],
+}
+for task in MIGRATION_GROUPS:
+    paths = sorted(p for p in owners if owners[p] == task)
+    services = [E + "Siemens/Services/" + pathlib.PurePosixPath(p).stem.removesuffix("Tools") + "Service.cs" for p in paths]
+    TASK_PATHS[task] = paths + sorted(p for p in services if p in files)
+TASK_PATHS["P6-07"] += [E+"ModelContextProtocol/Tools/McpServer.Profile.cs", SH+"ToolUsageCatalog.cs", L+"ModelContextProtocol/ToolRecipes.cs"]
+TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
+TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
+
+def validate_inventory(inventory):
+    expected = {f"P6-{i:02}" for i in range(1, 49)}
+    plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
+    assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
+    for task, paths in inventory.items():
+        assert paths and len(paths) == len(set(paths)), task
+        validate_paths(paths)
+
+validate_inventory(TASK_PATHS)
 
 out.append("### 当前基线与 V4 提案计数\n")
 rows = []
@@ -374,6 +463,7 @@ table(["输入", "发布键", "当前参数约束原文", "其他 schema 约束"
 guard_paths = [f for f in files if f.endswith('.cs') and (
     (f.startswith(F) and pathlib.PurePosixPath(f).name.startswith("Offline") and "Builder" in f)
     or f.startswith(L) or f in {p for p,m in source_tools.values()}
+    or f in primitive_paths
     or f.startswith(E + 'Siemens/') and (f.endswith('Logic.cs') or f.endswith('Rules.cs')))]
 guard_rows = []
 for f in sorted(guard_paths):
@@ -382,6 +472,7 @@ for f in sorted(guard_paths):
             guard_rows.append([link(f) + ":" + str(i), tick(line.strip())])
 assert guard_rows
 table(["parser/策略来源:行", "原始边界表达式"], guard_rows)
+out.append(f"共 {len(guard_rows)} 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。\n")
 end()
 
 section("C. 当前响应族 → V4 与保留的标记事实")
@@ -421,6 +512,9 @@ for p, target, ks, directory in [
     assert old == "TiaMcpServer"
     rows.append([link(p), ks, old+" → "+target, directory+target+".exe", tree.findtext('.//TargetFramework')])
 table(["项目", "发布键", "AssemblyName", "4.0 安装 EXE", "框架不变"], rows)
+table(["公共库/桌面项目", "当前目标框架（源码属性）"],
+      [[link(p), ET.fromstring(read(p)).findtext('.//TargetFrameworks') or ET.fromstring(read(p)).findtext('.//TargetFramework')]
+       for p in [L+"TiaMcp.Logic.csproj", S+"Gui/TiaOpenness.Gui.csproj", S+"Core/TiaOpenness.Core.csproj"]])
 config_specs = [
     (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", r'"(TIA_MCP_REPOSITORY_ROOT)"', "替换为 --bundle-root / TIA_MCP_BUNDLE_ROOT"),
     (E+"ModelContextProtocol/Tools/McpServer.Profile.cs", r"(TIA_MCP_PROFILE)", "lite/full 名称保留，名单改为 V4 数据"),
@@ -450,8 +544,10 @@ layout_policies = [
     (S+"Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
     (S+"Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
     (S+"Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
-    (E+"Program.cs", "DiagLogPathLocal", "安装目录启动日志/TEMP 共用日志", "LocalAppData/TiaMcp/logs/<releaseKey>"),
-    (S+"Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "LocalAppData/TiaMcp/logs/studio"),
+    (SH+"DataLocations.cs", "TIA_MCP_DATA_DIRECTORY", "显式数据根或 bundle/data；不可写时按用途回退用户目录", "沿用数据根政策；logs 按发布键/studio 分组"),
+    (SH+"InvocationJournal.cs", "DiagnosticsDirectory", "data/diagnostics 调用日志；10 MiB + 一份 previous", "P6-45 读取；P6-46 配置保留与时间窗口，审计另存 logs/audit"),
+    (E+"Program.cs", "DiagLogPathLocal", "主日志经 DataLocations；启动日志仍在安装目录", "数据根 logs/<releaseKey>；只读安装沿用用户目录回退"),
+    (S+"Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "数据根 logs/studio；只读安装沿用用户目录回退"),
     (E+"ModelContextProtocol/Tools/EcosystemTools.cs", "ecosystem-python", "包根下私有 Python 缺省", "显式解释器或 LocalAppData 环境"),
     (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "TMP_EXPORT/src/cwd 探测", "显式 workspace/fixture 根"),
     (E+"Cli/HmiTemplateBuilder.cs", "TIA_MCP_AI_PACK", "私有 HMI 模板默认输入", "显式模板路径"),
@@ -478,7 +574,7 @@ SCAN_TERMS = {
 scan = []
 excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")
 for f in sorted(files):
-    if f.startswith(excluded) or f == "CHANGELOG.md" or (f.startswith("third_party/") and not f.startswith("third_party/tia-openness-studio/")): continue
+    if f.startswith(excluded) or f == "CHANGELOG.md" or f.startswith("third_party/"): continue
     if pathlib.PurePosixPath(f).suffix.lower() not in {".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".slnx", ".config", ".gitignore", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml"}: continue
     content = read(f)
     hits = {kind: [str(i) for i,l in enumerate(content.splitlines(), 1) if re.search(pattern, l)] for kind,pattern in SCAN_TERMS.items()}
@@ -486,6 +582,7 @@ for f in sorted(files):
     if not hits: continue
     treatment = "修改引用并回归"
     if f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"): treatment = "仅运行所属生成器更新；历史契约归档，不手改哈希"
+    elif f.startswith(("docs/releases/", "docs/archive/", "docs/development/evidence/")): treatment = "历史证据只读保留，不作为 V4 改写目标"
     elif f.startswith("docs/development/"): treatment = "更新现行说明；历史阶段证据保留并注明被 V4 决策取代"
     scan.append([link(f, f), "; ".join(k+":"+",".join(v) for k,v in hits.items()), treatment])
 assert any("Package-Release.py" in r[0] for r in scan)
@@ -506,7 +603,26 @@ section("G. 完整引擎契约迁移任务的工具文件所有权")
 table(["任务", "工具源文件", "当前注册入口数"],
       [[task, "<br>".join(link(p) for p in sorted(owners) if owners[p] == task),
         sum(owners[p] == task for p,m in source_tools.values())] for task in MIGRATION_GROUPS])
-out.append("每个完整引擎注册入口恰有一个文件所有者；同 stem 的 Service 与本领域独占规则随该任务，公共 Portal/基础设施由 P6-24 串行集成。Foundation 由 P6-08 单独负责；公共 DTO 与项目文件不归并行领域任务编辑。\n")
+out.append("每个完整引擎注册入口恰有一个文件所有者；同 stem 的 Service 路径在 H 表展开。本领域独占规则随该任务，公共 src/Engine/Siemens/Portal 与基础设施由 P6-24 串行集成。Foundation 由 P6-08 单独负责；公共 DTO 与项目文件不归并行领域任务编辑。\n")
+end()
+
+section("H. 全部阶段 6 任务的当前路径与所有权")
+table(["任务", "当前源码/文档/验证入口（仓库根相对路径）"],
+      [[f'<a id="phase6-path-{task.lower()}"></a>{task}', "<br>".join(link(p, p) for p in TASK_PATHS[task])] for task in sorted(TASK_PATHS)])
+out.append("共 48 项。目录项是所有权定位范围，不是整目录修改授权；每份实施说明仍须列出精确文件。03–06 只在 src/Logic/V4 与所属测试目录新增本族 DTO/转换/测试，表内现有 parser 是只读依据。07、24 串行接线公共文件，08–23 仅改 G 表工具、对应 Service 和独占规则，共享原语留给 27–34 串行政策任务。\n")
+out.append("44 拥有引擎/Foundation 执行前审批门、src/Shared 内新增的当前用户命名管道协议、src/Studio/Core 与 Gui 的审批服务/视图/设置及 V4 拒绝详情；45 拥有调用日志脱敏投影与 Core 读取器/Gui 调用面板，不改变原生日志调用顺序；46 拥有 src/Shared 内新增审计写入/校验、InvocationJournal 保留策略、CLI/Studio 校验入口；47 拥有现有 doctor 的复用适配、Gui 体检视图与诊断包。四项的新增文件由各自任务固定名称，交叉文件按依赖串行集成。48 拥有把 RenderPlcVisualDiff 的梯形图布局/SVG 抽成共享逻辑、八版单块出图与图册工具（完整引擎与 Foundation 同一实现）及工作台入口；RenderPlcVisualDiff 输出不变。\n")
+out.append("35/41 的新快照及旧基线归档位置按正文第 7 节；40 的 ToolUsageData/tool-matrix、41 的 manifest 产物只运行所属生成器。P6-43 仅更新新发布说明，不改历史发布事实。\n")
+end()
+
+section("I. 已合并的第 I 步、V4 类型与原生验收边界")
+table(["任务", "当前服务 / 原语", "再生成的静态证据", "原生验收"],
+      [[task.upper(), "<br>".join(link(E+"Siemens/Services/"+s+"Service.cs") for s in services.split()) + "<br>" + link(A+"Native/"+primitive),
+        link("docs/development/evidence/"+task+"-native-evidence.json", "accepted: true（静态）"), "NOT RUN"]
+       for task, (services, primitive) in step_i.items()])
+out.append("五项已合并；共享原语清单从 " + link(SH+"TiaSharedAdapterPaths.props") + " 的 shared-native/*.props 提取，开关默认 false。静态 accepted 不等于 L5，G3/J 与发布门槛不变。\n")
+table(["已完成项目", "当前文件"], [["P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验", "<br>".join(link(p) for p in sorted(files) if p.startswith(L+"V4/") and p.endswith(".cs"))],
+      ["D334：源码目录迁移完成；产品名/运行目录仍待 36–39", link("docs/development/repository-layout.md")]])
+out.append("台账已核对：" + "、".join("P6-"+f for f in behavior_families) + "，八族全部 NOT RUN；P6-PRODUCT 也为 NOT RUN。未运行任何原生调用。\n")
 end()
 
 def self_test():
@@ -527,7 +643,16 @@ def self_test():
         assert set(target_tools[k]) == {renames[n] for n in tools[k]}
     for n,ps in typed.items():
         for p in ps: assert shape(n,p)
-    print("Self-check: 4 negative cases rejected; 8 release mappings, typed coverage and lite examples passed.")
+    missing = dict(TASK_PATHS)
+    missing.pop("P6-47")
+    stale = dict(TASK_PATHS)
+    stale["P6-44"] = ["tools/tiaportal-mcp/src/TiaMcpServer/Program.cs"]
+    for broken in (missing, stale):
+        try: validate_inventory(broken)
+        except AssertionError: rejected += 1
+        else: raise AssertionError("negative inventory check unexpectedly passed")
+    assert rejected == 6
+    print("Self-check: 6 negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 NOT RUN behavior families passed.")
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

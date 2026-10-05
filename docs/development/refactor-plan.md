@@ -145,14 +145,17 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 维护者于 2026-10-03 决定 **硬切 4.0**，重新提出的 1–11 项全部采用建议。实施契约见
 [4.0 规范与生成表](phase6-review.md)，其中完整名称、类型输入、响应、lite 和布局清单是本阶段唯一目标。
-阶段 4 第 I 步仍为 doing；本表没有将 I、G3/J 或任何 NOT RUN 项改为完成。
+阶段 4 第 I 步 P4-I1/I2/I3/I4a/I4b 已合并，`docs/development/evidence/p4-i*-native-evidence.json` 已再生成且静态 accepted=true。
+`src/Shared/TiaSharedAdapterPaths.props` 仍默认 false；原生验收及 G3/J 仍为 NOT RUN/待验，不因静态证明而放行发布。
+P6-02（`src/Logic/V4`）与 D334 源码目录整理已完成；产品入口与运行目录迁移仍待 P6-36～39。
 
-以下全部是待实施任务，P6-R2 只交付规范/生成器。`I` 表示第 I 步全部并行任务完成并合并；
+P6-02 已完成，P6-01 已更新事实与路径待审查，其余为待实施任务；P6-R2 只交付规范/生成器。
+每行的路径链接指向规范附表 H 的当前文件归属，附表 G 另固定领域工具所有权。`I` 表示第 I 步全部任务完成并合并（现已满足）；
 `L5-X` 表示真机台账 P6-X 中该发布键的基线和候选行为均通过。原生策略任务可以先准备离线代码，
 但在 L5-X 前不得切换发布能力；未验收族保持 current 行为。每次任务说明须列出精确路径，超出范围先停。
 
-公共证明缩写：`C`=生成器 --self-test/--check、仓库/死引用及全部 source-contracts；
-`T`=受影响离线套件按 Test-DotnetSuites.py 的 TRX 最低数量门禁、0 失败；
+公共证明缩写：`C`=`scripts/generate/Generate-Phase6Plan.py` --self-test/--check、仓库/死引用及全部 source-contracts；
+`T`=受影响离线套件按 `scripts/checks/Test-DotnetSuites.py` 的 TRX 最低数量门禁、0 失败；
 `V`=八版实际名称/schema/响应快照符合生成映射，直接/CallTool/批次同形，版本/action 无扩张；
 `N`=逐方法前后 Siemens 调用顺序/参数/线程与全部织入类别差量，加本族故障证据及 L5。
 新增/移动/删除文件还必须运行 Strict/NoBinaries/SkipSourceHashes bundle 校验及三份必需文件清单核对。
@@ -160,58 +163,59 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 
 | ID | 单次任务与文件边界 | 前置依赖 | 验收证明 | 状态 |
 |---|---|---|---|---|
-| P6-01 | 合并后冻结八版事实与任务路径清单；重跑 Generate-Phase6Plan.py，固定新契约快照目录/生成规则；登记 I 与 L5 实际状态 | 本规范；只读核对 I，不改服务 | 两次生成相同、C；当前目录与源码一致 | todo |
-| P6-02 | 已在公共 Logic 实现 V4 信封、25 种错误详情、分页/批次/计划 DTO、MCP/CLI 映射和单一序列化/校验边界，补齐黄金字节、往返、文化与非法组合测试，现有工具不接线 | 本规范（不依赖 01） | T；成功/拒绝/失败/partial/unknown 黄金字节，null/键序/关联 ID；无 Siemens 引用 | done |
-| P6-03 | 新建 P/S/N/R/M/L/V/C/W 类型及校验适配层，ToolArguments 按目标 schema；保持原 parser 预算 | 02 | T；双编码、重复字段、溢出、null/缺省、批次 allowlist/上限正反例 | todo |
-| P6-04 | 新建 B 构造 DTO 与按 kind 的联合、嵌套 call 字段；限定新 DTO/转换文件 | 02 | T；Foundation 窄语法、输出版本/预算、XML 内容等价 | todo |
-| P6-05 | 新建 H 的 Classic/Unified/AML 类型，控件联合各自收窄；限定 H DTO 文件 | 02 | T；布局/屏幕/包样本和非法属性，Classic 与 Unified 不互换 | todo |
-| P6-06 | 新建 D/X 领域联合与选择 DTO，列出每个 parser 的字段/枚举/schema；限定 D/X DTO 文件 | 02 | T；全部 B 表项有具体类型，动作判别及 snapshot 身份/完整性保留 | todo |
-| P6-07 | 基础设施工具契约：桥接、批次、分页、指南合并、目录与 lite 数据接线；工具文件见附表 G；不改领域服务 | 03–06 | T、V；合并映射逐 topic、CallTool 对象信封、60 项提案示例、完整目录仍可达 | todo |
-| P6-08 | Foundation 宿主名称/输入/结果适配（不改 EXE 名和 adapter 行为）；按 F7 保留 evidence、Executed、候选输出状态 | 03–07、I | T foundation/transport、六版 V；schema 更窄、无新增 HMI/CallTool/lite；N 调用不变 | todo |
-| P6-09 | 离线构造、审计、模板、生态、Git、文档生成工具迁移；文件见附表 G | 03–07、I | T、V；生成文件内容不变、预算与输出版本限制，修改只在本组 | todo |
-| P6-10 | PLC 块/软件/类型/表工具名称/类型/信封迁移；同名服务及独占规则 | 03–07、I | T、V；N 调用不变，compile 两入口不误合并 | todo |
-| P6-11 | PLC 文档/原生交换/外部源/补丁工具契约迁移；本组工具/服务 | 03–07、I | T、V；partial/unknown 和 observation 保全；N 调用不变 | todo |
-| P6-12 | 设备/AML/模块/地址工具契约迁移；本组工具/服务 | 03–07、I | T、V；创建仍披露 current；N 调用不变 | todo |
-| P6-13 | 硬件网络/服务工具契约迁移；本组工具/服务 | 03–07、I | T、V；逐路径/属性限制；N 调用不变 | todo |
-| P6-14 | 证书/项目安全/Safety/安全扩展契约迁移；本组工具/服务 | 03–07、I | T、V；权限/版本门禁与脱敏；N 调用不变 | todo |
-| P6-15 | 报警/OPC UA/工艺对象/软件单元契约迁移；本组工具/服务 | 03–07、I | T、V；版本 action 与 native 值边界；N 调用不变 | todo |
-| P6-16 | Classic HMI 文件夹与 Motion/ProDiag 契约迁移；本组工具/服务 | 03–07、I | T、V；目标联合互斥与能力拒绝；N 调用不变 | todo |
-| P6-17 | Unified HMI 核心、组、屏幕项、UI 模型契约迁移；本组工具/服务 | 03–07、I | T、V；控件设计 DTO 与旧结果信息等价；N 调用不变 | todo |
-| P6-18 | HMI/Unified 交换与变量删除契约迁移；本组工具/服务 | 03–07、I | T、V；逐项结果、导入导出边界；N 调用不变 | todo |
-| P6-19 | HMI 描述/检查/脚本/图形快照/对象服务/反射契约迁移；文件见 G | 03–07、I | T、V；游标身份/完整性与反射准入；N 调用不变 | todo |
-| P6-20 | CFC/TestSuite/V20Options/OptionalEngineering/SpecializedExchange 契约迁移 | 03–07、I | T、V；两版能力差集；N 调用不变 | todo |
-| P6-21 | DCC/Startdrive/Teamcenter 契约迁移；本组工具/服务 | 03–07、I | T、V；联合/动态属性；已知现场事故不标记已修复；N 调用不变 | todo |
-| P6-22 | 库/Sivarc/VCI 契约迁移；本组工具/服务 | 03–07、I | T、V；大小写、范围、selection 限制；N 调用不变，保留 G3/J 开关门槛 | todo |
-| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 Runtime 适配边界 | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | todo |
-| P6-24 | 会话/工程/诊断契约及公共 Portal、ToolCatalog、注册/项目文件串行集成；清除旧工具目录注册 | 08–23、I | T、V 全量；生成所有权覆盖每个入口，拒绝旧名/旧参数/二次编码；N 调用不变 | todo |
-| P6-25 | CLI 和 Studio 的 V4 消费边界、错误展示、退出码；各自报告保留业务字段 | 24 | T；CLI 0/2/3/4/5/64/70 黄金样本、Studio Loc 测试、partial/unknown 不显示成功 | todo |
-| P6-26 | 先删文本判定再统一英文 MCP 文本；错误码消费者/FindTools/稳定性与快照脚本同步 | 25 | T、V、MCP 文案检查；无消息子串控制安全动作，原生文本作为脱敏数据 | todo |
-| P6-27 | D1 设备精确创建候选实现与本族能力切换：Devices/设备添加策略 | 24、I；发布切换等待 L5-DEVICE | T、N；一次 create、冲突/失败后状态；台账 P6-DEVICE 逐适用版通过 | todo |
-| P6-28 | D1 PLC 块/类型/表导入安全策略候选与切换；原生导入及文件准备策略 | 27、I；发布切换等待 L5-IMPORT | T、N；不修版本/BOM、覆盖拒绝、显式覆盖能力、批次中止/内容回读 | todo |
-| P6-29 | D1 PLC 导出/SD/批量发布安全策略候选与切换；原生导出及文件发布策略 | 28、I；发布切换等待 L5-EXPORT | T、N；暂存、原文件保全、partial、文件系统故障、对象范围不扩大 | todo |
-| P6-30 | D1 connect/open 的进程/工程身份与升级副本策略候选与切换 | 29、I；发布切换等待 L5-SESSION | T、N；PID 重用、绑定、拒绝升级/副本升级、不启动、不关闭外部工程 | todo |
-| P6-31 | D1 save/close 的借用/脏工程/LocalSession 策略候选与切换 | 30、I；发布切换等待 L5-CLOSE | T、N；显式保存、独立 discard 确认、借用拒绝与所属线程 | todo |
-| P6-32 | D1 PLC 路径及外部源计划/生成/删除策略候选与切换 | 31、I；发布切换等待 L5-SOURCE | T、N；G9 空/错误/歧义路径、删除核实、14sp1 observation、不重放 | todo |
-| P6-33 | D1 编译离线前提与 Safety 会话对称清理候选与切换 | 32、I；发布切换等待 L5-COMPILE | T、N；不自动下线、清理失败、根/叶诊断、各入口目标范围 | todo |
-| P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换 | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |
-| P6-35 | 汇总逐版/逐族行为能力与 V4 schema 缺省；未验收族保持 current，并重新生成实际发布快照 | 26；已进入发布的 27–34 必须对应 L5 通过；其余明确延期 | T、V；schema 不广告未实现安全策略、UNVERIFIED_BEHAVIOR 可见；不改 G3/J 默认开关 | todo |
-| P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单 | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | todo |
-| P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现 | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | todo |
-| P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测 | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | todo |
-| P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入 | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |
-| P6-40 | 更新 reference/tool-examples calls/metadata/sequences/语言例子、prompts/skills、现行文档；运行 ToolUsage/矩阵生成器 | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |
-| P6-41 | 建立最终 V4 契约快照、生成器和 CI 检查；旧事实基线归档只读，禁止用改哈希掩盖差异 | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | todo |
-| P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族 | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
-| P6-43 | **最后任务：发布说明**生成旧→新工具名/参数/产品入口对照，类型/信封/安全策略/目录变更及实际验收状态 | 42 | 对照表逐版与发布产物一致、链接可执行示例、刷新客户端工具缓存说明；仅文档，无程序转换层 | todo |
-| P6-44 | 工作台写操作审批：宿主按调用的写分类、待批队列与超时、当前用户命名管道、审批开关与 meta 披露；Studio 审批视图；ConfirmationRequiredDetails 拒绝原因（先改规范第 3 节）；见规范第 8 节 | 25、39；D1 已切换族在 apply 处接入 | T 宿主/Studio Core/GUI、V；只读不排队、批次逐项、拒绝/超时/工作台未连接均为操作前拒绝、批准一次性且绑定 planHash、MCP 客户端不能自批；N 调用不变 | todo |
-| P6-45 | 工作台 AI 调用面板：读取调用日志实时显示、详情展开（截断/脱敏）、待批置顶、复制连接信息 | 44 | T GUI/Core；轮转/并发/中断行、脱敏、中英文；不新增采集通道 | todo |
-| P6-46 | 哈希链审计日志与校验入口；调用日志保留上限/份数及时间窗口显示 | 39、44 | T；篡改/断链/跨文件轮转检测，尾部截断限制写入文档；保留按配置生效 | todo |
-| P6-47 | 工作台环境体检页与一键诊断包；复用 doctor，补 Openness 首次确认提示与 data 可写检查 | 38、39 | T GUI/Core/config；逐项结果与修复文本中英文、密钥脱敏、只读安装 | todo |
-| P6-48 | 梯形图出图与程序图册：抽出 RenderPlcVisualDiff 的布局/SVG 为共享逻辑，新增八版单块出图与整机图册工具、检查结论标注、工作台入口；见规范第 8 节 | 24；自行导出时服从当时导出族状态 | T Logic/宿主/GUI、V；RenderPlcVisualDiff 输出逐字节不变；每版真实导出样本的渲染快照；HTML 自包含、不覆盖已有文件；N 仅复用既有只读导出调用 | todo |
+| P6-01 | 合并后冻结八版事实与任务路径清单；重跑 `scripts/generate/Generate-Phase6Plan.py`，固定新契约快照目录/生成规则；登记 I 与 L5 实际状态；[路径清单](phase6-review.md#phase6-path-p6-01) | 本规范；只读核对 I，不改服务 | 两次生成相同、C；当前目录与源码一致 | done |
+| P6-02 | 已在 `src/Logic/V4` 实现 V4 信封、25 种错误详情、分页/批次/计划 DTO、MCP/CLI 映射和单一序列化/校验边界，补齐黄金字节、往返、文化与非法组合测试，现有工具不接线；[路径清单](phase6-review.md#phase6-path-p6-02) | 本规范（不依赖 01） | T；成功/拒绝/失败/partial/unknown 黄金字节，null/键序/关联 ID；无 Siemens 引用 | done |
+| P6-03 | 新建 P/S/N/R/M/L/V/C/W 类型及校验适配层，ToolArguments 按目标 schema；保持原 parser 预算；[路径清单](phase6-review.md#phase6-path-p6-03) | 02 | T；双编码、重复字段、溢出、null/缺省、批次 allowlist/上限正反例 | todo |
+| P6-04 | 新建 B 构造 DTO 与按 kind 的联合、嵌套 call 字段；限定新 DTO/转换文件；[路径清单](phase6-review.md#phase6-path-p6-04) | 02 | T；Foundation 窄语法、输出版本/预算、XML 内容等价 | todo |
+| P6-05 | 新建 H 的 Classic/Unified/AML 类型，控件联合各自收窄；限定 H DTO 文件；[路径清单](phase6-review.md#phase6-path-p6-05) | 02 | T；布局/屏幕/包样本和非法属性，Classic 与 Unified 不互换 | todo |
+| P6-06 | 新建 D/X 领域联合与选择 DTO，列出每个 parser 的字段/枚举/schema；限定 D/X DTO 文件；[路径清单](phase6-review.md#phase6-path-p6-06) | 02 | T；全部 B 表项有具体类型，动作判别及 snapshot 身份/完整性保留 | todo |
+| P6-07 | 基础设施工具契约：桥接、批次、分页、指南合并、目录与 lite 数据接线；工具文件见附表 G；不改领域服务；[路径清单](phase6-review.md#phase6-path-p6-07) | 03–06 | T、V；合并映射逐 topic、CallTool 对象信封、60 项提案示例、完整目录仍可达 | todo |
+| P6-08 | Foundation 宿主名称/输入/结果适配（不改 EXE 名和 adapter 行为）；按 F7 保留 evidence、Executed、候选输出状态；[路径清单](phase6-review.md#phase6-path-p6-08) | 03–07、I | T foundation/transport、六版 V；schema 更窄、无新增 HMI/CallTool/lite；N 调用不变 | todo |
+| P6-09 | 离线构造、审计、模板、生态、Git、文档生成工具迁移；文件见附表 G；[路径清单](phase6-review.md#phase6-path-p6-09) | 03–07、I | T、V；生成文件内容不变、预算与输出版本限制，修改只在本组 | todo |
+| P6-10 | PLC 块/软件/类型/表工具名称/类型/信封迁移；同名服务及独占规则；[路径清单](phase6-review.md#phase6-path-p6-10) | 03–07、I | T、V；N 调用不变，compile 两入口不误合并 | todo |
+| P6-11 | PLC 文档/原生交换/外部源/补丁工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-11) | 03–07、I | T、V；partial/unknown 和 observation 保全；N 调用不变 | todo |
+| P6-12 | 设备/AML/模块/地址工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-12) | 03–07、I | T、V；创建仍披露 current；N 调用不变 | todo |
+| P6-13 | 硬件网络/服务工具契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-13) | 03–07、I | T、V；逐路径/属性限制；N 调用不变 | todo |
+| P6-14 | 证书/项目安全/Safety/安全扩展契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-14) | 03–07、I | T、V；权限/版本门禁与脱敏；N 调用不变 | todo |
+| P6-15 | 报警/OPC UA/工艺对象/软件单元契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-15) | 03–07、I | T、V；版本 action 与 native 值边界；N 调用不变 | todo |
+| P6-16 | Classic HMI 文件夹与 Motion/ProDiag 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-16) | 03–07、I | T、V；目标联合互斥与能力拒绝；N 调用不变 | todo |
+| P6-17 | Unified HMI 核心、组、屏幕项、UI 模型契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-17) | 03–07、I | T、V；控件设计 DTO 与旧结果信息等价；N 调用不变 | todo |
+| P6-18 | HMI/Unified 交换与变量删除契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-18) | 03–07、I | T、V；逐项结果、导入导出边界；N 调用不变 | todo |
+| P6-19 | HMI 描述/检查/脚本/图形快照/对象服务/反射契约迁移；文件见 G；[路径清单](phase6-review.md#phase6-path-p6-19) | 03–07、I | T、V；游标身份/完整性与反射准入；N 调用不变 | todo |
+| P6-20 | CFC/TestSuite/V20Options/OptionalEngineering/SpecializedExchange 契约迁移；[路径清单](phase6-review.md#phase6-path-p6-20) | 03–07、I | T、V；两版能力差集；N 调用不变 | todo |
+| P6-21 | DCC/Startdrive/Teamcenter 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-21) | 03–07、I | T、V；联合/动态属性；已知现场事故不标记已修复；N 调用不变 | todo |
+| P6-22 | 库/Sivarc/VCI 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-22) | 03–07、I | T、V；大小写、范围、selection 限制；N 调用不变，保留 G3/J 开关门槛 | todo |
+| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 `src/Runtime`、`src/Engine/Runtime` 适配边界；[路径清单](phase6-review.md#phase6-path-p6-23) | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | todo |
+| P6-24 | 会话/工程/诊断契约及公共 Portal、ToolCatalog、注册/项目文件串行集成；清除旧工具目录注册；[路径清单](phase6-review.md#phase6-path-p6-24) | 08–23、I | T、V 全量；生成所有权覆盖每个入口，拒绝旧名/旧参数/二次编码；N 调用不变 | todo |
+| P6-25 | CLI 和 Studio 的 V4 消费边界、错误展示、退出码；各自报告保留业务字段；[路径清单](phase6-review.md#phase6-path-p6-25) | 24 | T；CLI 0/2/3/4/5/64/70 黄金样本、Studio Loc 测试、partial/unknown 不显示成功 | todo |
+| P6-26 | 先删文本判定再统一英文 MCP 文本；错误码消费者/FindTools/稳定性与快照脚本同步；[路径清单](phase6-review.md#phase6-path-p6-26) | 25 | T、V、MCP 文案检查；无消息子串控制安全动作，原生文本作为脱敏数据 | todo |
+| P6-27 | D1 设备精确创建候选实现与本族能力切换：Devices/设备添加策略；[路径清单](phase6-review.md#phase6-path-p6-27) | 24、I；发布切换等待 L5-DEVICE | T、N；一次 create、冲突/失败后状态；台账 P6-DEVICE 逐适用版通过 | todo |
+| P6-28 | D1 PLC 块/类型/表导入安全策略候选与切换；原生导入及文件准备策略；[路径清单](phase6-review.md#phase6-path-p6-28) | 27、I；发布切换等待 L5-IMPORT | T、N；不修版本/BOM、覆盖拒绝、显式覆盖能力、批次中止/内容回读 | todo |
+| P6-29 | D1 PLC 导出/SD/批量发布安全策略候选与切换；原生导出及文件发布策略；[路径清单](phase6-review.md#phase6-path-p6-29) | 28、I；发布切换等待 L5-EXPORT | T、N；暂存、原文件保全、partial、文件系统故障、对象范围不扩大 | todo |
+| P6-30 | D1 connect/open 的进程/工程身份与升级副本策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-30) | 29、I；发布切换等待 L5-SESSION | T、N；PID 重用、绑定、拒绝升级/副本升级、不启动、不关闭外部工程 | todo |
+| P6-31 | D1 save/close 的借用/脏工程/LocalSession 策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-31) | 30、I；发布切换等待 L5-CLOSE | T、N；显式保存、独立 discard 确认、借用拒绝与所属线程 | todo |
+| P6-32 | D1 PLC 路径及外部源计划/生成/删除策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-32) | 31、I；发布切换等待 L5-SOURCE | T、N；G9 空/错误/歧义路径、删除核实、14sp1 observation、不重放 | todo |
+| P6-33 | D1 编译离线前提与 Safety 会话对称清理候选与切换；[路径清单](phase6-review.md#phase6-path-p6-33) | 32、I；发布切换等待 L5-COMPILE | T、N；不自动下线、清理失败、根/叶诊断、各入口目标范围 | todo |
+| P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |
+| P6-35 | 汇总逐版/逐族行为能力与 V4 schema 缺省；未验收族保持 current，并重新生成实际发布快照；[路径清单](phase6-review.md#phase6-path-p6-35) | 26；已进入发布的 27–34 必须对应 L5 通过；其余明确延期 | T、V；schema 不广告未实现安全策略、UNVERIFIED_BEHAVIOR 可见；不改 G3/J 默认开关 | todo |
+| P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | todo |
+| P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | todo |
+| P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测；[路径清单](phase6-review.md#phase6-path-p6-38) | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | todo |
+| P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |
+| P6-40 | 更新 `reference/tool-examples`、`src/Engine/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `scripts/generate/Generate-ToolUsage.py`、`Generate-ToolCapabilityMatrix.ps1`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |
+| P6-41 | 按规范第 7 节在 `manifest/contracts/v4` 建立逐发布键快照和 CI 检查；现有 Snapshot-ToolContracts/Responses 脚本生成，3.x 基线逐字节归档至 `manifest/history/contracts-v3`，禁止用改哈希掩盖差异；[路径清单](phase6-review.md#phase6-path-p6-41) | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | todo |
+| P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族；[路径清单](phase6-review.md#phase6-path-p6-42) | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
+| P6-43 | **最后任务：发布说明**生成旧→新工具名/参数/产品入口对照，类型/信封/安全策略/目录变更及实际验收状态；[路径清单](phase6-review.md#phase6-path-p6-43) | 42 | 对照表逐版与发布产物一致、链接可执行示例、刷新客户端工具缓存说明；仅文档，无程序转换层 | todo |
+| P6-44 | 工作台写操作审批：宿主按调用的写分类、待批队列与超时、当前用户命名管道、审批开关与 meta 披露；Studio 审批视图；ConfirmationRequiredDetails 拒绝原因（先改规范第 3 节）；见规范第 8 节；[路径清单](phase6-review.md#phase6-path-p6-44) | 25、39；D1 已切换族在 apply 处接入 | T 宿主/Studio Core/GUI、V；只读不排队、批次逐项、拒绝/超时/工作台未连接均为操作前拒绝、批准一次性且绑定 planHash、MCP 客户端不能自批；N 调用不变 | todo |
+| P6-45 | 工作台 AI 调用面板：读取调用日志实时显示、详情展开（截断/脱敏）、待批置顶、复制连接信息；[路径清单](phase6-review.md#phase6-path-p6-45) | 44 | T GUI/Core；轮转/并发/中断行、脱敏、中英文；不新增采集通道 | todo |
+| P6-46 | 哈希链审计日志与校验入口；调用日志保留上限/份数及时间窗口显示；[路径清单](phase6-review.md#phase6-path-p6-46) | 39、44 | T；篡改/断链/跨文件轮转检测，尾部截断限制写入文档；保留按配置生效 | todo |
+| P6-47 | 工作台环境体检页与一键诊断包；复用 doctor，补 Openness 首次确认提示与 data 可写检查；[路径清单](phase6-review.md#phase6-path-p6-47) | 38、39 | T GUI/Core/config；逐项结果与修复文本中英文、密钥脱敏、只读安装 | todo |
+| P6-48 | 梯形图出图与程序图册：抽出 RenderPlcVisualDiff 的布局/SVG 为共享逻辑，新增八版单块出图与整机图册工具、检查结论标注、工作台入口；见规范第 8 节；[路径清单](phase6-review.md#phase6-path-p6-48) | 24；自行导出时服从当时导出族状态 | T Logic/宿主/GUI、V；RenderPlcVisualDiff 输出逐字节不变；每版真实导出样本的渲染快照；HTML 自包含、不覆盖已有文件；N 仅复用既有只读导出调用 | todo |
 
 并行边界：02 完成后 03/04/05/06 可各建独立 DTO/测试文件；项目公共引用由 02 预置、后续缺项由 07 集成。
 07 完成且 I 合并后，08–23 按规范附表 G 的工具文件所有权并行。
-本领域同 stem Service 和独占规则归对应任务，公共 Portal/EngineServices/注册/项目文件统一留给 24，
+`src/Engine/Siemens/Services` 中本领域同 stem Service 和独占规则归对应任务；
+公共 `src/Engine/Siemens/Portal`、`src/Engine/EngineServices.cs`、注册/项目文件统一留给 24，
 共享测试夹具和快照由 24 集成，领域任务只加本组测试文件。任一共享规则被两个领域引用时暂停并交 24，不能并行编辑。
 27–34 涉及共享 adapter/安全政策，按表串行；36–39 为路径链也串行。36–39 可以与 27–34 并行，
 但只改入口/布局/构建路径，不能改原生服务；汇合在 40。维护者未恢复真机授权时，契约/布局链可继续，
