@@ -127,7 +127,7 @@ internal static class LibraryDeepShapeChecks
         guard.Invoke(null,new object[]{20,scriptModuleType,new[]{"Name"}});
         guard.Invoke(null,new object[]{21,scriptModuleType,new[]{"DoNotUse"}});
         check(true,"rename incident guard preserves V20 and unrelated property scope (not a native safety claim)");
-        foreach(var tool in new[]{"ReadLibraryOverview","ReadLibraryType","ManageLibraryType","CheckLibraryUpdates","SynchronizeLibrary","CompareLibraryObjects"}) check(portal.Method(tool)!=null,"Portal."+tool+" present");
+        foreach(var tool in new[]{"GetLibraryOverview","GetLibraryType","ManageLibraryType","CheckLibraryUpdates","SynchronizeLibrary","CompareLibraryObjects"}) check(portal.Tool(tool)!=null,"Portal."+tool+" present");
         check(portal.Method("ManageGlobalLibrary")?.GetParameters().Any(p=>p.Name=="archiveMode")==true,"Portal.ManageGlobalLibrary carries archiveMode (infos/openInfo/archive actions)");
         check(portal.Method("ImportLibraryTypeDocuments")?.GetParameters().Any(p=>p.Name=="createOptions")==true,"Portal.ImportLibraryTypeDocuments carries createOptions (version import)");
     }

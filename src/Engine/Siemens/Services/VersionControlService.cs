@@ -66,7 +66,7 @@ namespace TiaMcpServer.Siemens.Services
                 _vciOwnerProject = null;
                 _vciCached = null;
                 _vciKeepAlive.Clear();
-                throw new InvalidOperationException(
+                throw new PortalException(PortalErrorCode.InvalidState,
                     "No project is open. Call Connect, then AttachToOpenProject / OpenProject first.");
             }
             if (_vciCached != null && ReferenceEquals(_vciOwnerProject, project))
@@ -130,6 +130,17 @@ namespace TiaMcpServer.Siemens.Services
             return hit;
         }
 
+        private static JsonObject FailureEvidence(Exception error, bool issued = false)
+        {
+            var meta = ResponseMeta.Basic(DateTime.Now, false);
+            meta["mayHaveChanged"] = issued;
+            if (!issued)
+                meta["v4Rejection"] = error is PortalException portal && portal.Code == PortalErrorCode.InvalidState ? "PROJECT_NOT_BOUND"
+                    : error is ArgumentException ? "INVALID_ARGUMENT"
+                    : error is DirectoryNotFoundException ? "NOT_FOUND" : null;
+            return meta;
+        }
+
         public ResponseStringList GetVersionControlWorkspaces()
         {
             try
@@ -164,8 +175,8 @@ namespace TiaMcpServer.Siemens.Services
             {
                 return new ResponseStringList
                 {
-                    Message = "GetVersionControlWorkspaces failed: " + ex.Message,
-                    Meta = ResponseMeta.Basic(DateTime.Now, false),
+                    Message = "ListVersionControlWorkspaces failed: " + ex.Message,
+                    Meta = FailureEvidence(ex),
                 };
             }
         }
@@ -180,6 +191,7 @@ namespace TiaMcpServer.Siemens.Services
             string workspaceName,
             string folderPath)
         {
+            bool issued = false;
             try
             {
                 if (string.IsNullOrWhiteSpace(workspaceName))
@@ -198,17 +210,18 @@ namespace TiaMcpServer.Siemens.Services
                     return new ResponseMessage
                     {
                         Message = "A workspace named '" + workspaceName + "' already exists. " +
-                                  "Use GetVersionControlWorkspaces to inspect it.",
-                        Meta = ResponseMeta.Basic(DateTime.Now, false),
+                                  "Use ListVersionControlWorkspaces to inspect it.",
+                        Meta = ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "ALREADY_EXISTS")),
                     };
 
                 var group = Keep(Vci.Group(vci));
+                issued = true;
                 var ws = Keep(Vci.Create(Keep(Vci.Workspaces(group)), workspaceName.Trim(), dir));
                 return new ResponseMessage
                 {
                     Message = "Created workspace '" + Vci.Name(ws) + "' at " + dir.FullName +
                               ". Next: ConnectProjectToWorkspace to map the project's objects into it, " +
-                              "then SyncVersionControlWorkspace to write them out.",
+                              "then SynchronizeVersionControlWorkspace to write them out.",
                     Meta = ResponseMeta.Basic(DateTime.Now, true),
                 };
             }
@@ -217,7 +230,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseMessage
                 {
                     Message = "CreateVersionControlWorkspace failed: " + ex.Message,
-                    Meta = ResponseMeta.Basic(DateTime.Now, false),
+                    Meta = FailureEvidence(ex, issued),
                 };
             }
         }
@@ -258,7 +271,7 @@ namespace TiaMcpServer.Siemens.Services
                         Vci.Name(ws), total, differing,
                         differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
-                            : " Call SyncVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
+                            : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
@@ -269,7 +282,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "GetVersionControlStatus failed: " + ex.Message,
-                    Meta = ResponseMeta.Basic(DateTime.Now, false),
+                    Meta = FailureEvidence(ex),
                 };
             }
         }
@@ -302,6 +315,9 @@ namespace TiaMcpServer.Siemens.Services
             bool dryRun = true,
             bool changedOnly = true)
         {
+            bool issued = false;
+            var lines = new List<string>();
+            int ok = 0, failed = 0;
             try
             {
                 SynchronizationMode mode;
@@ -313,7 +329,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         Message = "direction must be 'ProjectToWorkspace' (export for commit) or " +
                                   "'WorkspaceToProject' (import to restore); got '" + direction + "'.",
-                        Meta = ResponseMeta.Basic(DateTime.Now, false),
+                        Meta = ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "INVALID_ARGUMENT")),
                     };
 
                 // Exporting (project -> text files) is allowed; importing (text files -> project)
@@ -324,10 +340,10 @@ namespace TiaMcpServer.Siemens.Services
                         Message = "direction='WorkspaceToProject' (restoring a Git version back INTO the project) " +
                                   "overwrites blocks in the open project and is a commercial-tier operation. " +
                                   "Everything else is free — CreateVersionControlWorkspace, ConnectProjectToWorkspace, " +
-                                  "GetVersionControlStatus and SyncVersionControlWorkspace(direction='ProjectToWorkspace') " +
+                                  "GetVersionControlStatus and SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') " +
                                   "— so you can put the project under version control, see exactly what changed, " +
                                   "export it as text and commit it.",
-                        Meta = ResponseMeta.Basic(DateTime.Now, false),
+                        Meta = ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     };
 
                 var vci = RequireVci();
@@ -356,7 +372,6 @@ namespace TiaMcpServer.Siemens.Services
                         Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = Vci.Name(ws), ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
                     };
 
-                var lines = new List<string>();
                 if (dryRun)
                 {
                     foreach (var mo in targets) lines.Add(SafeName(mo) + " | would sync " + mode);
@@ -371,10 +386,9 @@ namespace TiaMcpServer.Siemens.Services
                     };
                 }
 
-                int ok = 0, failed = 0;
                 foreach (var mo in targets)
                 {
-                    try { Vci.Synchronize(mo, mode); ok++; lines.Add(SafeName(mo) + " | synchronized"); }
+                    try { issued = true; Vci.Synchronize(mo, mode); ok++; lines.Add(SafeName(mo) + " | synchronized"); }
                     catch (Exception ex) { failed++; lines.Add(SafeName(mo) + " | FAILED: " + ex.Message); }
                 }
 
@@ -395,8 +409,9 @@ namespace TiaMcpServer.Siemens.Services
             {
                 return new ResponseStringList
                 {
-                    Message = "SyncVersionControlWorkspace failed: " + ex.Message,
-                    Meta = ResponseMeta.Basic(DateTime.Now, false),
+                    Message = "SynchronizeVersionControlWorkspace failed: " + ex.Message,
+                    Items = lines,
+                    Meta = FailureEvidence(ex, issued),
                 };
             }
         }
@@ -527,10 +542,12 @@ namespace TiaMcpServer.Siemens.Services
             int maxObjects = 3000,
             bool walkTrace = false)
         {
+            bool issued = false;
+            var lines = new List<string>();
             try
             {
                 var project = VciProject;
-                if (project == null) throw new InvalidOperationException("No project is open.");
+                if (project == null) throw new PortalException(PortalErrorCode.InvalidState, "No project is open.");
 
                 var ws = FindWorkspace(RequireVci(), workspaceName);
                 string wsName = Vci.Name(ws);
@@ -547,7 +564,6 @@ namespace TiaMcpServer.Siemens.Services
                     return FindWorkspace(RequireVci(), wsName);
                 }
 
-                var lines = new List<string>();
                 int mapped = 0, already = 0, failed = 0, unsupported = 0, visited = 0;
                 bool truncated = false;
 
@@ -620,6 +636,7 @@ namespace TiaMcpServer.Siemens.Services
                             {
                                 // Use the established root layout once. An exception can follow a partial
                                 // export, so never retry the same object with a different target directory.
+                                issued = true;
                                 Vci.Export(ws, node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt +
@@ -662,7 +679,7 @@ namespace TiaMcpServer.Siemens.Services
                                     truncated ? " ** stopped at maxObjects - raise maxObjects for full coverage **" : "")
                     : string.Format("Workspace '{0}' ({1}): {2} newly mapped, {3} already mapped, {4} failed, " +
                                     "{5} not supported by VCI, {6} tree nodes visited.{7} " +
-                                    "Next: SyncVersionControlWorkspace(direction='ProjectToWorkspace', dryRun=false), then git commit. " +
+                                    "Next: SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace', dryRun=false), then git commit. " +
                                     "Save the project to persist the mappings.",
                                     wsName, wsRootPath, mapped, already, failed, unsupported, visited,
                                     truncated ? " ** stopped at maxObjects - raise maxObjects for full coverage **" : "");
@@ -679,7 +696,8 @@ namespace TiaMcpServer.Siemens.Services
                 return new ResponseStringList
                 {
                     Message = "ConnectProjectToWorkspace failed: " + ex.Message,
-                    Meta = ResponseMeta.Basic(DateTime.Now, false),
+                    Items = lines,
+                    Meta = FailureEvidence(ex, issued),
                 };
             }
         }

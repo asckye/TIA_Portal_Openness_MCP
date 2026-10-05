@@ -29,7 +29,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzeHmiTemplateReference",
@@ -43,7 +43,7 @@
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzePlcReferences",
@@ -81,7 +81,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ApplyToolBatch",
@@ -844,7 +844,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CheckProductUpdate",
@@ -902,7 +902,7 @@
           "leftPath": "Types/FB_Motor",
           "rightPath": "Types/FB_Motor_v2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ComparePlcBlockDocuments",
@@ -1101,7 +1101,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateDevice",
@@ -1171,7 +1171,7 @@
           "sourcePath": "Examples/Example_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcBlockGroup",
@@ -1240,7 +1240,7 @@
           "workspaceName": "Engineering",
           "folderPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DecodePlcSimaticMl",
@@ -2355,18 +2355,20 @@
       },
       {
         "name": "GenerateSivarc",
-        "currentName": "GenerateSiVArc",
+        "currentName": "GenerateSivarc",
         "sourceName": "GenerateSiVArc",
         "profiles": [
           "full"
         ],
         "arguments": {
           "hmiDeviceName": "HMI_1",
-          "plcSoftwarePathsJson": "[\"PLC_1\"]",
-          "generationOptions": "&lt;options supported by this target SiVArc version&gt;",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -2603,23 +2605,23 @@
       },
       {
         "name": "GetLibraryOverview",
-        "currentName": "ReadLibraryOverview",
+        "currentName": "GetLibraryOverview",
         "sourceName": "ReadLibraryOverview",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetLibraryType",
-        "currentName": "ReadLibraryType",
+        "currentName": "GetLibraryType",
         "sourceName": "ReadLibraryType",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetMotionAxisConfiguration",
@@ -3089,7 +3091,7 @@
       },
       {
         "name": "GetSivarcRuleTree",
-        "currentName": "ReadSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
         "sourceName": "ReadSivarcRuleTree",
         "profiles": [
           "full"
@@ -3097,7 +3099,7 @@
         "arguments": {
           "category": "screens"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSoftwareInfo",
@@ -3409,7 +3411,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportAlarmClasses",
@@ -3535,7 +3537,7 @@
           "targetGroupKind": "blocks",
           "targetGroupPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportMasterCopyFromGlobalLibrary",
@@ -3550,7 +3552,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportOpcUaInterface",
@@ -4252,7 +4254,7 @@
       },
       {
         "name": "ListSivarcBlockDefinitions",
-        "currentName": "ReadSivarcBlockDefinitions",
+        "currentName": "ListSivarcBlockDefinitions",
         "sourceName": "ReadSivarcBlockDefinitions",
         "profiles": [
           "full"
@@ -4261,7 +4263,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListSivarcRules",
@@ -4403,13 +4405,13 @@
       },
       {
         "name": "ListVersionControlWorkspaces",
-        "currentName": "GetVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
         "sourceName": "GetVersionControlWorkspaces",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageCfcChartProtection",
@@ -4732,7 +4734,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageHardwareObject",
@@ -4798,7 +4800,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryMasterCopy",
@@ -4812,7 +4814,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryType",
@@ -4824,11 +4826,13 @@
         "arguments": {
           "typePath": "Examples/FB_Motor",
           "action": "update",
-          "propertiesJson": "{\"DoNotUse\":true}",
+          "properties": {
+            "DoNotUse": true
+          },
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryTypeVersion",
@@ -4843,7 +4847,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageMotionAxis",
@@ -5322,9 +5326,10 @@
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "name": "Example_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcRule",
@@ -5357,7 +5362,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcTableRule",
@@ -5371,9 +5376,10 @@
           "tablePath": "ExampleTable",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "rulePath": "ExampleRule"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageStartdriveParameter",
@@ -5872,7 +5878,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanHardwareNetworkConfiguration",
@@ -5991,7 +5997,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -6102,13 +6108,17 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "libraryItemKind": "masterCopy",
           "libraryItemPath": "MasterCopies/FB_Motor",
           "expression": "&lt;SiVArc expression for the selected rule context&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RestartOpennessWorker",
@@ -6742,16 +6752,20 @@
         ],
         "arguments": {
           "action": "updateLibrary",
-          "selectionJson": "[]",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
           "confirmChange": false,
           "dryRun": true,
           "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SynchronizeVersionControlWorkspace",
-        "currentName": "SyncVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
         "sourceName": "SyncVersionControlWorkspace",
         "profiles": [
           "full"
@@ -6759,7 +6773,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "TraceTagCause",
@@ -6799,7 +6813,7 @@
           "softwarePath": "PLC_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UploadDeviceParameters",
@@ -7015,7 +7029,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzeHmiTemplateReference",
@@ -7029,7 +7043,7 @@
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AnalyzePlcReferences",
@@ -7067,7 +7081,7 @@
         "arguments": {
           "templateDirectory": "C:\\Examples\\templates"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ApplyToolBatch",
@@ -7830,7 +7844,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CheckProductUpdate",
@@ -7888,7 +7902,7 @@
           "leftPath": "Types/FB_Motor",
           "rightPath": "Types/FB_Motor_v2"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ComparePlcBlockDocuments",
@@ -8087,7 +8101,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateDevice",
@@ -8157,7 +8171,7 @@
           "sourcePath": "Examples/Example_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcBlockGroup",
@@ -8226,7 +8240,7 @@
           "workspaceName": "Engineering",
           "folderPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DecodePlcSimaticMl",
@@ -9341,18 +9355,20 @@
       },
       {
         "name": "GenerateSivarc",
-        "currentName": "GenerateSiVArc",
+        "currentName": "GenerateSivarc",
         "sourceName": "GenerateSiVArc",
         "profiles": [
           "full"
         ],
         "arguments": {
           "hmiDeviceName": "HMI_1",
-          "plcSoftwarePathsJson": "[\"PLC_1\"]",
-          "generationOptions": "&lt;options supported by this target SiVArc version&gt;",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetClassicHmiGlobalization",
@@ -9589,23 +9605,23 @@
       },
       {
         "name": "GetLibraryOverview",
-        "currentName": "ReadLibraryOverview",
+        "currentName": "GetLibraryOverview",
         "sourceName": "ReadLibraryOverview",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetLibraryType",
-        "currentName": "ReadLibraryType",
+        "currentName": "GetLibraryType",
         "sourceName": "ReadLibraryType",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetMotionAxisConfiguration",
@@ -10075,7 +10091,7 @@
       },
       {
         "name": "GetSivarcRuleTree",
-        "currentName": "ReadSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
         "sourceName": "ReadSivarcRuleTree",
         "profiles": [
           "full"
@@ -10083,7 +10099,7 @@
         "arguments": {
           "category": "screens"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSoftwareInfo",
@@ -10395,7 +10411,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportAlarmClasses",
@@ -10521,7 +10537,7 @@
           "targetGroupKind": "blocks",
           "targetGroupPath": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportMasterCopyFromGlobalLibrary",
@@ -10536,7 +10552,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportOpcUaInterface",
@@ -11262,7 +11278,7 @@
       },
       {
         "name": "ListSivarcBlockDefinitions",
-        "currentName": "ReadSivarcBlockDefinitions",
+        "currentName": "ListSivarcBlockDefinitions",
         "sourceName": "ReadSivarcBlockDefinitions",
         "profiles": [
           "full"
@@ -11271,7 +11287,7 @@
           "softwarePath": "PLC_1",
           "blockPath": "Main"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListSivarcRules",
@@ -11413,13 +11429,13 @@
       },
       {
         "name": "ListVersionControlWorkspaces",
-        "currentName": "GetVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
         "sourceName": "GetVersionControlWorkspaces",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageCfcChartProtection",
@@ -11794,7 +11810,7 @@
           "action": "list",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageHardwareObject",
@@ -11860,7 +11876,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryMasterCopy",
@@ -11874,7 +11890,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryType",
@@ -11886,11 +11902,13 @@
         "arguments": {
           "typePath": "Examples/FB_Motor",
           "action": "update",
-          "propertiesJson": "{\"DoNotUse\":true}",
+          "properties": {
+            "DoNotUse": true
+          },
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryTypeVersion",
@@ -11905,7 +11923,7 @@
           "action": "read",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageMotionAxis",
@@ -12459,9 +12477,10 @@
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "name": "Example_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcRule",
@@ -12494,7 +12513,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcScreenLayout",
@@ -12510,7 +12529,7 @@
           "filePath": "C:\\Examples\\exports\\Overview.yml",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageSivarcTableRule",
@@ -12524,9 +12543,10 @@
           "tablePath": "ExampleTable",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "rulePath": "ExampleRule"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageStartdriveParameter",
@@ -13025,7 +13045,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanHardwareNetworkConfiguration",
@@ -13144,7 +13164,7 @@
         "arguments": {
           "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -13255,13 +13275,17 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "libraryItemKind": "masterCopy",
           "libraryItemPath": "MasterCopies/FB_Motor",
           "expression": "&lt;SiVArc expression for the selected rule context&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RestartOpennessWorker",
@@ -13895,16 +13919,20 @@
         ],
         "arguments": {
           "action": "updateLibrary",
-          "selectionJson": "[]",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
           "confirmChange": false,
           "dryRun": true,
           "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SynchronizeVersionControlWorkspace",
-        "currentName": "SyncVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
         "sourceName": "SyncVersionControlWorkspace",
         "profiles": [
           "full"
@@ -13912,7 +13940,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "TraceTagCause",
@@ -13952,7 +13980,7 @@
           "softwarePath": "PLC_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "UploadDeviceParameters",

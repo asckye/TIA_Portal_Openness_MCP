@@ -296,10 +296,10 @@ CASES = {
         + [('PlanOnlineReadOnlyDataProvider', provider, dict(provider=provider, endpoint='opc.tcp://192.0.2.1:4840',
                                                           tagPaths=["DB_HMI.MotorRun"]))
            for provider in ('opcua', 's7-readonly')],
-    'Library': [('ReadLibraryOverview', 'read', {}), ('ReadLibraryType', 'read', {'typePath': 'Type1'})]
+    'Library': [('GetLibraryOverview', 'read', {}), ('GetLibraryType', 'read', {'typePath': 'Type1'})]
         + actions('ManageLibraryType', 'update delete updateLibrary updateProject', typePath='Type1')
         + [('CheckLibraryUpdates', 'read', {})]
-        + actions('SynchronizeLibrary', 'updateLibrary updateProject harmonizeProject cleanUp', selectionJson='[]')
+        + actions('SynchronizeLibrary', 'updateLibrary updateProject harmonizeProject cleanUp', selection=[{'folder': ''}])
         + [('CompareLibraryObjects', kind, {'kind': kind, 'leftPath': 'Left', 'rightPath': 'Right',
                                           'leftVersion': '1.0.0' if kind == 'version' else '',
                                           'rightVersion': '1.0.0' if kind == 'version' else ''})
@@ -312,23 +312,23 @@ CASES = {
         + [('ImportLibraryTypeDocuments', 'import', {'filePath': 'C:/domain-offline.xml'})]
         + actions('ManageGlobalLibrary', 'list infos create open openInfo retrieve save saveAs close archive')
         + actions('ManageLibraryFolder', 'read create rename delete', folderKind='types', folderPath='Folder1'),
-    'VersionControl': [('GetVersionControlWorkspaces', 'read', {}),
+    'VersionControl': [('ListVersionControlWorkspaces', 'read', {}),
         ('CreateVersionControlWorkspace', 'create', {'workspaceName': 'Offline', 'folderPath': str(Path(__file__).resolve().parents[2])}),
         ('GetVersionControlStatus', 'read', {}),
-        ('SyncVersionControlWorkspace', 'export', {'direction': 'ProjectToWorkspace'}),
-        ('SyncVersionControlWorkspace', 'import-refusal', {'direction': 'WorkspaceToProject'}),
+        ('SynchronizeVersionControlWorkspace', 'export', {'direction': 'ProjectToWorkspace'}),
+        ('SynchronizeVersionControlWorkspace', 'import-refusal', {'direction': 'WorkspaceToProject'}),
         ('ConnectProjectToWorkspace', 'map', {})],
-    'Sivarc': [('ReadSivarcRuleTree', category, {'category': category})
+    'Sivarc': [('GetSivarcRuleTree', category, {'category': category})
                for category in ('screens', 'tags', 'advancedTags', 'alarms', 'copies', 'textLists')]
         + actions('ManageSivarcRuleContainer', 'read create createFromType delete', category='screens', kind='table', path='Table1')
         + actions('ManageSivarcTableRule', 'read create createFromMasterCopy update delete', category='screens', tablePath='Table1')
-        + [('ReadSivarcBlockDefinitions', 'read', {'softwarePath': PLC, 'blockPath': 'Block1'})]
+        + [('ListSivarcBlockDefinitions', 'read', {'softwarePath': PLC, 'blockPath': 'Block1'})]
         + actions('ManageSivarcBlockDefinition', 'read create update delete', softwarePath=PLC, blockPath='Block1', kind='tagDefinition')
-        + [('ResolveSivarcExpression', 'resolve', {'softwarePath': PLC, 'blockPath': 'Block1', 'devicePathJson': '[]',
-            'itemPathJson': '[]', 'libraryItemKind': 'masterCopy', 'libraryItemPath': 'Copy1', 'expression': 'Block.Name'})]
+        + [('ResolveSivarcExpression', 'resolve', {'softwarePath': PLC, 'blockPath': 'Block1', 'devicePath': [],
+            'itemPath': [], 'libraryItemKind': 'masterCopy', 'libraryItemPath': 'Copy1', 'expression': 'Block.Name'})]
         + actions('ManageSivarcScreenLayout', 'export import', softwarePath=PLC, screenName='Screen1', filePath='C:/domain-offline.xml')
         + [('UpgradeSivarcDefinitions', 'upgrade', {'softwarePath': PLC}),
-           ('GenerateSiVArc', 'generate', {'hmiDeviceName': 'HMI1', 'plcSoftwarePathsJson': '["PLC1"]', 'generationOptions': 'None'})],
+           ('GenerateSivarc', 'generate', {'hmiDeviceName': 'HMI1', 'plcSoftwarePaths': ['PLC1'], 'generationOptions': 'None'})],
     'ClassicHmiFolders': [('GetClassicHmiScreenTree', kind, {'softwarePath': PLC, 'kind': kind})
                          for kind in ('all', 'screens', 'popups', 'templates', 'slideins')]
         + actions('ManageClassicHmiScreenObject', 'read export import delete', softwarePath=PLC,
@@ -449,7 +449,7 @@ CASES = {
            for target in ('', 'primary', 'backup')]
         + [('GoOfflineAll', 'disconnected', {}), ('ScanAccessibleDevices', 'disconnected', {}),
            ('UploadStationFromPlc', 'disconnected', {'targetIpAddress': '192.0.2.1'}),
-           ('UploadDeviceParameters', 'disconnected', {'devicePathJson': '[]', 'itemPathJson': '[]',
+           ('UploadDeviceParameters', 'disconnected', {'devicePath': [], 'itemPath': [],
                                                      'targetIpAddress': '192.0.2.1'}),
            ('DownloadPlcToFolder', 'disconnected', {'softwarePath': PLC,
                                                   'destinationDirectory': 'C:/domain-offline-card'})],
@@ -1500,7 +1500,7 @@ def capture(args, exe, harness, profile, isolated):
                             and meta.get('failures', [{}])[0].get('code') == 'InvalidSnapshot',
                             f'{name}: missing incomplete snapshot refusal: {raw}')
                         reached_child = True
-                    elif name in ('ReadLibraryOverview', 'ReadLibraryType', 'CompareLibraryObjects', 'ManageGlobalLibrary'):
+                    elif name in ('GetLibraryOverview', 'GetLibraryType', 'CompareLibraryObjects', 'ManageGlobalLibrary'):
                         error_type = ('System.InvalidOperationException' if name == 'ManageGlobalLibrary'
                                       else 'TiaMcpServer.Siemens.PortalException')
                         resources.require(value.get('message', value.get('Message')) == name + ' failed'

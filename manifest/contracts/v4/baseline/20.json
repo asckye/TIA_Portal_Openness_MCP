@@ -67,6 +67,7 @@
     {
       "descriptionSha256": "644c54317bc3febffe45212c78936008fe83979fa902dbfe22da22a4a0753c09",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "libraryPath": {
             "description": "libraryPath: global library folder path or .al* file path",
@@ -83,6 +84,7 @@
     {
       "descriptionSha256": "f0ded49958c5e443596d739cea3c78ccce3c42b7b898fb9214982061c5d23b03",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "referenceGlobalLibraryPath": {
             "description": "referenceGlobalLibraryPath: reference global library folder or .al* file",
@@ -231,6 +233,7 @@
     {
       "descriptionSha256": "76ef11c232a615d4c75192fb47d600e1cf940cce07d72c249959b3f6e1541fcd",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "templateDirectory": {
             "description": "templateDirectory: directory containing Unified HMI JSON templates",
@@ -7642,8 +7645,9 @@
       "name": "CheckForUpdate"
     },
     {
-      "descriptionSha256": "f127a191de5fb49423946f2e99cca543629330257527209b380c9ac4bd4c8ada",
+      "descriptionSha256": "f2e5de86e49f21ddbf305967b5ceba44a0e4a4cd26bb6b50e23ba6d161f93603",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "libraryName": {
             "default": "",
@@ -7737,8 +7741,9 @@
       "name": "CompareLibraries"
     },
     {
-      "descriptionSha256": "346ee1991367fed6502be3f78a578d1de0bbd122ffc49debb9f4c6c054db841a",
+      "descriptionSha256": "5f69d2f8c2c03f7fd3e4116c91a2d55a8b2ab498f5d4ac12ccb8b11b64563d89",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "includeIdentical": {
             "default": false,
@@ -7771,11 +7776,13 @@
           "limit": {
             "default": 100,
             "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
             "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
             "type": "integer"
           },
           "rightLibraryName": {
@@ -8227,8 +8234,9 @@
       "name": "ConnectIsolated"
     },
     {
-      "descriptionSha256": "91f467a5debc0a757614dd377ea0ce17829b8846aa0682ec4d343789ffeefffc",
+      "descriptionSha256": "3060113699409d6569b7977121e921a7e8cd152813e313c4d4d18d459be2a009",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "deviceFilter": {
             "default": "",
@@ -8421,8 +8429,9 @@
       "name": "CreateHardwareDevice"
     },
     {
-      "descriptionSha256": "d1e803bf576d488bacdb53c59de298f3474eaf9709ee61b75de23dc6d8c9afbf",
+      "descriptionSha256": "961cce7f819a1fcc4c1e01e3c4c5cf2f9a2c0e014a708070be9c9c683a992361",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -8596,8 +8605,9 @@
       "name": "CreateProject"
     },
     {
-      "descriptionSha256": "be26b7addea60fb86fd8d93741b19faaf8d731ba3c129e71fbbb003dbce144f4",
+      "descriptionSha256": "946bb01642bfc8f5ffd151f7a888f681b51f10389dbebd01fb130dbfece31f87",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "folderPath": {
             "description": "folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.",
@@ -11534,13 +11544,16 @@
       "name": "GeneratePlcSourceFromBlocks"
     },
     {
-      "descriptionSha256": "98ea353598cdb69ceea1a52eb47cb826ecfc6fef12bb3a21572e6f6fa4820c48",
+      "descriptionSha256": "503c0a1742755f2bd84e55e743125717e3d62426dee15560e1850a327fdca546",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "additionalHmiDeviceNamesJson": {
-            "default": "[]",
-            "description": "additionalHmiDeviceNamesJson: JSON array of further HMI device names.",
-            "type": "string"
+          "additionalHmiDeviceNames": {
+            "description": "additionalHmiDeviceNames: JSON array of further HMI device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -11555,19 +11568,22 @@
             "description": "hmiDeviceName: exact HMI device name to generate for.",
             "type": "string"
           },
-          "plcSoftwarePathsJson": {
-            "description": "plcSoftwarePathsJson: JSON array of PLC software paths included in the generation.",
-            "type": "string"
+          "plcSoftwarePaths": {
+            "description": "plcSoftwarePaths: JSON array of PLC software paths included in the generation.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
           "hmiDeviceName",
-          "plcSoftwarePathsJson",
+          "plcSoftwarePaths",
           "generationOptions"
         ],
         "type": "object"
       },
-      "name": "GenerateSiVArc"
+      "name": "GenerateSivarc"
     },
     {
       "descriptionSha256": "5c6537023ac93fc5ce4aaa7eaa5fe0a1de87b458e2d63d8913b027a81d626bf8",
@@ -11910,6 +11926,78 @@
         "type": "object"
       },
       "name": "GetHmiProgramInfo"
+    },
+    {
+      "descriptionSha256": "b394dc54c108b0d34e0c385067b4040cd7f385aa2ba630a6d48a843fe499ceb1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeMasterCopies": {
+            "default": true,
+            "description": "includeMasterCopies: true also lists the master copies.",
+            "type": "boolean"
+          },
+          "includeTypes": {
+            "default": true,
+            "description": "includeTypes: true also lists the types.",
+            "type": "boolean"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "maxDepth": {
+            "default": 6,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "maxItems": {
+            "default": 500,
+            "description": "maxItems: cap on items returned.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetLibraryOverview"
+    },
+    {
+      "descriptionSha256": "7539c2ef50b473e03874da6152eace4849d5a32c3821a63fb3cf4d248d90f573",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "guid": {
+            "default": "",
+            "description": "guid: GUID of the type ('' = look up by name).",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "typePath": {
+            "default": "",
+            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetLibraryType"
     },
     {
       "descriptionSha256": "d7753f3a5c577216dd758d242007d4fe7a8e0469a708beb2a0eacde18163b20e",
@@ -12692,6 +12780,63 @@
       "name": "GetSafetyBlockSignatures"
     },
     {
+      "descriptionSha256": "79c4d266bdee7213f3751621f1a2879378b5e640122b0739bd4cb8975a101227",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "description": "category: screens | tags | advancedTags | alarms | copies | textLists.",
+            "enum": [
+              "screens",
+              "tags",
+              "advancedTags",
+              "alarms",
+              "copies",
+              "textLists"
+            ],
+            "type": "string"
+          },
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "includeRules": {
+            "default": true,
+            "description": "includeRules: true also returns the rules of each table.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 200,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "tablePath": {
+            "default": "",
+            "description": "tablePath: 'Group/Table' path of the table as the read tools show it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "GetSivarcRuleTree"
+    },
+    {
       "descriptionSha256": "3c6d7a55c9a8638147322fbcdfdbfe5e0e56978a9f94235176566bfa5f72e06b",
       "inputSchema": {
         "additionalProperties": false,
@@ -13077,8 +13222,9 @@
       "name": "GetV21EcosystemCatalog"
     },
     {
-      "descriptionSha256": "c6b984345b431d0afdb3d136b39a1cb6e819e3d719c0195224b3bcd15dbb06b2",
+      "descriptionSha256": "bd067a3e32ba0bf901d0d78547acd8cbd3936111b9e0600f7a8549c911b6bd22",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "changedOnly": {
             "default": true,
@@ -13094,14 +13240,6 @@
         "type": "object"
       },
       "name": "GetVersionControlStatus"
-    },
-    {
-      "descriptionSha256": "8116b4e7aaf90e15397552f243fbe875344f7f44d3aa20ef2e8e8c716749646a",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "GetVersionControlWorkspaces"
     },
     {
       "descriptionSha256": "3328f85adbb4cb656401f0a47f12cef1e30bd63dbcccec4f131db0a7df1af4b7",
@@ -13445,8 +13583,9 @@
       "name": "ImportHmiTagTablesFromDirectory"
     },
     {
-      "descriptionSha256": "97d3d0110199aaa2f36438805e2cafa5a37ca2c66787220b09ab072dfbf479d3",
+      "descriptionSha256": "b34ab600c6ad46238e7d5e830fcac12ff74a1f7a971f454a92f31cbff3be11e8",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "createOptions": {
             "default": "None",
@@ -13515,8 +13654,9 @@
       "name": "ImportLibraryTypeDocuments"
     },
     {
-      "descriptionSha256": "bc7cadb73edd82010cd3b25eea9c95babbe6625e59e753fbf81ce8e9ad7f1cbb",
+      "descriptionSha256": "f0e1646ac82de72b985b4073429ba239d64425663f8becf4b6fa5c8d2794fa9f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: real Unified HMI software path resolved from GetProjectTree, e.g. HMI_RT_1",
@@ -15153,6 +15293,33 @@
       "name": "ListPortalProcessProjects"
     },
     {
+      "descriptionSha256": "fe8f14491cd1bbf225dfcb9d9bf42d096da5ce5bad009ed062a28e6593caa87f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "type": "string"
+          },
+          "includeBlockParameters": {
+            "default": true,
+            "description": "includeBlockParameters: true also returns block parameters.",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "ListSivarcBlockDefinitions"
+    },
+    {
       "descriptionSha256": "16aaa787cd08d069f71f76c28f6d65f757a576df52d7821db1ea7d03dd293518",
       "inputSchema": {
         "additionalProperties": false,
@@ -15323,6 +15490,15 @@
         "type": "object"
       },
       "name": "ListUnifiedLibraryFolder"
+    },
+    {
+      "descriptionSha256": "96b56f6b8bd0be9f7612f6a2a806d368223e2a5385936f20605d5c9f6b939db0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ListVersionControlWorkspaces"
     },
     {
       "descriptionSha256": "5610c61ac39fb03af48deb975ef8f01307446943f5caef9c41e66cab7bbb2b5e",
@@ -16748,8 +16924,9 @@
       "name": "ManageDriveTelegrams"
     },
     {
-      "descriptionSha256": "0adc3f2df48e417961f041f3563bd750ec3362a145d5cca7cfd081cc584e3f2a",
+      "descriptionSha256": "b0d855d0a847670461856308bdb8615947f7758c128466bbcd511ae9621cd096",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.",
@@ -17053,8 +17230,9 @@
       "name": "ManageIoSystem"
     },
     {
-      "descriptionSha256": "a72c7f49ce5210c5103932934ad6101d8319353e0d93959aff387f8830e2298d",
+      "descriptionSha256": "a96607d7b9cda31d804befcb4127ccda382f74dc4dc5a97f1231867a99fc43d3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - read | create | rename | delete.",
@@ -17104,8 +17282,9 @@
       "name": "ManageLibraryFolder"
     },
     {
-      "descriptionSha256": "3b1eb0f30494ff2cc6f585299954f02d369faf924fa1f81695d8d1419536da7d",
+      "descriptionSha256": "d91b3e16d9c481464885394c7d955f79b9d6d667708e4e5bf50223ac888934b3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - read | copy | compare | delete.",
@@ -17151,8 +17330,9 @@
       "name": "ManageLibraryMasterCopy"
     },
     {
-      "descriptionSha256": "5857bc5f06e61fc4d928e4c5349aa7ec0a07813f98494f754920c69aa6a62d59",
+      "descriptionSha256": "4bf130bf85bca46592f02ebd99766a9be9fd0f0f1ce63621eff7930cfa8f93d3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - update | delete | updateLibrary | updateProject.",
@@ -17198,15 +17378,32 @@
             "description": "libraryName: name of the global library ('' = the project library).",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
-          "scopeSoftwarePathsJson": {
-            "default": "[]",
-            "description": "scopeSoftwarePathsJson: JSON array of software paths that limit the update scope ('[]' = whole project).",
-            "type": "string"
+          "scopeSoftwarePaths": {
+            "description": "scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "structureConflictResolutionMode": {
             "default": "RetainStructure",
@@ -17237,8 +17434,9 @@
       "name": "ManageLibraryType"
     },
     {
-      "descriptionSha256": "cc11da560a00f2328b092d5f3e7f0b7e44e32428387575f0170a43b15f36082a",
+      "descriptionSha256": "2150e34ff5bf83180eb9e89dd223ac5f97f5e83bc3fce7a5152b973f6d66ea20",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.",
@@ -19940,8 +20138,9 @@
       "name": "ManageSinumerikSafetyMode"
     },
     {
-      "descriptionSha256": "3348ed397646df79e3c9b78c9b44013a001bce32dea9b68c4aa4459e93a16a4c",
+      "descriptionSha256": "e2df1c66ac3f1525b6a9c7412b6ce1a443511c41bfb8538f236106682f5fb8b6",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -19984,19 +20183,37 @@
             "description": "name: exact name of the object (case-sensitive).",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
           },
-          "textsJson": {
-            "default": "{}",
-            "description": "textsJson: JSON object language tag -> text.",
-            "type": "string"
+          "texts": {
+            "additionalProperties": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "description": "texts: JSON object language tag -> text.",
+            "type": "object"
           }
         },
         "required": [
@@ -20009,8 +20226,9 @@
       "name": "ManageSivarcBlockDefinition"
     },
     {
-      "descriptionSha256": "f4f5a8de1cf431220751c4c39a1f26b95d27a39dd0b767737c1071b5731639ba",
+      "descriptionSha256": "adbe453d3877c15c7ac0bc6aba7096544b6337f701b0cf063504a0bd3bb1ed04",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20075,8 +20293,9 @@
       "name": "ManageSivarcRuleContainer"
     },
     {
-      "descriptionSha256": "b53fa8316c52d51d09b8251b30ed946b62931e47e2ca4fd4c1083bc05d257b5d",
+      "descriptionSha256": "8079832ab4fbb56547802b9a0420f07214ee9bf296f795feba5fbba2cd0e8f9b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -20108,15 +20327,20 @@
             ],
             "type": "string"
           },
-          "deviceNamesJson": {
-            "default": "[]",
-            "description": "deviceNamesJson: JSON array of device names.",
-            "type": "string"
+          "deviceNames": {
+            "description": "deviceNames: JSON array of device names.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "deviceSelectionJson": {
-            "default": "{}",
-            "description": "deviceSelectionJson: JSON object selecting PLC / HMI devices for the rule.",
-            "type": "string"
+          "deviceSelection": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "deviceSelection: JSON object selecting PLC / HMI devices for the rule.",
+            "minProperties": 0,
+            "type": "object"
           },
           "dryRun": {
             "default": true,
@@ -20142,15 +20366,100 @@
             "description": "masterCopyPath: 'Folder/Name' of the master copy in the library.",
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
           },
-          "referencesJson": {
-            "default": "{}",
-            "description": "referencesJson: JSON object of library references for the rule (see the tool description).",
-            "type": "string"
+          "references": {
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "plcBlock"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "path": {
+                          "maxLength": 1024,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "softwarePath": {
+                          "maxLength": 1024,
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "softwarePath",
+                        "path"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "masterCopy",
+                            "libraryType",
+                            "masterCopyFolder",
+                            "typeFolder"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "libraryName": {
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "path": {
+                          "maxLength": 1024,
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "path"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "references: JSON object of library references for the rule (see the tool description).",
+            "minProperties": 0,
+            "type": "object"
           },
           "rulePath": {
             "default": "",
@@ -22480,15 +22789,36 @@
     {
       "descriptionSha256": "7d7b25c0b02a9b49e62c18af3ad2f8abf5c6f2cbad1b3b31f54a61d04c040461",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "libraryPath": {
             "description": "libraryPath: reference global library folder path or .al* file path.",
             "type": "string"
           },
-          "templateIntentJson": {
-            "default": "{}",
-            "description": "templateIntentJson: optional JSON {\"screenType\":\"overview\",\"targetRuntime\":\"Unified\",\"preferredComponents\":[...]}.",
-            "type": "string"
+          "templateIntent": {
+            "additionalProperties": false,
+            "description": "templateIntent: optional JSON {\"screenType\":\"overview\",\"targetRuntime\":\"Unified\",\"preferredComponents\":[...]}.",
+            "minProperties": 0,
+            "properties": {
+              "preferredComponents": {
+                "items": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array"
+              },
+              "screenType": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "targetRuntime": {
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
           }
         },
         "required": [
@@ -22881,8 +23211,9 @@
       "name": "PreviewToolCall"
     },
     {
-      "descriptionSha256": "63d949c95fab96c32117b258f7a2ef1ae0c8724fc11ed66c57873d77b5923ed5",
+      "descriptionSha256": "752154db6a144d6527dc273a3b8fd097ab07180f10222e368ece06fbcdbea98a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "libraryPath": {
             "description": "libraryPath: full path to .al21 file or its containing folder",
@@ -23291,74 +23622,6 @@
         "type": "object"
       },
       "name": "ReadHmiScreenSnapshot"
-    },
-    {
-      "descriptionSha256": "a0df8dac1921a54c22d47d017f911a112b6e37000ab3094f8df3648272364225",
-      "inputSchema": {
-        "properties": {
-          "includeMasterCopies": {
-            "default": true,
-            "description": "includeMasterCopies: true also lists the master copies.",
-            "type": "boolean"
-          },
-          "includeTypes": {
-            "default": true,
-            "description": "includeTypes: true also lists the types.",
-            "type": "boolean"
-          },
-          "libraryName": {
-            "default": "",
-            "description": "libraryName: name of the global library ('' = the project library).",
-            "type": "string"
-          },
-          "maxDepth": {
-            "default": 6,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "maxItems": {
-            "default": 500,
-            "description": "maxItems: cap on items returned.",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadLibraryOverview"
-    },
-    {
-      "descriptionSha256": "055ef4903189a247b7b801c6adb64a40b109aa8c8a2d69a16c1aa37d3b6b5328",
-      "inputSchema": {
-        "properties": {
-          "guid": {
-            "default": "",
-            "description": "guid: GUID of the type ('' = look up by name).",
-            "type": "string"
-          },
-          "libraryName": {
-            "default": "",
-            "description": "libraryName: name of the global library ('' = the project library).",
-            "type": "string"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "typePath": {
-            "default": "",
-            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadLibraryType"
     },
     {
       "descriptionSha256": "a08f3d0efe3ae487341530585b2dff743b4ebdffcfe28b344bf2435e6285f023",
@@ -23791,86 +24054,6 @@
         "type": "object"
       },
       "name": "ReadSiVArcRules"
-    },
-    {
-      "descriptionSha256": "8b35331e2e7a05504b8c977f26884488c0155472c5b55367094e66948768a1ea",
-      "inputSchema": {
-        "properties": {
-          "blockPath": {
-            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
-            "type": "string"
-          },
-          "includeBlockParameters": {
-            "default": true,
-            "description": "includeBlockParameters: true also returns block parameters.",
-            "type": "boolean"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "blockPath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadSivarcBlockDefinitions"
-    },
-    {
-      "descriptionSha256": "4eddd79aba1677ba6ef31aab4c6e9737de06b8446b616b67b8b790580fec7ca3",
-      "inputSchema": {
-        "properties": {
-          "category": {
-            "description": "category: screens | tags | advancedTags | alarms | copies | textLists.",
-            "enum": [
-              "screens",
-              "tags",
-              "advancedTags",
-              "alarms",
-              "copies",
-              "textLists"
-            ],
-            "type": "string"
-          },
-          "folderPath": {
-            "default": "",
-            "description": "folderPath: group / folder path inside the software ('' = root).",
-            "type": "string"
-          },
-          "includeRules": {
-            "default": true,
-            "description": "includeRules: true also returns the rules of each table.",
-            "type": "boolean"
-          },
-          "limit": {
-            "default": 200,
-            "description": "limit: maximum number of items to return (paging).",
-            "type": "integer"
-          },
-          "maxDepth": {
-            "default": 4,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "type": "integer"
-          },
-          "tablePath": {
-            "default": "",
-            "description": "tablePath: 'Group/Table' path of the table as the read tools show it.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "category"
-        ],
-        "type": "object"
-      },
-      "name": "ReadSivarcRuleTree"
     },
     {
       "descriptionSha256": "92e3ded96c2a6a51adf5dfe4aeecc4bef94a714dcab585c091f1c28e966b200b",
@@ -24578,24 +24761,29 @@
       "name": "RepairAndReimportPlcBlock"
     },
     {
-      "descriptionSha256": "100853f616ecba80ec73f7830d6f9177289effbcc2de96bd3d8f7c13e77a37b3",
+      "descriptionSha256": "cdcc105dedc0d8e87da25ba70d6c3fbfedfa3b51ba6d823a32767f1c54b30c74",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "blockPath": {
             "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
             "type": "string"
           },
-          "devicePathJson": {
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "expression": {
             "description": "expression: the SiVArc expression to resolve.",
             "type": "string"
           },
-          "itemPathJson": {
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "libraryItemKind": {
             "description": "libraryItemKind: masterCopy | libraryType.",
@@ -24627,8 +24815,8 @@
         "required": [
           "softwarePath",
           "blockPath",
-          "devicePathJson",
-          "itemPathJson",
+          "devicePath",
+          "itemPath",
           "libraryItemKind",
           "libraryItemPath",
           "expression"
@@ -26074,37 +26262,9 @@
       "name": "ShowObjectInEditor"
     },
     {
-      "descriptionSha256": "cc3c3650638cb0f8ed828de219d4855d48641e5d40f9d2c30154ed2303339e44",
+      "descriptionSha256": "6d8b10e583b0e1ec24a1e1432eef95217cc33f436cb3c825b3f0845877943969",
       "inputSchema": {
-        "properties": {
-          "changedOnly": {
-            "default": true,
-            "description": "changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.",
-            "type": "boolean"
-          },
-          "direction": {
-            "default": "ProjectToWorkspace",
-            "description": "direction: 'ProjectToWorkspace' (export, for committing) or 'WorkspaceToProject' (import, for restoring).",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.",
-            "type": "boolean"
-          },
-          "workspaceName": {
-            "default": "",
-            "description": "workspaceName: which workspace. Empty = the first one in the project.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "name": "SyncVersionControlWorkspace"
-    },
-    {
-      "descriptionSha256": "85c8389f9af62ae54d8c15ebcaddb4e67a6b7d47ab1961109b70abfe72f8d8a9",
-      "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: the operation to perform - updateLibrary | updateProject | harmonizeProject | cleanUp.",
@@ -26154,24 +26314,62 @@
             ],
             "type": "string"
           },
-          "harmonizeOptionsJson": {
-            "default": "[\"HarmonizeNames\",\"HarmonizePaths\"]",
-            "description": "harmonizeOptionsJson: JSON object of harmonisation options (see the tool description).",
-            "type": "string"
+          "harmonizeOptions": {
+            "description": "harmonizeOptions: Array of harmonisation option names (see the tool description).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "libraryName": {
             "default": "",
             "description": "libraryName: name of the global library ('' = the project library).",
             "type": "string"
           },
-          "scopeSoftwarePathsJson": {
-            "default": "[]",
-            "description": "scopeSoftwarePathsJson: JSON array of software paths that limit the update scope ('[]' = whole project).",
-            "type": "string"
+          "scopeSoftwarePaths": {
+            "description": "scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
-          "selectionJson": {
-            "description": "selectionJson: JSON array selecting the types / instances to synchronise ('[]' = all).",
-            "type": "string"
+          "selection": {
+            "description": "selection: JSON array selecting the types / instances to synchronise (at least one type or folder; {folder: ''} selects the whole Types folder).",
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "folder": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "folder"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "type": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
           },
           "structureConflictResolutionMode": {
             "default": "RetainStructure",
@@ -26191,11 +26389,41 @@
         },
         "required": [
           "action",
-          "selectionJson"
+          "selection"
         ],
         "type": "object"
       },
       "name": "SynchronizeLibrary"
+    },
+    {
+      "descriptionSha256": "64b61016ca1f10addfc9ad8ea4324206c86057903ef5473ed0787eb6242146fb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "changedOnly": {
+            "default": true,
+            "description": "changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.",
+            "type": "boolean"
+          },
+          "direction": {
+            "default": "ProjectToWorkspace",
+            "description": "direction: 'ProjectToWorkspace' (export, for committing) or 'WorkspaceToProject' (import, for restoring).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.",
+            "type": "boolean"
+          },
+          "workspaceName": {
+            "default": "",
+            "description": "workspaceName: which workspace. Empty = the first one in the project.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "SynchronizeVersionControlWorkspace"
     },
     {
       "descriptionSha256": "8050af18069a9079097d2b30fd8a59aef82fb5b55d8879e814e2d99e6f638509",
@@ -26486,8 +26714,9 @@
       "name": "UpdateUnifiedRuntimeSettings"
     },
     {
-      "descriptionSha256": "5c8b1091c0718fa798be9149995108619ba258c19f2a24ca3ffba6d136f1a74d",
+      "descriptionSha256": "38e4478cb8aa0b1bd30541ecfd69cfaf26c14da684d2eb2c1d29536f4b6b16ee",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,

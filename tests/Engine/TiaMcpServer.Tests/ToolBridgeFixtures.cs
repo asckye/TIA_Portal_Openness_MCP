@@ -138,7 +138,8 @@ namespace TiaMcpServer.Tests
                 typeof(SoftwareUnitDeepTools), typeof(SoftwareUnitManagementTools), typeof(TechnologyObjectsTools),
                 typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools),
                 typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools),
-                typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(UnifiedUiModelTools)
+                typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(UnifiedUiModelTools),
+                typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools)
             }).Methods, ToolCatalog.Engine.Methods);
         }
 

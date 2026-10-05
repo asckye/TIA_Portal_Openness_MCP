@@ -4943,7 +4943,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "GenerateSiVArc": {
+    "GenerateSivarc": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -5157,6 +5157,30 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
+    },
+    "GetLibraryOverview": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/global-library/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
+        "guides/skills/libraries-and-alarms/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "GetLibraryType": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/global-library/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
+        "guides/skills/libraries-and-alarms/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
     },
     "GetMotionAxisConfiguration": {
       "relationship": "related-api-patterns",
@@ -5463,6 +5487,32 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetSivarcRuleTree": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "sivarc-21",
+          "topic": "sivarc",
+          "releaseKey": "21",
+          "title": "SiVArc generation",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
+          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "sivarc-rules-21",
+          "topic": "sivarc-rules",
+          "releaseKey": "21",
+          "title": "Rule objects and groups",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
+          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "GetSoftwareInfo": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5662,41 +5712,6 @@
       "manualReferences": []
     },
     "GetVersionControlStatus": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "vci-20",
-          "topic": "vci",
-          "releaseKey": "20",
-          "title": "Creating VCI workspace",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
-          "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup; foundation legacy VCI uses a different contract.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "vci-21",
-          "topic": "vci",
-          "releaseKey": "21",
-          "title": "Creating VCI workspace",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
-          "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "vci-formats-21",
-          "topic": "vci-formats",
-          "releaseKey": "21",
-          "title": "Supported workspace formats",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/getting-supported-file-formats",
-          "projectSummary": "Query formats for the engineering object before mapping/exporting; do not pass its composition or association.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "GetVersionControlWorkspaces": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -6534,6 +6549,32 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListSivarcBlockDefinitions": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "sivarc-21",
+          "topic": "sivarc",
+          "releaseKey": "21",
+          "title": "SiVArc generation",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
+          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "sivarc-rules-21",
+          "topic": "sivarc-rules",
+          "releaseKey": "21",
+          "title": "Rule objects and groups",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
+          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
     "ListTechnologyObjects": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -6639,6 +6680,41 @@
           "title": "HMISoftware example index",
           "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
           "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        }
+      ]
+    },
+    "ListVersionControlWorkspaces": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": [
+        {
+          "id": "vci-20",
+          "topic": "vci",
+          "releaseKey": "20",
+          "title": "Creating VCI workspace",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
+          "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup; foundation legacy VCI uses a different contract.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "vci-21",
+          "topic": "vci",
+          "releaseKey": "21",
+          "title": "Creating VCI workspace",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
+          "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup.",
+          "delivery": "link to official manual example; not a vendored code sample"
+        },
+        {
+          "id": "vci-formats-21",
+          "topic": "vci-formats",
+          "releaseKey": "21",
+          "title": "Supported workspace formats",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/getting-supported-file-formats",
+          "projectSummary": "Query formats for the engineering object before mapping/exporting; do not pass its composition or association.",
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
@@ -8307,30 +8383,6 @@
         }
       ]
     },
-    "ReadLibraryOverview": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/global-library/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
-        "guides/skills/libraries-and-alarms/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadLibraryType": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/global-library/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
-        "guides/skills/libraries-and-alarms/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadNativeInvocationLog": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -8433,58 +8485,6 @@
       "manualReferences": []
     },
     "ReadSiVArcRules": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "sivarc-21",
-          "topic": "sivarc",
-          "releaseKey": "21",
-          "title": "SiVArc generation",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
-          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "sivarc-rules-21",
-          "topic": "sivarc-rules",
-          "releaseKey": "21",
-          "title": "Rule objects and groups",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
-          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadSivarcBlockDefinitions": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": [
-        {
-          "id": "sivarc-21",
-          "topic": "sivarc",
-          "releaseKey": "21",
-          "title": "SiVArc generation",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
-          "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        },
-        {
-          "id": "sivarc-rules-21",
-          "topic": "sivarc-rules",
-          "releaseKey": "21",
-          "title": "Rule objects and groups",
-          "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
-          "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
-          "delivery": "link to official manual example; not a vendored code sample"
-        }
-      ]
-    },
-    "ReadSivarcRuleTree": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -9419,7 +9419,19 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "SyncVersionControlWorkspace": {
+    "SynchronizeLibrary": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/global-library/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
+        "guides/skills/libraries-and-alarms/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "SynchronizeVersionControlWorkspace": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -9453,18 +9465,6 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
-    },
-    "SynchronizeLibrary": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/global-library/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/LibrarySnippets.cs",
-        "guides/skills/libraries-and-alarms/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
     },
     "TraceTagCause": {
       "relationship": "no-direct-official-example",
@@ -15598,19 +15598,21 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GenerateSiVArc": {
+        "GenerateSivarc": {
           "arguments": {
             "hmiDeviceName": "HMI_1",
-            "plcSoftwarePathsJson": "[\"PLC_1\"]",
-            "generationOptions": "<options supported by this target SiVArc version>",
+            "plcSoftwarePaths": [
+              "PLC_1"
+            ],
+            "generationOptions": "None",
             "dryRun": true
           },
           "parameters": {
             "generationOptions": {
               "requiresBinding": true
             },
-            "additionalHmiDeviceNamesJson": {
-              "exampleValue": "<additionalHmiDeviceNamesJson from this operation's target or user input>",
+            "additionalHmiDeviceNames": {
+              "exampleValue": [],
               "requiresBinding": true
             }
           },
@@ -16023,7 +16025,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GetVersionControlWorkspaces": {
+        "ListVersionControlWorkspaces": {
           "arguments": {},
           "parameters": {},
           "operations": {},
@@ -18592,7 +18594,9 @@
           "arguments": {
             "typePath": "Examples/FB_Motor",
             "action": "update",
-            "propertiesJson": "{\"DoNotUse\":true}",
+            "properties": {
+              "DoNotUse": true
+            },
             "confirmDelete": false,
             "dryRun": true
           },
@@ -18604,8 +18608,10 @@
               "exampleValue": "<targetLibraryName from this operation's target or user input>",
               "requiresBinding": true
             },
-            "scopeSoftwarePathsJson": {
-              "exampleValue": "<scopeSoftwarePathsJson from this operation's target or user input>",
+            "scopeSoftwarePaths": {
+              "exampleValue": [
+                "PLC_1"
+              ],
               "requiresBinding": true
             },
             "deleteUnusedVersionsMode": {
@@ -18621,24 +18627,31 @@
           "operations": {
             "update": {
               "arguments": {
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "DoNotUse": true
+                }
               }
             },
             "delete": {
               "arguments": {
-                "action": "delete"
+                "action": "delete",
+                "properties": {}
               }
             },
             "updateLibrary": {
               "arguments": {
                 "action": "updateLibrary",
-                "targetLibraryName": "ExampleLibrary"
+                "targetLibraryName": "ExampleLibrary",
+                "properties": {}
               }
             },
             "updateProject": {
               "arguments": {
                 "action": "updateProject",
-                "scopeSoftwarePathsJson": "<scopeSoftwarePathsJson from this operation's target or user input>"
+                "scopeSoftwarePaths": [
+                  "PLC_1"
+                ],
+                "properties": {}
               }
             }
           },
@@ -21082,18 +21095,23 @@
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "name": "Example_1"
           },
           "parameters": {
             "name": {
               "exampleValue": "Example_1"
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "Comment": "Example"
+              },
               "requiresBinding": true
             },
-            "textsJson": {
-              "exampleValue": "<textsJson from this operation's target or user input>",
+            "texts": {
+              "exampleValue": {
+                "en-US": "Example"
+              },
               "requiresBinding": true
             }
           },
@@ -21110,7 +21128,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "Comment": "Example"
+                },
                 "name": "Example_1"
               }
             },
@@ -21202,7 +21222,8 @@
             "tablePath": "ExampleTable",
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "rulePath": "ExampleRule"
           },
           "parameters": {
             "category": {
@@ -21215,20 +21236,32 @@
             "kind": {
               "exampleValue": "rule"
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "Comment": "Example"
+              },
               "requiresBinding": true
             },
-            "referencesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "references": {
+              "exampleValue": {
+                "ProgramBlock": {
+                  "kind": "plcBlock",
+                  "softwarePath": "PLC_1",
+                  "path": "Main"
+                }
+              },
               "requiresBinding": true
             },
-            "deviceSelectionJson": {
-              "exampleValue": "<deviceSelectionJson from this operation's target or user input>",
+            "deviceSelection": {
+              "exampleValue": {
+                "PLC_1": true
+              },
               "requiresBinding": true
             },
-            "deviceNamesJson": {
-              "exampleValue": "<deviceNamesJson from this operation's target or user input>",
+            "deviceNames": {
+              "exampleValue": [
+                "PLC_1"
+              ],
               "requiresBinding": true
             },
             "libraryName": {
@@ -21254,13 +21287,16 @@
               "arguments": {
                 "action": "createFromMasterCopy",
                 "masterCopyPath": "Examples/Example_1",
-                "libraryName": ""
+                "libraryName": "",
+                "rulePath": ""
               }
             },
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "Enabled": true
+                }
               }
             },
             "delete": {
@@ -22801,8 +22837,12 @@
             "libraryPath": "C:\\Examples\\Library.al{extension}"
           },
           "parameters": {
-            "templateIntentJson": {
-              "exampleValue": "<templateIntentJson from this operation's target or user input>",
+            "templateIntent": {
+              "exampleValue": {
+                "screenType": "overview",
+                "targetRuntime": "Unified",
+                "preferredComponents": []
+              },
               "requiresBinding": true
             }
           },
@@ -23338,7 +23378,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadLibraryOverview": {
+        "GetLibraryOverview": {
           "arguments": {},
           "parameters": {
             "libraryName": {
@@ -23360,7 +23400,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadLibraryType": {
+        "GetLibraryType": {
           "arguments": {},
           "parameters": {
             "libraryName": {
@@ -23840,7 +23880,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadSivarcBlockDefinitions": {
+        "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
             "blockPath": "Main"
@@ -23853,7 +23893,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadSivarcRuleTree": {
+        "GetSivarcRuleTree": {
           "arguments": {
             "category": "screens"
           },
@@ -24395,17 +24435,21 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "blockPath": "Main",
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "libraryItemKind": "masterCopy",
             "libraryItemPath": "MasterCopies/FB_Motor",
             "expression": "<SiVArc expression for the selected rule context>"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "expression": {
@@ -24932,7 +24976,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "SyncVersionControlWorkspace": {
+        "SynchronizeVersionControlWorkspace": {
           "arguments": {
             "dryRun": true
           },
@@ -24953,7 +24997,11 @@
         "SynchronizeLibrary": {
           "arguments": {
             "action": "updateLibrary",
-            "selectionJson": "[]",
+            "selection": [
+              {
+                "folder": ""
+              }
+            ],
             "confirmChange": false,
             "dryRun": true,
             "targetLibraryName": "<targetLibraryName from this operation's target or user input>"
@@ -24965,8 +25013,10 @@
             "targetLibraryName": {
               "requiresBinding": true
             },
-            "scopeSoftwarePathsJson": {
-              "exampleValue": "<scopeSoftwarePathsJson from this operation's target or user input>",
+            "scopeSoftwarePaths": {
+              "exampleValue": [
+                "PLC_1"
+              ],
               "requiresBinding": true
             },
             "forceUpdateMode": {
@@ -24978,8 +25028,11 @@
             "structureConflictResolutionMode": {
               "exampleValue": "RetainStructure"
             },
-            "harmonizeOptionsJson": {
-              "exampleValue": "[\"HarmonizeNames\",\"HarmonizePaths\"]"
+            "harmonizeOptions": {
+              "exampleValue": [
+                "HarmonizeNames",
+                "HarmonizePaths"
+              ]
             },
             "cleanUpMode": {
               "exampleValue": "PreserveDefaultVersionOfUnusedTypes"
@@ -24992,12 +25045,19 @@
             "updateProject": {
               "arguments": {
                 "action": "updateProject",
-                "scopeSoftwarePathsJson": "<scopeSoftwarePathsJson from this operation's target or user input>"
+                "scopeSoftwarePaths": [
+                  "PLC_1"
+                ],
+                "targetLibraryName": ""
               }
             },
             "harmonizeProject": {
               "arguments": {
-                "action": "harmonizeProject"
+                "action": "harmonizeProject",
+                "scopeSoftwarePaths": [
+                  "PLC_1"
+                ],
+                "targetLibraryName": ""
               }
             },
             "cleanUp": {

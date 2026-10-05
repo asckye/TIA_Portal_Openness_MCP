@@ -191,7 +191,7 @@ DOMAIN_CALLS = {
     'PLC-Software': 'GetSoftwareTree',
     'Portal': 'Disconnect',
     'Project': 'GetProjectTree',
-    'VersionControl': 'GetVersionControlWorkspaces',
+    'VersionControl': 'ListVersionControlWorkspaces',
 }
 
 # ToolVersionPolicy.V21Only. Both direct admission and bridge admission are

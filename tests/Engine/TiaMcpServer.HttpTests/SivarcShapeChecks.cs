@@ -133,8 +133,8 @@ internal static class SivarcShapeChecks
 
         // ---- server side ----
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ReadSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcTableRule","ReadSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSiVArc"})
-            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
-        check(portal.Method("GenerateSiVArc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNamesJson"),"GenerateSiVArc takes additionalHmiDeviceNamesJson (multi-device overload)");
+        foreach(var tool in new[]{"GetSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcTableRule","ListSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSivarc"})
+            check(portal.Tool(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Tool("GenerateSivarc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNames"),"GenerateSivarc takes additionalHmiDeviceNames (multi-device overload)");
     }
 }

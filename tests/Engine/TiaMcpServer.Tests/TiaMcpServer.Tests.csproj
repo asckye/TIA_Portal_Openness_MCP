@@ -16,6 +16,11 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs" Link="LibraryTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs" Link="VersionControlTools.cs" />
+
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs" Link="McpServer.BlockImportVerification.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs" Link="McpServer.BlockLogic.cs" />
 

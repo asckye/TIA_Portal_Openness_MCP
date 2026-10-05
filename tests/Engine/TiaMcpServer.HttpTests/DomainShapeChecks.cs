@@ -83,11 +83,18 @@ internal static class DomainShapeChecks
                 }
                 var implementation = tool;
                 var serviceName = name;
-                if (domain.Name == "SoftwareUnitDeep")
+                if (domain.Name == "SoftwareUnitDeep" || domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl")
                 {
                     check(tool.Name.EndsWith("V4", StringComparison.Ordinal) && tool.ReturnType.Name == "CallToolResult",
                         name + " exposes the V4 envelope boundary");
                     serviceName = tool.Name.Substring(0, tool.Name.Length - "V4".Length);
+                    if (domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl")
+                        serviceName = serviceName switch {
+                            "GetLibraryOverview" => "ReadLibraryOverview", "GetLibraryType" => "ReadLibraryType",
+                            "GetSivarcRuleTree" => "ReadSivarcRuleTree", "ListSivarcBlockDefinitions" => "ReadSivarcBlockDefinitions",
+                            "GenerateSivarc" => "GenerateSiVArc", "ListVersionControlWorkspaces" => "GetVersionControlWorkspaces",
+                            "SynchronizeVersionControlWorkspace" => "SyncVersionControlWorkspace", _ => serviceName
+                        };
                     implementation = tools.GetMethod(serviceName, all)!;
                     check(implementation.GetCustomAttribute<McpServerToolAttribute>() == null,
                         name + " retains its unregistered service implementation without an alias");
@@ -167,9 +174,11 @@ internal static class DomainShapeChecks
         }
         catch (TargetInvocationException ex)
         {
-            check(ex.InnerException is InvalidOperationException && ex.InnerException.Message ==
+            check(ex.InnerException?.GetType().Name == "PortalException"
+                && ex.InnerException.GetType().GetProperty("Code")!.GetValue(ex.InnerException)?.ToString() == "InvalidState"
+                && ex.InnerException.Message ==
                 "No project is open. Call Connect, then AttachToOpenProject / OpenProject first.",
-                "Disconnected VCI acquisition retains its original error");
+                "Disconnected VCI acquisition retains its message and exposes a typed precondition");
         }
         check(roots.Count == 0 && owner.GetValue(first) == null && vci.GetField("_vciCached", all)!.GetValue(first) == null,
             "Disconnected VCI acquisition clears the cached owner and retained proxies");

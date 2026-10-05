@@ -261,7 +261,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- read --------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadLibraryOverview(string libraryName = "", bool includeTypes = true, bool includeMasterCopies = true, int maxDepth = 6, int maxItems = 500)
-            => _session.RunHmiStepTool("ReadLibraryOverview", meta => {
+            => _session.RunHmiStepTool("GetLibraryOverview", meta => {
                 LibraryDeepLogic.ValidateBounds(maxDepth, maxItems);
                 if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 if (string.IsNullOrEmpty(libraryName) && _session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project library requested but no project is bound.");
@@ -288,7 +288,7 @@ namespace TiaMcpServer.Siemens.Services
             }, requiresProject: false);
 
         public ResponseMessage ReadLibraryType(string libraryName = "", string typePath = "", string guid = "", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadLibraryType", meta => {
+            => _session.RunHmiStepTool("GetLibraryType", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var parsed = LibraryDeepLogic.ParseGuid(guid, "guid");
                 if ((parsed == null) == string.IsNullOrEmpty(typePath)) throw new ArgumentException("Give exactly one of typePath (relative to the Types folder) or guid (type or version GUID).");

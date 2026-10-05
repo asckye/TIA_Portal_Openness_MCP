@@ -157,7 +157,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- tools: rule tree ----------------------------------------------------------------------------------------------------
         public ResponseMessage ReadSivarcRuleTree(string category, string folderPath = "", string tablePath = "", bool includeRules = true, int maxDepth = 4, int offset = 0, int limit = 200)
-            => _session.RunHmiStepTool("ReadSivarcRuleTree", meta =>
+            => _session.RunHmiStepTool("GetSivarcRuleTree", meta =>
             {
                 Logic.ValidateTreeRequest(category, folderPath, tablePath, maxDepth, offset, limit);
                 var family = _session.GetSivarcFamily(category); var sivarc = _session.RequireSivarc();
@@ -390,7 +390,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 #endif
         public ResponseMessage ReadSivarcBlockDefinitions(string softwarePath, string blockPath, bool includeBlockParameters = true)
-            => _session.RunHmiStepTool("ReadSivarcBlockDefinitions", meta =>
+            => _session.RunHmiStepTool("ListSivarcBlockDefinitions", meta =>
             {
                 EngineeringGroupOperations.Parts(blockPath);
                 var (block, provider) = RequireSivarcBlock(softwarePath, blockPath, false);
@@ -523,6 +523,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "export")
                 {
                     var file = NativeFileOutput.Plan(filePath); meta["file"] = file.FullName;
+                    meta["mayHaveWrittenFiles"] = true;
                     layout.Export(file); meta["output"] = NativeFileOutput.Verify(file);
                     return "SiVArc screen layouts exported to the YML file (LayoutData.Export); project unchanged.";
                 }
@@ -563,7 +564,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         public ResponseMessage GenerateSiVArc(string hmiDeviceName, string plcSoftwarePathsJson, string generationOptions, bool dryRun = true, string additionalHmiDeviceNamesJson = "[]")
-            => _session.RunHmiStepTool("GenerateSiVArc", meta =>
+            => _session.RunHmiStepTool("GenerateSivarc", meta =>
             {
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var device = _session.ExactEngineeringDevice(new JsonArray(JsonValue.Create(hmiDeviceName)).ToJsonString());
