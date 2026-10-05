@@ -65,7 +65,10 @@ function Build-Variant([string]$SourceRepo, [string]$Destination, [string]$Label
         # instrumenter used by this source tree for later replay.
         $savedWeaver = Join-Path $Destination 'weaver'
         New-Item -ItemType Directory -Force $savedWeaver | Out-Null
-        Copy-Item -Path 'tools/native-call-weaver/bin/Release/net10.0/*' -Destination $savedWeaver -Recurse -Force
+        # Baselines checked out from before the .NET 10 move build the weaver for net8.0.
+        $weaverOutput = @('net10.0', 'net8.0') | ForEach-Object { "tools/native-call-weaver/bin/Release/$_" } | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+        if (!$weaverOutput) { throw 'Native call weaver output not found' }
+        Copy-Item -Path (Join-Path $weaverOutput '*') -Destination $savedWeaver -Recurse -Force
     } finally { Pop-Location }
 }
 Push-Location $repo
