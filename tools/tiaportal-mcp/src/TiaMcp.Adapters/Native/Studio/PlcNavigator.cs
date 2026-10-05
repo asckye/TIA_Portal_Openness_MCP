@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering;
@@ -215,38 +216,38 @@ namespace TiaOpenness.Openness
             context.TagTables.Clear();
             context.Folders.Clear();
 
-            IndexBlockGroup(context, context.Software.BlockGroup, string.Empty);
-            IndexTypeGroup(context, context.Software.TypeGroup, string.Empty);
+            IndexBlockGroup(context, PlcNative.BlockGroup(context.Software), string.Empty);
+            IndexTypeGroup(context, PlcNative.TypeGroup(context.Software), string.Empty);
             IndexTagTableGroup(context, context.Software.TagTableGroup, string.Empty);
         }
 
         private static void IndexBlockGroup(PlcContext context, PlcBlockGroup group, string prefix)
         {
-            foreach (var block in group.Blocks.SafeEnumerate())
+            foreach (var block in PlcNative.Blocks(group).SafeEnumerate())
             {
-                var path = Join(prefix, block.Name);
+                var path = Join(prefix, PlcNative.Name(block));
                 context.Blocks[path] = block;
                 context.Folders[path] = prefix;
             }
 
-            foreach (var child in group.Groups.SafeEnumerate())
+            foreach (var child in PlcNative.Groups(group).SafeEnumerate())
             {
-                IndexBlockGroup(context, child, Join(prefix, child.Name));
+                IndexBlockGroup(context, child, Join(prefix, PlcNative.Name(child)));
             }
         }
 
         private static void IndexTypeGroup(PlcContext context, PlcTypeGroup group, string prefix)
         {
-            foreach (var type in group.Types.SafeEnumerate())
+            foreach (var type in PlcNative.Types(group).SafeEnumerate())
             {
-                var path = Join(prefix, type.Name);
+                var path = Join(prefix, PlcNative.Name(type));
                 context.Types[path] = type;
                 context.Folders[path] = prefix;
             }
 
-            foreach (var child in group.Groups.SafeEnumerate())
+            foreach (var child in PlcNative.Groups(group).SafeEnumerate())
             {
-                IndexTypeGroup(context, child, Join(prefix, child.Name));
+                IndexTypeGroup(context, child, Join(prefix, PlcNative.Name(child)));
             }
         }
 
@@ -273,7 +274,7 @@ namespace TiaOpenness.Openness
             return new BlockInfo
             {
                 Path = path,
-                Name = block.Name,
+                Name = PlcNative.Name(block),
                 Kind = KindOf(block, instanceOf),
                 Number = block.Prop<int?>("Number"),
                 ProgrammingLanguage = block.Prop<string>("ProgrammingLanguage"),
@@ -290,7 +291,7 @@ namespace TiaOpenness.Openness
             return new BlockInfo
             {
                 Path = path,
-                Name = type.Name,
+                Name = PlcNative.Name(type),
                 Kind = BlockKind.UDT,
                 Number = null,
                 ProgrammingLanguage = null,

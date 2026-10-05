@@ -43,7 +43,7 @@ internal static class SoftwareReadTests
         bad=Tree(); bad["Meta"]!["paths"]![0]!["path"]="devices/E/CPU/blocks"; Reject(()=>SoftwareReadContract.Wrap("GetSoftwareTree",bad,options),"foreign PLC path");
         var engine=new PlcFoundationEngine();
         engine.Software.BlockGroup.Items.Add(new Siemens.Engineering.SW.Blocks.PlcBlock { Name="A/B",FailNumber=true });
-        engine.Software.BlockGroup.Groups.Add(new Siemens.Engineering.SW.Blocks.PlcBlockGroup { Name="Empty" });
+        engine.Software.BlockGroup.Groups.Add(new Siemens.Engineering.SW.Blocks.PlcBlockUserGroup { Name="Empty" });
         var snapshot=engine.ReadSoftwareTree("D");
         var snapshotJson=JsonSerializer.SerializeToNode(snapshot)!;
         Check(snapshot.Tree.Contains("A/B [PlcBlock?, SCL]") && snapshot.Tree.Contains("Empty"),"actual read method renders snapshot and optional fallback");

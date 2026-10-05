@@ -1,3 +1,4 @@
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,31 +28,31 @@ namespace TiaMcp.PlcFoundation
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
             if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new InvalidOperationException("Cannot establish exact existing block number.");
-            return new PlcBatchImportObject {Name=block.Name,Kind=kind,Number=number,GroupPath=group};
+            return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
         {
             // Keep readable identity evidence even if native number inspection fails after mutation.
-            var result=new PlcBatchImportObject {Name=block.Name,Kind=block.GetType().Name,GroupPath=BatchReturnedGroup(block,expectedGroup,group)};
+            var result=new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=block.GetType().Name,GroupPath=BatchReturnedGroup(block,expectedGroup,group)};
             try {var value=((IEngineeringObject)block).GetAttribute("Number");if(value!=null && int.TryParse(value.ToString(),out var number) && number>=0)result.Number=number;}
             catch(Exception) /* swallow(native-fallback): an unreadable returned block number stays missing so the batch policy rejects verification */ { /* Missing number is an explicit verification failure in the policy. */ }
             return result;
         }
         private static string BatchReturnedGroup(IEngineeringObject item,object expected,string exactPath)
         {
-            try {if(ReferenceEquals(item.Parent,expected)) return exactPath;}
+            try {if(ReferenceEquals(PlcNative.Parent(item),expected)) return exactPath;}
             catch(Exception) /* swallow(native-fallback): unreadable native ownership falls through to the sentinel rejected by the batch policy */ { /* Preserve a visible ownership-verification failure. */ }
             // A traversal segment is impossible in an accepted canonical destination.
             return "../<unverified-native-owner>";
         }
         private IEnumerable<PlcBatchImportObject> BatchImportInventory(PlcSoftware software)
         {
-            foreach(var group in BatchGroupsBounded(BlockGroups(software.BlockGroup)))
-                foreach(var block in group.Value.Blocks) yield return BatchBlock(block,group.Path);
-            foreach(var group in BatchGroupsBounded(TypeGroups(software.TypeGroup)))
-                foreach(var type in group.Value.Types) yield return new PlcBatchImportObject {Name=type.Name,Kind="UDT",GroupPath=group.Path};
+            foreach(var group in BatchGroupsBounded(BlockGroups(PlcNative.BlockGroup(software))))
+                foreach(var block in PlcNative.Blocks(group.Value)) yield return BatchBlock(block,group.Path);
+            foreach(var group in BatchGroupsBounded(TypeGroups(PlcNative.TypeGroup(software))))
+                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path};
             foreach(var group in BatchGroupsBounded(TagGroups(software.TagTableGroup)))
-                foreach(var table in group.Value.TagTables) yield return new PlcBatchImportObject {Name=table.Name,Kind="TagTable",GroupPath=group.Path};
+                foreach(var table in PlcNative.TagTables(group.Value)) yield return new PlcBatchImportObject {Name=table.Name,Kind="TagTable",GroupPath=group.Path};
         }
         private PlcBatchImportResult BatchImport(PlcBatchImportRequest request)
         {
@@ -66,8 +67,8 @@ namespace TiaMcp.PlcFoundation
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new InvalidOperationException("Explicit process identity required.");
             foreach(var path in new[]{request.BlockGroup,request.TypeGroup,request.TagGroup}) if(path!=PlcExchangePolicy.ObjectPath(path,true)) throw new ArgumentException("Exact canonical group path required.");
-            var blocks=BatchGroup(BlockGroups(selected.Value.BlockGroup),request.BlockGroup);
-            var types=request.Program ? BatchGroup(TypeGroups(selected.Value.TypeGroup),request.TypeGroup) : null;
+            var blocks=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),request.BlockGroup);
+            var types=request.Program ? BatchGroup(TypeGroups(PlcNative.TypeGroup(selected.Value)),request.TypeGroup) : null;
             var tags=request.Program ? BatchGroup(TagGroups(selected.Value.TagTableGroup),request.TagGroup) : null;
             var inventory=BatchImportInventory(selected.Value).Take(4097).ToArray();
             Action check=()=>
@@ -76,16 +77,16 @@ namespace TiaMcp.PlcFoundation
                 if(lifecycle.ProcessId!=request.ProcessId) throw new InvalidOperationException("Process identity changed.");
                 var fresh=ReadSelection(request.Software);
                 if(fresh.ExactPath!=selected.ExactPath || !ReferenceEquals(fresh.Value,selected.Value) || !ReferenceEquals(fresh.Context,selected.Context)) throw new InvalidOperationException("Selected target identity changed.");
-                if(!ReferenceEquals(BatchGroup(BlockGroups(fresh.Value.BlockGroup),request.BlockGroup),blocks) ||
-                   (request.Program && (!ReferenceEquals(BatchGroup(TypeGroups(fresh.Value.TypeGroup),request.TypeGroup),types) || !ReferenceEquals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new InvalidOperationException("Destination group identity changed.");
+                if(!ReferenceEquals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
+                   (request.Program && (!ReferenceEquals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !ReferenceEquals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new InvalidOperationException("Destination group identity changed.");
                 RequireTargetOffline(fresh);
             };
             return PlcBatchImportPolicy.Run(request,inventory,check,(file,planned)=>
             {
                 // Native None throws on existing objects. No filename-derived identity, repair, renumber or Override fallback.
-                if(planned.Kind=="UDT") return types!.Types.Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
-                if(planned.Kind=="TagTable") return tags!.TagTables.Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
-                return blocks.Blocks.Import(file,ImportOptions.None).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
+                if(planned.Kind=="UDT") return PlcNative.Types(types!).Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
+                if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
+                return PlcNative.Import(PlcNative.Blocks(blocks),file,ImportOptions.None).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
             });
         }
     }

@@ -15,6 +15,7 @@
     <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />
     <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcSoftwareRead.cs" Link="PlcSoftwareRead.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
     <Compile Include="../../src/TiaMcp.Adapters/Policy/PlcSoftwareReadPolicy.cs" Link="PlcSoftwareReadPolicy.cs" />
     <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />

@@ -39,11 +39,32 @@ using Siemens.Engineering.Library.MasterCopies;
 using Siemens.Engineering.SW.Alarm.TextLists;
 using Siemens.Engineering.SW.Blocks.Interface;
 
+#if TIA_SHARED_ADAPTER_PATHS
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
+#else
+using PlcNative = TiaMcpServer.Siemens.LocalPlcBlocks.PlcBlockPrimitives;
+#endif
+
 namespace TiaMcpServer.Siemens.Services
 {
     internal sealed class PlcBlocksService
     {
         private readonly IEngineeringSession _session;
+
+#if TIA_SHARED_ADAPTER_PATHS
+        private TiaMcp.Adapters.PlcServices.BlockSurface? _plcBlocks;
+        private ProjectBase? PlcBlocksProject => (_plcBlocks ?? (_plcBlocks =
+            TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).PlcBlocks)).CurrentProject;
+#else
+        private ProjectBase? PlcBlocksProject => _session.CurrentProject;
+#endif
+
+        private bool IsProjectNull()
+        {
+            if (PlcBlocksProject == null) return true;
+            _session.VerifyBinding("Project access");
+            return false;
+        }
 
         public PlcBlocksService(IEngineeringSession session) => _session = session;
 
@@ -51,7 +72,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             _session.Logger?.LogInformation("Exporting blocks...");
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
             }
@@ -75,28 +96,28 @@ namespace TiaMcpServer.Siemens.Services
             {
                 var block = list[k];
 
-                _session.Logger?.LogDebug($"- Exporting block {k}/{list.Count()} : {block.Name}");
+                _session.Logger?.LogDebug($"- Exporting block {k}/{list.Count()} : {PlcNative.Name(block)}");
 
                 string path;
                 if (preservePath)
                 {
                     var groupPath = "";
-                    if (block.Parent is PlcBlockGroup parentGroup)
+                    if (PlcNative.Parent(block) is PlcBlockGroup parentGroup)
                     {
                         groupPath = _session.GetPlcBlockGroupPath(parentGroup);
                     }
-                    path = Path.Combine(exportPath, groupPath.Replace('/', '\\'), $"{block.Name}.xml");
+                    path = Path.Combine(exportPath, groupPath.Replace('/', '\\'), $"{PlcNative.Name(block)}.xml");
                 }
                 else
                 {
-                    path = Path.Combine(exportPath, $"{block.Name}.xml");
+                    path = Path.Combine(exportPath, $"{PlcNative.Name(block)}.xml");
                 }
 
                 try
                 {
-                    if (!block.IsConsistent)
+                    if (!PlcNative.IsConsistent(block))
                     {
-                        _session.Logger?.LogWarning("Skipping inconsistent block {Name}", block.Name);
+                        _session.Logger?.LogWarning("Skipping inconsistent block {Name}", PlcNative.Name(block));
 
                         continue;
                     }
@@ -112,7 +133,7 @@ namespace TiaMcpServer.Siemens.Services
                         try { File.Delete(path); }
                         catch (Exception ioEx)
                         {
-                            failures.Add($"{block.Name}: cannot delete existing file ({ioEx.Message})");
+                            failures.Add($"{PlcNative.Name(block)}: cannot delete existing file ({ioEx.Message})");
                             _session.Logger?.LogError(ioEx, "Delete failed for {File}", path);
 
                             continue;
@@ -121,26 +142,26 @@ namespace TiaMcpServer.Siemens.Services
 
                     try
                     {
-                        block.Export(new FileInfo(path), ExportOptions.None);
+                        PlcNative.Export(block, new FileInfo(path), ExportOptions.None);
                     }
                     catch (LicenseNotFoundException licEx)
                     {
-                        failures.Add($"{block.Name}: license not found ({licEx.Message})");
-                        _session.Logger?.LogError(licEx, "License issue exporting {Block}", block.Name);
+                        failures.Add($"{PlcNative.Name(block)}: license not found ({licEx.Message})");
+                        _session.Logger?.LogError(licEx, "License issue exporting {Block}", PlcNative.Name(block));
 
                         continue;
                     }
                     catch (EngineeringTargetInvocationException engEx)
                     {
-                        failures.Add($"{block.Name}: target invocation failed ({engEx.Message})");
-                        _session.Logger?.LogError(engEx, "TargetInvocationException exporting {Block}", block.Name);
+                        failures.Add($"{PlcNative.Name(block)}: target invocation failed ({engEx.Message})");
+                        _session.Logger?.LogError(engEx, "TargetInvocationException exporting {Block}", PlcNative.Name(block));
 
                         continue;
                     }
                     catch (Exception ex)
                     {
-                        failures.Add($"{block.Name}: export failed ({ex.Message})");
-                        _session.Logger?.LogError(ex, "Export failed for {Block}", block.Name);
+                        failures.Add($"{PlcNative.Name(block)}: export failed ({ex.Message})");
+                        _session.Logger?.LogError(ex, "Export failed for {Block}", PlcNative.Name(block));
 
                         continue;
                     }
@@ -150,8 +171,8 @@ namespace TiaMcpServer.Siemens.Services
                 catch (Exception ex)
                 {
                     // Catch only truly unexpected wrapper-level errors
-                    failures.Add($"{block.Name}: unexpected exception ({ex.Message})");
-                    _session.Logger?.LogError(ex, "Unexpected error at block {Block}", block.Name);
+                    failures.Add($"{PlcNative.Name(block)}: unexpected exception ({ex.Message})");
+                    _session.Logger?.LogError(ex, "Unexpected error at block {Block}", PlcNative.Name(block));
                     // continue with next block
                 }
             }
@@ -184,30 +205,30 @@ namespace TiaMcpServer.Siemens.Services
         public JsonObject DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
         {
             EmptyPlcGroupDeletion.Parse(groupPath);
-            if (_session.IsProjectNull() || _session.CurrentPortal==null) throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
+            if (IsProjectNull() || _session.CurrentPortal==null) throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
             lock (_blockGroupDeleteGate)
             {
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 // Destructive operations use the shared exact container resolver, never fuzzy PLC selection.
                 var sc=_session.ResolveSoftwareContainerUncached(softwarePath);
-                var plc=sc?.Software as PlcSoftware ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);
+                var plc=PlcNative.SoftwareOrNull(sc) as PlcSoftware ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);
                 PlcBlockUserGroup? Find(string[] parts)
                 {
-                    PlcBlockGroup current=plc.BlockGroup;
+                    PlcBlockGroup current=PlcNative.BlockGroup(plc);
                     foreach(var name in parts)
                     {
-                        var matches=current.Groups.Where(g=>string.Equals(g.Name,name,StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+                        var matches=PlcNative.Groups(current).Where(g=>string.Equals(PlcNative.Name(g),name,StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
                         if(matches.Count==0) return null;
                         if(matches.Count!=1) throw new PortalException(PortalErrorCode.InvalidParams,"Ambiguous user group: " + name);
                         current=matches[0];
                     }
                     return current as PlcBlockUserGroup ?? throw new PortalException(PortalErrorCode.InvalidParams,"Only user block groups can be deleted.");
                 }
-                var result=EmptyPlcGroupDeletion.Execute(groupPath,dryRun,Find,g=>g.Blocks.Count,g=>g.Groups.Count,
-                    ()=>_session.ResolvePlcService<OnlineProvider>(softwarePath,plc)?.State.ToString() ?? "Unknown",
-                    g=>g.Delete());
+                var result=EmptyPlcGroupDeletion.Execute(groupPath,dryRun,Find,g=>PlcNative.Count(PlcNative.Blocks(g)),g=>PlcNative.Count(PlcNative.Groups(g)),
+                    ()=>PlcNative.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath,plc))?.ToString() ?? "Unknown",
+                    g=>PlcNative.Delete(g));
                 result["softwarePath"]=softwarePath;
-                result["resolvedSoftwareName"]=plc.Name;
+                result["resolvedSoftwareName"]=PlcNative.Name(plc);
                 result["success"]=true;
                 return result;
             }
@@ -254,7 +275,7 @@ namespace TiaMcpServer.Siemens.Services
                     "DeletePlcBlock requires one exact block path; regular expressions and wildcards are not allowed");
             }
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "DeletePlcBlock: no project is open. Connect / AttachToOpenProject first.");
@@ -287,7 +308,7 @@ namespace TiaMcpServer.Siemens.Services
             int? pinnedNumber = null;
             try
             {
-                if (!block.AutoNumber) pinnedNumber = block.Number;
+                if (!PlcNative.AutoNumber(block)) pinnedNumber = PlcNative.Number(block);
             }
             catch
             {
@@ -299,7 +320,7 @@ namespace TiaMcpServer.Siemens.Services
                 ["softwarePath"] = softwarePath,
                 ["requestedBlockPath"] = blockPath,
                 ["resolvedBlockPath"] = resolvedPath,
-                ["blockName"] = block.Name,
+                ["blockName"] = PlcNative.Name(block),
                 ["blockType"] = blockType,
                 ["pinnedBlockNumber"] = pinnedNumber,
                 ["dryRun"] = dryRun,
@@ -342,7 +363,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (dryRun) return result;
 
-            block.Delete();
+            PlcNative.Delete(block);
 
             // Delete() 之后原来的代理对象已死，回读必须从 PlcSoftware 重新解析一遍路径。
             bool absent = _session.GetBlock(softwarePath, resolvedPath) == null;
@@ -381,7 +402,7 @@ namespace TiaMcpServer.Siemens.Services
                     + "regular expressions and wildcards are not allowed");
             }
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "DeletePlcTagTable: no project is open. Connect / AttachToOpenProject first.");
@@ -525,7 +546,7 @@ namespace TiaMcpServer.Siemens.Services
                     "DeletePlcType requires one exact type path; regular expressions and wildcards are not allowed");
             }
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "DeletePlcType: no project is open. Connect / AttachToOpenProject first.");
@@ -542,7 +563,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 ["softwarePath"] = softwarePath,
                 ["requestedTypePath"] = typePath,
-                ["typeName"] = type.Name,
+                ["typeName"] = PlcNative.Name(type),
                 ["dryRun"] = dryRun,
                 ["deleted"] = false,
                 ["verifiedAbsent"] = false
@@ -581,7 +602,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (dryRun) return result;
 
-            type.Delete();
+            PlcNative.Delete(type);
             bool absent = _session.GetType(softwarePath, typePath) == null;
             result["deleted"] = true;
             result["verifiedAbsent"] = absent;
@@ -705,13 +726,13 @@ namespace TiaMcpServer.Siemens.Services
                 // The service belongs to tags/constants, not the table itself. Any failed child invalidates the aggregate.
                 var typed = table as global::Siemens.Engineering.SW.Tags.PlcTagTable ?? throw new NotSupportedException("Expected PlcTagTable.");
                 var items = new List<ModelContextProtocol.CrossReferenceEntry>();
-                var targets = EngineeringGroupOperations.Items(typed.Tags).Concat(EngineeringGroupOperations.Items(typed.SystemConstants));
+                var targets = EngineeringGroupOperations.Items(PlcNative.Tags(typed)).Concat(EngineeringGroupOperations.Items(PlcNative.SystemConstants(typed)));
                 foreach (IEngineeringServiceProvider target in targets)
                 {
-                    var service = InvocationJournal.Native("TagTable.CrossReference.GetService", () => target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>());
+                    var service = InvocationJournal.Native("TagTable.CrossReference.GetService", () => PlcNative.CrossReferences(target));
                     if (service == null) throw new NotSupportedException("CrossReferenceService missing on a tag/system constant; table result incomplete.");
                     queried = true;
-                    var raw = InvocationJournal.Native("TagTable.CrossReference.query", () => service.GetCrossReferences(global::Siemens.Engineering.CrossReference.CrossReferenceFilter.AllObjects));
+                    var raw = InvocationJournal.Native("TagTable.CrossReference.query", () => PlcNative.CrossReferences(service, global::Siemens.Engineering.CrossReference.CrossReferenceFilter.AllObjects));
                     items.AddRange(InvocationJournal.Native("TagTable.CrossReference.read", () => _session.TryFlattenCrossReferenceResult(raw, resolvedPath)));
                 }
                 reason = null;
@@ -745,25 +766,25 @@ namespace TiaMcpServer.Siemens.Services
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 _session.ExactPlcForEngineering(softwarePath, writing);
                 var block = _session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock ?? throw new ArgumentException("blockPath must identify a block.");
-                var provider = block.GetService<PlcBlockProtectionProvider>() ?? throw new NotSupportedException("PlcBlockProtectionProvider unavailable on this block/version.");
+                var provider = PlcNative.Protection(block) ?? throw new NotSupportedException("PlcBlockProtectionProvider unavailable on this block/version.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["blockPath"] = blockPath; meta["action"] = action;
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                meta["before"] = new JsonObject { ["name"] = block.Name, ["isKnowHowProtected"] = block.IsKnowHowProtected, ["programmingLanguage"] = block.ProgrammingLanguage.ToString() };
-                var invalid = provider.GetInvalidPasswordCharacters()?.ToArray() ?? Array.Empty<char>();
+                meta["before"] = new JsonObject { ["name"] = PlcNative.Name(block), ["isKnowHowProtected"] = PlcNative.IsKnowHowProtected(block), ["programmingLanguage"] = PlcNative.Language(block).ToString() };
+                var invalid = PlcNative.InvalidPasswordCharacters(provider)?.ToArray() ?? Array.Empty<char>();
                 meta["invalidPasswordCharacters"] = new JsonArray(invalid.Select(c => (JsonNode)JsonValue.Create(c.ToString())!).ToArray());
                 if (action == "read") return "Block know-how protection state read.";
                 bool expected = action == "protect";
-                if (block.IsKnowHowProtected == expected) throw new InvalidOperationException(expected ? "Block is already know-how protected; unprotect first." : "Block is not know-how protected.");
+                if (PlcNative.IsKnowHowProtected(block) == expected) throw new InvalidOperationException(expected ? "Block is already know-how protected; unprotect first." : "Block is not know-how protected.");
                 if (expected && PlcBlockServicesLogic.ContainsInvalidPasswordCharacter(password, invalid)) throw new ArgumentException("Password contains characters rejected by the native password policy.");
                 if (!writing) return "Block protection preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 using (var secure = PlcBlockServicesLogic.ToSecureString(password))
                 {
-                    if (expected) provider.Protect(secure); else provider.Unprotect(secure);
+                    if (expected) PlcNative.Protect(provider, secure); else PlcNative.Unprotect(provider, secure);
                 }
                 meta["apiCallSuccess"] = true;
-                meta["after"] = new JsonObject { ["isKnowHowProtected"] = block.IsKnowHowProtected };
-                if (block.IsKnowHowProtected != expected) throw new InvalidOperationException("Protection readback differs from the requested state.");
+                meta["after"] = new JsonObject { ["isKnowHowProtected"] = PlcNative.IsKnowHowProtected(block) };
+                if (PlcNative.IsKnowHowProtected(block) != expected) throw new InvalidOperationException("Protection readback differs from the requested state.");
                 return "Block know-how protection changed and verified by readback; no save/compile/download.";
             });
         public ResponseMessage ManagePlcDataBlockSnapshot(string softwarePath, string blockPath, string action, string filePath = "", bool confirmValueChange = false, bool dryRun = true)
@@ -775,9 +796,9 @@ namespace TiaMcpServer.Siemens.Services
                 // Snapshot/load semantics need the PLC already online in TIA, so Offline is not demanded here; this tool never changes the online state.
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var db = _session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as DataBlock ?? throw new ArgumentException("blockPath must identify a data block.");
-                var iface = db.Interface ?? throw new NotSupportedException("Data block exposes no interface.");
+                var iface = PlcNative.Interface(db) ?? throw new NotSupportedException("Data block exposes no interface.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["blockPath"] = blockPath; meta["action"] = action;
-                meta["onlineState"] = _session.ResolvePlcService<OnlineProvider>(softwarePath, plc)?.State.ToString();
+                meta["onlineState"] = PlcNative.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath, plc))?.ToString();
                 meta["before"] = EngineeringScalarProperties.Read(db);
                 const string valueServiceName = "Siemens.Engineering.SW.Blocks.Interface.ValueService";
                 meta["valueServiceTypeAvailable"] = typeof(PlcBlockInterface).Assembly.GetType(valueServiceName) != null;
@@ -790,7 +811,7 @@ namespace TiaMcpServer.Siemens.Services
                     foreach (var (source, owner) in new (string, object?)[] { ("DataBlock.Interface", iface), ("DataBlock", db), ("ValueService", valueService) })
                     {
                         if (owner == null || snapshot != null) continue;
-                        try { snapshot = (owner as IEngineeringServiceProvider)?.GetService<InterfaceSnapshot>(); if (snapshot != null) meta["snapshotServiceSource"] = source; }
+                        try { snapshot = PlcNative.SnapshotOrNull(owner as IEngineeringServiceProvider); if (snapshot != null) meta["snapshotServiceSource"] = source; }
                         catch (Exception ex) { attempts.Add(source + ": " + ex.GetBaseException().Message); }
                     }
                     meta["snapshotServiceAttempts"] = attempts; meta["snapshotServiceAvailable"] = snapshot != null;
@@ -805,7 +826,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (exporting)
                 {
                     meta["mayHaveWrittenFiles"] = true;
-                    snapshot!.Export(file!, ExportOptions.None);
+                    PlcNative.Export(snapshot!, file!, ExportOptions.None);
                     meta["apiCallSuccess"] = true; meta["file"] = NativeFileOutput.Verify(file!); meta["dataComplete"] = false;
                     return "Snapshot values exported by TIA and hashed; content semantics not verified; no project change.";
                 }
@@ -838,7 +859,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var provider = _session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc) ?? throw new NotSupportedException("FingerprintDataProvider unavailable for this PLC/version.");
-                var configuration = provider.Configuration ?? throw new PortalException(PortalErrorCode.InvalidState, "No connection configuration; configure the CPU network interface first.");
+                var configuration = PlcNative.Configuration(provider) ?? throw new PortalException(PortalErrorCode.InvalidState, "No connection configuration; configure the CPU network interface first.");
                 var candidates = new List<PlcBlockServicesLogic.RouteCandidate>();
                 foreach (var mode in _session.EnumerateReflectedProperty(configuration, "Modes"))
                     foreach (var pcInterface in _session.EnumerateReflectedProperty(mode, "PcInterfaces"))
@@ -846,17 +867,17 @@ namespace TiaMcpServer.Siemens.Services
                         foreach (var target in _session.EnumerateReflectedProperty(pcInterface, "TargetInterfaces"))
                             foreach (var address in _session.EnumerateReflectedProperty(target, "Addresses"))
                                 if (address is ConfigurationAddress native)
-                                    candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = _session.ReadReflectedString(target, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                                    candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = _session.ReadReflectedString(target, "Name"), Address = PlcNative.Address(native) ?? "", NativeAddress = native });
                         // The CPU's configured IP is listed under the PC interface's subnets / gateways (the target interface stays empty until the adapter sees the CPU)
                         foreach (var subnet in _session.EnumerateReflectedProperty(pcInterface, "Subnets"))
                         {
                             foreach (var address in _session.EnumerateReflectedProperty(subnet, "Addresses"))
                                 if (address is ConfigurationAddress native)
-                                    candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = "subnet " + _session.ReadReflectedString(subnet, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                                    candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = "subnet " + _session.ReadReflectedString(subnet, "Name"), Address = PlcNative.Address(native) ?? "", NativeAddress = native });
                             foreach (var gateway in _session.EnumerateReflectedProperty(subnet, "Gateways"))
                                 foreach (var address in _session.EnumerateReflectedProperty(gateway, "Addresses"))
                                     if (address is ConfigurationAddress native)
-                                        candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = "gateway " + _session.ReadReflectedString(gateway, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                                        candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = _session.ReadReflectedString(mode, "Name"), PcInterfaceName = _session.ReadReflectedString(pcInterface, "Name"), TargetName = "gateway " + _session.ReadReflectedString(gateway, "Name"), Address = PlcNative.Address(native) ?? "", NativeAddress = native });
                         }
                     }
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["contactedPlc"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
@@ -865,22 +886,22 @@ namespace TiaMcpServer.Siemens.Services
                 meta["selectedRoute"] = route.Describe();
                 if (dryRun) return "Fingerprint read preview: route resolved, PLC not contacted.";
                 using var secure = string.IsNullOrEmpty(password) ? null : PlcBlockServicesLogic.ToSecureString(password);
-                OnlineConfigurationDelegate handler = cfg =>
+                OnlineConfigurationDelegate handler = PlcNative.Handler(cfg =>
                 {
-                    if (secure != null && cfg is OnlinePasswordConfiguration pwd) pwd.SetPassword(secure);
+                    if (secure != null && cfg is OnlinePasswordConfiguration pwd) PlcNative.Password(pwd, secure);
                     else if (cfg is TlsVerificationConfiguration tls)   // FW >= 2.9 CPUs ask for certificate trust before any online read
                     {
-                        var before = tls.CurrentSelection.ToString();
-                        if (EngineeringCredentialRules.TlsSelectionToApply(true, before) != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
-                        meta["tlsVerification"] = new JsonObject { ["plcName"] = tls.PlcName, ["verificationInfo"] = tls.VerificationInfo, ["selectionBefore"] = before, ["selectionAfter"] = tls.CurrentSelection.ToString() };
+                        var before = PlcNative.Selection(tls).ToString();
+                        if (EngineeringCredentialRules.TlsSelectionToApply(true, before) != null) PlcNative.Selection(tls, TlsVerificationConfigurationSelection.Trusted);
+                        meta["tlsVerification"] = new JsonObject { ["plcName"] = PlcNative.PlcName(tls), ["verificationInfo"] = PlcNative.VerificationInfo(tls), ["selectionBefore"] = before, ["selectionAfter"] = PlcNative.Selection(tls).ToString() };
                     }
-                };
+                });
                 meta["contactedPlc"] = true;
-                var result = provider.GetFingerprintData((ConfigurationAddress)route.NativeAddress!, handler) ?? throw new InvalidOperationException("GetFingerprintData returned no result.");
+                var result = PlcNative.Fingerprints(provider, (ConfigurationAddress)route.NativeAddress!, handler) ?? throw new InvalidOperationException("GetFingerprintData returned no result.");
                 meta["apiCallSuccess"] = true;
-                var items = EngineeringGroupOperations.Items(result.FingerprintDataItems).Cast<FingerprintDataItem>().ToArray();
+                var items = EngineeringGroupOperations.Items(PlcNative.Items(result)).Cast<FingerprintDataItem>().ToArray();
                 var window = PlcBlockServicesLogic.Paginate(meta, items.Length, offset, limit);
-                meta["records"] = new JsonArray(items.Skip(window.Skip).Take(window.Take).Select(i => (JsonNode)new JsonObject { ["identifier"] = i.FingerprintDataIdentifier, ["value"] = i.FingerprintDataValue }).ToArray());
+                meta["records"] = new JsonArray(items.Skip(window.Skip).Take(window.Take).Select(i => (JsonNode)new JsonObject { ["identifier"] = PlcNative.Identifier(i), ["value"] = PlcNative.Value(i) }).ToArray());
                 return "Fingerprint data read from the PLC via the selected route; no project or PLC change.";
             });
 
@@ -895,25 +916,25 @@ namespace TiaMcpServer.Siemens.Services
                 try {
                     exclusive = _session.AcquireHmiEditAccess();
                     var plc = _session.ExactPlcForEngineering(softwarePath, true); // Offline even for export preview.
-                    var group = (PlcBlockGroup)EngineeringGroupOperations.Group(plc.BlockGroup, string.Join("/", parts.Take(parts.Length - 1)));
-                    PlcBlock Resolve() => group.Blocks.Find(parts.Last()) ?? throw new InvalidOperationException("Exact existing block not found in its target group.");
+                    var group = (PlcBlockGroup)EngineeringGroupOperations.Group(PlcNative.BlockGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));
+                    PlcBlock Resolve() => PlcNative.Find(PlcNative.Blocks(group), parts.Last()) ?? throw new InvalidOperationException("Exact existing block not found in its target group.");
                     void Check() { _session.VerifyBinding("ImportPlcBlockVerified"); _session.ExactPlcForEngineering(softwarePath, true); }
                     void Export(string path) {
                         var block = Resolve();
-                        if (!block.IsConsistent) throw new InvalidOperationException("Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
-                        block.Export(new FileInfo(path), ExportOptions.WithDefaults | ExportOptions.WithReadOnly);
+                        if (!PlcNative.IsConsistent(block)) throw new InvalidOperationException("Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
+                        PlcNative.Export(block, new FileInfo(path), ExportOptions.WithDefaults | ExportOptions.WithReadOnly);
                     }
                     void Import(string path) {
                         Resolve();
-                        var result = group.Blocks.Import(new FileInfo(path), ImportOptions.Override);
+                        var result = PlcNative.Import(PlcNative.Blocks(group), new FileInfo(path), ImportOptions.Override);
                         if (result == null || result.Count != 1) throw new InvalidOperationException("Import did not return exactly one block; inspect retained evidence.");
                     }
                     void Compile() {
-                        var compiler = Resolve().GetService<ICompilable>() ?? throw new NotSupportedException("Block compiler service unavailable.");
-                        var result = compiler.Compile();
+                        var compiler = PlcNative.Compiler(Resolve()) ?? throw new NotSupportedException("Block compiler service unavailable.");
+                        var result = PlcNative.Compile(compiler);
                         if (result == null) throw new InvalidOperationException("Block compiler returned no result.");
-                        meta["compileState"] = result.State.ToString(); meta["compileErrorCount"] = result.ErrorCount; meta["compileWarningCount"] = result.WarningCount;
-                        if (result.ErrorCount != 0 || (result.State.ToString() != "Success" && result.State.ToString() != "Warning")) throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
+                        meta["compileState"] = PlcNative.State(result).ToString(); meta["compileErrorCount"] = PlcNative.ErrorCount(result); meta["compileWarningCount"] = PlcNative.WarningCount(result);
+                        if (PlcNative.ErrorCount(result) != 0 || (PlcNative.State(result).ToString() != "Success" && PlcNative.State(result).ToString() != "Warning")) throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
                     }
                     var identity = _session.GetBindingIdentity();
                     if (identity["identity"] == null) throw new InvalidOperationException("Exact binding identity required.");
@@ -930,17 +951,17 @@ namespace TiaMcpServer.Siemens.Services
         public JsonObject CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
         {
             PlcTypeGroupCreation.Parse(groupPath);
-            if (_session.IsProjectNull() || _session.CurrentPortal == null)
+            if (IsProjectNull() || _session.CurrentPortal == null)
                 throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
             lock (_blockGroupDeleteGate)
             {
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
-                var plc = _session.ResolveSoftwareContainerUncached(softwarePath)?.Software as PlcSoftware
+                var plc = PlcNative.SoftwareOrNull(_session.ResolveSoftwareContainerUncached(softwarePath)) as PlcSoftware
                     ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);
-                var result = PlcTypeGroupCreation.Execute<PlcTypeGroup>(plc.TypeGroup, groupPath, dryRun,
-                    g => g.Groups, g => g.Name, (g, name) => g.Groups.Create(name));
+                var result = PlcTypeGroupCreation.Execute<PlcTypeGroup>(PlcNative.TypeGroup(plc), groupPath, dryRun,
+                    g => PlcNative.Groups(g), g => PlcNative.Name(g), (g, name) => PlcNative.Create(PlcNative.Groups(g), name));
                 result["softwarePath"] = softwarePath;
-                result["resolvedSoftwareName"] = plc.Name;
+                result["resolvedSoftwareName"] = PlcNative.Name(plc);
                 return result;
             }
         }
@@ -954,11 +975,11 @@ namespace TiaMcpServer.Siemens.Services
                     _ => throw new ArgumentException("family must be blocks, types, tags, technology, watchTables or externalSources.") };
                 EngineeringGroupOperations.Parts(groupPath);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
-                var plc = _session.ResolveSoftwareContainerUncached(softwarePath)?.Software as PlcSoftware
+                var plc = PlcNative.SoftwareOrNull(_session.ResolveSoftwareContainerUncached(softwarePath)) as PlcSoftware
                     ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);
-                meta["softwarePath"] = softwarePath; meta["resolvedSoftwareName"] = plc.Name;
+                meta["softwarePath"] = softwarePath; meta["resolvedSoftwareName"] = PlcNative.Name(plc);
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                if (!dryRun && _session.ResolvePlcService<OnlineProvider>(softwarePath, plc)?.State.ToString() != "Offline")
+                if (!dryRun && PlcNative.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath, plc))?.ToString() != "Offline")
                     throw new PortalException(PortalErrorCode.InvalidState, "Confirmed Offline state is required for group editing.");
                 if (!dryRun) meta["mayHaveChanged"] = true;
                 meta["result"] = EngineeringGroupOperations.Manage(EngineeringGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2);
@@ -969,11 +990,11 @@ namespace TiaMcpServer.Siemens.Services
         // Typed user-group row for every STEP 7 user group class (Name is writable, Delete exists on each).
         private static JsonObject UserGroupRow(object group) => group switch
         {
-            global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new JsonObject { ["name"] = b.Name, ["groupClass"] = b.GetType().Name, ["blocks"] = b.Blocks.Count, ["groups"] = b.Groups.Count },
-            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new JsonObject { ["name"] = ty.Name, ["groupClass"] = ty.GetType().Name, ["types"] = ty.Types.Count, ["groups"] = ty.Groups.Count },
-            global::Siemens.Engineering.SW.Tags.PlcTagTableUserGroup tg => new JsonObject { ["name"] = tg.Name, ["groupClass"] = tg.GetType().Name, ["tagTables"] = tg.TagTables.Count, ["groups"] = tg.Groups.Count },
-            global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup w => new JsonObject { ["name"] = w.Name, ["groupClass"] = w.GetType().Name, ["watchTables"] = w.WatchTables.Count, ["forceTables"] = w.ForceTables.Count, ["groups"] = w.Groups.Count },
-            global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceUserGroup e => new JsonObject { ["name"] = e.Name, ["groupClass"] = e.GetType().Name, ["externalSources"] = e.ExternalSources.Count, ["groups"] = e.Groups.Count },
+            global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new JsonObject { ["name"] = PlcNative.Name(b), ["groupClass"] = b.GetType().Name, ["blocks"] = PlcNative.Count(PlcNative.Blocks(b)), ["groups"] = PlcNative.Count(PlcNative.Groups(b)) },
+            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new JsonObject { ["name"] = PlcNative.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcNative.Count(PlcNative.Types(ty)), ["groups"] = PlcNative.Count(PlcNative.Groups(ty)) },
+            global::Siemens.Engineering.SW.Tags.PlcTagTableUserGroup tg => new JsonObject { ["name"] = PlcNative.Name(tg), ["groupClass"] = tg.GetType().Name, ["tagTables"] = PlcNative.Count(PlcNative.TagTables(tg)), ["groups"] = PlcNative.Count(PlcNative.Groups(tg)) },
+            global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup w => new JsonObject { ["name"] = PlcNative.Name(w), ["groupClass"] = w.GetType().Name, ["watchTables"] = PlcNative.Count(PlcNative.WatchTables(w)), ["forceTables"] = PlcNative.Count(PlcNative.ForceTables(w)), ["groups"] = PlcNative.Count(PlcNative.Groups(w)) },
+            global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceUserGroup e => new JsonObject { ["name"] = PlcNative.Name(e), ["groupClass"] = e.GetType().Name, ["externalSources"] = PlcNative.Count(PlcNative.ExternalSources(e)), ["groups"] = PlcNative.Count(PlcNative.Groups(e)) },
             _ => new JsonObject { ["name"] = EngineeringGroupOperations.Get(group, "Name").ToString(), ["groupClass"] = group.GetType().Name }
         };
 
@@ -992,25 +1013,25 @@ namespace TiaMcpServer.Siemens.Services
         public PlcBlockGroup? EnsurePlcBlockGroup(string softwarePath, string groupPath, out List<string> created)
         {
             created = new List<string>();
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 return null;
             }
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware || plcSoftware.BlockGroup == null)
+            if (PlcNative.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcNative.BlockGroup(plcSoftware) == null)
             {
                 return null;
             }
 
             var groupNames = groupPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
-            PlcBlockGroup currentGroup = plcSoftware.BlockGroup;
+            PlcBlockGroup currentGroup = PlcNative.BlockGroup(plcSoftware);
             foreach (var groupName in groupNames)
             {
-                var next = currentGroup.Groups.FirstOrDefault(g => g.Name.Equals(groupName, StringComparison.OrdinalIgnoreCase));
+                var next = PlcNative.Groups(currentGroup).FirstOrDefault(g => PlcNative.Name(g).Equals(groupName, StringComparison.OrdinalIgnoreCase));
                 if (next == null)
                 {
-                    next = currentGroup.Groups.Create(groupName);
+                    next = PlcNative.Create(PlcNative.Groups(currentGroup), groupName);
                     created.Add(groupName);
                     _session.Logger?.LogInformation($"Created PLC block group '{groupName}'");
                 }
@@ -1025,21 +1046,21 @@ namespace TiaMcpServer.Siemens.Services
         // falls back to SimaticML XML for mixed-language/STL blocks. Returns a summary.
         public string MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true)
         {
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
             }
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware || plcSoftware.BlockGroup == null)
+            if (PlcNative.SoftwareOrNull(softwareContainer) is not PlcSoftware plcSoftware || PlcNative.BlockGroup(plcSoftware) == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
             }
 
             // 1) find the block anywhere by exact name
             var all = new List<PlcBlock>();
-            _session.GetBlocksRecursive(plcSoftware.BlockGroup, all);
-            var block = all.FirstOrDefault(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase));
+            _session.GetBlocksRecursive(PlcNative.BlockGroup(plcSoftware), all);
+            var block = all.FirstOrDefault(b => PlcNative.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
             if (block == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound, $"Block '{blockName}' not found in '{softwarePath}'");
@@ -1050,7 +1071,7 @@ namespace TiaMcpServer.Siemens.Services
             if (block is OB)
             {
                 var existingGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                if (existingGroup != null && ReferenceEquals(block.Parent, existingGroup))
+                if (existingGroup != null && ReferenceEquals(PlcNative.Parent(block), existingGroup))
                     return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
                 throw new PortalException(PortalErrorCode.NotSupportedOnVersion,
                     "Moving organization blocks by export/delete/import is disabled: SIMATIC SD import does not preserve OB type/number. Move this OB in TIA Portal.");
@@ -1067,11 +1088,11 @@ namespace TiaMcpServer.Siemens.Services
             }
 
             // already in the target group?
-            if (ReferenceEquals(block.Parent, targetGroup))
+            if (ReferenceEquals(PlcNative.Parent(block), targetGroup))
             {
                 return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
             }
-            if (targetGroup.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)))
+            if (PlcNative.Blocks(targetGroup).Any(b => PlcNative.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase)))
                 throw new PortalException(PortalErrorCode.InvalidParams,
                     $"Target group already contains '{blockName}'; relocation never overwrites another block.");
 
@@ -1085,8 +1106,8 @@ namespace TiaMcpServer.Siemens.Services
                 bool usedDocs;
                 try
                 {
-                    var exp = block.ExportAsDocuments(new DirectoryInfo(tempDir), blockName);
-                    usedDocs = exp != null && exp.State == DocumentResultState.Success;
+                    var exp = PlcNative.ExportDocuments(block, new DirectoryInfo(tempDir), blockName);
+                    usedDocs = exp != null && PlcNative.State(exp) == DocumentResultState.Success;
                 }
                 catch (EngineeringNotSupportedException)
                 {
@@ -1095,9 +1116,9 @@ namespace TiaMcpServer.Siemens.Services
 
                 if (usedDocs)
                 {
-                    block.Delete();
-                    var res = targetGroup.Blocks.ImportFromDocuments(new DirectoryInfo(tempDir), blockName, ImportDocumentOptions.Override);
-                    if (res == null || res.State != DocumentResultState.Success)
+                    PlcNative.Delete(block);
+                    var res = PlcNative.ImportDocuments(PlcNative.Blocks(targetGroup), new DirectoryInfo(tempDir), blockName, ImportDocumentOptions.Override);
+                    if (res == null || PlcNative.State(res) != DocumentResultState.Success)
                     {
                         throw new PortalException(PortalErrorCode.ImportFailed,
                             $"Re-import of '{blockName}' into '{targetGroupPath}' failed (documents)");
@@ -1107,9 +1128,9 @@ namespace TiaMcpServer.Siemens.Services
                 else
                 {
                     var xml = Path.Combine(tempDir, blockName + ".xml");
-                    block.Export(new FileInfo(xml), ExportOptions.None);
-                    block.Delete();
-                    var imp = targetGroup.Blocks.Import(new FileInfo(xml), ImportOptions.Override);
+                    PlcNative.Export(block, new FileInfo(xml), ExportOptions.None);
+                    PlcNative.Delete(block);
+                    var imp = PlcNative.Import(PlcNative.Blocks(targetGroup), new FileInfo(xml), ImportOptions.Override);
                     if (imp == null || imp.Count == 0)
                     {
                         throw new PortalException(PortalErrorCode.ImportFailed,
@@ -1118,7 +1139,8 @@ namespace TiaMcpServer.Siemens.Services
                     method = "xml(SimaticML)";
                 }
                 var verifyGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                moveVerified = verifyGroup?.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)) == true;
+                var verifyBlocks = PlcNative.BlocksOrNull(verifyGroup);
+                moveVerified = verifyGroup != null && verifyBlocks.Any(b => PlcNative.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
                 if (!moveVerified) throw new PortalException(PortalErrorCode.ImportFailed,
                     $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
             }

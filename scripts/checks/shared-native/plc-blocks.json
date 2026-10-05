@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "domain": "plc-blocks",
+  "label": "PLC blocks and compilation",
+  "engine": {
+    "types": [
+      "TiaMcpServer.Siemens.Services.PlcBlocksService",
+      "TiaMcpServer.Siemens.Portal"
+    ],
+    "releases": [
+      "20",
+      "21"
+    ],
+    "methodScopes": {
+      "TiaMcpServer.Siemens.Portal": [
+        {
+          "method": "CompileSoftware",
+          "signature": "Siemens.Engineering.Compiler.CompilerResult TiaMcpServer.Siemens.Portal::CompileSoftware(System.String,System.String)"
+        },
+        {
+          "method": "ResolveCompileService",
+          "signature": "Siemens.Engineering.Compiler.ICompilable TiaMcpServer.Siemens.Portal::ResolveCompileService(Siemens.Engineering.HW.Features.SoftwareContainer,System.String,System.String&)"
+        }
+      ]
+    }
+  },
+  "adapter": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "mutableTypes": [
+      "TiaMcp.Adapters.PlcServices"
+    ]
+  },
+  "hosts": [
+    {
+      "name": "foundation",
+      "types": [
+        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+      ],
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "methodScopes": {
+        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+          {
+            "method": "ExportBlocks",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportBlocks(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
+          },
+          {
+            "method": "ExportTypes",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportTypes(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
+          },
+          {
+            "method": "BatchBlock",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchImportObject TiaMcp.PlcFoundation.PlcFoundationEngine::BatchBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String)"
+          },
+          {
+            "method": "BatchReturnedBlock",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchImportObject TiaMcp.PlcFoundation.PlcFoundationEngine::BatchReturnedBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String,System.Object)"
+          },
+          {
+            "method": "BatchReturnedGroup",
+            "signature": "System.String TiaMcp.PlcFoundation.PlcFoundationEngine::BatchReturnedGroup(Siemens.Engineering.IEngineeringObject,System.Object,System.String)"
+          },
+          {
+            "method": "BatchImportInventory",
+            "signature": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcBatchImportObject> TiaMcp.PlcFoundation.PlcFoundationEngine::BatchImportInventory(Siemens.Engineering.SW.PlcSoftware)"
+          },
+          {
+            "method": "BatchImport",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchImportResult TiaMcp.PlcFoundation.PlcFoundationEngine::BatchImport(TiaMcp.PlcFoundation.PlcBatchImportRequest)"
+          },
+          {
+            "method": "ReadSoftwareInfo",
+            "signature": "TiaMcp.PlcFoundation.PlcSoftwareDetails TiaMcp.PlcFoundation.PlcFoundationEngine::ReadSoftwareInfo(System.String)"
+          },
+          {
+            "method": "ReadSoftwareTree",
+            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeDetails TiaMcp.PlcFoundation.PlcFoundationEngine::ReadSoftwareTree(System.String)"
+          },
+          {
+            "method": "SnapshotBlocks",
+            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeNode TiaMcp.PlcFoundation.PlcFoundationEngine::SnapshotBlocks(Siemens.Engineering.SW.Blocks.PlcBlockGroup,System.String,System.String,System.Collections.Generic.List`1<System.String>,TiaMcp.PlcFoundation.PlcSoftwareReadBudget,System.Int32)"
+          },
+          {
+            "method": "SnapshotTypes",
+            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeNode TiaMcp.PlcFoundation.PlcFoundationEngine::SnapshotTypes(Siemens.Engineering.SW.Types.PlcTypeGroup,System.String,System.String,TiaMcp.PlcFoundation.PlcSoftwareReadBudget,System.Int32)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "studio",
+      "types": [
+        "TiaOpenness.Openness.PlcNavigator",
+        "TiaOpenness.Openness.OpennessSession"
+      ],
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "methodScopes": {
+        "TiaOpenness.Openness.PlcNavigator": [
+          {
+            "method": "Index",
+            "signature": "System.Void TiaOpenness.Openness.PlcNavigator::Index(TiaOpenness.Openness.PlcContext)"
+          },
+          {
+            "method": "IndexBlockGroup",
+            "signature": "System.Void TiaOpenness.Openness.PlcNavigator::IndexBlockGroup(TiaOpenness.Openness.PlcContext,Siemens.Engineering.SW.Blocks.PlcBlockGroup,System.String)"
+          },
+          {
+            "method": "IndexTypeGroup",
+            "signature": "System.Void TiaOpenness.Openness.PlcNavigator::IndexTypeGroup(TiaOpenness.Openness.PlcContext,Siemens.Engineering.SW.Types.PlcTypeGroup,System.String)"
+          },
+          {
+            "method": "Describe",
+            "signature": "TiaMcp.Adapters.Contracts.Studio.BlockInfo TiaOpenness.Openness.PlcNavigator::Describe(Siemens.Engineering.SW.Blocks.PlcBlock,System.String)"
+          },
+          {
+            "method": "Describe",
+            "signature": "TiaMcp.Adapters.Contracts.Studio.BlockInfo TiaOpenness.Openness.PlcNavigator::Describe(Siemens.Engineering.SW.Types.PlcType,System.String)"
+          }
+        ],
+        "TiaOpenness.Openness.OpennessSession": [
+          {
+            "method": "ExportAsXml",
+            "signature": "System.String TiaOpenness.Openness.OpennessSession::ExportAsXml(TiaOpenness.Openness.OpennessSession/ExportTarget,System.String)"
+          },
+          {
+            "method": "ImportSimaticMl",
+            "signature": "System.String TiaOpenness.Openness.OpennessSession::ImportSimaticMl(TiaOpenness.Openness.PlcContext,System.String,System.Boolean)"
+          },
+          {
+            "method": "CompileDevice",
+            "signature": "TiaMcp.Adapters.Contracts.Studio.CompileResult TiaOpenness.Openness.OpennessSession::CompileDevice(System.String,System.Boolean)"
+          },
+          {
+            "method": "Describe",
+            "signature": "TiaMcp.Adapters.Contracts.Studio.CompileMessage TiaOpenness.Openness.OpennessSession::Describe(Siemens.Engineering.Compiler.CompilerResultMessage)"
+          }
+        ]
+      }
+    }
+  ],
+  "primitives": [
+    {
+      "adapterType": "TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives",
+      "engineNamespace": "TiaMcpServer.Siemens.LocalPlcBlocks"
+    }
+  ],
+  "expansionTypes": [],
+  "expansionNamespaces": [
+    "TiaOpenness.Openness"
+  ],
+  "tools": [
+    {
+      "name": "ExportBlocks",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ExportBlocks"
+        }
+      ]
+    },
+    {
+      "name": "ExportBlocksToTemp",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ExportBlocksToTemp"
+        }
+      ]
+    },
+    {
+      "name": "DeleteEmptyPlcBlockGroup",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "DeleteEmptyPlcBlockGroup"
+        }
+      ]
+    },
+    {
+      "name": "DeletePlcBlock",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "DeletePlcBlock"
+        }
+      ]
+    },
+    {
+      "name": "DeletePlcTagTable",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "DeletePlcTagTable"
+        }
+      ]
+    },
+    {
+      "name": "DeletePlcType",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "DeletePlcType"
+        }
+      ]
+    },
+    {
+      "name": "ManagePlcBlockProtection",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ManagePlcBlockProtection"
+        }
+      ]
+    },
+    {
+      "name": "ManagePlcDataBlockSnapshot",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ManagePlcDataBlockSnapshot"
+        }
+      ]
+    },
+    {
+      "name": "UpdatePlcProgram",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "UpdatePlcProgram"
+        }
+      ]
+    },
+    {
+      "name": "ReadPlcBlockFingerprints",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ReadPlcBlockFingerprints"
+        }
+      ]
+    },
+    {
+      "name": "ImportPlcBlockVerified",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ImportPlcBlockVerified"
+        }
+      ]
+    },
+    {
+      "name": "CreatePlcTypeGroup",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "CreatePlcTypeGroup"
+        }
+      ]
+    },
+    {
+      "name": "ManagePlcUserGroup",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "ManagePlcUserGroup"
+        }
+      ]
+    },
+    {
+      "name": "CreatePlcBlockGroup",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "EnsurePlcBlockGroup"
+        }
+      ]
+    },
+    {
+      "name": "MoveBlockToGroup",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcBlocksService",
+          "method": "MoveBlockToGroup"
+        }
+      ]
+    },
+    {
+      "name": "CompileSoftware",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Portal",
+          "method": "CompileSoftware"
+        }
+      ]
+    },
+    {
+      "name": "CompileAndDiagnosePlc",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Portal",
+          "method": "CompileSoftware"
+        }
+      ]
+    },
+    {
+      "name": "CompileAndDiagnoseHmi",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Portal",
+          "method": "CompileSoftware"
+        }
+      ]
+    },
+    {
+      "name": "ImportPlcProgramFromDirectory",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Portal",
+          "method": "CompileSoftware"
+        }
+      ]
+    },
+    {
+      "name": "PlcBuildAndImport",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Portal",
+          "method": "CompileSoftware"
+        }
+      ]
+    }
+  ],
+  "evidence": "docs/development/p4-i4a-native-evidence.json"
+}

@@ -1,3 +1,4 @@
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,11 +23,11 @@ namespace TiaMcp.PlcFoundation
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true);
             if(path!=groupPath) throw new ArgumentException("Use the exact canonical group path from the software inventory.");
-            var group=BatchGroup(BlockGroups(selected.Value.BlockGroup),path);
+            var group=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),path);
             var groups=recursive ? BlockGroups(group,path) : new[]{new Located<PlcBlockGroup>(path,group)};
-            var sources=BatchGroupsBounded(groups).SelectMany(g=>g.Value.Blocks.Select(b=>new PlcBatchExportSource {
-                Path=Child(g.Path,b.Name),Consistent=b.IsConsistent,Capability=PlcBlockXmlPolicy.Export(ReleaseKey,b.ProgrammingLanguage.ToString()),
-                Export=f=>{ RequireTargetOffline(selected); if(!b.IsConsistent) throw new InvalidOperationException("Block is no longer consistent."); b.Export(f,ExportOptions.None); }
+            var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Blocks(g.Value).Select(b=>new PlcBatchExportSource {
+                Path=Child(g.Path,PlcNative.Name(b)),Consistent=PlcNative.IsConsistent(b),Capability=PlcBlockXmlPolicy.Export(ReleaseKey,PlcNative.Language(b).ToString()),
+                Export=f=>{ RequireTargetOffline(selected); if(!PlcNative.IsConsistent(b)) throw new InvalidOperationException("Block is no longer consistent."); PlcNative.Export(b,f,ExportOptions.None); }
             }));
             return PlcBatchExportPolicy.Run("blocks",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>RequireTargetOffline(selected));
         }
@@ -37,10 +38,10 @@ namespace TiaMcp.PlcFoundation
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true);
             if(path!=groupPath) throw new ArgumentException("Use the exact canonical group path from the software inventory.");
-            var group=BatchGroup(TypeGroups(selected.Value.TypeGroup),path);
+            var group=BatchGroup(TypeGroups(PlcNative.TypeGroup(selected.Value)),path);
             var groups=recursive ? TypeGroups(group,path) : new[]{new Located<PlcTypeGroup>(path,group)};
-            var sources=BatchGroupsBounded(groups).SelectMany(g=>g.Value.Types.Select(t=>new PlcBatchExportSource {
-                Path=Child(g.Path,t.Name),Consistent=t.IsConsistent,
+            var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Types(g.Value).Select(t=>new PlcBatchExportSource {
+                Path=Child(g.Path,PlcNative.Name(t)),Consistent=t.IsConsistent,
                 Export=f=>{ RequireTargetOffline(selected); if(!t.IsConsistent) throw new InvalidOperationException("Type is no longer consistent."); t.Export(f,ExportOptions.None); }
             }));
             return PlcBatchExportPolicy.Run("types",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>RequireTargetOffline(selected));

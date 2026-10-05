@@ -34,6 +34,12 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
+#if TIA_SHARED_ADAPTER_PATHS
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
+#else
+using PlcNative = TiaMcpServer.Siemens.LocalPlcBlocks.PlcBlockPrimitives;
+#endif
+
 namespace TiaMcpServer.Siemens
 {
     public partial class Portal
@@ -127,22 +133,22 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
 
             var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null)
+            if (PlcNative.SoftwareOrNull(softwareContainer) == null)
                 throw new PortalException(PortalErrorCode.NotFound, $"SoftwareContainer or Software not found for path '{softwarePath}'");
 
             if (!string.IsNullOrEmpty(password))
             {
-                var deviceItem = softwareContainer?.Parent as DeviceItem;
+                var deviceItem = PlcNative.ParentOrNull(softwareContainer) as DeviceItem;
 
-                var admin = deviceItem?.GetService<SafetyAdministration>();
+                var admin = PlcNative.SafetyOrNull(deviceItem);
                 if (admin != null)
                 {
-                    if (!admin.IsLoggedOnToSafetyOfflineProgram)
+                    if (!PlcNative.IsLoggedOn(admin))
                     {
                         SecureString secString = new NetworkCredential("", password).SecurePassword;
                         try
                         {
-                            admin.LoginToSafetyOfflineProgram(secString);
+                            PlcNative.Login(admin, secString);
                         }
                         catch (Exception ex)
                         {
@@ -162,14 +168,14 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                CompilerResult result = compileService.Compile();
+                CompilerResult result = PlcNative.Compile(compileService);
 
                 if (result == null)
                     throw new PortalException(PortalErrorCode.OpennessError, "ICompilable.Compile() returned null");
                 try
                 {
-                    foreach (CompilerResultMessage top in EngineeringGroupOperations.Items(result.Messages).Cast<CompilerResultMessage>().Take(20))
-                        _logger?.LogInformation("Compile {Path}: {State} {Description} ({Errors} errors / {Warnings} warnings, {Time}, {Nested} nested)", top.Path, top.State, top.Description, top.ErrorCount, top.WarningCount, top.DateTime, EngineeringGroupOperations.Items(top.Messages).Count());
+                    foreach (CompilerResultMessage top in EngineeringGroupOperations.Items(PlcNative.Messages(result)).Cast<CompilerResultMessage>().Take(20))
+                        _logger?.LogInformation("Compile {Path}: {State} {Description} ({Errors} errors / {Warnings} warnings, {Time}, {Nested} nested)", PlcNative.Path(top), PlcNative.State(top), PlcNative.Description(top), PlcNative.ErrorCount(top), PlcNative.WarningCount(top), PlcNative.DateTime(top), EngineeringGroupOperations.Items(PlcNative.Messages(top)).Count());
                 }
                 catch { /* swallow(logging-failure): Optional compiler-message logging must not replace the native compile result. */ }
 
@@ -214,7 +220,7 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private ICompilable ResolveCompileService(SoftwareContainer? softwareContainer, string softwarePath, out string targetKind)
         {
-            var software = softwareContainer?.Software;
+            var software = PlcNative.SoftwareOrNull(softwareContainer);
             if (software == null)
                 throw new PortalException(PortalErrorCode.NotFound, $"SoftwareContainer or Software not found for path '{softwarePath}'");
 
@@ -227,7 +233,7 @@ namespace TiaMcpServer.Siemens
                 ICompilable? service;
                 try
                 {
-                    service = provider.GetService<ICompilable>();
+                    service = PlcNative.Compiler(provider);
                 }
                 catch (Exception ex)
                 {
@@ -258,7 +264,7 @@ namespace TiaMcpServer.Siemens
                     targetKind = kind;
                     return service;
                 }
-                node = (node as IEngineeringObject)?.Parent;
+                node = PlcNative.ParentOrNull(node as IEngineeringObject);
             }
 
             throw new PortalException(

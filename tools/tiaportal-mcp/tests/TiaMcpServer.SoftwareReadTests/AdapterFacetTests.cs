@@ -63,7 +63,7 @@ public sealed class AdapterFacetTests
     {
         var engine = new PlcFoundationEngine();
         engine.Software.Name = "PLC with escaped block";
-        engine.Software.BlockGroup.Items.Add(new Siemens.Engineering.SW.Blocks.PlcBlock { Name = "A/B", ProgrammingLanguage = "SCL" });
+        engine.Software.BlockGroup.Items.Add(new Siemens.Engineering.SW.Blocks.PlcBlock { Name = "A/B", ProgrammingLanguage = Siemens.Engineering.SW.Blocks.ProgrammingLanguage.SCL });
         var facet = new OpennessAdapter(engine).PlcProgram;
         foreach(var path in new[] { "devices/D/CPU", "D", "CPU" })
         {

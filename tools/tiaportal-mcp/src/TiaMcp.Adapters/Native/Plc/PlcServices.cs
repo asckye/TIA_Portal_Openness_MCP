@@ -5,7 +5,7 @@ using Siemens.Engineering;
 namespace TiaMcp.Adapters
 {
     // Borrowed engine project. Construction never reads, owns or caches native handles;
-    // VCI shares raw operations while the host retains its policies.
+    // Hosts share raw operations while retaining their policies.
     public sealed class PlcServices
     {
         private PlcServices(Func<ProjectBase> project)
@@ -21,6 +21,7 @@ namespace TiaMcp.Adapters
 #endif
 #if STUDIO_VCI_MODERN
             VersionControl = new VersionControlSurface(project);
+            PlcBlocks = new BlockSurface(project);
 #endif
         }
 
@@ -59,6 +60,14 @@ namespace TiaMcp.Adapters
 #endif
 #if STUDIO_VCI_MODERN
         public VersionControlSurface VersionControl { get; }
+        public BlockSurface PlcBlocks { get; }
+
+        public sealed class BlockSurface
+        {
+            private readonly Func<ProjectBase> project;
+            internal BlockSurface(Func<ProjectBase> project) { this.project = project; }
+            public ProjectBase CurrentProject => project();
+        }
 
         // Borrow the engine's handle at the point of use; the engine retains cache lifetime,
         // refusal policy and serialization on its existing MTA thread.

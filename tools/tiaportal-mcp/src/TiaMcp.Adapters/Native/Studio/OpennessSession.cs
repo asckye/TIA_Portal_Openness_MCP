@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -346,7 +347,7 @@ namespace TiaOpenness.Openness
             var file = new FileInfo(Path.Combine(directory, SafeFileName(target.Name) + ".xml"));
             if (file.Exists) throw new IOException("Export file already exists: " + file.FullName);
 
-            if (target.Block != null) target.Block.Export(file, ExportOptions.WithDefaults);
+            if (target.Block != null) PlcNative.Export(target.Block, file, ExportOptions.WithDefaults);
             else target.Type.Export(file, ExportOptions.WithDefaults);
 
             return file.FullName;
@@ -488,12 +489,12 @@ namespace TiaOpenness.Openness
             // accepts it, and TIA gives no way to ask beforehand.
             if (LooksLikeType(path))
             {
-                var types = plc.Software.TypeGroup.Types.Import(file, options);
-                return string.Join(", ", types.Select(t => t.Name));
+                var types = PlcNative.Types(PlcNative.TypeGroup(plc.Software)).Import(file, options);
+                return string.Join(", ", types.Select(t => PlcNative.Name(t)));
             }
 
-            var blocks = plc.Software.BlockGroup.Blocks.Import(file, options);
-            return string.Join(", ", blocks.Select(b => b.Name));
+            var blocks = PlcNative.Import(PlcNative.Blocks(PlcNative.BlockGroup(plc.Software)), file, options);
+            return string.Join(", ", blocks.Select(b => PlcNative.Name(b)));
         }
 
         private static bool LooksLikeType(string path)
@@ -602,18 +603,18 @@ namespace TiaOpenness.Openness
             }
 
             var stopwatch = Stopwatch.StartNew();
-            var compilerResult = compilable.Compile();
+            var compilerResult = PlcNative.Compile(compilable);
             stopwatch.Stop();
 
             Index(plc);
 
             return new CompileResult
             {
-                State = compilerResult.State.ToString(),
-                ErrorCount = compilerResult.ErrorCount,
-                WarningCount = compilerResult.WarningCount,
+                State = PlcNative.State(compilerResult).ToString(),
+                ErrorCount = PlcNative.ErrorCount(compilerResult),
+                WarningCount = PlcNative.WarningCount(compilerResult),
                 Duration = stopwatch.Elapsed,
-                Messages = compilerResult.Messages.SafeEnumerate().Select(Describe).ToList(),
+                Messages = PlcNative.Messages(compilerResult).SafeEnumerate().Select(Describe).ToList(),
             };
         }
 
@@ -621,11 +622,11 @@ namespace TiaOpenness.Openness
         {
             return new CompileMessage
             {
-                Severity = SeverityOf(message.State.ToString()),
-                Description = message.Description,
-                Target = message.Path,
+                Severity = SeverityOf(PlcNative.State(message).ToString()),
+                Description = PlcNative.Description(message),
+                Target = PlcNative.Path(message),
                 ErrorCode = message.Prop<string>("ErrorCode"),
-                Children = message.Messages.SafeEnumerate().Select(Describe).ToList(),
+                Children = PlcNative.Messages(message).SafeEnumerate().Select(Describe).ToList(),
             };
         }
 
