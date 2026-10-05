@@ -19,7 +19,7 @@ internal static class BatchImportContract
         if (data["plan"] != null)
         {
             var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
-            var normalized = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Logic.V4.PlcImportRequest>(request.ToJsonString(),
+            var normalized = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.Candidates.PlcImportRequest>(request.ToJsonString(),
                 new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })!;
             if (plan.ArgumentsHash != TiaMcp.Logic.V4.DeviceCreationSession.Hash(normalized)
                 || plan.InventoryHash != TiaMcp.Logic.V4.DeviceCreationSession.Hash(new JsonObject { ["inventory"] = data["inventory"]?.DeepClone(), ["targets"] = data["targets"]?.DeepClone() })

@@ -57,6 +57,10 @@ jobs:
           python3 scripts/checks/Test-EngineSources.py
       - name: Diagnostic membership contracts
         run: python3 scripts/checks/Test-DiagnosticMembershipSources.py
+      - name: Native adapter host and JSON dependency boundary
+        run: |
+          python3 scripts/checks/Check-AdapterBoundary.py --self-test
+          python3 scripts/checks/Check-AdapterBoundary.py
       - name: Document import safety contracts
         run: python3 scripts/checks/Test-DocumentImportSafetySources.py
       - name: Import selection contracts

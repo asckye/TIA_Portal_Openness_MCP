@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.LegacyHost;
 using Xunit;
 
@@ -24,7 +25,7 @@ public sealed class PlcImportCandidateTests
         internal string[] Kinds = { "FC", "UDT", "TagTable" };
         internal Action? OnBefore;
         private string ContentHash => PlcImportSession.ByteHash(Encoding.UTF8.GetBytes(Content));
-        public PlanIdentity ReadIdentity() { Trace.Add("identity"); return new(23, DateTimeOffset.Parse("2026-10-03T00:00:00Z", CultureInfo.InvariantCulture), Project, Epoch, null, Array.Empty<PlanFile>()); }
+        public CandidateIdentity ReadIdentity() { Trace.Add("identity"); return new(23, DateTimeOffset.Parse("2026-10-03T00:00:00Z", CultureInfo.InvariantCulture), Project, Epoch); }
         public IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
         {
             Trace.Add("inputs"); if (Fault == "unreadable") throw new IOException("locked");

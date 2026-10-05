@@ -76,7 +76,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (_session.CurrentProject == null || _session.CurrentPortal == null)
                     throw new TiaMcp.Logic.V4.DeviceCreationRejection(new TiaMcp.Logic.V4.Error("No project is bound.", new TiaMcp.Logic.V4.ProjectNotBoundDetails()));
                 var project = _session.CurrentProject;
-                TiaMcp.Logic.V4.PlanIdentity Identity()
+                TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity Identity()
                 {
                     _session.VerifyBinding("device-creation-candidate");
                     if (!object.Equals(project, _session.CurrentProject))
@@ -84,9 +84,9 @@ namespace TiaMcpServer.Siemens.Services
                     var binding = _session.GetBindingIdentity()["identity"]!.AsObject();
                     var generation = binding["generation"]!.GetValue<string>();
                     if (generation != _deviceBindingGeneration) { _deviceBindingGeneration = generation; _deviceBindingEpoch++; }
-                    return new TiaMcp.Logic.V4.PlanIdentity(binding["processId"]!.GetValue<int>(),
+                    return new TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity(binding["processId"]!.GetValue<int>(),
                         DateTimeOffset.Parse(binding["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
-                        TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(project.Path.FullName), _deviceBindingEpoch, null, Array.Empty<TiaMcp.Logic.V4.PlanFile>());
+                        TiaMcp.Logic.V4.DeviceCreationSession.CanonicalProject(project.Path.FullName), _deviceBindingEpoch);
                 }
                 if (_deviceAdapter == null || !_deviceAdapter.IsProject(project))
                     _deviceAdapter = new TiaMcp.Adapters.Hardware.DeviceCreationAdapter(project, _session.CurrentPortal, Identity);

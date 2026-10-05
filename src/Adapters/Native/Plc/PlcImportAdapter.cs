@@ -7,7 +7,7 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
-using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 
 namespace TiaMcp.Adapters.Native.Plc
 {
@@ -17,14 +17,14 @@ namespace TiaMcp.Adapters.Native.Plc
         private readonly List<KeyValuePair<object, string>> ids = new List<KeyValuePair<object, string>>();
         private readonly Dictionary<string, object> objects = new Dictionary<string, object>(StringComparer.Ordinal);
         private readonly Dictionary<string, object> groups = new Dictionary<string, object>(StringComparer.Ordinal);
-        public Func<PlanIdentity> Identity { private get; set; }
+        public Func<CandidateIdentity> Identity { private get; set; }
         public Func<PlcSoftware> Software { private get; set; }
         public Action RequireOffline { private get; set; }
         public bool OverwriteSupported { private get; set; }
         private readonly string release;
         private readonly string scopeId = Guid.NewGuid().ToString("N");
 
-        public PlcImportAdapter(string release, Func<PlanIdentity> identity, Func<PlcSoftware> software, Action requireOffline, bool overwriteSupported)
+        public PlcImportAdapter(string release, Func<CandidateIdentity> identity, Func<PlcSoftware> software, Action requireOffline, bool overwriteSupported)
         { this.release = release; Identity = identity; Software = software; RequireOffline = requireOffline; OverwriteSupported = overwriteSupported; }
 
         private string Id(object value)
@@ -34,9 +34,9 @@ namespace TiaMcp.Adapters.Native.Plc
             string id = "plc-import-" + scopeId + "-" + ids.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ids.Add(new KeyValuePair<object, string>(value, id)); objects[id] = value; return id;
         }
-        public PlanIdentity ReadIdentity() => Identity();
+        public CandidateIdentity ReadIdentity() => Identity();
         public IReadOnlyList<PlcImportInput> ReadInputs(string key, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
-        { if (key != release) PlcImportSession.Unsupported(key, "adapter-release"); return PlcImportFiles.Read(key, tool, request, locks); }
+        { if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release"); return CandidateImportFiles.Read(key, tool, request, locks); }
         private static string Space(string kind) => kind == "UDT" ? "type" : kind == "TagTable" ? "tag" : "block";
         private static string Key(string space, string group) => space + ":" + group;
         public string TargetGroupIdentity(PlcImportObject target)
@@ -48,7 +48,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public void BeforeImport(PlcImportInput input)
         {
             RequireOffline();
-            if (TargetGroupIdentity(input.Target) == "") PlcImportSession.Refuse("Exact target group not found.", new NotFoundDetails(input.Target.GroupPath));
+            if (TargetGroupIdentity(input.Target) == "") CandidatePrimitives.NotFound(input.Target.GroupPath);
         }
         private void RefreshGroups()
         {
@@ -141,7 +141,7 @@ namespace TiaMcp.Adapters.Native.Plc
             else if (item is PlcType type) type.Export(file, ExportOptions.None);
             else ((PlcTagTable)item).Export(file, ExportOptions.None);
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return PlcImportFiles.XmlHash(PlcImportSession.Read(stream));
+            return CandidateImportFiles.XmlHash(CandidatePrimitives.Read(stream));
         }
         public string ReadContent(PlcImportInput input, PlcImportObject imported)
         {
@@ -151,10 +151,10 @@ namespace TiaMcp.Adapters.Native.Plc
             string path = AuditDirectory(), name = imported.Name;
             var result = ((PlcBlock)item).ExportAsDocuments(new DirectoryInfo(path), name);
             if (result == null || result.State != DocumentResultState.Success) throw new InvalidDataException("Document content export did not succeed.");
-            byte[] Read(string file) { using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read); return PlcImportSession.Read(stream); }
+            byte[] Read(string file) { using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read); return CandidatePrimitives.Read(stream); }
             var code = Read(Path.Combine(path, name + ".s7dcl"));
             string resource = Path.Combine(path, name + ".s7res");
-            return PlcImportFiles.DocumentHash(code, File.Exists(resource) ? Read(resource) : null);
+            return CandidateImportFiles.DocumentHash(code, File.Exists(resource) ? Read(resource) : null);
 #else
             throw new NotSupportedException("Document readback is unavailable.");
 #endif

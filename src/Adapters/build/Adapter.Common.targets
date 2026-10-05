@@ -23,4 +23,10 @@
     <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; weave &quot;@(IntermediateAssembly)&quot; &quot;$(IntermediateOutputPath)native-call-coverage.json&quot;" />
     <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; verify &quot;@(IntermediateAssembly)&quot;" />
   </Target>
+  <Target Name="RejectAdapterHostDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <ForbiddenAdapterReference Include="@(ReferencePath)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(?i:TiaMcp\.Logic|System\.Text\.Json|Newtonsoft\.Json)$'))" />
+    </ItemGroup>
+    <Error Condition="'@(ForbiddenAdapterReference)' != ''" Text="Native adapters must not reference host policy or JSON libraries: @(ForbiddenAdapterReference)" />
+  </Target>
 </Project>

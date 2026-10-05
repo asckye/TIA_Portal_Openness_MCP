@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Siemens.Engineering.SW;
 using TiaMcp.Adapters.Native.Plc;
 using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens.Services
@@ -30,15 +31,15 @@ namespace TiaMcpServer.Siemens.Services
                 var project = session.CurrentProject;
                 if (project == null || session.CurrentPortal == null) PlcImportSession.Refuse("No project is bound.", new ProjectNotBoundDetails());
                 var software = session.ExactPlcForEngineering(request.SoftwarePath, false);
-                PlanIdentity Identity()
+                CandidateIdentity Identity()
                 {
                     session.VerifyBinding("plc-import-candidate");
                     if (!object.Equals(project, session.CurrentProject)) PlcImportSession.IdentityMismatch();
                     var binding = session.GetBindingIdentity()["identity"]!.AsObject();
                     string fresh = binding["generation"]!.GetValue<string>();
                     if (fresh != generation) { generation = fresh; epoch++; }
-                    return new PlanIdentity(binding["processId"]!.GetValue<int>(), DateTimeOffset.Parse(binding["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
-                        DeviceCreationSession.CanonicalProject(project!.Path.FullName), epoch, null, Array.Empty<PlanFile>());
+                    return new CandidateIdentity(binding["processId"]!.GetValue<int>(), DateTimeOffset.Parse(binding["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
+                        DeviceCreationSession.CanonicalProject(project!.Path.FullName), epoch);
                 }
                 PlcSoftware Software()
                 {

@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts.Candidates;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,34 +10,6 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class DeviceCatalogEntry
-    {
-        public string TypeIdentifier { get; set; } = "";
-        public string ArticleNumber { get; set; } = "";
-        public string Version { get; set; } = "";
-        public string TypeName { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string CatalogPath { get; set; } = "";
-    }
-
-    public sealed class DeviceInventoryItem
-    {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string ParentId { get; set; } = "";
-        public bool IsGroup { get; set; }
-    }
-
-    public interface IDeviceCreationAdapter
-    {
-        PlanIdentity ReadIdentity();
-        IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string typeIdentifier);
-        IReadOnlyList<DeviceInventoryItem> ReadInventory();
-        string RootId { get; }
-        void BeforeCreate();
-        DeviceInventoryItem Create(string typeIdentifier, string deviceName);
-    }
-
     public sealed class DeviceCreationRejection : Exception
     {
         public Error Error { get; }
@@ -59,6 +32,7 @@ namespace TiaMcp.Logic.V4
             PlanIdentity? identity = null;
             Plan? plan = null;
             JsonObject? data = null;
+            DeviceCreateAttempt? attempt = null;
             try
             {
                 if (RequiresSessionReset) Refuse("Inspect the device inventory and establish a new session.", new SessionResetRequiredDetails("device-create-unknown"));
@@ -73,7 +47,7 @@ namespace TiaMcp.Logic.V4
                 if (mode == "apply") CanonicalProject(expectedProjectFile);
                 if (foundation && release != "19") Refuse("Device creation is outside this Foundation release's capability.", new UnsupportedCapabilityDetails(release, "P6-DEVICE", "create"));
 
-                identity = adapter.ReadIdentity();
+                identity = CandidateHostMapping.Plan(adapter.ReadIdentity());
                 if (mode == "apply")
                 {
                     if (CanonicalProject(identity.ProjectFile!) != CanonicalProject(expectedProjectFile)) IdentityMismatch();
@@ -104,24 +78,15 @@ namespace TiaMcp.Logic.V4
                 if (conflicts.Length > 0) Refuse("A device with this name already exists.", new AlreadyExistsDetails(deviceName));
                 if (plan.Hash != expectedPlanHash) Stale(expectedPlanHash);
 
-                // A second complete observation closes the gap between review and the single write.
-                if (Hash(identity) != Hash(adapter.ReadIdentity())) IdentityMismatch();
-                var fresh = ObserveCatalog();
-                var freshInventory = Inventory(adapter.ReadInventory());
-                var freshScope = Capability(fresh, family, release, foundation, tool);
-                if (BuildPlan(release, tool, identity, fresh, freshInventory, deviceName, family, freshScope).Hash != expectedPlanHash) Stale(expectedPlanHash);
-                adapter.BeforeCreate();
-                if (Hash(identity) != Hash(adapter.ReadIdentity())) IdentityMismatch();
-                consumed.Add(expectedPlanHash);
-                issued = true;
-                data["createIssued"] = true;
-                var created = adapter.Create(typeIdentifier, deviceName);
-                if (created == null || created.IsGroup || created.Name != deviceName || created.ParentId != adapter.RootId || before.Any(i => i.Id == created.Id))
-                    throw new InvalidOperationException("Created device identity is not the planned addition.");
-                if (Hash(identity) != Hash(adapter.ReadIdentity())) throw new InvalidOperationException("Identity changed after Create.");
-                var after = Inventory(adapter.ReadInventory());
-                if (after.Length != before.Length + 1 || !after.Any(i => Hash(i) == Hash(created)) || !before.All(i => after.Any(j => Hash(i) == Hash(j))))
-                    throw new InvalidOperationException("Post-create inventory did not verify exactly one addition.");
+                var check = new DeviceCreateCheck { Identity = CandidateHostMapping.Identity(identity), Catalog = selected, Inventory = before,
+                    TypeIdentifier = typeIdentifier, DeviceName = deviceName };
+                check.Digest = CandidateDigest.DeviceObservation(check.Identity, selected, before, typeIdentifier, deviceName);
+                attempt = adapter is IDeviceCandidateBoundary boundary ? boundary.Execute(check) : CandidateExecution.Create(adapter, check);
+                issued = attempt.Issued;
+                if (issued) { consumed.Add(expectedPlanHash); data["createIssued"] = true; }
+                if (attempt.Fault != null) throw CandidateHostMapping.Device(attempt.Fault, expectedPlanHash);
+                var created = attempt.Created!;
+                var after = attempt.After;
                 data["created"] = JsonNode.Parse(V4Json.Serialize(created));
                 data["residueCheck"] = Residue(before, after);
                 return Result(release, tool, requestId, data, null, Outcome.Succeeded, Execution.Completed);
@@ -130,18 +95,14 @@ namespace TiaMcp.Logic.V4
             {
                 if (!issued)
                 {
-                    var error = failure is DeviceCreationRejection rejected ? rejected.Error
+                    var error = failure is CandidateObservationException observed ? CandidateHostMapping.Device(observed.Fault).Error
+                        : failure is DeviceCreationRejection rejected ? rejected.Error
                         : new Error("Preflight could not establish a complete device-creation plan. No Create was issued.", new PreconditionFailedDetails("device-create-preflight", deviceName));
                     return Result(release, tool, requestId, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
                 }
                 RequiresSessionReset = true;
-                var residue = new JsonObject { ["status"] = "unavailable", ["reason"] = "residue-read-failed" };
-                try
-                {
-                    if (identity != null && Hash(identity) == Hash(adapter.ReadIdentity())) residue = Residue(before!, Inventory(adapter.ReadInventory()));
-                    else residue["reason"] = "identity-changed";
-                }
-                catch (Exception) /* swallow(privacy): retain an explicit unavailable residue check after an unknown write */ { }
+                var residue = attempt == null ? new JsonObject { ["status"] = "unavailable", ["reason"] = "residue-read-failed" }
+                    : CandidateHostMapping.DeviceResidue(attempt.Residue);
                 data ??= new JsonObject();
                 data["createIssued"] = true;
                 data["residueCheck"] = residue;

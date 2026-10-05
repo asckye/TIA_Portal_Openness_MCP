@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts.Candidates;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,56 +9,6 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class PlcImportRequest
-    {
-        public string SoftwarePath { get; set; } = "";
-        public string InputPath { get; set; } = "";
-        public string BlockGroupPath { get; set; } = "";
-        public string TypeGroupPath { get; set; } = "";
-        public string TagFolderPath { get; set; } = "";
-        public string TechnologyFolderPath { get; set; } = "";
-        public string RegexName { get; set; } = "";
-        public string FileNameWithoutExtension { get; set; } = "";
-        public string[] ImportOrder { get; set; } = Array.Empty<string>();
-        public bool Overwrite { get; set; }
-        public string VersionPolicy { get; set; } = "exact";
-        public string OnError { get; set; } = "stop";
-        public bool CompileAfter { get; set; }
-        public int MaxItems { get; set; } = 128;
-    }
-
-    public sealed class PlcImportObject
-    {
-        public string Id { get; set; } = "";
-        public string Kind { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string GroupPath { get; set; } = "";
-        public int? Number { get; set; }
-        public string ContentHash { get; set; } = "";
-    }
-
-    public sealed class PlcImportInput
-    {
-        public string Path { get; set; } = "";
-        public string[] Files { get; set; } = Array.Empty<string>();
-        public PlcImportObject Target { get; set; } = new PlcImportObject();
-        public string ContentHash { get; set; } = "";
-        public bool Documents { get; set; }
-    }
-
-    public interface IPlcImportAdapter
-    {
-        PlanIdentity ReadIdentity();
-        IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks);
-        IReadOnlyList<PlcImportObject> ReadInventory();
-        string TargetGroupIdentity(PlcImportObject target);
-        bool SupportsOverwrite(PlcImportInput input);
-        void BeforeImport(PlcImportInput input);
-        PlcImportObject Import(PlcImportInput input, bool overwrite);
-        // Export/read the actual returned native object on this same release and native thread.
-        string ReadContent(PlcImportInput input, PlcImportObject imported);
-    }
-
     public sealed class PlcImportRejection : Exception
     {
         public Error Error { get; }
@@ -105,6 +56,7 @@ namespace TiaMcp.Logic.V4
             PlanIdentity? identity = null;
             JsonObject? data = null;
             bool issued = false;
+            PlcImportAttempt? attempt = null;
             int index = 0;
             try
             {
@@ -123,7 +75,7 @@ namespace TiaMcp.Logic.V4
                 if (mode == "apply" && !confirm) Refuse("Apply requires explicit confirmation.", new ConfirmationRequiredDetails(expectedPlanHash.Length == 64 && expectedPlanHash.All(c => "0123456789abcdef".Contains(c)) ? expectedPlanHash : null));
                 if (mode == "apply" && (expectedPlanHash.Length != 64 || expectedPlanHash.Any(c => !"0123456789abcdef".Contains(c)))) Invalid("expectedPlanHash");
                 if (mode == "apply") DeviceCreationSession.CanonicalProject(expectedProjectFile);
-                identity = adapter.ReadIdentity();
+                identity = CandidateHostMapping.Plan(adapter.ReadIdentity());
                 if (mode == "apply")
                 {
                     if (DeviceCreationSession.CanonicalProject(identity.ProjectFile!) != DeviceCreationSession.CanonicalProject(expectedProjectFile)) IdentityMismatch();
@@ -168,28 +120,18 @@ namespace TiaMcp.Logic.V4
                 for (index = 0; index < inputs.Length; index++)
                 {
                     var input = inputs[index];
-                    if (BindingHash(identity) != BindingHash(adapter.ReadIdentity())) IdentityMismatch();
-                    if (DeviceCreationSession.Hash(current) != DeviceCreationSession.Hash(Inventory(adapter.ReadInventory()))) Stale(expectedPlanHash, "inventory-changed-before-item");
-                    if (targets[index].groupIdentity != adapter.TargetGroupIdentity(input.Target)) Stale(expectedPlanHash, "group-changed-before-item");
-                    if (DeviceCreationSession.Hash(files) != DeviceCreationSession.Hash(FileIdentities(locks))) Stale(expectedPlanHash, "files-changed-before-item");
-                    // Reread the manifest while borrowing the original locks. A new file is stale, never silently selected.
-                    if (DeviceCreationSession.Hash(inputs) != DeviceCreationSession.Hash(adapter.ReadInputs(release, tool, request, locks))) Stale(expectedPlanHash, "manifest-changed-before-item");
-                    adapter.BeforeImport(input);
-                    if (targets[index].groupIdentity != adapter.TargetGroupIdentity(input.Target)) Stale(expectedPlanHash, "group-changed-at-import-boundary");
-                    if (DeviceCreationSession.Hash(current) != DeviceCreationSession.Hash(Inventory(adapter.ReadInventory()))) Stale(expectedPlanHash, "inventory-changed-at-import-boundary");
-                    if (DeviceCreationSession.Hash(files) != DeviceCreationSession.Hash(FileIdentities(locks))) Stale(expectedPlanHash, "files-changed-at-import-boundary");
-                    if (BindingHash(identity) != BindingHash(adapter.ReadIdentity())) IdentityMismatch();
-                    issued = true;
-                    nativeAttempted = true;
-                    data["importIssued"] = true;
-                    var imported = adapter.Import(input, request.Overwrite);
-                    if (imported == null || !SameTarget(input.Target, imported)) throw new InvalidDataException("Native import returned a different target.");
-                    if (BindingHash(identity) != BindingHash(adapter.ReadIdentity())) throw new InvalidDataException("Project identity changed after import.");
-                    string contentHash = adapter.ReadContent(input, imported);
-                    if (contentHash != input.ContentHash) throw new InvalidDataException("Imported content differs from the reviewed input.");
-                    var after = Inventory(adapter.ReadInventory());
-                    VerifyDelta(current, after, input.Target, imported, request.Overwrite);
-                    current = after;
+                    var check = new PlcImportCheck { Release = release, Tool = tool, Request = request, Identity = CandidateHostMapping.Identity(identity),
+                        Inputs = inputs, Files = CandidateHostMapping.Files(files), InitialInventory = inventory, CurrentInventory = current,
+                        Index = index, GroupIdentity = targets[index].groupIdentity, OverwriteSupported = targets[index].overwriteSupported };
+                    check.Digest = CandidateDigest.ImportObservation(check);
+                    attempt = adapter is IImportCandidateBoundary boundary ? boundary.Execute(check, locks) : CandidateExecution.Import(adapter, check, locks);
+                    issued = attempt.Issued;
+                    nativeAttempted |= issued;
+                    if (issued) data["importIssued"] = true;
+                    if (attempt.Fault != null) throw CandidateHostMapping.Import(attempt.Fault, expectedPlanHash);
+                    var imported = attempt.Imported!;
+                    string contentHash = attempt.ContentHash;
+                    current = attempt.After;
                     children.Add(new BatchItem(index, input.Path, Result(release, tool, id,
                         new JsonObject { ["input"] = JsonNode.Parse(V4Json.Serialize(input)), ["returnedObject"] = JsonNode.Parse(V4Json.Serialize(imported)),
                             ["contentVerified"] = true, ["contentSha256"] = contentHash, ["nativeImportCalls"] = 1 }, null, Outcome.Succeeded, Execution.Completed)));
@@ -202,6 +144,7 @@ namespace TiaMcp.Logic.V4
             }
             catch (Exception ex)
             {
+                if (ex is CandidateObservationException observed) ex = CandidateHostMapping.Import(observed.Fault);
                 if (mode == "apply" && data == null && identity != null && (ex is not PlcImportRejection rejected
                     || rejected.Error.Code != ErrorCode.IdentityMismatch && rejected.Error.Code != ErrorCode.PlanStale))
                     ex = new PlcImportRejection(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
@@ -211,13 +154,8 @@ namespace TiaMcp.Logic.V4
                 if (issued)
                 {
                     RequiresSessionReset = true;
-                    var residue = new JsonObject { ["status"] = "unavailable", ["reason"] = "residue-read-failed" };
-                    try
-                    {
-                        if (identity != null && BindingHash(identity) == BindingHash(adapter.ReadIdentity())) residue = Residue(inventory!, Inventory(adapter.ReadInventory()));
-                        else residue["reason"] = "identity-changed";
-                    }
-                    catch (Exception) /* swallow(privacy): an unknown import retains explicit unavailable residue evidence */ { }
+                    var residue = attempt == null ? new JsonObject { ["status"] = "unavailable", ["reason"] = "residue-read-failed" }
+                        : CandidateHostMapping.ImportResidue(attempt.Residue);
                     data ??= new JsonObject(); data["residueCheck"] = residue;
                     error = new Error("Import outcome is unknown. Inspect the residue and rebuild the session; never replay or roll back automatically.",
                         new OutcomeUnknownDetails("native-import-or-content-readback", new Dictionary<string, JsonElement> { ["residueCheck"] = V4Json.Data(residue)!.Value }));

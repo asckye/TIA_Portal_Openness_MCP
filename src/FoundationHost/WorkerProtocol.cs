@@ -18,7 +18,7 @@ internal sealed class WorkerOutcomeState
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
         WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
-        if ((operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate) && result?["meta"]?["requiresSessionReset"]?.GetValue<bool>() == true)
+        if ((operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate) && result?["RequiresSessionReset"]?.GetValue<bool>() == true)
             Failed(true, new IOException("Device candidate outcome is unknown; inspect before a new explicit session."));
         if(operation is "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
             Failed(true,new IOException("External-source outcome is unknown; inspect before a new explicit session."));
@@ -32,8 +32,8 @@ internal static class WorkerProtocol
     internal static bool RequiresSessionReset(bool sent,Exception error) => sent && !(error is WorkerOperationException known && known.KnownNoMutation);
     internal static void ValidateExchangeResult(string operation,JsonObject arguments,JsonNode? result)
     {
-        if (operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate) { DeviceAddContract.ValidateCandidate(result, arguments); return; }
-        if (operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate) { BatchImportContract.ValidateCandidate(result, arguments); return; }
+        if (operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate) { CandidateWire.Device(result, arguments); return; }
+        if (operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate) { CandidateWire.Import(result, arguments); return; }
         if(operation=="AddDeviceWithFallback") { DeviceAddContract.Validate(result,arguments); return; }
         if(operation=="ImportBlocksFromDocuments") { BatchDocumentImportContract.Validate(result,arguments); return; }
         if(operation=="ImportFromDocuments") { DocumentImportContract.Validate(result,arguments); return; }

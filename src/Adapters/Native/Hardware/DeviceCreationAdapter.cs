@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
-using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using Primitives = TiaMcp.Adapters.Hardware.HardwarePrimitives;
 
 namespace TiaMcp.Adapters.Hardware
@@ -16,11 +16,11 @@ namespace TiaMcp.Adapters.Hardware
         private readonly TiaPortal portal;
         private readonly List<KeyValuePair<object, string>> identities = new List<KeyValuePair<object, string>>();
         private DeviceComposition? rootDevices;
-        public Func<PlanIdentity> Identity { private get; set; }
+        public Func<CandidateIdentity> Identity { private get; set; }
         public string RootId => Id(project);
         public bool IsProject(ProjectBase current) => object.Equals(project, current);
 
-        public DeviceCreationAdapter(ProjectBase project, TiaPortal portal, Func<PlanIdentity> identity)
+        public DeviceCreationAdapter(ProjectBase project, TiaPortal portal, Func<CandidateIdentity> identity)
         { this.project = project; this.portal = portal; Identity = identity; }
 
         private string Id(object value)
@@ -32,7 +32,7 @@ namespace TiaMcp.Adapters.Hardware
             return id;
         }
 
-        public PlanIdentity ReadIdentity() => Identity();
+        public CandidateIdentity ReadIdentity() => Identity();
 
         public IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string typeIdentifier)
         {

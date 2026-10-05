@@ -105,8 +105,8 @@ tool build; the tool is an additional compile input so changes invalidate output
 `Diagnostics/` is one API-independent runtime source shared by all eight builds.
 It preserves the existing runtime's call bracketing, weak object lineage,
 enumeration adapters, exception redaction and best-effort flushed journal. Its
-serializer still uses Newtonsoft.Json 13.0.4 after the net48 migration;
-the original modern runtime and its System.Text.Json dependency are unchanged.
+adapter serializer uses the existing JSON-library-free implementation;
+the full-engine runtime retains its existing System.Text.Json dependency.
 The exact existing PortalFailureClassifier source is linked without Siemens
 references. This is a serializer variant to maintain in parallel until a later
 common diagnostic abstraction removes the duplication, not eight runtime copies.
@@ -155,6 +155,15 @@ subdirectories. The journal directory must not already exist. These checks
 exercise diagnostic behavior and inspect eight worker/adapter PE files without
 loading them. The project contains no Siemens references, replacement SDK, or
 native tests.
+
+The console itself needs no Siemens SDK, but its required eight worker/adapter
+PE inputs must first be compiled against the eight exact licensed PublicAPI
+SDKs. Hosted CI has neither those SDKs nor checked-in worker binaries, so it
+cannot run this complete diagnostic check. The Python-only source-contracts job
+instead runs `python scripts/checks/Check-AdapterBoundary.py --self-test` and
+`python scripts/checks/Check-AdapterBoundary.py` to reject adapter references to
+Logic or JSON libraries, including source use and transitive project references.
+Local acceptance still requires the full eight-release diagnostic console.
 
 ## Studio migration verification
 

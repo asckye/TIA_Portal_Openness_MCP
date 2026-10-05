@@ -9,28 +9,9 @@ using Xunit;
 
 public sealed class PlcImportBoundaryTests
 {
-    private sealed class Worker : IFoundationWorker
-    {
-        internal int Calls;
-        internal string? Operation;
-        internal JsonObject? Arguments;
-        internal bool Unknown, Malformed;
-        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        {
-            Calls++; Operation = operation; Arguments = arguments;
-            var error = Unknown ? new Error("Unknown import.", new OutcomeUnknownDetails("native-import", new Dictionary<string, JsonElement>()))
-                : new Error("No project bound.", new ProjectNotBoundDetails());
-            var data = Unknown ? new JsonObject { ["residueCheck"] = new JsonObject { ["status"] = "unavailable", ["reason"] = "injected-failure" } } : null;
-            var result = PlcImportSession.Result("19", (string)arguments["tool"]!, (string)arguments["requestId"]!, data, error,
-                Unknown ? Outcome.Unknown : Outcome.RejectedBeforeOperation, Unknown ? Execution.Unknown : Execution.NotStarted);
-            var body = JsonNode.Parse(V4Json.Serialize(result)); if (Malformed) body!["meta"]!["tool"] = "WrongTool";
-            return Task.FromResult(body);
-        }
-        public void Dispose() { }
-    }
     private static RequestContext<CallToolRequestParams> Request(JsonObject args) => new(DispatchProxy.Create<IMcpServer, DeviceCreationBoundaryTests.ServerProxy>())
     { Params = new() { Name = "ImportPlcBlock", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
-    private static FoundationV4Tool Tool(Worker worker, string name, string release, bool safe) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker), release,
+    private static FoundationV4Tool Tool(CandidateWorkerFixture worker, string name, string release, bool safe) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker), release,
         family => family == "P6-IMPORT" && safe ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current);
     private static Envelope Body(CallToolResult result)
     {
@@ -46,7 +27,7 @@ public sealed class PlcImportBoundaryTests
     [Theory, MemberData(nameof(States))]
     public async Task EveryFoundationEntrySelectsOneSchemaAndRejectsOtherStateBeforeWorker(string release, string name, bool safe)
     {
-        var worker = new Worker(); var tool = Tool(worker, name, release, safe); var schema = tool.ProtocolTool.InputSchema;
+        var worker = new CandidateWorkerFixture(); var tool = Tool(worker, name, release, safe); var schema = tool.ProtocolTool.InputSchema;
         Assert.Equal(safe, schema.GetProperty("properties").TryGetProperty("mode", out _));
         Assert.Equal(!safe, schema.GetProperty("properties").TryGetProperty("dryRun", out _));
         var args = new JsonObject(); foreach (var key in schema.GetProperty("required").EnumerateArray()) args[key.GetString()!] = key.GetString() == "importOrder" ? new JsonArray("a.xml") : JsonValue.Create("example");
@@ -58,25 +39,48 @@ public sealed class PlcImportBoundaryTests
     [InlineData("ImportBlock", "blockGroupPath")] [InlineData("ImportType", "typeGroupPath")] [InlineData("ImportPlcTagTable", "tagFolderPath")]
     public async Task SingleImportMapsOnlyToNewCandidateOperation(string entry, string group)
     {
-        var worker = new Worker(); var args = new JsonObject { ["softwarePath"] = "devices/PLC/CPU", [entry == "ImportPlcTagTable" ? "folderPath" : "groupPath"] = "Group", ["importPath"] = @"C:\input.xml" };
+        var worker = new CandidateWorkerFixture { MissingProject = true }; var args = new JsonObject { ["softwarePath"] = "devices/PLC/CPU", [entry == "ImportPlcTagTable" ? "folderPath" : "groupPath"] = "Group", ["importPath"] = @"C:\input.xml" };
         var result = Body(await Tool(worker, entry, "19", true).InvokeAsync(Request(args)));
         Assert.Equal(ErrorCode.ProjectNotBound, result.Error!.Code); Assert.Equal("ImportPlcCandidate", worker.Operation); Assert.Equal(1, worker.Calls);
-        Assert.Equal("Group", (string?)worker.Arguments![group]); Assert.Equal(@"C:\input.xml", (string?)worker.Arguments["inputPath"]);
-        Assert.Equal(1, (int?)worker.Arguments["maxItems"]); Assert.Equal((string?)worker.Arguments["requestId"], result.Meta.RequestId);
+        Assert.Equal("Group", (string?)worker.Arguments!["candidate"]!["Request"]![char.ToUpperInvariant(group[0]) + group.Substring(1)]); Assert.Equal(@"C:\input.xml", (string?)worker.Arguments["candidate"]!["Request"]!["InputPath"]);
+        Assert.Equal(1, (int?)worker.Arguments["candidate"]!["Request"]!["MaxItems"]); Assert.False(string.IsNullOrWhiteSpace(result.Meta.RequestId));
     }
     [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public async Task UnknownAndMalformedNativeReplyPreserveUncertaintyAndPoisonOutcome(bool malformed)
+    [InlineData(false, false)] [InlineData(true, false)] [InlineData(false, true)]
+    public async Task UnknownAndMalformedNativeReplyPreserveUncertaintyAndPoisonOutcome(bool malformed, bool corruptReadback)
     {
-        var worker = new Worker { Unknown = true, Malformed = malformed };
-        var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = @"C:\input.xml", ["mode"] = "apply", ["confirm"] = true,
-            ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = @"C:\Test.ap19" };
-        var result = Body(await Tool(worker, "ImportBlock", "19", true).InvokeAsync(Request(args)));
-        Assert.Equal(Outcome.Unknown, result.Meta.Outcome); Assert.True(result.Meta.RequiresSessionReset); Assert.Equal(1, worker.Calls);
-        Assert.NotNull(result.Error!.Details); Assert.Equal((string?)worker.Arguments!["requestId"], result.Meta.RequestId);
-        var outcome = new WorkerOutcomeState(); outcome.AcceptResult(worker.Operation!, worker.Arguments, JsonNode.Parse(V4Json.Serialize(result)));
-        Assert.True(outcome.Poisoned); Assert.Throws<InvalidOperationException>(() => outcome.RequireUsable());
+        var worker = new CandidateWorkerFixture(); var tool = Tool(worker, "ImportBlock", "19", true);
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
+        var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok); Assert.Equal(0, worker.Import.Calls);
+        args["mode"] = "apply"; args["confirm"] = true; args["expectedPlanHash"] = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString(); args["expectedProjectFile"] = @"C:\Test.ap19";
+        worker.Import.Fault = malformed || corruptReadback ? "" : "during-after";
+        worker.Malformed = malformed; worker.CorruptReadback = corruptReadback;
+        var result = Body(await tool.InvokeAsync(Request(args)));
+        Assert.Equal(Outcome.Unknown, result.Meta.Outcome); Assert.True(result.Meta.RequiresSessionReset); Assert.Equal(1, worker.Import.Calls);
+        Assert.NotNull(result.Error!.Details); Assert.False(string.IsNullOrWhiteSpace(result.Meta.RequestId));
+        Assert.True(worker.Outcome.Poisoned); Assert.Throws<InvalidOperationException>(() => worker.Outcome.RequireUsable());
+        int calls = worker.Calls; var replay = Body(await tool.InvokeAsync(Request(args))); Assert.Equal(ErrorCode.SessionResetRequired, replay.Error!.Code); Assert.Equal(calls, worker.Calls);
+
     }
+    [Theory]
+    [InlineData("", true, false)] [InlineData("before", false, false)]
+    [InlineData("during-before", false, true)] [InlineData("during-after", false, true)]
+    [InlineData("after", false, true)] [InlineData("inventory-after", false, true)]
+    [InlineData("identity-after", false, true)] [InlineData("wrong-parent", false, true)] [InlineData("content-mismatch", false, true)]
+    public async Task RemoteBoundaryRetainsTheNativeFaultMatrix(string fault, bool ok, bool unknown)
+    {
+        var worker = new CandidateWorkerFixture(); var tool = Tool(worker, "ImportBlock", "19", true);
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
+        var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok);
+        args["mode"] = "apply"; args["confirm"] = true;
+        args["expectedPlanHash"] = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString(); args["expectedProjectFile"] = @"C:\Test.ap19";
+        worker.Import.Fault = fault;
+        var result = Body(await tool.InvokeAsync(Request(args)));
+        Assert.Equal(ok, result.Ok); Assert.Equal(unknown, result.Meta.RequiresSessionReset);
+        Assert.Equal(fault == "before" ? 0 : 1, worker.Import.Calls); Assert.Equal(unknown, worker.Outcome.Poisoned);
+        if (unknown) Assert.Equal(Outcome.Unknown, result.Meta.Outcome);
+    }
+
     [Fact]
     public void WorkerPreviewClassificationDoesNotChangeExistingOperations()
     {

@@ -1,57 +1,57 @@
 #if PLC_HARDWARE_CATALOG
 using System;
 using System.Diagnostics;
-using System.Text.Json;
-using TiaMcp.Logic.V4;
+using System.Linq;
+using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Hardware;
 
 namespace TiaMcp.PlcFoundation
 {
     public sealed partial class PlcFoundationEngine
     {
-        private DeviceCreationSession? deviceCandidate;
         private DeviceCreationAdapter? deviceCandidateAdapter;
-
-        public JsonElement CreateHardwareDeviceCandidate(string typeIdentifier, string deviceName, string family,
-            string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "",
-            long bindingEpoch = 0, string requestId = "")
+        public DeviceCandidateReply CreateHardwareDeviceCandidate(DeviceCandidateCall candidate, string mode = "preview", long bindingEpoch = 0)
         {
-            const string tool = "CreateHardwareDevice";
-            Envelope result;
+            var result = new DeviceCandidateReply();
             try
             {
                 Check();
-                if (ReleaseKey != "19" || BehaviorCapabilities.Select(typeof(PlcFoundationEngine).Assembly, ReleaseKey, "P6-DEVICE") != BehaviorPolicy.SafeV4)
-                    throw new DeviceCreationRejection(new Error("This Foundation device candidate is not selected.", new UnsupportedCapabilityDetails(ReleaseKey, "P6-DEVICE", "create")));
-                deviceCandidate ??= new DeviceCreationSession();
-                if (deviceCandidate.RequiresSessionReset) throw new DeviceCreationRejection(new Error("The device-create session must be rebuilt.", new SessionResetRequiredDetails("device-create-unknown")));
+                if (ReleaseKey != "19") CandidatePrimitives.Unsupported(ReleaseKey, "device-candidate");
                 PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession, false);
                 var candidateProject = Project();
                 var candidatePortal = Portal();
-                PlanIdentity Identity()
+                CandidateIdentity Identity()
                 {
                     Check();
                     if (!object.Equals(Project(), candidateProject) || !object.Equals(Portal(), candidatePortal))
-                        throw new DeviceCreationRejection(new Error("The project binding changed.", new IdentityMismatchDetails("project", null, null)));
+                        CandidatePrimitives.Fail("identity", "project");
                     int pid = lifecycle.ProcessId ?? throw new InvalidOperationException("No attached process identity.");
                     using var process = Process.GetProcessById(pid);
                     if (process.HasExited) throw new InvalidOperationException("The attached process exited.");
                     var path = candidateProject.Path.FullName;
                     RequireProjectIdentity(path);
-                    return new PlanIdentity(pid, new DateTimeOffset(process.StartTime.ToUniversalTime()), DeviceCreationSession.CanonicalProject(path), bindingEpoch, null, Array.Empty<PlanFile>());
+                    return new CandidateIdentity(pid, new DateTimeOffset(process.StartTime.ToUniversalTime()), CandidatePrimitives.CanonicalProject(path), bindingEpoch);
                 }
                 if (deviceCandidateAdapter == null || !deviceCandidateAdapter.IsProject(candidateProject))
                     deviceCandidateAdapter = new DeviceCreationAdapter(candidateProject, candidatePortal, Identity);
                 else deviceCandidateAdapter.Identity = Identity;
-                result = deviceCandidate.Run(deviceCandidateAdapter, ReleaseKey, tool, requestId, typeIdentifier, deviceName, family,
-                    mode, confirm, expectedPlanHash, expectedProjectFile, foundation: true);
+                result.RootId = deviceCandidateAdapter.RootId;
+                switch (candidate.Action)
+                {
+                    case "identity": result.Identity = deviceCandidateAdapter.ReadIdentity(); break;
+                    case "catalog": result.Catalog = deviceCandidateAdapter.ReadCatalog(candidate.TypeIdentifier).ToArray(); break;
+                    case "inventory": result.Inventory = deviceCandidateAdapter.ReadInventory().ToArray(); break;
+                    case "execute":
+                        if (mode != "apply" || candidate.Check == null) CandidatePrimitives.Invalid("candidate");
+                        result.Attempt = CandidateExecution.Create(deviceCandidateAdapter, candidate.Check!);
+                        result.RequiresSessionReset = result.Attempt.RequiresSessionReset;
+                        break;
+                    default: CandidatePrimitives.Invalid("candidate.action"); break;
+                }
             }
             catch (Exception ex)
-            {
-                var error = ex is DeviceCreationRejection rejected ? rejected.Error : new Error("Device preflight is unavailable; no Create was issued.", new PreconditionFailedDetails("device-create-preflight", null));
-                result = DeviceCreationSession.Result(ReleaseKey, tool, requestId, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
-            }
-            return JsonSerializer.Deserialize<JsonElement>(V4Json.Serialize(result));
+            { result.Fault = ex is CandidateObservationException observed ? observed.Fault : new CandidateFault { Kind = "preflight", Subject = "device-create-preflight" }; }
+            return result;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
 

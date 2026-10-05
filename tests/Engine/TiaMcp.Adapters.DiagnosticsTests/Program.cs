@@ -71,6 +71,8 @@ foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
     using var adapterPe=new PEReader(adapterStream);
     var adapter=adapterPe.GetMetadataReader();
     Check(!adapter.AssemblyReferences.Any(h=>adapter.GetString(adapter.GetAssemblyReference(h).Name) is "Newtonsoft.Json" or "System.Text.Json"),key+" adapter has no JSON library dependency");
+    Check(!adapter.AssemblyReferences.Any(h=>adapter.GetString(adapter.GetAssemblyReference(h).Name)=="TiaMcp.Logic"),key+" adapter has no host policy dependency");
+    Check(!workerRefs.Contains("TiaMcp.Logic"),key+" worker has no host policy dependency");
     Check(!workerRefs.Contains("Newtonsoft.Json") && !File.Exists(Path.Combine(folder,"Newtonsoft.Json.dll")),key+" worker payload has no Newtonsoft dependency");
     var types=adapter.TypeDefinitions.Select(h=>adapter.GetTypeDefinition(h)).ToArray();
     var engine=types.Single(t=>adapter.GetString(t.Name)=="PlcFoundationEngine");

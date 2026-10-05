@@ -128,8 +128,10 @@ internal sealed class FoundationTool : McpServerTool
         {
             cancellationToken.ThrowIfCancellationRequested();
             dispatched = true;
-            var result = await worker.Call(TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate, values, cancellationToken);
-            return FoundationV4Result.DeviceCandidate(DeviceAddContract.ValidateCandidate(result, values));
+            var result = await Task.Run(() => FoundationCandidateSession.For(worker).Device(release, id,
+                (string)values["typeIdentifier"]!, (string)values["deviceName"]!, (string)values["family"]!, (string?)values["mode"] ?? "preview",
+                (bool?)values["confirm"] ?? false, (string?)values["expectedPlanHash"] ?? "", (string?)values["expectedProjectFile"] ?? "", cancellationToken));
+            return FoundationV4Result.DeviceCandidate(DeviceAddContract.ValidateCandidate(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(result)), values));
         }
         catch (Exception ex)
         {
@@ -156,7 +158,15 @@ internal sealed class FoundationTool : McpServerTool
         try
         {
             cancellationToken.ThrowIfCancellationRequested(); dispatched = true;
-            var result = BatchImportContract.ValidateCandidate(await worker.Call(TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate, values, cancellationToken), values);
+            string Text(string key) => (string?)values[key] ?? "";
+            var importRequest = new TiaMcp.Adapters.Contracts.Candidates.PlcImportRequest { SoftwarePath = Text("softwarePath"), InputPath = Text("inputPath"),
+                BlockGroupPath = Text("blockGroupPath"), TypeGroupPath = Text("typeGroupPath"), TagFolderPath = Text("tagFolderPath"), TechnologyFolderPath = Text("technologyFolderPath"),
+                RegexName = Text("regexName"), FileNameWithoutExtension = Text("fileNameWithoutExtension"), ImportOrder = values["importOrder"]?.Deserialize<string[]>() ?? Array.Empty<string>(),
+                Overwrite = (bool?)values["overwrite"] ?? false, VersionPolicy = (string?)values["versionPolicy"] ?? "exact", OnError = (string?)values["onError"] ?? "stop",
+                CompileAfter = (bool?)values["compileAfter"] ?? false, MaxItems = (int)values["maxItems"]! };
+            var mapped = await Task.Run(() => FoundationCandidateSession.For(worker).Import(release, tool, id, importRequest, (string?)values["mode"] ?? "preview",
+                (bool?)values["confirm"] ?? false, Text("expectedPlanHash"), Text("expectedProjectFile"), cancellationToken));
+            var result = BatchImportContract.ValidateCandidate(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(mapped)), values);
             if (result.Meta.ReleaseKey != release) throw new InvalidDataException("Import candidate release mismatch.");
             return FoundationV4Result.ImportCandidate(result);
         }

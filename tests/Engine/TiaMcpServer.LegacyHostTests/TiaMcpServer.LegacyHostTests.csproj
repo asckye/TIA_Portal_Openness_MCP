@@ -48,6 +48,8 @@
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Tool.cs" Link="FoundationV4Tool.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Result.cs" Link="FoundationV4Result.cs" />
+    <Compile Include="../../../src/FoundationHost/FoundationCandidateSession.cs" Link="FoundationCandidateSession.cs" />
+    <Compile Include="../../../src/FoundationHost/CandidateWire.cs" Link="CandidateWire.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationTools.cs" Link="FoundationTools.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />

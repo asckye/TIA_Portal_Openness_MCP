@@ -48,8 +48,8 @@ internal static class Program
         {
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
-            bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Logic.V4.BehaviorCapabilities.Select(typeof(PlcFoundationEngine).Assembly, releaseKey, "P6-DEVICE") == TiaMcp.Logic.V4.BehaviorPolicy.SafeV4;
-            bool importCandidateEnabled = TiaMcp.Logic.V4.BehaviorCapabilities.Select(typeof(PlcFoundationEngine).Assembly, releaseKey, "P6-IMPORT") == TiaMcp.Logic.V4.BehaviorPolicy.SafeV4;
+            bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-DEVICE");
+            bool importCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-IMPORT");
             var methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => WorkerOperations.Names.Contains(m.Name) || deviceCandidateEnabled && m.Name == WorkerOperations.DeviceCreationCandidate
                     || importCandidateEnabled && m.Name == WorkerOperations.PlcImportCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
@@ -118,8 +118,8 @@ internal static class Program
                     enteredOperation=true;
                     if(name=="Disconnect") disconnectAttempted=true;
                     var result = method.Invoke(engine, call);
-                    if ((name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate) && result is System.Text.Json.JsonElement candidateResult
-                        && candidateResult.GetProperty("meta").GetProperty("requiresSessionReset").GetBoolean()) sessionOutcome.MarkUncertain(blockReads: true);
+                    if (result is TiaMcp.Adapters.Contracts.Candidates.DeviceCandidateReply deviceCandidate && deviceCandidate.RequiresSessionReset
+                        || result is TiaMcp.Adapters.Contracts.Candidates.ImportCandidateReply importCandidate && importCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) sessionOutcome.MarkUncertain();

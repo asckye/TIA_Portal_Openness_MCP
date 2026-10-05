@@ -1,6 +1,7 @@
 using System.Text;
 using System.Xml.Linq;
 using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using Xunit;
 
 public sealed class PlcImportFileTests

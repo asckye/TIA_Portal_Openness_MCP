@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
+using TiaMcp.Adapters.Contracts.Candidates;
 using Xunit;
 
 public sealed class DeviceCreationCandidateTests
@@ -19,7 +20,7 @@ public sealed class DeviceCreationCandidateTests
         public Action<Adapter>? Observe;
         public readonly List<DeviceCatalogEntry> Catalog = new() { new() { TypeIdentifier = Identifier, ArticleNumber = "6ES7 513-1AM03-0AB0", Version = "V3.0", Description = "CPU 1513" } };
         public readonly List<DeviceInventoryItem> Items = new() { new() { Id = "first", Name = "PLC_1", ParentId = "root" } };
-        public PlanIdentity ReadIdentity() { IdReads++; Observe?.Invoke(this); return new(Pid, Start, DeviceCreationSession.CanonicalProject(Project), Epoch, null, Array.Empty<PlanFile>()); }
+        public CandidateIdentity ReadIdentity() { IdReads++; Observe?.Invoke(this); return new(Pid, Start, DeviceCreationSession.CanonicalProject(Project), Epoch); }
         public IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string exact) { CatalogReads++; if (Fault == "catalog") throw new IOException(); return Catalog; }
         public IReadOnlyList<DeviceInventoryItem> ReadInventory() { InventoryReads++; if (Creates > 0 && (Fault == "during-unreadable" || Fault == "after")) throw new IOException(); return Items; }
         public void BeforeCreate() { if (Fault == "before") throw new IOException(); }
