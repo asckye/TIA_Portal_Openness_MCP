@@ -9,5 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" />
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" />
   </ItemGroup>
 </Project>
