@@ -255,7 +255,9 @@ def migration_names(root):
 
 
 def rewrite_guidance(source, renames, registered):
-    active = {old: new for old, new in renames.items() if old != new and old not in registered and new in registered}
+    # ALLOWED names are reviewed API names that a historical tool shared; each occurrence is decided by hand.
+    active = {old: new for old, new in renames.items()
+              if old != new and old not in registered and new in registered and old not in ALLOWED}
     if not active: return source, []
     pattern = re.compile(r'(?<![.\w])(?:' + '|'.join(re.escape(n) for n in sorted(active, key=len, reverse=True)) + r')\b')
     tokens, _ = text_literals.lexer.Lexer(source).scan()
@@ -277,7 +279,8 @@ def rewrite_guidance(source, renames, registered):
                     prose = False
                 except ValueError:
                     pass  # A prose example with braces is not a serialized data object.
-            if sink or directed or prose:
+            # A literal that is only an identifier is data or code (a reflection lookup, a key), never prose.
+            if (sink or directed or prose) and not re.fullmatch(r'\s*[A-Za-z_]\w*\s*', decoded):
                 eligible.append((token.start, token.end, tuple(token.expressions)))
             if token.expressions: visit(list(token.expressions), sink)
     visit(tokens)
@@ -372,6 +375,16 @@ const string Hint = """See OldTool for details.""";
         self.assertEqual(sum(changed for _, _, _, changed in events), 5)
         self.assertEqual(sum(not changed for _, _, _, changed in events), 4)
         self.assertEqual(rewrite_guidance(fixed, {'OldTool': 'NewTool'}, {'NewTool'})[0], fixed)
+
+    def test_bare_identifiers_and_allowed_api_names_are_kept(self):
+        source = ('[Description("Use OldTool.")] void M() { throw new Exception("OldTool"); '
+                  'var m = t.GetMethods().Single(x => x.Name == "OldTool"); }')
+        fixed, _ = rewrite_guidance(source, {'OldTool': 'NewTool'}, {'NewTool'})
+        self.assertEqual(fixed.count('NewTool'), 1)
+        self.assertEqual(fixed.count('"OldTool"'), 2)
+        api = next(iter(ALLOWED))
+        source = '[Description("Calls ' + api + ' natively.")] void M() {}'
+        self.assertEqual(rewrite_guidance(source, {api: 'NewTool'}, {'NewTool'})[0], source)
 
     def test_qualified_api_members_are_not_tool_names(self):
         source = ('var r = InvocationJournal.Native("CrossReferenceService.GetCrossReferences", () => 1); '
