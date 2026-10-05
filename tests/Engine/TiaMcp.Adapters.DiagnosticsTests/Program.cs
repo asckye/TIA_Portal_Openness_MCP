@@ -12,6 +12,7 @@ string output=Path.GetFullPath(args[0]), journal=Path.GetFullPath(args[1]);
 if(Directory.Exists(journal)) throw new ArgumentException("Use a new directory so existing evidence is preserved.");
 Directory.CreateDirectory(journal);
 Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY",journal);
+Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY",Path.Combine(journal,"data"));
 InvocationJournalGoldenTests.Run(journal);
 int checks=0;
 void Check(bool condition,string name){if(!condition)throw new Exception(name);checks++;}

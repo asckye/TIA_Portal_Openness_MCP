@@ -10,7 +10,7 @@ namespace TiaMcpServer.Cli
     internal static class CliBoundary
     {
         private static readonly string[] Tools = { "gen", "patch", "compile", "export", "import", "describe" };
-        private static readonly string[] Commands = { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "schema", "version", "help", "--help", "-h" };
+        private static readonly string[] Commands = { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "schema", "version", "help", "--help", "-h", "audit" };
         private static readonly string[] Values = { "--plc", "--out", "--block", "--from", "--host", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--worker-timeout-seconds" };
         private static string Canonical(string option) => new[] { "-tia-major-version", "-tia-portal-location", "-profile", "-logging", "-with-ui" }.Contains(option.ToLowerInvariant()) ? "-" + option : option;
 
@@ -34,6 +34,13 @@ namespace TiaMcpServer.Cli
         {
             string verb = args[0].ToLowerInvariant();
             if (!Commands.Contains(verb)) throw new ArgumentException("Unknown command. Run tia help for supported commands.");
+            if (verb == "audit")
+            {
+                if (args.Length != 2 && args.Length != 4 || args[1] != "verify" || args.Length == 4 &&
+                    (args[2] != "--path" || string.IsNullOrWhiteSpace(args[3]) || !Path.IsPathRooted(args[3])))
+                    throw new ArgumentException("Expected tia audit verify [--path <absolute directory>].");
+                return;
+            }
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             allowed.UnionWith(new[] { "--with-ui", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--full", "--lite", "--isolate-openness", "--worker-timeout-seconds" });
             switch (verb)

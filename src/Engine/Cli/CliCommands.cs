@@ -16,7 +16,7 @@ namespace TiaMcpServer.Cli
     public static class CliCommands
     {
         private static readonly string[] Verbs =
-            { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "schema", "version", "help", "--help", "-h" };
+            { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "schema", "version", "help", "--help", "-h", "audit" };
 
         public static bool IsVerb(string s) => Array.IndexOf(Verbs, s.ToLowerInvariant()) >= 0;
 
@@ -35,6 +35,7 @@ namespace TiaMcpServer.Cli
                     case "prewarm": return Prewarm(args);
                     case "config": return Config(args);
                     case "doctor": return DoctorCli(args);
+                    case "audit": return TiaOpenness.Shared.AuditCli.Verify(Opt(args, "--path") ?? TiaOpenness.Shared.DataLocations.Current.AuditDirectory, Console.Out);
                     case "schema": Console.WriteLine(SchemaText); return 0;
                     case "version": Console.WriteLine("tia " + AssemblyVersion()); return 0;
                     default: PrintUsage(); return 0;
@@ -270,6 +271,7 @@ USAGE
   tia doctor   [--fix]                                    Environment check: TIA install, exe/version match, Openness
                                                           group, AI host configs. --fix auto-adds the Openness group
   tia schema                                              Print the spec field reference
+  tia audit verify [--path DIR]                            Verify the audit chain; JSON report, exit 0 intact / 3 broken
   tia version
 
 GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-version KEY

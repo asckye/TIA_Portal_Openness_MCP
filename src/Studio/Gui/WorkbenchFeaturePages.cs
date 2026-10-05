@@ -18,7 +18,7 @@ public partial class MainWindow
 
     private void InitializeFeaturePages()
     {
-        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogServiceStub(), new EnvironmentCheckService());
+        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(), new EnvironmentCheckService());
         Approvals.NewRequest += OnNewApproval;
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }
@@ -32,6 +32,7 @@ public partial class MainWindow
             Features.Feedback -= OnFeatureFeedback;
             Features.Dispose();
             (Features.Journal as IDisposable)?.Dispose();
+            (Features.Audit as IDisposable)?.Dispose();
         }
         if (notification != null) { _approvalNotification.Dispose(); _approvalNotification = notification; }
         Features = new FeaturePagesViewModel(Approvals, journal, audit, environment, _diagnostics, now) { Release = _model.SelectedReleaseKey };
@@ -80,6 +81,6 @@ public partial class MainWindow
         Features.DrawerRequested -= OnFeatureDrawer;
         Features.Feedback -= OnFeatureFeedback;
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext = CallDetailContent.DataContext = null;
-        Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); _approvalNotification.Dispose();
+        Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); (Features.Audit as IDisposable)?.Dispose(); _approvalNotification.Dispose();
     }
 }

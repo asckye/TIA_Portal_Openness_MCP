@@ -96,6 +96,7 @@ namespace TiaOpenness.Shared
         internal string ConfigDirectory => configDirectory.Value;
         internal string UiFilePath => uiFilePath.Value;
         internal string LogsDirectory => Ensure(At("logs", temporaryDirectory));
+        internal string AuditDirectory => At(Path.Combine("logs", "audit"), Path.Combine(localApplicationData, "TiaMcp", "logs", "audit"));
         internal string ReportsDirectory => At("reports", Path.Combine(temporaryDirectory, "TiaMcpReports"));
         internal string TempDirectory => Ensure(At("temp", temporaryDirectory));
 

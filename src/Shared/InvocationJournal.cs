@@ -13,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly object Sync = new object();
         private static readonly int ProcessId = Process.GetCurrentProcess().Id;
-        private static readonly string ProcessKey = ProcessId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+        private static readonly string ProcessKey = ProcessId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N");
         private static readonly AsyncLocal<string?> Current = new AsyncLocal<string?>();
         private static IJournalSink sink = new FileJournalSink();
         private static Func<string>? correlationSource;
@@ -37,15 +37,19 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private sealed class FileJournalSink : IJournalSink
         {
+            private TiaOpenness.Shared.JournalRetention retention = new TiaOpenness.Shared.JournalRetention();
+            private long settingsRead;
             public void Write(Func<string> row)
             {
                 var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 if (!Path.IsPathRooted(root)) throw new IOException("Diagnostic path must be absolute.");
                 Directory.CreateDirectory(root);
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");
-                if (File.Exists(path) && new FileInfo(path).Length > 10 * 1024 * 1024)
-                { string previous = path + ".previous"; if (File.Exists(previous)) File.Delete(previous); File.Move(path, previous); }
                 string text = row();
+                long now = Stopwatch.GetTimestamp();
+                if (settingsRead == 0 || now - settingsRead >= Stopwatch.Frequency)
+                { retention = TiaOpenness.Shared.JournalRetention.Load(TiaOpenness.Shared.JournalRetention.SettingsPath); settingsRead = now; }
+                retention.Rotate(path, Encoding.UTF8.GetByteCount(text + Environment.NewLine));
                 // Flush BEFORE before calling into native code, even if the native process later crashes.
                 using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) { writer.WriteLine(text); writer.Flush(); stream.Flush(true); }

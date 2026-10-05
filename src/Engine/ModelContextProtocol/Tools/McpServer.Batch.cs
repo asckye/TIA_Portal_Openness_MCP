@@ -122,6 +122,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
                 var row = BatchRow(rows.Count, name, result);
+                if (!issued)
+                {
+                    using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, "engine", ReleaseKey, name);
+                    audit?.Complete(ResultBody(result)?.ToJsonString());
+                }
                 // An unreadable target result must never make the parent successful.
                 if (issued && ResultSucceeded(row["result"]) == null) row["outcomeUnknown"] = true;
                 rows.Add(row);

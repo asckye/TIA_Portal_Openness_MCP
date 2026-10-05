@@ -24,6 +24,8 @@ internal static class Program
     {
         try
         {
+            if (args.Length >= 2 && (args[0] == "audit-writer" || args[0] == "audit-verify")) return AuditLogTests.Child(args);
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY")!, "data"));
             if (args.Length == 1 && args[0] == "abrupt") { InvocationJournal.Begin("abrupt"); Node.ExitNow(); return 99; }
             InvocationJournal.Begin("fixture");
             int before = Node.Calls;
@@ -95,6 +97,7 @@ internal static class Program
             Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", previous);
             Check((long)InvocationJournal.Health()["failedWrites"]! >= 2, "diagnostic I/O failures visible");
             InvocationJournalGoldenTests.Run(directory);
+            AuditLogTests.Run(directory);
             Console.WriteLine("COMPLETE: " + checks + " instrumented diagnostic checks passed; no TIA connection");
             return 0;
         }

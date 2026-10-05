@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AuditLog.cs" Link="Shared/AuditLog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AuditInvocation.cs" Link="Shared/AuditInvocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AuditCli.cs" Link="Shared/AuditCli.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)JournalRetention.cs" Link="Shared/JournalRetention.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)JournalFileLock.cs" Link="Shared/JournalFileLock.cs" />
+  </ItemGroup>
+</Project>

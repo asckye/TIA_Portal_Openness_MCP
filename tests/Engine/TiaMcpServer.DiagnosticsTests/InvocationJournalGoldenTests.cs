@@ -124,20 +124,24 @@ internal static class InvocationJournalGoldenTests
             InvocationJournal.ConfigureOutput(null);
             string rotation = Path.Combine(directory, "rotation");
             Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", rotation);
+            new TiaOpenness.Shared.JournalRetention(1, 3).Save(TiaOpenness.Shared.JournalRetention.SettingsPath);
+            InvocationJournal.ConfigureOutput(null);
             InvocationJournal.Begin("file", id);
             string file = Directory.GetFiles(rotation, "calls-*.jsonl").Single();
-            using (var stream = new FileStream(file, FileMode.Open)) stream.SetLength(10 * 1024 * 1024);
+            using (var stream = new FileStream(file, FileMode.Open)) stream.SetLength(1024 * 1024 - 4096);
             InvocationJournal.Write(id, "limit", "BEFORE");
-            Check(!File.Exists(file + ".previous"), "rotation threshold is strictly greater");
+            Check(!File.Exists(file + ".1"), "row below configured limit remains in current file");
+            using (var stream = new FileStream(file, FileMode.Open)) stream.SetLength(1024 * 1024);
             File.WriteAllText(file + ".previous", "old rotation");
             InvocationJournal.Write(id, "rotate", "BEFORE");
-            Check(new FileInfo(file + ".previous").Length > 10 * 1024 * 1024 && File.ReadAllLines(file).Length == 1, "rotation replaces previous file");
+            Check(new FileInfo(file + ".1").Length == 1024 * 1024 && File.ReadAllLines(file).Length == 1 && File.ReadAllText(file + ".2") == "old rotation", "configured rotation migrates previous and keeps ordered copies");
             byte[] bytes = File.ReadAllBytes(file);
             Check(bytes[0] == (byte)'{' && Encoding.UTF8.GetString(bytes).EndsWith(Environment.NewLine, StringComparison.Ordinal), "no BOM and original newline");
         }
         finally
         {
             InvocationJournal.ConfigureOutput(null);
+            new TiaOpenness.Shared.JournalRetention().Save(TiaOpenness.Shared.JournalRetention.SettingsPath);
             InvocationJournal.BindingSnapshot = null;
             Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", previous);
         }

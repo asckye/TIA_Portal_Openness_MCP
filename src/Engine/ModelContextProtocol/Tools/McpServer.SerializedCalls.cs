@@ -70,6 +70,28 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var tool in tools) result.Add(new SerializedCallTool(tool));
             return result;
         }
+        internal static IList<McpServerTool> WrapWithAuditCalls(IList<McpServerTool> tools)
+        {
+            var result = new List<McpServerTool>();
+            foreach (var tool in tools) result.Add(new AuditCallTool(tool));
+            return result;
+        }
+    }
+    // Outside admission and worker forwarding: invalid write requests are audited too.
+    internal sealed class AuditCallTool : McpServerTool
+    {
+        private readonly McpServerTool inner;
+        internal AuditCallTool(McpServerTool inner) { this.inner = inner; }
+        public override Tool ProtocolTool => inner.ProtocolTool;
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(ToolCatalog.IsWrite(ProtocolTool.Name),
+                "engine", McpServer.ReleaseKey, ProtocolTool.Name);
+            var result = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ??
+                (result.Content.Count == 1 && result.Content[0] is TextContentBlock text ? text.Text : null));
+            return result;
+        }
     }
     internal sealed class SerializedCallTool : McpServerTool
     {

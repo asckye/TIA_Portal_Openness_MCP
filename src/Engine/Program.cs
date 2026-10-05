@@ -85,7 +85,7 @@ namespace TiaMcpServer
                 LogDiag($"Exe: {Assembly.GetExecutingAssembly().Location}");
                 LogDiag($"Args: {string.Join(" ", args.Select((arg, i) => i > 0 && string.Equals(args[i - 1], "--http-api-key", StringComparison.OrdinalIgnoreCase) ? "[redacted]" : arg))}");
 
-                if (CliOptions.IsInformationalCommand(args))
+                if (CliOptions.IsInformationalCommand(args) || args.Length > 0 && args[0].Equals("audit", StringComparison.OrdinalIgnoreCase))
                 {
                     Environment.ExitCode = Cli.CliCommands.Run(args);
                     return;

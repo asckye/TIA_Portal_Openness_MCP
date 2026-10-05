@@ -122,6 +122,14 @@ internal sealed class FoundationV4Tool : McpServerTool
     public override Tool ProtocolTool => tool;
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(inner is FoundationTool { IsWrite: true }, "foundation", release, tool.Name);
+        var result = await InvokeCoreAsync(request, cancellationToken);
+        if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
+        return result;
+    }
+
+    private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+    {
         string id = Meta.Correlate(null);
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         using var journal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,

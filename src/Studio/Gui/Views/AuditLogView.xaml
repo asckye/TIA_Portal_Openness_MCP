@@ -24,7 +24,7 @@
               <TextBlock Text="{Binding Time}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
               <TextBlock Grid.Column="2" Text="{Binding Type}" Style="{StaticResource Feature.Text}" Tag="{Binding Tone}" FontSize="11.5" FontWeight="SemiBold"/>
               <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Glass.Mono}" ToolTip="{Binding Record.ToolObject}"/>
-              <TextBlock Grid.Column="6" Text="{Binding Record.Result}" Style="{StaticResource Glass.Muted}"/>
+              <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Glass.Muted}"/>
               <TextBlock Grid.Column="8" Text="{Binding Record.Hash}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
             </Grid>
           </Border>
@@ -35,20 +35,20 @@
     <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="14"/><RowDefinition/></Grid.RowDefinitions>
       <Border Style="{StaticResource Glass.Card}" Padding="20,18"><StackPanel>
         <TextBlock Text="{l:Tr Audit.Retention}" Style="{StaticResource Glass.Heading}" Margin="0,0,0,12"/>
-        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="74"/><ColumnDefinition/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="74"/><ColumnDefinition/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
           <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Glass.Muted}"/>
           <Border Grid.Column="1" Background="{DynamicResource Ui.ControlBackground}" CornerRadius="16" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="Size5" Tag="5" Content="5 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
-            <RadioButton x:Name="Size10" Tag="10" Content="10 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
+            <RadioButton x:Name="Size128" Tag="128" Content="128 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
+            <RadioButton x:Name="Size256" Tag="256" Content="256 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
             <RadioButton x:Name="Size50" Tag="50" Content="50 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
           </StackPanel></Border>
           <TextBlock Grid.Row="1" Text="{l:Tr Audit.Copies}" Style="{StaticResource Glass.Muted}"/>
           <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Ui.ControlBackground}" CornerRadius="16" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="Copies3" Tag="3" Content="3" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
-            <RadioButton x:Name="Copies5" Tag="5" Content="5" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
-            <RadioButton x:Name="Copies10" Tag="10" Content="10" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
+            <RadioButton x:Name="Copies16" Tag="16" Content="16" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
+            <RadioButton x:Name="Copies32" Tag="32" Content="32" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
+            <RadioButton x:Name="Copies64" Tag="64" Content="64" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
           </StackPanel></Border>
-          <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" Style="{StaticResource Glass.Text}" FontWeight="SemiBold" FontSize="11.5"/>
+          <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" TextWrapping="Wrap" Style="{StaticResource Glass.Text}" FontWeight="SemiBold" FontSize="11.5"/>
         </Grid>
         <Button Content="{l:Tr Audit.OpenFolder}" Style="{StaticResource Glass.Button}" Height="32" Margin="0,4,0,0" Click="OnOpenFolder"/>
       </StackPanel></Border>

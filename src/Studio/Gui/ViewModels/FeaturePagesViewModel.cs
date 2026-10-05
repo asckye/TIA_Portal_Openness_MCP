@@ -264,6 +264,13 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
 
 public sealed record AuditRow(AuditEvent Record, bool Selected)
 {
+    public string Result => Record.Result switch
+    {
+        "succeeded" => Loc.Current["Calls.Success"], "rejected-before-operation" => Loc.Current["Calls.Rejected"],
+        "failed" or "read-failed" => Loc.Current["Approval.Failed"], "partial" => Loc.Current["Approval.Partial"],
+        "unknown" => Loc.Current["Approval.Unknown"], "enabled" => Loc.Current["Audit.Enabled"],
+        "disabled" => Loc.Current["Audit.Disabled"], "invalid-record" => Loc.Current["Audit.InvalidRecord"], _ => Record.Result,
+    };
     public string Time => Record.Time.ToLocalTime().ToString("HH:mm:ss");
     public string Type => Loc.Current[Record.Type switch
     {

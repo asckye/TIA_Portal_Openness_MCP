@@ -105,6 +105,14 @@ internal sealed class FoundationTool : McpServerTool
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
     public override Tool ProtocolTool=>tool;
+    internal bool IsWrite
+    {
+        get
+        {
+            string operation = TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(FoundationV4Tool.Name(definition.Name), definition.Description).Operation;
+            return operation == "WRITE" || operation == "ONLINE-WRITE";
+        }
+    }
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
         => InvokeCoreAsync(request, cancellationToken);
     internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)

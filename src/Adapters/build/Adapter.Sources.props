@@ -72,6 +72,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.Shared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/JournalRetention.cs" Link="Diagnostics/JournalRetention.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/JournalFileLock.cs" Link="Diagnostics/JournalFileLock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/DataLocations.cs" Link="Diagnostics/DataLocations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/BundleLayout.cs" Link="Diagnostics/BundleLayout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />

@@ -16,6 +16,8 @@ namespace TiaOpenness.Gui.Settings;
 /// </summary>
 public sealed class UiSettings
 {
+    internal static TiaOpenness.Shared.JournalRetention LoadRetention(string path) => TiaOpenness.Shared.JournalRetention.Load(path);
+    internal static void SaveRetention(string path, int fileSizeMb, int copies) => new TiaOpenness.Shared.JournalRetention(fileSizeMb, copies).Save(path);
     private const string LanguageKey = "language";
     private const string ThemeKey = "theme";
 

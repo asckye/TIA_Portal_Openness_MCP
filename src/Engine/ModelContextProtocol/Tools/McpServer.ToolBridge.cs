@@ -275,18 +275,26 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
         {
+            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(AllToolMethods(includeUnavailable: true).TryGetValue(name ?? "", out _)
+                && ToolCatalog.IsWrite(name ?? ""), "engine", ReleaseKey, name ?? "");
             var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
             if (error != null)
             {
                 var rejected = V4Reject("CallTool", error);
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
-                return rejected;
+                return AuditBridgeResult(audit, rejected);
             }
             if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
-                return V4Reject("CallTool", InvalidInput("name"));
-            try { return ToolResult(InvokeToolMethod(method!, call!)); }
+                return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")));
+            try { return AuditBridgeResult(audit, ToolResult(InvokeToolMethod(method!, call!))); }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
-            { return TargetFailure(ex.InnerException); }
+            { return AuditBridgeResult(audit, TargetFailure(ex.InnerException)); }
+        }
+
+        private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result)
+        {
+            if (audit != null) audit.Complete(ResultBody(result)?.ToJsonString());
+            return result;
         }
 
         private static CallToolResult TargetFailure(Exception error)
@@ -570,7 +578,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Write and online-write tools by their typed classification; descriptions never decide.</summary>
         internal static bool IsWriteTool(MethodInfo method) => IsWrite(ClassificationOf(method));
-        internal static bool IsWriteTool(string name) => IsWrite(ToolMetadata.Find(name));
+        internal static bool IsWriteTool(string name) => ToolCatalog.IsWrite(name);
         private static bool IsWrite(ToolMetadata.Classification? classification)
             => classification?.Operation is "WRITE" or "ONLINE-WRITE";
 

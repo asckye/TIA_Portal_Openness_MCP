@@ -34,6 +34,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static ToolCatalog Engine => engine.Value;
         internal IReadOnlyList<KeyValuePair<string, MethodInfo>> Methods { get; }
+        /// <summary>Write and online-write tools by their typed classification (name inference only for unregistered names).</summary>
+        internal static bool IsWrite(string name)
+        {
+            string operation = ToolTaxonomy.OperationOf(name, null).Operation;
+            return operation == "WRITE" || operation == "ONLINE-WRITE";
+        }
 
         internal ToolCatalog(IEnumerable<Type> types)
         {
