@@ -11,10 +11,12 @@ namespace TiaOpenness.Gui.Localization;
 /// it. <c>StringsTests</c> checks the rest - no duplicates, nothing blank, and the same
 /// <c>{0}</c> placeholders on both sides.
 /// </summary>
-internal static class Strings
+internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
-    internal static readonly (string Key, string En, string Zh)[] Catalogue =
+    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue];
+
+    private static readonly (string Key, string En, string Zh)[] CommonCatalogue =
     [
         ("Shell.VersionControl", "Version control", "版本控制"),
         ("Shell.Engineering", "Project operations", "工程操作"),
@@ -189,9 +191,9 @@ internal static class Strings
         ("Config.StopServiceCaption", "Stop MCP", "停止 MCP"),
         ("Config.WaitBeforeClosing", "Configuration is in progress. Wait before closing.", "正在处理配置，请稍候再关闭。"),
         ("Desktop.Configuration", "MCP & clients", "MCP 与客户端"),
-        ("Glass.Software", "PLC software", "PLC 软件"),
-        ("Glass.Transfer", "Export · Import", "导出 · 导入"),
-        ("Glass.Git", "Git diff", "Git 差异"),
+
+        ("Glass.Transfer", "Import / Export", "导入 / 导出"),
+
         ("Glass.Bound", "Bound", "已绑定"),
         ("Glass.SelectAll", "Select all", "全选"),
         ("Glass.Clear", "Clear", "清空"),
@@ -200,35 +202,35 @@ internal static class Strings
         ("Glass.Number", "NO.", "编号"),
         ("Glass.Language", "LANG", "语言"),
         ("Glass.Group", "GROUP PATH", "组路径"),
-        ("Glass.Consistent", "CONSISTENT", "一致性"),
-        ("Glass.KnowHow", "KNOW-HOW", "专有技术"),
+        ("Glass.Consistent", "CONSISTENT", "一致"),
+
         ("Glass.ExportXml", "Export · SimaticML XML", "导出 · SimaticML XML"),
-        ("Glass.ImportXml", "Import XML…", "导入 XML…"),
+
         ("Glass.CompileSoftware", "Compile PLC software", "编译 PLC 软件"),
         ("Glass.Errors", "errors", "个错误"),
         ("Glass.Warnings", "warnings", "条警告"),
-        ("Glass.Inspection", "Inspection", "审查结果"),
+        ("Glass.Inspection", "Inspection", "检查"),
         ("Glass.ReadStatus", "Read status", "读取状态"),
         ("Glass.NewWorkspace", "New workspace", "新建工作区"),
         ("Glass.Mapping", "Object mapping", "对象映射"),
         ("Glass.WholeProject", "Whole project", "整个项目"),
-        ("Glass.PreviewMapping", "Preview mapping", "预览映射"),
+        ("Glass.PreviewMapping", "Preview", "预览"),
         ("Glass.RunMapping", "Run mapping", "执行映射"),
         ("Glass.Sync", "Sync", "同步"),
-        ("Glass.NotGitPush", "Not a git push", "并非 Git 推送"),
-        ("Glass.ToWorkspace", "To workspace", "到工作区"),
-        ("Glass.ToProject", "To project", "到项目"),
+        ("Glass.NotGitPush", "Not a git push", "不是 git push"),
+        ("Glass.ToWorkspace", "→ Workspace", "→ 工作区"),
+        ("Glass.ToProject", "→ Project", "→ 工程"),
         ("Glass.PreviewSync", "Preview sync", "预览同步"),
         ("Glass.RunSync", "Run sync", "执行同步"),
         ("Glass.MappedObjects", "Mapped objects", "已映射对象"),
         ("Glass.File", "FILE", "文件"),
         ("Glass.LocalDiff", "Local git diff", "本地 Git 差异"),
         ("Glass.WorkingTree", "Working tree", "工作树"),
-        ("Glass.DiffScope", "Staged, unstaged and untracked changes. No branches, commits or GitHub sync here.", "包含暂存、未暂存和未跟踪的改动。此处不管理分支、提交或 GitHub 同步。"),
+        ("Glass.DiffScope", "Staged, unstaged and untracked changes. No branches, commits or remote sync here.", "包含已暂存、未暂存与未跟踪的变更。此处不涉及分支、提交或远端同步。"),
         ("Glass.NamingPattern", "Naming rule (regular expression)", "命名规则（正则表达式）"),
         ("Glass.Mapped", "mapped", "已映射"),
         ("Glass.Unsupported", "unsupported", "不支持"),
-        ("Glass.Failed", "failed", "失败"),
+
         ("Glass.All", "All", "全部"),
         ("Glass.Differ", "Differ", "差异"),
         ("Glass.Missing", "Missing", "缺失"),
@@ -280,7 +282,7 @@ internal static class Strings
         ("Glass.Yes", "Yes", "是"),
         ("Glass.No", "No", "否"),
         ("Glass.Protected", "Protected", "受保护"),
-        ("Glass.Identical", "Identical", "相同"),
+        ("Glass.Identical", "Identical", "一致"),
         ("Glass.Differs", "Differs", "有差异"),
         ("Glass.Unknown", "Unknown", "未知"),
         ("Glass.RuleNaming", "Naming", "命名"),
@@ -292,9 +294,9 @@ internal static class Strings
         ("Glass.CompileErrors", "Errors", "错误"),
         ("Glass.CompileWarnings", "Warnings", "警告"),
         ("Glass.CompileCompleted", "Completed", "已完成"),
-        ("Glass.BlocksSummary", "{0} blocks · {1} selected · {2} shown", "{0} 个程序块 · {1} 已选 · {2} 显示"),
-        ("Glass.WorkspaceSummary", "{0} · {1} mapped · {2} differ", "{0} · {1} 已映射 · {2} 存在差异"),
-        ("Glass.InspectionSummary", "Checked {0} blocks, found {1} issues.", "已检查 {0} 个程序块，发现 {1} 处问题。"),
+        ("Glass.BlocksSummary", "{0} blocks · {1} selected · {2} shown", "{0} 个块 · 已选 {1} · 显示 {2}"),
+        ("Glass.WorkspaceSummary", "{0} · {1} mapped · {2} differ", "{0} · {1} 已映射 · {2} 差异"),
+        ("Glass.InspectionSummary", "Checked {0} blocks, found {1} issues.", "检查 {0} 个块，发现 {1} 个问题。"),
         ("Glass.SyncPreview", "Preview: {0} objects expected to sync · {1} already identical.", "预览：{0} 个对象需要同步，{1} 个已相同。"),
         // ---- shell -----------------------------------------------------------------
         ("App.Title",                  "TIA Portal Workbench", "TIA Portal 工作台"),
@@ -317,9 +319,7 @@ internal static class Strings
         ("Toolbar.Compile",            "Compile", "编译"),
         ("Toolbar.Inspect",            "Inspect", "审查"),
         ("Toolbar.Import",             "Import…", "导入…"),
-        ("Toolbar.Save",               "Save project", "保存项目"),
-        ("Toolbar.Save.Tip",           "Write the project to disk. Cannot be undone.",
-                                       "把项目写入磁盘,此操作不可撤销。"),
+
 
         // ---- project row -----------------------------------------------------------
         ("Project.Label",              "Project", "项目"),
@@ -338,12 +338,11 @@ internal static class Strings
         ("Tab.Log",                    "Log", "日志"),
 
         // ---- blocks ----------------------------------------------------------------
-        ("Blocks.Filter",              "Filter by group path...", "按组路径筛选..."),
+
         ("Blocks.Count",               "{0} block(s)", "共 {0} 个程序块"),
         ("Blocks.Selected",            "{0} of {1} selected", "已选择 {0}/{1}"),
         ("Blocks.Empty.Title",         "No project open", "尚未打开项目"),
-        ("Blocks.Empty.Body",          "Press Connect. If TIA Portal is already running with a project open, that project is taken over and its blocks appear here — no path needed. Otherwise give a project path above and open it.",
-                                       "点击\"连接\"。如果博途已在运行并且已打开项目,会直接接管那个项目,程序块随即出现在这里——不需要填路径。否则在上方填写项目路径再打开。"),
+
         ("Blocks.ExportTo",            "Export to", "导出到"),
         ("Blocks.SourceFormat",        "Source text", "源文本"),
         ("Blocks.SourceFormat.Tip",    "Export source through the native Openness adapter. Mock mode uses synthetic source text.",
@@ -372,9 +371,7 @@ internal static class Strings
                                        "版本控制接口会把项目映射到一个文件夹,每个对象一个文本文件。可用性取决于项目和已安装的 Openness 功能。"),
         ("Col.State",                  "State", "状态"),
         ("Col.Object",                 "Object", "对象"),
-        ("Col.Format",                 "Format", "格式"),
-        ("Vc.Diff.Empty",              "Select a changed object to see what it changed. The comparison is against the files, so push first.",
-                                       "选中一个有差异的对象即可查看改动内容。比较的是文件,所以要先推送。"),
+
         ("Vc.Diff.Unchanged",          "{0}: no uncommitted change in the workspace file.",
                                        "{0}:工作区文件没有未提交的改动。"),
 

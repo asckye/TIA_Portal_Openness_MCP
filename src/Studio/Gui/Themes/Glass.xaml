@@ -199,11 +199,12 @@
       <Setter.Value>
         <ControlTemplate TargetType="CheckBox">
           <StackPanel Orientation="Horizontal">
-            <Border x:Name="Mark" Width="14" Height="14" BorderThickness="1" BorderBrush="{DynamicResource Ui.DashedBorder}" CornerRadius="7"/>
+            <Border x:Name="Mark" Width="14" Height="14" BorderThickness="1" BorderBrush="{DynamicResource Ui.DashedBorder}" CornerRadius="7"><TextBlock x:Name="CheckMark" Text="✓" FontSize="8" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/></Border>
             <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
           </StackPanel>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
               <Setter TargetName="Mark" Property="Background" Value="{DynamicResource Ui.Accent}"/>
               <Setter TargetName="Mark" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
             </Trigger>

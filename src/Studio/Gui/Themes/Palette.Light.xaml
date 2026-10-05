@@ -74,4 +74,11 @@
  <DropShadowEffect x:Key="Glass.DrawerShadow" Color="#000000" BlurRadius="60" ShadowDepth="24" Direction="270" Opacity="0.3"/>
  <DropShadowEffect x:Key="Glass.SurfaceShadow" Color="#15202B" BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.08"/>
  <DropShadowEffect x:Key="Glass.RailShadow" Color="#15202B" BlurRadius="6" ShadowDepth="2" Direction="270" Opacity="0.06"/>
+ <SolidColorBrush x:Key="Ui.DiffCardBackground" Color="#B8FFFFFF"/>
+ <SolidColorBrush x:Key="Ui.DiffText" Color="#15202B"/>
+ <SolidColorBrush x:Key="Ui.DiffMuted" Color="#5B6B7A"/>
+ <SolidColorBrush x:Key="Ui.DiffInset" Color="#0F15202B"/>
+ <SolidColorBrush x:Key="Ui.DiffGreen" Color="#3E9D62"/>
+ <SolidColorBrush x:Key="Ui.DiffRed" Color="#C25A5A"/>
+ <SolidColorBrush x:Key="Ui.BlockSelection" Color="#0F15202B"/>
 </ResourceDictionary>

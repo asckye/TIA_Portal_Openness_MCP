@@ -31,6 +31,7 @@ public sealed class StudioClient : IStudioClient
 
     public void Start(bool forceMock, string opennessVersion) => _client.Start(forceMock: forceMock, opennessVersion: opennessVersion);
     public Task<SessionState> ConnectAsync(bool withUserInterface) => _client.ConnectAsync(withUserInterface);
+    public Task<SessionState> DisconnectAsync() => _client.DisconnectAsync();
     public Task<ProjectInfo> OpenProjectAsync(string path) => _client.OpenProjectAsync(path);
     public Task SaveProjectAsync() => _client.SaveProjectAsync();
     public Task<List<DeviceInfo>> ListDevicesAsync() => _client.ListDevicesAsync();

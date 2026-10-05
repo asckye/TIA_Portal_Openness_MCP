@@ -317,6 +317,16 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         if (folder is not null) OutputDirectory = folder;
     }
 
+    internal void ClearPresentation()
+    {
+        SelectedDevice = null;
+        Devices.Clear();
+        foreach (var row in Blocks) row.PropertyChanged -= OnRowChanged;
+        Blocks.Clear();
+        BlockTree.Clear();
+        DeviceTree.Clear();
+    }
+
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
         Raise(nameof(SelectionSummary));

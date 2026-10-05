@@ -1,0 +1,105 @@
+<UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringSideView" x:Name="PageRoot">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="{Binding Tag.CompileCardHeight,ElementName=PageRoot}" />
+      <RowDefinition Height="14" />
+      <RowDefinition Height="{Binding Tag.InspectionCardHeight,ElementName=PageRoot}" />
+      <RowDefinition Height="14" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Grid>
+      <Border x:Name="CompileCard" Style="{StaticResource Glass.Card}" Padding="20,18">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="24" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <TextBlock Text="{l:Tr Toolbar.Compile}" Style="{StaticResource Glass.Heading}" />
+          <Border Style="{StaticResource Glass.Chip}" HorizontalAlignment="Right" Background="{DynamicResource Ui.ControlBackground}">
+            <TextBlock Text="{Binding ElementName=PageRoot, Path=Tag.CompileBadge}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
+          </Border>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Height="54" VerticalAlignment="Center" Visibility="{Binding Tag.HasCompile,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="{Binding ElementName=PageRoot, Path=Tag.Errors}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr Glass.Errors}" Style="{StaticResource Glass.Muted}" FontSize="12" Margin="4,0,12,0" />
+            <TextBlock Text="{Binding ElementName=PageRoot, Path=Tag.Warnings}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr Glass.Warnings}" Style="{StaticResource Glass.Muted}" FontSize="12" Margin="4,0,0,0" />
+          </StackPanel>
+          <TextBlock Grid.Row="1" Text="{l:Tr Pages.CompileHint}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,12,0,0" Visibility="{Binding Tag.HasCompile,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}" />
+          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0">
+            <ItemsControl ItemsSource="{Binding ElementName=PageRoot, Path=Tag.Diagnostics}" Margin="0,0,0,-8">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border CornerRadius="10" Background="{DynamicResource Ui.PanelBackground}" Padding="12,10" Margin="0,0,0,8">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Name}" Style="{StaticResource Glass.Text}" FontSize="11" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding Message}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+    <Grid Grid.Row="2">
+      <Border x:Name="InspectionCard" Style="{StaticResource Glass.Card}" Padding="20,18">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="28" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <TextBlock Text="{l:Tr Glass.Inspection}" Style="{StaticResource Glass.Heading}" />
+          <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.InspectionTime}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Right" />
+          <TextBlock Grid.Row="1" Text="{Binding ElementName=PageRoot, Path=Tag.InspectionDisplay}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" />
+          <ItemsControl Grid.Row="2" ItemsSource="{Binding ElementName=PageRoot, Path=Tag.Rules}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" Margin="0,0,6,6">
+                  <TextBlock Text="{Binding}" Foreground="{DynamicResource Ui.Label}" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Grid>
+      </Border>
+    </Grid>
+    <Grid Grid.Row="4">
+      <Border x:Name="BlocksLogCard" Style="{StaticResource Glass.Card}" Padding="20,18">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="28" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <TextBlock Text="{l:Tr Log.Title}" Foreground="{DynamicResource Ui.Label}" FontWeight="Bold" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Glass.Quiet}" />
+          </StackPanel>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" ScrollChanged="OnLogScrollChanged">
+            <ItemsControl ItemsSource="{Binding Tag.LogTail,ElementName=PageRoot}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="70" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Message}" ToolTip="{Binding Message}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.LogText}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -270,7 +270,7 @@ public class StringsTests(WpfContext wpf)
             {
                 Loc.Current.Language = language;
                 Assert.Equal(language == AppLanguage.English ? "Warnings" : "警告", results.CompileState);
-                Assert.Equal(language == AppLanguage.English ? "Checked 5 blocks, found 1 issues." : "已检查 5 个程序块，发现 1 处问题。", results.InspectionSummary);
+                Assert.Equal(language == AppLanguage.English ? "Checked 5 blocks, found 1 issues." : "检查 5 个块，发现 1 个问题。", results.InspectionSummary);
                 Assert.Contains(language == AppLanguage.English ? "Naming · 1" : "命名 · 1", results.Rules);
                 Assert.Equal(Loc.Current.T("Status.VcMapApplied", 3, 0, 2, 1), results.MappingSummary);
                 Assert.Equal(Loc.Current.T("Status.VcSyncApplied", 2, 1, 3), results.SyncSummary);

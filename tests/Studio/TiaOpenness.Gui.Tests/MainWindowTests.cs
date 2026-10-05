@@ -40,9 +40,9 @@ public class MainWindowTests(WpfContext wpf)
         public void Dispose() => Window.Close();
     }
 
-    private static Rendered Render()
+    private static Rendered Render(bool connected = false)
     {
-        var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
+        var window = new MainWindow(ProjectPageTestSupport.Model(connected), false);
 
         var content = (UIElement)window.Content;
         window.Content = null;
@@ -180,7 +180,12 @@ public class MainWindowTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            using var rendered = Render();
+            using var rendered = Render(connected: group == "SyncDirection");
+            if (group == "SyncDirection")
+            {
+                rendered.Window.Navigate("VersionControl");
+                Layout(rendered.Host);
+            }
             var segments = Group(rendered.Host, group);
 
             Assert.Equal(expectedSegments, segments.Count);
@@ -189,16 +194,16 @@ public class MainWindowTests(WpfContext wpf)
     }
 
     [Fact]
-    public void The_view_switch_starts_on_blocks_and_swaps_the_visible_card()
+    public void Shell_navigation_swaps_operations_blocks_and_workspace_views()
     {
         wpf.Run(() =>
         {
-            using var rendered = Render();
+            using var rendered = Render(connected: true);
             var model = (ViewModels.MainViewModel)rendered.Host.DataContext;
 
             Assert.True(model.IsBlocksTab);
 
-            model.IsVcTab = true;
+            rendered.Window.Navigate("VersionControl");
             Layout(rendered.Host);
 
             Assert.False(model.IsBlocksTab);

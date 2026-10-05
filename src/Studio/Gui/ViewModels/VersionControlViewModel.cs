@@ -308,6 +308,16 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         if (folder is not null) NewWorkspaceFolder = folder;
     }
 
+    internal void ClearPresentation()
+    {
+        SelectedVcItem = null;
+        SelectedWorkspace = null;
+        Workspaces.Clear();
+        VcStatusItems.Clear();
+        VcDiffLines.Clear();
+        VcSupported = false;
+    }
+
     private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(WorkspaceRootDisplay));
 
     public void Dispose() => Loc.Current.LanguageChanged -= OnLanguageChanged;

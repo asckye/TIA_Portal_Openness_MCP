@@ -26,7 +26,7 @@ public class ReleasePickerTests(WpfContext wpf)
                 host.Measure(new Size(1200, 780));
                 host.Arrange(new Rect(0, 0, 1200, 780));
                 host.UpdateLayout();
-                var picker = (ComboBox)window.FindName("ReleasePicker");
+                var picker = (ComboBox)ProjectPageTestSupport.Find(window, "ReleasePicker");
                 Assert.Equal(8, picker.Items.Count);
                 foreach (var release in model.Releases)
                 {

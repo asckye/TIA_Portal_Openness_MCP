@@ -31,7 +31,7 @@ public class SourceConsistencyTests(WpfContext wpf)
         new(@"Loc\.Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
         new(@"Loc\.Current\.T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetStatus\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"Guarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"\bGuarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"LocalizedText\.(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"[?:]\s*""((?:Config|Shell|Mcp)\.[\w.]+)""", RegexOptions.Compiled),

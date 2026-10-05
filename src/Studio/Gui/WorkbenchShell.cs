@@ -23,6 +23,7 @@ public partial class MainWindow
         _diagnostics = diagnostics ?? new DiagnosticBundleServiceStub();
         SettingsContent.Initialize(Approvals);
         SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;
+        OperationsContent.EnvironmentRequested += OnEnvironmentRequested;
         Approvals.PropertyChanged += OnApprovalChanged;
         _model.Session.PropertyChanged += OnShellSessionChanged;
         _model.Engineering.PropertyChanged += OnShellSessionChanged;
@@ -35,6 +36,7 @@ public partial class MainWindow
     {
         SettingsContent.Dispose();
         SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
+        OperationsContent.EnvironmentRequested -= OnEnvironmentRequested;
         Approvals.PropertyChanged -= OnApprovalChanged;
         _model.Session.PropertyChanged -= OnShellSessionChanged;
         _model.Engineering.PropertyChanged -= OnShellSessionChanged;
@@ -42,7 +44,13 @@ public partial class MainWindow
     }
 
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e) => UpdateShell();
-    private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e) { UpdateShell(); UpdateMcpStatus(); }
+    private void OnEnvironmentRequested(object? sender, EventArgs e) => NavigateGuarded("Environment");
+    private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (!HasProject && _page is "Blocks" or "VersionControl") Navigate("Engineering");
+        UpdateShell();
+        UpdateMcpStatus();
+    }
     private void OnShellLanguageChanged(object? sender, EventArgs e) => UpdateShell();
     private void UpdateShell()
     {
@@ -69,7 +77,14 @@ public partial class MainWindow
         if (page is "Blocks" or "VersionControl" && !HasProject) return;
         if (page == "Mcp") EnsureConfiguration();
         _page = page;
-        OptionsOverlay.Visibility = Visibility.Collapsed;
+        OperationsContent.HideOptions();
+        BlocksContent.HideOptions();
+        VersionControlContent.HideOptions();
+        OperationsContent.Visibility = page == "Engineering" ? Visibility.Visible : Visibility.Collapsed;
+        BlocksContent.Visibility = page == "Blocks" ? Visibility.Visible : Visibility.Collapsed;
+        EngineeringSideContent.Visibility = page is "Engineering" or "Blocks" ? Visibility.Visible : Visibility.Collapsed;
+        VersionControlContent.Visibility = page == "VersionControl" ? Visibility.Visible : Visibility.Collapsed;
+        LogContent.Visibility = page == "Log" ? Visibility.Visible : Visibility.Collapsed;
         _model.IsConfigurationPage = page == "Mcp";
         ConfigurationHost.Visibility = page == "Mcp" ? Visibility.Visible : Visibility.Collapsed;
         EngineeringPage.Visibility = page is "Engineering" or "Blocks" or "VersionControl" or "Log" ? Visibility.Visible : Visibility.Collapsed;

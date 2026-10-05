@@ -35,6 +35,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         _loadProject = loadProject;
         RunDoctor = new AsyncCommand(DoctorAsync);
         Connect = new AsyncCommand(ConnectAsync);
+        Disconnect = new AsyncCommand(DisconnectAsync, () => IsConnected && !_activity.Busy);
         OpenProject = new AsyncCommand(OpenProjectAsync, () => ProjectPath.Length > 0);
         _client.Exited += OnBridgeExited;
         _activity.PropertyChanged += OnActivityChanged;
@@ -59,6 +60,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public AsyncCommand RunDoctor { get; }
     public AsyncCommand Connect { get; }
+    public AsyncCommand Disconnect { get; }
     public AsyncCommand OpenProject { get; }
 
     /// <summary>
@@ -77,7 +79,11 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public string ProjectName { get => _projectName; private set => Set(ref _projectName, value); }
 
-    public bool IsConnected { get => _isConnected; private set => Set(ref _isConnected, value); }
+    public bool IsConnected
+    {
+        get => _isConnected;
+        private set { if (Set(ref _isConnected, value)) Disconnect.RaiseCanExecuteChanged(); }
+    }
 
     public bool UseMock
     {
@@ -128,6 +134,16 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private async Task ConnectAsync() => await _activity.Guarded("Status.Connecting", async () =>
     {
         await ConnectCoreAsync(adoptOpenProject: true);
+    });
+
+    private async Task DisconnectAsync() => await _activity.Guarded("Pages.Disconnecting", async () =>
+    {
+        await _client.DisconnectAsync();
+        IsConnected = false;
+        ProjectName = string.Empty;
+        SetOpennessVersion(null);
+        _activity.SetStatus("Status.NotConnected");
+        _activity.Append(_activity.Status);
     });
 
     /// <summary>
@@ -226,7 +242,11 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     private void OnActivityChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(WorkbenchActivity.Busy)) Raise(nameof(CanSelectRelease));
+        if (e.PropertyName == nameof(WorkbenchActivity.Busy))
+        {
+            Raise(nameof(CanSelectRelease));
+            Disconnect.RaiseCanExecuteChanged();
+        }
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)

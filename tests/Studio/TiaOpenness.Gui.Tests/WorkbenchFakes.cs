@@ -73,6 +73,7 @@ internal sealed class FakeStudioClient : IStudioClient
     }
     public Task<SessionState> ConnectAsync(bool withUserInterface) => Reply("Connect", new SessionState
         { Connected = true, OpennessVersion = "21", OpenProject = AttachedProject! }, withUserInterface);
+    public Task<SessionState> DisconnectAsync() => Reply("Disconnect", new SessionState { Connected = false });
     public Task<ProjectInfo> OpenProjectAsync(string path) => Reply("OpenProject", new ProjectInfo { Name = "Line", Path = path }, path);
     public Task SaveProjectAsync() { Record("Save"); return Task.CompletedTask; }
     public Task<List<DeviceInfo>> ListDevicesAsync() => Reply("Devices", Devices);

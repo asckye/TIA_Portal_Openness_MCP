@@ -80,7 +80,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 model.ServiceOwnsRelease = true;
                 model.SelectedReleaseKey = "21";
                 Assert.Equal("15.1", model.SelectedReleaseKey);
-                Assert.False(((ComboBox)window.FindName("ReleasePicker")).IsEnabled);
+                Assert.False(((ComboBox)ProjectPageTestSupport.Find(window, "ReleasePicker")).IsEnabled);
                 model.ServiceOwnsRelease = false;
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 

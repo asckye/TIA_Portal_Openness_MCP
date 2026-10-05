@@ -349,7 +349,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
             Assert.Equal(Loc.Current["Status.ProjectSaved"], model.Activity.Status);
             Assert.Equal(Loc.Current.T("Blocks.Selected", 1, 1), model.Engineering.SelectionSummary);
             Assert.Equal(Loc.Current["Vc.NoWorkspace"], model.VersionControl.WorkspaceRootDisplay);
-            Assert.Contains("1 已选", results.BlocksSummary);
+            Assert.Contains("已选 1", results.BlocksSummary);
             Assert.Equal(log, model.Activity.Log);
         });
     }

@@ -16,6 +16,7 @@ public interface IStudioClient : IDisposable
     event EventHandler Exited;
     void Start(bool forceMock, string opennessVersion);
     Task<SessionState> ConnectAsync(bool withUserInterface);
+    Task<SessionState> DisconnectAsync();
     Task<ProjectInfo> OpenProjectAsync(string path);
     Task SaveProjectAsync();
     Task<List<DeviceInfo>> ListDevicesAsync();

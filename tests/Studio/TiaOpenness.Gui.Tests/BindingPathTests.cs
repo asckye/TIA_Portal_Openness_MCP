@@ -113,6 +113,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 model.Activity.Append(Loc.Current.T("Log.InspectionHeader", "PLC_1"));
                 model.Activity.Append("NAMING-001 (1)");
                 model.Activity.Append(Loc.Current.T("Status.InspectResult", 1, 2));
+                window.Navigate("Blocks");
                 Layout(host);
                 var blocks = Descendants<ListBox>(host).Single(list => ReferenceEquals(list.ItemsSource, model.Engineering.BlocksView));
                 RealizeItems(host, blocks, 2);
@@ -128,7 +129,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 {
                     client.EmitProgress(new ProgressPayload { Operation = "Compile", Current = 1, Total = 2, Message = "fixture" });
                     Layout(host);
-                    var progress = Assert.Single(Descendants<ProgressBar>(host));
+                    var progress = Assert.Single(Descendants<ProgressBar>(host), bar => bar.ActualHeight > 0);
                     Assert.True(progress.ActualWidth > 0 && progress.ActualHeight > 0);
                     Assert.Equal(2, progress.Maximum);
                     Assert.Equal(1, progress.Value);
@@ -136,28 +137,25 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 finally { gate.SetResult(); Flush(); }
                 Assert.True(operation.IsCompletedSuccessfully);
 
-                foreach (string panelName in new[] { "ProjectOptions", "ExportOptions", "InspectOptions", "WorkspaceOptions" })
+                window.Navigate("Engineering");
+                var options = (TiaOpenness.Gui.Views.EngineeringOptionsView)((UserControl)window.FindName("OperationsContent")).FindName("Options");
+                foreach (string section in new[] { "Project", "Export", "Inspect", "Workspace" })
                 {
-                    // Exercise collapsed option templates too, including their enclosing overlay.
-                    var panel = Find<StackPanel>(window, panelName);
-                    for (FrameworkElement? ancestor = panel; ancestor != null && ancestor != host;
-                         ancestor = VisualTreeHelper.GetParent(ancestor) as FrameworkElement)
-                        ancestor.SetCurrentValue(UIElement.VisibilityProperty, Visibility.Visible);
-                    foreach (string other in new[] { "ProjectOptions", "ExportOptions", "InspectOptions", "WorkspaceOptions" })
-                        Find<StackPanel>(window, other).Visibility = other == panelName ? Visibility.Visible : Visibility.Collapsed;
+                    options.Show(section);
                     Layout(host);
-                    Assert.True(panel.ActualHeight > 0, panelName + " was not laid out");
+                    var panel = (StackPanel)options.FindName(section + "Options");
+                    Assert.True(panel.ActualHeight > 0);
                     RealizePickers(panel);
-                    if (panelName == "ProjectOptions")
+                    if (section == "Project")
                     {
                         var tree = Assert.Single(Descendants<TreeView>(panel));
                         ExpandTree(host, tree);
                         Assert.Contains(Descendants<TextBlock>(tree), text => text.Text.Contains("PLC_1", StringComparison.Ordinal));
                     }
                 }
-                ((FrameworkElement)VisualTreeHelper.GetParent(Find<Border>(window, "OptionsPanel"))).Visibility = Visibility.Collapsed;
+                options.Hide();
 
-                model.IsVcTab = true;
+                window.Navigate("VersionControl");
                 Layout(host);
                 RealizeItems(host, Find<ListBox>(window, "MappedList"), 2);
                 Assert.Same(model.VersionControl.SelectedVcItem, Find<ListBox>(window, "MappedList").SelectedItem);
@@ -184,7 +182,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 model.VersionControl.SelectedVcItem = null; // Also realize the no-diff explanation.
                 model.VersionControl.VcStatusItems.Clear();
                 Layout(host);
-                model.IsLogTab = true;
+                window.Navigate("Log");
                 Layout(host);
 
                 window.ShowConfiguration(false);
@@ -225,7 +223,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
     }
 
     private static T Find<T>(FrameworkElement owner, string name) where T : FrameworkElement
-        => (T)owner.FindName(name);
+        => (T)(owner is MainWindow window ? ProjectPageTestSupport.Find(window, name) : owner.FindName(name));
 
     private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {

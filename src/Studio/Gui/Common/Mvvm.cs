@@ -31,6 +31,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
 public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
 {
     private bool _running;
+    public bool IsRunning => _running;
 
     public event EventHandler? CanExecuteChanged;
 

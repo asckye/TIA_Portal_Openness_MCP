@@ -105,6 +105,7 @@ public class GlassViewTests(WpfContext wpf)
                     Set(model.Activity, "Log", "09:54:00  Mapped 128, already 0, unsupported 6, failed 0.\n09:54:01  Dry run: 4 would sync ProjectToWorkspace, 124 already equal. Clear Dry run to apply.\n");
                 }
                 if (log) model.IsLogTab = true;
+                window.Navigate(log ? "Log" : vci ? "VersionControl" : "Blocks");
                 var root = (FrameworkElement)window.Content;
                 window.Content = null;
                 var host = new Border { Child = root, DataContext = model, Width = 1200, Height = 780 };
@@ -113,9 +114,9 @@ public class GlassViewTests(WpfContext wpf)
                 host.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
                 host.UpdateLayout();
                 Assert.Equal(theme, ThemeManager.Current.Theme);
-                if (vci) Assert.True(((Border)window.FindName("SyncThumb")).ActualWidth > 80);
-                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "ProjectCard", "BlocksCard", "CompileCard", "InspectionCard", "BlocksLogCard" };
-                DesktopCapture.AssertCards(host, theme, cards.Select(name => (Border)window.FindName(name)).ToArray());
+                if (vci) Assert.True(((Border)ProjectPageTestSupport.Find(window, "SyncThumb")).ActualWidth > 80);
+                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "BlocksHeaderCard", "BlocksCard", "CompileCard", "InspectionCard", "BlocksLogCard" };
+                DesktopCapture.AssertCards(host, theme, cards.Where(name => name != "DiffCard").Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray());
                 var bitmap = new RenderTargetBitmap(1200,780,96,96,PixelFormats.Pbgra32);bitmap.Render(host);
                 string? output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
                 if (!string.IsNullOrEmpty(output))

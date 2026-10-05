@@ -103,6 +103,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(SessionViewModel.IsConnected) && !Session.IsConnected)
+        {
+            Engineering.ClearPresentation();
+            VersionControl.ClearPresentation();
+        }
         if (e.PropertyName is nameof(SelectedReleaseKey) or nameof(ServiceOwnsRelease) or nameof(CanSelectRelease))
             Raise(e.PropertyName);
     }

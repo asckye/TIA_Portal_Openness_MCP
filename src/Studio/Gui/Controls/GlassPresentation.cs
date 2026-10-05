@@ -60,6 +60,7 @@ public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
 public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 {
     private readonly MainViewModel model;
+    private int _resultLogStart;
     public GlassResults(MainViewModel model)
     {
         this.model = model;
@@ -70,12 +71,47 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         model.VersionControl.VcStatusItems.CollectionChanged += CollectionChanged;
         model.VersionControl.VcDiffLines.CollectionChanged += CollectionChanged;
         model.Engineering.BlocksView.CollectionChanged += CollectionChanged;
+        model.Engineering.Compile.CanExecuteChanged += OperationChanged;
+        model.Engineering.Inspect.CanExecuteChanged += OperationChanged;
         Loc.Current.LanguageChanged += LanguageChanged;
         Refresh();
     }
     public event PropertyChangedEventHandler? PropertyChanged;
+    public bool HasProject => model.Session.IsConnected && model.Session.ProjectName.Length > 0;
+    public bool CanConnect => !model.Busy;
+    public string MappedMeta => Loc.Current.T("Pages.MappedMeta", model.VersionControl.SelectedWorkspace?.MappedObjectCount ?? 0, model.VersionControl.VcStatusItems.Count(i => i.CompareState != VcCompareState.Equal));
+    public bool CanOperate => HasProject && !model.Busy;
+    public double OperationOpacity => HasProject ? 1 : .5;
+    public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
+    public bool HasWorkspace => model.VersionControl.SelectedWorkspace != null;
+    public double WorkspaceOpacity => HasWorkspace ? 1 : .45;
+    public double CompileCardHeight => HasCompile ? 289 : Loc.Current.Language == AppLanguage.Chinese ? 89 : 104;
+    public double InspectionCardHeight => HasInspection ? 148 : 85;
+    public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
+    public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
+    public sealed record LogRow(string Time, string Message);
+    public IReadOnlyList<LogRow> LogRows => model.Activity.Log.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))
+        .Select(line => line.TrimEnd('\r')).Select(line => line.Length > 8 && line[2] == ':' && line[5] == ':'
+            ? new LogRow(line[..8], line[8..].TrimStart()) : new LogRow("", line)).ToArray();
+    public IReadOnlyList<LogRow> LogTail => LogRows.TakeLast(12).ToArray();
+    public bool HasCompile => Errors != "—";
+    public bool HasInspection => InspectionTime.Length > 0;
+    public string ProjectKind => model.Session.UseMock ? Loc.Current["Toolbar.Mock"] : Loc.Current["Pages.RealProject"];
+    public string BlocksSubtitle => model.Session.ProjectName + " · " + model.Engineering.SelectedDevice?.Name + " · Software";
+    public string SelectedSummary => HasProject ? Loc.Current.T("Pages.Selected", model.Engineering.Blocks.Count(b => b.Selected)) : Loc.Current["Pages.NotRun"];
+    public string ReadyState => HasProject ? Loc.Current["Pages.Ready"] : Loc.Current["Pages.NeedConnection"];
+    public string CompileOperationState => OperationState(model.Engineering.Compile.IsRunning, HasCompile);
+    public string InspectionOperationState => OperationState(model.Engineering.Inspect.IsRunning, HasInspection);
+    public string EnvironmentState => Loc.Current["Pages.Ready"];
+    public string EnvironmentSummary => Loc.Current["Pages.NotRun"];
+    public string CompileSummary => HasCompile ? model.Engineering.SelectedDevice?.Name + " · " + Errors + " " + Loc.Current["Glass.Errors"] + " · " + Warnings + " " + Loc.Current["Glass.Warnings"] : Loc.Current["Pages.NotRun"];
+    public string LogCount => Loc.Current.T("Pages.LogCount", model.Activity.Log.Split('\n').Count(line => !string.IsNullOrWhiteSpace(line)));
+    private string OperationState(bool running, bool completed) => !HasProject ? Loc.Current["Pages.NeedConnection"]
+        : running ? Loc.Current["Pages.Running"]
+        : completed ? Loc.Current["Pages.Done"] : Loc.Current["Pages.Ready"];
     public string DiffAdded => "+" + model.VersionControl.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Added);
     public string DiffRemoved => "−" + model.VersionControl.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Removed);
+    public string DiffFileName => model.VersionControl.SelectedVcItem?.FilePath ?? model.VersionControl.VcDiffCaption;
     public IReadOnlyList<MappedObjectInfo> OtherMappedFiles => model.VersionControl.VcStatusItems
         .Where(i=>i!=model.VersionControl.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
     public string BlocksSummary => Loc.Current.T("Glass.BlocksSummary", model.Engineering.Blocks.Count,
@@ -101,11 +137,16 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 
     private void Changed(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(WorkbenchActivity.Log) or nameof(SessionViewModel.ProjectPath)) Refresh();
-        else if (e.PropertyName is nameof(EngineeringViewModel.SelectionSummary) or nameof(VersionControlViewModel.WorkspaceRootDisplay) or nameof(VersionControlViewModel.SelectedVcItem))
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        if (sender == model.Session && e.PropertyName == nameof(SessionViewModel.IsConnected) && !model.Session.IsConnected)
+        {
+            _resultLogStart = model.Activity.Log.Length;
+            Refresh();
+        }
+        else if (e.PropertyName is nameof(WorkbenchActivity.Log) or nameof(SessionViewModel.ProjectPath)) Refresh();
+        else PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
     private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    private void OperationChanged(object? sender, EventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void LanguageChanged(object? sender, EventArgs e) => Refresh();
 
     private static Match Outcome(string line, string key)
@@ -140,7 +181,8 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         var pendingDiagnostics = new List<Diagnostic>();
         var rules = new List<string>();
         bool inspection = false;
-        foreach (string raw in model.Activity.Log.Split('\n'))
+        if (model.Activity.Log.Length < _resultLogStart) _resultLogStart = 0;
+        foreach (string raw in model.Activity.Log[_resultLogStart..].Split('\n'))
         {
             string line = Regex.Replace(raw.TrimEnd('\r'), @"^\d{2}:\d{2}:\d{2}\s+", "");
             var compile = Outcome(line, "Status.CompileResult");
@@ -199,6 +241,8 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         model.VersionControl.VcStatusItems.CollectionChanged -= CollectionChanged;
         model.VersionControl.VcDiffLines.CollectionChanged -= CollectionChanged;
         model.Engineering.BlocksView.CollectionChanged -= CollectionChanged;
+        model.Engineering.Compile.CanExecuteChanged -= OperationChanged;
+        model.Engineering.Inspect.CanExecuteChanged -= OperationChanged;
         Loc.Current.LanguageChanged -= LanguageChanged;
     }
 }

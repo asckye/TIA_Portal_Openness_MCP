@@ -64,15 +64,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Drawer == "Settings") window.OpenSettings();
                     if (state.Drawer == "Approvals")
                         UnifiedDesktopTests.ClickControl((Button)window.FindName("PendingBadge"));
-                    var content = (FrameworkElement)window.Content;
-                    window.Content = null;
-                    var host = new Border { Child = content, DataContext = window.DataContext, Width = 1200, Height = 780 };
-                    NameScope.SetNameScope(host, NameScope.GetNameScope(window));
-                    host.Measure(new Size(1200, 780));
-                    host.Arrange(new Rect(0, 0, 1200, 780));
-                    host.UpdateLayout();
-                    window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
-                    host.UpdateLayout();
+                    var host = CreateHost(window);
                     Assert.Equal(!state.Local, ((RadioButton)window.Configuration!.FindName("RemoteNav")).IsChecked);
                     Assert.Equal(state.Local, ((RadioButton)window.Configuration.FindName("LocalNav")).IsChecked);
                     Assert.False(window.Configuration.HasRunningServer);
@@ -114,17 +106,37 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         }
                         File.WriteAllLines(Path.Combine(output, "layout.txt"), metrics);
                     }
-                    var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
-                    bitmap.Render(host);
-                    var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                    using var stream = File.Create(Path.Combine(output, state.Name + ".png"));
-                    encoder.Save(stream);
+                    SaveRender(host, Path.Combine(output, state.Name + ".png"));
                 }
                 finally { window.Close(); ThemeManager.Current.Theme = previous; }
                 Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
             });
         }
+    }
+
+    internal static Border CreateHost(MainWindow window)
+    {
+        var content = (FrameworkElement)window.Content;
+        window.Content = null;
+        var host = new Border { Child = content, DataContext = window.DataContext, Width = 1200, Height = 780 };
+        NameScope.SetNameScope(host, NameScope.GetNameScope(window));
+        foreach (System.Windows.Input.CommandBinding binding in window.CommandBindings) host.CommandBindings.Add(binding);
+        host.Measure(new Size(1200, 780));
+        host.Arrange(new Rect(0, 0, 1200, 780));
+        host.UpdateLayout();
+        window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+        host.UpdateLayout();
+        return host;
+    }
+
+    internal static void SaveRender(FrameworkElement host, string path)
+    {
+        var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(host);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(path);
+        encoder.Save(stream);
     }
 
     private sealed record RenderState(string Name, AppLanguage Language, AppTheme Theme,

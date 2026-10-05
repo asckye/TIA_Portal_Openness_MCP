@@ -36,17 +36,17 @@ public class GlassInteractionTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
-            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
             try
             {
-                var model=(MainViewModel)window.DataContext;model.IsVcTab=true;
+                var model=(MainViewModel)window.DataContext;window.Navigate("VersionControl");
                 var content=(FrameworkElement)window.Content;window.Content=null;
                 var host=new Border { Child=content, DataContext=model };
                 host.Measure(new Size(1200,780));host.Arrange(new Rect(0,0,1200,780));host.UpdateLayout();
                 var preview=Find<Button>(host).Single(b=>Equals(b.Content,"Preview sync"));
                 var run=Find<Button>(host).Single(b=>Equals(b.Content,"Run sync"));
                 Assert.Same(model.VersionControl.VcPush,preview.Command);
-                var direction=(RadioButton)window.FindName("ToWorkspace");
+                var direction=(RadioButton)ProjectPageTestSupport.Find(window, "ToWorkspace");
                 direction.IsChecked=false;host.UpdateLayout();
                 Assert.Same(model.VersionControl.VcPull,preview.Command);
                 Assert.Same(model.VersionControl.VcPull,run.Command);

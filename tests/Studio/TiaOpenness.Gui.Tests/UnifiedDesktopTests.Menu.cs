@@ -68,7 +68,7 @@ public sealed partial class UnifiedDesktopTests
                     Assert.True(WorkbenchCommands.Open.CanExecute(null, window));
                 }
                 WorkbenchCommands.Open.Execute(null, window);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("OptionsOverlay")).Visibility);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)ProjectPageTestSupport.Find(window, "OptionsOverlay")).Visibility);
                 window.OpenSettings();
                 Assert.Equal(400, ((Border)window.FindName("DrawerPanel")).Width);
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
