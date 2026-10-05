@@ -1,17 +1,19 @@
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-
-using TiaMcpServer.Siemens.Services;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcpServer.Siemens;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -19,214 +21,281 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ExportTools
     {
-        // ── 对模型暴露的分页工具 ────────────────────────────────────────────
-
-        [McpServerTool(Name = "GetExport"), Description(
-            "[L1][Exports] Read one page of a large response that was parked under an export handle. "
-            + "When a tool's response exceeds the size limit the engine stores the full text and returns "
-            + "only its head plus an 'exportId'; call this with that id to read the rest. "
-            + "Page forward by passing the 'nextOffset' from the previous page until 'eof' is true. "
-            + "Each page is a raw CHARACTER SLICE of the original text — it can cut a line or a JSON value "
-            + "in half. Concatenate every page first, THEN parse; never parse a single page on its own. "
-            + "Handles live for 24 hours and only inside the current engine session.")]
-        public ResponseMessage GetExport(
-            [Description("exportId: copy the opaque handle exactly from the truncated response; never construct it or reuse it after a worker/server restart.")] string exportId,
-            [Description("offset: character index to start at; use the previous page's nextOffset. 0 = beginning")] int offset = 0,
-            [Description("length: how many characters to return. 0 or omitted = this session's response limit.")] int length = 0)
+        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a character slice of a parked response. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its SHA-256. Handles last 24 hours in this engine session.")]
+        public CallToolResult GetExport(
+            [Description("Opaque export handle from this engine session.")] string exportId,
+            [Description("Zero-based character offset.")] int offset = 0,
+            [Description("Requested characters; 0 uses the response limit, capped at 20000.")] int length = 0)
         {
-            // 默认跟随本会话阈值，别硬编码 20000：把 TIA_MCP_MAX_RESPONSE_CHARS 调小的人，
-            // 本意就是每次少给点，硬编码等于把这个配置整个绕过去。
-            if (length <= 0)
-            {
-                int lim = ResolvedMaxResponseChars();
-                length = lim > 0 ? lim : ExportStore.MaxSliceChars;
-            }
-            var slice = ExportStore.Slice(exportId, offset, length);
-            if (slice.Error != null)
-            {
-                // 句柄不存在/已过期/被淘汰 —— 这一页取不到，而且知道为什么。
-                // 本线没有三态契约：取不到就抛，让宿主标 IsError，别返回一份空 Message
-                // 让模型误以为「这份导出是空的」。
-                throw new McpException(
-                    slice.Message ?? $"取不到句柄 {exportId}（{slice.Error}）。",
-                    McpErrorCode.InvalidParams);
-            }
-
-            return new ResponseMessage
-            {
-                Message = slice.Text,
-                Meta = new JsonObject
-                {
-                    ["ok"] = true,
-                    ["exportId"] = slice.Id,
-                    ["offset"] = slice.Offset,
-                    ["returned"] = slice.Returned,
-                    ["totalLength"] = slice.TotalLength,
-                    ["nextOffset"] = slice.NextOffset.HasValue ? JsonValue.Create(slice.NextOffset.Value) : null,
-                    ["eof"] = slice.Eof
-                }
-            };
-        }
-
-        [McpServerTool(Name = "ListExports"), Description(
-            "[L1][Exports] List the export handles currently held by this engine session — id, the tool "
-            + "that produced each one, its target, age, and total size. Use it when you have lost an "
-            + "exportId, or to check what is still available before paging.")]
-        public ResponseMessage ListExports(
-            [Description("tool: optional filter, matches part of the producing tool's name")] string? tool = null,
-            [Description("limit: maximum handles to return")] int limit = 20)
-        {
-            var items = ExportStore.List(tool, limit);
-            var arr = new JsonArray();
-            foreach (var e in items)
-            {
-                arr.Add(new JsonObject
-                {
-                    ["exportId"] = e.Id,
-                    ["tool"] = e.Tool,
-                    ["target"] = e.Target,
-                    ["createdUtc"] = e.CreatedUtc.ToString("yyyy-MM-dd HH:mm:ss") + "Z",
-                    ["totalLength"] = e.Length
-                });
-            }
-            var (count, chars) = ExportStore.Stats();
-            // 列举本身不依赖外部资源，走到这里就是列完了；空表也是一个确定的答案，不该报错。
-            return new ResponseMessage
-            {
-                Message = items.Count == 0
-                    ? "当前没有寄存的响应。"
-                    : $"寄存中 {count} 份，共 {chars} 字符；此处列出 {items.Count} 份。",
-                Meta = new JsonObject { ["ok"] = true, ["count"] = count, ["items"] = arr }
-            };
-        }
-
-        [McpServerTool(Name = "SaveExport"), Description(
-            "[L1][Exports] Write a parked response to a file in one step, instead of paging it through "
-            + "the conversation. Prefer this whenever the user wants the whole thing (a full cross-reference "
-            + "dump, a whole block list, a whole block export): it costs one call and no context. "
-            + "By default the tool's PAYLOAD is written (e.g. the CSV itself), not the JSON envelope around it — "
-            + "so saving a truncated table to 'IO.csv' really gives you a CSV you can open in Excel. "
-            + "Pass raw=true to write the untouched response text instead. "
-            + "Written as UTF-8 with BOM so Chinese opens correctly in Notepad and Excel.")]
-        public ResponseMessage SaveExport(
-            [Description("exportId: the handle from a truncated response")] string exportId,
-            [Description("outputPath: full file path to write, e.g. 'C:\\\\Temp\\\\IO表.csv'")] string outputPath,
-            [Description("raw: true = write the response text verbatim (JSON envelope included). Default false = write just the payload.")] bool raw = false,
-            [Description("overwrite: DEFAULT false — if the file already exists the call is REFUSED rather than replacing it. Pass true only after the user agreed to overwrite that specific file.")] bool overwrite = false)
-        {
+            const string tool = "GetExportContent";
+            if (offset < 0 || length < 0) return PlcExchangeContract.Reject(tool, InvalidInput("offset/length"), current: false);
             var entry = ExportStore.Get(exportId);
-            if (entry == null)
-            {
-                // 没这个句柄，文件一个字都没写。借 Slice 拿到「过期 / 被淘汰 / id 记错了」的准确说法。
-                var probe = ExportStore.Slice(exportId, 0, 1);
-                throw new McpException(
-                    probe.Message ?? $"没有句柄 {exportId}。",
-                    McpErrorCode.InvalidParams);
-            }
-            if (string.IsNullOrWhiteSpace(outputPath))
-            {
-                throw new McpException("outputPath 不能为空。", McpErrorCode.InvalidParams);
-            }
+            if (entry == null) return Missing(tool, exportId);
+            if (offset > entry.Length) return PlcExchangeContract.Reject(tool, InvalidInput("offset"), current: false);
+            if (length == 0) length = ResolvedMaxResponseChars();
+            length = length <= 0 ? ExportStore.MaxSliceChars : Math.Min(length, ExportStore.MaxSliceChars);
+            var slice = ExportStore.Slice(exportId, offset, length);
+            if (slice.Error != null) return Missing(tool, exportId);
+            return PlcExchangeContract.Result(tool, new JsonObject { ["text"] = slice.Text, ["export"] = Describe(entry) },
+                paging: OffsetPage(offset, length, slice.TotalLength));
+        }
 
+        [McpServerTool(Name = "ListExportHandles"), Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles.")]
+        public CallToolResult ListExports(string? tool = null, int limit = 20)
+        {
+            if (limit < 1) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput("limit"), current: false);
+            var matches = ExportStore.List(tool, int.MaxValue);
+            var entries = matches.Take(limit).ToArray();
+            var (count, chars) = ExportStore.Stats();
+            return PlcExchangeContract.Result("ListExportHandles", new JsonObject {
+                ["items"] = new JsonArray(entries.Select(e => (JsonNode)new JsonObject { ["export"] = Describe(e) }).ToArray()),
+                ["count"] = count, ["totalCharacters"] = chars, ["matchingCount"] = matches.Count,
+                ["returnedCount"] = entries.Length }, completeness: entries.Length < matches.Count ? Completeness.Partial : Completeness.Complete);
+        }
+
+        [McpServerTool(Name = "SaveExportContent"), Description("[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current.")]
+        public CallToolResult SaveExport(string exportId, string outputPath, bool raw = false, bool overwrite = false)
+        {
+            const string tool = "SaveExportContent";
+            var entry = ExportStore.Get(exportId);
+            if (entry == null) return Missing(tool, exportId, current: true);
+            if (string.IsNullOrWhiteSpace(outputPath)) return PlcExchangeContract.Reject(tool, InvalidInput("outputPath"));
             string full;
-            try
-            {
-                full = Path.GetFullPath(outputPath.Trim());
-            }
-            catch (Exception ex)
-            {
-                throw new McpException($"outputPath 不是一个合法路径：{ex.Message}", ex, McpErrorCode.InvalidParams);
-            }
-
-            // 不覆盖已存在的文件。这个工具不动 TIA 工程，所以看起来「只读」、门槛低；
-            // 如果它能无声覆盖任意路径，那就等于开了个写盘后门 —— 路径写成工程目录里
-            // 某个已有文件，一次调用就把它盖了。默认拒绝，要覆盖得明说。
-            if (File.Exists(full) && !overwrite)
-            {
-                // 这是按设计主动不干，但对调用方来说文件没写成，必须报错 ——
-                // 报成功会让它以为备份已经存下来了。
-                throw new McpException(
-                    $"{full} 已存在，未覆盖。换个文件名，或者在用户同意后传 overwrite=true。",
-                    McpErrorCode.InvalidParams);
-            }
-
-            // 先初始化：raw 分支不走 UnwrapPayload，out 参数不会被赋值。
+            try { full = Path.GetFullPath(outputPath.Trim()); }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)
+            { return PlcExchangeContract.Reject(tool, InvalidInput("outputPath")); }
+            if (File.Exists(full) && !overwrite) return PlcExchangeContract.Reject(tool,
+                new Error("The destination already exists.", new AlreadyExistsDetails(full)));
             bool unwrapped = false;
-            string content;
+            string content = raw ? entry.Content : Payload(entry.Content, out unwrapped);
+            bool issued = false;
             try
             {
-                var dir = Path.GetDirectoryName(full);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir!);
-
-                content = raw
-                    ? entry.Content
-                    : ResponseGuardTool.UnwrapPayload(entry.Content, out unwrapped);
+                var directory = Path.GetDirectoryName(full);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) Directory.CreateDirectory(directory!);
+                issued = true;
                 File.WriteAllText(full, content, new UTF8Encoding(true));
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
             {
-                // 写盘抛了：内容没有完整写出去。注意磁盘上可能留了个半截文件，别当它是好的。
-                throw new McpException("写文件失败：" + ex.Message, ex, McpErrorCode.InternalError);
+                var data = new JsonObject { ["export"] = Describe(entry), ["path"] = full, ["writeIssued"] = issued };
+                return issued ? PlcExchangeContract.Result(tool, data, new Error("File write outcome is unknown; inspect the destination before retrying.",
+                    new OutcomeUnknownDetails("file-write", PlcExchangeContract.Evidence(data))), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true)
+                    : PlcExchangeContract.Reject(tool, new Error("Cannot prepare the destination directory.", new IoFailedDetails("create-directory", full)), data);
             }
-
-            // WriteAllText 返回即文件已落盘，长度是写进去的那份内容的长度。
-            return new ResponseMessage
-            {
-                Message = $"已写入 {full}（{content.Length} 字符，来自 {entry.Tool}）。"
-                        + (unwrapped ? "写的是工具正文本身（已剥掉 JSON 信封）；要原文加 raw=true。" : ""),
-                Meta = new JsonObject
-                {
-                    ["ok"] = true,
-                    ["exportId"] = entry.Id,
-                    ["path"] = full,
-                    ["writtenLength"] = content.Length,
-                    ["totalLength"] = entry.Length,
-                    ["unwrapped"] = unwrapped
-                }
-            };
+            return PlcExchangeContract.Result(tool, new JsonObject { ["export"] = Describe(entry), ["path"] = full,
+                ["writtenLength"] = content.Length, ["unwrapped"] = unwrapped }, execution: Execution.Completed, current: true);
         }
 
-        [McpServerTool(Name = "DeleteExport"), Description(
-            "[L1][Exports] Drop one export handle once you are done with it. Optional — handles expire on "
-            + "their own after 24 hours and the oldest are evicted automatically when the store fills up.")]
-        public ResponseMessage DeleteExport(
-            [Description("exportId: the handle to drop")] string exportId)
+        [McpServerTool(Name = "DeleteExportHandle"), Description("[L1][Exports][WRITE] Delete one parked response from this engine session. A missing or expired handle returns NOT_FOUND.")]
+        public CallToolResult DeleteExport(string exportId)
         {
-            if (!ExportStore.Delete(exportId))
-            {
-                // 没找到时分不清是「本来就没有/已过期」还是「id 打错了」——
-                // 后一种情况下调用方真正的那个句柄还活着，报成功等于骗它。
-                throw new McpException(
-                    $"没有句柄 {exportId}（可能已过期或已删除，也可能 id 写错了）。用 ListExports 看当前还有哪些。",
-                    McpErrorCode.InvalidParams);
-            }
-            return new ResponseMessage
-            {
-                Message = $"已删除 {exportId}。",
-                Meta = new JsonObject { ["ok"] = true, ["exportId"] = exportId ?? "" }
-            };
+            var entry = ExportStore.Get(exportId);
+            if (entry == null || !ExportStore.Delete(exportId)) return Missing("DeleteExportHandle", exportId);
+            return PlcExchangeContract.Result("DeleteExportHandle", new JsonObject { ["export"] = Describe(entry) }, execution: Execution.Completed);
         }
 
-        [McpServerTool(Name = "ClearExports"), Description(
-            "[L1][Exports] Drop parked responses in bulk. NOTE: handles already expire on their own at 24h, "
-            + "so the default olderThanHours=24 almost always deletes nothing — pass olderThanHours=0 to "
-            + "actually free the store now.")]
-        public ResponseMessage ClearExports(
-            [Description("olderThanHours: drop handles at least this old; 0 drops every handle")] int olderThanHours = 24)
+        [McpServerTool(Name = "ClearExportHandles"), Description("[L1][Exports][WRITE] Delete parked responses at least olderThanHours old. Zero clears all; the default 24 generally removes none because handles expire automatically at 24 hours.")]
+        public CallToolResult ClearExports(int olderThanHours = 24)
         {
-            int n = ExportStore.Clear(olderThanHours);
+            if (olderThanHours < 0) return PlcExchangeContract.Reject("ClearExportHandles", InvalidInput("olderThanHours"), current: false);
+            int deleted = ExportStore.Clear(olderThanHours);
             var (count, chars) = ExportStore.Stats();
-            // 24h 那个默认值恒等于空操作（句柄本来就到 24h 自动过期），
-            // 不点破的话最自然的一次裸调用永远回「已删除 0 份」，调用方只会以为工具坏了。
-            string hint = (n == 0 && olderThanHours >= ExportStore.DefaultTtlHours)
-                ? $"（句柄本来就满 {ExportStore.DefaultTtlHours} 小时自动过期，所以这个默认值几乎总是删不掉东西；"
-                  + "要立刻清空传 olderThanHours=0。）" : "";
-            // 删了几份、还剩几份都是数出来的，纯内存操作，结局是确定的。
-            return new ResponseMessage
+            return PlcExchangeContract.Result("ClearExportHandles", new JsonObject { ["deleted"] = deleted,
+                ["remaining"] = count, ["remainingCharacters"] = chars }, execution: Execution.Completed);
+        }
+
+        private static CallToolResult Missing(string tool, string id, bool current = false) => PlcExchangeContract.Reject(tool,
+            new Error("Export handle is missing, expired or evicted in this engine session.", new NotFoundDetails(id)), current: current);
+        private static JsonObject Describe(ExportEntry entry)
+        {
+            using var hash = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(entry.Content);
+            return new JsonObject { ["id"] = entry.Id, ["tool"] = entry.Tool, ["target"] = entry.Target,
+                ["createdUtc"] = entry.CreatedUtc.ToUniversalTime().ToString("O"), ["totalLength"] = entry.Length,
+                ["mediaType"] = "text/plain", ["byteLength"] = (long)bytes.Length,
+                ["expiresUtc"] = entry.CreatedUtc.ToUniversalTime().AddHours(ExportStore.DefaultTtlHours).ToString("O"),
+                ["sha256"] = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant() };
+        }
+        private static string Payload(string content, out bool unwrapped)
+        {
+            try
             {
-                Message = $"已删除 {n} 份；剩余 {count} 份、共 {chars} 字符。" + hint,
-                Meta = new JsonObject { ["ok"] = true, ["deleted"] = n, ["remaining"] = count }
-            };
+                var body = JsonNode.Parse(content);
+                if (body is JsonObject obj && obj["schemaVersion"] is JsonValue version && version.TryGetValue<int>(out var number)
+                    && number == 4 && obj["data"] is JsonObject data)
+                {
+                    unwrapped = true;
+                    if (data["text"] is JsonValue text && text.TryGetValue<string>(out var value)) return value;
+                    return data.ToJsonString();
+                }
+            }
+            catch (JsonException) /* swallow(parse-fallback): plain text exports retain the existing payload extraction */ { }
+            return ResponseGuardTool.UnwrapPayload(content, out unwrapped);
+        }
+    }
+
+    // This adapter belongs only to the PLC exchange group. Native methods retain
+    // their original calls; the scoped observations record already-known stages.
+    internal static class PlcExchangeContract
+    {
+        internal sealed class Observation
+        {
+            internal int Issued, Confirmed;
+            internal bool Changed;
+            internal string Stage = "admission";
+            internal JsonObject Fields = new JsonObject();
+        }
+        private static readonly AsyncLocal<Observation?> Active = new AsyncLocal<Observation?>();
+        internal static void StartWrite(string stage)
+        { if (Active.Value is Observation value) { value.Issued++; value.Stage = stage; } }
+        internal static void ConfirmWrite()
+        { if (Active.Value is Observation value) value.Confirmed++; }
+        internal static void Changed()
+        { if (Active.Value is Observation value) value.Changed = true; }
+        internal static void Observe(string key, JsonNode? value)
+        { if (Active.Value is Observation observation) observation.Fields[key] = value?.DeepClone(); }
+
+        internal static readonly InputContract<string[]> Paths = NameListValidator.Create(new NameListPolicy(
+            minimum: 1, maximum: 500, unique: true, ignoreCase: true, budget: new InputBudget(characters: 65536)));
+        internal static InputContract<AttributeMap<Scalar>> TagProperties(string kind)
+        {
+            var fields = new Dictionary<string, AttributeRule> {
+                ["ExternalAccessible"] = new AttributeRule(InputSchema.Boolean()), ["ExternalVisible"] = new AttributeRule(InputSchema.Boolean()),
+                ["ExternalWritable"] = new AttributeRule(InputSchema.Boolean()), ["DataTypeName"] = new AttributeRule(InputSchema.String()),
+                ["Comment"] = new AttributeRule(InputSchema.String()) };
+            fields[kind == "constant" ? "Value" : "LogicalAddress"] = new AttributeRule(InputSchema.String());
+            return AttributeMapValidator.Create(fields, new InputBudget(), maximum: 50);
+        }
+
+        internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool write, bool current)
+        {
+            var previous = Active.Value;
+            var observation = new Observation(); Active.Value = observation;
+            try { return Map(tool, action(), write, current, observation); }
+            catch (Exception ex) { return Failure(tool, ex, write, current, observation); }
+            finally { Active.Value = previous; }
+        }
+        internal static async Task<CallToolResult> RunAsync<T>(string tool, Func<Task<T>> action, bool write, bool current) where T : ResponseMessage
+        {
+            var previous = Active.Value;
+            var observation = new Observation(); Active.Value = observation;
+            try { return Map(tool, await action(), write, current, observation); }
+            catch (Exception ex) { return Failure(tool, ex, write, current, observation); }
+            finally { Active.Value = previous; }
+        }
+        internal static Dictionary<string, JsonElement> Evidence(JsonObject data) => data.ToDictionary(p => p.Key,
+            p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
+        private static bool? Flag(JsonObject data, string key) => data[key] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
+        private static int Count(JsonObject data, string key) => data[key] is JsonValue value && value.TryGetValue<int>(out var count) ? count : 0;
+
+        internal static CallToolResult Map(string tool, ResponseMessage response, bool write, bool current, Observation? observation = null)
+        {
+            var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            bool? success = Flag(data, "operationSuccess") ?? Flag(data, "success");
+            var json = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
+            foreach (var pair in json.Where(p => p.Key != "meta" && p.Key != "message")) data[pair.Key] = pair.Value?.DeepClone();
+            data.Remove("timestamp"); data.Remove("success"); data.Remove("error"); // legacy error includes a stack trace
+            if (data["lastFailure"] is JsonObject lastFailure) lastFailure.Remove("error");
+            data["summary"] = response.Message;
+            if (observation != null)
+            {
+                foreach (var field in observation.Fields) data[field.Key] = field.Value?.DeepClone();
+                data["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued, ["confirmed"] = observation.Confirmed,
+                    ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage };
+            }
+            bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
+            bool unknown = observation != null && observation.Issued > observation.Confirmed
+                || (string?)data["outcome"] == "unknown" || Flag(data, "outcomeUnknown") == true
+                || write && success == null
+                || write && success != true && (Count(data, "attemptedFiles") > Count(data, "succeededFiles")
+                    || changed && (observation == null || observation.Issued == 0));
+            if (unknown) return Result(tool, data, new Error("An issued write could not be confirmed; do not replay it.", new OutcomeUnknownDetails(observation?.Stage ?? "native-call", Evidence(data))),
+                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
+            int succeeded = Count(data, "exportedBlocks") + Count(data, "succeededFiles");
+            int failed = Count(data, "skippedBlocks");
+            int skipped = Count(data, "notAttemptedFiles");
+            if ((string?)data["outcome"] == "partial" || write && (succeeded > 0 && (failed > 0 || skipped > 0 || success == false) || observation?.Changed == true && success != true))
+                return Result(tool, data, new Error("The operation has confirmed partial results.",
+                    succeeded > 0 && failed + skipped > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)),
+                    Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+            if (success == true)
+            {
+                bool incomplete = Flag(data, "dataComplete") == false || Flag(data, "complete") == false || ContainsTruncation(data);
+                bool unverified = data.ContainsKey("contentVerified") && Flag(data, "contentVerified") != true;
+                return Result(tool, data, execution: write ? Execution.Completed : Execution.ReadOnly,
+                    completeness: incomplete ? Completeness.Partial : unverified ? Completeness.Unknown : Completeness.Complete, current: current);
+            }
+            if (Flag(data, "requiresExplicitRebind") == true) return Reject(tool,
+                new Error("The session must be rebound before another operation.", new SessionResetRequiredDetails("native-session")), data, current);
+            if (!changed && new[] { "InvalidState", "InvalidParams", "NotFound", "NotSupportedOnVersion" }.Contains((string?)data["status"]))
+                return Reject(tool, StatusError(data), data, current);
+            if (Flag(data, "queried") == false || write && !changed && (observation == null || observation.Issued == 0))
+                return Reject(tool, StatusError(data), data, current);
+            return Result(tool, data, new Error("The native operation did not complete successfully.",
+                new NativeOperationFailedDetails((string?)data["status"], null, Evidence(data))), write ? Outcome.Failed : Outcome.ReadFailed,
+                write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current);
+        }
+        private static bool ContainsTruncation(JsonNode? node)
+        {
+            if (node is JsonArray array) return array.Any(ContainsTruncation);
+            if (!(node is JsonObject obj)) return false;
+            if (Flag(obj, "dataComplete") == false || Flag(obj, "groupsTruncated") == true || Count(obj, "blockCount") > (obj["blocks"] as JsonArray)?.Count
+                || Count(obj, "typeCount") > (obj["types"] as JsonArray)?.Count) return true;
+            return obj.Any(p => ContainsTruncation(p.Value));
+        }
+        private static Error StatusError(JsonObject data)
+        {
+            switch ((string?)data["status"])
+            {
+                case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
+                case "InvalidParams": return InvalidInput("arguments");
+                case "NotFound": return new Error("The exact target was not found.", new NotFoundDetails(null));
+                case "NotSupportedOnVersion": return new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, null, null));
+                default: return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
+            }
+        }
+        private static CallToolResult Failure(string tool, Exception exception, bool write, bool current, Observation observation)
+        {
+            var data = new JsonObject { ["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued,
+                ["confirmed"] = observation.Confirmed, ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage } };
+            foreach (var pair in observation.Fields) data[pair.Key] = pair.Value?.DeepClone();
+            if (observation.Issued > observation.Confirmed) return Result(tool, data,
+                new Error("An issued write outcome is unknown; inspect state before another write.", new OutcomeUnknownDetails(observation.Stage, Evidence(data))),
+                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
+            if (observation.Changed || observation.Confirmed > 0) return Result(tool, data,
+                new Error("Confirmed effects remain, but result reporting did not complete.", new PartialFailureDetails(0, 0, 0)),
+                Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+            Error? error = null;
+            for (Exception? cause = exception; cause != null; cause = cause.InnerException)
+            {
+                if (cause is PortalException portal) error = StatusError(new JsonObject { ["status"] = portal.Code.ToString() });
+                if (cause is ArgumentException) error = InvalidInput("arguments");
+                if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error = InvalidInput("arguments");
+                if (cause is NotSupportedException) error = new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
+                if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error = new Error("The input file or directory was not found.", new NotFoundDetails(null));
+            }
+            if (error != null || write) return Reject(tool, error ?? new Error("The operation was rejected before its write.", new PreconditionFailedDetails("native-exchange", null)), data, current);
+            return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),
+                Outcome.ReadFailed, Execution.ReadOnly, Completeness.None, current: current);
+        }
+        internal static CallToolResult Reject(string tool, Error error, JsonObject? data = null, bool current = true)
+            => Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
+        internal static CallToolResult Result(string tool, JsonObject? data, Error? error = null, Outcome? outcome = null,
+            Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false)
+        {
+            var warnings = new List<Warning>();
+            if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; family acceptance is pending.", new Dictionary<string, JsonElement>()));
+            if (completeness == Completeness.Partial || completeness == Completeness.Unknown) warnings.Add(new Warning(WarningCode.IncompleteData,
+                "The retained observations do not establish complete content or post-operation state.", new Dictionary<string, JsonElement>()));
+            if ((data?["warnings"] as JsonArray)?.Count > 0 || data?["warning"] != null
+                || outcome == null && (data?["failures"] as JsonArray)?.Count > 0)
+                warnings.Add(new Warning(WarningCode.NativeWarning, "Native or precheck diagnostics are retained in data.", new Dictionary<string, JsonElement>()));
+            var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome ?? Outcome.Succeeded, execution ?? Execution.ReadOnly,
+                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness ?? Completeness.Complete, paging, warnings);
+            var mapped = McpResult.From(Envelope.Create(data, error, meta));
+            return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }
     }
 }

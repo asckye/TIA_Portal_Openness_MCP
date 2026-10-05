@@ -3311,7 +3311,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ClearExports": {
+    "ClearExportHandles": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -3813,7 +3813,7 @@
         }
       ]
     },
-    "DeleteExport": {
+    "DeleteExportHandle": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -4641,24 +4641,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ExportAsDocuments": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/simatic-sd/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ExportBlocksAsDocuments": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/simatic-sd/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ExportDeviceAml": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -4769,6 +4751,15 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ExportPlcBlockDocuments": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/simatic-sd/SKILL.md"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ExportPlcBlocks": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -4777,6 +4768,15 @@
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
         "guides/skills/software-hierarchy/SKILL.md"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ExportPlcBlocksDocuments": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/simatic-sd/SKILL.md"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -5037,18 +5037,6 @@
         }
       ]
     },
-    "GetCrossReferences": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/blocks/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-        "guides/skills/software-hierarchy/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "GetDeviceAddressing": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5167,7 +5155,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "GetExport": {
+    "GetExportContent": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -5352,7 +5340,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "GetPlcExternalSources": {
+    "GetPlcCrossReferences": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
@@ -5668,15 +5656,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ImportBlocksFromDocuments": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/simatic-sd/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ImportDeviceAml": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5686,15 +5665,6 @@
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
         "guides/skills/hardware-and-modules/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ImportFromDocuments": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/simatic-sd/SKILL.md"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -5839,6 +5809,15 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ImportPlcBlockDocuments": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/simatic-sd/SKILL.md"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ImportPlcBlockVerified": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5847,6 +5826,15 @@
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
         "guides/skills/software-hierarchy/SKILL.md"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ImportPlcBlocksDocuments": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/simatic-sd/SKILL.md"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -6123,7 +6111,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ListExports": {
+    "ListExportHandles": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -6198,9 +6186,14 @@
       "manualReferences": []
     },
     "ListPlcExternalSources": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/blocks/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+        "guides/skills/software-hierarchy/SKILL.md"
+      ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -6221,6 +6214,18 @@
       "documents": [
         "guides/skills/tags-and-tagtables/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListPlcSystemGroups": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/blocks/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+        "guides/skills/software-hierarchy/SKILL.md"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -8317,18 +8322,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadPlcSystemGroups": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/blocks/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-        "guides/skills/software-hierarchy/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadPlcWebDiagnostics": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -9214,7 +9207,7 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "SaveExport": {
+    "SaveExportContent": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -9895,7 +9888,7 @@
         "scl-s7dcl"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -9907,7 +9900,7 @@
         "kop"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -9920,7 +9913,7 @@
         "fup"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -9933,7 +9926,7 @@
         "lad-scl"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -9944,7 +9937,7 @@
         "globaldb"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "BuildPlcGlobalDbXml",
         "ImportPlcBlock"
@@ -9970,7 +9963,7 @@
         "resources"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -10211,7 +10204,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10256,7 +10249,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10307,7 +10300,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10340,7 +10333,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10380,7 +10373,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10418,7 +10411,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -10453,7 +10446,7 @@
       ],
       "notes": [
         "Import into the PLC type group with the type-document tool listed by the engine.",
-        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportFromDocuments targets program blocks."
+        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportPlcBlockDocuments targets program blocks."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
@@ -13904,15 +13897,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ClearExports": {
-          "arguments": {
-            "olderThanHours": 0
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
         "CloseProject": {
           "arguments": {},
           "parameters": {},
@@ -14403,19 +14387,6 @@
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
-        "DeleteExport": {
-          "arguments": {
-            "exportId": "<exportId from response>"
-          },
-          "parameters": {
-            "exportId": {
-              "requiresBinding": true
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "DeleteHmiTag": {
           "arguments": {
@@ -15309,36 +15280,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ExportAsDocuments": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "blockPath": "Main",
-            "exportPath": "C:\\Examples\\exports"
-          },
-          "parameters": {
-            "preservePath": {
-              "exampleValue": false
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
-        "ExportBlocksAsDocuments": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "exportPath": "C:\\Examples\\exports",
-            "regexName": "FB_.*"
-          },
-          "parameters": {
-            "preservePath": {
-              "exampleValue": false
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
         "ExportDeviceAml": {
           "arguments": {
             "devicePath": "PLC_1",
@@ -15753,11 +15694,13 @@
         "GeneratePlcLoadableFile": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "objectPathsJson": "[\"Main\"]",
             "objectKind": "blocks",
             "targetOption": "<target option from the selected release>",
             "filePath": "<new absolute output file for the selected TargetOption>",
-            "dryRun": true
+            "dryRun": true,
+            "objectPaths": [
+              "Main"
+            ]
           },
           "parameters": {
             "targetOption": {
@@ -15770,9 +15713,11 @@
         "GeneratePlcSourceFromBlocks": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPathsJson": "[\"FC_Ready\"]",
             "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
-            "dryRun": true
+            "dryRun": true,
+            "blockPaths": [
+              "FC_Ready"
+            ]
           },
           "parameters": {},
           "operations": {},
@@ -15796,25 +15741,6 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
-        "GetCrossReferences": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "objectPath": "Main",
-            "objectKind": "Block",
-            "filter": "AllObjects"
-          },
-          "parameters": {
-            "unitName": {
-              "exampleValue": "Unit_1"
-            },
-            "unitKind": {
-              "exampleValue": "unit"
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "GetDeviceInfo": {
           "arguments": {
@@ -15896,23 +15822,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
-        },
-        "GetExport": {
-          "arguments": {
-            "exportId": "<exportId from response>",
-            "offset": 0
-          },
-          "parameters": {
-            "exportId": {
-              "requiresBinding": true
-            },
-            "length": {
-              "exampleValue": 0
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "GetHmiConnections": {
           "arguments": {
@@ -16044,15 +15953,6 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "blockPath": "Main"
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
-        "GetPlcExternalSources": {
-          "arguments": {
-            "softwarePath": "PLC_1"
           },
           "parameters": {},
           "operations": {},
@@ -16317,22 +16217,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ImportBlocksFromDocuments": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "groupPath": "",
-            "importPath": "C:\\Examples\\documents",
-            "regexName": ""
-          },
-          "parameters": {
-            "importOption": {
-              "exampleValue": "Override"
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
         "ImportDeviceAml": {
           "arguments": {
             "filePath": "C:\\Examples\\exports\\Device.aml",
@@ -16348,19 +16232,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
-        },
-        "ImportFromDocuments": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "groupPath": "",
-            "importPath": "C:\\Examples\\documents",
-            "fileNameWithoutExtension": "FC_Add",
-            "importOption": "Override"
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "ImportHmiConnection": {
           "arguments": {
@@ -16863,16 +16734,6 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
-        "ListExports": {
-          "arguments": {
-            "tool": "GetBlocks",
-            "limit": 10
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "ListHmiScreenPaths": {
           "arguments": {
@@ -20455,7 +20316,7 @@
             "dryRun": true
           },
           "parameters": {
-            "propertiesJson": {
+            "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             }
@@ -23816,27 +23677,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadPlcSystemGroups": {
-          "arguments": {
-            "softwarePath": "PLC_1"
-          },
-          "parameters": {
-            "unitName": {
-              "exampleValue": "Unit_1"
-            },
-            "unitKind": {
-              "exampleValue": "unit"
-            },
-            "includeBlocks": {
-              "exampleValue": true
-            },
-            "maxDepth": {
-              "exampleValue": 4
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
         "ReadPlcWebDiagnostics": {
           "arguments": {
             "host": "192.0.2.10",
@@ -24829,26 +24669,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "SaveExport": {
-          "arguments": {
-            "exportId": "<exportId from response>",
-            "outputPath": "C:\\Temp\\blocks.json"
-          },
-          "parameters": {
-            "exportId": {
-              "requiresBinding": true
-            },
-            "raw": {
-              "exampleValue": false
-            },
-            "overwrite": {
-              "exampleValue": false
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
-        },
         "SaveProject": {
           "arguments": {},
           "parameters": {},
@@ -25614,6 +25434,183 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ClearExportHandles": {
+          "arguments": {
+            "olderThanHours": 0
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "DeleteExportHandle": {
+          "arguments": {
+            "exportId": "<exportId from response>"
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ExportPlcBlockDocuments": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main",
+            "exportPath": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "preservePath": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ExportPlcBlocksDocuments": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "exportPath": "C:\\Examples\\exports",
+            "regexName": "FB_.*"
+          },
+          "parameters": {
+            "preservePath": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "GetPlcCrossReferences": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Main",
+            "objectKind": "Block",
+            "filter": "AllObjects"
+          },
+          "parameters": {
+            "unitName": {
+              "exampleValue": "Unit_1"
+            },
+            "unitKind": {
+              "exampleValue": "unit"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "GetExportContent": {
+          "arguments": {
+            "exportId": "<exportId from response>",
+            "offset": 0
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            },
+            "length": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ListPlcExternalSources": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ImportPlcBlocksDocuments": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\documents",
+            "regexName": ""
+          },
+          "parameters": {
+            "importOption": {
+              "exampleValue": "Override"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ImportPlcBlockDocuments": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\documents",
+            "fileNameWithoutExtension": "FC_Add",
+            "importOption": "Override"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ListExportHandles": {
+          "arguments": {
+            "tool": "GetBlocks",
+            "limit": 10
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ListPlcSystemGroups": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {
+            "unitName": {
+              "exampleValue": "Unit_1"
+            },
+            "unitKind": {
+              "exampleValue": "unit"
+            },
+            "includeBlocks": {
+              "exampleValue": true
+            },
+            "maxDepth": {
+              "exampleValue": 4
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "SaveExportContent": {
+          "arguments": {
+            "exportId": "<exportId from response>",
+            "outputPath": "C:\\Temp\\blocks.json"
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            },
+            "raw": {
+              "exampleValue": false
+            },
+            "overwrite": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
         }
       }
     }
@@ -25780,7 +25777,7 @@
       "validation": "Contract checked; native acceptance of this revision NOT RUN.",
       "steps": [
         {
-          "tool": "ImportFromDocuments",
+          "tool": "ImportPlcBlockDocuments",
           "arguments": {
             "softwarePath": "PLC_1",
             "groupPath": "",
@@ -26369,7 +26366,7 @@
       "topic": "large-response",
       "purpose": "Read a response that was stored because it exceeded the size limit.",
       "preconditions": "A response came back with meta.truncated=true and an exportId.",
-      "notes": "Pages are character slices: concatenate every page before parsing. SaveExport writes the whole payload to a file on the TIA machine.",
+      "notes": "Pages are character slices: concatenate every page before parsing. SaveExportContent writes the whole payload to a file on the TIA machine.",
       "releaseKeys": [
         "20",
         "21"
@@ -26379,7 +26376,7 @@
       "validation": "Contract checked; native acceptance of this revision NOT RUN.",
       "steps": [
         {
-          "tool": "GetExport",
+          "tool": "GetExportContent",
           "arguments": {
             "exportId": "<exportId>",
             "offset": 0
@@ -26387,7 +26384,7 @@
           "expect": "first page + nextOffset"
         },
         {
-          "tool": "GetExport",
+          "tool": "GetExportContent",
           "arguments": {
             "exportId": "<exportId>",
             "offset": 20000
@@ -26395,7 +26392,7 @@
           "expect": "offset = the previous page's nextOffset; repeat until eof=true"
         },
         {
-          "tool": "SaveExport",
+          "tool": "SaveExportContent",
           "arguments": {
             "exportId": "<exportId>",
             "outputPath": "C:\\Temp\\<name>.json"
@@ -26614,9 +26611,9 @@
     },
     "exportId": {
       "tools": [
-        "ListExports"
+        "ListExportHandles"
       ],
-      "meaning": "Copy the exportId returned by the original tool; GetExport pages use its nextOffset."
+      "meaning": "Copy the exportId returned by the original tool; GetExportContent pages use its nextOffset."
     }
   },
   "resultReading": {

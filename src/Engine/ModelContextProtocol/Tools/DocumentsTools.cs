@@ -1,3 +1,5 @@
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -32,7 +34,6 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        [McpServerTool(Name = "ExportAsDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer.")]
         public ResponseExportAsDocuments ExportAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: defines the path in the project structure to the block")] string blockPath,
@@ -43,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (Engineering.TiaMajorVersion < 20)
                 {
-                    throw new McpException("ExportAsDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
+                    throw new McpException("ExportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
                 if (OnlineToolPolicy.WithAutoOffline(() => _domain.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath)))
                 {
@@ -64,7 +65,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportBlocksAsDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer.")]
         public async Task<ResponseExportBlocksAsDocuments> ExportBlocksAsDocuments(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
@@ -80,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (Engineering.TiaMajorVersion < 20)
                 {
-                    throw new McpException("ExportBlocksAsDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
+                    throw new McpException("ExportPlcBlocksDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
                 // First, get the list of blocks to determine total count
                 Logger?.LogInformation($"Starting export of blocks as documents from '{softwarePath}' to '{exportPath}'");
@@ -251,7 +251,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (Meta.existsVerified / legacy verified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification.")]
         public ResponseImportFromDocuments ImportFromDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
@@ -263,7 +262,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (Engineering.TiaMajorVersion < 20)
                 {
-                    throw new McpException("ImportFromDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
+                    throw new McpException("ImportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
 
                 var option = ParseImportDocumentOption(importOption);
@@ -341,7 +340,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportBlocksFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically.")]
         public async Task<ResponseImportBlocksFromDocuments> ImportBlocksFromDocuments(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
@@ -358,7 +356,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (Engineering.TiaMajorVersion < 20)
                 {
-                    throw new McpException("ImportBlocksFromDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
+                    throw new McpException("ImportPlcBlocksDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
 
                 // Determine total by scanning .s7dcl files matching regex
@@ -491,9 +489,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 bool ok = imported != null && selected > 0 && !stopped && !responseReportingFailed && succeeded == selected;
                 string msg = stopped
-                    ? $"Document import stopped after {attempted}/{selected} selected document sets: {succeeded} reported Success, {selected - attempted} not attempted. The failed or unknown import may have changed the project; do not retry automatically. See meta.failures."
+                    ? $"Document import stopped after {attempted}/{selected} selected document sets: {succeeded} reported Success, {selected - attempted} not attempted. The failed or unknown import may have changed the project; do not retry automatically. See data.failures."
                     : responseReportingFailed
-                        ? $"Native import ended with {succeeded}/{selected} document sets reporting Success, but response readback or progress reporting failed. The project may have changed; do not retry automatically. See meta.failures."
+                        ? $"Native import ended with {succeeded}/{selected} document sets reporting Success, but response readback or progress reporting failed. The project may have changed; do not retry automatically. See data.failures."
                     : imported == null
                         ? "No document import attempted: no open project or unsupported version."
                         : selected == 0
@@ -583,5 +581,52 @@ namespace TiaMcpServer.ModelContextProtocol
         // .s7res is YAML; S7ResScanner reads its culture entries.
         private static List<string> GetResMissingEnUsIds(string directory, string baseName)
             => S7ResScanner.GetMissingEnUsIds(directory, baseName);
+
+        [McpServerTool(Name = "ExportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        public CallToolResult ExportAsDocumentsV4(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("blockPath: defines the path in the project structure to the block")] string blockPath,
+            [Description("exportPath: defines the path where to export the documents")] string exportPath,
+            [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+        {
+            return PlcExchangeContract.Run("ExportPlcBlockDocuments", () => ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath), write: true, current: true);
+        }
+
+        [McpServerTool(Name = "ExportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        public async Task<CallToolResult> ExportBlocksAsDocumentsV4(
+            IMcpServer server,
+            RequestContext<CallToolRequestParams> context,
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("exportPath: defines the path where to export the documents")] string exportPath,
+            [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "",
+            [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
+        {
+            return await PlcExchangeContract.RunAsync("ExportPlcBlocksDocuments", () => ExportBlocksAsDocuments(server, context, softwarePath, exportPath, regexName, preservePath), write: true, current: true);
+        }
+
+        [McpServerTool(Name = "ImportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        public CallToolResult ImportFromDocumentsV4(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
+            [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
+            [Description("fileNameWithoutExtension: name of the block file without extension") ] string fileNameWithoutExtension,
+            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+        {
+            return PlcExchangeContract.Run("ImportPlcBlockDocuments", () => ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, importOption), write: true, current: true);
+        }
+
+        [McpServerTool(Name = "ImportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        public async Task<CallToolResult> ImportBlocksFromDocumentsV4(
+            IMcpServer server,
+            RequestContext<CallToolRequestParams> context,
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("groupPath: optional path within the PLC program where the blocks should be placed (empty for root)")] string groupPath,
+            [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
+            [Description("regexName: name or regular expression to select block files (empty for all)")] string regexName = "",
+            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+        {
+            return await PlcExchangeContract.RunAsync("ImportPlcBlocksDocuments", () => ImportBlocksFromDocuments(server, context, softwarePath, groupPath, importPath, regexName, importOption), write: true, current: true);
+        }
+
     }
 }

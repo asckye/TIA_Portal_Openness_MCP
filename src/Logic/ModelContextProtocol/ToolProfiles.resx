@@ -593,7 +593,7 @@
       },
       {
         "name": "ClearExportHandles",
-        "currentName": "ClearExports",
+        "currentName": "ClearExportHandles",
         "sourceName": "ClearExports",
         "profiles": [
           "full",
@@ -602,7 +602,7 @@
         "arguments": {
           "olderThanHours": 0
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CloseProject",
@@ -934,7 +934,7 @@
           "name": "Example_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcTypeGroup",
@@ -1019,7 +1019,7 @@
       },
       {
         "name": "DeleteExportHandle",
-        "currentName": "DeleteExport",
+        "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
         "profiles": [
           "full",
@@ -1028,7 +1028,7 @@
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteHmiTag",
@@ -1071,7 +1071,7 @@
           "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcTagTable",
@@ -1743,7 +1743,7 @@
       },
       {
         "name": "ExportPlcBlockDocuments",
-        "currentName": "ExportAsDocuments",
+        "currentName": "ExportPlcBlockDocuments",
         "sourceName": "ExportAsDocuments",
         "profiles": [
           "full"
@@ -1753,7 +1753,7 @@
           "blockPath": "Main",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlocks",
@@ -1771,7 +1771,7 @@
       },
       {
         "name": "ExportPlcBlocksDocuments",
-        "currentName": "ExportBlocksAsDocuments",
+        "currentName": "ExportPlcBlocksDocuments",
         "sourceName": "ExportBlocksAsDocuments",
         "profiles": [
           "full"
@@ -1781,7 +1781,7 @@
           "exportPath": "C:\\Examples\\exports",
           "regexName": "FB_.*"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcProDiagInfo",
@@ -1881,7 +1881,7 @@
           "targetCulture": "zh-CN",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportSafetyPrintout",
@@ -2005,7 +2005,7 @@
           "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateErrorReport",
@@ -2061,13 +2061,15 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "objectPathsJson": "[\"Main\"]",
           "objectKind": "blocks",
           "targetOption": "&lt;target option from the selected release&gt;",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "objectPaths": [
+            "Main"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GeneratePlcSourceFromBlocks",
@@ -2078,11 +2080,13 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPathsJson": "[\"FC_Ready\"]",
           "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
-          "dryRun": true
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateSivarc",
@@ -2281,7 +2285,7 @@
       },
       {
         "name": "GetExportContent",
-        "currentName": "GetExport",
+        "currentName": "GetExportContent",
         "sourceName": "GetExport",
         "profiles": [
           "full",
@@ -2291,7 +2295,7 @@
           "exportId": "&lt;exportId from response&gt;",
           "offset": 0
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHardwareFeatures",
@@ -2548,7 +2552,7 @@
       },
       {
         "name": "GetPlcCrossReferences",
-        "currentName": "GetCrossReferences",
+        "currentName": "GetPlcCrossReferences",
         "sourceName": "GetCrossReferences",
         "profiles": [
           "full"
@@ -2559,7 +2563,7 @@
           "objectKind": "Block",
           "filter": "AllObjects"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcLiveValuesOpcUa",
@@ -3316,7 +3320,7 @@
       },
       {
         "name": "ImportPlcBlockDocuments",
-        "currentName": "ImportFromDocuments",
+        "currentName": "ImportPlcBlockDocuments",
         "sourceName": "ImportFromDocuments",
         "profiles": [
           "full"
@@ -3328,7 +3332,7 @@
           "fileNameWithoutExtension": "FC_Add",
           "importOption": "Override"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlockVerified",
@@ -3349,7 +3353,7 @@
       },
       {
         "name": "ImportPlcBlocksDocuments",
-        "currentName": "ImportBlocksFromDocuments",
+        "currentName": "ImportPlcBlocksDocuments",
         "sourceName": "ImportBlocksFromDocuments",
         "profiles": [
           "full"
@@ -3360,7 +3364,7 @@
           "importPath": "C:\\Examples\\documents",
           "regexName": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlocksFromDirectory",
@@ -3389,7 +3393,7 @@
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcProgramFromDirectory",
@@ -3475,7 +3479,7 @@
           "updateSourceLanguage": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportSinumerikAlarmTexts",
@@ -3725,7 +3729,7 @@
       },
       {
         "name": "ListExportHandles",
-        "currentName": "ListExports",
+        "currentName": "ListExportHandles",
         "sourceName": "ListExports",
         "profiles": [
           "full",
@@ -3735,7 +3739,7 @@
           "tool": "GetBlocks",
           "limit": 10
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiConnections",
@@ -3852,7 +3856,7 @@
       },
       {
         "name": "ListPlcExternalSources",
-        "currentName": "GetPlcExternalSources",
+        "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
         "profiles": [
           "full"
@@ -3860,7 +3864,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcForceTables",
@@ -3900,7 +3904,7 @@
       },
       {
         "name": "ListPlcSystemGroups",
-        "currentName": "ReadPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
         "sourceName": "ReadPlcSystemGroups",
         "profiles": [
           "full"
@@ -3908,7 +3912,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcTagTables",
@@ -4766,7 +4770,7 @@
           "dryRun": true,
           "confirmDelete": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcGitRepository",
@@ -4894,7 +4898,7 @@
           "addressOrValue": "%M0.0",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcUserGroup",
@@ -4955,7 +4959,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectUserManagement",
@@ -5798,7 +5802,7 @@
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunCapabilitySelfTest",
@@ -5978,7 +5982,7 @@
       },
       {
         "name": "SaveExportContent",
-        "currentName": "SaveExport",
+        "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
         "profiles": [
           "full",
@@ -5988,7 +5992,7 @@
           "exportId": "&lt;exportId from response&gt;",
           "outputPath": "C:\\Temp\\blocks.json"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveProject",
@@ -6586,7 +6590,7 @@
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WritePlcSimAdvancedTags",
@@ -7210,7 +7214,7 @@
       },
       {
         "name": "ClearExportHandles",
-        "currentName": "ClearExports",
+        "currentName": "ClearExportHandles",
         "sourceName": "ClearExports",
         "profiles": [
           "full",
@@ -7219,7 +7223,7 @@
         "arguments": {
           "olderThanHours": 0
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CloseProject",
@@ -7551,7 +7555,7 @@
           "name": "Example_1",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreatePlcTypeGroup",
@@ -7636,7 +7640,7 @@
       },
       {
         "name": "DeleteExportHandle",
-        "currentName": "DeleteExport",
+        "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
         "profiles": [
           "full",
@@ -7645,7 +7649,7 @@
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeleteHmiTag",
@@ -7688,7 +7692,7 @@
           "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DeletePlcTagTable",
@@ -8360,7 +8364,7 @@
       },
       {
         "name": "ExportPlcBlockDocuments",
-        "currentName": "ExportAsDocuments",
+        "currentName": "ExportPlcBlockDocuments",
         "sourceName": "ExportAsDocuments",
         "profiles": [
           "full"
@@ -8370,7 +8374,7 @@
           "blockPath": "Main",
           "exportPath": "C:\\Examples\\exports"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcBlocks",
@@ -8388,7 +8392,7 @@
       },
       {
         "name": "ExportPlcBlocksDocuments",
-        "currentName": "ExportBlocksAsDocuments",
+        "currentName": "ExportPlcBlocksDocuments",
         "sourceName": "ExportBlocksAsDocuments",
         "profiles": [
           "full"
@@ -8398,7 +8402,7 @@
           "exportPath": "C:\\Examples\\exports",
           "regexName": "FB_.*"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportPlcProDiagInfo",
@@ -8498,7 +8502,7 @@
           "targetCulture": "zh-CN",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExportSafetyPrintout",
@@ -8622,7 +8626,7 @@
           "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateErrorReport",
@@ -8678,13 +8682,15 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "objectPathsJson": "[\"Main\"]",
           "objectKind": "blocks",
           "targetOption": "&lt;target option from the selected release&gt;",
           "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "objectPaths": [
+            "Main"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GeneratePlcSourceFromBlocks",
@@ -8695,11 +8701,13 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPathsJson": "[\"FC_Ready\"]",
           "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
-          "dryRun": true
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateSivarc",
@@ -8898,7 +8906,7 @@
       },
       {
         "name": "GetExportContent",
-        "currentName": "GetExport",
+        "currentName": "GetExportContent",
         "sourceName": "GetExport",
         "profiles": [
           "full",
@@ -8908,7 +8916,7 @@
           "exportId": "&lt;exportId from response&gt;",
           "offset": 0
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHardwareFeatures",
@@ -9165,7 +9173,7 @@
       },
       {
         "name": "GetPlcCrossReferences",
-        "currentName": "GetCrossReferences",
+        "currentName": "GetPlcCrossReferences",
         "sourceName": "GetCrossReferences",
         "profiles": [
           "full"
@@ -9176,7 +9184,7 @@
           "objectKind": "Block",
           "filter": "AllObjects"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcLiveValuesOpcUa",
@@ -9933,7 +9941,7 @@
       },
       {
         "name": "ImportPlcBlockDocuments",
-        "currentName": "ImportFromDocuments",
+        "currentName": "ImportPlcBlockDocuments",
         "sourceName": "ImportFromDocuments",
         "profiles": [
           "full"
@@ -9945,7 +9953,7 @@
           "fileNameWithoutExtension": "FC_Add",
           "importOption": "Override"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlockVerified",
@@ -9966,7 +9974,7 @@
       },
       {
         "name": "ImportPlcBlocksDocuments",
-        "currentName": "ImportBlocksFromDocuments",
+        "currentName": "ImportPlcBlocksDocuments",
         "sourceName": "ImportBlocksFromDocuments",
         "profiles": [
           "full"
@@ -9977,7 +9985,7 @@
           "importPath": "C:\\Examples\\documents",
           "regexName": ""
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcBlocksFromDirectory",
@@ -10006,7 +10014,7 @@
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportPlcProgramFromDirectory",
@@ -10092,7 +10100,7 @@
           "updateSourceLanguage": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ImportSinumerikAlarmTexts",
@@ -10356,7 +10364,7 @@
       },
       {
         "name": "ListExportHandles",
-        "currentName": "ListExports",
+        "currentName": "ListExportHandles",
         "sourceName": "ListExports",
         "profiles": [
           "full",
@@ -10366,7 +10374,7 @@
           "tool": "GetBlocks",
           "limit": 10
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListHmiConnections",
@@ -10483,7 +10491,7 @@
       },
       {
         "name": "ListPlcExternalSources",
-        "currentName": "GetPlcExternalSources",
+        "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
         "profiles": [
           "full"
@@ -10491,7 +10499,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcForceTables",
@@ -10531,7 +10539,7 @@
       },
       {
         "name": "ListPlcSystemGroups",
-        "currentName": "ReadPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
         "sourceName": "ReadPlcSystemGroups",
         "profiles": [
           "full"
@@ -10539,7 +10547,7 @@
         "arguments": {
           "softwarePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListPlcTagTables",
@@ -11475,7 +11483,7 @@
           "dryRun": true,
           "confirmDelete": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcGitRepository",
@@ -11603,7 +11611,7 @@
           "addressOrValue": "%M0.0",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcUserGroup",
@@ -11664,7 +11672,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectUserManagement",
@@ -12582,7 +12590,7 @@
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunCapabilitySelfTest",
@@ -12762,7 +12770,7 @@
       },
       {
         "name": "SaveExportContent",
-        "currentName": "SaveExport",
+        "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
         "profiles": [
           "full",
@@ -12772,7 +12780,7 @@
           "exportId": "&lt;exportId from response&gt;",
           "outputPath": "C:\\Temp\\blocks.json"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveProject",
@@ -13370,7 +13378,7 @@
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "WritePlcSimAdvancedTags",

@@ -41,12 +41,12 @@ namespace TiaMcpServer.ModelContextProtocol
         //
         // 比较器必须是 OrdinalIgnoreCase，不能是 Ordinal：CallTool 的工具名映射建在
         // OrdinalIgnoreCase 上（McpServer.ToolBridge.cs 的 AllToolMethods），所以
-        // CallTool(name="getexport") 会**成功派发**到 GetExport；这里若按大小写敏感匹配
+        // CallTool(name="getexportcontent") 会**成功派发**到 GetExportContent；这里若按大小写敏感匹配
         // 就漏判，正好给分页结果再套一层句柄。
         private static readonly HashSet<string> ExportToolNames =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports"
+                "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
             };
 
         /// <summary>是不是分页工具自身。</summary>
@@ -235,12 +235,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["totalLength"] = head.TotalLength,
                 ["nextOffset"] = head.NextOffset.HasValue ? JsonValue.Create(head.NextOffset.Value) : null,
                 ["eof"] = head.Eof,
-                ["hint"] = $"这是 {toolName} 响应的前 {head.Returned} 个字符，共 {head.TotalLength} 个。"
-                         + $"**你自己要读全文**：GetExport(exportId=\"{id}\", offset={head.NextOffset}) 往后翻，"
-                         + "直到 eof=true；每页是**字符切片**，会从行或 JSON 中间断开，"
-                         + "要解析必须先把所有页拼完整再解析，别拿单页去 parse。"
-                         + $"**用户要的是文件**：SaveExport(exportId=\"{id}\", outputPath=...) 一次落盘"
-                         + "（它只回路径，不回内容，所以你自己要看的话别用它）。"
+                ["hint"] = $"This is the first {head.Returned} of {head.TotalLength} characters in the {toolName} response. "
+                         + $"Read the remaining text with GetExportContent(exportId=\"{id}\", offset={head.NextOffset}). "
+                         + "Each page is a character slice and can split a line or JSON value; concatenate all pages before parsing. "
+                         + $"To deliver a file, use SaveExportContent(exportId=\"{id}\", outputPath=...). "
+                         + "Saving returns the path, not the content."
             };
 
             var stub = new JsonObject

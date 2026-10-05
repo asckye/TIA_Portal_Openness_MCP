@@ -133,17 +133,21 @@ namespace TiaMcpServer.Siemens.Services
                             if (File.Exists(blockFiles7dclPath))
                             {
                                 File.Delete(blockFiles7dclPath);
+                                PlcExchangeContract.Changed();
                             }
                             var blockFiles7resPath = Path.Combine(exportPath, $"{blockName}.s7res");
                             if (File.Exists(blockFiles7resPath))
                             {
                                 File.Delete(blockFiles7resPath);
+                                PlcExchangeContract.Changed();
                             }
 
+                            PlcExchangeContract.StartWrite("document-export");
                             var result = Documents.ExportOptional(group, exportPath, blockName);
 
                             if (result != null && Documents.State(result) == DocumentResultState.Success)
                             {
+                                PlcExchangeContract.ConfirmWrite();
                                 success = true;
                             }
                         }
@@ -170,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
                 pex.Data["blockPath"] = blockPath;
                 pex.Data["exportPath"] = exportPath;
 
-                _session.Logger?.LogError(pex, "ExportAsDocuments failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
+                _session.Logger?.LogError(pex, "ExportPlcBlockDocuments failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
                 throw pex;
             }
             return success;
@@ -187,7 +191,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (Engineering.TiaMajorVersion < 20)
             {
-                _session.Logger?.LogWarning("ExportBlocksAsDocuments is only supported on TIA Portal V20 or newer");
+                _session.Logger?.LogWarning("ExportPlcBlocksDocuments is only supported on TIA Portal V20 or newer");
                 return null;
             }
 
@@ -247,6 +251,7 @@ namespace TiaMcpServer.Siemens.Services
                         if (File.Exists(f))
                         {
                             File.Delete(f);
+                            PlcExchangeContract.Changed();
                         }
                     }
                     catch (Exception ex)
@@ -262,6 +267,7 @@ namespace TiaMcpServer.Siemens.Services
                     DocumentExportResult? result = null;
                     try
                     {
+                        PlcExchangeContract.StartWrite("document-export");
                         result = Documents.Export(block, new DirectoryInfo(targetDir), Documents.Name(block));
                     }
                     catch (EngineeringNotSupportedException ex)
@@ -279,7 +285,7 @@ namespace TiaMcpServer.Siemens.Services
                     catch (Exception ex)
                     {
                         failures.Add($"{Documents.Name(block)}: export threw ({ex.Message})");
-                        _session.Logger?.LogError(ex, $"ExportAsDocuments failed for {Documents.Name(block)}");
+                        _session.Logger?.LogError(ex, $"ExportPlcBlockDocuments failed for {Documents.Name(block)}");
                         continue;
                     }
 
@@ -291,6 +297,7 @@ namespace TiaMcpServer.Siemens.Services
 
                     if (Documents.State(result) == DocumentResultState.Success)
                     {
+                        PlcExchangeContract.ConfirmWrite();
                         exportList.Add(block);
                     }
                     else
@@ -307,13 +314,13 @@ namespace TiaMcpServer.Siemens.Services
 
             if (failures.Count > 0)
             {
-                _session.Logger?.LogWarning($"ExportBlocksAsDocuments completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
+                _session.Logger?.LogWarning($"ExportPlcBlocksDocuments completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
                 // Optional verbose list:
 
             }
             else
             {
-                _session.Logger?.LogInformation($"ExportBlocksAsDocuments completed successfully. Exported {exportList.Count} blocks.");
+                _session.Logger?.LogInformation($"ExportPlcBlocksDocuments completed successfully. Exported {exportList.Count} blocks.");
             }
 
             LastExportAsDocumentsFailures = failures;
@@ -332,7 +339,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (Engineering.TiaMajorVersion < 20)
             {
-                _session.Logger?.LogWarning("ImportFromDocuments is only supported on TIA Portal V20 or newer");
+                _session.Logger?.LogWarning("ImportPlcBlockDocuments is only supported on TIA Portal V20 or newer");
                 return false;
             }
 
@@ -378,19 +385,20 @@ namespace TiaMcpServer.Siemens.Services
             DocumentImportResultForBlocks? result;
             try
             {
+                PlcExchangeContract.StartWrite("document-import");
                 result = InvocationJournal.Native("ImportFromDocuments.import", () => Documents.Import(Documents.Blocks(targetGroup), dir, fileNameWithoutExtension, option));
             }
             catch (EngineeringNotSupportedException ex)
             {
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, $"ImportFromDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
+                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, $"ImportPlcBlockDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
             }
             catch (EngineeringTargetInvocationException ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.", null, ex);
+                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.", null, ex);
             }
             catch (Exception ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
+                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportPlcBlockDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
             }
 
             try
@@ -398,7 +406,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                 {
                     throw new PortalException(PortalErrorCode.ImportFailed,
-                        $"ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                        $"PlcBlockComposition.ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                 }
                 try
                 {
@@ -434,6 +442,8 @@ namespace TiaMcpServer.Siemens.Services
                         }
                     }
                 }
+                PlcExchangeContract.ConfirmWrite();
+                PlcExchangeContract.Observe("nativeImportedNames", new JsonArray(LastImportedDocumentBlocks.Select(n => (JsonNode)JsonValue.Create(n)!).ToArray()));
                 return true;
             }
             catch (PortalException) { throw; }
@@ -534,6 +544,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                     LastImportFromDocumentsAttempted++;
+                    PlcExchangeContract.StartWrite("document-import");
                     result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => Documents.Import(Documents.Blocks(group), dir, name, option));
                     if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                     {
@@ -546,6 +557,7 @@ namespace TiaMcpServer.Siemens.Services
                     var blocks = EngineeringGroupOperations.Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Where(block => block != null).ToArray();
                     imported.AddRange(blocks);
                     LastImportFromDocumentsSucceeded++;
+                    PlcExchangeContract.ConfirmWrite();
                 }
                 catch (Exception ex)
                 {

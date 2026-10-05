@@ -464,11 +464,11 @@ CASES = {
         ('DescribeService', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'serviceTypeSuffix': 'ICompilable'}),
         ('InvokeService', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'serviceTypeSuffix': 'ICompilable', 'methodName': 'ToString'})],
     'Export': [
-        ('GetExport', 'missing', {'exportId': 'domain-missing'}),
-        ('ListExports', 'empty', {}),
-        ('SaveExport', 'missing', {'exportId': 'domain-missing', 'outputPath': 'unused.xml'}),
-        ('DeleteExport', 'missing', {'exportId': 'domain-missing'}),
-        ('ClearExports', 'empty', {})],
+        ('GetExportContent', 'missing', {'exportId': 'domain-missing'}),
+        ('ListExportHandles', 'empty', {}),
+        ('SaveExportContent', 'missing', {'exportId': 'domain-missing', 'outputPath': 'unused.xml'}),
+        ('DeleteExportHandle', 'missing', {'exportId': 'domain-missing'}),
+        ('ClearExportHandles', 'empty', {})],
     'EngineeringAudit': [('ReadPlcBlockScopes', 'disconnected', {'softwarePath': PLC})]
         + actions('ManagePlcBlockDocuments', 'list read export import', softwarePath=PLC),
     'EngineeringDiagnostics': [('InspectSimaticSdCompatibility', 'invalid-version', {'filePath': '', 'tiaMajor': 19}),
@@ -495,26 +495,26 @@ CASES = {
         # These two batch exporters return a variable elapsed duration even without a project.
         # Exercise their exact-name dispatch refusal without expanding the byte-mask allowlist.
         ('ExportPlcTypes', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'})],
-    'Documents': [('ExportAsDocuments', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'exportPath': 'C:/domain-offline'}),
-        ('ExportBlocksAsDocuments', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'}),
-        ('ImportFromDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'fileNameWithoutExtension': 'Block1', 'importOption': 'invalid'}),
-        ('ImportBlocksFromDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'importOption': 'invalid'})],
-    'PlcExternalSources': [('GetCrossReferences', 'policy-refusal', {'softwarePath': PLC, 'objectPath': 'Block1'}),
-        ('GetPlcExternalSources', 'read', {'softwarePath': PLC}),
+    'Documents': [('ExportPlcBlockDocuments', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'exportPath': 'C:/domain-offline'}),
+        ('ExportPlcBlocksDocuments', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'}),
+        ('ImportPlcBlockDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'fileNameWithoutExtension': 'Block1', 'importOption': 'invalid'}),
+        ('ImportPlcBlocksDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'importOption': 'invalid'})],
+    'PlcExternalSources': [('GetPlcCrossReferences', 'policy-refusal', {'softwarePath': PLC, 'objectPath': 'Block1'}),
+        ('ListPlcExternalSources', 'read', {'softwarePath': PLC}),
         ('WritePlcSclSourceFile', 'empty-source', {'sclContent': ''}),
         ('ImportPlcExternalSource', 'import', {'softwarePath': PLC, 'groupPath': '', 'filePath': 'C:/domain-offline.scl'}),
         ('DeletePlcExternalSource', 'delete', {'softwarePath': PLC, 'externalSourceName': 'Source1'}),
         ('GenerateBlocksFromExternalSource', 'generate', {'softwarePath': PLC, 'externalSourceName': 'Source1'})]
         + actions('ManagePlcExternalSources', 'list read createGroup deleteGroup createFromFile createFromMasterCopy delete generateBlocks',
                   softwarePath=PLC, name='Source1', filePath='C:/domain-offline.scl')
-        + [('ReadPlcSystemGroups', 'read', {'softwarePath': PLC})],
+        + [('ListPlcSystemGroups', 'read', {'softwarePath': PLC})],
     'PlcDocumentation': [('RenderPlcBlockDocument', 'missing-input', {}),
         ('GeneratePlcDocumentation', 'missing-output', {'directory': '', 'outputPath': ''}),
         ('LintPlcSclSource', 'lint', {'sourceText': 'FUNCTION Test : Void\nBEGIN\nEND_FUNCTION'})],
     'NativeExchange': actions('ManageProjectLanguage', 'read activate deactivate setEditing setReference', culture='en-US')
         + [('CreatePlcInstanceDb', 'preview', {'softwarePath': PLC, 'fbPath': 'FB1', 'name': 'DB1'}),
-           ('GeneratePlcSourceFromBlocks', 'preview', {'softwarePath': PLC, 'blockPathsJson': '["Block1"]', 'filePath': 'C:/domain-offline.scl'}),
-           ('GeneratePlcLoadableFile', 'preview', {'softwarePath': PLC, 'objectPathsJson': '["Block1"]', 'objectKind': 'blocks', 'targetOption': '', 'filePath': 'C:/domain-offline.bin'}),
+           ('GeneratePlcSourceFromBlocks', 'preview', {'softwarePath': PLC, 'blockPaths': ['Block1'], 'filePath': 'C:/domain-offline.scl'}),
+           ('GeneratePlcLoadableFile', 'preview', {'softwarePath': PLC, 'objectPaths': ['Block1'], 'objectKind': 'blocks', 'targetOption': '', 'filePath': 'C:/domain-offline.bin'}),
            ('RetrieveProjectArchive', 'preview', {'archivePath': 'C:/domain-offline.zap21', 'destinationDirectory': 'C:/domain-offline'}),
            ('ExportProjectTexts', 'preview', {'filePath': 'C:/domain-offline.xlsx', 'sourceCulture': 'en-US', 'targetCulture': 'de-DE'}),
            ('ImportProjectTexts', 'preview', {'filePath': 'C:/domain-offline.xlsx', 'updateSourceLanguage': False})]
@@ -1087,8 +1087,6 @@ SOFTWARE_REPLY_MARKERS = {
     **{name: 'not found' for name in ('DescribeObjectProperty', 'DescribeObject', 'ListObjectChildren',
                                     'InvokeObject', 'DescribeService', 'InvokeService')},
     'GetObjectProperty': 'Null',
-    'GetExport': 'domain-missing', 'SaveExport': 'domain-missing', 'DeleteExport': 'domain-missing',
-    'ListExports': '当前没有寄存的响应', 'ClearExports': '0',
     'InspectSimaticSdCompatibility': ("An error occurred invoking 'InspectSimaticSdCompatibility'", 'tiaMajor must be 20/21'),
     'ReadOpennessCompatibility': 'installedPatch', 'ReadNativeInvocationLog': 'take',
     **{name: 'InvalidParams' for name in ('ComparePlcBlockDocuments', 'ScanPlcSourceAnnotations', 'ExtractPlcBlockMetrics')},
@@ -1124,14 +1122,9 @@ def software_reply(reply, profile, name):
 SOURCE_TOOL_GUARDS = {
     'GetPlcTypeInfo': 'Type not found', 'ListPlcTypes': 'No TIA project is open',
     'ExportPlcType': 'No project is open', 'ImportPlcType': 'No project is open',
-    'SeedProjectFromReference': 'Project is null', 'ExportAsDocuments': 'No project is open',
-    'ImportFromDocuments': 'Invalid importOption', 'ImportBlocksFromDocuments': 'Invalid importOption',
-    'GetCrossReferences': 'notQueried', 'GetPlcExternalSources': 'PLC software not found',
-    'WritePlcSclSourceFile': 'sclContent is empty', 'ImportPlcExternalSource': 'project is null',
-    'DeletePlcExternalSource': 'project is null', 'GenerateBlocksFromExternalSource': 'project is null',
+    'SeedProjectFromReference': 'Project is null',
     'RenderPlcBlockDocument': 'Exactly one of filePath or blockPath',
-    'GeneratePlcDocumentation': 'Absolute output file path required', 'LintPlcSclSource': 'findingCount',
-    'RetrieveProjectArchive': 'Connect to TIA first.'
+    'GeneratePlcDocumentation': 'Absolute output file path required', 'LintPlcSclSource': 'findingCount'
 }
 
 
@@ -1144,10 +1137,7 @@ def source_reply(reply, profile, name, case):
     if case == 'duplicate-argument':
         resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
         return raw
-    throwing = name in {'GetPlcTypeInfo', 'ListPlcTypes', 'ExportPlcType', 'ImportPlcType', 'ExportAsDocuments',
-                       'ImportFromDocuments', 'ImportBlocksFromDocuments', 'GetPlcExternalSources',
-                       'WritePlcSclSourceFile', 'ImportPlcExternalSource', 'DeletePlcExternalSource',
-                       'GenerateBlocksFromExternalSource'}
+    throwing = name in {'GetPlcTypeInfo', 'ListPlcTypes', 'ExportPlcType', 'ImportPlcType'}
     if profile == 'lite':
         bridge = json.loads(raw)
         resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
@@ -1157,11 +1147,6 @@ def source_reply(reply, profile, name, case):
         resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
     marker = SOURCE_TOOL_GUARDS.get(name, 'Project is null')
     resources.require(marker in raw, f'{name}/{case}: missing expected offline outcome {marker!r}: {raw}')
-    if name == 'ExportAsDocuments':
-        # This legacy MCP exception embeds ex.ToString() in plain error text.
-        # Put it in the comparison envelope so the same D1 frame-only rule applies;
-        # the first line, non-frame details and preflight suffix remain contractual.
-        return json.dumps({'meta': {'error': raw}}, ensure_ascii=False)
     return raw
 
 
@@ -1256,6 +1241,30 @@ def hmi_reply(reply, profile, name):
 
 
 
+PLC_EXCHANGE_DOMAINS = ('Documents', 'PlcExternalSources', 'NativeExchange', 'Export')
+
+
+def plc_exchange_reply(reply, name):
+    result = reply['result']
+    resources.require(len(result['content']) == 1, f'{name}: expected one text envelope')
+    raw = result['content'][0]['text']
+    body = json.loads(raw)
+    resources.require(body.get('schemaVersion') == 4 and result.get('structuredContent') == body,
+                      f'{name}: inconsistent V4 envelope: {reply}')
+    resources.require(bool(result.get('isError')) is not body['ok'], f'{name}: inconsistent error verdict: {reply}')
+    expected_success = name in ('ListExportHandles', 'ClearExportHandles')
+    resources.require(body['ok'] is expected_success, f'{name}: unexpected offline outcome: {reply}')
+    if expected_success:
+        resources.require(body['meta']['outcome'] == 'succeeded', raw)
+    elif name in ('ListPlcExternalSources', 'RetrieveProjectArchive'):
+        resources.require(body['meta']['outcome'] == 'read-failed'
+                          and body['meta']['execution'] == 'read-only' and body['error'] is not None, raw)
+    else:
+        resources.require(body['meta']['outcome'] == 'rejected-before-operation'
+                          and body['meta']['execution'] == 'not-started' and body['error'] is not None, raw)
+    return raw
+
+
 def check_coverage(domains):
     from engine_sources import EngineSources
     sources = EngineSources()
@@ -1304,7 +1313,8 @@ def capture(args, exe, harness, profile, isolated):
                 if profile == 'full':
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
-                    'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
+                    'name': 'CallTool', 'arguments': {'name': name.lower(), **({'arguments': arguments}
+                        if domain in PLC_EXCHANGE_DOMAINS else {'argumentsJson': json.dumps(arguments)})}}
                 if domain in ('Devices', 'HardwareManagement', 'HardwareAml', 'Modules', 'Addresses') and profile == 'lite':
                     params = {'name': 'CallTool', 'arguments': {'name': name, 'arguments': arguments}}
                 reply = rpc('tools/call', params=params)
@@ -1323,6 +1333,11 @@ def capture(args, exe, harness, profile, isolated):
                     reached_child = True
                     # Reuse the existing V4 envelope-only timestamp/requestId mask.
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, 'CallTool').encode('utf-8')
+                    continue
+                if domain in PLC_EXCHANGE_DOMAINS:
+                    raw = plc_exchange_reply(reply, name)
+                    reached_child |= case != 'duplicate-argument'
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
                 if domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced'):
                     raw = runtime_reply(reply, profile, name, case)
@@ -1649,15 +1664,16 @@ class SelfTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             source_reply(reply, 'full', 'GetPlcTypeInfo', 'read')
 
-    def test_document_plain_error_uses_only_d1_frame_mask(self):
-        def response(text):
-            reply = {'result': {'isError': True, 'content': [{'text': text}]}}
-            return mask_error_frames(source_reply(reply, 'full', 'ExportAsDocuments', 'export'))
-        before = 'No project is open\n   at Portal.Export()\npreflight: unchanged'
-        after = 'No project is open\n   at Service.Export()\npreflight: unchanged'
-        self.assertEqual(response(before), response(after))
-        self.assertNotEqual(response(before), response(after.replace('unchanged', 'changed')))
-        self.assertNotEqual(response(before), response(after.replace('open', 'open!')))
+    def test_document_refusal_preserves_the_v4_error_verdict(self):
+        body = {'schemaVersion': 4, 'ok': False, 'error': {'code': 'PRECONDITION_FAILED'},
+                'meta': {'outcome': 'rejected-before-operation', 'execution': 'not-started'}}
+        raw = json.dumps(body)
+        reply = {'result': {'isError': True, 'content': [{'text': raw}], 'structuredContent': body}}
+        self.assertEqual(plc_exchange_reply(reply, 'ExportPlcBlockDocuments'), raw)
+        reply['result']['isError'] = False
+        with self.assertRaises(AssertionError):
+            plc_exchange_reply(reply, 'ExportPlcBlockDocuments')
+
     def test_unified_nested_timestamp_mask_is_narrow(self):
         raw = '{"meta":{"setMeta":{"timestamp":"2026-10-03T12:34:56+08:00"},"other":"2026-10-03T12:34:56+08:00"}}'
         masked = snapshots.mask_raw_text(raw, 'EnsureUnifiedHmiButtonAction')

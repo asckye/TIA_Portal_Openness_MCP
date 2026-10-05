@@ -8,10 +8,15 @@ ROOT = Path(__file__).resolve().parents[2]
 sources = EngineSources()
 SINGLE = sources.member('ImportFromDocuments', signature='bool ImportFromDocuments')
 BATCH = sources.member('ImportBlocksFromDocuments', signature='IEnumerable<PlcBlock>')
-MCP = sources.member('ImportBlocksFromDocuments', tool=True)
+MCP = sources.member('ImportBlocksFromDocuments', signature='Task<ResponseImportBlocksFromDocuments>')
+V4_MCP = sources.member('ImportBlocksFromDocumentsV4', tool=True)
 PRIMITIVES = (ROOT / 'src/Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
 
 class DocumentImportSafetySources(unittest.TestCase):
+    def test_v4_boundary_keeps_the_existing_native_and_reporting_path(self):
+        self.assertIn('PlcExchangeContract.RunAsync("ImportPlcBlocksDocuments"', V4_MCP)
+        self.assertIn('ImportBlocksFromDocuments(server, context, softwarePath, groupPath, importPath, regexName, importOption)', V4_MCP)
+
     def test_shared_primitives_keep_each_native_operation_and_argument(self):
         for declaration in (
             'public static PlcBlockSystemGroup BlockGroup(PlcSoftware software) => software.BlockGroup;',

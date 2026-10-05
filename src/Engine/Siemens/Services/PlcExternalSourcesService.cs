@@ -72,7 +72,11 @@ namespace TiaMcpServer.Siemens.Services
             if (Documents.Software(softwareContainer) is not PlcSoftware plcSoftware) return null;
 
             var sources = TryGetExternalSourcesCollection(plcSoftware);
-            if (sources == null) return new List<string>();
+            if (sources == null)
+            {
+                PlcExchangeContract.Observe("complete", JsonValue.Create(false));
+                return new List<string>();
+            }
 
             var names = new List<string>();
             foreach (var item in sources)
@@ -116,7 +120,9 @@ namespace TiaMcpServer.Siemens.Services
                     var del = item.GetType().GetMethod("Delete", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
                     if (del != null)
                     {
+                        PlcExchangeContract.StartWrite("external-source-delete");
                         del.Invoke(item, null);
+                        PlcExchangeContract.ConfirmWrite();
                         return;
                     }
 
@@ -154,8 +160,10 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 // Official V20/V21 signature: source name, then the full source file path.
+                PlcExchangeContract.StartWrite("external-source-import");
                 var source = Documents.CreateFromFile(Documents.Sources(target), fi.Name, fi.FullName);
                 if (source == null) throw new InvalidOperationException("CreateFromFile returned no source.");
+                PlcExchangeContract.ConfirmWrite();
             }
             catch (Exception ex)
             {
@@ -208,7 +216,12 @@ namespace TiaMcpServer.Siemens.Services
             if (source == null) throw new PortalException(PortalErrorCode.OpennessError, "Expected a public PLC external source.");
             try
             {
+                PlcExchangeContract.StartWrite("external-source-generation");
                 Documents.Generate(source);
+                PlcExchangeContract.ConfirmWrite();
+                PlcExchangeContract.Observe("nativeResult", null);
+                PlcExchangeContract.Observe("observation", new JsonObject { ["source"] = "native-call-returned", ["contentVerified"] = false });
+                PlcExchangeContract.Observe("contentVerified", null);
             }
             catch (Exception ex)
             {
@@ -405,7 +418,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         public ResponseMessage ReadPlcSystemGroups(string softwarePath, string unitName = "", string unitKind = "unit", bool includeBlocks = true, int maxDepth = 4)
-            => _session.RunHmiStepTool("ReadPlcSystemGroups", meta => {
+            => _session.RunHmiStepTool("ListPlcSystemGroups", meta => {
                 ExternalSourceRules.ValidateSystemGroupRequest(unitName, unitKind, maxDepth);
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);

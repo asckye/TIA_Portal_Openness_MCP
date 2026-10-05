@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Starts("Download", "Upload", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags", "WritePlcSimAdvanced", "ManagePlcSimAdvanced")) return ("ONLINE-WRITE", true);
             if (Starts("GoOnline", "GoOffline", "ScanAccessible") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
             if (Starts("Build", "Compose", "Plan", "Analyze", "Compare", "Scan", "Extract", "Render", "Lint")) return ("OFFLINE", true);
-            if (Starts("Export", "Archive", "Write", "Generate", "Save", "Rebuild", "GetExport", "ListExports", "ClearExports", "DeleteExport")) return ("FILE", true);
+            if (Starts("Export", "Archive", "Write", "Generate", "Save", "Rebuild", "GetExportContent", "ListExportHandles", "ClearExportHandles", "DeleteExportHandle")) return ("FILE", true);
             if (Starts("Import", "Ensure", "Apply", "Create", "Set", "Update", "Manage", "Delete", "Remove", "Add", "Plug", "Bind", "Rename", "Move", "Copy", "Assign", "Protect", "Release", "Exchange", "Configure", "Retrieve", "Sync", "Clear", "Invoke", "Migrate", "Restore", "Register", "Normalize", "Enable", "Disable", "Attach", "PlcBuild", "Repair", "Connect", "Seed", "Scaffold")) return ("WRITE", true);
             if (Starts("Get", "List", "Read", "Describe", "Probe", "Validate", "Check", "Dump", "Inspect", "Find", "Search", "Preview", "Resolve", "Diff", "Verify", "Count", "Enumerate", "Show", "Query", "Fetch", "Is", "Has", "Lookup", "Match", "Test", "Audit", "Trace")) return ("READ", true);
             return ("UNSPECIFIED", true);

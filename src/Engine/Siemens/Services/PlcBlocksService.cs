@@ -353,11 +353,11 @@ namespace TiaMcpServer.Siemens.Services
                 result["crossReferenceCount"] = null;
                 result["crossReferences"] = null;
                 if (!crossReferences)
-                warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
-                    + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
-                    + "优先用导出文档做离线分析；原生诊断还需显式启用服务器进程开关，编译也不能保证不崩溃。");
-                else warnings.Add("Cross references are unavailable (" + (crossRefReason ?? "unknown reason") + "). This does not establish that the block has no callers. "
-                    + "Use ExportAsDocuments to back up before deletion and CompilePlcSoftware to check errors afterwards.");
+                warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
+                    + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
+                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
+                else warnings.Add("Block cross references are unavailable (" + (crossRefReason ?? "unknown reason") + "); this does not establish that the block has no callers. "
+                    + "Back up with ExportPlcBlockDocuments before deletion, then run CompilePlcSoftware and inspect errors.");
             }
             result["warnings"] = warnings;
 
@@ -490,12 +490,12 @@ namespace TiaMcpServer.Siemens.Services
                 result["crossReferences"] = null;
                 result["crossReferenceCount"] = null;
                 if (!crossReferences)
-                warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
-                    + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
-                    + "优先用导出文档做离线分析；原生诊断还需显式启用服务器进程开关，编译也不能保证不崩溃。");
-                else warnings.Add("⚠️ 没有查到这张表的交叉引用（原因见 crossReferenceUnavailableReason）。"
-                    + "这**不等于**没人引用它。要确认，请先 ExportPlcTagTable 备份，"
-                    + "再对可能用到这些符号的块逐个 GetCrossReferences，或在 TIA 里手工看交叉引用。");
+                warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
+                    + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
+                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
+                else warnings.Add("Table cross references are unavailable; see crossReferenceUnavailableReason. "
+                    + "This does not establish that there are no references. Back up with ExportPlcTagTable, "
+                    + "then use GetPlcCrossReferences for blocks that may use these symbols, or inspect references manually in TIA.");
             }
 
             result["warnings"] = warnings;
@@ -592,9 +592,9 @@ namespace TiaMcpServer.Siemens.Services
                 result["crossReferenceCount"] = null;
                 result["crossReferences"] = null;
                 if (!crossReferences)
-                warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
-                    + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
-                    + "优先用导出文档做离线分析；原生诊断还需显式启用服务器进程开关，编译也不能保证不崩溃。");
+                warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
+                    + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
+                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
                 else warnings.Add("⚠️ 取不到这个 UDT 的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人用它。"
                     + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }

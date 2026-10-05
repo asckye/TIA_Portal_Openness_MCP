@@ -194,7 +194,7 @@ Use the ExportPlcTypes tool with:
 
 Note: importing LAD blocks requires the .s7res to contain en-US tags for all items.
 
-Use the ExportBlocksAsDocuments tool with:
+Use the ExportPlcBlocksDocuments tool with:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}
 - regexName: {regexName}
@@ -240,7 +240,7 @@ Use the ExportBlocksAsDocuments tool with:
 
 Note: importing LAD blocks requires the .s7res to contain en-US tags.
 
-Use the ImportFromDocuments tool with:
+Use the ImportPlcBlockDocuments tool with:
 - softwarePath: {softwarePath}
 - groupPath: {groupPath}
 - importPath: {importPath}
@@ -255,7 +255,7 @@ Use the ImportFromDocuments tool with:
 
 Note: importing LAD blocks requires the .s7res to contain en-US tags.
 
-Use the ImportBlocksFromDocuments tool with:
+Use the ImportPlcBlocksDocuments tool with:
 - softwarePath: {softwarePath}
 - groupPath: {groupPath}
 - importPath: {importPath}

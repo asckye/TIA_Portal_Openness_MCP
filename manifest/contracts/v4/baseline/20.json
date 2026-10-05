@@ -7,7 +7,7 @@
     "BuildPlcTagTableXml",
     "BuildPlcUdtXml",
     "CallTool",
-    "ClearExports",
+    "ClearExportHandles",
     "CloseProject",
     "CompileAndDiagnoseHmi",
     "CompilePlcDiagnostics",
@@ -15,7 +15,7 @@
     "ConnectToProject",
     "CreateHardwareDevice",
     "CreateProject",
-    "DeleteExport",
+    "DeleteExportHandle",
     "DescribeHmiScreen",
     "Disconnect",
     "Doctor",
@@ -25,7 +25,7 @@
     "FindTools",
     "GenerateBlocksFromExternalSource",
     "GenerateErrorReport",
-    "GetExport",
+    "GetExportContent",
     "GetHmiScreens",
     "GetHmiTagTables",
     "GetHmiTags",
@@ -43,7 +43,7 @@
     "ImportPlcTagTable",
     "ImportPlcType",
     "ListDevices",
-    "ListExports",
+    "ListExportHandles",
     "ListPlcBlocks",
     "ListPlcTagTables",
     "ListPlcTypes",
@@ -54,7 +54,7 @@
     "PreviewToolCall",
     "ReadOpennessWorkerStatus",
     "RestartOpennessWorker",
-    "SaveExport",
+    "SaveExportContent",
     "SaveProject",
     "SearchHardwareCatalog",
     "ValidateAutomationContext",
@@ -731,7 +731,7 @@
       "name": "BuildDeviceAmlDocument"
     },
     {
-      "descriptionSha256": "f7515e9cf921ef55c372270db0b5aaff1fe318d1c2dbaf328cae9a46e3d3e3ae",
+      "descriptionSha256": "d283e7d7ede8eadb8a38966243a218d29f59b4c918cbd201d55d8faa6fe6047f",
       "inputSchema": {
         "properties": {
           "flgNetJson": {
@@ -1100,12 +1100,12 @@
       "name": "CheckLibraryUpdates"
     },
     {
-      "descriptionSha256": "ad9676ecf4429cc6047a0c1f0bb77aa87815bd2b1583c398d56954d7ca30141b",
+      "descriptionSha256": "82bea17e6e906cc6074a9e1438c6c77a553da7d73c5563722ba194c2c78a3018",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "olderThanHours": {
             "default": 24,
-            "description": "olderThanHours: drop handles at least this old; 0 drops every handle",
             "examples": [
               0
             ],
@@ -1114,7 +1114,7 @@
         },
         "type": "object"
       },
-      "name": "ClearExports"
+      "name": "ClearExportHandles"
     },
     {
       "descriptionSha256": "7138565d918d10be4f31b95fed3721ac5c1e3bb63b7cb46880eadfb43f8a59e7",
@@ -1567,7 +1567,7 @@
       "name": "ComposePlcFcBlockXml"
     },
     {
-      "descriptionSha256": "1efb8a6c0c662911e2e329169bc4b5d522fe7e9b1b0823abf6b65297afa14b9c",
+      "descriptionSha256": "228590673e2c68fea32e50d38771901bcfa125619823934a4484116b79c43843",
       "inputSchema": {
         "properties": {
           "ladFcBlockJson": {
@@ -1978,8 +1978,9 @@
       "name": "CreatePlcBlockGroup"
     },
     {
-      "descriptionSha256": "8a288fb81a9c112e2022cc018d9207d020a5cb58c6fcf71b004dbd7f6c2e749b",
+      "descriptionSha256": "633ca5f2c98f465c45dfc75106dd570ee217ec468eb86e190b78b28350675761",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "autoNumber": {
             "default": true,
@@ -2178,11 +2179,11 @@
       "name": "DeleteEmptyUnifiedHmiScreenGroup"
     },
     {
-      "descriptionSha256": "501a60f1d1ecf3be78ec9dc583921aee991895ed9b96e109d5f2ef546831d907",
+      "descriptionSha256": "3ed396262d29cefd557b866c3bf3b64a2e1e31575b88b72fd26fe3a2a0180619",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportId": {
-            "description": "exportId: the handle to drop",
             "examples": [
               "<exportId from response>"
             ],
@@ -2194,7 +2195,7 @@
         ],
         "type": "object"
       },
-      "name": "DeleteExport"
+      "name": "DeleteExportHandle"
     },
     {
       "descriptionSha256": "a6598796612f39b086ab898a0f247128942713a2ce686a46127a1e5bcbfb83aa",
@@ -2239,7 +2240,7 @@
       "name": "DeleteHmiTag"
     },
     {
-      "descriptionSha256": "39233d30a238280ccb4729283fb6a13dc5342d3e3abf93f04acd1f41e9ae3303",
+      "descriptionSha256": "2e1ef24e5f3e9055cb2b936a4a4eefc740a29ccdbe7587284f2591ac77e32c34",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -2271,11 +2272,12 @@
       "name": "DeletePlcBlock"
     },
     {
-      "descriptionSha256": "b93f7b69e45d0f69d5d3a616947c28c140e60338301c51ce1e63ea6b9303b141",
+      "descriptionSha256": "e97b046fc3c11e0be3bd2a463ae8550f285dd807e8ebb0bdddda785450c55d23",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "externalSourceName": {
-            "description": "externalSourceName: name from GetPlcExternalSources (e.g. MCPVerify_FC_SCL_v3.scl)",
+            "description": "externalSourceName: name from ListPlcExternalSources (e.g. MCPVerify_FC_SCL_v3.scl)",
             "type": "string"
           },
           "softwarePath": {
@@ -2292,7 +2294,7 @@
       "name": "DeletePlcExternalSource"
     },
     {
-      "descriptionSha256": "356533b828921697d9278cd6132c170a576b891ee34325e97696874d4fbda178",
+      "descriptionSha256": "569dee8e8c5714efb912e9bf198c905847aad7e96780d25e836fb2aece6cbfed",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -2324,7 +2326,7 @@
       "name": "DeletePlcTagTable"
     },
     {
-      "descriptionSha256": "40b53fb5112762dda6688a699c017a572d69585efe03fc8796f5cad230d8b095",
+      "descriptionSha256": "509992b86115c4c22db1914e6c818dd9f7a44810065085bd307a56fa0903a8df",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -3886,86 +3888,6 @@
       "name": "ExportAlarmTextLists"
     },
     {
-      "descriptionSha256": "c22e5fb70e2582a4477c1216c3faf08160d30314e394900d16a4c9a9ebc7213e",
-      "inputSchema": {
-        "properties": {
-          "blockPath": {
-            "description": "blockPath: defines the path in the project structure to the block",
-            "examples": [
-              "Main"
-            ],
-            "type": "string"
-          },
-          "exportPath": {
-            "description": "exportPath: defines the path where to export the documents",
-            "examples": [
-              "C:\\Examples\\exports"
-            ],
-            "type": "string"
-          },
-          "preservePath": {
-            "default": false,
-            "description": "preservePath: preserves the path/structure of the plc software",
-            "type": "boolean"
-          },
-          "softwarePath": {
-            "description": "softwarePath: defines the path in the project structure to the plc software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "blockPath",
-          "exportPath"
-        ],
-        "type": "object"
-      },
-      "name": "ExportAsDocuments"
-    },
-    {
-      "descriptionSha256": "08b11ee6ac491a62a7792907df12683b878a6e1180554ed983c6b8077bd46b3a",
-      "inputSchema": {
-        "properties": {
-          "exportPath": {
-            "description": "exportPath: defines the path where to export the documents",
-            "examples": [
-              "C:\\Examples\\exports"
-            ],
-            "type": "string"
-          },
-          "preservePath": {
-            "default": false,
-            "description": "preservePath: preserves the path/structure of the plc software",
-            "type": "boolean"
-          },
-          "regexName": {
-            "default": "",
-            "description": "regexName: defines the name or regular expression to find the block. Use empty string (default) to find all",
-            "examples": [
-              "FB_.*"
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: defines the path in the project structure to the plc software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "exportPath"
-        ],
-        "type": "object"
-      },
-      "name": "ExportBlocksAsDocuments"
-    },
-    {
       "descriptionSha256": "7ce2340f0ab6c9c135625d326d16d12201e6a3b886b2fa534b780e5bb74b9739",
       "inputSchema": {
         "additionalProperties": false,
@@ -4137,7 +4059,7 @@
       "name": "ExportOpcUaInterface"
     },
     {
-      "descriptionSha256": "3d59288e16cf214349ab264edd09dc3a36b7875348078f6470b7fe91bfaa3fe6",
+      "descriptionSha256": "d4dabe786b4bd82121f932b676bf14c66ecbed4c3fdff6a07d0bc1570a206159",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -4178,7 +4100,48 @@
       "name": "ExportPlcBlock"
     },
     {
-      "descriptionSha256": "63175516dad585ca94f9e121394cd62dabd9fa0de0bf7ad4ffb658c700c74673",
+      "descriptionSha256": "54caa1ef398af2deeaf694c192481860ce72913a0a3c1c665eb2d7b8ac7b764e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "blockPath: defines the path in the project structure to the block",
+            "examples": [
+              "Main"
+            ],
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "exportPath: defines the path where to export the documents",
+            "examples": [
+              "C:\\Examples\\exports"
+            ],
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "preservePath: preserves the path/structure of the plc software",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: defines the path in the project structure to the plc software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcBlockDocuments"
+    },
+    {
+      "descriptionSha256": "a2e38de297e9a5159593c46b549fd039c6edfb5a6974021611ad1b56973e8cae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -4217,6 +4180,47 @@
         "type": "object"
       },
       "name": "ExportPlcBlocks"
+    },
+    {
+      "descriptionSha256": "0e80aba50aa93153390ab00d2d4a6301b9bfac787c78c8cac20baf9222d1ab4f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: defines the path where to export the documents",
+            "examples": [
+              "C:\\Examples\\exports"
+            ],
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "preservePath: preserves the path/structure of the plc software",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: defines the name or regular expression to find the block. Use empty string (default) to find all",
+            "examples": [
+              "FB_.*"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: defines the path in the project structure to the plc software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcBlocksDocuments"
     },
     {
       "descriptionSha256": "b05c8006f84ba2908cf7037622b5bc6fffc64770dd1bf6c408906a3c36df390e",
@@ -4436,8 +4440,9 @@
       "name": "ExportPlcWatchTablesToDirectory"
     },
     {
-      "descriptionSha256": "f73b5dbe769ffb2c12eeb44eb83112ec647ff39d2c057eed89b35c42fed8c14c",
+      "descriptionSha256": "9a83cbc6bf20af7db390153bacac98ac1e6650201ba284c7a5e34a146ab9d699",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -4744,11 +4749,12 @@
       "name": "GenerateAcceptanceReport"
     },
     {
-      "descriptionSha256": "744709090d5e4541595bdb102e469a2549fc116e8b7e8cdd667efab3056884e9",
+      "descriptionSha256": "f54a802ef09316066d6e585d41197f94ecf287120ff6d6429506008a588368e8",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "externalSourceName": {
-            "description": "externalSourceName: name from GetPlcExternalSources",
+            "description": "externalSourceName: name from ListPlcExternalSources",
             "examples": [
               "FC_Add"
             ],
@@ -4880,7 +4886,7 @@
       "name": "GenerateOpcUaModelledInterface"
     },
     {
-      "descriptionSha256": "2c4b247ebc0f4021e2e9012aef5b11e7b8146a22d55631952bd4574705bcf140",
+      "descriptionSha256": "ac049a58309bdf1df768441bd21e3e60e9e28c40dfd37d7d6f29223bf0d84bf1",
       "inputSchema": {
         "properties": {
           "directory": {
@@ -4921,8 +4927,9 @@
       "name": "GeneratePlcDocumentation"
     },
     {
-      "descriptionSha256": "d19e72424ea96175d95a471520a4cea080645619b89ef402c7f7ab9ca536bd51",
+      "descriptionSha256": "b7a364bd737ae3e5b8f0f2196357b277f8ff11d9da4ef7e65af57b7c6bfd72aa",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -4941,9 +4948,12 @@
             ],
             "type": "string"
           },
-          "objectPathsJson": {
-            "description": "objectPathsJson: JSON array of object paths.",
-            "type": "string"
+          "objectPaths": {
+            "description": "objectPaths: Array of object paths.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -4956,7 +4966,7 @@
         },
         "required": [
           "softwarePath",
-          "objectPathsJson",
+          "objectPaths",
           "objectKind",
           "targetOption",
           "filePath"
@@ -4966,12 +4976,16 @@
       "name": "GeneratePlcLoadableFile"
     },
     {
-      "descriptionSha256": "097ee637121d2c478515566ddda9144a4461477685d796ace5a9ad03da272575",
+      "descriptionSha256": "6e3ea886652d0419357d0b9ea9c51d25c389368c99c07920da9eba21dc145421",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "blockPathsJson": {
-            "description": "blockPathsJson: JSON array of block paths.",
-            "type": "string"
+          "blockPaths": {
+            "description": "blockPaths: Array of block paths.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
@@ -4989,7 +5003,7 @@
         },
         "required": [
           "softwarePath",
-          "blockPathsJson",
+          "blockPaths",
           "filePath"
         ],
         "type": "object"
@@ -5031,69 +5045,6 @@
         "type": "object"
       },
       "name": "GenerateSiVArc"
-    },
-    {
-      "descriptionSha256": "a6639bbb37aab5e781092fa92bdd007f53527f1435cb3df727b6aa78e9b1b92d",
-      "inputSchema": {
-        "properties": {
-          "filter": {
-            "default": "AllObjects",
-            "description": "filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)",
-            "examples": [
-              "AllObjects"
-            ],
-            "type": "string"
-          },
-          "objectKind": {
-            "default": "Block",
-            "description": "objectKind: Block | Type | Tag | SystemConstant",
-            "enum": [
-              "Block",
-              "Type",
-              "Tag",
-              "SystemConstant"
-            ],
-            "examples": [
-              "Block"
-            ],
-            "type": "string"
-          },
-          "objectPath": {
-            "description": "objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope",
-            "examples": [
-              "Main"
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the PLC software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "unit",
-            "description": "unitKind: unit | safety. Empty unitName selects PLC root.",
-            "enum": [
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: exact software/safety unit; empty selects PLC root.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "objectPath"
-        ],
-        "type": "object"
-      },
-      "name": "GetCrossReferences"
     },
     {
       "descriptionSha256": "25a02d00e894ac92a5fa50f67d00b723515a35f992929933901e7695e1bc8735",
@@ -5283,11 +5234,12 @@
       "name": "GetDevicePlugLocations"
     },
     {
-      "descriptionSha256": "ec8708fddcc76cfa531428505ab975270f1cdde3110289f2914dbcba34585049",
+      "descriptionSha256": "2747b1249d3f02221ddff8936f2a4a95ca68555aa93454bef7f94b1ee6d24d9f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportId": {
-            "description": "exportId: copy the opaque handle exactly from the truncated response; never construct it or reuse it after a worker/server restart.",
+            "description": "Opaque export handle from this engine session.",
             "examples": [
               "<exportId from response>"
             ],
@@ -5295,15 +5247,16 @@
           },
           "length": {
             "default": 0,
-            "description": "length: how many characters to return. 0 or omitted = this session's response limit.",
+            "description": "Requested characters; 0 uses the response limit, capped at 20000.",
             "type": "integer"
           },
           "offset": {
             "default": 0,
-            "description": "offset: character index to start at; use the previous page's nextOffset. 0 = beginning",
+            "description": "Zero-based character offset.",
             "examples": [
               0
             ],
+            "minimum": 0,
             "type": "integer"
           }
         },
@@ -5312,7 +5265,7 @@
         ],
         "type": "object"
       },
-      "name": "GetExport"
+      "name": "GetExportContent"
     },
     {
       "descriptionSha256": "499623bcf1255194263c6100b3bcc578d467bc6193616dddec5c5f4be559bb0a",
@@ -5645,23 +5598,68 @@
       "name": "GetPlcBlockInfo"
     },
     {
-      "descriptionSha256": "5ff4a9beface3e6fe4e646d11b59946c9fba2d858e25229754e17b58c30cf9b8",
+      "descriptionSha256": "a3a7c710efcbe8b9e0a4adbb5a137b1ea352254c5d864690247f06134107111b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
+          "filter": {
+            "default": "AllObjects",
+            "description": "filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)",
+            "examples": [
+              "AllObjects"
+            ],
+            "type": "string"
+          },
+          "objectKind": {
+            "default": "Block",
+            "description": "objectKind: Block | Type | Tag | SystemConstant",
+            "enum": [
+              "Block",
+              "Type",
+              "Tag",
+              "SystemConstant"
+            ],
+            "examples": [
+              "Block"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope",
+            "examples": [
+              "Main"
+            ],
+            "type": "string"
+          },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software",
             "examples": [
               "PLC_1"
             ],
             "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: unit | safety. Empty unitName selects PLC root.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: exact software/safety unit; empty selects PLC root.",
+            "type": "string"
           }
         },
         "required": [
-          "softwarePath"
+          "softwarePath",
+          "objectPath"
         ],
         "type": "object"
       },
-      "name": "GetPlcExternalSources"
+      "name": "GetPlcCrossReferences"
     },
     {
       "descriptionSha256": "f197af32e69d298f23019e36e1aa0d6d1eeceb6bd49e1ace90cac508bb9f5b39",
@@ -6165,60 +6163,6 @@
       "name": "ImportAlarmTextLists"
     },
     {
-      "descriptionSha256": "3bf17f1985cb0254acd11935d012ea1c5e113330afd94d5bad1f54b4569453fc",
-      "inputSchema": {
-        "properties": {
-          "groupPath": {
-            "description": "groupPath: optional path within the PLC program where the blocks should be placed (empty for root)",
-            "examples": [
-              ""
-            ],
-            "type": "string"
-          },
-          "importOption": {
-            "default": "Override",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
-            "enum": [
-              "None",
-              "Override",
-              "SkipInactiveCultures",
-              "ActivateInactiveCultures"
-            ],
-            "type": "string"
-          },
-          "importPath": {
-            "description": "importPath: directory containing the document files (.s7dcl/.s7res)",
-            "examples": [
-              "C:\\Examples\\documents"
-            ],
-            "type": "string"
-          },
-          "regexName": {
-            "default": "",
-            "description": "regexName: name or regular expression to select block files (empty for all)",
-            "examples": [
-              ""
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: defines the path in the project structure to the plc software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "groupPath",
-          "importPath"
-        ],
-        "type": "object"
-      },
-      "name": "ImportBlocksFromDocuments"
-    },
-    {
       "descriptionSha256": "5155f54af9b8249a4accea6e0ee6a52328759e37f22e93a363b7a8203eb6d060",
       "inputSchema": {
         "additionalProperties": false,
@@ -6259,63 +6203,6 @@
         "type": "object"
       },
       "name": "ImportDeviceAml"
-    },
-    {
-      "descriptionSha256": "63a72b012e994d52330e87041d53feb9451a706f82465ff36356ec70f557bed1",
-      "inputSchema": {
-        "properties": {
-          "fileNameWithoutExtension": {
-            "description": "fileNameWithoutExtension: name of the block file without extension",
-            "examples": [
-              "FC_Add"
-            ],
-            "type": "string"
-          },
-          "groupPath": {
-            "description": "groupPath: optional path within the PLC program where the block should be placed (empty for root)",
-            "examples": [
-              ""
-            ],
-            "type": "string"
-          },
-          "importOption": {
-            "default": "Override",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
-            "enum": [
-              "None",
-              "Override",
-              "SkipInactiveCultures",
-              "ActivateInactiveCultures"
-            ],
-            "examples": [
-              "Override"
-            ],
-            "type": "string"
-          },
-          "importPath": {
-            "description": "importPath: directory containing the document files (.s7dcl/.s7res)",
-            "examples": [
-              "C:\\Examples\\documents"
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: defines the path in the project structure to the plc software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "groupPath",
-          "importPath",
-          "fileNameWithoutExtension"
-        ],
-        "type": "object"
-      },
-      "name": "ImportFromDocuments"
     },
     {
       "descriptionSha256": "32ca0f189aaf9018d9f9ca86b9bef291652481a6b7fa98880f7c387aa841be7d",
@@ -6654,7 +6541,7 @@
       "name": "ImportPlcAlarmInstanceTexts"
     },
     {
-      "descriptionSha256": "b7069ddd08d409f56ea141d65993083fc7b88bec55449dc7b02ff75808188511",
+      "descriptionSha256": "eba5c66f608389df94fe00b80acdbaddb1a71e959b1a8b96a4d049098af900cd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6688,6 +6575,64 @@
         "type": "object"
       },
       "name": "ImportPlcBlock"
+    },
+    {
+      "descriptionSha256": "0efa1f1e65751724cf824ef0b8185d40d11d579e6b34d373e726a693f49e1f09",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fileNameWithoutExtension": {
+            "description": "fileNameWithoutExtension: name of the block file without extension",
+            "examples": [
+              "FC_Add"
+            ],
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "groupPath: optional path within the PLC program where the block should be placed (empty for root)",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "importOption": {
+            "default": "Override",
+            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "enum": [
+              "None",
+              "Override",
+              "SkipInactiveCultures",
+              "ActivateInactiveCultures"
+            ],
+            "examples": [
+              "Override"
+            ],
+            "type": "string"
+          },
+          "importPath": {
+            "description": "importPath: directory containing the document files (.s7dcl/.s7res)",
+            "examples": [
+              "C:\\Examples\\documents"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: defines the path in the project structure to the plc software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath",
+          "fileNameWithoutExtension"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcBlockDocuments"
     },
     {
       "descriptionSha256": "1b57de68bdf9642bada09d9942a405b4ca02bd09597e9499a4e2cf9e385143da",
@@ -6755,7 +6700,62 @@
       "name": "ImportPlcBlockVerified"
     },
     {
-      "descriptionSha256": "54f90d5ce25110e6dff07c58b1b64ec6b6993ce301e4807ddd1a32d4559c6b91",
+      "descriptionSha256": "b90a43e627b249da63b8126035c4710ecc264a5dfd22df60f58f14fc988822aa",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "groupPath": {
+            "description": "groupPath: optional path within the PLC program where the blocks should be placed (empty for root)",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "importOption": {
+            "default": "Override",
+            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "enum": [
+              "None",
+              "Override",
+              "SkipInactiveCultures",
+              "ActivateInactiveCultures"
+            ],
+            "type": "string"
+          },
+          "importPath": {
+            "description": "importPath: directory containing the document files (.s7dcl/.s7res)",
+            "examples": [
+              "C:\\Examples\\documents"
+            ],
+            "type": "string"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: name or regular expression to select block files (empty for all)",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: defines the path in the project structure to the plc software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcBlocksDocuments"
+    },
+    {
+      "descriptionSha256": "515214e3e5c8dc1d88f4dd743182ffc0ef428a7a69c63fc876f0e6e0cf09628b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6792,8 +6792,9 @@
       "name": "ImportPlcBlocksFromDirectory"
     },
     {
-      "descriptionSha256": "d4b22fb0b88243368af8cad015dc4016bc2eb659343a479c16114b18806741d9",
+      "descriptionSha256": "a81bc74ef52a168a6a2ac533e76f3b17d85f2de4b526b305b4371d2b6db1ce54",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "filePath": {
             "description": "filePath: path to external source file (.scl, etc.)",
@@ -7021,8 +7022,9 @@
       "name": "ImportPlcWatchTableOffline"
     },
     {
-      "descriptionSha256": "c1db8a6a33d87a1f449b7a18bf9658af5334bc1b3d6728d27e74c2e36eec353f",
+      "descriptionSha256": "f5ad5c2ba5b73d9f31b337b8ae1555dde6feb27e704bee693b2bcbd102519840",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
@@ -7399,7 +7401,7 @@
       "name": "InvokeService"
     },
     {
-      "descriptionSha256": "1aa1f13ff04d7d65ac8eb89ff9310d34baa817f6a2708d7023576a7853adc244",
+      "descriptionSha256": "94ef3589b5a2414d73636cb5620ca69bcfb338bd960163971d2549977097c4f9",
       "inputSchema": {
         "properties": {
           "filePath": {
@@ -7522,20 +7524,20 @@
       "name": "ListDevices"
     },
     {
-      "descriptionSha256": "bebc12cb51d1a37a140c927714d06ba1d6c50ed1f571321fae4652c585d0ff4c",
+      "descriptionSha256": "7b59733c4a08f535300090d430e4de53cafaeab5bca633ac2d6a4bb139b3c539",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "limit": {
             "default": 20,
-            "description": "limit: maximum handles to return",
+            "description": "limit: maximum number of items to return (paging).",
             "examples": [
               10
             ],
+            "minimum": 1,
             "type": "integer"
           },
           "tool": {
-            "default": null,
-            "description": "tool: optional filter, matches part of the producing tool's name",
             "examples": [
               "GetBlocks"
             ],
@@ -7544,7 +7546,7 @@
         },
         "type": "object"
       },
-      "name": "ListExports"
+      "name": "ListExportHandles"
     },
     {
       "descriptionSha256": "916364f9f1c86751631b736d78c48eca6bc7387ca6f0ceb40d896637e43213c0",
@@ -7719,6 +7721,26 @@
       "name": "ListPlcBlocks"
     },
     {
+      "descriptionSha256": "994378f351b6901a5c31b640f53956da764d07286266c4910419e2f03eebc019",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcExternalSources"
+    },
+    {
       "descriptionSha256": "57d84bb80c0332e3983e8cd3e5383f1f5071f06e344f5ca5e5db8d7cdad100ef",
       "inputSchema": {
         "additionalProperties": false,
@@ -7734,6 +7756,47 @@
         "type": "object"
       },
       "name": "ListPlcForceTables"
+    },
+    {
+      "descriptionSha256": "d49b9525b5ad0d268554eb47604bee955e7fdbeb7f369720d14a120ec9a7c02f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeBlocks": {
+            "default": true,
+            "description": "includeBlocks: true also returns the blocks of each chart / group.",
+            "type": "boolean"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcSystemGroups"
     },
     {
       "descriptionSha256": "3f4c4213d868852521f18aa28b026474599b17145117a3d9a1622417bd6d8fa3",
@@ -10846,8 +10909,9 @@
       "name": "ManagePlcDocuments"
     },
     {
-      "descriptionSha256": "fae56c59d416253167a93e3a86e66308f2013725a7ce67d5da52a7c25fd38d47",
+      "descriptionSha256": "01fa33259f357e263bd42ccc4037cb71f48a741be799c480d101de6e4e1a6c22",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.",
@@ -11547,8 +11611,9 @@
       "name": "ManagePlcTableEntries"
     },
     {
-      "descriptionSha256": "c680af0c2cc3f8779b63b865306867336af03e1dc319e832b7f0b2ed2ea6900b",
+      "descriptionSha256": "91dee1a6c9aeba8a90af17aac75684cd0fabe8da48fe956161e9c69095e1a72e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "description": "action: read | create | update | delete.",
@@ -11605,10 +11670,26 @@
             ],
             "type": "string"
           },
-          "propertiesJson": {
-            "default": "{}",
-            "description": "propertiesJson: JSON object of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; Comment as text or per culture).",
-            "type": "string"
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "properties: Scalar attribute map of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value; Comment: text).",
+            "type": "object"
           },
           "softwarePath": {
             "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
@@ -11773,8 +11854,9 @@
       "name": "ManageProjectCompilationSettings"
     },
     {
-      "descriptionSha256": "f7972032c8d1dde70067128ca28c476553da3ab968cb6822b02aebd16123b55f",
+      "descriptionSha256": "61f6ac770377d9792b9c05f138a791204de96a751b7b63fb717b04fc25a8ca5e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
@@ -15228,7 +15310,7 @@
       "name": "ReadDriveParameters"
     },
     {
-      "descriptionSha256": "2ac74f559dcbbe6b8f055496a9e2f68b57ed36ea8e4043a8e89d981c7f73b7f8",
+      "descriptionSha256": "6843b0bd1b73c4f525b73a0e38cbb75a5b2ed6accdf3dc6cacdee3326c85ce85",
       "inputSchema": {
         "properties": {
           "maxDepth": {
@@ -15848,46 +15930,6 @@
         "type": "object"
       },
       "name": "ReadPlcSoftwareUnits"
-    },
-    {
-      "descriptionSha256": "9ce4e1008bf4cfb74df91b826b3aa775cc2b746a2fe0c5a93867e94fb7d5c0c5",
-      "inputSchema": {
-        "properties": {
-          "includeBlocks": {
-            "default": true,
-            "description": "includeBlocks: true also returns the blocks of each chart / group.",
-            "type": "boolean"
-          },
-          "maxDepth": {
-            "default": 4,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "unit",
-            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
-            "enum": [
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ReadPlcSystemGroups"
     },
     {
       "descriptionSha256": "760f90b97ca3af5cd5dc07b0370a0ae1672ce5fa670dfd34143a83e0b629610a",
@@ -17220,8 +17262,9 @@
       "name": "RestartOpennessWorker"
     },
     {
-      "descriptionSha256": "b1feba2a1033ea116b9f1a9dbb21eba97ab849bfeded8ea364a06284b4b35280",
+      "descriptionSha256": "d83f95c39b8e526f8673d17973052006093d94daeed6204944e9479010912de8",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "archivePath": {
             "description": "archivePath: full path of the project archive (.zap2x) on the TIA machine.",
@@ -17669,18 +17712,18 @@
       "name": "SaveAsProject"
     },
     {
-      "descriptionSha256": "64dc5da68218084f22ad8e4a0a8e85bafe08fb5b00ecb7bf04fa81651ea139c1",
+      "descriptionSha256": "4f583e775f7f1c98fd4790f0e1166a8fcbc818751f406cad0aa14fa618254b2a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "exportId": {
-            "description": "exportId: the handle from a truncated response",
             "examples": [
               "<exportId from response>"
             ],
             "type": "string"
           },
           "outputPath": {
-            "description": "outputPath: full file path to write, e.g. 'C:\\\\Temp\\\\IO表.csv'",
+            "description": "outputPath: full file path on the TIA machine to write.",
             "examples": [
               "C:\\Temp\\blocks.json"
             ],
@@ -17688,12 +17731,10 @@
           },
           "overwrite": {
             "default": false,
-            "description": "overwrite: DEFAULT false — if the file already exists the call is REFUSED rather than replacing it. Pass true only after the user agreed to overwrite that specific file.",
             "type": "boolean"
           },
           "raw": {
             "default": false,
-            "description": "raw: true = write the response text verbatim (JSON envelope included). Default false = write just the payload.",
             "type": "boolean"
           }
         },
@@ -17703,7 +17744,7 @@
         ],
         "type": "object"
       },
-      "name": "SaveExport"
+      "name": "SaveExportContent"
     },
     {
       "descriptionSha256": "ebb5c3e817d92d21fb9c5c260c75db178c78cd95911d9a2764a125a884ff9231",
@@ -19251,8 +19292,9 @@
       "name": "WriteClassicHmiMinimalPackageFiles"
     },
     {
-      "descriptionSha256": "7b5d78997708225862f06a180244cd3a547795473169f08782e00de1f90c3497",
+      "descriptionSha256": "5791336102e2833095bc136611d377dfb5785531702c4b1f42e337a0a87fc086",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "outputPath": {
             "default": "",

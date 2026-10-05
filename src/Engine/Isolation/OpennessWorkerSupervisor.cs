@@ -100,7 +100,7 @@ namespace TiaMcpServer.Isolation
             bool binding = string.Equals(effectiveName, "ConnectToProject", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "ConnectIsolated", StringComparison.OrdinalIgnoreCase) ||
                 ((string.Equals(effectiveName, "Connect", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "AttachToOpenProject", StringComparison.OrdinalIgnoreCase)) &&
                     !string.IsNullOrWhiteSpace(effectiveArguments?["projectName"]?.ToString()));
-            var diagnostic = new[] { "GetState", "Bootstrap", "FindTools", "GetToolSchema", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "GetExport", "ListExports" }
+            var diagnostic = new[] { "GetState", "Bootstrap", "FindTools", "GetToolSchema", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "GetExportContent", "ListExportHandles" }
                 .Contains(effectiveName, StringComparer.OrdinalIgnoreCase);
             long ticket;
             lock (sync)

@@ -160,7 +160,7 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "ImportFromDocuments",
+        "tool": "ImportPlcBlockDocuments",
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
@@ -749,7 +749,7 @@
     "topic": "large-response",
     "purpose": "Read a response that was stored because it exceeded the size limit.",
     "preconditions": "A response came back with meta.truncated=true and an exportId.",
-    "notes": "Pages are character slices: concatenate every page before parsing. SaveExport writes the whole payload to a file on the TIA machine.",
+    "notes": "Pages are character slices: concatenate every page before parsing. SaveExportContent writes the whole payload to a file on the TIA machine.",
     "releaseKeys": [
       "20",
       "21"
@@ -759,7 +759,7 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "GetExport",
+        "tool": "GetExportContent",
         "arguments": {
           "exportId": "<exportId>",
           "offset": 0
@@ -767,7 +767,7 @@
         "expect": "first page + nextOffset"
       },
       {
-        "tool": "GetExport",
+        "tool": "GetExportContent",
         "arguments": {
           "exportId": "<exportId>",
           "offset": 20000
@@ -775,7 +775,7 @@
         "expect": "offset = the previous page's nextOffset; repeat until eof=true"
       },
       {
-        "tool": "SaveExport",
+        "tool": "SaveExportContent",
         "arguments": {
           "exportId": "<exportId>",
           "outputPath": "C:\\Temp\\<name>.json"

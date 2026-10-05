@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -141,17 +142,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (write) args["dryRun"] = true;
                 var error = BindV4Call(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out var method, out _);
                 if (error != null) return error;
-                string description = ToolDescription(method!);
-                bool orchestration = method!.Name.Contains("Batch") || method.Name == "CallTool" || method.Name == "RunToolsInTransaction" || method.Name == "GetCrossReferences";
-                bool read = description.Contains("[READ]") || method.Name == "GetState";
-                bool preview = description.Contains("[WRITE]") && method.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
+                var targetMethod = method!;
+                string description = ToolDescription(targetMethod);
+                bool orchestration = IsBatchOrchestration(targetMethod);
+                bool read = description.Contains("[READ]") || targetMethod.Name == "GetState";
+                bool preview = description.Contains("[WRITE]") && targetMethod.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
                 if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
-                targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, method)), new InputBudget(), read, preview, orchestration: orchestration);
+                targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, targetMethod)), new InputBudget(), read, preview, orchestration: orchestration);
             }
             var result = ToolCallValidator.Create(write ? ToolCallMode.PreviewBatch : ToolCallMode.ReadBatch, targets.Values.ToArray()).Validate(operations, "operations");
             validated = result.Value;
             return result.Error;
         }
+
+        internal static bool IsBatchOrchestration(MethodInfo method) => method.Name.Contains("Batch")
+            || method.Name == "CallTool" || method.Name == "RunToolsInTransaction"
+            || method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "GetPlcCrossReferences";
 
         private static string StablePreview(JsonNode? value)
         {

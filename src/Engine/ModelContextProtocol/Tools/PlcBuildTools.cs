@@ -241,7 +241,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 result.Decision = "external-scl-recommended";
                 result.Warnings.Add("The PLC XML DSL is intentionally narrow. Complex SCL expressions were detected: " + string.Join("; ", risky.Take(8)));
-                result.NextActions.Add("Prefer a native .scl/.s7dcl external source and import via ImportFromDocuments/ImportBlocksFromDocuments, or use a verified SCL template from templates/plc/scl-examples.");
+                result.NextActions.Add("Prefer a native .scl/.s7dcl external source and import via ImportPlcBlockDocuments/ImportPlcBlocksDocuments, or use a verified SCL template from templates/plc/scl-examples.");
                 result.NextActions.Add("If you still use XML DSL, split expressions into verified primitive operations and run dryRun=true plus CompilePlcDiagnostics.");
             }
             else

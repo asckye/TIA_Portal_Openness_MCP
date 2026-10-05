@@ -32,7 +32,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         ["BuildPlcGlobalDbXml"] = "BuildPlcGlobalDb", ["BuildStructuredTextXml"] = "BuildStructuredText",
         ["BuildFlgNetCallXml"] = "BuildFlgNetCall", ["ComposePlcFcBlockXml"] = "BuildPlcFcBlock",
         ["ComposePlcFbBlockXml"] = "BuildPlcFbBlock", ["ComposePlcLadFcBlockXml"] = "BuildPlcLadFcBlock",
-        ["BuildPlcSymbolManifestFromXmlPath"] = "BuildPlcSymbolManifestFromPath"
+        ["BuildPlcSymbolManifestFromXmlPath"] = "BuildPlcSymbolManifestFromPath",
+        ["ExportAsDocuments"] = "ExportPlcBlockDocuments", ["ExportBlocksAsDocuments"] = "ExportPlcBlocksDocuments",
+        ["ImportFromDocuments"] = "ImportPlcBlockDocuments", ["ImportBlocksFromDocuments"] = "ImportPlcBlocksDocuments"
     };
     internal static string Name(string source) => Names.TryGetValue(source, out var name) ? name : source;
     internal static string Guidance(string text)

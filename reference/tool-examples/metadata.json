@@ -109,9 +109,9 @@
     },
     "exportId": {
       "tools": [
-        "ListExports"
+        "ListExportHandles"
       ],
-      "meaning": "Copy the exportId returned by the original tool; GetExport pages use its nextOffset."
+      "meaning": "Copy the exportId returned by the original tool; GetExportContent pages use its nextOffset."
     }
   },
   "resultReading": {

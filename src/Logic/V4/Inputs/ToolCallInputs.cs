@@ -69,6 +69,6 @@ namespace TiaMcp.Logic.V4.Inputs
             });
         }
         private static bool Nested(string name) => name.IndexOf("Batch", StringComparison.Ordinal) >= 0
-            || new[] { "CallTool", "RunToolsInTransaction", "GetCrossReferences", "GetPlcCrossReferences" }.Contains(name, StringComparer.OrdinalIgnoreCase);
+            || new[] { "CallTool", "RunToolsInTransaction", "GetPlcCrossReferences" }.Contains(name, StringComparer.OrdinalIgnoreCase);
     }
 }

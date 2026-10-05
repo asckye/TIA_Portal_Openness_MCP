@@ -40,6 +40,9 @@ HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
 ALLOWED = {
+    'GetCrossReferences': 'Native CrossReferenceService method name, including the reflection denylist in CrossReferenceGuardLogic; the MCP tool is GetPlcCrossReferences',
+    'ExportAsDocuments': 'Native document export member in LibraryTypeVersion reflection, PlcType/PlcDocument API descriptions and native result diagnostics; not an MCP alias',
+    'ImportFromDocuments': 'Native PlcDocumentComposition/PlcTypeComposition import member in API descriptions and native result diagnostics; not an MCP alias',
     'CompileUnit': 'SW.Blocks.CompileUnit SimaticML type in a quoted native import error',
     'CreateSignatures': 'Diagnostic result field containing reflected native Create overloads',
     'DeleteAll': 'Download ResetModule prompt answer enum value',

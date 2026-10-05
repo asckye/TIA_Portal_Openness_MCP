@@ -23,7 +23,7 @@
         "scl-s7dcl"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -35,7 +35,7 @@
         "kop"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -48,7 +48,7 @@
         "fup"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "ExportPlcBlock",
         "ImportPlcBlock"
@@ -61,7 +61,7 @@
         "lad-scl"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -72,7 +72,7 @@
         "globaldb"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware",
         "BuildPlcGlobalDbXml",
         "ImportPlcBlock"
@@ -98,7 +98,7 @@
         "resources"
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ]
     },
@@ -331,7 +331,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -372,7 +372,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -419,7 +419,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -450,7 +450,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -488,7 +488,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -524,7 +524,7 @@
         }
       ],
       "tools": [
-        "ImportFromDocuments",
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
@@ -557,7 +557,7 @@
       ],
       "notes": [
         "Import into the PLC type group with the type-document tool listed by the engine.",
-        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportFromDocuments targets program blocks."
+        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportPlcBlockDocuments targets program blocks."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"

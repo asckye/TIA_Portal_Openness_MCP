@@ -181,7 +181,7 @@ PASSIVE_RESOURCE_CALLS = (
 # Every current [L1][Domain] group from ToolTaxonomy's description prefixes.
 # All native-facing representatives stop at a null project before SDK access.
 # Portal/Exports have no connection prerequisite: disconnected Disconnect and
-# missing GetExport are their passive/negative representatives instead.
+# missing export content are their passive/negative representatives instead.
 DOMAIN_CALLS = {
     'Diagnostics': 'ValidateAutomationContext',
     'Exports': 'GetExport',
@@ -529,7 +529,10 @@ def capture_release(args, release, exe, public_api):
                     domains.setdefault(match[1].strip(), set()).add(tool['name'])
             resources.require(set(domains) == set(DOMAIN_CALLS),
                               'L1 taxonomy changed; review offline domain representatives')
-            for domain, name in sorted(DOMAIN_CALLS.items()):
+            domain_calls = dict(DOMAIN_CALLS)
+            if 'GetExportContent' in domains['Exports']:
+                domain_calls['Exports'] = 'GetExportContent'
+            for domain, name in sorted(domain_calls.items()):
                 resources.require(name in domains[domain], name + ' moved out of its L1 domain')
                 call(name, example(name))
 
@@ -562,7 +565,7 @@ def capture_release(args, release, exe, public_api):
                     'calledOperations': [list(pair) for pair in selected_operations],
                     'usageTools': usage['checkedToolCount'], 'usageOperations': usage['operationExampleCount'],
                     'offlineExamples': sorted(usage['offlineCallExamplesExecuted'] + list(PURE_EXAMPLES)),
-                    'l1Domains': DOMAIN_CALLS}}
+                    'l1Domains': domain_calls}}
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during capture')
         with resources.server(exe, public_api, int(release), 'stdio', 'lite',

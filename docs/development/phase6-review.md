@@ -1514,7 +1514,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):37 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):41 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
 | [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):16 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
-| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):135 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
+| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):136 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
 | [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]` |
 | [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):516 | `if (conflicts.Count > 16)` |
 | [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):122 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
@@ -1881,8 +1881,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17387 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:18107 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17430 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:18150 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:62 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:51 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1905,7 +1905,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:654 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:657 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
@@ -2019,7 +2019,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `BuildPlcTagTable` | `BuildPlcTagTableXml` | 离线构造与规划 | 20, 21 |
 | `BuildPlcUdt` | `BuildPlcUdtXml` | 离线构造与规划 | 20, 21 |
 | `CallTool` | `CallTool` | 发现、用法与完整目录调用 | 20, 21 |
-| `ClearExportHandles` | `ClearExports` | 大结果分页与文件交付 | 20, 21 |
+| `ClearExportHandles` | `ClearExportHandles` | 大结果分页与文件交付 | 20, 21 |
 | `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
 | `CompileHmiDiagnostics` | `CompileAndDiagnoseHmi` | HMI 定位和诊断 | 20, 21 |
 | `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | 常用 PLC 交换与编译 | 20, 21 |
@@ -2027,7 +2027,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ConnectProject` | `ConnectToProject` | 工程生命周期 | 20, 21 |
 | `CreateHardwareDevice` | `CreateHardwareDevice` | 硬件查找和精确创建 | 20, 21 |
 | `CreateProject` | `CreateProject` | 工程生命周期 | 20, 21 |
-| `DeleteExportHandle` | `DeleteExport` | 大结果分页与文件交付 | 20, 21 |
+| `DeleteExportHandle` | `DeleteExportHandle` | 大结果分页与文件交付 | 20, 21 |
 | `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
 | `DisconnectPortal` | `Disconnect` | 工程生命周期 | 20, 21 |
 | `ExportPlcBlock` | `ExportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
@@ -2037,7 +2037,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
 | `GenerateErrorReport` | `GenerateErrorReport` | 诊断收尾 | 20, 21 |
 | `GetEnvironmentDiagnostics` | `Doctor` | 环境与会话诊断 | 20, 21 |
-| `GetExportContent` | `GetExport` | 大结果分页与文件交付 | 20, 21 |
+| `GetExportContent` | `GetExportContent` | 大结果分页与文件交付 | 20, 21 |
 | `GetOpennessWorkerStatus` | `ReadOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
 | `GetPlcBlockHierarchy` | `GetPlcBlockHierarchy` | 工程和 PLC 定位 | 20, 21 |
 | `GetPlcBlockInfo` | `GetPlcBlockInfo` | 工程和 PLC 定位 | 20, 21 |
@@ -2054,7 +2054,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportPlcType` | `ImportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
 | `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
 | `ListDevices` | `ListDevices` | 工程和 PLC 定位 | 20, 21 |
-| `ListExportHandles` | `ListExports` | 大结果分页与文件交付 | 20, 21 |
+| `ListExportHandles` | `ListExportHandles` | 大结果分页与文件交付 | 20, 21 |
 | `ListHmiScreens` | `GetHmiScreens` | HMI 定位和诊断 | 20, 21 |
 | `ListHmiTagTables` | `GetHmiTagTables` | HMI 定位和诊断 | 20, 21 |
 | `ListHmiTags` | `GetHmiTags` | HMI 定位和诊断 | 20, 21 |
@@ -2067,7 +2067,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 离线构造与规划 | 20, 21 |
 | `PreviewToolCall` | `PreviewToolCall` | 发现、用法与完整目录调用 | 20, 21 |
 | `RestartOpennessWorker` | `RestartOpennessWorker` | 环境与会话诊断 | 20, 21 |
-| `SaveExportContent` | `SaveExport` | 大结果分页与文件交付 | 20, 21 |
+| `SaveExportContent` | `SaveExportContent` | 大结果分页与文件交付 | 20, 21 |
 | `SaveProject` | `SaveProject` | 工程生命周期 | 20, 21 |
 | `SearchHardwareCatalog` | `SearchHardwareCatalog` | 硬件查找和精确创建 | 20, 21 |
 | `ValidateAutomationContext` | `ValidateAutomationContext` | 环境与会话诊断 | 20, 21 |

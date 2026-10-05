@@ -170,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "ExportPlcBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: Connect + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportAsDocuments. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: Connect + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportPlcBlockDocuments. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
@@ -351,7 +351,7 @@ namespace TiaMcpServer.ModelContextProtocol
  /* swallow(probe-optional): Group suggestions are optional and must not replace the original import error. */                return string.Empty;
             }
         }
-        [McpServerTool(Name = "ImportPlcBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: Connect + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportFromDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → PlcBuildAndImport. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: Connect + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportPlcBlockDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → PlcBuildAndImport. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
@@ -411,7 +411,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportBlocksFromDirectoryV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import blocks")] string groupPath,
@@ -695,7 +695,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportBlocksAsDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
         public Task<CallToolResult> ExportBlocksV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
@@ -1381,11 +1381,11 @@ namespace TiaMcpServer.ModelContextProtocol
             + "blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, "
             + "ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / "
             + "DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports "
-            + "the resolved target (pinned block number, warnings). Native cross references are disabled by default at the server-process level; see GetCrossReferences. They also require "
+            + "the resolved target (pinned block number, warnings). Native cross references are disabled by default at the server-process level; see GetPlcCrossReferences. They also require "
             + "crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took "
             + "TIA Portal V21 down during a dry run, so it is off by default and the response says 'not queried' - never "
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
-            + "back the block up with ExportAsDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
+            + "back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
             + "CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
             + "table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DeletePlcBlockV4(
@@ -1440,8 +1440,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     nextActions: dryRun
                         ? new JsonArray
                         {
-                            "ExportAsDocuments —— 删之前先把这个块导出备份",
-                            "GetCrossReferences —— 逐个看还有谁在调用它",
+                            "ExportPlcBlockDocuments - back up this block before deletion.",
+                            "GetPlcCrossReferences - inspect each remaining caller.",
                             "确认后再 DeletePlcBlock(dryRun=false)"
                         }
                         : new JsonArray
@@ -1469,7 +1469,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what "
             + "the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every "
             + "tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the "
-            + "HMI silently loses its bindings - always review the previewed tag list first. Native cross references are disabled by default at the server-process level; see GetCrossReferences. They are "
+            + "HMI silently loses its bindings - always review the previewed tag list first. Native cross references are disabled by default at the server-process level; see GetPlcCrossReferences. They are "
             + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
             + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
             + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
@@ -1502,7 +1502,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? new JsonArray
                         {
                             "ExportPlcTagTable —— 删之前先把这张表导出备份",
-                            "逐个 GetCrossReferences 相关块 —— 表级交叉引用未必可用，块级可用",
+                            "Use GetPlcCrossReferences on the related blocks; table-level references may be unavailable.",
                             "确认后再 DeletePlcTagTable(dryRun=false)"
                         }
                         : new JsonArray
@@ -1532,7 +1532,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "DeletePlcType"), Description(
             "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
             + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; "
-            + "native cross references are disabled by default at the server-process level (see GetCrossReferences) and also require crossReferences=true (the TIA CrossReferenceService query "
+            + "native cross references are disabled by default at the server-process level (see GetPlcCrossReferences) and also require crossReferences=true (the TIA CrossReferenceService query "
             + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
             + "review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type "
             + "first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -1563,7 +1563,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? new JsonArray
                         {
                             "ExportPlcType: back up this UDT before deletion",
-                            "GetCrossReferences —— 看还有哪些 DB / 块用它做数据类型",
+                            "GetPlcCrossReferences - inspect DBs and blocks using this data type.",
                             "确认后再 DeletePlcType(dryRun=false)"
                         }
                         : new JsonArray

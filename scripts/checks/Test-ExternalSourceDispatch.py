@@ -34,6 +34,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.SW;
@@ -72,6 +73,13 @@ namespace Siemens.Engineering.SW {
 }
 public enum PortalErrorCode { InvalidState, NotFound, InvalidParams, OpennessError }
 public sealed class PortalException : Exception { public PortalException(PortalErrorCode code,string text,Exception? inner=null):base(text,inner){} }
+internal static class PlcExchangeContract {
+    internal static int Issued, Confirmed;
+    internal static JsonObject Observation = new();
+    internal static void StartWrite(string stage) { Issued++; }
+    internal static void ConfirmWrite() { Confirmed++; }
+    internal static void Observe(string key, JsonNode? value) { Observation[key] = value; }
+}
 public sealed class Portal {
     public SoftwareContainer Container { get; } = new();
     private Portal _session => this;
@@ -109,6 +117,10 @@ internal static class Program {
         plc.ExternalSourceGroup.ExternalSources[0].Fail=true;
         Fails(()=>p.GenerateBlocksFromExternalSource("PLC","source.scl"));
         Check(plc.ExternalSourceGroup.ExternalSources[0].Calls==2,"failed generation not replayed");
+        Check(PlcExchangeContract.Issued==6,"every native dispatch recorded once");
+        Check(PlcExchangeContract.Confirmed==3,"failed/null outcomes not confirmed");
+        Check(PlcExchangeContract.Observation["nativeResult"]==null,"observation does not fabricate native result");
+        Check((string?)PlcExchangeContract.Observation["observation"]?["source"]=="native-call-returned","observation source retained");
         Console.WriteLine($"External-source actual method bodies: {checks} passed; managed fakes only.");
     }
 }
