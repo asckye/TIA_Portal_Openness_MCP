@@ -79,6 +79,9 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs" Link="HardwareNetworkTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />
     <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
     <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->

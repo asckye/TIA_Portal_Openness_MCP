@@ -287,37 +287,45 @@
       {
         "tool": "ManagePlcProtection",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]",
-          "action": "read"
+          "action": "read",
+          "devicePath": [
+            "<Station>"
+          ]
         },
         "expect": "accessLevel / masterSecret as configured"
       },
       {
         "tool": "ManagePlcProtection",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]",
           "action": "setAccessLevel",
           "accessLevel": "FullAccess",
           "dryRun": false,
-          "confirmChange": true
+          "confirmChange": true,
+          "devicePath": [
+            "<Station>"
+          ]
         },
         "expect": "accessLevel FullAccess (FullAccessIncludingFailsafe on an F-CPU)"
       },
       {
         "tool": "ManagePlcProtection",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]",
           "action": "protectMasterSecret",
           "password": "<test password>",
           "dryRun": false,
-          "confirmChange": true
+          "confirmChange": true,
+          "devicePath": [
+            "<Station>"
+          ]
         },
         "expect": "masterSecret WithPassword"
       },
       {
         "tool": "CompileDevice",
         "arguments": {
-          "devicePathJson": "[\"<Station>\"]"
+          "devicePath": [
+            "<Station>"
+          ]
         },
         "expect": "0 errors (warnings allowed)"
       }

@@ -161,7 +161,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- IO systems ----------------------------------------------------------------------------------------------
         public ResponseMessage ReadIoSystems(string subnetName = "", string devicePathJson = "[]", string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadIoSystems", meta => {
+            => _session.RunHmiStepTool("ListIoSystems", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 bool bySubnet = !string.IsNullOrEmpty(subnetName), byInterface = devicePathJson != "[]" && !string.IsNullOrWhiteSpace(devicePathJson);
                 if (bySubnet == byInterface) throw new ArgumentException("Give exactly one scope: subnetName, or devicePathJson/itemPathJson of an interface device item.");
@@ -251,7 +251,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- sync / MRP domains ----------------------------------------------------------------------------------------
         public ResponseMessage ReadNetworkDomains(string subnetName, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadNetworkDomains", meta => {
+            => _session.RunHmiStepTool("ListNetworkDomains", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var subnet = ExactSubnet(subnetName); meta["subnet"] = EngineeringScalarProperties.Read(subnet);
                 var syncOwner = subnet.GetService<SyncDomainOwner>(); var mrpOwner = subnet.GetService<MrpDomainOwner>();
@@ -339,7 +339,7 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- transfer areas ---------------------------------------------------------------------------------------------
         public ResponseMessage ReadTransferAreas(string devicePathJson, string itemPathJson, int positionNumber = -1, int extendedPositionNumber = -1, int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadTransferAreas", meta => {
+            => _session.RunHmiStepTool("ListTransferAreas", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit); HardwareNetworkLogic.RequirePosition(positionNumber, extendedPositionNumber);
                 var network = RequireNetworkInterface(_session.ExactEngineeringHardware(devicePathJson, itemPathJson), "itemPathJson");
                 meta["interfaceOwnerPath"] = _session.HardwareOwnerPath(network);
@@ -485,7 +485,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "Mapping rule written and read back. No save/compile/download.";
             });
         public ResponseMessage ReadDeviceItemChannels(string devicePathJson, string itemPathJson, string channelType = "", string channelIoType = "", int channelNumber = -1, string attributeNamesJson = "[]", int offset = 0, int limit = 100, bool includeLinkedTags = false)
-            => _session.RunHmiStepTool("ReadDeviceItemChannels", meta => {
+            => _session.RunHmiStepTool("ListDeviceItemChannels", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 bool exact = HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber);
                 var extra = HardwareNetworkLogic.ParseNames(attributeNamesJson, "attributeNamesJson");
@@ -498,7 +498,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "Channels of the device item read; no modification.";
             });
         public ResponseMessage UpdateDeviceItemChannel(string devicePathJson, string itemPathJson, string channelType, string channelIoType, int channelNumber, string attributesJson, bool dryRun = true)
-            => _session.RunHmiStepTool("UpdateDeviceItemChannel", meta => {
+            => _session.RunHmiStepTool("SetDeviceItemChannel", meta => {
                 if (!HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber)) throw new ArgumentException("channelType, channelIoType and channelNumber are required.");
                 var attributes = HardwareNetworkLogic.ParseObject(attributesJson, "attributesJson");
                 if (attributes.Count == 0) throw new ArgumentException("attributesJson must name at least one attribute.");
@@ -650,7 +650,7 @@ namespace TiaMcpServer.Siemens.Services
         // One-shot project topology: every device with its network nodes (IP / subnet / type).
         public JsonObject GetProjectTopology()
         {
-            if (_session.IsProjectNull()) return new JsonObject { ["message"] = "No project open." };
+            if (_session.IsProjectNull()) return new JsonObject { ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
             var devices = new JsonArray();
             foreach (Device device in _session.CurrentProject!.Devices)
             {
@@ -676,6 +676,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 ["timestamp"] = DateTime.Now,
                 ["success"] = false,
+                ["mayHaveChanged"] = false,
                 ["anchorDeviceItemPath"] = anchorDeviceItemPath,
                 ["subnetType"] = subnetType,
                 ["subnetName"] = subnetName
@@ -684,10 +685,14 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 if (_session.IsProjectNull())
+                {
+                    meta["failureCode"] = "PROJECT_NOT_BOUND";
                     return new ResponseMessage { Message = "Project is null", Meta = meta };
+                }
 
                 if (!IsSupportedProfinetSubnetType(subnetType))
                 {
+                    meta["failureCode"] = "UNSUPPORTED_CAPABILITY";
                     meta["error"] = "Only IndustrialEthernet/PROFINET subnet types are supported by this safe primitive.";
                     return new ResponseMessage { Message = "Unsupported subnet type", Meta = meta };
                 }
@@ -695,6 +700,7 @@ namespace TiaMcpServer.Siemens.Services
                 var anchorRoot = _session.GetDeviceItemByPath(anchorDeviceItemPath);
                 if (anchorRoot == null)
                 {
+                    meta["failureCode"] = "NOT_FOUND";
                     meta["error"] = "Anchor device item not found";
                     return new ResponseMessage { Message = "Anchor device item not found", Meta = meta };
                 }
@@ -721,6 +727,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (subnet == null)
                 {
                     var create = node.Node.GetType().GetMethod("CreateAndConnectToSubnet", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
+                    meta["mayHaveChanged"] = create != null;
                     subnet = create?.Invoke(node.Node, new object[] { subnetName });
                     meta["created"] = subnet != null;
                 }
@@ -754,6 +761,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 ["timestamp"] = DateTime.Now,
                 ["success"] = false,
+                ["mayHaveChanged"] = false,
                 ["deviceItemPath"] = deviceItemPath,
                 ["interfaceIndex"] = interfaceIndex,
                 ["subnetName"] = subnetName,
@@ -763,11 +771,15 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 if (_session.IsProjectNull())
+                {
+                    meta["failureCode"] = "PROJECT_NOT_BOUND";
                     return new ResponseMessage { Message = "Project is null", Meta = meta };
+                }
 
                 var targetRoot = _session.GetDeviceItemByPath(deviceItemPath);
                 if (targetRoot == null)
                 {
+                    meta["failureCode"] = "NOT_FOUND";
                     meta["error"] = "Device item not found";
                     return new ResponseMessage { Message = "Device item not found", Meta = meta };
                 }
@@ -803,6 +815,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (!string.Equals(connectedName, subnetName, StringComparison.OrdinalIgnoreCase))
                 {
                     var connect = selected.Node.GetType().GetMethod("ConnectToSubnet", BindingFlags.Public | BindingFlags.Instance);
+                    meta["mayHaveChanged"] = connect != null;
                     connect?.Invoke(selected.Node, new object[] { subnet });
                 }
 
@@ -826,25 +839,28 @@ namespace TiaMcpServer.Siemens.Services
 
         public List<string> ProbeHardwareHmiConnectionOwnerCandidates(string plcRootPath, string hmiRootPath, bool deepScan = true)
         {
-            var lines = new List<string>();
+            var lines = new HardwareProbeEvidence { FailureCode = "PROJECT_NOT_BOUND" };
             if (_session.IsProjectNull())
             {
                 lines.Add("Project is null");
                 return lines;
             }
 
+            lines.FailureCode = "NOT_FOUND";
             var plcRoot = _session.GetDeviceItemByPath(plcRootPath);
             var hmiRoot = _session.GetDeviceItemByPath(hmiRootPath);
             lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
             lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
             if (plcRoot == null || hmiRoot == null) return lines;
 
+            lines.FailureCode = "UNSUPPORTED_CAPABILITY";
             var plcNode = _session.FindNetworkNodes(plcRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
             var hmiNode = _session.FindNetworkNodes(hmiRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
             lines.Add("Selected PLC node: " + (plcNode.Node == null ? "<none>" : _session.FormatNodeInfo(plcNode)));
             lines.Add("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : _session.FormatNodeInfo(hmiNode)));
             if (plcNode.Node == null || hmiNode.Node == null) return lines;
 
+            lines.FailureCode = null;
             var candidates = deepScan
                 ? _session.BuildHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList()
                 : _session.BuildDirectHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList();
@@ -864,25 +880,28 @@ namespace TiaMcpServer.Siemens.Services
 
         public List<string> ProbeHardwareHmiConnectionWhitelistedServices(string plcRootPath, string hmiRootPath, bool deepScan = true)
         {
-            var lines = new List<string>();
+            var lines = new HardwareProbeEvidence { FailureCode = "PROJECT_NOT_BOUND" };
             if (_session.IsProjectNull())
             {
                 lines.Add("Project is null");
                 return lines;
             }
 
+            lines.FailureCode = "NOT_FOUND";
             var plcRoot = _session.GetDeviceItemByPath(plcRootPath);
             var hmiRoot = _session.GetDeviceItemByPath(hmiRootPath);
             lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
             lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
             if (plcRoot == null || hmiRoot == null) return lines;
 
+            lines.FailureCode = "UNSUPPORTED_CAPABILITY";
             var plcNode = _session.FindNetworkNodes(plcRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
             var hmiNode = _session.FindNetworkNodes(hmiRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
             lines.Add("Selected PLC node: " + (plcNode.Node == null ? "<none>" : _session.FormatNodeInfo(plcNode)));
             lines.Add("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : _session.FormatNodeInfo(hmiNode)));
             if (plcNode.Node == null || hmiNode.Node == null) return lines;
 
+            lines.FailureCode = null;
             var candidates = deepScan
                 ? _session.BuildHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList()
                 : _session.BuildDirectHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList();

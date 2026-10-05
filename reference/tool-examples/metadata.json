@@ -288,7 +288,9 @@
       "resultCases": [
         {
           "example": {
-            "meta": {
+            "schemaVersion": 4,
+            "ok": true,
+            "data": {
               "apiCallSuccess": true,
               "effectiveState": "Warning",
               "rootCounts": {
@@ -299,13 +301,22 @@
                 "<native warning diagnostic>"
               ],
               "incomplete": false
+            },
+            "error": null,
+            "meta": {
+              "outcome": "succeeded",
+              "execution": "completed",
+              "completeness": "complete",
+              "behaviorPolicy": "current"
             }
           },
           "meaning": "The hardware compile returned with a warning. Inspect warnings and nodes; no save/download is implied."
         },
         {
           "example": {
-            "meta": {
+            "schemaVersion": 4,
+            "ok": false,
+            "data": {
               "apiCallSuccess": true,
               "effectiveState": "Error",
               "rootCounts": {
@@ -316,12 +327,27 @@
                 "<nested error diagnostic>"
               ],
               "incomplete": false
+            },
+            "error": {
+              "code": "NATIVE_OPERATION_FAILED",
+              "message": "The hardware operation did not establish a successful result.",
+              "details": {
+                "nativeCode": null,
+                "nativeMessage": null,
+                "evidence": {}
+              }
+            },
+            "meta": {
+              "outcome": "failed",
+              "execution": "completed",
+              "completeness": "complete",
+              "behaviorPolicy": "current"
             }
           },
           "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
         }
       ],
-      "result": "This tool returns compilation fields under meta, not top-level state/errorCount. Inspect meta.effectiveState, rootCounts.errors/warnings, errors/warnings and nodes, including nested diagnostics. apiCallSuccess only means the API returned; this wrapper sets success/operationSuccess from the native root state, so those flags alone can miss nested errors. incomplete/truncated/collectFailures explain partial diagnostics; root/subtree counts overlap and must not be added.",
+      "result": "Compilation evidence is under data: effectiveState, rootCounts, errors, warnings and nodes, including nested diagnostics. The V4 outcome uses effectiveState, so a nested error remains failed even when root counts are zero. apiCallSuccess only means the API returned. incomplete, truncated and collectFailures describe partial diagnostics; root/subtree counts overlap and must not be added. behaviorPolicy remains current; no save/download is implied.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],

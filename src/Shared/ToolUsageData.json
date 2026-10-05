@@ -5174,6 +5174,19 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetHardwareFeatures": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetHmiConnections": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -5351,6 +5364,19 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "GetPlcPutGetAccess": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "GetPlcRunStateS7": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -5430,19 +5456,6 @@
       "documents": [
         "guides/skills/session-and-project/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "GetPutGetAccess": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -6074,6 +6087,29 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListCommunicationConnections": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListDeviceItemChannels": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ListDevices": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -6110,6 +6146,34 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
+    },
+    "ListIoSystems": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/networks-and-drivecliq/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListNetworkDomains": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/networks-and-drivecliq/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
     },
     "ListObjectChildren": {
       "relationship": "related-api-patterns",
@@ -6233,6 +6297,20 @@
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ListTransferAreas": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/networks-and-drivecliq/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+      ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -7990,16 +8068,6 @@
         }
       ]
     },
-    "ReadCommunicationConnections": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/session-and-project/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadDccCharts": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8016,19 +8084,6 @@
       "documents": [
         "guides/skills/drive-control-charts/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadDeviceItemChannels": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -8064,19 +8119,6 @@
         "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
       }
     },
-    "ReadHardwareFeatures": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadHmiScreenSnapshot": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -8093,20 +8135,6 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
-    },
-    "ReadIoSystems": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/networks-and-drivecliq/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
     },
     "ReadLibraryOverview": {
       "relationship": "related-api-patterns",
@@ -8146,20 +8174,6 @@
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadNetworkDomains": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/networks-and-drivecliq/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-      ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -8483,20 +8497,6 @@
       "documents": [
         "guides/skills/session-and-project/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "ReadTransferAreas": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/networks-and-drivecliq/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -9321,6 +9321,19 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "SetDeviceItemChannel": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "SetDeviceItemIoAddress": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -9376,6 +9389,19 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "SetPlcPutGetAccess": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/devices-and-hardware/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+        "guides/skills/hardware-and-modules/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "SetPlcUnitObjectAccess": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -9401,19 +9427,6 @@
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "SetPutGetAccess": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -9553,19 +9566,6 @@
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "UpdateDeviceItemChannel": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/devices-and-hardware/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-        "guides/skills/hardware-and-modules/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-      ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -14100,11 +14100,15 @@
         },
         "CompileDevice": {
           "arguments": {
-            "devicePathJson": "[\"PLC_1\"]"
+            "devicePath": [
+              "PLC_1"
+            ]
           },
           "parameters": {
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             }
           },
@@ -15141,12 +15145,16 @@
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "devicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             }
           },
@@ -16139,7 +16147,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
         },
-        "GetPutGetAccess": {
+        "GetPlcPutGetAccess": {
           "arguments": {
             "devicePath": "PLC_1"
           },
@@ -17404,8 +17412,12 @@
         },
         "ManageCommunicationConnection": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "action": "create",
             "connectionName": "ExampleConnection",
             "connectionType": "S7Connection",
@@ -17413,30 +17425,38 @@
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "localInterfaceItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "localInterfaceItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "localNodeName": {
               "exampleValue": "<localNodeName from this operation's target or user input>",
               "requiresBinding": true
             },
-            "partnerDevicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "partnerDevicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "partnerItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "partnerItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "partnerInterfaceItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "partnerInterfaceItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "partnerNodeName": {
@@ -17866,25 +17886,31 @@
         },
         "ManageDeviceServiceObjects": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "family": "webApplications",
             "confirmChange": false,
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "name": {
               "exampleValue": "Example_1"
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
             "filePath": {
@@ -17904,7 +17930,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "name": "Example_1"
               }
             },
@@ -17987,18 +18015,22 @@
         },
         "ManageDeviceUsers": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "family": "webserver",
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "userName": {
@@ -18008,8 +18040,10 @@
               "exampleValue": "<password supplied for this target>",
               "requiresBinding": true
             },
-            "permissionsJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "permissions": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
             "active": {
@@ -18046,7 +18080,9 @@
             "setPermissions": {
               "arguments": {
                 "action": "setPermissions",
-                "permissionsJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+                "permissions": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
                 "userName": "ExampleUser"
               }
             },
@@ -18607,12 +18643,16 @@
               "exampleValue": "<exact TypeIdentifier from SearchHardwareCatalog>",
               "requiresBinding": true
             },
-            "devicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "devicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "filePath": {
@@ -18648,16 +18688,24 @@
             "exportOpcUa": {
               "arguments": {
                 "action": "exportOpcUa",
-                "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ],
                 "filePath": "C:\\Examples\\exports\\Main.xml"
               }
             },
             "exportCardReaderPsc": {
               "arguments": {
                 "action": "exportCardReaderPsc",
-                "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ],
                 "filePath": "C:\\Examples\\exports\\Main.xml"
               }
             }
@@ -18666,8 +18714,12 @@
         },
         "ManageIoSystem": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "action": "create",
             "name": "ExampleIO",
             "subnetName": "PN_IE_1",
@@ -18675,22 +18727,26 @@
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "ioSystemName": {
               "exampleValue": "<ioSystemName from this operation's target or user input>",
               "requiresBinding": true
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             }
           },
@@ -18706,7 +18762,9 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "connect": {
@@ -19116,20 +19174,28 @@
             "dryRun": true
           },
           "parameters": {
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
-            "participantDevicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "participantDevicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "participantItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "participantItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             }
           },
@@ -19145,14 +19211,20 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "addParticipant": {
               "arguments": {
                 "action": "addParticipant",
-                "participantDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "participantItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+                "participantDevicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "participantItemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
               }
             }
           },
@@ -19906,14 +19978,18 @@
         },
         "ManagePlcProtection": {
           "arguments": {
-            "devicePathJson": "[\"PLC_1\"]",
+            "devicePath": [
+              "PLC_1"
+            ],
             "action": "read",
             "confirmChange": false,
             "dryRun": true
           },
           "parameters": {
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "accessLevel": {
@@ -20444,24 +20520,32 @@
         },
         "ManagePortInterconnection": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "partnerDevicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "partnerDevicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "partnerItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "partnerItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             }
           },
@@ -20472,15 +20556,23 @@
             "connect": {
               "arguments": {
                 "action": "connect",
-                "partnerDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "partnerItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+                "partnerDevicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "partnerItemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
               }
             },
             "disconnect": {
               "arguments": {
                 "action": "disconnect",
-                "partnerDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "partnerItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+                "partnerDevicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "partnerItemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
               }
             }
           },
@@ -21928,8 +22020,12 @@
         },
         "ManageTransferArea": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "action": "create",
             "kind": "standard",
             "name": "ExampleTransfer",
@@ -21939,21 +22035,25 @@
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "extendedPositionNumber": {
               "exampleValue": -1
             },
-            "partnerDevicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "partnerDevicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "partnerItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "partnerItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "senderName": {
@@ -21963,23 +22063,31 @@
             "length": {
               "exampleValue": -1
             },
-            "propertiesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
-            "attributesJson": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "requiresBinding": true
             },
             "ruleIndex": {
               "exampleValue": -1
             },
-            "targetDevicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "targetDevicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "targetItemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "targetItemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             }
           },
@@ -21995,21 +22103,27 @@
             "update": {
               "arguments": {
                 "action": "update",
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "createMappingRule": {
               "arguments": {
                 "action": "createMappingRule",
                 "ruleIndex": -1,
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "updateMappingRule": {
               "arguments": {
                 "action": "updateMappingRule",
                 "ruleIndex": -1,
-                "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
               }
             },
             "deleteMappingRule": {
@@ -22022,8 +22136,12 @@
               "arguments": {
                 "action": "createReceiver",
                 "senderName": "<senderName from this operation's target or user input>",
-                "targetDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-                "targetItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+                "targetDevicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "targetItemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
               }
             }
           },
@@ -22627,17 +22745,21 @@
         },
         "ManageWatchForceTableWebAccess": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "confirmChange": false,
             "dryRun": true,
             "action": "read"
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "softwarePath": {
@@ -22780,7 +22902,16 @@
         },
         "PlanHardwareNetworkConfiguration": {
           "arguments": {
-            "planJson": "{\"operations\":[{\"type\":\"EnsureSubnet\",\"subnetName\":\"PN_IE_1\",\"subnetType\":\"System:Subnet.Ethernet\"}]}"
+            "plan": {
+              "operations": [
+                {
+                  "type": "EnsureSubnet",
+                  "subnetName": "PN_IE_1",
+                  "subnetType": "PROFINET",
+                  "anchorDeviceItemPath": "PLC_1"
+                }
+              ]
+            }
           },
           "parameters": {},
           "operations": {},
@@ -23034,16 +23165,20 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadCommunicationConnections": {
+        "ListCommunicationConnections": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "offset": {
@@ -23152,16 +23287,20 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
         },
-        "ReadDeviceItemChannels": {
+        "ListDeviceItemChannels": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "channelType": {
@@ -23173,8 +23312,11 @@
             "channelNumber": {
               "exampleValue": -1
             },
-            "attributeNamesJson": {
-              "exampleValue": "<attributeNamesJson from this operation's target or user input>",
+            "attributeNames": {
+              "exampleValue": [
+                "ChannelAddress",
+                "ChannelWidth"
+              ],
               "requiresBinding": true
             },
             "offset": {
@@ -23245,16 +23387,20 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "ReadHardwareFeatures": {
+        "GetHardwareFeatures": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "offset": {
@@ -23283,18 +23429,22 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadIoSystems": {
+        "ListIoSystems": {
           "arguments": {},
           "parameters": {
             "subnetName": {
               "exampleValue": "PN_IE_1"
             },
-            "devicePathJson": {
-              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "devicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
-            "itemPathJson": {
-              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
               "requiresBinding": true
             },
             "offset": {
@@ -23380,7 +23530,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "ReadNetworkDomains": {
+        "ListNetworkDomains": {
           "arguments": {
             "subnetName": "PN_IE_1"
           },
@@ -23951,16 +24101,20 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadTransferAreas": {
+        "ListTransferAreas": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
             "positionNumber": {
@@ -24914,7 +25068,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "SetPutGetAccess": {
+        "SetPlcPutGetAccess": {
           "arguments": {
             "devicePath": "PLC_1"
           },
@@ -25166,24 +25320,30 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
         },
-        "UpdateDeviceItemChannel": {
+        "SetDeviceItemChannel": {
           "arguments": {
-            "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-            "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
             "channelType": "None",
             "channelIoType": "None",
             "channelNumber": 1,
-            "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "attributes": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "dryRun": true
           },
           "parameters": {
-            "devicePathJson": {
+            "devicePath": {
               "requiresBinding": true
             },
-            "itemPathJson": {
+            "itemPath": {
               "requiresBinding": true
             },
-            "attributesJson": {
+            "attributes": {
               "requiresBinding": true
             }
           },
@@ -25747,37 +25907,45 @@
         {
           "tool": "ManagePlcProtection",
           "arguments": {
-            "devicePathJson": "[\"<Station>\"]",
-            "action": "read"
+            "action": "read",
+            "devicePath": [
+              "<Station>"
+            ]
           },
           "expect": "accessLevel / masterSecret as configured"
         },
         {
           "tool": "ManagePlcProtection",
           "arguments": {
-            "devicePathJson": "[\"<Station>\"]",
             "action": "setAccessLevel",
             "accessLevel": "FullAccess",
             "dryRun": false,
-            "confirmChange": true
+            "confirmChange": true,
+            "devicePath": [
+              "<Station>"
+            ]
           },
           "expect": "accessLevel FullAccess (FullAccessIncludingFailsafe on an F-CPU)"
         },
         {
           "tool": "ManagePlcProtection",
           "arguments": {
-            "devicePathJson": "[\"<Station>\"]",
             "action": "protectMasterSecret",
             "password": "<test password>",
             "dryRun": false,
-            "confirmChange": true
+            "confirmChange": true,
+            "devicePath": [
+              "<Station>"
+            ]
           },
           "expect": "masterSecret WithPassword"
         },
         {
           "tool": "CompileDevice",
           "arguments": {
-            "devicePathJson": "[\"<Station>\"]"
+            "devicePath": [
+              "<Station>"
+            ]
           },
           "expect": "0 errors (warnings allowed)"
         }
@@ -26625,7 +26793,9 @@
       "resultCases": [
         {
           "example": {
-            "meta": {
+            "schemaVersion": 4,
+            "ok": true,
+            "data": {
               "apiCallSuccess": true,
               "effectiveState": "Warning",
               "rootCounts": {
@@ -26636,13 +26806,22 @@
                 "<native warning diagnostic>"
               ],
               "incomplete": false
+            },
+            "error": null,
+            "meta": {
+              "outcome": "succeeded",
+              "execution": "completed",
+              "completeness": "complete",
+              "behaviorPolicy": "current"
             }
           },
           "meaning": "The hardware compile returned with a warning. Inspect warnings and nodes; no save/download is implied."
         },
         {
           "example": {
-            "meta": {
+            "schemaVersion": 4,
+            "ok": false,
+            "data": {
               "apiCallSuccess": true,
               "effectiveState": "Error",
               "rootCounts": {
@@ -26653,12 +26832,27 @@
                 "<nested error diagnostic>"
               ],
               "incomplete": false
+            },
+            "error": {
+              "code": "NATIVE_OPERATION_FAILED",
+              "message": "The hardware operation did not establish a successful result.",
+              "details": {
+                "nativeCode": null,
+                "nativeMessage": null,
+                "evidence": {}
+              }
+            },
+            "meta": {
+              "outcome": "failed",
+              "execution": "completed",
+              "completeness": "complete",
+              "behaviorPolicy": "current"
             }
           },
           "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
         }
       ],
-      "result": "This tool returns compilation fields under meta, not top-level state/errorCount. Inspect meta.effectiveState, rootCounts.errors/warnings, errors/warnings and nodes, including nested diagnostics. apiCallSuccess only means the API returned; this wrapper sets success/operationSuccess from the native root state, so those flags alone can miss nested errors. incomplete/truncated/collectFailures explain partial diagnostics; root/subtree counts overlap and must not be added.",
+      "result": "Compilation evidence is under data: effectiveState, rootCounts, errors, warnings and nodes, including nested diagnostics. The V4 outcome uses effectiveState, so a nested error remains failed even when root counts are zero. apiCallSuccess only means the API returned. incomplete, truncated and collectFailures describe partial diagnostics; root/subtree counts overlap and must not be added. behaviorPolicy remains current; no save/download is implied.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],

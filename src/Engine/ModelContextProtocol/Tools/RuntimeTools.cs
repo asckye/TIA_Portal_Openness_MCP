@@ -122,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             {
                                 Ok = false,
                                 Message = $"PUT/GET access is DISABLED on '{devicePath}' (attribute '{pg["attributeName"]}'). S7 absolute DB reads will fail. " +
-                                          $"Enable it: SetPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadToPlc — or read M/I/Q which are unrestricted.",
+                                          $"Enable it: SetPlcPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadToPlc — or read M/I/Q which are unrestricted.",
                                 Data = new JsonObject { ["putGetAccess"] = pg, ["precheck"] = "putget-disabled" },
                                 Meta = ResponseMeta.Basic(DateTime.Now, false)
                             };

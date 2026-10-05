@@ -135,13 +135,18 @@ internal static class HardwareServicesShapeChecks
         // Tool surface
         var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ImportDeviceAml","ManagePlcProtection"}) {
+            if(v20 && name=="ManageCommunicationConnection") continue;
             var method=tools.Tool(name)!;
             var preview=method.GetParameters().Last();
             check(preview.Name=="dryRun" && Equals(preview.DefaultValue,true),name+" ends with dryRun=true");
         }
         foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ImportDeviceAml","confirmImport"),("ManagePlcProtection","confirmChange")})
+        {
+            if(v20 && name=="ManageCommunicationConnection") continue;
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==confirm).DefaultValue,false),name+" requires explicit "+confirm);
-        foreach(var name in new[]{"ReadCommunicationConnections","ReadHardwareFeatures"}) {
+        }
+        foreach(var name in new[]{"ListCommunicationConnections","GetHardwareFeatures"}) {
+            if(v20 && name=="ListCommunicationConnections") continue;
             var method=tools.Tool(name)!;
             check(method.GetParameters().Any(p=>p.Name=="offset") && method.GetParameters().Any(p=>p.Name=="limit") && !method.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read without dryRun");
         }

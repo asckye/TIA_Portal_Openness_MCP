@@ -1881,8 +1881,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17013 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17710 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:17387 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:18107 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:62 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:51 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |

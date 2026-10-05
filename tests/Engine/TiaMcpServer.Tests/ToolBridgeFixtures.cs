@@ -56,7 +56,7 @@ namespace TiaMcpServer.Tests
 {
     internal static class ToolBridgeFixture
     {
-        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools) });
+        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) });
 
         internal static void Configure(bool lite = false)
         {
@@ -68,6 +68,8 @@ namespace TiaMcpServer.Tests
                 .AddSingleton(HmiToolFixture.RuntimeSettings)
                 .AddSingleton(HmiToolFixture.GraphicSelection)
                 .AddSingleton(HmiToolFixture.GlobalScriptEdit)
+                .AddSingleton<Siemens.Services.HardwareNetworkService>()
+                .AddSingleton<Siemens.Services.HardwareServicesService>()
                 .AddEngine(includeSession: false, Catalog).BuildServiceProvider());
         }
     }
@@ -126,7 +128,7 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void AssemblyDiscoveryIncludesEveryAttributedTypeOnly()
         {
-            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools) }).Methods, ToolCatalog.Engine.Methods);
+            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) }).Methods, ToolCatalog.Engine.Methods);
         }
 
         [Fact]

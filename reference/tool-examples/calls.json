@@ -2992,11 +2992,15 @@
       },
       "CompileDevice": {
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "parameters": {
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           }
         },
@@ -4033,12 +4037,16 @@
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           }
         },
@@ -5031,7 +5039,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "GetPutGetAccess": {
+      "GetPlcPutGetAccess": {
         "arguments": {
           "devicePath": "PLC_1"
         },
@@ -6296,8 +6304,12 @@
       },
       "ManageCommunicationConnection": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "action": "create",
           "connectionName": "ExampleConnection",
           "connectionType": "S7Connection",
@@ -6305,30 +6317,38 @@
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
-          "localInterfaceItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "localInterfaceItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "localNodeName": {
             "exampleValue": "<localNodeName from this operation's target or user input>",
             "requiresBinding": true
           },
-          "partnerDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "partnerDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "partnerItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "partnerItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "partnerInterfaceItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "partnerInterfaceItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "partnerNodeName": {
@@ -6758,25 +6778,31 @@
       },
       "ManageDeviceServiceObjects": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "family": "webApplications",
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "name": {
             "exampleValue": "Example_1"
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
           "filePath": {
@@ -6796,7 +6822,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "name": "Example_1"
             }
           },
@@ -6879,18 +6907,22 @@
       },
       "ManageDeviceUsers": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "family": "webserver",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "userName": {
@@ -6900,8 +6932,10 @@
             "exampleValue": "<password supplied for this target>",
             "requiresBinding": true
           },
-          "permissionsJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "permissions": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
           "active": {
@@ -6938,7 +6972,9 @@
           "setPermissions": {
             "arguments": {
               "action": "setPermissions",
-              "permissionsJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "permissions": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
               "userName": "ExampleUser"
             }
           },
@@ -7499,12 +7535,16 @@
             "exampleValue": "<exact TypeIdentifier from SearchHardwareCatalog>",
             "requiresBinding": true
           },
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "filePath": {
@@ -7540,16 +7580,24 @@
           "exportOpcUa": {
             "arguments": {
               "action": "exportOpcUa",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ],
               "filePath": "C:\\Examples\\exports\\Main.xml"
             }
           },
           "exportCardReaderPsc": {
             "arguments": {
               "action": "exportCardReaderPsc",
-              "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ],
               "filePath": "C:\\Examples\\exports\\Main.xml"
             }
           }
@@ -7558,8 +7606,12 @@
       },
       "ManageIoSystem": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "action": "create",
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
@@ -7567,22 +7619,26 @@
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "ioSystemName": {
             "exampleValue": "<ioSystemName from this operation's target or user input>",
             "requiresBinding": true
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           }
         },
@@ -7598,7 +7654,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "connect": {
@@ -8008,20 +8066,28 @@
           "dryRun": true
         },
         "parameters": {
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
-          "participantDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "participantDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "participantItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "participantItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           }
         },
@@ -8037,14 +8103,20 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "addParticipant": {
             "arguments": {
               "action": "addParticipant",
-              "participantDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "participantItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "participantDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "participantItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           }
         },
@@ -8798,14 +8870,18 @@
       },
       "ManagePlcProtection": {
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]",
+          "devicePath": [
+            "PLC_1"
+          ],
           "action": "read",
           "confirmChange": false,
           "dryRun": true
         },
         "parameters": {
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "accessLevel": {
@@ -9336,24 +9412,32 @@
       },
       "ManagePortInterconnection": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "dryRun": true,
           "action": "read"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
-          "partnerDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "partnerDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "partnerItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "partnerItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           }
         },
@@ -9364,15 +9448,23 @@
           "connect": {
             "arguments": {
               "action": "connect",
-              "partnerDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "partnerItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "partnerDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "partnerItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           },
           "disconnect": {
             "arguments": {
               "action": "disconnect",
-              "partnerDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "partnerItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "partnerDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "partnerItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           }
         },
@@ -10820,8 +10912,12 @@
       },
       "ManageTransferArea": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "action": "create",
           "kind": "standard",
           "name": "ExampleTransfer",
@@ -10831,21 +10927,25 @@
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "extendedPositionNumber": {
             "exampleValue": -1
           },
-          "partnerDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "partnerDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "partnerItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "partnerItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "senderName": {
@@ -10855,23 +10955,31 @@
           "length": {
             "exampleValue": -1
           },
-          "propertiesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
-          "attributesJson": {
-            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
             "requiresBinding": true
           },
           "ruleIndex": {
             "exampleValue": -1
           },
-          "targetDevicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "targetDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "targetItemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "targetItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           }
         },
@@ -10887,21 +10995,27 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "createMappingRule": {
             "arguments": {
               "action": "createMappingRule",
               "ruleIndex": -1,
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "updateMappingRule": {
             "arguments": {
               "action": "updateMappingRule",
               "ruleIndex": -1,
-              "propertiesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}"
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
             }
           },
           "deleteMappingRule": {
@@ -10914,8 +11028,12 @@
             "arguments": {
               "action": "createReceiver",
               "senderName": "<senderName from this operation's target or user input>",
-              "targetDevicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-              "targetItemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+              "targetDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "targetItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
             }
           }
         },
@@ -11519,17 +11637,21 @@
       },
       "ManageWatchForceTableWebAccess": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "softwarePath": {
@@ -11672,7 +11794,16 @@
       },
       "PlanHardwareNetworkConfiguration": {
         "arguments": {
-          "planJson": "{\"operations\":[{\"type\":\"EnsureSubnet\",\"subnetName\":\"PN_IE_1\",\"subnetType\":\"System:Subnet.Ethernet\"}]}"
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
         },
         "parameters": {},
         "operations": {},
@@ -11926,16 +12057,20 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadCommunicationConnections": {
+      "ListCommunicationConnections": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]"
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "offset": {
@@ -12044,16 +12179,20 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "ReadDeviceItemChannels": {
+      "ListDeviceItemChannels": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "channelType": {
@@ -12065,8 +12204,11 @@
           "channelNumber": {
             "exampleValue": -1
           },
-          "attributeNamesJson": {
-            "exampleValue": "<attributeNamesJson from this operation's target or user input>",
+          "attributeNames": {
+            "exampleValue": [
+              "ChannelAddress",
+              "ChannelWidth"
+            ],
             "requiresBinding": true
           },
           "offset": {
@@ -12137,16 +12279,20 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadHardwareFeatures": {
+      "GetHardwareFeatures": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]"
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "offset": {
@@ -12175,18 +12321,22 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadIoSystems": {
+      "ListIoSystems": {
         "arguments": {},
         "parameters": {
           "subnetName": {
             "exampleValue": "PN_IE_1"
           },
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
             "requiresBinding": true
           },
           "offset": {
@@ -12272,7 +12422,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ReadNetworkDomains": {
+      "ListNetworkDomains": {
         "arguments": {
           "subnetName": "PN_IE_1"
         },
@@ -12843,16 +12993,20 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadTransferAreas": {
+      "ListTransferAreas": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]"
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
           "positionNumber": {
@@ -13806,7 +13960,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "SetPutGetAccess": {
+      "SetPlcPutGetAccess": {
         "arguments": {
           "devicePath": "PLC_1"
         },
@@ -14058,24 +14212,30 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
       },
-      "UpdateDeviceItemChannel": {
+      "SetDeviceItemChannel": {
         "arguments": {
-          "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
-          "itemPathJson": "[\"<exact device item from GetProjectTree>\"]",
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
           "channelType": "None",
           "channelIoType": "None",
           "channelNumber": 1,
-          "attributesJson": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+          "attributes": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          },
           "dryRun": true
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "requiresBinding": true
           },
-          "attributesJson": {
+          "attributes": {
             "requiresBinding": true
           }
         },

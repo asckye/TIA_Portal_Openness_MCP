@@ -85,7 +85,7 @@ namespace TiaMcpServer.Siemens.Services
             => EngineeringGroupOperations.Items(composition).Where(c => string.Equals(c.GetType().GetProperty("LocalConnectionName")?.GetValue(c)?.ToString(), name, StringComparison.Ordinal)).ToArray();
 
         public ResponseMessage ReadCommunicationConnections(string devicePathJson, string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadCommunicationConnections", meta => {
+            => _session.RunHmiStepTool("ListCommunicationConnections", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["owner"] = EngineeringScalarProperties.Read(owner);
@@ -249,7 +249,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         public ResponseMessage ReadHardwareFeatures(string devicePathJson, string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => _session.RunHmiStepTool("ReadHardwareFeatures", meta => {
+            => _session.RunHmiStepTool("GetHardwareFeatures", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["owner"] = EngineeringScalarProperties.Read(owner);
@@ -446,15 +446,16 @@ namespace TiaMcpServer.Siemens.Services
         public JsonObject SetPutGetAccess(string devicePath, bool enable)
         {
             // envelope: legacy-ok-only
-            if (_session.IsProjectNull()) return new JsonObject { ["ok"] = false, ["message"] = "No project open." };
+            if (_session.IsProjectNull()) return new JsonObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
             var device = _session.GetDevice(devicePath);
-            if (device == null) return new JsonObject { ["ok"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
+            if (device == null) return new JsonObject { ["ok"] = false, ["failureCode"] = "NOT_FOUND", ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
             var (item, attrName) = _session.FindPutGetAttribute(device);
             if (item == null || attrName == null)
                 return new JsonObject
                 {
                     ["ok"] = false,
+                    ["failureCode"] = "UNSUPPORTED_CAPABILITY",
                     ["device"] = device.Name,
                     ["message"] = "PUT/GET access cannot be set via Openness on this CPU/firmware (not an exposed attribute; " +
                                   "confirmed e.g. on S7-1200 1211C V4.6). Set it manually in TIA: " +
@@ -465,13 +466,15 @@ namespace TiaMcpServer.Siemens.Services
             try { item.SetAttribute(attrName, enable); }
             catch (Exception ex)
             {
-                return new JsonObject { ["ok"] = false, ["device"] = device.Name, ["attributeName"] = attrName, ["message"] = $"SetAttribute failed: {ex.Message}" };
+                return new JsonObject { ["ok"] = false, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = false, ["device"] = device.Name, ["attributeName"] = attrName, ["message"] = $"SetAttribute failed: {ex.Message}" };
             }
             object? after = null; try { after = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
 
             return new JsonObject
             {
                 ["ok"] = _session.AttrValueIsEnabled(after) == enable,
+                ["mayHaveChanged"] = true,
+                ["writeOutcomeKnown"] = after != null,
                 ["device"] = device.Name,
                 ["deviceItem"] = item.Name,
                 ["attributeName"] = attrName,
@@ -639,6 +642,7 @@ namespace TiaMcpServer.Siemens.Services
                 var compilable = _session.ServiceProvider(owner).GetService<ICompilable>()
                     ?? throw new NotSupportedException("ICompilable is not available on '" + owner.Name + "'.");
                 var watch = System.Diagnostics.Stopwatch.StartNew();
+                meta["mayHaveChanged"] = true;
                 CompilerResult result = compilable.Compile();
                 meta["compileElapsedMs"] = watch.ElapsedMilliseconds;
                 meta["apiCallSuccess"] = true;
@@ -647,6 +651,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["errors"] = new JsonArray(collected.Errors.Select(e => (JsonNode)JsonValue.Create(e)!).ToArray());
                 meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
                 // envelope: legacy-independent-verdicts
+                meta["nativeCompleted"] = true;
                 meta["success"] = result.State != CompilerResultState.Error;
                 meta["operationSuccess"] = result.State != CompilerResultState.Error;
                 return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";

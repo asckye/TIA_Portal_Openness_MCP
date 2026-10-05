@@ -163,7 +163,7 @@
           "interfaceIndex": 1,
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AttachOpenProject",
@@ -700,9 +700,11 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompileHmiDiagnostics",
@@ -770,7 +772,7 @@
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectIsolatedPortal",
@@ -1361,7 +1363,7 @@
           "subnetType": "System:Subnet.Ethernet",
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureUnifiedHmiButtonAction",
@@ -1553,7 +1555,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeTestSuiteCase",
@@ -2218,7 +2220,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemTree",
@@ -2293,15 +2295,17 @@
       },
       {
         "name": "GetHardwareFeatures",
-        "currentName": "ReadHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
         "sourceName": "ReadHardwareFeatures",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHmiProgramInfo",
@@ -2611,7 +2615,7 @@
       },
       {
         "name": "GetPlcPutGetAccess",
-        "currentName": "GetPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
         "sourceName": "GetPutGetAccess",
         "profiles": [
           "full"
@@ -2619,7 +2623,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcRunStateS7",
@@ -2768,7 +2772,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectTree",
@@ -3676,16 +3680,20 @@
       },
       {
         "name": "ListDeviceItemChannels",
-        "currentName": "ReadDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
         "sourceName": "ReadDeviceItemChannels",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDevices",
@@ -3794,17 +3802,17 @@
       },
       {
         "name": "ListIoSystems",
-        "currentName": "ReadIoSystems",
+        "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListNetworkDomains",
-        "currentName": "ReadNetworkDomains",
+        "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
         "profiles": [
           "full"
@@ -3812,7 +3820,7 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListObjectChildren",
@@ -4013,16 +4021,20 @@
       },
       {
         "name": "ListTransferAreas",
-        "currentName": "ReadTransferAreas",
+        "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTransferRoutes",
@@ -4310,14 +4322,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "family": "webApplications",
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceUserGroup",
@@ -4330,7 +4346,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceUsers",
@@ -4340,14 +4356,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "family": "webserver",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveFunctions",
@@ -4450,7 +4470,7 @@
           "dryRun": true,
           "action": "list"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageIoSystem",
@@ -4460,15 +4480,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "action": "create",
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryFolder",
@@ -4575,7 +4599,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOnlineDriveFunctions",
@@ -4766,12 +4790,14 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]",
+          "devicePath": [
+            "PLC_1"
+          ],
           "action": "read",
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSafety",
@@ -4894,12 +4920,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectCompilationSettings",
@@ -5176,8 +5206,12 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "action": "create",
           "kind": "standard",
           "name": "ExampleTransfer",
@@ -5186,7 +5220,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUmcUsers",
@@ -5402,13 +5436,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "MonitorPlcWatchTableS7",
@@ -5507,9 +5545,18 @@
           "full"
         ],
         "arguments": {
-          "planJson": "{\"operations\":[{\"type\":\"EnsureSubnet\",\"subnetName\":\"PN_IE_1\",\"subnetType\":\"System:Subnet.Ethernet\"}]}"
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanOnlineReadOnlyDataProvider",
@@ -5620,7 +5667,7 @@
           "plcRootPath": "PLC_1",
           "hmiRootPath": "HMI_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeHardwareHmiConnectionWhitelistedServices",
@@ -5633,7 +5680,7 @@
           "plcRootPath": "PLC_1",
           "hmiRootPath": "HMI_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbePlcMonitorOnlineCapabilities",
@@ -6067,21 +6114,27 @@
       },
       {
         "name": "SetDeviceItemChannel",
-        "currentName": "UpdateDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
         "sourceName": "UpdateDeviceItemChannel",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "channelType": "None",
           "channelIoType": "None",
           "channelNumber": 1,
-          "attributesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemIoAddress",
@@ -6145,7 +6198,7 @@
       },
       {
         "name": "SetPlcPutGetAccess",
-        "currentName": "SetPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
         "profiles": [
           "full"
@@ -6153,7 +6206,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcUnitObjectAccess",
@@ -6727,7 +6780,7 @@
           "interfaceIndex": 1,
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AttachOpenProject",
@@ -7264,9 +7317,11 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]"
+          "devicePath": [
+            "PLC_1"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompileHmiDiagnostics",
@@ -7334,7 +7389,7 @@
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectIsolatedPortal",
@@ -7925,7 +7980,7 @@
           "subnetType": "System:Subnet.Ethernet",
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureUnifiedHmiButtonAction",
@@ -8117,7 +8172,7 @@
           "confirmImport": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ExchangeTestSuiteCase",
@@ -8782,7 +8837,7 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetDeviceItemTree",
@@ -8857,15 +8912,17 @@
       },
       {
         "name": "GetHardwareFeatures",
-        "currentName": "ReadHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
         "sourceName": "ReadHardwareFeatures",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetHmiProgramInfo",
@@ -9175,7 +9232,7 @@
       },
       {
         "name": "GetPlcPutGetAccess",
-        "currentName": "GetPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
         "sourceName": "GetPutGetAccess",
         "profiles": [
           "full"
@@ -9183,7 +9240,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcRunStateS7",
@@ -9332,7 +9389,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectTree",
@@ -10227,15 +10284,17 @@
       },
       {
         "name": "ListCommunicationConnections",
-        "currentName": "ReadCommunicationConnections",
+        "currentName": "ListCommunicationConnections",
         "sourceName": "ReadCommunicationConnections",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDccCharts",
@@ -10252,16 +10311,20 @@
       },
       {
         "name": "ListDeviceItemChannels",
-        "currentName": "ReadDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
         "sourceName": "ReadDeviceItemChannels",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListDevices",
@@ -10370,17 +10433,17 @@
       },
       {
         "name": "ListIoSystems",
-        "currentName": "ReadIoSystems",
+        "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListNetworkDomains",
-        "currentName": "ReadNetworkDomains",
+        "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
         "profiles": [
           "full"
@@ -10388,7 +10451,7 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListObjectChildren",
@@ -10599,16 +10662,20 @@
       },
       {
         "name": "ListTransferAreas",
-        "currentName": "ReadTransferAreas",
+        "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]"
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListTransferRoutes",
@@ -10812,15 +10879,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "action": "create",
           "connectionName": "ExampleConnection",
           "connectionType": "S7Connection",
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDcbLibraries",
@@ -10929,14 +11000,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "family": "webApplications",
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceUserGroup",
@@ -10949,7 +11024,7 @@
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDeviceUsers",
@@ -10959,14 +11034,18 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "family": "webserver",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageDriveFunctions",
@@ -11084,7 +11163,7 @@
           "dryRun": true,
           "action": "list"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageIoSystem",
@@ -11094,15 +11173,19 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "action": "create",
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageLibraryFolder",
@@ -11209,7 +11292,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageOnlineDriveFunctions",
@@ -11416,12 +11499,14 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"PLC_1\"]",
+          "devicePath": [
+            "PLC_1"
+          ],
           "action": "read",
           "confirmChange": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManagePlcSafety",
@@ -11544,12 +11629,16 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageProjectCompilationSettings",
@@ -11901,8 +11990,12 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "action": "create",
           "kind": "standard",
           "name": "ExampleTransfer",
@@ -11911,7 +12004,7 @@
           "confirmDelete": false,
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ManageUmcUsers",
@@ -12127,13 +12220,17 @@
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "confirmChange": false,
           "dryRun": true,
           "action": "read"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "MonitorPlcWatchTableS7",
@@ -12232,9 +12329,18 @@
           "full"
         ],
         "arguments": {
-          "planJson": "{\"operations\":[{\"type\":\"EnsureSubnet\",\"subnetName\":\"PN_IE_1\",\"subnetType\":\"System:Subnet.Ethernet\"}]}"
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PlanOnlineReadOnlyDataProvider",
@@ -12345,7 +12451,7 @@
           "plcRootPath": "PLC_1",
           "hmiRootPath": "HMI_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbeHardwareHmiConnectionWhitelistedServices",
@@ -12358,7 +12464,7 @@
           "plcRootPath": "PLC_1",
           "hmiRootPath": "HMI_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ProbePlcMonitorOnlineCapabilities",
@@ -12792,21 +12898,27 @@
       },
       {
         "name": "SetDeviceItemChannel",
-        "currentName": "UpdateDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
         "sourceName": "UpdateDeviceItemChannel",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "devicePathJson": "[\"&lt;exact device name from GetProjectTree&gt;\"]",
-          "itemPathJson": "[\"&lt;exact device item from GetProjectTree&gt;\"]",
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "channelType": "None",
           "channelIoType": "None",
           "channelNumber": 1,
-          "attributesJson": "{\"&lt;exact supported field from this operation/read result&gt;\":\"&lt;value of that field's documented type&gt;\"}",
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetDeviceItemIoAddress",
@@ -12870,7 +12982,7 @@
       },
       {
         "name": "SetPlcPutGetAccess",
-        "currentName": "SetPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
         "profiles": [
           "full"
@@ -12878,7 +12990,7 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SetPlcUnitObjectAccess",

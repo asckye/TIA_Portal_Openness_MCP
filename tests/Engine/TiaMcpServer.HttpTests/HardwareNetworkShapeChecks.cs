@@ -2,6 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Collections.Generic;
+using ModelContextProtocol.Server;
 
 // Native members used by the hardware-network family (HardwareNetworkService.cs and the shared Portal.HardwareNetwork.cs kernel): IO systems, sync/MRP domains,
 // transfer areas, channels, addressing, device user groups, device users and port interconnections, verified against
@@ -169,6 +172,10 @@ internal static class HardwareNetworkShapeChecks
                 type.FullName + " is a non-disposable singleton class");
         foreach (var name in names)
         {
+            string registered = V4Name(name);
+            if ((name == "ReadCommunicationConnections" || name == "ManageCommunicationConnection")
+                && !tools.GetMethods(all).Any(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == registered))
+                continue; // V20 does not advertise the V21 communication API.
             if (name == "PlanHardwareNetworkConfiguration")
             {
                 var offline = surface.Tool(name);
@@ -179,7 +186,7 @@ internal static class HardwareNetworkShapeChecks
             var method = name == "GetDeviceItemNetworkInfo" || name == "GetPutGetAccess" || name == "ConnectDeviceNodesToProfinetSubnet"
                 ? service.GetMethod(name == "ConnectDeviceNodesToProfinetSubnet" ? "ProbeConnectDeviceNodesToSubnet" : name, all)!
                 : surface.Method(name);
-            var tool = surface.Tool(name);
+            var tool = surface.Tool(registered);
             var target = surface.Target(method);
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
@@ -187,13 +194,50 @@ internal static class HardwareNetworkShapeChecks
             check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
                 && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(surface.Target(tool)), target),
                 domain + " tool uses the service with the shared session: " + name);
-            var il = tool.GetMethodBody()!.GetILAsByteArray()!;
-            bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
-                (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            bool callsService = CallsService(tool, method, tools, new HashSet<MethodBase>());
             EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
             var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
             check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tools)),
                 domain + " tool resolves directly without a static CLI forwarder: " + name);
         }
+    }
+
+    private static string V4Name(string name) => name switch
+    {
+        "ReadIoSystems" => "ListIoSystems", "ReadNetworkDomains" => "ListNetworkDomains",
+        "ReadTransferAreas" => "ListTransferAreas", "ReadDeviceItemChannels" => "ListDeviceItemChannels",
+        "UpdateDeviceItemChannel" => "SetDeviceItemChannel", "ReadCommunicationConnections" => "ListCommunicationConnections",
+        "ReadHardwareFeatures" => "GetHardwareFeatures", "GetPutGetAccess" => "GetPlcPutGetAccess",
+        "SetPutGetAccess" => "SetPlcPutGetAccess", _ => name
+    };
+
+    private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.FieldType == typeof(OpCode)).Select(f => (OpCode)f.GetValue(null)!).ToDictionary(op => op.Value);
+
+    // Follow only this tool's adapters and captured delegates. Do not execute any
+    // code or accept a service call belonging to an unrelated tool method.
+    private static bool CallsService(MethodBase caller, MethodInfo service, Type owner, HashSet<MethodBase> seen)
+    {
+        if (!seen.Add(caller)) return false;
+        var il = caller.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
+        for (int i = 0; i < il.Length;)
+        {
+            short code = il[i++] == 0xfe ? (short)(0xfe00 | il[i++]) : (short)il[i - 1];
+            var op = OpCodesByValue[code];
+            if (op.OperandType == OperandType.InlineMethod)
+            {
+                var target = caller.Module.ResolveMethod(BitConverter.ToInt32(il, i));
+                if (target == service) return true;
+                var declaring = target!.DeclaringType;
+                while (declaring != null && declaring != owner) declaring = declaring.DeclaringType;
+                if (declaring == owner && CallsService(target, service, owner, seen)) return true;
+            }
+            i += op.OperandType == OperandType.InlineNone ? 0
+                : op.OperandType == OperandType.ShortInlineBrTarget || op.OperandType == OperandType.ShortInlineI || op.OperandType == OperandType.ShortInlineVar ? 1
+                : op.OperandType == OperandType.InlineVar ? 2
+                : op.OperandType == OperandType.InlineI8 || op.OperandType == OperandType.InlineR ? 8
+                : op.OperandType == OperandType.InlineSwitch ? 4 + 4 * BitConverter.ToInt32(il, i) : 4;
+        }
+        return false;
     }
 }

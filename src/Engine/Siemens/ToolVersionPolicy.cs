@@ -12,7 +12,7 @@ namespace TiaMcpServer.Siemens
         internal static readonly IReadOnlyDictionary<string, string> V21Only =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ReadCommunicationConnections"] = "HW.CommunicationConnections",
+                ["ListCommunicationConnections"] = "HW.CommunicationConnections",
                 ["ManageCommunicationConnection"] = "HW.CommunicationConnections",
                 ["ReadSafetyActivationTests"] = "SafetyValidationAssistant",
                 ["ManageSafetyActivationTest"] = "SafetyValidationAssistant",
