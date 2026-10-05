@@ -9,7 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <!-- The add-in's settings store is the only Newtonsoft.Json user and nothing here calls it; leaving it out keeps the
+         Studio payload System.Text.Json-only (Build-Studio refuses Newtonsoft.Json.dll). The source file stays unmodified. -->
+    <Compile Remove="Configuration/ConfigurationService.cs" />
   </ItemGroup>
 
 </Project>

@@ -2,5 +2,5 @@
   "repository": "https://github.com/Czarnak/tia-git-addin",
   "commit": "01d0bca9f92da9052aeb8f3130d25edb1847a22b",
   "license": "MIT",
-  "scope": "Unmodified netstandard2.0 Core project; UI add-in not embedded"
+  "scope": "Unmodified netstandard2.0 Core sources; UI add-in not embedded. The project file leaves out the unused Configuration/ConfigurationService.cs and with it the Newtonsoft.Json package reference."
 }
