@@ -783,6 +783,7 @@ def compare_migration(args):
     """Phase-6 group proof: only the task's group (including bridge calls that wrap it) may change."""
     import phase6_groups
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
+    usage = phase6_groups.names(args.migration)
     failures = 0
     for release in args.releases or sorted(baseline.keys() & current.keys()):
         old, new = baseline[release], current[release]
@@ -790,8 +791,19 @@ def compare_migration(args):
         members = phase6_groups.group(args.migration, release, {key[1] for key in a})
         allowed = members | {phase6_groups.mapped(name, members) for name in members}
 
+        def catalog(key):
+            # Catalog pages and searches aggregate every group's names and examples (reported, not failed);
+            # usage for one tool belongs to the group only when that tool is one of its names in any release.
+            try:
+                arguments = json.loads(key[2])
+            except ValueError:
+                return False
+            if key[1] == 'GetToolUsage':
+                return arguments['toolName'] in usage if 'toolName' in arguments else set(arguments) <= {'limit', 'offset', 'exampleKind'}
+            return (key[1] == 'FindTools' and set(arguments) <= {'query', 'limit'}) or (key[1] == 'ListToolCategories' and not arguments)
+
         def in_group(key):
-            if key[1] in allowed:
+            if key[1] in allowed or catalog(key):
                 return True
             if key[1] in ('CallTool', 'PreviewToolCall', 'PreflightToolCall'):
                 try:
@@ -804,7 +816,7 @@ def compare_migration(args):
         other_b = {key: value for key, value in b.items() if not in_group(key)}
         outside = [key for key in sorted(other_a.keys() | other_b.keys()) if other_a.get(key) != other_b.get(key)]
         for key in ('release', 'formatVersion', 'profiles', 'transport', 'maxResponseChars'):
-            assert old[key] == new[key], (release, key)
+            assert old.get(key) == new.get(key), (release, key)
         assert new['rawMaskRules'] == RAW_MASK_RULES
         merged = len(members) - len({phase6_groups.mapped(name, members) for name in members})
         assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged, (release, 'registered tool count')
@@ -813,8 +825,11 @@ def compare_migration(args):
         if old['coverage'].get('bridgeRejectedTools'):
             assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}, (release, 'bridge refusal roster')
         changed = sum(a[key] != b[key] for key in a.keys() & b.keys())
+        catalog_changed = sorted(key for key in a.keys() & b.keys() if catalog(key) and key[1] not in allowed and a[key] != b[key])
         print(f'V{release} {args.migration}: changed={changed} added={len(b.keys() - a.keys())} removed={len(a.keys() - b.keys())}; '
-              f'unchanged outside group={len(other_a) - len(outside)}; FAILED outside group={len(outside)}')
+              f'catalog changed={len(catalog_changed)}; unchanged outside group={len(other_a) - len(outside)}; FAILED outside group={len(outside)}')
+        for key in catalog_changed:
+            print('  catalog: ' + key[1] + '(' + key[2] + ')')
         for key in outside:
             print('  unexpected: ' + key[0] + ' ' + key[1] + '(' + key[2] + ') ' + str(first_difference(other_a.get(key), other_b.get(key))))
         failures += len(outside)

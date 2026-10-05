@@ -2,6 +2,7 @@
 
 A group is the set of 3.x tool names whose source file appendix G assigns to a task; the Foundation releases belong to P6-08 as a whole.
 """
+import json
 import runpy
 from collections import defaultdict
 from functools import lru_cache
@@ -35,6 +36,21 @@ def group(task, release, baseline_names):
     for name, (path, _method) in g['source_tools'].items():
         members[g['owners'][path]].add(name)
     return members[task] & set(baseline_names)
+
+
+def names(task):
+    """Every 3.x and V4 name `task` migrates in any release; usage-catalog responses about them belong to the group."""
+    if task not in TASKS:
+        raise ValueError('Unknown migration task: ' + task)
+    if task == 'P6-08':
+        old = set()
+        for release in FOUNDATION_RELEASES:
+            path = ROOT / 'manifest/contracts/baseline' / (release + '.json')
+            old |= {tool['name'] for tool in json.loads(path.read_text('utf-8-sig'))['tools']}
+    else:
+        g = _generator()
+        old = {name for name, (path, _method) in g['source_tools'].items() if g['owners'][path] == task}
+    return old | {renames().get(name, name) for name in old}
 
 
 def mapped(name, members):
