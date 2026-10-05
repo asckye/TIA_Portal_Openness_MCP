@@ -18,10 +18,12 @@ Normalization rules (no automatic learning/blanket removal of volatile fields):
   BuildClassicHmiScreenXml/BuildClassicHmiTagTableXml/BuildClassicHmiMinimalPackage,
   and data.screen.timestamp/data.tagTable.timestamp in the minimal package.
   These builders call DateTime.Now.ToString("O"); mask those five paths only.
+* V4 infrastructure envelopes introduce meta.requestId correlation GUIDs. Mask
+  only the envelope and batch-child envelope paths, never example data.
 * Other environmental fields are NOT masked unless encountered and documented
   here. In particular GUIDs/operation/export IDs, PIDs, paths, machine names,
   durations and binary hashes must first be observed at a specific response path.
-  Current calls emit none requiring a mask. A new volatile field fails the two
+  A new volatile field fails the two
   capture check instead of silently weakening the guard.
 
 Capture runs twice in fresh processes and refuses to write if normalized results
@@ -46,7 +48,7 @@ read by the RPC client; its inner text is not decoded/re-serialized for this has
 RAW_MASK_RULES is the complete reviewed allowlist, including reasons. A lexical
 JSON walk locates literal paths; regex substitutes only the timestamp's contents,
 preserving quotes, whitespace, key order, escapes and all surrounding text. No
-elapsed-time, PID, GUID or temp-path mask is needed by the current capture set.
+elapsed-time, PID, arbitrary GUID or temp-path mask is used by the capture set.
 Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
 import argparse
@@ -90,9 +92,9 @@ RESPONSE_LIMIT = 16 * 1024
 # McpServer.VersionPolicy.cs::InvokeAsync rejects case-insensitive duplicate names
 # BEFORE VersionCallProblem and inner.InvokeAsync, regardless of inputSchema.
 # McpServer.Profile.cs::GetAllTools/GetLiteTools supply the advertised rosters.
-# McpServer.ToolBridge.cs::CallTool(string,string) resolves the target then calls
-# DuplicateArgumentProblem BEFORE parameter binding and InvokeToolMethod. A mere
-# unknown name is NOT safe in this bridge: optional/no-argument targets ignore it.
+# McpServer.ToolBridge.cs::CallTool(string,ToolArguments) calls BindV4Call, which
+# rejects case-insensitive duplicate properties BEFORE schema validation, binding
+# and InvokeToolMethod. It returns a V4 INVALID_ARGUMENT/not-started envelope.
 # The two distinct JSON keys below trigger the same duplicate-name refusal on
 # both paths. Do not replace this pair with a single unknown key or valid args.
 # CallTool -> CallTool has an earlier self-recursion guard; record that exact
@@ -101,6 +103,8 @@ REJECT_ARGUMENTS = {'SnapshotReject': True, 'snapshotReject': True}
 DUPLICATE_MARKER = ('Duplicate argument names differing only by case are ambiguous: '
                     'snapshotReject. Nothing was executed.')
 SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
+V4_INFRASTRUCTURE = {'CallTool', 'PreviewToolCall', 'FindTools', 'ListToolCategories',
+    'GetToolUsage', 'RunReadOnlyToolBatch', 'PreviewToolBatch', 'ApplyToolBatch'}
 
 # Foundation has no outer ArgDiagnosticTool and no CallTool/lite bridge.
 # Reviewed host admission routines in TiaMcpServer.LegacyHost (all InvokeAsync):
@@ -208,6 +212,8 @@ def identity(call):
 
 
 RAW_MASK_RULES = [
+    {'tool': 'V4 infrastructure only', 'kind': 'requestId', 'path': ['meta', 'requestId'],
+     'reason': 'V4 invocation journal correlation ID (32 lowercase hex). Also masks actual batch result envelopes, never examples.'},
     {'tool': '*', 'path': ['meta', 'timestamp'],
      'reason': 'Response envelope wall clock (DateTime.Now).'},
     *[{'tool': tool, 'path': ['data', 'timestamp'],
@@ -276,6 +282,12 @@ def mask_raw_text(text, tool):
             take(']')
         elif raw in ('}', ']', ':', ','):
             raise ValueError('Expected value')
+        elif (tool in V4_INFRASTRUCTURE and raw.startswith('"')
+              and (path in (('"meta"', '"requestId"'), ('"meta"', '"timestamp"'))
+                   or len(path) == 6 and path[:2] == ('"data"', '"items"') and isinstance(path[2], int)
+                   and path[3:5] == ('"result"', '"meta"') and path[5] in ('"requestId"', '"timestamp"'))):
+            masked = re.sub(r'(?<=")[0-9a-f]{32}(?=")', '<string:requestId>', raw) if path[-1] == '"requestId"' else RAW_TIMESTAMP.sub('<string:timestamp>', raw)
+            if masked != raw: replacements.append((token.start(), token.end(), masked))
         elif path in paths and raw.startswith('"'):
             masked, count = RAW_TIMESTAMP.subn('<string:timestamp>', raw)
             if count:
@@ -318,6 +330,17 @@ def normalize(call):
             if isinstance(stamp, str) and re.fullmatch(
                     r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)', stamp):
                 parent[path[-1]] = '<string:timestamp>'
+    def v4_envelope(envelope):
+        if not isinstance(envelope, dict) or envelope.get('schemaVersion') != 4: return
+        meta = envelope['meta']
+        meta['timestamp'] = '<string:timestamp>'
+        if re.fullmatch('[0-9a-f]{32}', meta['requestId']): meta['requestId'] = '<string:requestId>'
+        for item in (envelope.get('data') or {}).get('items', []):
+            if isinstance(item, dict): v4_envelope(item.get('result'))
+    if call['tool'] in V4_INFRASTRUCTURE:
+        protocol = result['response'].get('result', {})
+        v4_envelope(protocol.get('structuredContent'))
+        for block in protocol.get('content', []): v4_envelope(block.get('text'))
     return result
 
 
@@ -372,8 +395,8 @@ def decode_reply(reply):
 def body(response):
     result = response.get('result', {})
     content = result.get('content', [])
-    resources.require(not result.get('isError') and len(content) == 1
-                      and isinstance(content[0].get('text'), dict),
+    resources.require(len(content) == 1 and isinstance(content[0].get('text'), dict)
+                      and (not result.get('isError') or content[0]['text'].get('schemaVersion') == 4),
                       'Expected a JSON tool result: ' + canonical(response))
     decoded = content[0]['text']
     resources.require(not decoded.get('meta', {}).get('truncated'),
@@ -460,8 +483,8 @@ def capture_release(args, release, exe, public_api):
             decoded('ListToolCategories', {})
             decoded('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
             decoded('FindTools', {'query': 'no-such-snapshot-tool', 'limit': 3})
-            decoded('PreflightToolCall', {'name': 'GetDevices', 'argumentsJson': '{}'})
-            decoded('PreflightToolCall', {'name': 'GetBlocks', 'argumentsJson': '{}'})
+            decoded('PreviewToolCall', {'name': 'GetDevices', 'arguments': {}})
+            decoded('PreviewToolCall', {'name': 'GetBlocks', 'arguments': {}})
 
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
                 result = decoded(name, arguments)
@@ -506,8 +529,8 @@ def capture_release(args, release, exe, public_api):
             if release == '20':
                 for name in V21_ONLY:
                     call(name, {})
-                    decoded('PreflightToolCall', {'name': name, 'argumentsJson': '{}'})
-                    call('CallTool', {'name': name, 'argumentsJson': '{}'})
+                    decoded('PreviewToolCall', {'name': name, 'arguments': {}})
+                    call('CallTool', {'name': name, 'arguments': {}})
 
             registered = {tool['name'] for tool in tools}
             behavior_calls = sorted({entry['tool'] for entry in entries.values()} & registered)
@@ -534,9 +557,10 @@ def capture_release(args, release, exe, public_api):
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
             bridge = recorder(rpc, entries, 'lite')
             for name in sorted(registered):
-                reply = body(bridge('CallTool', {'name': name, 'argumentsJson': canonical(REJECT_ARGUMENTS)}))
-                marker = SELF_MARKER if name == 'CallTool' else DUPLICATE_MARKER
-                resources.require(reply['meta'].get('bridgeSuccess') is False and reply['message'] == marker,
+                reply = body(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}))
+                resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
+                                  and reply['error']['code'] == 'INVALID_ARGUMENT'
+                                  and reply['meta']['execution'] == 'not-started',
                                   name + ': missing bridge admission marker: ' + canonical(reply))
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
@@ -686,6 +710,8 @@ def response_length(call):
 
 
 def compare(args):
+    if getattr(args, 'migration', None) == 'P6-07':
+        return compare_infrastructure(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -737,7 +763,42 @@ def compare(args):
     return int(any(total.values()))
 
 
+def compare_infrastructure(args):
+    baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
+    allowed = set(contracts.P6_07) | set(contracts.P6_07.values())
+    failures = 0
+    for release in args.releases or FULL_RELEASES:
+        old, new = baseline[release], current[release]
+        a, b = ({identity(call): call for call in snapshot['calls']} for snapshot in (old, new))
+        other_a = {key: value for key, value in a.items() if key[1] not in allowed}
+        other_b = {key: value for key, value in b.items() if key[1] not in allowed}
+        outside = [key for key in sorted(other_a.keys() | other_b.keys()) if other_a.get(key) != other_b.get(key)]
+        failures += len(outside)
+        for key in ('release', 'formatVersion', 'profiles', 'transport', 'maxResponseChars'):
+            assert old[key] == new[key], (release, key)
+        assert new['rawMaskRules'] == RAW_MASK_RULES
+        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - 2
+        expected = {contracts.P6_07.get(name, name) for name in old['coverage']['directRejectedTools']}
+        assert set(new['coverage']['directRejectedTools']) == expected
+        assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}
+        changed = sum(a[key] != b[key] for key in a.keys() & b.keys())
+        print(f'V{release} P6-07: changed={changed} added={len(b.keys() - a.keys())} removed={len(a.keys() - b.keys())}; unchanged outside group={len(other_a) - len(outside)}; FAILED outside group={len(outside)}')
+        for key in outside:
+            print('  unexpected: ' + key[0] + ' ' + key[1] + '(' + key[2] + ') ' +
+                  str(first_difference(other_a.get(key), other_b.get(key))))
+    return int(failures != 0)
+
+
 class RawResponseTests(unittest.TestCase):
+    def test_v4_correlation_masks_only_actual_envelopes(self):
+        first, second = 'a' * 32, 'b' * 32
+        sample = '{"schemaVersion":4,"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + first + '"},"data":{"example":{"requestId":"' + first + '"}}}'
+        masked = mask_raw_text(sample, 'CallTool')
+        self.assertIn('"requestId":"<string:requestId>"', masked)
+        self.assertIn('"example":{"requestId":"' + first + '"}', masked)
+        self.assertEqual(self.call(sample, 'CallTool'), self.call(sample.replace('"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + first, '"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + second), 'CallTool'))
+        self.assertIn('"requestId":"' + first + '"', mask_raw_text(sample, 'GetState'))
+
     def reply(self, text):
         return {'id': 1, 'jsonrpc': '2.0', 'result': {'content': [{'type': 'text', 'text': text}]}}
 
@@ -759,6 +820,7 @@ class RawResponseTests(unittest.TestCase):
 
     def test_every_reviewed_path(self):
         for rule in RAW_MASK_RULES:
+            if rule.get('kind') == 'requestId': continue
             with self.subTest(rule=rule):
                 value = '"2026-10-03T11:12:13.1234567-07:00"'
                 for key in reversed(rule['path']):
@@ -877,6 +939,7 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
+    compare_parser.add_argument('--migration', choices=['P6-07'], help='Verify the reviewed infrastructure transition; every other call and raw hash must match')
     compare_parser.add_argument('--normalized-only', action='store_true',
                                 help='Migration check against format 2 only; does not prove raw-byte compatibility')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,

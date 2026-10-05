@@ -10,7 +10,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// </summary>
         internal const string DocumentImportHelp =
             "\r\n按这个顺序处理，别改语法瞎猜：\r\n"
-            + "1) GetAuthoringGuide(topic:'lad')（SCL 用 'scl'）—— 拿到本引擎验证过的语法与编码规则，"
+            + "1) GetToolUsage(language:'lad') (SCL: language:'scl') — read the language examples and encoding rules, "
             + "把你的文件逐条对齐；只改名字和操作数，别改结构。\r\n"
             + "2) .s7dcl 是**原子失败**：整份文档任何一处不合法都整份不导入，Openness 不给行号。"
             + "所以一次只放一个 NETWORK，导入→编译通过→再加下一段。整份写完再导，出错时没有任何定位信息。\r\n"

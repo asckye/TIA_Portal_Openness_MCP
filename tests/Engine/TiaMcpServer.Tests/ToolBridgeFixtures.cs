@@ -19,7 +19,7 @@ namespace TiaMcpServer.Siemens
     internal interface IEngineeringSession { }
     // Kept only for the linked EngineRegistration and maintenance root-lookup checks.
     // No Portal implementation files are compiled into this suite.
-    internal sealed class Portal : TiaMcpServer.Tests.FakeHmiToolSession, IEngineeringSession
+    internal sealed partial class Portal : TiaMcpServer.Tests.FakeHmiToolSession, IEngineeringSession
     {
         internal (bool IsConnected, string? Project)? GetState()
             => throw new InvalidOperationException("The layout fixture must not read a session.");
@@ -126,7 +126,7 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void AssemblyDiscoveryIncludesEveryAttributedTypeOnly()
         {
-            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools) }).Methods, ToolCatalog.Engine.Methods);
+            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools) }).Methods, ToolCatalog.Engine.Methods);
         }
 
         [Fact]

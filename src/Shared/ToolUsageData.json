@@ -4962,13 +4962,6 @@
         }
       ]
     },
-    "GetAuthoringGuide": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "GetBlockInfo": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -5344,13 +5337,6 @@
         "guides/skills/hardware-and-modules/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
       ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
-    "GetRecipe": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
@@ -7673,14 +7659,14 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "PreflightToolCall": {
+    "PreviewToolBatch": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "PreviewToolBatch": {
+    "PreviewToolCall": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -8365,13 +8351,6 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
-    "ReadToolBatch": {
-      "relationship": "no-direct-official-example",
-      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
-      "documents": [],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ReadTransferAreas": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -9049,6 +9028,13 @@
       "manualReferences": []
     },
     "RunPlcSimAdvancedTestScenario": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "RunReadOnlyToolBatch": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -14238,7 +14224,7 @@
         "CallTool": {
           "arguments": {
             "name": "GetState",
-            "argumentsJson": {}
+            "arguments": {}
           },
           "parameters": {},
           "operations": {},
@@ -16002,16 +15988,15 @@
         "FindTools": {
           "arguments": {
             "query": "watch table",
-            "limit": 8
+            "limit": 8,
+            "offset": 0
           },
           "parameters": {
             "category": {
-              "exampleValue": "<category from this operation's target or user input>",
-              "requiresBinding": true
+              "exampleValue": ""
             },
             "domain": {
-              "exampleValue": "<domain from this operation's target or user input>",
-              "requiresBinding": true
+              "exampleValue": ""
             }
           },
           "operations": {},
@@ -16167,15 +16152,6 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
-        "GetAuthoringGuide": {
-          "arguments": {
-            "topic": "scl"
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
         },
         "GetBlockInfo": {
           "arguments": {
@@ -16475,16 +16451,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "GetRecipe": {
-          "arguments": {},
-          "parameters": {
-            "topic": {
-              "exampleValue": "scl"
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
         "GetSoftwareInfo": {
           "arguments": {
             "softwarePath": "PLC_1"
@@ -16519,7 +16485,8 @@
         },
         "GetToolUsage": {
           "arguments": {
-            "toolName": "GetBlocks"
+            "toolName": "GetBlocks",
+            "exampleKind": "all"
           },
           "parameters": {
             "query": {
@@ -16537,16 +16504,19 @@
               "exampleValue": 80
             },
             "language": {
-              "exampleValue": "<language from this operation's target or user input>",
-              "requiresBinding": true
+              "exampleValue": "scl"
             },
             "exampleId": {
-              "exampleValue": "<exampleId from this operation's target or user input>",
-              "requiresBinding": true
+              "exampleValue": "sequence/connect-project"
+            },
+            "exampleKind": {
+              "exampleValue": "sequence",
+              "meaning": "all, sequence or language; exampleId reads a complete entry."
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
         },
         "GetTypeInfo": {
           "arguments": {
@@ -23151,10 +23121,29 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
         },
-        "PreflightToolCall": {
+        "PreviewToolBatch": {
+          "arguments": {
+            "expectedProject": "Example",
+            "operations": [
+              {
+                "name": "ManagePlcExternalSources",
+                "arguments": {
+                  "softwarePath": "PLC_1",
+                  "action": "createGroup",
+                  "name": "ExampleSources",
+                  "dryRun": true
+                }
+              }
+            ]
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "PreviewToolCall": {
           "arguments": {
             "name": "GetBlocks",
-            "argumentsJson": {
+            "arguments": {
               "softwarePath": "PLC_1"
             }
           },
@@ -23162,15 +23151,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
-        },
-        "PreviewToolBatch": {
-          "arguments": {
-            "operationsJson": "[{\"name\":\"GetState\",\"arguments\":{}}]",
-            "expectedProject": "Example"
-          },
-          "parameters": {},
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "ProbeGlobalLibrary": {
           "arguments": {
@@ -24297,18 +24277,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ReadToolBatch": {
-          "arguments": {
-            "operationsJson": "[{\"name\":\"ReadOpennessGuidance\",\"arguments\":{\"query\":\"threading\"}}]"
-          },
-          "parameters": {
-            "expectedProject": {
-              "exampleValue": "Example"
-            }
-          },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-        },
         "ReadTransferAreas": {
           "arguments": {
             "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
@@ -24941,6 +24909,25 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true
+        },
+        "RunReadOnlyToolBatch": {
+          "arguments": {
+            "operations": [
+              {
+                "name": "ReadOpennessGuidance",
+                "arguments": {
+                  "query": "threading"
+                }
+              }
+            ]
+          },
+          "parameters": {
+            "expectedProject": {
+              "exampleValue": "Example"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "RunTestSuiteCase": {
           "arguments": {
@@ -26790,6 +26777,14 @@
     ],
     "ResponsePlcProgramImport": [
       "Compare importedBlocks/importedTypes/importedTagTables with requested objects, inspect failed entries and compile.errorCount when compile was requested. A dryRun result is a plan."
+    ],
+    "Envelope": [
+      "Read ok and error.code together with meta.outcome, execution and completeness.",
+      "Paging is in meta.paging. Batch data.items retain each target result unchanged; inspect failures and NOT_EXECUTED items."
+    ],
+    "TargetResult": [
+      "CallTool returns the target result unchanged. Read GetToolUsage for that target.",
+      "Bridge admission failures use a V4 envelope with meta.execution=not-started."
     ]
   },
   "toolNotes": {

@@ -45,6 +45,21 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static Recipe? Find(string? topic) => topic != null && Index.TryGetValue(topic.Trim(), out var r) ? r : null;
 
+        public static JsonObject Selection(string? topic)
+        {
+            if (string.IsNullOrWhiteSpace(topic)) return new JsonObject { ["exampleKind"] = "sequence" };
+            var recipe = Find(topic);
+            if (recipe == null) throw new ArgumentException("Unknown recipe topic.");
+            return new JsonObject { ["exampleId"] = "sequence/" + recipe.Topic, ["exampleKind"] = "sequence" };
+        }
+
+        public static JsonArray ForRelease(string release, IEnumerable<string> roster, string? topic = null)
+        {
+            var selection = Selection(topic);
+            return TiaOpenness.Shared.ToolUsageCatalog.Examples(release, "full-engine", roster,
+                exampleId: (string?)selection["exampleId"] ?? "", exampleKind: "sequence")["examples"]!.AsArray();
+        }
+
         /// <summary>Every step must parse, name a real tool and use exact parameter names; required parameters must be present.</summary>
         public static IReadOnlyList<string> ValidateAgainst(Func<string, IReadOnlyList<KeyValuePair<string, bool>>?> parametersOf)
         {

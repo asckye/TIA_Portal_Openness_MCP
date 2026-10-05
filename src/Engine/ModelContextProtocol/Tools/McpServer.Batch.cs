@@ -1,8 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -10,96 +15,176 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly BatchPlanStore BatchPlans = new BatchPlanStore();
 
-        [McpServerTool(Name = "ReadToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 tools explicitly declared [READ], or GetState. operationsJson is [{name,arguments:{...}}]. No inferred name classification and no native GetCrossReferences. Rejects nested orchestration. Returns every result with succeeded/failed/unknown status; unknown is not success. Optional expectedProject requires exact bound project. Not a consistent project snapshot; external TIA edits can occur.")]
-        public static ResponseMessage ReadToolBatch([Description("Ordered JSON array of {name,arguments:{...}}; 1..50 operations.")] string operationsJson, [Description("Exact project name required to bind this batch to the intended open project.")] string expectedProject = "")
-            => BatchResult(meta =>
+        [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
+        public static CallToolResult ReadToolBatch(
+            [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
+            [Description("Optional exact bound project name.")] string expectedProject = "")
+        {
+            const string tool = "RunReadOnlyToolBatch";
+            var error = ValidateBatch(operations, false, out var validated);
+            if (error != null) return V4Reject(tool, error);
+            var rows = new JsonArray();
+            foreach (var call in validated!)
             {
-                var operations = ValidateBatch(operationsJson, false);
-                var rows = new JsonArray(); bool complete = true;
-                foreach (var op in operations.OfType<JsonObject>())
+                CallToolResult result;
+                try
                 {
                     if (expectedProject.Length > 0) BatchState(expectedProject);
-                    var result = CallTool(op["name"]!.GetValue<string>(), op["arguments"]!.ToJsonString());
-                    bool success = result.Meta?["operationSuccess"]?.GetValue<bool?>() == true;
-                    complete &= success;
-                    rows.Add(new JsonObject { ["name"] = op["name"]!.DeepClone(), ["result"] = JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(result)), ["status"] = result.Meta?["operationStatus"]?.DeepClone() });
+                    result = CallTool(call.Name, call.Arguments);
                 }
-                meta["results"] = rows; meta["success"] = complete; meta["dataComplete"] = complete;
-                return "Read batch completed; inspect per-item status.";
-            });
+                catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { result = V4Reject(tool, new Error("Batch project identity is unavailable or changed.", new PreconditionFailedDetails("batch-identity", expectedProject))); }
+                rows.Add(BatchRow(rows.Count, call.Name, result));
+            }
+            return BatchResult(tool, rows, false);
+        }
 
-        [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 project writes as [{name,arguments:{...}}]. Only tools explicitly tagged [WRITE] with a bool dryRun parameter are supported. Forces dryRun=true for previews; preserves explicit confirmation flags for later execution. expectedProject must exactly match the connected project. Successful previews yield a single-use 10-minute token bound to stored ordered calls, connection identity and preview results. No writes executed. No promise of atomic rollback or complete native state coverage.")]
-        public static ResponseMessage PreviewToolBatch([Description("Ordered JSON array of {name,arguments:{...}}; 1..50 operations.")] string operationsJson, [Description("Exact project name required to bind this batch to the intended open project.")] string expectedProject)
-            => BatchResult(meta =>
+        [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute token bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
+        public static CallToolResult PreviewToolBatch(
+            [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
+            [Description("Exact bound project name.")] string expectedProject)
+        {
+            const string tool = "PreviewToolBatch";
+            var error = ValidateBatch(operations, true, out var validated);
+            if (error != null) return V4Reject(tool, error);
+            try
             {
-                var plan = new BatchPlanStore.Plan { Project = expectedProject, State = BatchState(expectedProject), Operations = ValidateBatch(operationsJson, true) };
-                foreach (var op in plan.Operations.OfType<JsonObject>()) plan.Previews.Add(BatchPreview(op));
-                if (BatchState(expectedProject) != plan.State) throw new InvalidOperationException("Connection changed during preview.");
-                meta["token"] = BatchPlans.Add(plan, DateTime.UtcNow); meta["expiresUtc"] = plan.Expires.ToString("O");
-                meta["operations"] = plan.Operations.DeepClone(); meta["previews"] = plan.Previews.DeepClone(); meta["success"] = true; meta["executed"] = false;
-                meta["scope"] = "Revalidates native preview results, not all engineering state. Another TIA client can still edit between calls.";
-                return "Batch preview ready.";
-            });
+                var plan = new BatchPlanStore.Plan { Project = expectedProject, State = BatchState(expectedProject),
+                    Operations = JsonNode.Parse(V4Json.Serialize(validated))!.AsArray() };
+                var rows = new JsonArray();
+                foreach (var call in validated!)
+                {
+                    var result = CallTool(call.Name, call.Arguments);
+                    rows.Add(BatchRow(rows.Count, call.Name, result));
+                    if (ResultSucceeded(ResultBody(result)) != true)
+                    {
+                        int causeIndex = rows.Count - 1;
+                        foreach (var pending in validated.Skip(rows.Count))
+                            rows.Add(BatchRow(rows.Count, pending.Name, V4Reject(pending.Name,
+                                new Error("An earlier preview stopped the batch.", new NotExecutedDetails(causeIndex)))));
+                        return BatchResult(tool, rows, false);
+                    }
+                    plan.Previews.Add(ResultBody(result));
+                }
+                if (BatchState(expectedProject) != plan.State)
+                    return V4Reject(tool, new Error("Connection changed during preview.", new PreconditionFailedDetails("batch-identity", expectedProject)));
+                string token = BatchPlans.Add(plan, DateTime.UtcNow);
+                return V4Result(tool, new JsonObject { ["token"] = token, ["expiresUtc"] = plan.Expires.ToString("O"),
+                    ["operations"] = plan.Operations.DeepClone(), ["items"] = rows,
+                    ["executed"] = false, ["scope"] = "Revalidates native previews, not all engineering state. External edits can occur between calls." });
+            }
+            catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Batch preview requires a stable bound project and available preview capacity.", new PreconditionFailedDetails("batch-preview", expectedProject))); }
+        }
 
-        [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch token once. Recheck project/session/process identity and re-run every stored preview before the first write; changed previews abort. Executes the exact stored ordered operations with dryRun=false. Stops on first failure or unknown result and marks the rest skipped. Prior writes remain: this is NOT a transaction and has NO automatic rollback. No additional save/compile/download is performed. Token cannot change operations or be reused.")]
-        public static ResponseMessage ApplyToolBatch([Description("Single-use token from PreviewToolBatch; expires after 10 minutes.")] string token)
-            => BatchResult(meta =>
+        [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch token once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
+        public static CallToolResult ApplyToolBatch([Description("Single-use token from PreviewToolBatch; expires after 10 minutes.")] string token)
+        {
+            const string tool = "ApplyToolBatch";
+            BatchPlanStore.Plan plan;
+            try { plan = BatchPlans.Take(token, DateTime.UtcNow); }
+            catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Preview token is missing, expired or already consumed.", new NotFoundDetails(token))); }
+            try
             {
-                var plan = BatchPlans.Take(token, DateTime.UtcNow);
-                if (BatchState(plan.Project) != plan.State) throw new InvalidOperationException("Project/session/process changed; preview again.");
-                int i = 0;
-                foreach (var op in plan.Operations.OfType<JsonObject>())
-                    if (BatchPlanStore.Stable(BatchPreview(op)) != BatchPlanStore.Stable(plan.Previews[i++])) throw new InvalidOperationException("A native preview changed; preview the batch again.");
-                var rows = new JsonArray(); meta["results"] = rows; bool stopped = false;
+                if (BatchState(plan.Project) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(token, "identity")));
+                int index = 0;
                 foreach (var op in plan.Operations.OfType<JsonObject>())
                 {
-                    var row = new JsonObject { ["name"] = op["name"]!.DeepClone(), ["status"] = "skipped" }; rows.Add(row);
-                    if (stopped) continue;
+                    var result = CallTool((string)op["name"]!, new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"])));
+                    if (ResultSucceeded(ResultBody(result)) != true || StablePreview(ResultBody(result)) != StablePreview(plan.Previews[index++]))
+                        return V4Reject(tool, new Error("A stored preview changed.", new PlanStaleDetails(token, "preview")));
+                }
+            }
+            catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Cannot revalidate batch identity and previews.", new PreconditionFailedDetails("batch-revalidation", plan.Project))); }
+            var rows = new JsonArray();
+            int? cause = null;
+            foreach (var op in plan.Operations.OfType<JsonObject>())
+            {
+                string name = (string)op["name"]!;
+                CallToolResult result;
+                bool issued = false;
+                if (cause.HasValue) result = V4Reject(name, new Error("An earlier batch item stopped execution.", new NotExecutedDetails(cause)));
+                else
+                {
                     try
                     {
-                        if (BatchState(plan.Project) != plan.State) throw new InvalidOperationException("Connection changed.");
+                        if (BatchState(plan.Project) != plan.State) throw new InvalidOperationException();
                         var args = (JsonObject)op["arguments"]!.DeepClone(); args["dryRun"] = false;
-                        meta["mayHaveModifiedProject"] = true;
-                        var result = CallTool(op["name"]!.GetValue<string>(), args.ToJsonString());
-                        row["result"] = JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(result)); row["status"] = result.Meta?["operationStatus"]?.DeepClone() ?? (JsonNode)"unknown";
-                        stopped = result.Meta?["operationSuccess"]?.GetValue<bool?>() != true;
+                        issued = true;
+                        result = CallTool(name, new ToolArguments(JsonSerializer.SerializeToElement(args)));
+                        if (ResultSucceeded(ResultBody(result)) != true) cause = rows.Count;
                     }
-                    catch (Exception ex) { row["status"] = "failed"; row["error"] = ex.Message; stopped = true; }
+                    catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */
+                    {
+                        result = issued ? V4Result(name, null, new Error("The issued write outcome is unknown.", new OutcomeUnknownDetails("batch-call", new Dictionary<string, JsonElement>())),
+                            Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true)
+                            : V4Reject(name, new Error("Batch identity changed before this write.", new PreconditionFailedDetails("batch-identity", plan.Project)));
+                        cause = rows.Count;
+                    }
                 }
-                meta["success"] = !stopped; meta["rollbackPerformed"] = false; meta["dataComplete"] = !stopped;
-                return stopped ? "Batch stopped. Earlier writes may remain; inspect results before recovery." : "Batch calls succeeded; native readback remains tool-specific.";
-            });
-
-        private static JsonArray ValidateBatch(string text, bool write)
-        {
-            var array = JsonNode.Parse(text) as JsonArray ?? throw new ArgumentException("operationsJson must be an array.");
-            if (array.Count < 1 || array.Count > 50) throw new ArgumentException("Use 1..50 operations.");
-            var methods = AllToolMethods(); var result = new JsonArray();
-            foreach (var node in array)
-            {
-                var op = node as JsonObject ?? throw new ArgumentException("Each operation must be an object.");
-                if (op.Any(p => p.Key != "name" && p.Key != "arguments")) throw new ArgumentException("Only name and arguments are accepted per operation.");
-                string name = op["name"]?.GetValue<string>() ?? "";
-                if (!methods.TryGetValue(name, out var method)) throw new ArgumentException("Unknown tool: " + name);
-                if (method.Name.Contains("Batch") || method.Name == "CallTool" || method.Name == "RunToolsInTransaction" || method.Name == "GetCrossReferences") throw new ArgumentException("Nested orchestration/native cross-reference query is not supported in batches.");
-                string description = ToolDescription(method);
-                if (write ? !description.Contains("[WRITE]") || !method.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool)) : !description.Contains("[READ]") && method.Name != "GetState")
-                    throw new ArgumentException("Tool is outside the explicit " + (write ? "previewable write" : "read") + " batch contract: " + name);
-                var args = op["arguments"] == null ? new JsonObject() : op["arguments"] as JsonObject ?? throw new ArgumentException("arguments must be an object.");
-                args = (JsonObject)args.DeepClone();
-                if (args.Any(p => p.Key.Equals("dryRun", StringComparison.OrdinalIgnoreCase) && p.Key != "dryRun")) throw new ArgumentException("Use exact parameter spelling dryRun.");
-                if (write) args["dryRun"] = true;
-                var preflight = PreflightToolCall(name, args.ToJsonString());
-                if (preflight.Meta?["ok"]?.GetValue<bool?>() != true) throw new ArgumentException("Preflight failed for " + name + ": " + preflight.Message);
-                result.Add(new JsonObject { ["name"] = name, ["arguments"] = args });
+                var row = BatchRow(rows.Count, name, result);
+                // A legacy target without a verdict must never make the parent successful.
+                if (issued && ResultSucceeded(row["result"]) == null) row["outcomeUnknown"] = true;
+                rows.Add(row);
             }
-            return result;
+            return BatchResult(tool, rows, true);
         }
-        private static JsonNode BatchPreview(JsonObject op)
+
+        internal static Error? ValidateBatch(ToolCall[] operations, bool write, out ToolCall[]? validated)
         {
-            var result = CallTool(op["name"]!.GetValue<string>(), op["arguments"]!.ToJsonString());
-            if (result.Meta?["operationSuccess"]?.GetValue<bool?>() != true) throw new InvalidOperationException("Preview failed or returned unknown: " + op["name"] + ": " + result.Message);
-            return JsonNode.Parse(result.Message ?? "null") ?? throw new InvalidOperationException("Preview payload missing.");
+            validated = null;
+            if (operations == null || operations.Length == 0) return InvalidInput("operations");
+            if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));
+            var targets = new Dictionary<string, ToolTarget>(StringComparer.Ordinal);
+            foreach (var call in operations)
+            {
+                if (call == null) return InvalidInput("operations");
+                var args = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
+                if (write) args["dryRun"] = true;
+                var error = BindV4Call(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out var method, out _);
+                if (error != null) return error;
+                string description = ToolDescription(method!);
+                bool orchestration = method!.Name.Contains("Batch") || method.Name == "CallTool" || method.Name == "RunToolsInTransaction" || method.Name == "GetCrossReferences";
+                bool read = description.Contains("[READ]") || method.Name == "GetState";
+                bool preview = description.Contains("[WRITE]") && method.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
+                if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
+                targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, method)), new InputBudget(), read, preview, orchestration: orchestration);
+            }
+            var result = ToolCallValidator.Create(write ? ToolCallMode.PreviewBatch : ToolCallMode.ReadBatch, targets.Values.ToArray()).Validate(operations, "operations");
+            validated = result.Value;
+            return result.Error;
+        }
+
+        private static string StablePreview(JsonNode? value)
+        {
+            var copy = value?.DeepClone();
+            if (copy?["schemaVersion"]?.GetValue<int?>() == 4) copy["meta"]!.AsObject().Remove("requestId");
+            return BatchPlanStore.Stable(copy);
+        }
+        internal static bool? ResultSucceeded(JsonNode? body)
+        {
+            if (body is not JsonObject obj) return null;
+            if (obj["schemaVersion"]?.GetValue<int?>() == 4) return obj["ok"]?.GetValue<bool?>();
+            var meta = (obj["meta"] ?? obj["Meta"]) as JsonObject;
+            return meta?["success"]?.GetValue<bool?>();
+        }
+        private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
+        { ["index"] = index, ["target"] = target, ["result"] = ResultBody(result) };
+
+        private static CallToolResult BatchResult(string tool, JsonArray rows, bool write)
+        {
+            int succeeded = rows.Count(row => ResultSucceeded(row!["result"]) == true);
+            int skipped = rows.Count(row => (string?)row!["result"]?["error"]?["code"] == "NOT_EXECUTED");
+            int failed = rows.Count - succeeded - skipped;
+            bool unknown = rows.Any(row => (bool?)row!["outcomeUnknown"] == true || (string?)row["result"]?["meta"]?["outcome"] == "unknown");
+            bool partial = rows.Any(row => (string?)row!["result"]?["meta"]?["outcome"] == "partial");
+            var data = new JsonObject { ["items"] = rows, ["rollbackPerformed"] = false };
+            if (unknown) return V4Result(tool, data, new Error("A batch write outcome is unknown.", new OutcomeUnknownDetails("batch", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: write);
+            if (succeeded == rows.Count) return V4Result(tool, data, completed: write, current: write);
+            if (partial || succeeded > 0) return V4Result(tool, data, new Error("The batch contains partial results.",
+                succeeded > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)), Outcome.Partial, Execution.Partial, Completeness.Partial, current: write);
+            if (rows.All(row => (string?)row!["result"]?["meta"]?["execution"] == "not-started"))
+                return V4Reject(tool, new Error("Every batch item was rejected before execution.", new PreconditionFailedDetails("batch-results", null)), data);
+            return V4Result(tool, data, new Error("No batch item succeeded; inspect the retained target results.", new PreconditionFailedDetails("batch-results", null)),
+                write ? Outcome.Failed : Outcome.ReadFailed, write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: write);
         }
         private static string BatchState(string project)
         {
@@ -110,12 +195,6 @@ namespace TiaMcpServer.ModelContextProtocol
             var health = EngineServices.Get<Siemens.Portal>().GetPortalProcessHealth();
             if (health["boundProcessId"] == null || health["processAlive"]?.GetValue<bool?>() != true) throw new InvalidOperationException("Bound TIA process identity is unavailable.");
             return BatchPlanStore.BindingState(EngineServices.Get<Siemens.Portal>().GetBindingIdentity());
-        }
-        private static ResponseMessage BatchResult(Func<JsonObject, string> action)
-        {
-            var meta = ResponseMeta.LegacyBatch();
-            try { return new ResponseMessage { Message = action(meta), Meta = meta }; }
-            catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Batch refused/failed: " + ex.Message, Meta = meta }; }
         }
     }
 }

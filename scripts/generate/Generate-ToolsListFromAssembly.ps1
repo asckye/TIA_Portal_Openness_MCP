@@ -25,12 +25,12 @@ try {
     $taxonomy=$logic.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
     $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('Parse'); $operationOf=$taxonomy.GetMethod('OperationOf')
     $categories=@(foreach($c in $taxonomy.GetField('Categories').GetValue($null)){[ordered]@{key=$c.Key;nameZh=$c.NameZh;nameEn=$c.NameEn;description=$c.Description;domains=@($c.Domains)}})
-    # 2.7.57: the worked examples (ToolExamples) are appended to listed tool descriptions and printed by FindTools / PreflightToolCall;
+    # 2.7.57: the worked examples (ToolExamples) are appended to listed tool descriptions and printed by FindTools / PreviewToolCall;
     # an example that no longer fits its tool (renamed parameter, dropped tool) fails the build here rather than misleading callers.
     $exampleProblems=@($type.GetMethod('ValidateToolExamples').Invoke($null,@()))
     if($exampleProblems.Count){throw "Tool examples do not fit their tools (fix ToolExamples.cs): $($exampleProblems -join '; ')"}
     $findExample=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolExamples',$true).GetMethod('Find')
-    # 2.7.58: recipes (GetRecipe) are validated the same way; the schema-hint / documentation statistics go into the manifest so a
+    # 2.7.58: sequences (GetToolUsage) are validated the same way; the schema-hint / documentation statistics go into the manifest so a
     # release cannot silently lose parameter descriptions (the enum hints and the preflight both read them).
     $recipeProblems=@($type.GetMethod('ValidateToolRecipes').Invoke($null,@()))
     if($recipeProblems.Count){throw "Recipe steps do not fit their tools (fix ToolRecipes.cs): $($recipeProblems -join '; ')"}

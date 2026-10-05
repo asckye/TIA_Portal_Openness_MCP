@@ -1,14 +1,19 @@
 """Generate the reviewed V4 proposal, without building or loading product binaries.
 
 Run --check in a clean checkout; --self-test also exercises rejection cases.
-Only this script's proposal JSON and the marked documentation block are outputs.
+Only the embedded profile resource and the marked documentation block are outputs.
 """
 import argparse
 import collections, json, pathlib, re, subprocess, sys, xml.etree.ElementTree as ET
 sys.dont_write_bytecode = True
 root = pathlib.Path(__file__).resolve().parents[2]
 read = lambda p: (root / p).read_text(encoding="utf-8-sig")
-files = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
+files = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
+RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
+files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE})
+MIGRATED = {'PreflightToolCall': 'PreviewToolCall', 'ReadToolBatch': 'RunReadOnlyToolBatch',
+    'GetAuthoringGuide': 'GetToolUsage', 'GetRecipe': 'GetToolUsage',
+    **{n: n for n in ('GetToolUsage', 'FindTools', 'ListToolCategories', 'CallTool', 'PreviewToolBatch', 'ApplyToolBatch')}}
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
 tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
@@ -60,92 +65,6 @@ for fam in behavior_families:
 sys.path.insert(0, str(root / "scripts/checks"))
 import engine_sources
 engine = engine_sources.EngineSources(root)
-source_tools = {}
-for p, text in engine.sources.items():
-    for m in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', text):
-        decl = re.search(r"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", text[m.end():], re.M)
-        assert decl and m[1] not in source_tools
-        source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
-assert set(source_tools) == set(tools["21"])
-policy = read(E + "Siemens/ToolVersionPolicy.cs")
-only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
-assert set(tools["20"]) == set(source_tools) - only21
-profile = read(E + "ModelContextProtocol/Tools/McpServer.Profile.cs")
-profile = profile.split("private static readonly HashSet<string> LiteToolNames", 1)[1].split("};", 1)[0]
-lite = set(re.findall(r'"(\w+)"', profile))
-assert all(lite == set(snap[k]["liteTools"]) for k in ["20", "21"])
-foundation = "\n".join(read(f) for f in files if f.startswith(F) and f.endswith(".cs"))
-definitions = {}
-for line in read(F+"FoundationTools.cs").splitlines():
-    m=re.match(r'\s*new\("([^"]+)"',line)
-    if m:
-        response=re.search(r',\s*"([^"]+)"\),?\s*$',line)
-        definitions[m[1]]=response[1] if response else ""
-helpers=set()
-for f in files:
-    if f.startswith(F) and f.endswith(".cs") and not f.endswith("FoundationTools.cs"):
-        source=read(f)
-        helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
-        helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
-helpers &= set(names)
-for k in keys[:6]:
-    major = 14 if k=="14sp1" else int(k.split(".")[0])
-    accepted={n for n,r in definitions.items()
-        if not (r in ("HardwareCatalog","DeviceAdd") and major<19)
-        and not (r=="SpecialExport" and major<16)
-        and not (r in ("DocumentExport","BatchDocumentExport","DocumentImport","BatchDocumentImport") and major<20)
-        and not (n=="GetPlcWatchTables" and k=="14sp1")}
-    assert accepted | helpers == set(tools[k]), (k, (accepted | helpers) ^ set(tools[k]))
-for k in keys[:6]:
-    for n, t in tools[k].items():
-        assert '"' + n + '"' in foundation, n
-        for p in t["inputSchema"]["properties"]:
-            assert '"' + p + '"' in foundation, (n, p)
-calls = json.loads(read("reference/tool-examples/calls.json"))["profiles"]
-for k in keys:
-    assert set(tools[k]) <= set(calls[snap[k]["profile"]]), k
-typed = {}
-for n in names:
-    for k in keys:
-        if n not in tools[k]: continue
-        for p, schema in tools[k][n]["inputSchema"]["properties"].items():
-            if p.endswith("Json") or (n == "PlcBuildAndImport" and p == "json"):
-                typed.setdefault(n, {}).setdefault(p, set()).add(k)
-for n, (_, method) in source_tools.items():
-    member = engine.member(method, tool=True)
-    tokens, _ = engine_sources.lexer.Lexer(member).scan()
-    pairs = engine_sources.lexer.matching_pairs(tokens)
-    op = next(i for i,t in enumerate(tokens) if t.value == "(")
-    sig = member[:tokens[pairs[op]].end]
-    actual = set(re.findall(r"\bstring\??\s+(\w*Json)\b", sig))
-    expected = {p for p,v in tools["21"][n]["inputSchema"]["properties"].items() if p.endswith("Json") and "string" in str(v.get("type"))}
-    assert actual == expected, (n, actual, expected)
-family_groups = {
- "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
- "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
- "N":"numbers",
- "R":"objectPath",
- "M":"attributes changes customAttributes entry properties scriptProperties settings",
- "L":"accessLevels comments promptAnswers texts",
- "V":"value",
- "C":"arguments calls operations",
- "W":"values writes",
- "B":"fbBlock fcBlock flgNet globalDb ladFcBlock structuredText tagTable udt",
- "H":"design layout package spec table theme",
- "D":"artifacts plan rows scenario",
- "X":"afterPages beforePages deviceSelection harmonizeOptions itemDetails mappingEntries options partner references request revisionDetails rules scope selection target templateIntent",
-}
-families = {p+"Json":f for f,ps in family_groups.items() for p in ps.split()}
-def family(n,p):
-    if p == "json": return "B"
-    if (n,p) == ("RunPlcCompanionTool","argumentsJson"): return "S"
-    if (n,p) == ("PatchPlcBlockDocument","changesJson"): return "D"
-    if p == "harmonizeOptionsJson": return "S"
-    assert p in families, (n,p)
-    return families[p]
-
-# One spelling per operation. List is reserved for enumerations; Get includes
-# compound snapshots (tree, diagnostics, properties) even when they contain arrays.
 VERBS = set("Analyze Apply Archive Attach Audit Bind Build Call Check Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Synchronize Trace Upgrade Upload Validate Write".split())
 VERB_RENAMES = {"Read": "Get", "Compose": "Build", "Update": "Set", "Sync": "Synchronize", "Preflight": "Preview", "Dump": "Get", "Add": "Create"}
 SPECIAL_NAMES = {
@@ -198,23 +117,123 @@ def rename(n):
         target = VERB_RENAMES.get(verb, verb) + n[len(verb):]
     return target.replace("SiVArc", "Sivarc").replace("Json", "").replace("Xml", "").replace("Xlsx", "")
 
+
+source_tools = {}
+for p, text in engine.sources.items():
+    for m in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', text):
+        decl = re.search(r"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", text[m.end():], re.M)
+        assert decl and m[1] not in source_tools
+        source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
+registered_tools = dict(source_tools)
+renames = {n: rename(n) for n in names}
+current_names = {}
+for n in tools["21"]:
+    candidates = {n, renames[n]} & registered_tools.keys()
+    if n in ("GetAuthoringGuide", "GetRecipe"):
+        assert n not in registered_tools, (n, "merged alias still registered")
+        candidates = {"GetToolUsage"}
+    assert len(candidates) == 1, (n, "missing or double registration", candidates)
+    current_names[n] = next(iter(candidates))
+assert set(current_names.values()) == set(registered_tools), "unmapped registrations"
+source_tools = {n: registered_tools[current_names[n]] for n in tools["21"]}
+source_tools["GetRecipe"] = (E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs", "GetRecipe")
+policy = read(E + "Siemens/ToolVersionPolicy.cs")
+only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
+assert set(tools["20"]) == set(source_tools) - only21
+lite = set(snap["21"]["liteTools"])
+assert all(lite == set(snap[k]["liteTools"]) for k in ["20", "21"])
+foundation = "\n".join(read(f) for f in files if f.startswith(F) and f.endswith(".cs"))
+definitions = {}
+for line in read(F+"FoundationTools.cs").splitlines():
+    m=re.match(r'\s*new\("([^"]+)"',line)
+    if m:
+        response=re.search(r',\s*"([^"]+)"\),?\s*$',line)
+        definitions[m[1]]=response[1] if response else ""
+helpers=set()
+for f in files:
+    if f.startswith(F) and f.endswith(".cs") and not f.endswith("FoundationTools.cs"):
+        source=read(f)
+        helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
+        helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
+helpers &= set(names)
+for k in keys[:6]:
+    major = 14 if k=="14sp1" else int(k.split(".")[0])
+    accepted={n for n,r in definitions.items()
+        if not (r in ("HardwareCatalog","DeviceAdd") and major<19)
+        and not (r=="SpecialExport" and major<16)
+        and not (r in ("DocumentExport","BatchDocumentExport","DocumentImport","BatchDocumentImport") and major<20)
+        and not (n=="GetPlcWatchTables" and k=="14sp1")}
+    assert accepted | helpers == set(tools[k]), (k, (accepted | helpers) ^ set(tools[k]))
+for k in keys[:6]:
+    for n, t in tools[k].items():
+        assert '"' + n + '"' in foundation, n
+        for p in t["inputSchema"]["properties"]:
+            assert '"' + p + '"' in foundation, (n, p)
+calls = json.loads(read("reference/tool-examples/calls.json"))["profiles"]
+for k in keys:
+    expected = {current_names.get(n, n) for n in tools[k]} if k in keys[-2:] else set(tools[k])
+    assert expected <= set(calls[snap[k]["profile"]]), k
+typed = {}
+for n in names:
+    for k in keys:
+        if n not in tools[k]: continue
+        for p, schema in tools[k][n]["inputSchema"]["properties"].items():
+            if p.endswith("Json") or (n == "PlcBuildAndImport" and p == "json"):
+                typed.setdefault(n, {}).setdefault(p, set()).add(k)
+for n, (_, method) in source_tools.items():
+    if n in MIGRATED or current_names[n] != n: continue
+    member = engine.member(method, tool=True)
+    tokens, _ = engine_sources.lexer.Lexer(member).scan()
+    pairs = engine_sources.lexer.matching_pairs(tokens)
+    op = next(i for i,t in enumerate(tokens) if t.value == "(")
+    sig = member[:tokens[pairs[op]].end]
+    actual = set(re.findall(r"\bstring\??\s+(\w*Json)\b", sig))
+    expected = {p for p,v in tools["21"][n]["inputSchema"]["properties"].items() if p.endswith("Json") and "string" in str(v.get("type"))}
+    assert actual == expected, (n, actual, expected)
+family_groups = {
+ "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
+ "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
+ "N":"numbers",
+ "R":"objectPath",
+ "M":"attributes changes customAttributes entry properties scriptProperties settings",
+ "L":"accessLevels comments promptAnswers texts",
+ "V":"value",
+ "C":"arguments calls operations",
+ "W":"values writes",
+ "B":"fbBlock fcBlock flgNet globalDb ladFcBlock structuredText tagTable udt",
+ "H":"design layout package spec table theme",
+ "D":"artifacts plan rows scenario",
+ "X":"afterPages beforePages deviceSelection harmonizeOptions itemDetails mappingEntries options partner references request revisionDetails rules scope selection target templateIntent",
+}
+families = {p+"Json":f for f,ps in family_groups.items() for p in ps.split()}
+def family(n,p):
+    if p == "json": return "B"
+    if (n,p) == ("RunPlcCompanionTool","argumentsJson"): return "S"
+    if (n,p) == ("PatchPlcBlockDocument","changesJson"): return "D"
+    if p == "harmonizeOptionsJson": return "S"
+    assert p in families, (n,p)
+    return families[p]
+
+# One spelling per operation. List is reserved for enumerations; Get includes
+# compound snapshots (tree, diagnostics, properties) even when they contain arrays.
 # These are documentation mappings, never executable redirects. Merge proof is
 # deliberately closed; native compile/connect paths do not qualify.
 MERGES = {"GetToolUsage": {"GetToolUsage", "GetAuthoringGuide", "GetRecipe"}}
 MERGE_PROOF = {
-    "GetToolUsage": "同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。",
+    "GetToolUsage": "原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。",
 }
 MERGE_PARAMETERS = {
     "GetAuthoringGuide": "topic trim/lower 后：workflow→exampleId=sequence/connect-project；openness-workflow→query=openness-base；startdrive-bico→toolName=ManageStartdriveParameter,operation=read；hmi→language=hmi-javascript；errors→空选择；其余→language=原 topic。offset=0,limit=80。",
     "GetRecipe": "topic trim 后非空→exampleId=sequence/<精确目录 topic>；空→exampleKind=sequence（新增可选枚举过滤器，默认 all）；按当前发布版过滤目录；保留 purpose/preconditions/steps/expect/notes；未知 topic→NOT_FOUND。",
     "GetToolUsage": "toolName 按 A 表转换；query/documentId/offset/limit/operation/language/exampleId 同名；新增 exampleKind=all|sequence|language 默认 all；旧默认列表仍含 tools、languages、examples。",
 }
-assert '_usage.GetToolUsage' in read(E + "ModelContextProtocol/Tools/GuideTools.cs")
+assert 'GuideSelection(string topic)' in read(SH + "ToolUsageCatalog.cs")
 assert 'ToolUsageCatalog.Sequences()' in read(L + "ModelContextProtocol/ToolRecipes.cs")
 assert 'ToolRecipes.Find(topic)' in read(E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs")
 assert 'exampleId' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert all(n in names for n in SPECIAL_NAMES | dict.fromkeys(COLLECTIONS))
 renames = {n: rename(n) for n in names}
+assert all(renames[n] == target for n, target in MIGRATED.items())
 
 def validate_mapping(mapping, release_tools, merge_groups=MERGES):
     assert set(mapping) == set(names), "every current tool must be mapped exactly once"
@@ -281,30 +300,62 @@ def shape(n, p):
 
 # Re-selected by user workflow, not inherited from the current lite roster.
 LITE_GROUPS = {
-    "发现、用法与完整目录调用": "FindTools GetToolUsage ListToolCategories CallTool PreflightToolCall",
-    "环境与会话诊断": "Bootstrap Doctor GetState ReadOpennessWorkerStatus RestartOpennessWorker ValidateAutomationContext",
-    "工程生命周期": "ListPortalProcessProjects ConnectToProject Connect AttachToOpenProject Disconnect OpenProject CloseProject SaveProject CreateProject ArchiveSavedProject",
-    "工程和 PLC 定位": "GetProject GetProjectTree GetDevices GetSoftwareTree GetSoftwareInfo GetBlocksWithHierarchy GetBlocks GetBlockInfo GetTypes GetTypeInfo GetPlcTagTables",
-    "常用 PLC 交换与编译": "ImportBlock ExportBlock ImportType ExportType ImportPlcTagTable ExportPlcTagTable ImportPlcExternalSource GenerateBlocksFromExternalSource CompileAndDiagnosePlc WritePlcSclSourceFile",
-    "离线构造与规划": "BuildPlcUdtXml BuildPlcGlobalDbXml BuildPlcTagTableXml PlanArtifactImportOrder ValidatePlcXmlSchemas",
-    "硬件查找和精确创建": "SearchHardwareCatalog AddDeviceWithFallback",
-    "HMI 定位和诊断": "GetHmiScreens DescribeHmiScreen GetHmiTagTables GetHmiTags CompileAndDiagnoseHmi",
-    "大结果分页与文件交付": "ListExports GetExport SaveExport DeleteExport ClearExports",
+    "发现、用法与完整目录调用": "FindTools GetToolUsage ListToolCategories CallTool PreviewToolCall",
+    "环境与会话诊断": "InitializeEnvironment GetEnvironmentDiagnostics GetSessionState GetOpennessWorkerStatus RestartOpennessWorker ValidateAutomationContext",
+    "工程生命周期": "ListPortalProcessProjects ConnectProject ConnectPortal AttachOpenProject DisconnectPortal OpenProject CloseProject SaveProject CreateProject ArchiveSavedProject",
+    "工程和 PLC 定位": "GetProjectInfo GetProjectTree ListDevices GetSoftwareTree GetSoftwareInfo GetPlcBlockHierarchy ListPlcBlocks GetPlcBlockInfo ListPlcTypes GetPlcTypeInfo ListPlcTagTables",
+    "常用 PLC 交换与编译": "ImportPlcBlock ExportPlcBlock ImportPlcType ExportPlcType ImportPlcTagTable ExportPlcTagTable ImportPlcExternalSource GenerateBlocksFromExternalSource CompilePlcDiagnostics WritePlcSclSourceFile",
+    "离线构造与规划": "BuildPlcUdt BuildPlcGlobalDb BuildPlcTagTable PlanArtifactImportOrder ValidatePlcDocumentSchemas",
+    "硬件查找和精确创建": "SearchHardwareCatalog CreateHardwareDevice",
+    "HMI 定位和诊断": "ListHmiScreens DescribeHmiScreen ListHmiTagTables ListHmiTags CompileHmiDiagnostics",
+    "大结果分页与文件交付": "ListExportHandles GetExportContent SaveExportContent DeleteExportHandle ClearExportHandles",
     "诊断收尾": "GenerateErrorReport",
 }
-lite_proposal = {"schemaVersion": 1, "contractVersion": 4, "status": "proposal-not-runtime", "foundationLite": False, "releases": {}}
+lite_proposal = {"schemaVersion": 1, "contractVersion": 4, "status": "runtime-transition", "foundationLite": False, "releases": {}}
 for k in keys[-2:]:
     rows = []
     for reason, members in LITE_GROUPS.items():
-        for n in members.split():
-            assert n in tools[k] and n in calls[snap[k]["profile"]], (k, n)
-            example = calls[snap[k]["profile"]][n]
+        for v4_name in members.split():
+            n = next(n for n in tools[k] if renames[n] == v4_name and n not in ("GetAuthoringGuide", "GetRecipe"))
+            current = current_names[n]
+            assert n in tools[k] and current in calls[snap[k]["profile"]], (k, n)
+            example = calls[snap[k]["profile"]][current]
             assert isinstance(example.get("arguments"), dict), (k, n, "missing call example")
-            rows.append({"name": renames[n], "currentName": n, "reason": reason,
-                         "example": "reference/tool-examples/calls.json#/profiles/" + snap[k]["profile"] + "/" + n})
+            rows.append({"name": renames[n], "currentName": current_names[n], "reason": reason,
+                         "example": "reference/tool-examples/calls.json#/profiles/" + snap[k]["profile"] + "/" + current})
     assert len({r["name"] for r in rows}) == len(rows)
     assert 55 <= len(rows) <= 65
     lite_proposal["releases"][k] = sorted(rows, key=lambda r: r["name"])
+
+# One embedded record per release, contract version and V4 target. The registration
+# map is generated from the same transition decisions as the source checks.
+runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False, "releases": {}}
+for k in keys[-2:]:
+    lite_names = {r["name"] for r in lite_proposal["releases"][k]}
+    runtime_rows = {}
+    for old in tools[k]:
+        if old in ("GetAuthoringGuide", "GetRecipe"): continue
+        target = renames[old]
+        current = current_names[old]
+        if target in runtime_rows: continue
+        arguments = json.loads(json.dumps(calls["full-engine"][current]["arguments"]))
+        runtime_rows[target] = {"name": target, "currentName": current, "sourceName": old,
+            "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments}
+    runtime["releases"][k] = sorted(runtime_rows.values(), key=lambda r: r["name"])
+    assert {r["currentName"] for r in runtime["releases"][k]} == {current_names[n] for n in tools[k]}
+    assert all(isinstance(r["arguments"], dict) for r in runtime["releases"][k] if "lite" in r["profiles"])
+
+def resource_text():
+    resource = ET.Element("root")
+    for name, value in (("resmimetype", "text/microsoft-resx"), ("version", "2.0"),
+        ("reader", "System.Resources.ResXResourceReader, System.Windows.Forms"),
+        ("writer", "System.Resources.ResXResourceWriter, System.Windows.Forms")):
+        ET.SubElement(ET.SubElement(resource, "resheader", name=name), "value").text = value
+    entry = ET.SubElement(resource, "data", {"name": "Catalog", "xml:space": "preserve"})
+    ET.SubElement(entry, "value").text = json.dumps(runtime, ensure_ascii=False, indent=2)
+    ET.indent(resource, space="  ")
+    return '<?xml version="1.0" encoding="utf-8"?>\n' + ET.tostring(resource, encoding="unicode") + '\n'
+
 
 out = []
 tick = lambda s: "`" + str(s) + "`"
@@ -313,7 +364,7 @@ def table(headers, rows):
     out.extend("| " + " | ".join(str(x).replace("|", r"\|").replace("\n", " ") for x in row) + " |" for row in rows)
     out.append("")
 def link(p, label=None):
-    assert (root / p).exists(), p
+    assert p == RESOURCE or (root / p).exists(), p
     return "[" + (label or p.removeprefix(E).removeprefix(L).removeprefix(F).removeprefix(S)) + "](../../" + p + ")"
 def section(title):
     out.extend(["<details>", "<summary>" + title + "</summary>", ""])
@@ -327,7 +378,7 @@ def source(n):
     return sorted(candidates)[0]
 
 MIGRATION_GROUPS = {
-    "P6-07": "McpServer.ToolBridge McpServer.Batch McpServer.CallDiscipline McpServer.Exports GuideTools ToolUsageTools",
+    "P6-07": "McpServer.ToolBridge McpServer.Batch McpServer.CallDiscipline McpServer.Exports ToolUsageTools",
     "P6-09": "EcosystemTools V21EcosystemTools EngineeringAuditTools GitWorkflowTools ImportOrderTools OfflineAnalysisTools OfflineSuiteTools QualityAuditTools TemplateTools XmlBuilderTools PlcBuildTools PlcDocumentationTools",
     "P6-10": "PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
     "P6-11": "DocumentsTools NativeExchangeTools PlcExternalSourcesTools McpServer.Patch ExportTools",
@@ -357,7 +408,7 @@ assert set(p for p,m in source_tools.values()) <= set(owners), sorted(set(p for 
 # Existing entry points and ownership roots, not permission to edit whole trees.
 # New files are created only by the named future task within these roots.
 TASK_PATHS = {
-    "P6-01": ["scripts/generate/Generate-Phase6Plan.py", "scripts/generate/phase6-lite.proposal.json", "docs/development/phase6-review.md", "docs/development/refactor-plan.md", "docs/reference/real-machine-ledger.md"],
+    "P6-01": ["scripts/generate/Generate-Phase6Plan.py", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "docs/development/phase6-review.md", "docs/development/refactor-plan.md", "docs/reference/real-machine-ledger.md"],
     "P6-02": [L+"V4", L+"TiaMcp.Logic.csproj", TE+"TiaMcpServer.Tests/V4EnvelopeTests.cs"],
     "P6-03": [L+"V4", L+"Siemens/ArgumentRules.cs", TE+"TiaMcpServer.Tests"],
     "P6-04": [L+"V4", L+"ModelContextProtocol/Builders", F+"OfflineCompositionBuilders.cs", F+"OfflineBlockCompositionBuilders.cs", F+"OfflineLadderBuilders.cs", F+"OfflineXmlBuilders.cs", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests"],
@@ -596,7 +647,7 @@ section("F. V20/V21 lite 数据提案（每项均有现有调用示例）")
 table(["4.0 名称", "当前示例入口", "选择理由", "版本"],
       [[tick(r["name"]), tick(r["currentName"]), r["reason"], "20, 21"] for r in lite_proposal["releases"]["21"]])
 assert lite_proposal["releases"]["20"] == lite_proposal["releases"]["21"]
-out.append("数据文件：" + link("scripts/generate/phase6-lite.proposal.json", "phase6-lite.proposal.json") + "。每项 example 为 reference/tool-examples/calls.json 的 JSON Pointer；生成器逐版验证 arguments 对象存在。Foundation 继续不设 lite。\n")
+out.append("数据文件：" + link("src/Logic/ModelContextProtocol/ToolProfiles.resx", "ToolProfiles.resx") + "。Catalog JSON 按 contractVersion、releaseKey 记录 V4/current/source 名称、profiles 和 arguments；参数示例取自 reference/tool-examples/calls.json，按当前契约转换并逐版验证。Foundation 继续不设 lite。\n")
 end()
 
 section("G. 完整引擎契约迁移任务的工具文件所有权")
@@ -666,7 +717,7 @@ def main():
     a = content.index(begin) + len(begin)
     b = content.index(endmark, a)
     generated = content[:a] + '\n\n' + '\n'.join(out) + '\n' + content[b:]
-    outputs = {doc: generated, root / 'scripts/generate/phase6-lite.proposal.json': json.dumps(lite_proposal, ensure_ascii=False, indent=2) + '\n'}
+    outputs = {doc: generated, root / RESOURCE: resource_text()}
     for path, value in outputs.items():
         expected = value.encode('utf-8')
         if args.check:

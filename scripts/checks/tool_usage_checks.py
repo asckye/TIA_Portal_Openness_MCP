@@ -5,6 +5,15 @@ import xml.etree.ElementTree as ET
 
 
 def unwrap_usage(reply):
+    if reply.get('schemaVersion') == 4:
+        assert reply['ok'] and reply['error'] is None, reply
+        body = dict(reply['data'])
+        paging = reply['meta']['paging']
+        if paging:
+            following = paging['offset'] + paging['limit']
+            body['nextOffset'] = following if following < body.get('totalLines', body.get('totalMatches', 0)) else None
+            body['nextToolOffset'] = following if following < body.get('toolCount', 0) else None
+        return body
     body = reply.get('meta', reply)
     assert body.get('success'), reply
     return body['usage']

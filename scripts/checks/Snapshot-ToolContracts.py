@@ -16,6 +16,10 @@ import sys
 
 
 RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
+P6_07 = {'GetAuthoringGuide': 'GetToolUsage', 'GetRecipe': 'GetToolUsage',
+         'PreflightToolCall': 'PreviewToolCall', 'ReadToolBatch': 'RunReadOnlyToolBatch',
+         **{name: name for name in ('CallTool', 'FindTools', 'ListToolCategories',
+                                   'GetToolUsage', 'PreviewToolBatch', 'ApplyToolBatch')}}
 
 
 def tool_records(tools):
@@ -171,6 +175,8 @@ def load_snapshots(directory):
 
 
 def compare(args):
+    if getattr(args, 'migration', None) == 'P6-07':
+        return compare_infrastructure(args)
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
     releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
@@ -210,6 +216,34 @@ def compare(args):
     return int(bool(total['breaking']))
 
 
+def compare_infrastructure(args):
+    """Explicit phase-6 proof; the normal compatibility comparison remains strict."""
+    import xml.etree.ElementTree as ET
+    resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
+    runtime = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
+    baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
+    for release in args.releases or ('20', '21'):
+        old, new = baseline[release], current[release]
+        a, b = ({t['name']: t for t in snapshot['tools']} for snapshot in (old, new))
+        assert set(b) == {P6_07.get(name, name) for name in a}, (release, 'unexpected roster change')
+        untouched = set(a) - P6_07.keys()
+        assert all(a[name] == b[name] for name in untouched), (release, 'unmigrated contract changed')
+        expected_lite = {r['currentName'] for r in runtime['releases'][release] if 'lite' in r['profiles']}
+        assert set(new['liteTools']) == expected_lite <= set(b), (release, 'lite differs from generated runtime data')
+        for name, schema in ((n, b[n]['inputSchema']) for n in b):
+            assert '"$ref"' not in json.dumps(schema), (release, name, 'unexpected nonrecursive schema reference')
+        for name in ('CallTool', 'PreviewToolCall'):
+            properties = b[name]['inputSchema']['properties']
+            assert properties['arguments']['type'] == 'object' and 'argumentsJson' not in properties
+        for name in ('RunReadOnlyToolBatch', 'PreviewToolBatch'):
+            operations = b[name]['inputSchema']['properties']['operations']
+            assert operations['type'] == 'array' and operations['minItems'] == 1 and operations['maxItems'] == 50
+        assert b['GetToolUsage']['inputSchema']['properties']['exampleKind']['enum'] == ['all', 'sequence', 'language']
+        changed = sum(a[name] != b[name] for name in a.keys() & b.keys())
+        print(f'V{release} P6-07: changed={changed} removed={len(a.keys() - b.keys())} added={len(b.keys() - a.keys())}; untouched={len(untouched)} byte-identical records; lite={len(expected_lite)}')
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -226,6 +260,7 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)
     compare_parser.add_argument('--current', type=Path, required=True)
+    compare_parser.add_argument('--migration', choices=['P6-07'], help='Verify only the reviewed infrastructure transition against the 3.x baseline')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
                                 help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)

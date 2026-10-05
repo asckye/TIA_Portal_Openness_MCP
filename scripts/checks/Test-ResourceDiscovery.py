@@ -12,7 +12,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from tool_usage_checks import check_usage
+from tool_usage_checks import check_usage, unwrap_usage
 
 
 def require(condition, message):
@@ -23,9 +23,11 @@ def require(condition, message):
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None):
-    with socket.socket() as sock:
-        sock.bind(('127.0.0.1', 0))
-        port = sock.getsockname()[1]
+    port = 0
+    if transport == 'http':
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
     endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
     args = [str(exe), '--tia-major-version', str(major), '--tia-portal-location',
@@ -138,10 +140,11 @@ def main():
     parser.add_argument('--host-harness', type=Path, help='Load the EXE host methods without changing local Openness group membership')
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--usage-output', type=Path)
+    parser.add_argument('--transport', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     args = parser.parse_args()
     passed = 0
     usage_records = []
-    for transport in ('stdio', 'http'):
+    for transport in args.transport:
         for profile in ('full', 'lite'):
             label = f'V{args.major} {transport} {profile}'
             with server(args.exe.resolve(), args.portal_root.resolve(), args.major,
@@ -175,6 +178,15 @@ def main():
                     reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
                     require('result' in reply and not reply['result'].get('isError'), str(reply))
                     decoded = json.loads(reply['result']['content'][0]['text'])
+                    if decoded.get('schemaVersion') == 4 and decoded.get('data', {}).get('export'):
+                        pieces = [decoded['data']['content']]
+                        handle = decoded['data']['export']['id']
+                        offset = decoded['meta']['paging']['nextOffset']
+                        while offset is not None:
+                            page = call_guide_tool('GetExport', {'exportId': handle, 'offset': offset})
+                            pieces.append(page['message'])
+                            offset = page['meta']['nextOffset']
+                        decoded = json.loads(''.join(pieces))
                     if decoded.get('meta', {}).get('truncated'):
                         pieces = [decoded['message']]
                         page_meta = decoded['meta']
@@ -191,23 +203,20 @@ def main():
                     verify_documents=transport == 'stdio' and profile == 'full')
                 usage_records.append(dict(usage_report, transport=transport, profile=profile))
                 passed += 1
-                guide = call_guide_tool('GetAuthoringGuide', {'topic': 'scl'})
-                direct = call_guide_tool('GetToolUsage', {'language': 'scl'})
-                require(guide['meta']['usage'] == direct['meta']['usage'], 'Legacy guide diverges from unified examples')
+                guide = unwrap_usage(call_guide_tool('GetToolUsage', {'language': 'scl', 'exampleKind': 'language'}))
+                require(guide['examples'], 'Merged language guide is empty')
                 passed += 1
                 found = call_guide_tool('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
                 require('GetToolUsage' in json.dumps(found), 'Discovery omitted example route')
                 passed += 1
-                legacy = call_guide_tool('GetAuthoringGuide', {'topic': 'startdrive-bico'})
-                direct = call_guide_tool('GetToolUsage', {'toolName': 'ManageStartdriveParameter', 'operation': 'read'})
-                require(legacy['meta']['usage'] == direct['meta']['usage'], 'Legacy topic must use the same catalog')
+                direct = unwrap_usage(call_guide_tool('GetToolUsage', {'toolName': 'ManageStartdriveParameter', 'operation': 'read'}))
+                require(direct['example']['request']['params']['arguments']['action'] == 'read', 'Merged BICO topic changed action')
                 passed += 1
-                recipe = call_guide_tool('GetRecipe', {'topic': 'connect-project'})
-                sequence = call_guide_tool('GetToolUsage', {'exampleId': 'sequence/connect-project'})['meta']['usage']['examples'][0]
-                require([s['tool'] for s in recipe['meta']['steps']] == [s['tool'] for s in sequence['steps']], 'Recipe steps differ from the unified catalog')
+                sequence = unwrap_usage(call_guide_tool('GetToolUsage', {'exampleId': 'sequence/connect-project', 'exampleKind': 'sequence'}))['examples'][0]
+                require(sequence['steps'] and all(key in sequence for key in ('purpose', 'preconditions', 'notes')), 'Merged recipe lost its details')
                 passed += 1
-                bridged = call_guide_tool('CallTool', {'name': 'GetToolUsage', 'argumentsJson': {'language': 'scl'}})
-                require(json.loads(bridged['message'])['Meta']['usage'] == guide['meta']['usage'], 'Bridge did not deliver the same examples')
+                bridged = unwrap_usage(call_guide_tool('CallTool', {'name': 'GetToolUsage', 'arguments': {'language': 'scl', 'exampleKind': 'language'}}))
+                require(bridged == guide, 'Bridge did not deliver the same examples')
                 passed += 1
                 state = rpc('tools/call', params={'name': 'GetState', 'arguments': {}})
                 require('result' in state and not state['result'].get('isError') and

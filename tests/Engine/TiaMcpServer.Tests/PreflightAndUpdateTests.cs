@@ -112,7 +112,7 @@ namespace TiaMcpServer.Tests
             var noArgs = McpServer.PreflightToolCall("ProbeResult", "");
             check(noArgs.Meta!["toolFound"]!.GetValue<bool>() && noArgs.Meta["missing"]!.AsArray().Count == 1, "preflight tool: empty arguments -> the required parameter is listed as missing");
             var badJson = McpServer.PreflightToolCall("ProbeResult", "[1,2]");
-            check(!badJson.Meta!["ok"]!.GetValue<bool>() && badJson.Message!.StartsWith("argumentsJson must be a JSON object"), "preflight tool: non-object arguments refused with the signature");
+            check(!badJson.Meta!["ok"]!.GetValue<bool>() && badJson.Message!.StartsWith("arguments must be a JSON object"), "preflight tool: non-object arguments refused with the signature");
             check(!McpServer.PreflightToolCall("", "{}").Meta!["success"]!.GetValue<bool>(), "preflight tool: empty name refused");
 
             // ---- example table ----
@@ -136,7 +136,7 @@ namespace TiaMcpServer.Tests
 
             // ---- CallTool / FindTools carry the example ----
             var refusal = McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\"}");
-            check(refusal.Message!.Contains("missing required argument(s): expectedProject, changesJson") && refusal.Message.Contains("PreflightToolCall"), "bridge: missing-argument refusal points at PreflightToolCall");
+            check(refusal.Message!.Contains("missing required argument(s): expectedProject, changesJson") && refusal.Message.Contains("PreviewToolCall"), "bridge: missing-argument refusal points at PreviewToolCall");
 
             // ---- UpdateLogic ----
             check(UpdateLogic.ParseVersion("v2.7.57")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("2.7.57.0")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("latest") == null && UpdateLogic.ParseVersion("") == null, "update: version tags parsed");

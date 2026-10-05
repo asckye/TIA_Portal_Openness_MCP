@@ -95,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["EXECUTE"] = "执行编译、测试或自检并返回结果",
         };
 
-        private static readonly string[] SessionNames = { "Bootstrap", "Connect", "ConnectIsolated", "Disconnect", "GetState", "Doctor", "EnsureOpennessUserGroup", "ListPortalProcessProjects", "FindTools", "CallTool", "ListToolCategories", "GetAuthoringGuide", "AttachToOpenProject", "OpenProject", "CloseProject", "SaveProject", "OpenSession", "CloseSession" };
+        private static readonly string[] SessionNames = { "Bootstrap", "Connect", "ConnectIsolated", "Disconnect", "GetState", "Doctor", "EnsureOpennessUserGroup", "ListPortalProcessProjects", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "AttachToOpenProject", "OpenProject", "CloseProject", "SaveProject", "OpenSession", "CloseSession" };
 
         /// <summary>
         /// 描述未标注操作类型时按工具名推断。只用于清单/分类展示（标记 inferred），不改变工具行为；

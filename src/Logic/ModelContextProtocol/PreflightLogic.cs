@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // The pure part of PreflightToolCall. Given a tool's parameter specs (name, kind, required, default,
+    // The pure part of PreviewToolCall. Given a tool's parameter specs (name, kind, required, default,
     // description) and the arguments an AI caller intends to send, it says what CallTool / the SDK binder would
     // object to - before anything reaches TIA. Zero dependencies so the offline suite can feed it real inputs.
     public static class PreflightLogic
@@ -257,7 +257,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE") return false;
             // Tools that read the environment rather than a project.
-            var exempt = new[] { "ReadOpennessWorkerStatus", "RestartOpennessWorker", "ReadOpennessCompatibility", "ReadNativeInvocationLog", "InspectSimaticSdCompatibility", "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetAuthoringGuide", "GetToolUsage", "PreflightToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
+            var exempt = new[] { "ReadOpennessWorkerStatus", "RestartOpennessWorker", "ReadOpennessCompatibility", "ReadNativeInvocationLog", "InspectSimaticSdCompatibility", "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
             return !exempt.Contains(toolName, StringComparer.OrdinalIgnoreCase);
         }
     }

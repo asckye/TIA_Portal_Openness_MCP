@@ -138,6 +138,14 @@
     ],
     "ResponsePlcProgramImport": [
       "Compare importedBlocks/importedTypes/importedTagTables with requested objects, inspect failed entries and compile.errorCount when compile was requested. A dryRun result is a plan."
+    ],
+    "Envelope": [
+      "Read ok and error.code together with meta.outcome, execution and completeness.",
+      "Paging is in meta.paging. Batch data.items retain each target result unchanged; inspect failures and NOT_EXECUTED items."
+    ],
+    "TargetResult": [
+      "CallTool returns the target result unchanged. Read GetToolUsage for that target.",
+      "Bridge admission failures use a V4 envelope with meta.execution=not-started."
     ]
   },
   "toolNotes": {

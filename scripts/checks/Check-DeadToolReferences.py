@@ -1,4 +1,4 @@
-"""面向 Agent 的死引用闸：工具描述里点名的工具，必须真的注册过。
+"""面向 Agent 的死引用闸：工具描述和引导文案点名的工具必须真实注册。
 
 为什么要有这道闸：`GetPlcForceTables` 的描述写着 "use SetForceTableEntry"，而
 `SetForceTableEntry` 从 0.0.38 起就刻意不再注册（强制写值不许 AI 调）。安全下线做对了，
@@ -19,14 +19,32 @@ import io
 import os
 import sys
 import collections
+import importlib.util
+import json
+import unittest
 from pathlib import Path
 
 ROOT = str(Path(__file__).resolve().parents[2] / 'src/Engine')
 LOGIC_ROOT = str(Path(ROOT).with_name('Logic'))
+SHARED_ROOT = str(Path(ROOT).with_name('Shared'))
+spec = importlib.util.spec_from_file_location('dead_reference_text', Path(__file__).with_name('Check-McpText.py'))
+text_literals = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = text_literals
+spec.loader.exec_module(text_literals)
+# Historical registered names identify later renames even without a leading
+# "Use" verb. These are comparison facts, never runtime aliases.
+HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/contracts/baseline').glob('*.json')
+                    for tool in json.loads(path.read_text(encoding='utf-8'))['tools']}
 
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
 ALLOWED = {
+    'CompileUnit': 'SW.Blocks.CompileUnit SimaticML type in a quoted native import error',
+    'CreateSignatures': 'Diagnostic result field containing reflected native Create overloads',
+    'DeleteAll': 'Download ResetModule prompt answer enum value',
+    'OpenSession': 'Underlying local-session opening operation in ProjectSecurityService; not an MCP tool',
+    'ReadDriveParameter': 'Native Startdrive read-parameter type',
+    'RunToNextSyncPoint': 'Native S7-PLCSIM Advanced simulation stepping method',
     # Openness / .NET 的 API 名，描述里是在讲底层调用，不是让 Agent 去调工具
     'GetService': 'Openness IEngineeringObject.GetService<T>()',
     'ReadAccess': 'Openness PlcProtectionAccessLevel.ReadAccess（ManagePlcProtection 的 accessLevel 枚举值，不是工具）',
@@ -139,16 +157,14 @@ ALLOWED = {
 VERB = re.compile(
     r'^(Get|Set|Add|Import|Export|Create|Delete|Compile|Download|Sync|Analyze'
     r'|Build|Write|Read|Ensure|Find|List|Describe|Invoke|Generate|Apply|Bind'
-    r'|Move|Rename|Save|Open|Close|Connect|Run|Check|Validate|Preflight|Scaffold|Attach)[A-Z]')
-STR = r'"[^"]*"'          # 描述文案里没有转义引号，简单形态足够
-LIT = re.compile(r'Description\(\s*((?:@?' + STR + r'\s*\+?\s*)+)\)', re.S)
-PIECE = re.compile(STR)
+    r'|Move|Rename|Save|Open|Close|Connect|Run|Check|Validate|Preview|Preflight|Scaffold|Attach)[A-Z]')
 TOK = re.compile(r'\b([A-Z][A-Za-z0-9]{3,})\b')
 
 
 def load(root):
     src = {}
-    for dp, _, fs in os.walk(root):
+    for dp, dirs, fs in os.walk(root):
+        dirs[:] = [d for d in dirs if d.lower() not in text_literals.lexer.SKIP_DIRS]
         for f in fs:
             if f.endswith('.cs'):
                 p = os.path.join(dp, f)
@@ -156,23 +172,56 @@ def load(root):
     return src
 
 
+def guidance_literals(source):
+    """Decode ordinary/verbatim/raw/interpolated literals, excluding comments."""
+    tokens, _ = text_literals.lexer.Lexer(source).scan()
+    def visit(tokens, inherited=False):
+        ranges = text_literals.sink_ranges(tokens, text_literals.lexer.matching_pairs(tokens))
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            if token.kind != 'literal':
+                i += 1
+                continue
+            description = inherited or any(lo < i < hi and kind == 'description' for lo, hi, kind in ranges)
+            text = text_literals.literal_parts(token)[0]
+            for nested in (token.expressions,):
+                if nested: yield from visit(list(nested), description)
+            # A split spelling in a constant concatenation is still one hint.
+            while i + 2 < len(tokens) and tokens[i + 1].value == '+' and tokens[i + 2].kind == 'literal':
+                i += 2
+                text += text_literals.literal_parts(tokens[i])[0]
+                if tokens[i].expressions: yield from visit(list(tokens[i].expressions), description)
+            yield token.start, text, description
+            i += 1
+    yield from visit(tokens)
+
+
 def scan(src, extra_text=None):
     """返回 {疑似死引用名: [出处]}。extra_text 供哨兵注入用。"""
     names = set()
+    prompts = set()
     for s in src.values():
         names |= set(re.findall(r'McpServerTool\(Name\s*=\s*"([A-Za-z0-9_]+)"', s))
+        prompts |= set(re.findall(r'McpServerPrompt\(Name\s*=\s*"([A-Za-z0-9_]+)"', s))
     items = list(src.items())
     if extra_text:
         items.append(('<sentinel>', extra_text))
     bad = collections.defaultdict(list)
     for p, s in items:
-        for m in LIT.finditer(s):
-            text = ' '.join(x[1:-1] for x in PIECE.findall(m.group(1)))
-            line = s[:m.start()].count('\n') + 1
-            for t in set(TOK.findall(text)):
-                if t in names or t in ALLOWED or not VERB.match(t):
+        for start, text, description in guidance_literals(s):
+            location = os.path.basename(p) + ':' + str(s[:start].count('\n') + 1)
+            mentioned = set(TOK.findall(text))
+            directed = set(re.findall(r'\b(?:[Uu]se|[Cc]all|[Ii]nvoke|[Rr]un|[Tt]ry|[Ss]ee|via)\s+(?:the\s+)?([A-Z][A-Za-z0-9]+)', text))
+            candidates = mentioned if description else (mentioned & HISTORICAL_NAMES) | directed
+            for t in candidates:
+                if t in names or t in prompts or t in ALLOWED or (t not in HISTORICAL_NAMES and not VERB.match(t)):
                     continue
-                bad[t].append(os.path.basename(p) + ':' + str(line))
+                bad[t].append(location)
+            for tool, parameter in (('CallTool', 'argumentsJson'), ('PreviewToolCall', 'argumentsJson'),
+                                    ('RunReadOnlyToolBatch', 'operationsJson'), ('PreviewToolBatch', 'operationsJson')):
+                if re.search(r'\b' + tool + r'\s*\([^)]*\b' + parameter + r'\b', text):
+                    bad[tool + '.' + parameter].append(location)
     return names, bad
 
 
@@ -197,6 +246,7 @@ def duplicate_names(src, extra_text=None):
 def main():
     src = load(ROOT)
     src.update(load(LOGIC_ROOT))
+    src.update(load(SHARED_ROOT))
     if not src:
         print('找不到源码目录 %s —— 请在仓库根目录运行。' % ROOT)
         return 2
@@ -225,9 +275,9 @@ def main():
     names, bad = scan(src)
     print('引擎注册工具：%d 个；扫描文件：%d 个' % (len(names), len(src)))
     if not bad:
-        print('[PASS] 工具描述里点名的工具全部真实注册（哨兵已验证闸门有效）。')
+        print('[PASS] 工具描述及源码引导文案无死引用或旧基础设施参数（哨兵已验证闸门有效）。')
         return 0
-    print('[FAIL] 下列名字在 [Description] 文案里被点名，但没有任何 [McpServerTool] 注册它：')
+    print('[FAIL] 下列工具/参数在描述或源码引导文案中已失效：')
     for t, locs in sorted(bad.items()):
         print('  %-38s %2d 处  %s' % (t, len(locs), ', '.join(sorted(set(locs))[:4])))
     print('修法：要么改文案说清事实与替代路径，要么把工具真的注册上。'
@@ -235,12 +285,30 @@ def main():
     return 1
 
 
+class GuidanceTests(unittest.TestCase):
+    def test_hints_outside_description_and_split_literals(self):
+        for source in ('const string Instructions = "Use GetNonexistentSentinelTool first.";',
+                       'return "Call Preflight" + "ToolCall(name, argumentsJson).";',
+                       'throw new ArgumentException(@"GetAuthoringGuide(topic: ""lad"") supplies examples.");',
+                       'return $"Try PreviewMissingTool for {value}.";',
+                       'const string Hint = """GetRecipe(topic) returns the sequence.""";'):
+            with self.subTest(source=source): self.assertTrue(scan({'shared.cs': source})[1])
+
+    def test_current_names_native_apis_and_comments(self):
+        source = '[McpServerTool(Name="GetToolUsage")] void Usage() {}\n' + \
+            'return "Use GetToolUsage(language: \\"lad\\") or GetService<T>().";\n' + \
+            '// Use GetNonexistentSentinelTool.\n'
+        self.assertFalse(scan({'engine.cs': source})[1])
+
+    def test_old_arguments_in_current_tool_guidance(self):
+        for tool, parameter in (('CallTool', 'argumentsJson'), ('PreviewToolCall', 'argumentsJson'),
+                                ('PreviewToolBatch', 'operationsJson'), ('RunReadOnlyToolBatch', 'operationsJson')):
+            source = f'[McpServerTool(Name="{tool}")] void Tool() {{}} return "Use {tool}({parameter}).";'
+            self.assertIn(tool + '.' + parameter, scan({'hint.cs': source})[1])
+
+
 if __name__ == '__main__':
-    if '--selftest' in sys.argv:
-        src = load(ROOT)
-        src.update(load(LOGIC_ROOT))
-        _, caught = scan(src, extra_text='[Description("Use GetNonexistentSentinelTool first.")]')
-        ok = 'GetNonexistentSentinelTool' in caught
-        print('哨兵自检：' + ('PASS（假名字被抓到）' if ok else 'FAIL（假名字没被抓到）'))
-        sys.exit(0 if ok else 1)
+    if '--selftest' in sys.argv or '--self-test' in sys.argv:
+        result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(GuidanceTests))
+        sys.exit(0 if result.wasSuccessful() else 1)
     sys.exit(main())

@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol.Protocol;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -44,32 +45,43 @@ internal static class SessionToolChecks
                 check(forwarder == null && ReferenceEquals(surface.Target(method), provider.GetService(method.DeclaringType!)),
                     name + " resolves directly through EngineServices without a static compatibility forwarder");
                 check(!(bool)isControl.Invoke(null, new object[] { name })!, name + " remains proxied to the isolated worker");
-                var preflight = Invoke("PreflightToolCall", name, "{\"probe\":true,\"PROBE\":false}");
-                check(preflight.ToJsonString().IndexOf("duplicate", StringComparison.OrdinalIgnoreCase) >= 0,
+                var preflight = Invoke("PreviewToolCall", new JsonObject { ["name"] = name,
+                    ["arguments"] = new JsonObject { ["probe"] = true } }.ToJsonString());
+                check((string?)preflight["error"]?["code"] == "INVALID_ARGUMENT",
                     name + " preflight resolves the migrated tool before argument rejection");
             }
         }
 
-        JsonObject Invoke(string name, params object[] args)
+        JsonObject Invoke(string name, string arguments)
         {
-            var method = facade.GetMethod(name, all, null, args.Select(arg => arg.GetType()).ToArray(), null)!;
-            var response = method.Invoke(null, args)!;
-            return JsonNode.Parse(JsonSerializer.Serialize(response, response.GetType()))!.AsObject();
+            var method = surface.Tool(name);
+            var values = JsonNode.Parse(arguments)!.AsObject();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var args = method.GetParameters().Select(parameter => values.TryGetPropertyValue(parameter.Name!, out var value)
+                ? JsonSerializer.Deserialize(value!.ToJsonString(), parameter.ParameterType, options) : parameter.DefaultValue).ToArray();
+            var response = (CallToolResult)surface.Invoke(method, args)!;
+            return JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!.AsObject();
         }
-        var state = Invoke("CallTool", "GetState", "{}");
-        check(state["Meta"]!["bridgeSuccess"]!.GetValue<bool>() && state["Message"]!.GetValue<string>().Contains("TIA-Portal MCP server state retrieved"),
+        var state = Invoke("CallTool", "{\"name\":\"GetState\",\"arguments\":{}}");
+        check(state["meta"]!["success"]!.GetValue<bool>() && state["message"]!.GetValue<string>().Contains("TIA-Portal MCP server state retrieved"),
             "CallTool invokes the migrated GetState");
-        var scaffold = Invoke("CallTool", "ScaffoldProject", "{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}");
-        check(scaffold["Meta"]!["bridgeSuccess"]!.GetValue<bool>() && scaffold["Message"]!.GetValue<string>().Contains("0 ok, 0 failed"),
+        var scaffold = Invoke("CallTool", "{\"name\":\"ScaffoldProject\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}}");
+        check(scaffold["meta"]!["success"]!.GetValue<bool>() && scaffold["message"]!.GetValue<string>().Contains("0 ok, 0 failed"),
             "CallTool invokes the migrated ScaffoldProject preview without connecting");
-        var read = Invoke("ReadToolBatch", "[{\"name\":\"GetState\",\"arguments\":{}},{\"name\":\"ReadPortalInfo\",\"arguments\":{\"includeProcesses\":false}}]", "");
-        check(read["Meta"]!["results"]!.AsArray().Count == 2 && read["Meta"]!["success"]!.GetValue<bool>(),
-            "ReadToolBatch resolves both migrated session readers offline");
-        var plan = (JsonArray)facade.GetMethod("ValidateBatch", all)!.Invoke(null, new object[] {
-            "[{\"name\":\"ShowObjectInEditor\",\"arguments\":{\"dryRun\":false}}]", true })!;
+        var read = Invoke("RunReadOnlyToolBatch", "{\"operations\":[{\"name\":\"GetState\",\"arguments\":{}},{\"name\":\"ReadPortalInfo\",\"arguments\":{\"includeProcesses\":false}}]}");
+        check(read["data"]!["items"]!.AsArray().Count == 2 && read["ok"]!.GetValue<bool>(),
+            "RunReadOnlyToolBatch resolves both migrated session readers offline");
+        var validate = facade.GetMethod("ValidateBatch", all)!;
+        var batchArguments = new object?[] { JsonSerializer.Deserialize(
+            "[{\"name\":\"ShowObjectInEditor\",\"arguments\":{\"dryRun\":false}}]", validate.GetParameters()[0].ParameterType,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }), true, null };
+        check(validate.Invoke(null, batchArguments) == null, "Write batch validation accepts the session preview tool");
+        var plan = JsonNode.Parse(JsonSerializer.Serialize(batchArguments[2], batchArguments[2]!.GetType(),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))!.AsArray();
         check(plan[0]!["arguments"]!["dryRun"]!.GetValue<bool>(), "Write batch validation resolves ShowObjectInEditor and forces preview");
-        var apply = Invoke("ApplyToolBatch", "offline-invalid-token");
-        check(apply["Meta"]!["success"]!.GetValue<bool>() == false && apply["Meta"]!["mayHaveModifiedProject"] == null,
+        var apply = Invoke("ApplyToolBatch", "{\"token\":\"offline-invalid-token\"}");
+        check(!apply["ok"]!.GetValue<bool>() && (string?)apply["error"]?["code"] == "NOT_FOUND"
+            && (string?)apply["meta"]?["execution"] == "not-started",
             "ApplyToolBatch rejects an invalid token before any project write");
     }
 }

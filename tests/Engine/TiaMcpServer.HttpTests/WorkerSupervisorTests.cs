@@ -295,6 +295,37 @@ internal static partial class Program
             await f.Call("Connect", "{\"projectName\":\"scratch\"}");
             await WorkerFailure(f.Call("SaveProject"), false);
         });
+        foreach (string target in new[] { "ConnectToProject", "Connect" })
+            await Test("typed bridge recognizes recovered binding: " + target, async () => {
+                using var f = new WorkerFixture(); f.Restart(true);
+                await f.Call("CallTool", "{\"name\":\"" + target + "\",\"arguments\":{\"projectName\":\"scratch\"}}");
+                Check(!(bool)f.State["explicitBindingRequired"], "Bridge target result did not establish binding");
+                await f.Call("SaveProject");
+                Check(f.Dispatches == 2, "Bound bridge did not admit the subsequent call");
+            });
+        await Test("failed typed bridge binding keeps recovery locked", async () => {
+            using var f = new WorkerFixture("binding-fails"); f.Restart(true);
+            await f.Call("CallTool", "{\"name\":\"Connect\",\"arguments\":{\"projectName\":\"scratch\"}}");
+            await WorkerFailure(f.Call("SaveProject"), false);
+            Check(f.Dispatches == 1, "Failed bridge unlocked recovery");
+        });
+        await Test("bridge strings and unnamed Connect do not provide binding evidence", async () => {
+            using var f = new WorkerFixture(); f.Restart(true);
+            foreach (string arguments in new[] { "{}", "{\"arguments\":{}}", "{\"arguments\":\"{\\\"projectName\\\":\\\"scratch\\\"}\"}",
+                "{\"argumentsJson\":{\"projectName\":\"scratch\"}}" }) {
+                var values = Parse(arguments); values["name"] = "Connect";
+                await WorkerFailure(f.Call("CallTool", Json.Serialize(values)), false);
+            }
+            Check(f.Starts == 0 && f.Dispatches == 0, "Invalid bridge arguments launched a worker");
+        });
+        foreach (string diagnostic in new[] { "FindTools", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "GetToolSchema" })
+            await Test("current discovery remains diagnostic during recovery: " + diagnostic, async () => {
+                using var f = new WorkerFixture(); f.Restart(true);
+                await f.Call(diagnostic);
+                await f.Call("CallTool", "{\"name\":\"" + diagnostic + "\",\"arguments\":{}}");
+                Check((bool)f.State["explicitBindingRequired"] && f.Dispatches == 2, "Diagnostic call changed recovery binding");
+                await WorkerFailure(f.Call("SaveProject"), false);
+            });
         await Test("active worker refuses reset and reports state immediately", async () => {
             using var f = new WorkerFixture("slow"); var call=f.Call();
             await Task.Delay(60);

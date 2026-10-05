@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -204,6 +205,26 @@ namespace TiaMcpServer.ModelContextProtocol
             var (id, head) = ExportStore.PutAndSlice(toolName, target, full, limit);
             // fail-open：头部都取不到就原样放行完整响应。多花上下文可以接受，丢内容不行。
             if (head.Error != null) return result;
+
+            if (JsonNode.Parse(full) is JsonObject envelope && envelope["schemaVersion"]?.GetValue<int?>() == 4)
+            {
+                var original = V4Json.Deserialize<Envelope>(full);
+                string sha256;
+                var bytes = Encoding.UTF8.GetBytes(full);
+                using (var hash = System.Security.Cryptography.SHA256.Create())
+                    sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+                var entry = ExportStore.Get(id);
+                var data = new JsonObject { ["content"] = head.Text,
+                    ["export"] = JsonNode.Parse(V4Json.Serialize(new ExportHandle(id, "application/json", bytes.LongLength, sha256,
+                        entry == null ? (DateTimeOffset?)null : new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()).AddHours(ExportStore.DefaultTtlHours)))) };
+                var m = original.Meta;
+                var paging = McpServer.OffsetPage(0, limit, head.TotalLength);
+                var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
+                    m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
+                var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));
+                return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                    Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+            }
 
             var meta = new JsonObject
             {

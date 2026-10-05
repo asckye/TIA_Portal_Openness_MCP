@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -24,6 +26,81 @@ namespace TiaMcpServer.ModelContextProtocol
     // McpServer.PreflightSummary); this file only wires it into the SDK objects.
     public static partial class McpServer
     {
+        internal static bool IsInfrastructureV4(string name) => new[] { "CallTool", "PreviewToolCall", "FindTools",
+            "ListToolCategories", "GetToolUsage", "RunReadOnlyToolBatch", "PreviewToolBatch", "ApplyToolBatch" }.Contains(name, StringComparer.Ordinal);
+
+        internal static JsonElement ToolInputSchema(string name, MethodInfo method)
+        {
+            var raw = ToolCatalog.CreateTool(method).ProtocolTool.InputSchema;
+            var schema = (JsonObject)JsonNode.Parse(raw.GetRawText())!;
+            SchemaHintsLogic.Augment(schema, SpecsOf(method), null);
+            InfrastructureSchema(name, schema);
+            schema["additionalProperties"] = false;
+            return JsonSerializer.SerializeToElement(InlineSchema(schema));
+        }
+
+        private static void InfrastructureSchema(string name, JsonObject schema)
+        {
+            if (!IsInfrastructureV4(name)) return;
+            schema["additionalProperties"] = false;
+            var properties = schema["properties"]!.AsObject();
+            if (name == "CallTool" || name == "PreviewToolCall")
+                properties["arguments"] = new JsonObject { ["type"] = "object", ["description"] = "Arguments validated against the named tool's inputSchema." };
+            if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
+                properties["operations"] = JsonNode.Parse("{\"type\":\"array\",\"minItems\":1,\"maxItems\":50,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"name\",\"arguments\"],\"properties\":{\"name\":{\"type\":\"string\"},\"arguments\":{\"type\":\"object\"}}}}");
+            if (properties["offset"] is JsonObject offset) offset["minimum"] = 0;
+            if (properties["limit"] is JsonObject limit)
+            {
+                limit["minimum"] = 1;
+                if (name == "GetToolUsage") limit["maximum"] = 200;
+            }
+            if (name == "GetToolUsage") properties["exampleKind"]!["enum"] = new JsonArray("all", "sequence", "language");
+        }
+
+        // Inline shared definitions. Only a back edge retains a root-local definition.
+        internal static JsonObject InlineSchema(JsonObject schema)
+        {
+            var recursive = new Dictionary<string, string>(StringComparer.Ordinal);
+            JsonNode Resolve(string pointer)
+            {
+                if (!pointer.StartsWith("#/", StringComparison.Ordinal)) throw new ArgumentException("Only local schema references are supported.");
+                JsonNode? node = schema;
+                foreach (var part in pointer.Substring(2).Split('/')) node = node?[part.Replace("~1", "/").Replace("~0", "~")];
+                return node ?? throw new ArgumentException("Missing schema reference.");
+            }
+            JsonNode? Expand(JsonNode? node, HashSet<string> active)
+            {
+                if (node is JsonArray array) return new JsonArray(array.Select(n => Expand(n, active)).ToArray());
+                if (!(node is JsonObject obj)) return node?.DeepClone();
+                var result = new JsonObject();
+                if (obj["$ref"] is JsonValue reference)
+                {
+                    string pointer = reference.GetValue<string>();
+                    if (active.Contains(pointer))
+                    {
+                        if (!recursive.ContainsKey(pointer)) recursive.Add(pointer, "recursive" + recursive.Count);
+                        result["$ref"] = "#/$defs/" + recursive[pointer];
+                    }
+                    else
+                    {
+                        var next = new HashSet<string>(active, StringComparer.Ordinal) { pointer };
+                        result = (JsonObject)Expand(Resolve(pointer), next)!;
+                    }
+                }
+                foreach (var pair in obj)
+                    if (pair.Key != "$ref" && pair.Key != "$defs") result[pair.Key] = Expand(pair.Value, active);
+                return result;
+            }
+            var output = (JsonObject)Expand(schema, new HashSet<string>(StringComparer.Ordinal))!;
+            if (recursive.Count > 0)
+            {
+                var definitions = new JsonObject();
+                foreach (var pair in recursive.ToArray())
+                    definitions[pair.Value] = Expand(Resolve(pair.Key), new HashSet<string>(StringComparer.Ordinal) { pair.Key });
+                output["$defs"] = definitions;
+            }
+            return output;
+        }
         private static readonly JsonSerializerOptions DisciplineJson = new JsonSerializerOptions
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
@@ -41,7 +118,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 JsonObject? exampleArgs = null;
                 if (example != null) { try { exampleArgs = JsonNode.Parse(example.ArgumentsJson) as JsonObject; } catch (JsonException) /* swallow(parse-fallback): malformed example arguments omit example hints while retaining the tool schema */ { } }
                 var result = SchemaHintsLogic.Augment(schema, SpecsOf(method), exampleArgs);
-                if (!result.Changed) return tool;
+                InfrastructureSchema(name, schema);
+                schema = InlineSchema(schema);
+                if (!result.Changed && !IsInfrastructureV4(name) && schema.ToJsonString() == protocol.InputSchema.GetRawText()) return tool;
                 using var doc = JsonDocument.Parse(schema.ToJsonString(DisciplineJson));
                 var clone = new Tool
                 {
@@ -53,7 +132,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Annotations = protocol.Annotations,
                     Meta = protocol.Meta,
                 };
-                return new SchemaHintedTool(tool, clone);
+                var hinted = new SchemaHintedTool(tool, clone);
+                return IsInfrastructureV4(name) ? new InfrastructureInputTool(hinted) : hinted;
             }
             catch /* swallow(fail-open-guard): failure to enrich schema hints must leave the original tool available */
             {
@@ -107,6 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 JsonObject? meta = null;
                 if (payload != null)
                 {
+                    if (payload["schemaVersion"]?.GetValue<int?>() == 4) return result;
                     meta = (payload["meta"] ?? payload["Meta"]) as JsonObject;
                     var success = meta?["success"] as JsonValue;
                     if (success != null && success.TryGetValue<bool>(out var ok) && !ok) failed = true;
@@ -129,7 +210,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var inner = args["name"] as JsonValue;
                     if (inner == null || !inner.TryGetValue<string>(out var innerName) || string.IsNullOrWhiteSpace(innerName)) return result;
                     target = innerName;
-                    var innerArgs = args["argumentsJson"];
+                    var innerArgs = args["arguments"];
                     if (innerArgs is JsonValue v && v.TryGetValue<string>(out var innerText))
                     {
                         try { innerArgs = JsonNode.Parse(innerText); } catch (JsonException) /* swallow(parse-fallback): malformed bridge arguments leave an empty argument set for optional preflight guidance */ { innerArgs = null; }
@@ -169,6 +250,19 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta = (copy["meta"] ?? copy["Meta"]) as JsonObject;
             if (meta != null) meta["preflight"] = summary.DeepClone();
             return copy;
+        }
+    }
+
+    internal sealed class InfrastructureInputTool : McpServerTool
+    {
+        private readonly McpServerTool inner;
+        internal InfrastructureInputTool(McpServerTool inner) { this.inner = inner; }
+        public override Tool ProtocolTool => inner.ProtocolTool;
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
+            var error = new InputSchema(ProtocolTool.InputSchema).Validate(arguments, "arguments");
+            return error != null ? new ValueTask<CallToolResult>(McpServer.V4Reject(ProtocolTool.Name, error)) : inner.InvokeAsync(request, cancellationToken);
         }
     }
 

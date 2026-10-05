@@ -351,7 +351,7 @@ internal static partial class Program
             if (args.Length > 1 && args[1] == "example-library-only") {
                 var catalog = FindServerType(Server, "TiaOpenness.Shared.ToolUsageCatalog");
                 foreach (var language in new[] { "", "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" }) {
-                    var result = catalog.GetMethod("Examples")!.Invoke(null, new object[] { "21", "full-engine", new[] { "GetProjectTree" }, language, "", "" });
+                    var result = catalog.GetMethod("Examples")!.Invoke(null, new object[] { "21", "full-engine", new[] { "GetProjectTree" }, language, "", "", "all" });
                     Check(result != null && result.ToString()!.Contains("examples"), "Missing library output: " + language);
                 }
                 Console.WriteLine("PASS: 14 example library lookups on the actual .NET Framework host; no native calls");

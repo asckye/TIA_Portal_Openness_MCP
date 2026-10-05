@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -12,59 +13,10 @@ namespace TiaMcpServer.ModelContextProtocol
     // reach any individual non-lite tool without opting out via FindTools + CallTool.
     public static partial class McpServer
     {
-        // Explicit allowlist (tool Name, not method name). Kept explicit on purpose:
-        // membership must not silently change when a [Lx] description prefix is edited.
-        // Include all [L0]/[L1] tools and the golden-path tools named by ServerInstructions/GetAuthoringGuide,
-        // so every profile exposes the tools its instructions ask the model to call.
-        private static readonly HashSet<string> LiteToolNames = new HashSet<string>(StringComparer.Ordinal)
-        {
-            // L0 — discovery and invocation for every tool outside the advertised lite roster.
-            "FindTools", "CallTool", "ListToolCategories",
-            // Preflight belongs next to the bridge so callers can check a call before making it in every profile.
-            // Update checking is available alongside the other diagnostics.
-            "PreflightToolCall", "CheckForUpdate",
-            // The verified sequences belong next to the guide.
-            "GetRecipe", "GetToolUsage",
-            // L0 — orientation / diagnostics
-            "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
-            "GenerateAcceptanceReport", "GenerateErrorReport",
-            "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest",
-            // L1 — session / project lifecycle
-            "Connect", "ConnectToProject", "Disconnect", "ListPortalProcessProjects", "EnsureOpennessUserGroup",
-            // 用户在博途界面里开着工程时，Connect 会接管那个实例、OpenProject 又拒绝动它，
-            // 整台服务器就用不了了。这条出口必须在默认档里看得见 —— 挡掉它等于让
-            // 「用户正在用博途」变成一个无解的死局。
-            "ConnectIsolated",
-            "OpenProject", "AttachToOpenProject", "CreateProject", "SaveProject", "CloseProject",
-            "GetProject", "GetProjectTree", "ValidateAutomationContext",
-            // L1 — read / understand
-            "GetSoftwareInfo", "GetSoftwareTree", "GetDevices", "DescribeBlockLogic",
-            // L1 — build / import / compile
-            "ScaffoldProject", "PlcBuildAndImport", "ImportBlock", "ImportType",
-            "ImportPlcTagTable", "WritePlcSclSourceFile",
-            "CompileSoftware", "CompileAndDiagnosePlc",
-            // The HMI counterpart. Without it a lite session can generate Unified screens but
-            // cannot read its own HMI compile errors, so it has to hand the project back to the
-            // engineer to compile in the UI (#24).
-            "CompileAndDiagnoseHmi",
-            // L1 — hardware
-            "AddDeviceWithFallback", "SearchHardwareCatalog", "ConnectDeviceNodesToProfinetSubnet",
-            // Golden-path tools referenced by ServerInstructions / GetAuthoringGuide
-            // (required in lite so the roster agrees with those instructions)
-            "ImportFromDocuments", "GenerateBlocksFromExternalSource",
-            // Batch SD import/export are the "PREFERRED on V21+" batch path in the same
-            // instructions; tag tables and cross-references are what a model needs to read a
-            // project it did not write.
-            "ImportBlocksFromDocuments", "ExportBlocksAsDocuments",
-            "GetPlcTagTables", "GetCrossReferences",
-            "GetBlocks", "GetBlocksWithHierarchy", "GetBlockInfo",
-            "ExportAsDocuments", "GoOffline",
-            // 大响应寄存与分页。**任何档都必须能翻页** —— 超过阈值的响应会被寄存，
-            // 挡掉这几个出口等于内容直接丢：真实工程上 GetBlocks 的首页只装得下十几个块，
-            // 剩下的拿不回来。它们只碰引擎自己内存里的那份副本，一个都不动 TIA 工程。
-            "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports",
-            "ReadOpennessWorkerStatus", "RestartOpennessWorker",
-        };
+        private static readonly HashSet<string> LiteToolNames = new HashSet<string>(
+            TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey)
+                .Where(row => row!["profiles"]!.AsArray().Any(p => (string?)p == "lite"))
+                .Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
 
         public static IList<McpServerTool> GetLiteTools()
         {

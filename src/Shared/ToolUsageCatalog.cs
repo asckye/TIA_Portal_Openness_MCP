@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Text.Json.Nodes;
 
 namespace TiaOpenness.Shared
@@ -15,6 +16,35 @@ namespace TiaOpenness.Shared
             using (var reader = new StreamReader(stream!))
                 return (JsonObject)JsonNode.Parse(reader.ReadToEnd())!;
         });
+        private static readonly Lazy<JsonObject> Profiles = new Lazy<JsonObject>(() => {
+            var resources = new ResourceManager("TiaMcp.Logic.ModelContextProtocol.ToolProfiles", typeof(ToolUsageCatalog).Assembly);
+            return JsonNode.Parse(resources.GetString("Catalog", System.Globalization.CultureInfo.InvariantCulture)!)!.AsObject();
+        });
+
+        public static JsonArray ProfileEntries(string release, int contractVersion = 4)
+        {
+            if (contractVersion != 4) throw new ArgumentException("Unsupported contract version.");
+            return (JsonArray)(Profiles.Value["releases"]?[release]?.DeepClone() ?? new JsonArray());
+        }
+
+        private static JsonObject? ProfileEntry(string name, string release) => (Profiles.Value["releases"]?[release] as JsonArray)?
+            .OfType<JsonObject>().FirstOrDefault(row => (string?)row["currentName"] == name || (string?)row["sourceName"] == name);
+
+        public static string RegisteredName(string sourceName, string release)
+            => (string?)ProfileEntry(sourceName, release)?["currentName"] ?? sourceName;
+
+        public static JsonObject GuideSelection(string topic)
+        {
+            switch (topic.Trim().ToLowerInvariant())
+            {
+                case "workflow": return new JsonObject { ["exampleId"] = "sequence/connect-project" };
+                case "openness-workflow": return new JsonObject { ["query"] = "openness-base" };
+                case "startdrive-bico": return new JsonObject { ["toolName"] = "ManageStartdriveParameter", ["operation"] = "read" };
+                case "hmi": return new JsonObject { ["language"] = "hmi-javascript" };
+                case "errors": return new JsonObject();
+                default: return new JsonObject { ["language"] = topic };
+            }
+        }
         public static string Hint(string name) => " Examples: GetToolUsage(toolName: \"" + name + "\"), optionally operation or language.";
         public static JsonObject Mapping(string name) => (JsonObject)(Data.Value["tools"]![name]?.DeepClone()
             ?? throw new ArgumentException("No usage mapping for " + name + ". Regenerate the official example catalog."));
@@ -50,8 +80,11 @@ namespace TiaOpenness.Shared
 
         private static JsonObject? CallExample(string name, string release, string profile)
         {
-            var row = Data.Value["calls"]?["profiles"]?[profile]?[name];
+            var entry = profile == "full-engine" ? ProfileEntry(name, release) : null;
+            var source = (string?)entry?["currentName"] ?? name;
+            var row = Data.Value["calls"]?["profiles"]?[profile]?[source]?.DeepClone();
             if (row == null) return null;
+            if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
             return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension).Replace("{release}", release)
@@ -65,15 +98,17 @@ namespace TiaOpenness.Shared
                 if ((bool?)pair.Value?["inline"] == true)
                 {
                     var row = CallExample(pair.Key, release, "full-engine")!;
-                    result.Add(new JsonObject { ["tool"] = pair.Key, ["arguments"] = row["arguments"]!.DeepClone(),
+                    result.Add(new JsonObject { ["tool"] = RegisteredName(pair.Key, release), ["arguments"] = row["arguments"]!.DeepClone(),
                         ["note"] = "Sample targets require binding; GetToolUsage explains this release's parameters and results." });
                 }
             return result;
         }
 
         public static JsonObject Examples(string release, string profile, IEnumerable<string> roster,
-            string language = "", string exampleId = "", string toolName = "")
+            string language = "", string exampleId = "", string toolName = "", string exampleKind = "all")
         {
+            if (exampleKind != "all" && exampleKind != "sequence" && exampleKind != "language")
+                throw new ArgumentException("exampleKind must be all/sequence/language.");
             var available = new HashSet<string>(roster, StringComparer.OrdinalIgnoreCase);
             var languages = (JsonArray)Data.Value["languages"]!;
             if (language.Length > 0)
@@ -95,8 +130,11 @@ namespace TiaOpenness.Shared
             foreach (var record in records)
             {
                 var row = (JsonObject)record!.DeepClone();
+                bool sequenceRecord = row["steps"] is JsonArray;
+                if (exampleKind == "sequence" && !sequenceRecord || exampleKind == "language" && sequenceRecord) continue;
                 bool releaseMatches = row["releaseKeys"]!.AsArray().Any(v => (string?)v == release);
                 bool profileMatches = row["profile"] == null || (string?)row["profile"] == profile;
+                if (exampleKind != "all" && (!releaseMatches || !profileMatches)) continue;
                 row["releaseMatches"] = releaseMatches;
                 row["profileMatches"] = profileMatches;
                 if (row["tools"] is JsonArray names)
@@ -125,7 +163,8 @@ namespace TiaOpenness.Shared
             string? curatedArguments = null, string? curatedNote = null, string operation = "",
             IEnumerable<string>? roster = null, JsonObject? resultContract = null, Func<JsonObject, string>? callProblem = null)
         {
-            var mapping = Mapping(name);
+            var sourceName = profile == "full-engine" ? (string?)ProfileEntry(name, release)?["currentName"] ?? name : name;
+            var mapping = Mapping(sourceName);
             if (mapping["manualReferences"] is JsonArray manuals)
                 mapping["manualReferences"] = new JsonArray(manuals.Where(m => (string?)m!["releaseKey"] == release).Select(m => m!.DeepClone()).ToArray());
             var properties = (JsonObject)schema["properties"]!;

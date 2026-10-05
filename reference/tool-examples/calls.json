@@ -3252,7 +3252,7 @@
       "CallTool": {
         "arguments": {
           "name": "GetState",
-          "argumentsJson": {}
+          "arguments": {}
         },
         "parameters": {},
         "operations": {},
@@ -5016,16 +5016,15 @@
       "FindTools": {
         "arguments": {
           "query": "watch table",
-          "limit": 8
+          "limit": 8,
+          "offset": 0
         },
         "parameters": {
           "category": {
-            "exampleValue": "<category from this operation's target or user input>",
-            "requiresBinding": true
+            "exampleValue": ""
           },
           "domain": {
-            "exampleValue": "<domain from this operation's target or user input>",
-            "requiresBinding": true
+            "exampleValue": ""
           }
         },
         "operations": {},
@@ -5181,15 +5180,6 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
-      "GetAuthoringGuide": {
-        "arguments": {
-          "topic": "scl"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
       },
       "GetBlockInfo": {
         "arguments": {
@@ -5489,16 +5479,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetRecipe": {
-        "arguments": {},
-        "parameters": {
-          "topic": {
-            "exampleValue": "scl"
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "GetSoftwareInfo": {
         "arguments": {
           "softwarePath": "PLC_1"
@@ -5533,7 +5513,8 @@
       },
       "GetToolUsage": {
         "arguments": {
-          "toolName": "GetBlocks"
+          "toolName": "GetBlocks",
+          "exampleKind": "all"
         },
         "parameters": {
           "query": {
@@ -5551,16 +5532,19 @@
             "exampleValue": 80
           },
           "language": {
-            "exampleValue": "<language from this operation's target or user input>",
-            "requiresBinding": true
+            "exampleValue": "scl"
           },
           "exampleId": {
-            "exampleValue": "<exampleId from this operation's target or user input>",
-            "requiresBinding": true
+            "exampleValue": "sequence/connect-project"
+          },
+          "exampleKind": {
+            "exampleValue": "sequence",
+            "meaning": "all, sequence or language; exampleId reads a complete entry."
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true
       },
       "GetTypeInfo": {
         "arguments": {
@@ -12165,10 +12149,29 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "PreflightToolCall": {
+      "PreviewToolBatch": {
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "PreviewToolCall": {
         "arguments": {
           "name": "GetBlocks",
-          "argumentsJson": {
+          "arguments": {
             "softwarePath": "PLC_1"
           }
         },
@@ -12176,15 +12179,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
-      },
-      "PreviewToolBatch": {
-        "arguments": {
-          "operationsJson": "[{\"name\":\"GetState\",\"arguments\":{}}]",
-          "expectedProject": "Example"
-        },
-        "parameters": {},
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "ProbeGlobalLibrary": {
         "arguments": {
@@ -13311,18 +13305,6 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadToolBatch": {
-        "arguments": {
-          "operationsJson": "[{\"name\":\"ReadOpennessGuidance\",\"arguments\":{\"query\":\"threading\"}}]"
-        },
-        "parameters": {
-          "expectedProject": {
-            "exampleValue": "Example"
-          }
-        },
-        "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
-      },
       "ReadTransferAreas": {
         "arguments": {
           "devicePathJson": "[\"<exact device name from GetProjectTree>\"]",
@@ -13955,6 +13937,25 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
+      },
+      "RunReadOnlyToolBatch": {
+        "arguments": {
+          "operations": [
+            {
+              "name": "ReadOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "parameters": {
+          "expectedProject": {
+            "exampleValue": "Example"
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "RunTestSuiteCase": {
         "arguments": {

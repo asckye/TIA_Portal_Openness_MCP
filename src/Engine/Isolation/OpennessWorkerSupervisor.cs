@@ -92,17 +92,15 @@ namespace TiaMcpServer.Isolation
         {
             string effectiveName = parameters["name"]?.GetValue<string>() ?? "";
             JsonObject? effectiveArguments = parameters["arguments"] as JsonObject;
-            if (effectiveName == "CallTool")
+            if (string.Equals(effectiveName, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
                 effectiveName = effectiveArguments?["name"]?.GetValue<string>()?.Trim() ?? "";
-                var inner = effectiveArguments?["argumentsJson"];
-                try { effectiveArguments = inner is JsonObject obj ? obj : inner == null ? null : JsonNode.Parse(inner.GetValue<string>()) as JsonObject; }
-                catch /* swallow(parse-fallback): malformed bridge arguments provide no project-binding evidence and remain for tool validation */ { effectiveArguments = null; }
+                effectiveArguments = effectiveArguments?["arguments"] as JsonObject;
             }
             bool binding = string.Equals(effectiveName, "ConnectToProject", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "ConnectIsolated", StringComparison.OrdinalIgnoreCase) ||
                 ((string.Equals(effectiveName, "Connect", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "AttachToOpenProject", StringComparison.OrdinalIgnoreCase)) &&
                     !string.IsNullOrWhiteSpace(effectiveArguments?["projectName"]?.ToString()));
-            var diagnostic = new[] { "GetState", "Bootstrap", "FindTools", "GetToolSchema", "ListToolCategories", "GetAuthoringGuide", "GetExport", "ListExports" }
+            var diagnostic = new[] { "GetState", "Bootstrap", "FindTools", "GetToolSchema", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "GetExport", "ListExports" }
                 .Contains(effectiveName, StringComparer.OrdinalIgnoreCase);
             long ticket;
             lock (sync)
@@ -155,7 +153,7 @@ namespace TiaMcpServer.Isolation
                 lock (sync)
                     if (state != "Ready" || epoch != ticket) throw new IOException("Worker failed before the result was accepted.");
                 InvocationJournal.Write(id, "worker:" + name, "RETURNED");
-                if (binding && SuccessfulBinding(result, name == "CallTool")) lock (sync) { if (epoch == ticket && state == "Ready") bindingRequired = false; }
+                if (binding && SuccessfulBinding(result)) lock (sync) { if (epoch == ticket && state == "Ready") bindingRequired = false; }
                 return result;
             }
             catch (WorkerCallException) { throw; }
@@ -234,7 +232,7 @@ namespace TiaMcpServer.Isolation
         }
 
         private static async Task<bool> AsResult(Task task) { await task.ConfigureAwait(false); return true; }
-        private static bool SuccessfulBinding(JsonObject envelope, bool bridge)
+        private static bool SuccessfulBinding(JsonObject envelope)
         {
             try
             {
@@ -243,7 +241,9 @@ namespace TiaMcpServer.Isolation
                 if (content == null || content.Count != 1) return false;
                 var payload = JsonNode.Parse(content[0]!["text"]!.GetValue<string>()) as JsonObject;
                 var meta = payload?["meta"] ?? payload?["Meta"];
-                return bridge ? meta?["bridgeSuccess"]?.GetValue<bool>() == true && meta?["operationSuccess"]?.GetValue<bool>() == true
+                // CallTool returns the target's own result, just like a direct call.
+                return payload?["schemaVersion"]?.GetValue<int?>() == 4
+                    ? payload["ok"]?.GetValue<bool>() == true
                     : meta?["success"]?.GetValue<bool>() == true;
             }
             catch /* swallow(parse-fallback): an unreadable binding response cannot establish successful project binding */ { return false; }

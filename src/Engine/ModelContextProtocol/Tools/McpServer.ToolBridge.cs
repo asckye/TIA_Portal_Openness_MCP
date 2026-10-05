@@ -9,6 +9,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -98,7 +101,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return u.Name;
         }
 
-        [McpServerTool(Name = "ListToolCategories"), Description(
+        [McpServerTool(Name = "ListToolCategories"), Description("[L0][Meta][READ] List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain.")]
+        public static CallToolResult ListToolCategoriesV4()
+            => InfrastructureResult("ListToolCategories", ListToolCategories());
+
+        [Description(
             "[L0][Meta][READ] The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), " +
             "their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per category/domain/operation. " +
             "Call this first to orient, then FindTools(category=… or domain=…) to browse one area.")]
@@ -144,7 +151,26 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "FindTools"), Description(
+        [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
+        public static CallToolResult FindToolsV4(
+            [Description("Space-separated capability words; empty lists all tools.")] string query = "",
+            [Description("Positive page size; default 12.")] int limit = 12,
+            [Description("Optional category key from ListToolCategories.")] string category = "",
+            [Description("Optional exact domain tag from ListToolCategories.")] string domain = "",
+            [Description("Zero-based match offset.")] int offset = 0)
+        {
+            if (offset < 0 || limit < 1) return V4Reject("FindTools", InvalidInput("offset/limit"));
+            var response = FindTools(query, int.MaxValue, category, domain);
+            if (response.Meta?["success"]?.GetValue<bool?>() != true)
+                return V4Reject("FindTools", InvalidInput("category/domain"));
+            var lines = (response.Items ?? Enumerable.Empty<string>()).ToArray();
+            int count = lines.Length / 3;
+            if (offset > count) return V4Reject("FindTools", InvalidInput("offset"));
+            response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3).ToArray();
+            return InfrastructureResult("FindTools", response, OffsetPage(offset, limit, count));
+        }
+
+        [Description(
             "[L0][Meta][READ] Search the FULL tool roster, including tools not listed in this session. " +
             "The server ships a small 'lite' roster by default so every host can load it; everything else is reached through this tool plus CallTool. " +
             "USE THIS whenever the visible tools do not cover what you need, before concluding the server cannot do something. " +
@@ -234,7 +260,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = hits.Count + " of " + scored.Count + " matching tools (roster: " + all.Count + " total). " +
                               "Tools marked [call via CallTool] are not in this session's tool list - " +
-                              "invoke them with CallTool(name, argumentsJson); PreflightToolCall(name, argumentsJson) checks a planned call without executing it.",
+                              "invoke them with CallTool(name, arguments); PreviewToolCall(name, arguments) checks a planned call without executing it.",
                     Items = lines,
                     Meta = BridgeMeta(true),
                 };
@@ -245,23 +271,112 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CallTool"), Description(
-            "[L0][Meta] Invoke any available tool for this engine version by name, including non-lite tools. " +
-            "Use FindTools first to get the exact name and parameter signature. " +
-            "Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. " +
-            "Example: name='ExportPlcWatchTable', argumentsJson='{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}'.")]
-        public static ResponseMessage CallTool(
-            [Description("name: exact tool name from FindTools, e.g. 'ExportPlcWatchTable'.")] string name,
-            [Description("argumentsJson: the tool's arguments as a JSON object - either the object itself ({\"softwarePath\":\"PLC_1\"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings.")] JsonElement? argumentsJson = null)
+        [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Returns the target result unchanged; dispatch failures use the V4 envelope. Nested orchestration is refused.")]
+        public static CallToolResult CallTool(
+            [Description("Exact currently registered tool name from FindTools.")] string name,
+            [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
         {
-            // Accept arguments as either an object or a string. Keep JsonElement nullable because the tool factory
-            // cannot serialize default(JsonElement) as a parameter default; AIFunctionFactory.Build fails during host startup.
-            var element = argumentsJson ?? default;
-            string text = argumentsJson == null || element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null ? ""
-                : element.ValueKind == JsonValueKind.String ? (element.GetString() ?? "") : element.GetRawText();
-            return CallTool(name, text);
+            var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
+            if (error != null) return V4Reject("CallTool", error);
+            if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
+                return V4Reject("CallTool", InvalidInput("name"));
+            try { return ToolResult(InvokeToolMethod(method!, call!)); }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            { return TargetFailure(ex.InnerException); }
         }
 
+        private static CallToolResult TargetFailure(Exception error)
+        {
+            // The target's exception remains a target failure, as for SDK direct calls.
+            return new CallToolResult { IsError = true,
+                Content = new[] { new TextContentBlock { Text = error.Message } } };
+        }
+
+        internal static Error? BindV4Call(string name, ToolArguments arguments, out MethodInfo? method, out object?[]? call)
+        {
+            method = null; call = null;
+            if (string.IsNullOrWhiteSpace(name)) return InvalidInput("name");
+            if (!AllToolMethods(includeUnavailable: true).TryGetValue(name, out method))
+                return new Error("Tool is not registered in this release.", new ToolNotFoundDetails(name));
+            var argumentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in arguments.Json.EnumerateObject())
+                if (!argumentNames.Add(property.Name)) return InvalidInput("arguments");
+            name = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+            var resolved = method;
+            string version = VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var v) ? v.ToString()
+                : resolved.GetParameters().FirstOrDefault(p => p.Name == key)?.DefaultValue?.ToString());
+            if (version.Length != 0)
+                return new Error(version, new UnsupportedCapabilityDetails(ReleaseKey, name, null));
+            var schema = ToolInputSchema(name, method);
+            var error = new InputSchema(schema).Validate(arguments.Json, "arguments");
+            if (error != null) return error;
+            var parameters = method.GetParameters();
+            call = new object?[parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var p = parameters[i];
+                if (IsInfrastructureParameter(p.ParameterType)) continue;
+                if (!arguments.Json.TryGetProperty(p.Name!, out var value))
+                {
+                    if (!p.HasDefaultValue) return InvalidInput(p.Name!);
+                    call[i] = p.DefaultValue; continue;
+                }
+                try { call[i] = JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, V4BindingJson); }
+                catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException)
+                { return InvalidInput(p.Name!); }
+            }
+            return null;
+        }
+
+        internal static string ReleaseKey => Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
+        internal static Error InvalidInput(string parameter) => new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+        internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
+            (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
+        internal static CallToolResult V4Reject(string tool, Error error, JsonObject? data = null)
+            => V4Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None);
+        internal static CallToolResult V4Result(string tool, JsonObject? data, Paging? paging = null, bool current = false, bool completed = false)
+            => V4Result(tool, data, null, Outcome.Succeeded, completed ? Execution.Completed : Execution.ReadOnly, Completeness.Complete, paging, current);
+
+        internal static CallToolResult V4Result(string tool, JsonObject? data, Error? error,
+            Outcome outcome, Execution execution, Completeness completeness, Paging? paging = null, bool current = false)
+        {
+            var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
+                "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array.Empty<Warning>();
+            var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
+                outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
+            var mapped = McpResult.From(Envelope.Create(data, error, meta));
+            return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+        }
+        internal static CallToolResult InfrastructureResult(string tool, ResponseMessage response, Paging? paging = null)
+        {
+            var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            data.Remove("success"); data.Remove("timestamp");
+            data["summary"] = response.Message;
+            if (response is ResponseStringList list) data["items"] = new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
+            return response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
+                : V4Reject(tool, InvalidInput("arguments"), data);
+        }
+        internal static CallToolResult ToolResult(object? result)
+        {
+            if (result is CallToolResult protocol) return protocol;
+            string json = JsonSerializer.Serialize(result, result?.GetType() ?? typeof(object), V4BindingJson);
+            return new CallToolResult { Content = new[] { new TextContentBlock { Text = json } } };
+        }
+        internal static JsonNode? ResultBody(CallToolResult result)
+        {
+            if (result.StructuredContent != null) return result.StructuredContent.DeepClone();
+            if (result.Content.Count != 1 || !(result.Content.Single() is TextContentBlock text))
+                return JsonSerializer.SerializeToNode(result, V4BindingJson);
+            try { return JsonNode.Parse(text.Text); }
+            catch (JsonException) /* swallow(parse-fallback): a plain-text target error keeps its complete MCP result in the batch */
+            { return JsonSerializer.SerializeToNode(result, V4BindingJson); }
+        }
+        private static readonly JsonSerializerOptions V4BindingJson = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        { PropertyNameCaseInsensitive = false };
+
+        // Unregistered C# entry point retained for the not-yet-migrated transaction group.
         public static ResponseMessage CallTool(string name, string argumentsJson)
         {
             string target = (name ?? "").Trim();
@@ -323,7 +438,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         return new ResponseMessage
                         {
-                            Message = "argumentsJson is not valid JSON (" + jx.Message + "). It must be a JSON OBJECT of the " +
+                            Message = "arguments is not valid JSON (" + jx.Message + "). It must be a JSON OBJECT of the " +
                                       "tool's parameters, e.g. {\"softwarePath\":\"PLC_1\"} - not a bare value, not the tool name.",
                             Meta = BridgeMeta(false),
                         };
@@ -332,7 +447,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (obj == null)
                         return new ResponseMessage
                         {
-                            Message = "argumentsJson must be a JSON object, e.g. {\"softwarePath\":\"PLC_1\"}. " +
+                            Message = "arguments must be a JSON object, e.g. {\"softwarePath\":\"PLC_1\"}. " +
                                       "Expected signature: " + RenderSignature(target, method!),
                             Meta = BridgeMeta(false),
                         };
@@ -405,7 +520,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = target + " is missing required argument(s): " + string.Join(", ", missing) +
                                   ". Expected signature: " + RenderSignature(target, method!) +
                                   " " + ToolExamples.Render(example) +
-                                  " PreflightToolCall(name, argumentsJson) checks a corrected call without executing it.",
+                                  " PreviewToolCall(name, arguments) checks a corrected call without executing it.",
                         Meta = BridgeMeta(false),
                     };
                 }
@@ -444,33 +559,24 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // PreflightToolCall uses the same name resolution and parameter matching as CallTool without invoking anything.
+        // PreviewToolCall uses the same name resolution and parameter matching as CallTool without invoking anything.
         // The report identifies invalid arguments so callers can correct their plan before sending it to TIA.
         // PreflightLogic builds the report (pure, offline-tested); only session state comes from the engine,
         // through a partial method the offline suite does not implement.
 
-        [McpServerTool(Name = "PreflightToolCall"), Description(
-            "[L0][Meta][SESSION] Check a planned tool call WITHOUT executing it. Resolves the tool name (suggests the right one on a typo), " +
-            "validates argumentsJson against the real signature (missing required parameters, unknown or mis-cased names, type mismatches, values outside the documented alternatives, " +
-            "what CallTool would coerce), reports what the call would do (operation class, dryRun / confirm flags, precautions), whether the session prerequisites hold " +
-            "(connected, project bound) and one worked example. Use it before an unfamiliar call and after a correction from the user: fix the plan from this report, " +
-            "then call the tool (directly or through CallTool). Nothing touches TIA Portal or the project.")]
-        public static ResponseStringList PreflightToolCall(
-            [Description("name: the tool to check, e.g. 'DownloadToPlc' (case-insensitive; a near miss is corrected).")] string name,
-            [Description("argumentsJson: the arguments you intend to send - the JSON object itself or that object as a JSON string. Omit to see the signature, example and prerequisites only.")] JsonElement? argumentsJson = null)
+        [McpServerTool(Name = "PreviewToolCall"), Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls.")]
+        public static CallToolResult PreviewToolCall(
+            [Description("Exact currently registered tool name.")] string name,
+            [Description("Planned arguments as an object; omit for a no-argument tool.")] ToolArguments? arguments = null)
         {
-            string target = (name ?? "").Trim();
-            try
-            {
-                var element = argumentsJson ?? default;
-                string text = argumentsJson == null || element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null ? ""
-                    : element.ValueKind == JsonValueKind.String ? (element.GetString() ?? "") : element.GetRawText();
-                return PreflightToolCall(target, text);
-            }
-            catch (Exception ex)
-            {
-                return new ResponseStringList { Message = "PreflightToolCall('" + target + "') failed: " + ex.Message, Meta = BridgeMeta(false) };
-            }
+            var args = arguments ?? EmptyArguments();
+            var error = BindV4Call(name, args, out _, out _);
+            if (error != null) return V4Reject("PreviewToolCall", error);
+            var report = PreflightToolCall(name, args.Json.GetRawText());
+            if (report.Meta?["prerequisites"]?["satisfied"]?.GetValue<bool?>() == false)
+                return V4Reject("PreviewToolCall", new Error("No project is bound.", new ProjectNotBoundDetails()));
+            report.Meta!["success"] = true;
+            return InfrastructureResult("PreviewToolCall", report);
         }
 
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
@@ -479,7 +585,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
             if (target.Length == 0)
-                return new ResponseStringList { Message = "PreflightToolCall: 'name' is required.", Meta = BridgeMeta(false) };
+                return new ResponseStringList { Message = "PreviewToolCall: 'name' is required.", Meta = BridgeMeta(false) };
             if (AllToolMethods(includeUnavailable: true).ContainsKey(target))
             {
                 var unavailable = VersionToolProblem(target);
@@ -502,7 +608,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["suggestions"] = new JsonArray(near.Select(n => (JsonNode)n).ToArray());
                 return new ResponseStringList
                 {
-                    Message = "No tool named '" + target + "'." + (near.Count > 0 ? " Did you mean: " + string.Join(", ", near) + "? Re-run PreflightToolCall with that name." : " Call FindTools with capability words to find it."),
+                    Message = "No tool named '" + target + "'." + (near.Count > 0 ? " Did you mean: " + string.Join(", ", near) + "? Re-run PreviewToolCall with that name." : " Call FindTools with capability words to find it."),
                     Meta = meta,
                 };
             }
@@ -518,12 +624,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (JsonException jx)
                 {
                     meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
-                    return new ResponseStringList { Message = "argumentsJson is not valid JSON (" + jx.Message + "). Expected signature: " + RenderSignature(canonical, method), Meta = meta };
+                    return new ResponseStringList { Message = "arguments is not valid JSON (" + jx.Message + "). Expected signature: " + RenderSignature(canonical, method), Meta = meta };
                 }
                 if (!(parsed is JsonObject obj))
                 {
                     meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
-                    return new ResponseStringList { Message = "argumentsJson must be a JSON object. Expected signature: " + RenderSignature(canonical, method), Meta = meta };
+                    return new ResponseStringList { Message = "arguments must be a JSON object. Expected signature: " + RenderSignature(canonical, method), Meta = meta };
                 }
                 args = obj;
             }
@@ -676,7 +782,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (args["operation"] is JsonValue operation) summary["usageTool"]!["arguments"]!["operation"] = operation.DeepClone();
             if (example.Note == ToolExamples.DerivedNote) summary["exampleDerived"] = true;
             summary["next"] = !report.Ok
-                ? "Correct the argument problems listed here and call once more; PreflightToolCall(name, argumentsJson) checks a corrected call without executing."
+                ? "Correct the argument problems listed here and call once more; PreviewToolCall(name, arguments) checks a corrected call without executing."
                 : prerequisite != null ? prerequisite
                 : "The message names the cause; fix that one thing (real names from GetProjectTree / GetSoftwareTree, documented values, preconditions) and call once more - do not try variants.";
             var usageNote = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical)["precaution"];
@@ -696,7 +802,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [McpServerTool(Name = "GetRecipe"), Description("[L0][Guide][READ] Compatibility entry for call sequences stored in the unified GetToolUsage example library. Empty topic lists sequences; a topic returns ordered calls and expected results. No calls are executed.")]
+        [Description("[L0][Guide][READ] Compatibility entry for call sequences stored in the unified GetToolUsage example library. Empty topic lists sequences; a topic returns ordered calls and expected results. No calls are executed.")]
         public static ResponseStringList GetRecipe(
             [Description("topic: recipe key from the list, e.g. 'download-plcsim'; empty lists all recipes with their one-line purpose.")] string topic = "")
         {
@@ -705,7 +811,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var lines = ToolRecipes.All.Select(r => r.Topic + " - " + r.Purpose + " (" + r.Steps.Count + " steps)").ToList();
                 meta["topics"] = new JsonArray(ToolRecipes.All.Select(r => (JsonNode)r.Topic).ToArray());
-                return new ResponseStringList { Message = ToolRecipes.All.Count + " recipes. GetRecipe(topic) returns the exact calls of one.", Items = lines, Meta = meta };
+                return new ResponseStringList { Message = ToolRecipes.All.Count + " recipes. GetToolUsage(exampleId: 'sequence/<topic>', exampleKind: 'sequence') returns the exact calls of one.", Items = lines, Meta = meta };
             }
             var recipe = ToolRecipes.Find(topic);
             if (recipe == null)
@@ -735,12 +841,39 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IReadOnlyList<string> ValidateToolExamples()
         {
             var all = AllToolMethods(includeUnavailable: true);
-            return ToolExamples.ValidateAgainst(tool =>
+            var problems = ToolExamples.ValidateAgainst(tool =>
             {
                 if (!all.Keys.Any(k => string.Equals(k, tool, StringComparison.Ordinal))) return null;
                 return all[tool].GetParameters().Where(p => !IsInfrastructureParameter(p.ParameterType))
                     .Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
-            });
+            }).ToList();
+            // Validate the maintained V4 samples and the exact examples served to
+            // clients. This gate binds schemas only; it never invokes their targets.
+            foreach (var row in TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey))
+            {
+                string name = (string)row!["currentName"]!;
+                if (!IsInfrastructureV4(name)) continue;
+                var usage = ResultBody(new ToolUsageTools().GetToolUsage(toolName: name));
+                if (usage?["ok"]?.GetValue<bool?>() != true) { problems.Add(name + ": usage retrieval failed"); continue; }
+                foreach (var args in new[] { row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
+                {
+                    var error = ValidateInfrastructureExample(name, args.AsObject());
+                    if (error != null) problems.Add(name + ": " + V4Json.Serialize(error));
+                }
+            }
+            return problems;
+        }
+
+        internal static Error? ValidateInfrastructureExample(string name, JsonObject arguments)
+        {
+            var error = BindV4Call(name, new ToolArguments(JsonSerializer.SerializeToElement(arguments)), out _, out _);
+            if (error != null) return error;
+            if (name == "CallTool" || name == "PreviewToolCall")
+                return BindV4Call((string)arguments["name"]!, arguments["arguments"] == null ? EmptyArguments()
+                    : new ToolArguments(JsonSerializer.SerializeToElement(arguments["arguments"])), out _, out _);
+            if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
+                return ValidateBatch(JsonSerializer.Deserialize<ToolCall[]>(arguments["operations"]!.ToJsonString(), V4BindingJson)!, name == "PreviewToolBatch", out _);
+            return null;
         }
 
         private static object? InvokeToolMethod(MethodInfo method, object?[] call)

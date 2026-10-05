@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / 'src/Shared/ToolUsageData.json'
@@ -43,6 +44,9 @@ def generate():
                 'examples': blocks, 'text': text})
 
     full = {t['name']: t for t in read(ROOT / 'manifest/tools-list.json')['tools']}
+    profiles = ET.parse(ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx')
+    current = json.loads(profiles.find(".//data[@name='Catalog']/value").text)['releases']['21']
+    full = {row['currentName']: dict(full[row['sourceName']], name=row['currentName']) for row in current}
     names = set(full) | {'GetToolUsage'}
     for catalog in (ROOT / 'bin-build/multi-version').glob('tools-*.json'):
         names.update(t['name'] for t in read(catalog)['tools'])

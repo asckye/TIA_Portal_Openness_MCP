@@ -182,7 +182,7 @@ preview 的 `data.plan` 固定包含 `{hash,releaseKey,tool,argumentsHash,identi
 
 lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常见 PLC 交换和编译→HMI 定位→结果导出”的最短工作流程；低频可选包、在线写入/下载、通用反射、深层 HMI 编辑及自测通过完整目录发现后按需 CallTool。每个候选必须在 V20/V21 都存在，且 `reference/tool-examples/calls.json` 各版 profile 有 arguments 示例；不能仅因为在旧 lite 中就入选。附表 F 和数据提案逐项给出理由，精确数量由生成器输出。
 
-名单按 releaseKey + contractVersion + profile 内嵌；直接调用、FindTools、GetToolUsage、CallTool 使用同一完整目录及版本门禁，lite 只控制 tools/list 的广告成员。发现和分页/导出入口始终可达。Foundation **继续不设 lite**，也不新增它今天没有的 CallTool 或完整引擎能力。提案文件尚不被运行时读取；实施任务将其移动至正式资源路径并接线。
+名单按 releaseKey + contractVersion + profile 内嵌；直接调用、FindTools、GetToolUsage、CallTool 使用同一完整目录及版本门禁，lite 只控制 tools/list 的广告成员。发现和分页/导出入口始终可达。Foundation **继续不设 lite**，也不新增它今天没有的 CallTool 或完整引擎能力。P6-07 将名单和过渡名称映射嵌入正式资源；运行时按当前注册名称广告。
 
 产品输出采用 `TiaMcp.FoundationHost.exe`、`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`；AssemblyName 同步，关联 .dll/.exe.config/.deps.json/.runtimeconfig.json 按实际构建产物同步。发布键目录与开发输出目录不变，源命名空间不为这次改名批量移动。根 `TiaOpenness.exe` 为正式 Studio 启动器，启动 `runtime/studio/TiaOpenness.exe`；根启动器的 AssemblyName 为 TiaOpenness.Launcher，构建复制为根 EXE，避免同基名程序集身份混淆。删除根 `TiaMcpConfigurator.exe`；Bridge、worker、adapter 名称保持现有职责。
 
@@ -212,9 +212,22 @@ lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常�
 
 ## 7. 实施与生成证明
 
+P6-07 过渡规则（审查决定）：各组原地迁移；每个工具始终只注册当前名称或已迁移的 V4 名称，不设别名或双注册。
+直接调用、CallTool 和批次中的目标结果同形，桥接不重新包装目标结果；未迁移目标保留 legacy 结果，已迁移目标返回 V4 信封。
+桥接自己的名称、参数对象、版本准入、批次数量/白名单与嵌套错误使用 P6-02 错误码。
+lite 按 V4 名称维护，生成资源按 releaseKey、contractVersion 记录 V4 名称、当前注册名称和 profile 成员；tools/list 广告当前注册名称。
+直接调用、FindTools、GetToolUsage 和 CallTool 始终访问完整目录并保留版本门禁。
+导出的非递归 schema 全部内联；真正递归的类型才保留根本地 $defs/$ref。
+
+P6-07 的正式运行资源为 `src/Logic/ModelContextProtocol/ToolProfiles.resx`：Catalog 字符串保存 JSON，
+由 SDK 默认 EmbeddedResource 项嵌入 TiaMcp.Logic，不需修改公共项目文件。生成器是唯一写入者；
+每版记录包含 name（V4 名称）、currentName、sourceName、profiles 与 arguments，Foundation 无 lite 记录。
+5 个导出生命周期入口属于附表 G 的 P6-11/ExportTools.cs；P6-07 只接线本组的大响应分页边界。
+
+
 任务顺序、依赖及每项验收见[重构计划阶段 6](refactor-plan.md#阶段-6破坏性变更40)；附表 G 固定工具文件所有权，附表 H 覆盖 P6-01～47 的当前路径，附表 I 固定已合并事实。目录项只定位所有权，实施说明仍须列出精确文件。本文的每项未实现内容都有对应任务；最后一个任务 P6-43 生成发布说明的新旧名称/参数对照。改名、类型化、响应以及安全政策分别证明，不把离线测试称为原生验收。
 
-生成器仅用 Python 标准库和仓库检查器，不加载二进制、不访问网络、无需 SDK。可从任意 cwd 对干净 checkout 运行；只写本页标记块和 lite 提案文件。运行两遍必须字节完全相同，`--check` 不写文件。源码目录与八版基线、当前 lite、示例覆盖、闭合类型族、合并证明和目标唯一性任何一项不符都失败；任务路径必须在当前 Git 文件清单中。六个负例自检拒绝漏映射、未证明重名、表示词、未经证明的编译合并、遗漏任务和旧目录路径。第 I 步五份静态证据、默认关闭开关和八个 P6 行为族的 NOT RUN 状态同时核对。
+生成器仅用 Python 标准库和仓库检查器，不加载二进制、不访问网络、无需 SDK。可从任意 cwd 对干净 checkout 运行；只写本页标记块和 lite 运行资源。运行两遍必须字节完全相同，`--check` 不写文件。源码目录与八版基线、当前 lite、示例覆盖、闭合类型族、合并证明和目标唯一性任何一项不符都失败；任务路径必须在当前 Git 文件清单中。六个负例自检拒绝漏映射、未证明重名、表示词、未经证明的编译合并、遗漏任务和旧目录路径。第 I 步五份静态证据、默认关闭开关和八个 P6 行为族的 NOT RUN 状态同时核对。
 
 **V4 契约快照规则（由 P6-41 实施，本次不创建或移动快照）：**
 
@@ -502,7 +515,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GeneratePlcLoadableFile` | `GeneratePlcLoadableFile` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GeneratePlcSourceFromBlocks` | `GeneratePlcSourceFromBlocks` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GenerateSiVArc` | `GenerateSivarc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `GetAuthoringGuide` | `GetToolUsage` | 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../src/Engine/ModelContextProtocol/Tools/GuideTools.cs) |
+| `GetAuthoringGuide` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
 | `GetBlockInfo` | `GetPlcBlockInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `GetBlocks` | `ListPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `GetBlocksWithHierarchy` | `GetPlcBlockHierarchy` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
@@ -533,12 +546,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetProjectTopology` | `GetProjectTopology` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
 | `GetProjectTree` | `GetProjectTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
 | `GetPutGetAccess` | `GetPlcPutGetAccess` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `GetRecipe` | `GetToolUsage` | 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `GetRecipe` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
 | `GetSoftwareInfo` | `GetSoftwareInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
 | `GetSoftwareTree` | `GetSoftwareTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
 | `GetState` | `GetSessionState` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `GetTechnologyObjects` | `ListTechnologyObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
-| `GetToolUsage` | `GetToolUsage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
+| `GetToolUsage` | `GetToolUsage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
 | `GetTypeInfo` | `GetPlcTypeInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
 | `GetTypes` | `ListPlcTypes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
 | `GetUnifiedCrossReferences` | `GetUnifiedCrossReferences` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
@@ -1473,7 +1486,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):37 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):41 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
 | [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):16 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
-| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):76 | `if (array.Count < 1 \|\| array.Count > 50) throw new ArgumentException("Use 1..50 operations.");` |
+| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):135 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
 | [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]` |
 | [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):466 | `if (conflicts.Count > 16)` |
 | [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):122 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
@@ -1840,6 +1853,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:16597 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:17294 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1859,8 +1876,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,24 | 修改引用并回归 |
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:607 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,52 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:631 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
@@ -1923,15 +1940,18 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs) | 根定位:31 | 修改引用并回归 |
 | [src/Studio/Core/Adapters/SessionFactoryLoader.cs](../../src/Studio/Core/Adapters/SessionFactoryLoader.cs) | 根定位:38 | 修改引用并回归 |
 | [src/Studio/Core/TiaOpenness.Core.csproj](../../src/Studio/Core/TiaOpenness.Core.csproj) | 根定位:21 | 修改引用并回归 |
-| [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:63; 写入/工作区:16 | 修改引用并回归 |
+| [src/Studio/Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs) | 产品:70; 写入/工作区:16 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ClientProfiles.cs](../../src/Studio/Gui/Configuration/ClientProfiles.cs) | 产品:12 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs) | 产品:18,79,80,81; 根定位:77 | 修改引用并回归 |
+| [src/Studio/Gui/Configuration/ConfigurationPreview.cs](../../src/Studio/Gui/Configuration/ConfigurationPreview.cs) | 产品:3 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationView.xaml](../../src/Studio/Gui/Configuration/ConfigurationView.xaml) | 产品:1 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ConfigurationView.xaml.cs](../../src/Studio/Gui/Configuration/ConfigurationView.xaml.cs) | 产品:21 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/ModernJson.cs](../../src/Studio/Gui/Configuration/ModernJson.cs) | 产品:8 | 修改引用并回归 |
 | [src/Studio/Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150,153; 根定位:45,57 | 修改引用并回归 |
-| [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,48 | 修改引用并回归 |
+| [src/Studio/Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,47 | 修改引用并回归 |
+| [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
 | [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:17 | 修改引用并回归 |
+| [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/README.md](../../src/Studio/README.md) | 产品:4 | 修改引用并回归 |
 | [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tests/Engine/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:48 | 修改引用并回归 |
@@ -1942,7 +1962,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,43,79; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:159 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,220,236,238,266 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,426,442,444,472 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj](../../tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj) | 根定位:6 | 修改引用并回归 |
@@ -1951,10 +1971,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34,36; 根定位:14,74,164 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs](../../tests/Studio/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs) | 产品:6,26,27,28; 根定位:15 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs) | 产品:112 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs) | 产品:173 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:90,243,275,276,277 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:92,246,278,279,280 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs) | 产品:39 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:60 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 144 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 153 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 
@@ -2015,7 +2037,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ListToolCategories` | `ListToolCategories` | 发现、用法与完整目录调用 | 20, 21 |
 | `OpenProject` | `OpenProject` | 工程生命周期 | 20, 21 |
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 离线构造与规划 | 20, 21 |
-| `PreviewToolCall` | `PreflightToolCall` | 发现、用法与完整目录调用 | 20, 21 |
+| `PreviewToolCall` | `PreviewToolCall` | 发现、用法与完整目录调用 | 20, 21 |
 | `RestartOpennessWorker` | `RestartOpennessWorker` | 环境与会话诊断 | 20, 21 |
 | `SaveExportContent` | `SaveExport` | 大结果分页与文件交付 | 20, 21 |
 | `SaveProject` | `SaveProject` | 工程生命周期 | 20, 21 |
@@ -2024,7 +2046,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ValidatePlcDocumentSchemas` | `ValidatePlcXmlSchemas` | 离线构造与规划 | 20, 21 |
 | `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 常用 PLC 交换与编译 | 20, 21 |
 
-数据文件：[phase6-lite.proposal.json](../../scripts/generate/phase6-lite.proposal.json)。每项 example 为 reference/tool-examples/calls.json 的 JSON Pointer；生成器逐版验证 arguments 对象存在。Foundation 继续不设 lite。
+数据文件：[ToolProfiles.resx](../../src/Logic/ModelContextProtocol/ToolProfiles.resx)。Catalog JSON 按 contractVersion、releaseKey 记录 V4/current/source 名称、profiles 和 arguments；参数示例取自 reference/tool-examples/calls.json，按当前契约转换并逐版验证。Foundation 继续不设 lite。
 
 </details>
 
@@ -2033,7 +2055,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 任务 | 工具源文件 | 当前注册入口数 |
 |---|---|---|
-| P6-07 | [ModelContextProtocol/Tools/GuideTools.cs](../../src/Engine/ModelContextProtocol/Tools/GuideTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[ModelContextProtocol/Tools/McpServer.Exports.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ToolUsageTools.cs](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) | 10 |
+| P6-07 | [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[ModelContextProtocol/Tools/McpServer.Exports.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ToolUsageTools.cs](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) | 10 |
 | P6-09 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs)<br>[ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs)<br>[ModelContextProtocol/Tools/TemplateTools.cs](../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[ModelContextProtocol/Tools/XmlBuilderTools.cs](../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs) | 46 |
 | P6-10 | [ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[ModelContextProtocol/Tools/McpServer.BlockLogic.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[ModelContextProtocol/Tools/PlcTablesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) | 53 |
 | P6-11 | [ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/ExportTools.cs](../../src/Engine/ModelContextProtocol/Tools/ExportTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[ModelContextProtocol/Tools/NativeExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) | 25 |
@@ -2060,13 +2082,13 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 任务 | 当前源码/文档/验证入口（仓库根相对路径） |
 |---|---|
-| <a id="phase6-path-p6-01"></a>P6-01 | [scripts/generate/Generate-Phase6Plan.py](../../scripts/generate/Generate-Phase6Plan.py)<br>[scripts/generate/phase6-lite.proposal.json](../../scripts/generate/phase6-lite.proposal.json)<br>[docs/development/phase6-review.md](../../docs/development/phase6-review.md)<br>[docs/development/refactor-plan.md](../../docs/development/refactor-plan.md)<br>[docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) |
+| <a id="phase6-path-p6-01"></a>P6-01 | [scripts/generate/Generate-Phase6Plan.py](../../scripts/generate/Generate-Phase6Plan.py)<br>[src/Logic/ModelContextProtocol/ToolProfiles.resx](../../src/Logic/ModelContextProtocol/ToolProfiles.resx)<br>[docs/development/phase6-review.md](../../docs/development/phase6-review.md)<br>[docs/development/refactor-plan.md](../../docs/development/refactor-plan.md)<br>[docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) |
 | <a id="phase6-path-p6-02"></a>P6-02 | [src/Logic/V4](../../src/Logic/V4)<br>[src/Logic/TiaMcp.Logic.csproj](../../src/Logic/TiaMcp.Logic.csproj)<br>[tests/Engine/TiaMcpServer.Tests/V4EnvelopeTests.cs](../../tests/Engine/TiaMcpServer.Tests/V4EnvelopeTests.cs) |
 | <a id="phase6-path-p6-03"></a>P6-03 | [src/Logic/V4](../../src/Logic/V4)<br>[src/Logic/Siemens/ArgumentRules.cs](../../src/Logic/Siemens/ArgumentRules.cs)<br>[tests/Engine/TiaMcpServer.Tests](../../tests/Engine/TiaMcpServer.Tests) |
 | <a id="phase6-path-p6-04"></a>P6-04 | [src/Logic/V4](../../src/Logic/V4)<br>[src/Logic/ModelContextProtocol/Builders](../../src/Logic/ModelContextProtocol/Builders)<br>[src/FoundationHost/OfflineCompositionBuilders.cs](../../src/FoundationHost/OfflineCompositionBuilders.cs)<br>[src/FoundationHost/OfflineBlockCompositionBuilders.cs](../../src/FoundationHost/OfflineBlockCompositionBuilders.cs)<br>[src/FoundationHost/OfflineLadderBuilders.cs](../../src/FoundationHost/OfflineLadderBuilders.cs)<br>[src/FoundationHost/OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs)<br>[tests/Engine/TiaMcpServer.Tests](../../tests/Engine/TiaMcpServer.Tests)<br>[tests/Engine/TiaMcpServer.LegacyHostTests](../../tests/Engine/TiaMcpServer.LegacyHostTests) |
 | <a id="phase6-path-p6-05"></a>P6-05 | [src/Logic/V4](../../src/Logic/V4)<br>[src/Logic/ModelContextProtocol/Builders](../../src/Logic/ModelContextProtocol/Builders)<br>[tests/Engine/TiaMcpServer.Tests](../../tests/Engine/TiaMcpServer.Tests) |
 | <a id="phase6-path-p6-06"></a>P6-06 | [src/Logic/V4](../../src/Logic/V4)<br>[src/Engine/Siemens](../../src/Engine/Siemens)<br>[src/Logic/Siemens](../../src/Logic/Siemens)<br>[tests/Engine/TiaMcpServer.Tests](../../tests/Engine/TiaMcpServer.Tests) |
-| <a id="phase6-path-p6-07"></a>P6-07 | [src/Engine/ModelContextProtocol/Tools/GuideTools.cs](../../src/Engine/ModelContextProtocol/Tools/GuideTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs)<br>[src/Shared/ToolUsageCatalog.cs](../../src/Shared/ToolUsageCatalog.cs)<br>[src/Logic/ModelContextProtocol/ToolRecipes.cs](../../src/Logic/ModelContextProtocol/ToolRecipes.cs) |
+| <a id="phase6-path-p6-07"></a>P6-07 | [src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs)<br>[src/Shared/ToolUsageCatalog.cs](../../src/Shared/ToolUsageCatalog.cs)<br>[src/Logic/ModelContextProtocol/ToolRecipes.cs](../../src/Logic/ModelContextProtocol/ToolRecipes.cs) |
 | <a id="phase6-path-p6-08"></a>P6-08 | [src/FoundationHost/](../../src/FoundationHost/)<br>[tests/Engine/TiaMcpServer.LegacyHostTests](../../tests/Engine/TiaMcpServer.LegacyHostTests)<br>[tests/Engine/TiaMcpServer.TransportFixture](../../tests/Engine/TiaMcpServer.TransportFixture)<br>[scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) |
 | <a id="phase6-path-p6-09"></a>P6-09 | [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TemplateTools.cs](../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs](../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs)<br>[src/Engine/Siemens/Services/EngineeringAuditService.cs](../../src/Engine/Siemens/Services/EngineeringAuditService.cs) |
 | <a id="phase6-path-p6-10"></a>P6-10 | [src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[src/Engine/Siemens/Services/PlcBlocksService.cs](../../src/Engine/Siemens/Services/PlcBlocksService.cs)<br>[src/Engine/Siemens/Services/PlcSoftwareService.cs](../../src/Engine/Siemens/Services/PlcSoftwareService.cs)<br>[src/Engine/Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[src/Engine/Siemens/Services/TypesService.cs](../../src/Engine/Siemens/Services/TypesService.cs) |

@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ModelContextProtocol.Protocol;
+using System.Text.Json;
 
 internal static class PilotToolChecks
 {
@@ -17,7 +19,6 @@ internal static class PilotToolChecks
             ["TemplateTools"] = new[] { "ComposePlcAliasAlarmLad", "InstantiatePlcXmlTemplates" },
             ["QualityAuditTools"] = new[] { "AuditEngineeringExports" },
             ["ImportOrderTools"] = new[] { "PlanArtifactImportOrder" },
-            ["GuideTools"] = new[] { "GetAuthoringGuide" },
             ["ToolUsageTools"] = new[] { "GetToolUsage" },
             ["OfflineSuiteTools"] = new[]
             {
@@ -55,12 +56,10 @@ internal static class PilotToolChecks
             .GetProperty("Provider", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
         var resolved = usage.Invoke(provider.GetService(usage.DeclaringType!), arguments)!;
         var direct = surface.Invoke(usage, arguments)!;
-        check(resolved.GetType().GetProperty("Meta")!.GetValue(resolved)!.ToString()
-            == direct.GetType().GetProperty("Meta")!.GetValue(direct)!.ToString(),
+        string Data(object result) => JsonDocument.Parse(((TextContentBlock)((CallToolResult)result).Content.Single()).Text).RootElement.GetProperty("data").GetRawText();
+        check(Data(resolved) == Data(direct),
             "EngineServices and EngineSurface return the same tool usage result");
-        var guide = surface.Invoke(surface.Tool("GetAuthoringGuide"), new object[] { "errors" })!;
-        check(guide.GetType().GetProperty("Meta")!.GetValue(guide)!.ToString()
-            == direct.GetType().GetProperty("Meta")!.GetValue(direct)!.ToString(),
-            "Guide instance reaches its injected tool usage singleton");
+        check(server.GetType("TiaMcpServer.ModelContextProtocol.GuideTools") == null,
+            "Merged guide has no unused registration type");
     }
 }
