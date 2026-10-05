@@ -19,6 +19,7 @@
         <ResourceDictionary Source="Themes/Glass.xaml" />
         <ResourceDictionary Source="Themes/Glass.Studio.xaml" />
         <ResourceDictionary Source="Themes/Shell.xaml" />
+        <ResourceDictionary Source="Themes/FeaturePages.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />

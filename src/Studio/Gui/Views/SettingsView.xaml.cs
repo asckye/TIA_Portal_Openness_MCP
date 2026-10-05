@@ -54,8 +54,12 @@ public partial class SettingsView : UserControl
         }
     }
 
-    internal void Dispose() { if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; }
-    private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e) => UpdateApproval();
+    internal void Dispose() { if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null; }
+    private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (Dispatcher.CheckAccess()) UpdateApproval();
+        else Dispatcher.BeginInvoke(UpdateApproval);
+    }
     internal void UpdateApproval()
     {
         if (_approvals == null) return;

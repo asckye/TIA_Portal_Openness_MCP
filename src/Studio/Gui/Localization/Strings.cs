@@ -468,6 +468,7 @@ internal static partial class Strings
                                        "确定把工作区的文本文件读回项目吗?\n\n这会覆盖已打开项目中的程序块,且不可撤销。\n完成后请编译并保存。"),
         ("Dialog.Error.Caption",       "Unexpected error", "未预期的错误"),
         ("Dialog.Error.Details",       "Details written to {0}", "详细信息已写入 {0}"),
+        .. FeaturePageCatalogue,
     ];
 
     public static readonly IReadOnlyDictionary<string, string> English = Build(static e => e.En);

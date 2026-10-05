@@ -14,13 +14,13 @@ public partial class MainWindow
     private IDiagnosticBundleService _diagnostics = null!;
     private string _page = "Engineering";
     private string? _drawer;
-    private string? _toastKey;
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
     {
         Approvals = approvals ?? new ApprovalServiceStub();
         _diagnostics = diagnostics ?? new DiagnosticBundleServiceStub();
+        InitializeFeaturePages();
         SettingsContent.Initialize(Approvals);
         SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;
         OperationsContent.EnvironmentRequested += OnEnvironmentRequested;
@@ -34,6 +34,7 @@ public partial class MainWindow
 
     private void DisposeShell()
     {
+        DisposeFeaturePages();
         SettingsContent.Dispose();
         SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
         OperationsContent.EnvironmentRequested -= OnEnvironmentRequested;
@@ -43,7 +44,11 @@ public partial class MainWindow
         Loc.Current.LanguageChanged -= OnShellLanguageChanged;
     }
 
-    private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e) => UpdateShell();
+    private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (Dispatcher.CheckAccess()) UpdateShell();
+        else Dispatcher.BeginInvoke(UpdateShell);
+    }
     private void OnEnvironmentRequested(object? sender, EventArgs e) => NavigateGuarded("Environment");
     private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -54,22 +59,21 @@ public partial class MainWindow
     private void OnShellLanguageChanged(object? sender, EventArgs e) => UpdateShell();
     private void UpdateShell()
     {
+        if (_featuresDisposed) return;
         PendingBadge.Content = Loc.Current.T("Shell.Pending", Approvals.PendingCount);
         PendingBadge.Visibility = Approvals.PendingCount > 0 ? Visibility.Visible : Visibility.Collapsed;
         ApprovalOffPill.Visibility = Approvals.Enabled ? Visibility.Collapsed : Visibility.Visible;
         RailBlocks.IsEnabled = RailVersionControl.IsEnabled = HasProject;
         RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v') + " · " + TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
-        if (_drawer != null) DrawerTitle.Text = Loc.Current[_drawer == "Settings" ? "Shell.Settings" : "Shell.PendingTitle"];
-        if (_page is "Calls" or "Audit" or "Environment") UpdateEmptyPage();
-        if (_toastKey != null) ToastMessage.Text = Loc.Current[_toastKey];
-        ToastTitle.Text = Loc.Current["Shell.Diagnostics"];
+        if (_drawer != null)
+        {
+            DrawerTitle.Text = _drawer == "CallDetail" ? Features.SelectedCall?.Tool ?? Loc.Current["Calls.Detail"]
+                : Loc.Current[_drawer == "Settings" ? "Shell.Settings" : "Shell.PendingTitle"];
+            DrawerTitle.SetResourceReference(TextBlock.FontFamilyProperty, _drawer == "CallDetail" ? "Ui.FontMono" : "Ui.Font");
+        }
+        Features.Release = _model.SelectedReleaseKey;
+        UpdateFeatureToast();
         CommandManager.InvalidateRequerySuggested();
-    }
-
-    private void UpdateEmptyPage()
-    {
-        EmptyPageTitle.Text = Loc.Current["Shell." + _page];
-        EmptyPageMessage.Text = Loc.Current["Shell." + _page + "Empty"];
     }
 
     internal void Navigate(string page)
@@ -88,7 +92,9 @@ public partial class MainWindow
         _model.IsConfigurationPage = page == "Mcp";
         ConfigurationHost.Visibility = page == "Mcp" ? Visibility.Visible : Visibility.Collapsed;
         EngineeringPage.Visibility = page is "Engineering" or "Blocks" or "VersionControl" or "Log" ? Visibility.Visible : Visibility.Collapsed;
-        EmptyPage.Visibility = page is "Calls" or "Audit" or "Environment" ? Visibility.Visible : Visibility.Collapsed;
+        CallsContent.Visibility = page == "Calls" ? Visibility.Visible : Visibility.Collapsed;
+        AuditContent.Visibility = page == "Audit" ? Visibility.Visible : Visibility.Collapsed;
+        EnvironmentContent.Visibility = page == "Environment" ? Visibility.Visible : Visibility.Collapsed;
         if (page == "VersionControl") _model.IsVcTab = true;
         else if (page == "Log") _model.IsLogTab = true;
         else if (page is "Engineering" or "Blocks") _model.IsBlocksTab = true;
@@ -115,9 +121,12 @@ public partial class MainWindow
     private void OpenDrawer(string name)
     {
         _drawer = name;
+        DrawerCount.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
+        DrawerCallResult.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
         DrawerPanel.Width = name == "Settings" ? 400 : 440;
         SettingsContent.Visibility = name == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         ApprovalsContent.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
+        CallDetailContent.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
         DrawerOverlay.Visibility = Visibility.Visible;
         SettingsButton.SetResourceReference(Control.BackgroundProperty, name == "Settings" ? "Ui.Accent" : "Ui.ControlBackground");
         SettingsButton.SetResourceReference(Control.ForegroundProperty, name == "Settings" ? "Ui.OnAccent" : "Ui.Label");
@@ -145,10 +154,8 @@ public partial class MainWindow
     private void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { Approvals.Enabled = false; ConfirmOverlay.Visibility = Visibility.Collapsed; }
     private void OnDiagnostics(object sender, RoutedEventArgs e)
     {
-        _toastKey = _diagnostics.Export();
-        UpdateShell();
-        Toast.Visibility = Visibility.Visible;
+        Features.Export();
     }
     private void OnDismissToast(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
-    private void OnToastClick(object sender, MouseButtonEventArgs e) { Toast.Visibility = Visibility.Collapsed; OpenDrawer("Approvals"); }
+    private void OnToastClick(object sender, MouseButtonEventArgs e) { Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) OpenDrawer("Approvals"); else Navigate("Environment"); }
 }

@@ -55,7 +55,8 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 var preview = new ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14",
                     "192.168.86.131", state.Local, state.Running, state.Running, state.Running ? "render-fixture-secret" : "",
                     "20:50:27   Client scan · 1 detected, 11 not detected\n20:50:27   Ready · configure both sides on this page\n20:50:27   Loaded V14sp1 service config\n20:50:27   Update check · 3.3.0 is latest (api)\n", Clients());
-                var approvals = new ApprovalServiceStub(state.Pending ? 1 : 0) { Enabled = !state.Pending };
+                var approvals = FeaturePageFixtures.Approvals(state.Pending);
+                approvals.Enabled = !state.Pending;
                 var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals: approvals, preview: preview);
                 try
                 {

@@ -34,7 +34,7 @@ public class SourceConsistencyTests(WpfContext wpf)
         new(@"\bGuarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"LocalizedText\.(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"[?:]\s*""((?:Config|Shell|Mcp)\.[\w.]+)""", RegexOptions.Compiled),
+        new(@"(?:[?:]|=>)\s*""((?:Config|Shell|Mcp|Feature|Calls|Approval|Audit|Env)\.[\w.]+)""", RegexOptions.Compiled),
     ];
 
     // {StaticResource Ui.Button} / {DynamicResource Ui.Accent}
