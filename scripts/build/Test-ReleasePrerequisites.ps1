@@ -56,7 +56,9 @@ function Get-ReleaseToken([string]$Value, [string]$GitExe, [bool]$LocalOnly) {
 function Invoke-PrerequisiteChecks($Probes) {
     foreach ($probe in $Probes) {
         try {
-            $detail = & $probe.Check
+            # Per-probe values travel in Data: closures from GetNewClosure() cannot see this script's helpers
+            # when Release.ps1 invokes the script with '&'.
+            $detail = & $probe.Check $probe.Data
             [pscustomobject]@{Check=$probe.Name; Result='PASS'; Detail=[string]$detail}
         } catch {
             # Probes provide safe diagnostics; the token probe never includes helper output.
@@ -128,10 +130,13 @@ if ($SelfTest) {
         @{Name='Dirty tree'; Check={Assert-PrerequisiteValue (-not ' M tracked.ps1') 'Working tree is not clean'}},
         @{Name='Disk full'; Check={Assert-PrerequisiteValue (1GB -ge 10GB) 'Insufficient free disk space'}},
         @{Name='Bad archive'; Check={Assert-PrerequisiteValue ('bad' -eq 'pinned') 'Archive SHA-512 mismatch'}},
-        @{Name='Last probe still runs'; Check={'all probes evaluated'}}
+        @{Name='Last probe still runs'; Check={'all probes evaluated'}},
+        @{Name='Probe data A'; Data=@{Value='A'}; Check={param($d) Assert-PrerequisiteValue $true 'helper visible'; $d.Value}},
+        @{Name='Probe data B'; Data=@{Value='B'}; Check={param($d) Assert-PrerequisiteValue $true 'helper visible'; $d.Value}}
     )
     $rows = @(Invoke-PrerequisiteChecks $cases)
-    $expected = @('PASS','FAIL','PASS','FAIL','FAIL','FAIL','FAIL','FAIL','PASS')
+    $expected = @('PASS','FAIL','PASS','FAIL','FAIL','FAIL','FAIL','FAIL','PASS','PASS','PASS')
+    if ($rows[9].Detail -ne 'A' -or $rows[10].Detail -ne 'B') { throw 'Probe data was not bound per probe' }
     for ($i=0; $i -lt $expected.Count; $i++) {
         if ($rows[$i].Result -ne $expected[$i]) { throw "Prerequisite self-test failed: $($cases[$i].Name)" }
     }
@@ -213,22 +218,25 @@ foreach ($key in @('14sp1','15.1','16','17','18','19','20','21')) {
     if ($key -eq '20') { $settings.V20ReferenceRoot = $directory }
     if ($key -eq '21') { $settings.V21ReferenceRoot = $directory }
     $assemblies = if ($key -eq '21') { @('Siemens.Engineering.Base.dll','Siemens.Engineering.Step7.dll') } else { @('Siemens.Engineering.dll') }
-    $probes += @{Name="PublicAPI $key"; Check={
-        foreach ($assembly in $assemblies) {
-            Assert-PrerequisiteValue (Test-Path -LiteralPath (Join-Path $directory $assembly) -PathType Leaf) "Missing $assembly in $directory"
-            Assert-PrerequisiteValue (Test-Path -LiteralPath (Join-Path $canonical $assembly) -PathType Leaf) "Multi-version build needs $assembly in $canonical"
-            if ([IO.Path]::GetFullPath($canonical) -ne [IO.Path]::GetFullPath($directory)) {
-                Assert-PrerequisiteValue ((Get-FileHash (Join-Path $canonical $assembly)).Hash -eq (Get-FileHash (Join-Path $directory $assembly)).Hash) 'Full-engine and multi-version PublicAPI inputs differ'
+    $probes += @{Name="PublicAPI $key"; Data=@{Directory=$directory; Canonical=$canonical; Assemblies=$assemblies}; Check={
+        param($d)
+        foreach ($assembly in $d.Assemblies) {
+            Assert-PrerequisiteValue (Test-Path -LiteralPath (Join-Path $d.Directory $assembly) -PathType Leaf) "Missing $assembly in $($d.Directory)"
+            Assert-PrerequisiteValue (Test-Path -LiteralPath (Join-Path $d.Canonical $assembly) -PathType Leaf) "Multi-version build needs $assembly in $($d.Canonical)"
+            if ([IO.Path]::GetFullPath($d.Canonical) -ne [IO.Path]::GetFullPath($d.Directory)) {
+                Assert-PrerequisiteValue ((Get-FileHash (Join-Path $d.Canonical $assembly)).Hash -eq (Get-FileHash (Join-Path $d.Directory $assembly)).Hash) 'Full-engine and multi-version PublicAPI inputs differ'
             }
         }
-        $directory
-    }.GetNewClosure()}
+        $d.Directory
+    }}
 }
 $pin = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'bundled-dotnet.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 foreach ($archive in $pin.archives) {
     $cache = Join-Path $RepoRoot "bin-build/cache/dotnet-$($pin.version)"
     $file = Join-Path $cache $archive.name
-    $probes += @{Name=$archive.name; Check={
+    $probes += @{Name=$archive.name; Data=@{Archive=$archive; Cache=$cache; File=$file; Offline=[bool]$Offline}; Check={
+        param($d)
+        $archive = $d.Archive; $cache = $d.Cache; $file = $d.File; $Offline = $d.Offline
         Assert-PrerequisiteValue ($archive.url -match '^https://builds\.dotnet\.microsoft\.com/dotnet/') 'Archive must use the pinned official Microsoft URL'
         if (-not (Test-Path -LiteralPath $file)) {
             Assert-PrerequisiteValue (-not $Offline) "Archive not cached (offline): $file"
@@ -243,7 +251,7 @@ foreach ($archive in $pin.archives) {
         }
         Assert-PrerequisiteValue ((Get-FileHash -LiteralPath $file -Algorithm SHA512).Hash -eq $archive.sha512) "Cached archive SHA-512 mismatch: $file"
         'cached; SHA-512 verified'
-    }.GetNewClosure()}
+    }}
 }
 $timer = [Diagnostics.Stopwatch]::StartNew()
 $results = @(Invoke-PrerequisiteChecks $probes)
