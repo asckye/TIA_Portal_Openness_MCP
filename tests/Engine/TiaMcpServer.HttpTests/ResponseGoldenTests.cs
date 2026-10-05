@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -159,6 +160,22 @@ internal sealed class ResponseGoldenTests
         meta[key] = FixedDate(stamp.Kind);
     }
 
+    // V4 is already serialized by the engine boundary: timestamp is UTC text,
+    // and requestId is the batch invocation's correlation ID. Never mask item data.
+    private static void MaskEnvelope(JsonObject envelope)
+    {
+        var meta = envelope["meta"]!.AsObject();
+        var timestamp = meta["timestamp"]!.GetValue<string>();
+        if (!DateTimeOffset.TryParseExact(timestamp, new[] { "yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'" },
+            CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var stamp)
+            || stamp.Offset != TimeSpan.Zero)
+            throw new Exception("V4 timestamp lost UTC timestamp string type");
+        if (!Guid.TryParseExact(meta["requestId"]!.GetValue<string>(), "N", out _))
+            throw new Exception("V4 requestId lost generated GUID string type");
+        meta["timestamp"] = FixedDate(DateTimeKind.Utc).ToString("O", CultureInfo.InvariantCulture);
+        meta["requestId"] = "00000000000000000000000000000000";
+    }
+
     private void CheckMasks(Action<bool, string> check)
     {
         foreach (var kind in new[] { DateTimeKind.Local, DateTimeKind.Utc, DateTimeKind.Unspecified })
@@ -173,6 +190,16 @@ internal sealed class ResponseGoldenTests
                 && meta["operationId"]!.GetValue<string>() == "00000000-0000-0000-0000-000000000000" && meta["data"]!.ToJsonString() == data,
                 "E3 masks only reviewed paths " + kind);
         }
+        var envelope = new JsonObject
+        {
+            ["meta"] = new JsonObject { ["timestamp"] = "2026-10-03T01:02:03.0000000Z", ["requestId"] = Guid.NewGuid().ToString("N") },
+            ["data"] = new JsonObject { ["timestamp"] = "unchanged", ["requestId"] = "retained target evidence" }
+        };
+        string evidence = envelope["data"]!.ToJsonString();
+        MaskEnvelope(envelope);
+        check(envelope["meta"]!["timestamp"]!.GetValue<string>() == "2001-02-03T04:05:06.1234567Z"
+            && envelope["meta"]!["requestId"]!.GetValue<string>() == "00000000000000000000000000000000"
+            && envelope["data"]!.ToJsonString() == evidence, "V4 masks only envelope clock and generated correlation ID");
     }
 
     private void Capture(string name, object response)
@@ -184,6 +211,32 @@ internal sealed class ResponseGoldenTests
 
     private Exception PortalError() => (Exception)Activator.CreateInstance(Type("Siemens.PortalException"),
         Enum.Parse(Type("Siemens.PortalErrorCode"), "NotFound"), "synthetic portal failure", new[] { "候选" }, null)!;
+
+    private void CaptureBatch(string name, object target, bool succeeded, Action<bool, string> check)
+    {
+        // BatchResult now aggregates target results; it no longer executes a delegate.
+        // Keep the original action/error matrix through the real HMI executor and
+        // the same ToolResult/BatchRow boundary used by the production batch.
+        var protocol = surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target })!;
+        var row = (JsonObject)surface.Invoke(surface.ToolMethod("BatchRow"), new object[] { 0, "GoldenHmi", protocol })!;
+        var rows = new JsonArray(row);
+        string retained = rows.ToJsonString();
+        var result = (CallToolResult)surface.Invoke(surface.ToolMethod("BatchResult"), new object[] { "RunReadOnlyToolBatch", rows, false })!;
+        var body = result.StructuredContent!.AsObject();
+        check(result.Content.Count == 1 && result.Content[0] is TextContentBlock text
+            && JsonNode.DeepEquals(JsonNode.Parse(text.Text), body), "batch/" + name + " text and structured envelopes agree");
+        check(body["schemaVersion"]!.GetValue<int>() == 4 && body["ok"]!.GetValue<bool>() == succeeded
+            && result.IsError == !succeeded && (body["error"] == null) == succeeded
+            && body["meta"]!["outcome"]!.GetValue<string>() == (succeeded ? "succeeded" : "read-failed")
+            && body["meta"]!["execution"]!.GetValue<string>() == "read-only"
+            && body["meta"]!["completeness"]!.GetValue<string>() == (succeeded ? "complete" : "none"),
+            "batch/" + name + " retains the target verdict in the V4 envelope");
+        check(body["data"]!["items"]!.ToJsonString() == retained && body["data"]!["rollbackPerformed"]!.GetValue<bool>() == false,
+            "batch/" + name + " retains every target field and reports no rollback");
+        MaskEnvelope(body);
+        Add("executor/batch/" + name + "/direct", Serialize(body, sdk));
+        Add("executor/batch/" + name + "/bridge", Serialize(body, bridge));
+    }
 
     private void Executors(Action<bool, string> check)
     {
@@ -199,10 +252,15 @@ internal sealed class ResponseGoldenTests
         var portal = FormatterServices.GetUninitializedObject(hmi.DeclaringType!);
         foreach (var action in actions)
         {
-            Capture("hmi/" + action.Name, hmi.Invoke(portal, new object[] { "GoldenHmi", action.Action, false })!);
+            var target = hmi.Invoke(portal, new object[] { "GoldenHmi", action.Action, false })!;
+            Capture("hmi/" + action.Name, target);
             Capture("offline/" + action.Name, surface.Invoke(surface.Method("RunOfflineAnalysisTool", All), new object[] { "GoldenOffline", action.Action })!);
-            Capture("batch/" + action.Name, surface.Invoke(surface.ToolMethod("BatchResult"), new object[] { action.Action })!);
+            CaptureBatch(action.Name, target, action.Name == "success", check);
         }
+        // The old delegate could return text without setting success. Preserve
+        // that refusal to infer success when a target has no explicit verdict.
+        CaptureBatch("missing-verdict", Response("ResponseMessage", ("Message", "synthetic result without verdict"),
+            ("Meta", new JsonObject { ["rows"] = new JsonArray(1, "中文", null) })), false, check);
         bool invoked = false;
         Func<JsonObject, string> unreachable = meta => { invoked = true; throw new Exception("Blocked action ran"); };
         Capture("hmi/no-project", hmi.Invoke(portal, new object[] { "GoldenHmi", unreachable, true })!);

@@ -208,7 +208,8 @@ internal static class HardwareNetworkShapeChecks
         "ReadTransferAreas" => "ListTransferAreas", "ReadDeviceItemChannels" => "ListDeviceItemChannels",
         "UpdateDeviceItemChannel" => "SetDeviceItemChannel", "ReadCommunicationConnections" => "ListCommunicationConnections",
         "ReadHardwareFeatures" => "GetHardwareFeatures", "GetPutGetAccess" => "GetPlcPutGetAccess",
-        "SetPutGetAccess" => "SetPlcPutGetAccess", _ => name
+        "SetPutGetAccess" => "SetPlcPutGetAccess", "ReadDeviceAddressing" => "GetDeviceAddressing",
+        "UpdateDeviceAddress" => "SetDeviceAddress", "DumpDeviceAttributes" => "GetDeviceAttributes", _ => name
     };
 
     private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)

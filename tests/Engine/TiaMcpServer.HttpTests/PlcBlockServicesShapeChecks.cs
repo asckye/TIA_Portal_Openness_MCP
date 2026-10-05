@@ -77,9 +77,9 @@ internal static class PlcBlockServicesShapeChecks
         foreach(var value in new[]{"ThrowIfExists","Rename","Replace"}) check(Enum.GetNames(T(core,"Siemens.Engineering.Library.MasterCopies.MasterCopyMode")).Contains(value),"MasterCopyMode."+value);
         // Tool surface: every mutating tool previews by default and destructive ones need an explicit confirmation.
         var tools=EngineSurface.For(server);
-        foreach(var name in new[]{"ManagePlcBlockProtection","ManagePlcDataBlockSnapshot","UpdatePlcProgram","ReadPlcBlockFingerprints","ImportPlcAlarmInstanceTexts","ManagePlcAlarmTextList"})
+        foreach(var name in new[]{"ManagePlcBlockProtection","ManagePlcDataBlockSnapshot","SetPlcProgram","GetPlcBlockFingerprints","ImportPlcAlarmInstanceTexts","ManagePlcAlarmTextList"})
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
-        foreach(var (name,flag) in new[]{("ManagePlcBlockProtection","confirmProtectionChange"),("ManagePlcDataBlockSnapshot","confirmValueChange"),("UpdatePlcProgram","confirmUpdate"),("ManagePlcAlarmTextList","confirmDelete")})
+        foreach(var (name,flag) in new[]{("ManagePlcBlockProtection","confirmProtectionChange"),("ManagePlcDataBlockSnapshot","confirmValueChange"),("SetPlcProgram","confirmUpdate"),("ManagePlcAlarmTextList","confirmDelete")})
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==flag).DefaultValue,false),name+" requires explicit "+flag);
 
         // The migrated tools and native operations share the existing session singleton.
@@ -98,12 +98,12 @@ internal static class PlcBlockServicesShapeChecks
             && ReferenceEquals(serviceType.GetField("_session", all)!.GetValue(serviceInstance), session)
             && ReferenceEquals(toolType.GetField("_blocks", all)!.GetValue(toolInstance), serviceInstance),
             "PLC block tools and service share the kernel session");
-        foreach (var name in new[] { "GetBlockInfo", "GetBlocks", "GetBlocksWithHierarchy", "ExportBlock", "ImportBlock",
-            "ImportBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompileAndDiagnosePlc", "RepairAndReimportBlock", "ExportBlocks",
-            "DescribeBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "UpdatePlcProgram", "ReadPlcBlockFingerprints",
-            "ReadPlcBlockEditCapabilities", "AnalyzePlcReferences", "PatchPlcBlockDocument", "ImportPlcBlockVerified",
+        foreach (var name in new[] { "GetPlcBlockInfo", "ListPlcBlocks", "GetPlcBlockHierarchy", "ExportPlcBlock", "ImportPlcBlock",
+            "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompilePlcDiagnostics", "RepairAndReimportPlcBlock", "ExportPlcBlocks",
+            "DescribePlcBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "SetPlcProgram", "GetPlcBlockFingerprints",
+            "GetPlcBlockEditCapabilities", "AnalyzePlcReferences", "PatchPlcBlockDocument", "ImportPlcBlockVerified",
             "DeletePlcBlock", "DeletePlcTagTable", "DeletePlcType", "CreatePlcTypeGroup", "DeleteEmptyPlcBlockGroup",
-            "CreatePlcBlockGroup", "MoveBlockToGroup", "ManagePlcUserGroup" })
+            "CreatePlcBlockGroup", "MovePlcBlockToGroup", "ManagePlcUserGroup" })
         {
             var method = tools.Tool(name);
             check(method.DeclaringType == toolType && !method.IsStatic && ReferenceEquals(tools.Target(method), toolInstance),
