@@ -28,15 +28,15 @@ EXE = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "runt
 # profile that omits one is advertising a workflow it cannot perform.
 REQUIRED = [
     # orientation / diagnostics
-    "Bootstrap", "Doctor", "GetAuthoringGuide", "GetState",
+    "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetAuthoringGuide", "GetSessionState",
     # session + project
-    "Connect", "Disconnect", "OpenProject", "CreateProject", "AttachToOpenProject",
-    "CloseProject", "SaveProject", "GetProject", "GetProjectTree", "GetSoftwareTree",
+    "ConnectPortal", "DisconnectPortal", "OpenProject", "CreateProject", "AttachOpenProject",
+    "CloseProject", "SaveProject", "GetProjectInfo", "GetProjectTree", "GetSoftwareTree",
     # read / understand
     "GetBlocks", "GetBlocksWithHierarchy", "GetBlockInfo", "DescribeBlockLogic",
     "GetCrossReferences", "GetPlcTagTables",
     # author (golden path: SD documents preferred, SCL external source alternative)
-    "ScaffoldProject", "BuildAndImportPlcArtifact", "WritePlcSclSourceFile",
+    "BuildProjectScaffold", "BuildAndImportPlcArtifact", "WritePlcSclSourceFile",
     "ImportFromDocuments", "ExportAsDocuments",
     "ImportBlocksFromDocuments", "ExportBlocksAsDocuments",
     "GenerateBlocksFromExternalSource",

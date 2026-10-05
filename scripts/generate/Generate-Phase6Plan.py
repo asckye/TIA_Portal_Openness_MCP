@@ -1,7 +1,7 @@
 """Generate the reviewed V4 proposal, without building or loading product binaries.
 
 Run --check in a clean checkout; --self-test also exercises rejection cases.
-Only the embedded profile resource and the marked documentation block are outputs.
+Outputs are the runtime profile resource, test-only rejection data and marked documentation block.
 """
 import argparse
 import collections, json, pathlib, re, runpy, subprocess, sys, xml.etree.ElementTree as ET
@@ -10,7 +10,8 @@ root = pathlib.Path(__file__).resolve().parents[2]
 read = lambda p: (root / p).read_text(encoding="utf-8-sig")
 files = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
 RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
-files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE})
+REJECTIONS = 'tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json'
+files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE, REJECTIONS})
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
 tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
@@ -135,7 +136,6 @@ for n in tools["21"]:
     current_names[n] = next(iter(candidates))
 assert set(current_names.values()) == set(registered_tools), "unmapped registrations"
 source_tools = {n: registered_tools[current_names[n]] for n in tools["21"]}
-source_tools["GetRecipe"] = (E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs", "GetRecipe")
 policy = read(E + "Siemens/ToolVersionPolicy.cs")
 only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
 only21 = {old for old, current in current_names.items() if old in only21 or current in only21}
@@ -181,34 +181,51 @@ def signature(method):
     return member[:tokens[pairs[op]].end]
 
 
-def parameters(sig):
+def parameter_record(part, details):
+    declaration = part[:part.index('=')] if '=' in part else part
+    kind = ''.join(declaration[:-1])
+    if not details: return kind
+    return {'type': kind, 'default': ''.join(part[part.index('=') + 1:]) if '=' in part else None}
+
+
+def parameters(sig, details=False):
     tokens, _ = engine_sources.lexer.Lexer(sig).scan()
     pairs = engine_sources.lexer.matching_pairs(tokens)
     op = next(i for i,t in enumerate(tokens) if t.value == '(')
-    result, part, i = {}, [], op + 1
+    result, part, description, i = {}, [], None, op + 1
     while i < pairs[op]:
         token = tokens[i]
         if token.value == '[' and not part:
+            attribute = sig[token.start:tokens[pairs[i]].end]
+            match = re.search(r'\bDescription\(("(?:\\.|[^"\\])*")\)', attribute)
+            if match: description = json.loads(match[1])
             i = pairs[i] + 1
             continue
         if token.value in ('(', '['):
             part.extend(t.value for t in tokens[i:pairs[i]+1]); i = pairs[i] + 1; continue
         if token.value == ',' and part.count('<') == part.count('>'):
             declaration = part[:part.index('=')] if '=' in part else part
-            result[declaration[-1]] = ''.join(declaration[:-1]); part = []
+            result[declaration[-1]] = parameter_record(part, details)
+            if details and description is not None: result[declaration[-1]]['description'] = description
+            part, description = [], None
         else: part.append(token.value)
         i += 1
     if part:
         declaration = part[:part.index('=')] if '=' in part else part
-        result[declaration[-1]] = ''.join(declaration[:-1])
+        result[declaration[-1]] = parameter_record(part, details)
+        if details and description is not None: result[declaration[-1]]['description'] = description
     return result
 
 
 signatures = {n: signature(method) for n, (_, method) in source_tools.items() if n not in ('GetAuthoringGuide', 'GetRecipe')}
-# This is the explicit runtime marker. Return-type migration is checked together
-# with name and typed-parameter targets below; renaming alone never enables V4.
-envelope_versions = {n: 4 if re.search(r'\b(?:CallToolResult|Task<CallToolResult>)\s+\w+\s*\(', sig) else 3
-                     for n, sig in signatures.items()}
+# The full engine has completed the transition. A legacy return type is an error,
+# never a second runtime registration path.
+def envelope_version(name, sig):
+    assert re.search(r'\b(?:CallToolResult|Task<CallToolResult>)\s+\w+\s*\(', sig), (name, 'full-engine entry must return a V4 envelope')
+    return 4
+
+
+envelope_versions = {n: envelope_version(n, sig) for n, sig in signatures.items()}
 family_groups = {
  "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
  "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
@@ -248,7 +265,7 @@ MERGE_PARAMETERS = {
 }
 assert 'GuideSelection(string topic)' in read(SH + "ToolUsageCatalog.cs")
 assert 'ToolUsageCatalog.Sequences()' in read(L + "ModelContextProtocol/ToolRecipes.cs")
-assert 'ToolRecipes.Find(topic)' in read(E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs")
+assert 'ToolUsageCatalog.Examples(' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert 'exampleId' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert all(n in names for n in SPECIAL_NAMES | dict.fromkeys(COLLECTIONS))
 renames = {n: rename(n) for n in names}
@@ -327,12 +344,7 @@ def shape(n, p):
 
 
 def validate_parameter_transition(name, current, target, actual, expected, v4, target_shapes):
-    if not v4:
-        assert current == name, (name, 'rename without a V4 envelope')
-        legacy = {p for p, t in actual.items() if p.endswith('Json') and t in ('string', 'string?')}
-        assert legacy == {p for p in expected if p.endswith('Json')}, (name, legacy, expected)
-        if 'json' in expected: assert actual.get('json') in ('string', 'string?'), name
-        return
+    assert v4, (name, 'full-engine entry has not migrated to V4')
     assert current == target, (name, 'V4 tool has a legacy name', current, target)
     if name == 'ManageSafetyFunction':
         assert actual.get('signals') == 'string[]', (name, 'setTrace signals must be a separate typed array')
@@ -417,6 +429,43 @@ for k in keys[-2:]:
     runtime["releases"][k] = sorted(runtime_rows.values(), key=lambda r: r["name"])
     assert {r["currentName"] for r in runtime["releases"][k]} == {current_names[n] for n in tools[k]}
     assert all(isinstance(r["arguments"], dict) for r in runtime["releases"][k] if "lite" in r["profiles"])
+
+# Rejection fixtures are derived from the same appendix A/B mapping and checked
+# source signatures. They exercise the shared boundary without native bodies.
+default_sources = '\n'.join(read(p) for p in files if p.startswith((E, L)) and p.endswith('.cs'))
+
+
+def default_value(text):
+    if text in ('null!', 'default'): return None
+    try: return json.loads(text)
+    except json.JSONDecodeError:
+        symbol = text.rsplit('.', 1)[-1]
+        constants = set(re.findall(r'\bconst\s+\w+\s+' + re.escape(symbol) + r'\s*=\s*(@"(?:[^"]|"")*"|"(?:\\.|[^"\\])*")\s*;', default_sources))
+        assert len(constants) == 1, ('ambiguous or missing default constant', text, constants)
+        value = next(iter(constants))
+        return value[2:-1].replace('""', '"') if value.startswith('@"') else json.loads(value)
+
+
+rejections = {'contractVersion': 4, 'releases': {}}
+for k in keys[-2:]:
+    rows = []
+    for row in runtime['releases'][k]:
+        old = row['sourceName']
+        declarations = parameters(signatures[old], details=True)
+        aliases = dict(re.findall(r'^using (\w+) = ([\w.]+);', read(source_tools[old][0]), re.M))
+        for declaration in declarations.values():
+            declaration['type'] = re.sub(r'\b\w+\b', lambda m: aliases.get(m[0], m[0]), declaration['type'])
+            if declaration['default'] is not None: declaration['value'] = default_value(declaration['default'])
+        rows.append({'name': row['currentName'], 'parameters': declarations,
+            'arguments': row['arguments'],
+            'renamedFrom': sorted(n for n in tools[k] if renames[n] == row['name'] and n != row['currentName']),
+            'typedParameters': {p: 'spec' if p == 'json' else p[:-4]
+                                for p in sorted(typed.get(old, {})) if k in typed[old][p]}})
+    assert sum(len(r['typedParameters']) for r in rows) == sum(k in releases for n, ps in typed.items() if n in tools[k] for releases in ps.values())
+    rejections['releases'][k] = rows
+
+rejections_text = json.dumps(rejections, ensure_ascii=False, indent=2) + '\n'
+
 
 def resource_text():
     resource = ET.Element("root")
@@ -700,12 +749,12 @@ excluded = ("manifest/history/", "reference/siemens-openness/", "docs/developmen
 for f in sorted(files):
     if f.startswith(excluded) or f == "CHANGELOG.md" or f.startswith("third_party/"): continue
     if pathlib.PurePosixPath(f).suffix.lower() not in {".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".slnx", ".config", ".gitignore", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml"}: continue
-    content = read(f)
+    content = rejections_text if f == REJECTIONS else read(f)
     hits = {kind: [str(i) for i,l in enumerate(content.splitlines(), 1) if re.search(pattern, l)] for kind,pattern in SCAN_TERMS.items()}
     hits = {k:v for k,v in hits.items() if v}
     if not hits: continue
     treatment = "修改引用并回归"
-    if f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"): treatment = "仅运行所属生成器更新；历史契约归档，不手改哈希"
+    if f == REJECTIONS or f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"): treatment = "仅运行所属生成器更新；历史契约归档，不手改哈希"
     elif f.startswith(("docs/releases/", "docs/archive/", "docs/development/evidence/")): treatment = "历史证据只读保留，不作为 V4 改写目标"
     elif f.startswith("docs/development/"): treatment = "更新现行说明；历史阶段证据保留并注明被 V4 决策取代"
     scan.append([link(f, f), "; ".join(k+":"+",".join(v) for k,v in hits.items()), treatment])
@@ -750,7 +799,6 @@ out.append("台账已核对：" + "、".join("P6-"+f for f in behavior_families)
 end()
 
 def self_test():
-    validate_parameter_transition("Keep", "Keep", "Keep", {"valuesJson": "string"}, {"valuesJson"}, False, {})
     validate_parameter_transition("Keep", "Keep", "Keep", {"values": "AttributeMap<Scalar>"}, {"valuesJson"}, True, {"valuesJson": "AttributeMap<Scalar>"})
     validate_parameter_transition("Old", "New", "New", {"spec": "UdtSpec"}, {"specJson"}, True, {"specJson": "UdtSpec"})
     validate_parameter_transition("ManagePlcCertificate", "ManagePlcCertificate", "ManagePlcCertificate",
@@ -759,10 +807,19 @@ def self_test():
     validate_parameter_transition("ManageSafetyFunction", "ManageSafetyFunction", "ManageSafetyFunction",
                                   {"properties": "AttributeMap<Scalar>", "signals": "string[]"}, {"propertiesJson"}, True,
                                   {"propertiesJson": "AttributeMap<Scalar>"})
-    for actual, v4 in (({"valuesJson": "string"}, True), ({"values": "string"}, True), ({"values": "AttributeMap<Scalar>"}, False)):
+    for actual, v4 in (({"valuesJson": "string"}, True), ({"values": "string"}, True), ({"values": "AttributeMap<Scalar>"}, False), ({"valuesJson": "string"}, False)):
         try: validate_parameter_transition("Keep", "Keep", "Keep", actual, {"valuesJson"}, v4, {"valuesJson": "AttributeMap<Scalar>"})
         except AssertionError: pass
         else: raise AssertionError("typed transition unexpectedly passed")
+    try: envelope_version('Old', 'public ResponseMessage Old()')
+    except AssertionError: pass
+    else: raise AssertionError('legacy return type unexpectedly passed')
+    try: validate_parameter_transition('Old', 'Old', 'New', {}, set(), True, {})
+    except AssertionError: pass
+    else: raise AssertionError('legacy name unexpectedly passed')
+    assert envelope_version('New', 'public Task<CallToolResult> New()') == 4
+    assert parameters('public void Probe(string name = "", int count = 3)', details=True) == {
+        'name': {'type': 'string', 'default': '""'}, 'count': {'type': 'int', 'default': '3'}}
     rejected = 0
     for mutate in (
         lambda m: m.pop(names[0]),
@@ -789,7 +846,7 @@ def self_test():
         except AssertionError: rejected += 1
         else: raise AssertionError("negative inventory check unexpectedly passed")
     assert rejected == 6
-    print("Self-check: 6 negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 NOT RUN behavior families passed.")
+    print("Self-check: 6 mapping/inventory and 6 full-engine migration negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 NOT RUN behavior families passed.")
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -803,7 +860,8 @@ def main():
     a = content.index(begin) + len(begin)
     b = content.index(endmark, a)
     generated = content[:a] + '\n\n' + '\n'.join(out) + '\n' + content[b:]
-    outputs = {doc: generated, root / RESOURCE: resource_text()}
+    outputs = {doc: generated, root / RESOURCE: resource_text(),
+               root / REJECTIONS: rejections_text}
     for path, value in outputs.items():
         expected = value.encode('utf-8')
         if args.check:

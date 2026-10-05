@@ -20,15 +20,19 @@ class VersionCatalogWiring(unittest.TestCase):
         wiring = sources.member('WrapTools')
         self.assertIn('WrapWithVersionPolicy(Isolation.IsolatedWorkerHost.Current', wiring)
         wrapper = sources.member('InvokeAsync', owner='VersionPolicyTool')
-        self.assertLess(wrapper.index('VersionCallProblem'), wrapper.index('return inner.InvokeAsync'))
+        self.assertLess(wrapper.index('V4Admission'), wrapper.index('return inner.InvokeAsync'))
+        self.assertNotIn('VersionCallProblem', wrapper)
+        binding = sources.member('BindV4Call')
+        self.assertLess(binding.index('VersionCallProblem'), binding.index('ToolInputSchema'))
         profile = sources.member('GetLiteTools') + sources.member('GetAllTools')
         self.assertEqual(profile.count('VersionToolProblem(name).Length == 0'), 2)
         invoke = sources.member('InvokeToolMethod')
         self.assertLess(invoke.index('VersionCallProblem'), invoke.index('method.Invoke(method.IsStatic ? null : EngineServices.Get(method.DeclaringType!), call)'))
         self.assertIn('AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable)', sources.member('AllToolMethods', owner='McpServer'))
         self.assertIn('includeUnavailable || VersionToolProblem(kv.Key).Length == 0', sources.member('AvailableToolMethods'))
-        for name in ('CallTool', 'PreflightToolCall'):
-            self.assertIn('versionAvailable', sources.member(name, signature='string argumentsJson)'))
+        self.assertIn('BindV4Call', sources.member('CallTool', tool=True))
+        self.assertIn('BindV4Call', sources.member('PreviewToolCall', tool=True))
+        self.assertIn('versionAvailable', sources.member('PreflightToolCall', signature='string argumentsJson)'))
 
     def test_version_exclusions_have_real_registered_names(self):
         policy = sources.type_text('ToolVersionPolicy').split('internal static string ToolProblem', 1)[0]

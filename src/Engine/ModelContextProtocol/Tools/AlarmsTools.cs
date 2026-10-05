@@ -180,7 +180,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public AlarmsTools(AlarmsService service) => _service = service;
 
         [McpServerTool(Name = "ExportAlarmClasses"), Description(
-            "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Export PLC alarm classes to a file. Alarm classes define severity, acknowledgment behavior, and display colors for alarms." +
             " The exported file can be edited and re-imported to update alarm class configurations." +
             " Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -199,7 +199,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportAlarmClasses"), Description(
-            "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Import PLC alarm classes from a previously exported file." +
             " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportAlarmClassesV4(
@@ -217,7 +217,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportAlarmTextLists"), Description(
-            "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Export all PLC alarm text lists to an XLSX (Excel) file." +
             " Text lists contain the text strings shown for each alarm condition." +
             " Supports multi-language projects — all configured languages are exported." +
@@ -237,7 +237,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportAlarmTextLists"), Description(
-            "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Import PLC alarm text lists from an XLSX file." +
             " The file must match the format exported by ExportAlarmTextLists." +
             " Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -256,7 +256,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportAlarmInstanceTexts"), Description(
-            "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject]" +
             " Export PLC alarm instance texts to an XLSX file." +
             " Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText)." +
             " Options control what additional columns are included in the export." +

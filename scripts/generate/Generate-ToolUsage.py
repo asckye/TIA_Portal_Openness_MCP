@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import sys
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -85,6 +86,20 @@ def validate_coverage(rosters, calls):
                                                           expected ^ set(calls['profiles'][profile]))
 
 
+def source_metadata(sources):
+    """Usage topics follow registrations; tools-list staleness belongs to Check-ToolsList."""
+    full = {}
+    for source in sources:
+        for match in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source):
+            description = re.match(r'\)\s*,\s*Description\(\s*"([^"\n]*)', source[match.end():])
+            assert description, ('Missing adjacent Description', match[1])
+            tags = re.match(r'\[L\d\]\[([^\]]+)\]', description[1])
+            assert tags, ('Missing domain', match[1])
+            assert match[1] not in full, ('Duplicate registration', match[1])
+            full[match[1]] = {'name': match[1], 'domain': tags[1].removeprefix('Category:')}
+    return full
+
+
 def generate():
     sources, documents = [], []
     for folder, prefix in [('siemens-openness', 'guides'), ('siemens-code-snippets', 'snippets')]:
@@ -114,10 +129,10 @@ def generate():
                 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'lines': len(text.split('\n')),
                 'examples': blocks, 'text': text})
 
-    full = {t['name']: t for t in read(ROOT / 'manifest/tools-list.json')['tools']}
     rosters, _ = registered_rosters()
-    # The guard manifest follows the current roster, including the merged guides.
-    assert set(full) == rosters['21'], 'tools-list.json is stale; regenerate it from the current engine'
+    from engine_sources import EngineSources
+    full = source_metadata(EngineSources(ROOT).sources.values())
+    assert set(full) == rosters['21'], 'Source metadata differs from the registered roster'
     names = set().union(*rosters.values())
     domains = {
         'Portal': ['session-and-project', 'licensing-and-firewall'],
@@ -228,6 +243,26 @@ def generate():
 
 
 class RosterTests(unittest.TestCase):
+    def test_generation_does_not_read_the_guard_manifest(self):
+        original_read = read
+        def without_manifest(path):
+            self.assertNotEqual(path, ROOT / 'manifest/tools-list.json')
+            return original_read(path)
+        with patch(__name__ + '.read', side_effect=without_manifest):
+            catalog = generate()
+        rosters, _ = registered_rosters()
+        self.assertTrue(rosters['21'] <= catalog['tools'].keys())
+
+    def test_source_metadata_uses_current_names_and_normalizes_domains(self):
+        sources = ['[McpServerTool(Name = "ConnectPortal"), Description("[L1][Portal][SESSION] Connect.")]',
+                   '[McpServerTool(Name="GetHardware"), Description(\n "[L2][Category:Hardware]" + " Read.")]']
+        self.assertEqual(source_metadata(sources), {
+            'ConnectPortal': {'name': 'ConnectPortal', 'domain': 'Portal'},
+            'GetHardware': {'name': 'GetHardware', 'domain': 'Hardware'}})
+        for invalid in ([sources[0], sources[0]], ['[McpServerTool(Name="Missing")]'],
+                        ['[McpServerTool(Name="Missing"), Description("no domain")]']):
+            with self.subTest(invalid=invalid), self.assertRaises(AssertionError): source_metadata(invalid)
+
     def test_migrated_and_unmigrated_names(self):
         targets = {'BuildOld': 'BuildNew', 'ReadOld': 'GetNew', 'Typed': 'Typed'}
         self.assertEqual(resolve_names(targets, {'BuildNew', 'ReadOld', 'Typed'}, targets),

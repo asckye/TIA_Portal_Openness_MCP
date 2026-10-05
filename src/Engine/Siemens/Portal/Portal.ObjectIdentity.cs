@@ -44,7 +44,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseMessage ReadObjectIdentifier(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "", string objectPath = "", string identifier = "")
-            => RunHmiStepTool("ReadObjectIdentifier", meta => {
+            => RunHmiStepTool("GetObjectIdentifier", meta => {
                 ObjectIdentityRules.ValidateObjectSelection(kind, devicePathJson, itemPathJson, softwarePath, objectPath, identifier);
                 ObjectIdentifierProvider provider = _project!.GetService<ObjectIdentifierProvider>() ?? throw new NotSupportedException("ObjectIdentifierProvider service unavailable on this project.");
                 meta["kind"] = kind;

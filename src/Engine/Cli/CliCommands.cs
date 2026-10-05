@@ -313,8 +313,8 @@ namespace TiaMcpServer.Cli
                 : "         (register into all detected hosts with: tia config)");
 
             Console.WriteLine(ready
-                ? (zh ? "READY —— 环境正常。下一步：重启 AI 客户端，让它调用 Bootstrap。"
-                      : "READY — environment OK. Next: restart your AI client and ask it to call Bootstrap.")
+                ? (zh ? "READY —— 环境正常。下一步：重启 AI 客户端，让它调用 InitializeEnvironment。"
+                      : "READY — environment OK. Next: restart your AI client and ask it to call InitializeEnvironment.")
                 : (zh ? "NOT READY —— 请按上面的『修法』处理 FAIL 项，然后重新运行 tia doctor。"
                       : "NOT READY — fix the FAIL items above, then run `tia doctor` again."));
             return ready ? 0 : 1;

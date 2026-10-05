@@ -43,7 +43,7 @@ namespace TiaMcpServer.Tests
             HmiToolFixture.Session.FixtureRoot=root;
             var down=button.EventHandlers.Create(EngineeringDefectTests.EventType.Down);down.Script.ScriptCode="keep();";down.Script.Async=true;
             check(!Success(HmiToolFixture.HmiInspection.ReadUnifiedHmiButtonEvent("HMI","/Group/Main","btn","Tapped")) && button.EventHandlers.Count==1,"missing event read has no side effect");
-            check(!McpServer.CallTool("ReadUnifiedHmiButtonEvent","{\"softwarePath\":\"HMI\",\"screenPath\":\"/Group/Main\",\"buttonName\":\"btn\",\"eventType\":\"Tapped\"}").Meta!["success"]!.GetValue<bool>(),"missing event CallTool business failure");
+            check(McpServer.CallTool("GetUnifiedHmiButtonEvent", new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"softwarePath\":\"HMI\",\"screenPath\":\"/Group/Main\",\"buttonName\":\"btn\",\"eventType\":\"Tapped\"}"))).IsError == true, "missing event CallTool business failure");
             var tapped=button.EventHandlers.Create(EngineeringDefectTests.EventType.Tapped);
             var read=HmiToolFixture.HmiInspection.ReadUnifiedHmiButtonEvent("HMI","/Group/Main","btn","Down");
             check(Success(read) && read.Meta!["event"]!["ScriptCode"]!.ToString()=="keep();" && read.Meta["event"]!["Async"]!.GetValue<bool>(),"read exact script global and Async DTO");

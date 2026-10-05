@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - PlcTables
 
-        [McpServerTool(Name = "ListPlcTagTables"), Description("[L2][PLC-Software] List all PLC tag table names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). Use before ExportPlcTagTable to get exact table names, or before ImportPlcTagTable to check for conflicts. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ListPlcTagTables"), Description("[L2][PLC-Software] List all PLC tag table names. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). Use before ExportPlcTagTable to get exact table names, or before ImportPlcTagTable to check for conflicts. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult GetPlcTagTablesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
             => PlcToolContract.Run("ListPlcTagTables", false, true, () => GetPlcTagTables(softwarePath));
@@ -218,7 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ListPlcForceTables"), Description(
-            "[L2][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " List all force table names in the PLC software." +
             " Force tables configure which variables are continuously forced to specific values while the CPU is online." +
             " Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic" +
@@ -260,7 +260,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SetPlcWatchTableModifyValue"), Description(
-            "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+ConnectOnlinePlc]" +
+            "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc]" +
             " Configure a watch table entry to write a value to a PLC variable once (or on a trigger)." +
             " This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires." +
             " Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop." +

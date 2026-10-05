@@ -581,7 +581,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetProjectTopology` | `GetProjectTopology` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
 | `GetProjectTree` | `GetProjectTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
 | `GetPutGetAccess` | `GetPlcPutGetAccess` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `GetRecipe` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `GetRecipe` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
 | `GetSoftwareInfo` | `GetSoftwareInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
 | `GetSoftwareTree` | `GetSoftwareTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
 | `GetState` | `GetSessionState` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
@@ -1516,7 +1516,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 |---|---|
 | [ModelContextProtocol/Tools/AddressesTools.cs](../../src/Engine/ModelContextProtocol/Tools/AddressesTools.cs):275 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):63 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
-| [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):23 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
+| [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):28 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):35 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):48 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
 | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs):52 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
@@ -1527,6 +1527,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):516 | `if (conflicts.Count > 16)` |
 | [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):149 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
+| [ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs):559 | `if (calls.Length > 20) return V4Reject(tool, new Error("Transaction count exceeds its limit.", new LimitExceededDetails("calls", 20, calls.Length)));` |
+| [ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs):560 | `if (string.IsNullOrWhiteSpace(text) \|\| text.Length > 200) return V4Reject(tool, InvalidInput("text"));` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):32 | `[McpServerTool(Name="ManageUnifiedScreenItem"), Description("[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial properties), update, delete (confirmDelete=true). properties accepts scalars or one level of parts ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); at most 50 leaves, every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. Current native policy; V4 safety behavior is not yet accepted.")]` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):71 | `if (!string.IsNullOrWhiteSpace(culture.Name) && culture.Name.Length <= 16)` |
 | [Siemens/DeviceServiceObjectRules.cs](../../src/Engine/Siemens/DeviceServiceObjectRules.cs):42 | `if ((properties["ServiceGroupName"]!.ToString()).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");` |
@@ -1756,7 +1758,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 241 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 243 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1766,7 +1768,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 族 | 当前形状 | V4 映射 | 标记站点（非工具数） | variant |
 |---|---|---|---|---|
 | F1 | VersionPolicyTool 的 isError 文本/preflight | 准入→rejected-before-operation，error.code/details；无原生动作 | 0 | 0 |
-| F2 | POCO/Meta、McpException、success=false | 领域字段→data；异常由错误分类器生成 error；message 不判断成功 | 25 | legacy-existing-meta:2; legacy-independent-verdicts:2; legacy-late-stamp:1; legacy-late-verdict:2; legacy-multiple-dynamic-fields:8; legacy-roundtrip-data-stamp:2; legacy-single-verdict:3; legacy-stamp-then-verdict:2; legacy-stamp-without-verdict:2; legacy-verdict-last:1 |
+| F2 | POCO/Meta、McpException、success=false | 领域字段→data；异常由错误分类器生成 error；message 不判断成功 | 23 | legacy-existing-meta:2; legacy-independent-verdicts:1; legacy-late-stamp:1; legacy-late-verdict:1; legacy-multiple-dynamic-fields:8; legacy-roundtrip-data-stamp:2; legacy-single-verdict:3; legacy-stamp-then-verdict:2; legacy-stamp-without-verdict:2; legacy-verdict-last:1 |
 | F3 | operationSuccess/status/error、执行器 | 按执行证据确定 outcome；逐项结果→data.items；保留完整性与原生 verdict | 20 | legacy-independent-verdicts:1; legacy-migration-page:1; legacy-multiple-dynamic-fields:5; legacy-ok-only:1; legacy-plcsim-complete:1; legacy-plcsim-failure:1; legacy-roundtrip-data-stamp:2; legacy-runtime-settings:1; legacy-single-verdict:5; legacy-success-last:1; legacy-verdict-last:1 |
 | F4 | Message 中序列化 JSON/failed 文本 | CallTool 透传目标 envelope；批次逐项 envelope；无二次编码 | 2 | legacy-independent-verdicts:1; legacy-stamp-then-verdict:1 |
 | F5 | 导出句柄 ok/InvalidParams | data.export 与 meta.paging；缺句柄 NOT_FOUND，覆盖 ALREADY_EXISTS | 0 | 0 |
@@ -1774,14 +1776,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | F7 | Foundation PascalCase DTO/裸数组/V17 envelope | data 保留原领域数据及 evidence；Executed→meta.execution，RequiresSessionReset→meta；裸数组→data.items | 0 | 0 |
 | CLI | 报告 ok/roundtrip/后写判定 | 同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data | 3 | legacy-late-verdict:1; legacy-ok-report:1; legacy-roundtrip-report:1 |
 
-共 50 个注释站点、18 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
+共 48 个注释站点、18 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
 
 | variant | 源码文件 |
 |---|---|
 | legacy-existing-meta | [ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
-| legacy-independent-verdicts | [ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
+| legacy-independent-verdicts | [ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
 | legacy-late-stamp | [ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
-| legacy-late-verdict | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
+| legacy-late-verdict | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | legacy-migration-page | [Siemens/Services/MigrationReadService.cs](../../src/Engine/Siemens/Services/MigrationReadService.cs) |
 | legacy-multiple-dynamic-fields | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../src/Engine/Siemens/Services/VersionControlService.cs) |
 | legacy-ok-only | [Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
@@ -1831,7 +1833,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 当前位置/定位词 | 当前事实 | 4.0 目标 |
 |---|---|---|
 | [ModelContextProtocol/Builders/EcosystemFiles.cs](../../src/Logic/ModelContextProtocol/Builders/EcosystemFiles.cs):12 `RepositoryRoot` | R1 祖先桥接脚本探测、旧 root 变量 | 严格 bundle-root；缺资源拒绝 |
-| [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs):46 `FindInstallRoot` | R2 四层 delivery 探测 | 已知安装根 + delivery 标记 |
+| [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs):48 `FindInstallRoot` | R2 四层 delivery 探测 | 已知安装根 + delivery 标记 |
 | [Cli/SpecLoader.cs](../../src/Engine/Cli/SpecLoader.cs):48 `FindBundleRoot` | R3 十二层 templates/tools 探测 | 显式根/已知锚点；未解析 __BUNDLE__ 报错 |
 | [Siemens/EngineRouter.cs](../../src/Engine/Siemens/EngineRouter.cs):35 `FindSiblingExe` | R7 bin/bin-v20/v数字候选 | 版本目录表 + 精确新产品名 |
 | [Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs):88 `FindSiblingExe` | 目标引擎缺失时使用自身 | 缺版本引擎报 RESOURCE_UNAVAILABLE |
@@ -1840,7 +1842,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):45 `FindResource` | 解析失败仍拼传入根 | 严格资源解析，worktree 更新保护保留 |
 | [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):156 `BundleLayout` | R13 相对开发 Debug/Release 猜测 | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
-| [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):17 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
+| [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs):41 `TIA_MCP_DATA_DIRECTORY` | 显式数据根或 bundle/data；不可写时按用途回退用户目录 | 沿用数据根政策；logs 按发布键/studio 分组 |
 | [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):42 `DiagnosticsDirectory` | data/diagnostics 调用日志；10 MiB + 一份 previous | P6-45 读取；P6-46 配置保留与时间窗口，审计另存 logs/audit |
 | [Program.cs](../../src/Engine/Program.cs):26 `DiagLogPathLocal` | 主日志经 DataLocations；启动日志仍在安装目录 | 数据根 logs/<releaseKey>；只读安装沿用用户目录回退 |
@@ -1890,15 +1892,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30533 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31315 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:74 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:63 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30588 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31370 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:75 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:64 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2813,2817,2821,2825,3061,3065,3069,3073,3309,3313,3317,3321,3557,3561,3565,3569,3805,3809,3813,3817,4053,4057,4061,4065,4393,4397,4677,4681; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/release-build.json](../../manifest/release-build.json) | 产品:2099,2104,2454,2459; 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:6983 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7016 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |
@@ -1914,7 +1916,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:139,165; 根定位:13,107,108,109,153 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:663 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:662 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:17,18,104 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
@@ -1923,10 +1925,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:13 | 修改引用并回归 |
 | [scripts/checks/Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1) | 产品:45,132,140,141,142 | 修改引用并回归 |
 | [scripts/checks/Test-V21Ecosystem.py](../../scripts/checks/Test-V21Ecosystem.py) | 根定位:69 | 修改引用并回归 |
-| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:103 | 修改引用并回归 |
+| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:107 | 修改引用并回归 |
 | [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,101,115,142,169,225,228,244,416,457,497; 根定位:116,134,135,136 | 修改引用并回归 |
 | [scripts/checks/Verify-ReleaseAsset.py](../../scripts/checks/Verify-ReleaseAsset.py) | 产品:129,169,172,179,223,225; 根定位:27 | 修改引用并回归 |
-| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 产品:5144; 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4859,4868,4877,4886,4895,4904,5157,5319,5461 | 修改引用并回归 |
+| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 产品:5153; 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4868,4877,4886,4895,4904,4913,5166,5328,5470 | 修改引用并回归 |
 | [scripts/diagnostics/Collect-TiaCrashEvidence.ps1](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) | 产品:32 | 修改引用并回归 |
 | [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:35 | 修改引用并回归 |
 | [scripts/ecosystem/Install-PlcTools.ps1](../../scripts/ecosystem/Install-PlcTools.ps1) | 根定位:13; 写入/工作区:4 | 修改引用并回归 |
@@ -1943,9 +1945,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Engine/Cli/SpecLoader.cs](../../src/Engine/Cli/SpecLoader.cs) | 根定位:48,55,56,59,61 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs](../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs) | 产品:152 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs](../../src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs) | 写入/工作区:30 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) | 产品:497 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) | 产品:527 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:45,65; 写入/工作区:66 | 修改引用并回归 |
-| [src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs) | 产品:70; 根定位:46,47,50,55,81 | 修改引用并回归 |
+| [src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs) | 产品:72; 根定位:48,49,52,57,88 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:219,224 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:37; 写入/工作区:38 | 修改引用并回归 |
 | [src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:73; 写入/工作区:74 | 修改引用并回归 |
@@ -1997,8 +1999,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 根定位:205,228 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,79,112,113,204,205,210,215 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,43,79; 根定位:12,16,65,73,74,76,78,84,90,91,93,99,219,222,224 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16895,36603 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tests/Engine/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:159 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tests/Engine/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:161 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs](../../tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,426,442,444,472 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
@@ -2010,10 +2013,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UiSettingsTests.cs) | 产品:112 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:92,246,278,279,280 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs) | 产品:39 | 修改引用并回归 |
-| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:60 | 修改引用并回归 |
+| [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:68 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 153 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 154 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 
@@ -2023,7 +2026,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 4.0 名称 | 当前示例入口 | 选择理由 | 版本 |
 |---|---|---|---|
 | `ArchiveSavedProject` | `ArchiveSavedProject` | 工程生命周期 | 20, 21 |
-| `AttachOpenProject` | `AttachToOpenProject` | 工程生命周期 | 20, 21 |
+| `AttachOpenProject` | `AttachOpenProject` | 工程生命周期 | 20, 21 |
 | `BuildPlcGlobalDb` | `BuildPlcGlobalDb` | 离线构造与规划 | 20, 21 |
 | `BuildPlcTagTable` | `BuildPlcTagTable` | 离线构造与规划 | 20, 21 |
 | `BuildPlcUdt` | `BuildPlcUdt` | 离线构造与规划 | 20, 21 |
@@ -2032,28 +2035,28 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
 | `CompileHmiDiagnostics` | `CompileHmiDiagnostics` | HMI 定位和诊断 | 20, 21 |
 | `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | 常用 PLC 交换与编译 | 20, 21 |
-| `ConnectPortal` | `Connect` | 工程生命周期 | 20, 21 |
-| `ConnectProject` | `ConnectToProject` | 工程生命周期 | 20, 21 |
+| `ConnectPortal` | `ConnectPortal` | 工程生命周期 | 20, 21 |
+| `ConnectProject` | `ConnectProject` | 工程生命周期 | 20, 21 |
 | `CreateHardwareDevice` | `CreateHardwareDevice` | 硬件查找和精确创建 | 20, 21 |
 | `CreateProject` | `CreateProject` | 工程生命周期 | 20, 21 |
 | `DeleteExportHandle` | `DeleteExportHandle` | 大结果分页与文件交付 | 20, 21 |
 | `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
-| `DisconnectPortal` | `Disconnect` | 工程生命周期 | 20, 21 |
+| `DisconnectPortal` | `DisconnectPortal` | 工程生命周期 | 20, 21 |
 | `ExportPlcBlock` | `ExportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
 | `ExportPlcTagTable` | `ExportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
 | `ExportPlcType` | `ExportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
 | `FindTools` | `FindTools` | 发现、用法与完整目录调用 | 20, 21 |
 | `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
 | `GenerateErrorReport` | `GenerateErrorReport` | 诊断收尾 | 20, 21 |
-| `GetEnvironmentDiagnostics` | `Doctor` | 环境与会话诊断 | 20, 21 |
+| `GetEnvironmentDiagnostics` | `GetEnvironmentDiagnostics` | 环境与会话诊断 | 20, 21 |
 | `GetExportContent` | `GetExportContent` | 大结果分页与文件交付 | 20, 21 |
-| `GetOpennessWorkerStatus` | `ReadOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
+| `GetOpennessWorkerStatus` | `GetOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
 | `GetPlcBlockHierarchy` | `GetPlcBlockHierarchy` | 工程和 PLC 定位 | 20, 21 |
 | `GetPlcBlockInfo` | `GetPlcBlockInfo` | 工程和 PLC 定位 | 20, 21 |
 | `GetPlcTypeInfo` | `GetPlcTypeInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetProjectInfo` | `GetProject` | 工程和 PLC 定位 | 20, 21 |
+| `GetProjectInfo` | `GetProjectInfo` | 工程和 PLC 定位 | 20, 21 |
 | `GetProjectTree` | `GetProjectTree` | 工程和 PLC 定位 | 20, 21 |
-| `GetSessionState` | `GetState` | 环境与会话诊断 | 20, 21 |
+| `GetSessionState` | `GetSessionState` | 环境与会话诊断 | 20, 21 |
 | `GetSoftwareInfo` | `GetSoftwareInfo` | 工程和 PLC 定位 | 20, 21 |
 | `GetSoftwareTree` | `GetSoftwareTree` | 工程和 PLC 定位 | 20, 21 |
 | `GetToolUsage` | `GetToolUsage` | 发现、用法与完整目录调用 | 20, 21 |
@@ -2061,7 +2064,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportPlcExternalSource` | `ImportPlcExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
 | `ImportPlcTagTable` | `ImportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
 | `ImportPlcType` | `ImportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
-| `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
+| `InitializeEnvironment` | `InitializeEnvironment` | 环境与会话诊断 | 20, 21 |
 | `ListDevices` | `ListDevices` | 工程和 PLC 定位 | 20, 21 |
 | `ListExportHandles` | `ListExportHandles` | 大结果分页与文件交付 | 20, 21 |
 | `ListHmiScreens` | `ListHmiScreens` | HMI 定位和诊断 | 20, 21 |

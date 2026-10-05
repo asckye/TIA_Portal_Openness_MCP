@@ -205,7 +205,7 @@
       },
       {
         "name": "AttachOpenProject",
-        "currentName": "AttachToOpenProject",
+        "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
         "profiles": [
           "full",
@@ -214,7 +214,7 @@
         "arguments": {
           "projectName": "项目1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AuditEngineeringExports",
@@ -647,7 +647,7 @@
       },
       {
         "name": "BuildProjectScaffold",
-        "currentName": "ScaffoldProject",
+        "currentName": "BuildProjectScaffold",
         "sourceName": "ScaffoldProject",
         "profiles": [
           "full"
@@ -656,7 +656,7 @@
           "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "BuildReleaseDiagnosticReport",
@@ -819,7 +819,7 @@
           "lite"
         ],
         "arguments": {
-          "name": "GetState",
+          "name": "GetSessionState",
           "arguments": {}
         },
         "envelopeVersion": 4
@@ -848,13 +848,13 @@
       },
       {
         "name": "CheckProductUpdate",
-        "currentName": "CheckForUpdate",
+        "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ClearExportHandles",
@@ -878,7 +878,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareLibraries",
@@ -1183,13 +1183,13 @@
       },
       {
         "name": "ConnectIsolatedPortal",
-        "currentName": "ConnectIsolated",
+        "currentName": "ConnectIsolatedPortal",
         "sourceName": "ConnectIsolated",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectOnlinePlc",
@@ -1207,7 +1207,7 @@
       },
       {
         "name": "ConnectPortal",
-        "currentName": "Connect",
+        "currentName": "ConnectPortal",
         "sourceName": "Connect",
         "profiles": [
           "full",
@@ -1216,11 +1216,11 @@
         "arguments": {
           "projectName": "项目1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectProject",
-        "currentName": "ConnectToProject",
+        "currentName": "ConnectProject",
         "sourceName": "ConnectToProject",
         "profiles": [
           "full",
@@ -1231,7 +1231,7 @@
           "processStartUtc": "&lt;processStartUtc from current ListPortalProcessProjects&gt;",
           "projectPath": "C:\\Examples\\Example.ap{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectProjectToWorkspace",
@@ -1369,7 +1369,7 @@
           "directoryPath": "C:\\Projects",
           "projectName": "Demo"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateVersionControlWorkspace",
@@ -1710,14 +1710,14 @@
       },
       {
         "name": "DisconnectPortal",
-        "currentName": "Disconnect",
+        "currentName": "DisconnectPortal",
         "sourceName": "Disconnect",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DownloadPlc",
@@ -1756,7 +1756,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureSubnet",
@@ -2399,7 +2399,7 @@
           "outputDirectory": "C:\\Temp\\mcp-report",
           "includeProjectTree": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateBlocksFromExternalSource",
@@ -2429,7 +2429,7 @@
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateOpcUaModelledInterface",
@@ -2692,7 +2692,7 @@
       },
       {
         "name": "GetEnvironmentDiagnostics",
-        "currentName": "Doctor",
+        "currentName": "GetEnvironmentDiagnostics",
         "sourceName": "Doctor",
         "profiles": [
           "full",
@@ -2701,7 +2701,7 @@
         "arguments": {
           "fix": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetExportContent",
@@ -2791,7 +2791,7 @@
       },
       {
         "name": "GetNativeInvocationLog",
-        "currentName": "ReadNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
         "sourceName": "ReadNativeInvocationLog",
         "profiles": [
           "full"
@@ -2799,17 +2799,17 @@
         "arguments": {
           "take": 100
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetObjectIdentifier",
-        "currentName": "ReadObjectIdentifier",
+        "currentName": "GetObjectIdentifier",
         "sourceName": "ReadObjectIdentifier",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetObjectProperty",
@@ -2868,13 +2868,13 @@
       },
       {
         "name": "GetOpennessCompatibility",
-        "currentName": "ReadOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
         "sourceName": "ReadOpennessCompatibility",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpennessGuidance",
@@ -2888,14 +2888,14 @@
       },
       {
         "name": "GetOpennessWorkerStatus",
-        "currentName": "ReadOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
         "sourceName": "ReadOpennessWorkerStatus",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockEditCapabilities",
@@ -3158,7 +3158,7 @@
       },
       {
         "name": "GetPortalInfo",
-        "currentName": "ReadPortalInfo",
+        "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
         "profiles": [
           "full"
@@ -3168,18 +3168,18 @@
           "includeSessions": true,
           "includeProducts": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectInfo",
-        "currentName": "GetProject",
+        "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectProtection",
@@ -3246,14 +3246,14 @@
       },
       {
         "name": "GetSessionState",
-        "currentName": "GetState",
+        "currentName": "GetSessionState",
         "sourceName": "GetState",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSivarcRuleTree",
@@ -4026,14 +4026,14 @@
       },
       {
         "name": "InitializeEnvironment",
-        "currentName": "Bootstrap",
+        "currentName": "InitializeEnvironment",
         "sourceName": "Bootstrap",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InitializeSimotionScripting",
@@ -4057,7 +4057,7 @@
         "arguments": {
           "filePath": "C:\\Examples\\documents\\FC_Add.s7dcl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InstantiatePlcTemplates",
@@ -4452,7 +4452,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListSivarcBlockDefinitions",
@@ -6118,7 +6118,7 @@
         "arguments": {
           "path": "C:\\Examples\\Example.ap{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PatchPlcBlockDocument",
@@ -6429,7 +6429,7 @@
         "arguments": {
           "confirmRestart": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RetrieveProjectArchive",
@@ -6459,7 +6459,7 @@
           "includeProjectTree": false,
           "inspectPortalProcesses": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunClassicHmiOfflineValidationSuite",
@@ -6531,7 +6531,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunPlcCompanionTool",
@@ -6616,18 +6616,26 @@
       },
       {
         "name": "RunToolTransaction",
-        "currentName": "RunToolsInTransaction",
+        "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "callsJson": "[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"groupPath\":\"Examples\"}}]",
           "text": "Ready",
           "confirmChange": false,
-          "dryRun": true
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SamplePlcLiveValuesS7",
@@ -6667,11 +6675,11 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveProjectCopy",
-        "currentName": "SaveAsProject",
+        "currentName": "SaveProjectCopy",
         "sourceName": "SaveAsProject",
         "profiles": [
           "full"
@@ -6679,7 +6687,7 @@
         "arguments": {
           "newProjectPath": "C:\\Examples\\Copy"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ScanAccessibleDevices",
@@ -7101,7 +7109,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SynchronizeLibrary",
@@ -7596,7 +7604,7 @@
       },
       {
         "name": "AttachOpenProject",
-        "currentName": "AttachToOpenProject",
+        "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
         "profiles": [
           "full",
@@ -7605,7 +7613,7 @@
         "arguments": {
           "projectName": "项目1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "AuditEngineeringExports",
@@ -8038,7 +8046,7 @@
       },
       {
         "name": "BuildProjectScaffold",
-        "currentName": "ScaffoldProject",
+        "currentName": "BuildProjectScaffold",
         "sourceName": "ScaffoldProject",
         "profiles": [
           "full"
@@ -8047,7 +8055,7 @@
           "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "BuildReleaseDiagnosticReport",
@@ -8210,7 +8218,7 @@
           "lite"
         ],
         "arguments": {
-          "name": "GetState",
+          "name": "GetSessionState",
           "arguments": {}
         },
         "envelopeVersion": 4
@@ -8239,13 +8247,13 @@
       },
       {
         "name": "CheckProductUpdate",
-        "currentName": "CheckForUpdate",
+        "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ClearExportHandles",
@@ -8269,7 +8277,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CompareLibraries",
@@ -8574,13 +8582,13 @@
       },
       {
         "name": "ConnectIsolatedPortal",
-        "currentName": "ConnectIsolated",
+        "currentName": "ConnectIsolatedPortal",
         "sourceName": "ConnectIsolated",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectOnlinePlc",
@@ -8598,7 +8606,7 @@
       },
       {
         "name": "ConnectPortal",
-        "currentName": "Connect",
+        "currentName": "ConnectPortal",
         "sourceName": "Connect",
         "profiles": [
           "full",
@@ -8607,11 +8615,11 @@
         "arguments": {
           "projectName": "项目1"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectProject",
-        "currentName": "ConnectToProject",
+        "currentName": "ConnectProject",
         "sourceName": "ConnectToProject",
         "profiles": [
           "full",
@@ -8622,7 +8630,7 @@
           "processStartUtc": "&lt;processStartUtc from current ListPortalProcessProjects&gt;",
           "projectPath": "C:\\Examples\\Example.ap{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ConnectProjectToWorkspace",
@@ -8760,7 +8768,7 @@
           "directoryPath": "C:\\Projects",
           "projectName": "Demo"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "CreateVersionControlWorkspace",
@@ -9101,14 +9109,14 @@
       },
       {
         "name": "DisconnectPortal",
-        "currentName": "Disconnect",
+        "currentName": "DisconnectPortal",
         "sourceName": "Disconnect",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "DownloadPlc",
@@ -9147,7 +9155,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "EnsureSubnet",
@@ -9790,7 +9798,7 @@
           "outputDirectory": "C:\\Temp\\mcp-report",
           "includeProjectTree": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateBlocksFromExternalSource",
@@ -9820,7 +9828,7 @@
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GenerateOpcUaModelledInterface",
@@ -10083,7 +10091,7 @@
       },
       {
         "name": "GetEnvironmentDiagnostics",
-        "currentName": "Doctor",
+        "currentName": "GetEnvironmentDiagnostics",
         "sourceName": "Doctor",
         "profiles": [
           "full",
@@ -10092,7 +10100,7 @@
         "arguments": {
           "fix": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetExportContent",
@@ -10182,7 +10190,7 @@
       },
       {
         "name": "GetNativeInvocationLog",
-        "currentName": "ReadNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
         "sourceName": "ReadNativeInvocationLog",
         "profiles": [
           "full"
@@ -10190,17 +10198,17 @@
         "arguments": {
           "take": 100
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetObjectIdentifier",
-        "currentName": "ReadObjectIdentifier",
+        "currentName": "GetObjectIdentifier",
         "sourceName": "ReadObjectIdentifier",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetObjectProperty",
@@ -10259,13 +10267,13 @@
       },
       {
         "name": "GetOpennessCompatibility",
-        "currentName": "ReadOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
         "sourceName": "ReadOpennessCompatibility",
         "profiles": [
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetOpennessGuidance",
@@ -10279,14 +10287,14 @@
       },
       {
         "name": "GetOpennessWorkerStatus",
-        "currentName": "ReadOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
         "sourceName": "ReadOpennessWorkerStatus",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetPlcBlockEditCapabilities",
@@ -10549,7 +10557,7 @@
       },
       {
         "name": "GetPortalInfo",
-        "currentName": "ReadPortalInfo",
+        "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
         "profiles": [
           "full"
@@ -10559,18 +10567,18 @@
           "includeSessions": true,
           "includeProducts": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectInfo",
-        "currentName": "GetProject",
+        "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetProjectProtection",
@@ -10637,14 +10645,14 @@
       },
       {
         "name": "GetSessionState",
-        "currentName": "GetState",
+        "currentName": "GetSessionState",
         "sourceName": "GetState",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "GetSivarcRuleTree",
@@ -11417,14 +11425,14 @@
       },
       {
         "name": "InitializeEnvironment",
-        "currentName": "Bootstrap",
+        "currentName": "InitializeEnvironment",
         "sourceName": "Bootstrap",
         "profiles": [
           "full",
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InitializeSimotionScripting",
@@ -11448,7 +11456,7 @@
         "arguments": {
           "filePath": "C:\\Examples\\documents\\FC_Add.s7dcl"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "InstantiatePlcTemplates",
@@ -11857,7 +11865,7 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ListSafetyActivationTests",
@@ -13680,7 +13688,7 @@
         "arguments": {
           "path": "C:\\Examples\\Example.ap{extension}"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "PatchPlcBlockDocument",
@@ -13991,7 +13999,7 @@
         "arguments": {
           "confirmRestart": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RetrieveProjectArchive",
@@ -14021,7 +14029,7 @@
           "includeProjectTree": false,
           "inspectPortalProcesses": false
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunClassicHmiOfflineValidationSuite",
@@ -14093,7 +14101,7 @@
           "full"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "RunPlcCompanionTool",
@@ -14178,18 +14186,26 @@
       },
       {
         "name": "RunToolTransaction",
-        "currentName": "RunToolsInTransaction",
+        "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
         "profiles": [
           "full"
         ],
         "arguments": {
-          "callsJson": "[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"groupPath\":\"Examples\"}}]",
           "text": "Ready",
           "confirmChange": false,
-          "dryRun": true
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SamplePlcLiveValuesS7",
@@ -14229,11 +14245,11 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SaveProjectCopy",
-        "currentName": "SaveAsProject",
+        "currentName": "SaveProjectCopy",
         "sourceName": "SaveAsProject",
         "profiles": [
           "full"
@@ -14241,7 +14257,7 @@
         "arguments": {
           "newProjectPath": "C:\\Examples\\Copy"
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "ScanAccessibleDevices",
@@ -14663,7 +14679,7 @@
         "arguments": {
           "dryRun": true
         },
-        "envelopeVersion": 3
+        "envelopeVersion": 4
       },
       {
         "name": "SynchronizeLibrary",

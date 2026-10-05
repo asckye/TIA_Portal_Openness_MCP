@@ -148,8 +148,8 @@ internal static class EngineSurfaceChecks
         check(ReferenceEquals(session, engine.Target(engine.Method("GetState")))
             && ReferenceEquals(session, services.GetMethod("GetIfInitialized", All)!.Invoke(null, new object[] { sessionType })),
             "EngineSurface and optional session lookup share the container singleton");
-        var state = engine.Invoke(engine.Tool("GetState"), null)!;
-        check(!(bool)state.GetType().GetProperty("IsConnected")!.GetValue(state)!
+        var state = (global::ModelContextProtocol.Protocol.CallToolResult)engine.Invoke(engine.Tool("GetSessionState"), null)!;
+        check(!(bool)state.StructuredContent!["data"]!["isConnected"]!
             && !(bool)sessionType.GetMethod("IsConnected")!.Invoke(session, null)!,
             "Tool and kernel observe the same disconnected session");
         try

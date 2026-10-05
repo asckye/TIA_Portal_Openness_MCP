@@ -28,8 +28,10 @@ internal sealed class ResponseGoldenTests
         this.server = server;
         surface = EngineSurface.For(server);
         var tools = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
-        bridge = (JsonSerializerOptions)tools.GetField("BridgeJson", All)!.GetValue(null)!;
         discipline = (JsonSerializerOptions)tools.GetField("DisciplineJson", All)!.GetValue(null)!;
+        // The retired string bridge used the same output encoding. Keep its
+        // byte fixtures against the surviving renderer, without retaining a V3 dispatcher.
+        bridge = discipline;
         // McpServerToolCreateOptions.SerializerOptions defaults to this SDK singleton.
         sdk = (JsonSerializerOptions)typeof(McpServerTool).Assembly.GetType("ModelContextProtocol.McpJsonUtilities", true)!
             .GetProperty("DefaultOptions", All)!.GetValue(null)!;
@@ -67,6 +69,16 @@ internal sealed class ResponseGoldenTests
             }
             var expectedBytes = File.ReadAllBytes(path);
             var expected = File.ReadAllLines(path, new UTF8Encoding(false, true));
+            check(expectedBytes.SequenceEqual(Encoding.UTF8.GetBytes(string.Join("\n", expected) + "\n")),
+                "golden source bytes including BOM/newlines");
+            // These twelve historical records exercised the removed V3 batch
+            // verdict fallback. Preserve the file, retire only those exact keys;
+            // CaptureBatch checks the V4 aggregation below without a new baseline.
+            var retired = new HashSet<string>(new[] { "success", "operation-false", "argument", "portal", "target-invocation", "missing-verdict" }
+                .SelectMany(name => new[] { "executor/batch/" + name + "/direct", "executor/batch/" + name + "/bridge" }), StringComparer.Ordinal);
+            check(expected.Count(line => retired.Contains(line.Split('\t')[0])) == retired.Count, "all twelve retired V3 batch records are identified");
+            expected = expected.Where(line => !retired.Contains(line.Split('\t')[0])).ToArray();
+            expectedBytes = Encoding.UTF8.GetBytes(string.Join("\n", expected) + "\n");
             check(expected.Length == tests.records.Count, "golden case count " + tests.records.Count);
             for (int i = 0; i < tests.records.Count; i++)
             {
@@ -214,10 +226,20 @@ internal sealed class ResponseGoldenTests
 
     private void CaptureBatch(string name, object target, bool succeeded, Action<bool, string> check)
     {
-        // BatchResult now aggregates target results; it no longer executes a delegate.
-        // Keep the original action/error matrix through the real HMI executor and
-        // the same ToolResult/BatchRow boundary used by the production batch.
-        var protocol = surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target })!;
+        var legacy = surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target })!;
+        var data = (JsonObject)surface.Invoke(surface.ToolMethod("ResultBody"), new[] { legacy })!;
+        check(surface.Invoke(surface.ToolMethod("ResultSucceeded"), new object[] { data }) == null,
+            "batch/" + name + " does not infer a verdict from a V3 result");
+        // Use the current envelope factory and real aggregate; target bodies are
+        // synthetic, and their original executor bytes are checked separately.
+        var factory = Type("ModelContextProtocol.McpServer").GetMethods(All)
+            .Single(m => m.Name == "V4Result" && m.GetParameters().Length == 8);
+        var parameters = factory.GetParameters();
+        var error = succeeded ? null : surface.Invoke(surface.ToolMethod("InvalidInput"), new object[] { "fixture" });
+        var protocol = surface.Invoke(factory, new object?[] { "GoldenHmi", data, error,
+            Enum.Parse(parameters[3].ParameterType, succeeded ? "Succeeded" : "ReadFailed"),
+            Enum.Parse(parameters[4].ParameterType, "ReadOnly"),
+            Enum.Parse(parameters[5].ParameterType, succeeded ? "Complete" : "None"), null, false })!;
         var row = (JsonObject)surface.Invoke(surface.ToolMethod("BatchRow"), new object[] { 0, "GoldenHmi", protocol })!;
         var rows = new JsonArray(row);
         string retained = rows.ToJsonString();
@@ -233,9 +255,6 @@ internal sealed class ResponseGoldenTests
             "batch/" + name + " retains the target verdict in the V4 envelope");
         check(body["data"]!["items"]!.ToJsonString() == retained && body["data"]!["rollbackPerformed"]!.GetValue<bool>() == false,
             "batch/" + name + " retains every target field and reports no rollback");
-        MaskEnvelope(body);
-        Add("executor/batch/" + name + "/direct", Serialize(body, sdk));
-        Add("executor/batch/" + name + "/bridge", Serialize(body, bridge));
     }
 
     private void Executors(Action<bool, string> check)

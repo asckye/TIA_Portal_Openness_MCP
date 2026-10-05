@@ -2498,7 +2498,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "AttachToOpenProject": {
+      "AttachOpenProject": {
         "arguments": {
           "projectName": "项目1"
         },
@@ -2565,7 +2565,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "Bootstrap": {
+      "InitializeEnvironment": {
         "arguments": {},
         "parameters": {},
         "operations": {},
@@ -2731,7 +2731,7 @@
       },
       "CallTool": {
         "arguments": {
-          "name": "GetState",
+          "name": "GetSessionState",
           "arguments": {}
         },
         "parameters": {},
@@ -2748,7 +2748,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "CheckForUpdate": {
+      "CheckProductUpdate": {
         "arguments": {},
         "parameters": {
           "repository": {
@@ -3192,7 +3192,7 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "Connect": {
+      "ConnectPortal": {
         "arguments": {
           "projectName": "项目1"
         },
@@ -3216,7 +3216,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "ConnectIsolated": {
+      "ConnectIsolatedPortal": {
         "arguments": {},
         "parameters": {},
         "operations": {},
@@ -3244,7 +3244,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ConnectToProject": {
+      "ConnectProject": {
         "arguments": {
           "processId": 12345,
           "processStartUtc": "<processStartUtc from current ListPortalProcessProjects>",
@@ -3630,13 +3630,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "Disconnect": {
+      "DisconnectPortal": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "Doctor": {
+      "GetEnvironmentDiagnostics": {
         "arguments": {
           "fix": false
         },
@@ -5030,7 +5030,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "GetProject": {
+      "GetProjectInfo": {
         "arguments": {},
         "parameters": {},
         "operations": {},
@@ -5075,7 +5075,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true
       },
-      "GetState": {
+      "GetSessionState": {
         "arguments": {},
         "parameters": {},
         "operations": {},
@@ -12822,7 +12822,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadNativeInvocationLog": {
+      "GetNativeInvocationLog": {
         "arguments": {
           "take": 100
         },
@@ -12846,19 +12846,11 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadObjectIdentifier": {
+      "GetObjectIdentifier": {
         "arguments": {},
         "parameters": {
           "kind": {
             "exampleValue": "device"
-          },
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
-            "requiresBinding": true
-          },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
-            "requiresBinding": true
           },
           "softwarePath": {
             "exampleValue": "PLC_1"
@@ -12868,6 +12860,14 @@
           },
           "identifier": {
             "exampleValue": "<identifier from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "devicePath": {
+            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           }
         },
@@ -12941,13 +12941,13 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadOpennessCompatibility": {
+      "GetOpennessCompatibility": {
         "arguments": {},
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadOpennessWorkerStatus": {
+      "GetOpennessWorkerStatus": {
         "arguments": {},
         "parameters": {},
         "operations": {},
@@ -13141,7 +13141,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ReadPortalInfo": {
+      "GetPortalInfo": {
         "arguments": {
           "includeProcesses": true,
           "includeSessions": true,
@@ -14036,12 +14036,20 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "RunToolsInTransaction": {
+      "RunToolTransaction": {
         "arguments": {
-          "callsJson": "[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"groupPath\":\"Examples\"}}]",
           "text": "Ready",
           "confirmChange": false,
-          "dryRun": true
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
         },
         "parameters": {},
         "operations": {},
@@ -14078,7 +14086,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "SaveAsProject": {
+      "SaveProjectCopy": {
         "arguments": {
           "newProjectPath": "C:\\Examples\\Copy"
         },
@@ -14092,7 +14100,7 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
-      "ScaffoldProject": {
+      "BuildProjectScaffold": {
         "arguments": {
           "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
           "dryRun": true
@@ -14385,19 +14393,19 @@
           "kind": {
             "exampleValue": "device"
           },
-          "devicePathJson": {
-            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
-            "requiresBinding": true
-          },
-          "itemPathJson": {
-            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
-            "requiresBinding": true
-          },
           "softwarePath": {
             "exampleValue": "PLC_1"
           },
           "objectPath": {
             "exampleValue": "PLC_1/Program blocks/Main"
+          },
+          "devicePath": {
+            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "requiresBinding": true
           }
         },
         "operations": {},

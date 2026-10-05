@@ -138,7 +138,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 "1. Stop every TiaMcpServer.exe (and TiaMcpConfigurator.exe) on the TIA machine - the updater refuses while one runs; it never kills them.",
                 "2. On that machine (it needs access to github.com): powershell -NoProfile -ExecutionPolicy Bypass -File \"" + updater + "\" - downloads the ZIP + .sha256, verifies, backs up the current install to .previous, replaces runtime/manifest and overlays the rest.",
-                "3. Start the engine again and call Bootstrap - serverVersion must show the new version. -Rollback restores the previous install.",
+                "3. Start the engine again and call InitializeEnvironment - serverVersion must show the new version. -Rollback restores the previous install.",
             };
         }
 

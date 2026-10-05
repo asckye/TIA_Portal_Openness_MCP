@@ -40,6 +40,7 @@ HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
 ALLOWED = {
+    'Bootstrap': 'Existing ToolTaxonomy domain tag; the registered session tool is InitializeEnvironment, not a Bootstrap alias',
     # P6-19 keeps these data identities stable; none is a registered tool alias.
     'ReadUnifiedGraphicSelection': 'Frozen graphic-selection scope.tool identity, shared by captured pages, their DTO schema and offline comparison',
     'ReadUnifiedGlobalScript': 'Existing migration cursor scope identity; the registered tool is GetUnifiedGlobalScript',

@@ -55,7 +55,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "GetOnlineState: no project is open, so the online state was NOT measured. "
-                    + "Call Connect + OpenProject (or AttachToOpenProject) first.");
+                    + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
             var plcSoftware = _session.GetPlcSoftware(softwarePath);
@@ -125,7 +125,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "ConnectOnlinePlc: no project is open, so the online state was NOT measured. "
-                    + "Call Connect + OpenProject (or AttachToOpenProject) first.");
+                    + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
             var plcSoftware = _session.ResolvePlc(softwarePath, PlcAccess.Write);
@@ -249,7 +249,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "DisconnectOnlinePlc: no project is open, so nothing was taken offline. "
-                    + "Call Connect + OpenProject (or AttachToOpenProject) first.");
+                    + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
             var plcSoftware = _session.ResolvePlc(softwarePath, PlcAccess.Write);
@@ -332,7 +332,7 @@ namespace TiaMcpServer.Siemens.Services
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "CompareSoftwareToOnline: no project is open, so NO comparison was performed. "
                     + "Do not read this as 'offline and online are identical'. "
-                    + "Call Connect + OpenProject (or AttachToOpenProject) first.");
+                    + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
             var plcSoftware = _session.GetPlcSoftware(softwarePath);

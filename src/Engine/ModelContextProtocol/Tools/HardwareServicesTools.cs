@@ -191,7 +191,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "GetPlcPutGetAccess"), Description(
-            "[L2][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " Read whether a CPU permits remote PUT/GET access — the precondition for GetPlcLiveValuesS7 on DB areas." +
             " If enabled=false, S7 absolute reads of DBs will fail; enable with SetPlcPutGetAccess (then hardware DownloadPlc).")]
         public CallToolResult GetPlcPutGetAccess(
@@ -202,7 +202,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "SetPlcPutGetAccess"), Description(
-            "[L2][Category:Hardware][WRITE][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:Hardware][WRITE][PreCondition:ConnectPortal+OpenProject]" +
             " Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads)." +
             " This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU." +
             " Returns before/after readback evidence. Native behaviorPolicy=current; V4 native acceptance is pending.")]

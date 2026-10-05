@@ -32,27 +32,27 @@
     "processId": {
       "tools": [
         "ListPortalProcessProjects",
-        "ReadPortalInfo"
+        "GetPortalInfo"
       ],
       "meaning": "Choose the process that contains the requested project from current process discovery."
     },
     "projectName": {
       "tools": [
         "ListPortalProcessProjects",
-        "ReadPortalInfo"
+        "GetPortalInfo"
       ],
       "meaning": "Existing project: select its reported name. Creating a project: use the requested new name."
     },
     "expectedProjectFile": {
       "tools": [
-        "GetState"
+        "GetSessionState"
       ],
       "meaning": "Use the exact bound project file from the current session."
     },
     "expectedProject": {
       "tools": [
-        "GetProject",
-        "GetState"
+        "GetProjectInfo",
+        "GetSessionState"
       ],
       "meaning": "Use the current project identity returned by this engine."
     },

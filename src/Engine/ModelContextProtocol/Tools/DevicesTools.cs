@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public DevicesTools(DevicesService service) => _service = service;
 
-        [McpServerTool(Name = "GetProjectTree"), Description("[L1][Project] Get the full project device/software tree as ASCII art. Requires: Connect + OpenProject. ALWAYS call this first after opening a project to discover the exact softwarePath (e.g. 'PLC_1') and device paths needed by all other PLC/HMI/hardware tools. Returns device names, software nodes, and HMI nodes.")]
+        [McpServerTool(Name = "GetProjectTree"), Description("[L1][Project] Get the full project device/software tree as ASCII art. Requires: ConnectPortal + OpenProject. ALWAYS call this first after opening a project to discover the exact softwarePath (e.g. 'PLC_1') and device paths needed by all other PLC/HMI/hardware tools. Returns device names, software nodes, and HMI nodes.")]
         public CallToolResult GetProjectTreeV4()
             => HardwareContract.Run("GetProjectTree", () =>
             {
@@ -258,7 +258,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // NOTE: Deprecated demo tools removed (GenerateStartStopBlocks / EnsureUnifiedMainScreen).
 
-        [McpServerTool(Name = "ListDevices"), Description("[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: Connect + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.")]
+        [McpServerTool(Name = "ListDevices"), Description("[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.")]
         public CallToolResult ListDevicesV4(
             [Description("includePlcSoftware: include a structured PLC software name inventory for desktop browsing.")] bool includePlcSoftware = false)
             => HardwareContract.Run("ListDevices", () =>
@@ -315,7 +315,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: Connect + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
         public CallToolResult CreateDeviceV4(
             [Description("orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'")] string orderNumber,
             [Description("version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults")] string version,
@@ -350,7 +350,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: Connect + OpenProject. Example: 'add CPU 1211C AC/DC/RLY' → family='S7-1200'. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: 'add CPU 1211C AC/DC/RLY' → family='S7-1200'. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
         public CallToolResult CreateHardwareDeviceV4(
             [Description("preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list")] string preferredMlfb,
             [Description("preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions")] string preferredVersion,
@@ -580,7 +580,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetDeviceAttributes"), Description(
-            "[L2][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " Read-only inventory of EVERY Openness attribute exposed on a device's items (CPU, modules, interfaces, ports):" +
             " name, access mode (read-only vs read/write), current value, value type." +
             " Run this ONCE per CPU/firmware to learn what is actually exposed, then drive hardware reads/writes from that" +

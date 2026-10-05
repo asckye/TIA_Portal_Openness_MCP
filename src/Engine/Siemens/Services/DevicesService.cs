@@ -56,7 +56,7 @@ namespace TiaMcpServer.Siemens.Services
         public Device AddDevice(string orderNumber, string version, string deviceName)
         {
             _session.Logger?.LogInformation($"Adding device: {deviceName}, OrderNumber={orderNumber}, Version={version}");
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             string? lastVariantError = null;
             try

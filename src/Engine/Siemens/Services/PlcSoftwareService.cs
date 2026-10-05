@@ -55,8 +55,8 @@ namespace TiaMcpServer.Siemens.Services
             {
                 // 无工程时明确拒绝，提示调用方先连接并打开工程。
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "GetSoftwareTree: no project is open. Call Connect + OpenProject "
-                    + "(or AttachToOpenProject) first.");
+                    "GetSoftwareTree: no project is open. Call ConnectPortal + OpenProject "
+                    + "(or AttachOpenProject) first.");
             }
 
             try

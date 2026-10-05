@@ -215,7 +215,7 @@ namespace TiaMcpServer.Siemens
             var candidates = wanted == null ? processes : processes.Where(p => p.ProjectPath != null &&
                 string.Equals(Path.GetFileNameWithoutExtension(p.ProjectPath.FullName), wanted, StringComparison.OrdinalIgnoreCase)).ToList();
             if (candidates.Count > 1) throw new PortalException(PortalErrorCode.InvalidState,
-                "Multiple TIA instances match. Use ListPortalProcessProjects then ConnectToProject with PID, start time and full project path.");
+                "Multiple TIA instances match. Use ListPortalProcessProjects then ConnectProject with PID, start time and full project path.");
             if (candidates.Count == 1)
             {
                 var selected = candidates[0];
@@ -225,7 +225,7 @@ namespace TiaMcpServer.Siemens
             else
             {
                 if (wanted != null || (processes.Count != 0 && !allowStart))
-                    throw new PortalException(PortalErrorCode.NotFound, "Requested project is not open. Inspect ListPortalProcessProjects or explicitly use ConnectIsolated for a new instance.");
+                    throw new PortalException(PortalErrorCode.NotFound, "Requested project is not open. Inspect ListPortalProcessProjects or explicitly use ConnectIsolatedPortal for a new instance.");
                 if (_portal != null) DisconnectPortal();
                 _portal = InvocationJournal.Native("TiaPortal.Create", () => new TiaPortal(Engineering.LaunchWithUserInterface ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface));
                 RememberBoundProcess();
@@ -265,8 +265,8 @@ namespace TiaMcpServer.Siemens
         {
             if (_portal != null || _project != null || _session != null)
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "ConnectIsolated: this MCP session already owns a TIA connection. "
-                    + "Start a fresh MCP process before calling ConnectIsolated.");
+                    "ConnectIsolatedPortal: this MCP session already owns a TIA connection. "
+                    + "Start a fresh MCP process before calling ConnectIsolatedPortal.");
             LastConnectError = null;
             _portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(TiaPortalMode.WithoutUserInterface)); RememberBoundProcess();
             _logger?.LogInformation("Started isolated headless TIA Portal instance.");
@@ -321,7 +321,7 @@ namespace TiaMcpServer.Siemens
         {
             if (string.IsNullOrWhiteSpace(projectName)) throw new ArgumentException("projectName is required.");
             if (_project != null && string.Equals(_binding?.ProjectName, projectName.Trim(), StringComparison.Ordinal))
-            { VerifyBinding("AttachToOpenProject"); return true; }
+            { VerifyBinding("AttachOpenProject"); return true; }
             return ConnectPortal(projectName, false, null);
         }
 
@@ -359,7 +359,7 @@ namespace TiaMcpServer.Siemens
             return verb + " refused: TIA Portal already has the project '" + projectName + "' open, and this " +
                    "session did not open it - it is the user's. " + verb + " closes the current project first, " +
                    "which would discard any unsaved edits. " +
-                   "If you meant to work on that project, call AttachToOpenProject(projectName=\"" + projectName + "\"). " +
+                   "If you meant to work on that project, call AttachOpenProject(projectName=\"" + projectName + "\"). " +
                    "If you really do want it closed, pass closeForeignProject=true (ask the user first).";
         }
 

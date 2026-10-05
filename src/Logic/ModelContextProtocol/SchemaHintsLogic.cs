@@ -58,11 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 if (property["examples"] == null && example != null && example[spec.Name] != null)
                 {
-                    var value = example[spec.Name]!;
-                    // A string parameter shown with an object / array example (the *Json parameters) would invite the object form in a
-                    // direct call, which the SDK binder refuses; the schema shows the JSON text instead.
-                    JsonNode shown = spec.Kind == "string" && (value is JsonObject || value is JsonArray) ? JsonValue.Create(value.ToJsonString())! : value.DeepClone();
-                    property["examples"] = new JsonArray(shown);
+                    property["examples"] = new JsonArray(example[spec.Name]!.DeepClone());
                     result.Examples++;
                 }
             }

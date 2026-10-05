@@ -163,8 +163,8 @@ namespace TiaMcpServer.Siemens.Services
 
             if (_session.IsProjectNull())
             {
-                return (false, "没有连接到 TIA Portal 项目。先调用 Connect / OpenProject "
-                             + "（或 AttachToOpenProject 接管已打开的工程）。", null, null);
+                return (false, "No TIA Portal project is bound. Call ConnectPortal / OpenProject "
+                             + "(or AttachOpenProject to bind an already open project).", null, null);
             }
 
             if (startAddress < 0)

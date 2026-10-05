@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.ModelContextProtocol;
 
@@ -121,14 +123,14 @@ namespace TiaMcpServer.Tests
             foreach (var success in new[] { true, false })
             {
                 var direct = ToolBridgeProbes.ProbeResult(success);
-                var bridged = McpServer.CallTool("ProbeResult", new JsonObject { ["success"] = success }.ToJsonString());
-                check(direct.Meta!["success"]!.GetValue<bool>() == success && bridged.Meta!["operationSuccess"]!.GetValue<bool>() == success, "direct/CallTool business result parity");
-                check(JsonNode.Parse(bridged.Message!)!["Meta"]!["success"]!.GetValue<bool>() == success, "bridge retains payload");
+                var bridged = McpServer.CallTool("ProbeResult", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject { ["success"] = success })));
+                check(direct.Meta!["success"]!.GetValue<bool>() == success && McpServer.ResultBody(bridged)!["meta"]!["success"]!.GetValue<bool>() == success, "direct/CallTool business result parity");
+                check(McpServer.ResultBody(bridged)!["meta"]!["success"]!.GetValue<bool>() == success, "bridge retains payload");
             }
-            foreach (var request in new[] { ("ProbeResult", "{}"), ("ProbeResult", "[]"), ("ProbeResult", "invalid"), ("ProbeResult", "{\"success\":\"bad\"}"), ("ProbeThrow", "{}"), ("ProbeCycle", "{}"), ("unknown", "{}") })
+            foreach (var request in new[] { ("ProbeResult", "{}"), ("ProbeResult", "{\"success\":\"bad\"}"), ("ProbeThrow", "{}"), ("unknown", "{}") })
             {
-                var response = McpServer.CallTool(request.Item1, request.Item2);
-                check(!response.Meta!["bridgeSuccess"]!.GetValue<bool>() && !response.Meta["success"]!.GetValue<bool>(), "CallTool parameter/reflection/serialization failure: " + request);
+                var response = McpServer.CallTool(request.Item1, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(request.Item2)));
+                check(response.IsError == true, "CallTool parameter/reflection/serialization failure: " + request);
             }
         }
     }

@@ -87,9 +87,9 @@ namespace TiaMcpServer.Isolation
             Console.Out.Flush();
         }
 
-        internal static bool IsControl(string? name) => string.Equals(name, "ReadOpennessWorkerStatus", StringComparison.OrdinalIgnoreCase)
+        internal static bool IsControl(string? name) => string.Equals(name, "GetOpennessWorkerStatus", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "RestartOpennessWorker", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(name, "ReadNativeInvocationLog", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(name, "GetNativeInvocationLog", StringComparison.OrdinalIgnoreCase);
 
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
         {
@@ -101,7 +101,7 @@ namespace TiaMcpServer.Isolation
                 // Do not create parent-side export handles: engineering exports live only in the worker.
                 // Host controls share their own short-lived gate/journal. This process's
                 // gate is separate from the engineering gate inside the child.
-                var guarded = McpServer.WrapWithSerializedCalls(McpServer.WrapWithArgDiagnostics(new List<McpServerTool> { tool }))[0];
+                var guarded = McpServer.WrapWithSerializedCalls(new List<McpServerTool> { tool })[0];
                 result.Add(new ProxyTool(tool.ProtocolTool, guarded));
             }
             return result;

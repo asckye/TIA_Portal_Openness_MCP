@@ -1,3 +1,5 @@
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4.Inputs;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -21,10 +23,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public SessionTools(IEngineeringSession session) => _session = session;
 
-        [McpServerTool(Name = "Connect"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectToProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolated to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.")]
+        [McpServerTool(Name = "ConnectPortal"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.")]
+        public CallToolResult ConnectPortalV4(
+            [Description("projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectProject with full identity.")] string projectName = "",
+            [Description("allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolatedPortal for an explicit new instance.")] bool allowStart = false)
+            => SessionToolContract.Run("ConnectPortal", true, true, () => Connect(projectName, allowStart));
+
         public ResponseConnect Connect(
-            [Description("projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectToProject with full identity.")] string projectName = "",
-            [Description("allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolated for an explicit new instance.")] bool allowStart = false)
+            [Description("projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectProject with full identity.")] string projectName = "",
+            [Description("allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolatedPortal for an explicit new instance.")] bool allowStart = false)
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
 
@@ -54,14 +61,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ConnectIsolated"), Description(
+        [McpServerTool(Name = "ConnectIsolatedPortal"), Description(
             "[L1][Portal] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. "
             + "It never attaches to, modifies or closes any TIA window or project the user already has open. "
-            + "USE THIS when the user is working in the TIA Portal UI: plain Connect attaches to their instance "
+            + "USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance "
             + "and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable "
             + "until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after "
             + "another connection leaves an orphaned portal process that later attaches steal. "
-            + "Afterwards use OpenProject / CreateProject as usual, then CloseProject and Disconnect.")]
+            + "Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal.")]
+        public CallToolResult ConnectIsolatedPortalV4()
+            => SessionToolContract.Run("ConnectIsolatedPortal", true, true, () => ConnectIsolated());
+
         public ResponseConnect ConnectIsolated()
         {
             try
@@ -74,8 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = connected
                         ? "Connected to isolated headless TIA Portal (no existing TIA window or project was touched)."
-                        : "⚠ 未验证：ConnectIsolated 没有报错，但读不回 portal 句柄，"
-                          + "隔离实例到底起没起来**无法确认**。用 GetState 核对之后再往下走。",
+                        : "Unverified: ConnectIsolatedPortal returned without an error, but the portal handle could not be read. "
+                          + "Whether the isolated instance started is unknown. Inspect GetSessionState before continuing.",
                     Meta = ResponseMeta.Basic(DateTime.Now, connected, ("verified", connected), ("isolated", true))
                 };
             }
@@ -90,7 +100,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ListPortalProcessProjects"), Description("[L1][Portal]List running TIA process IDs, ISO start times and full project paths from process metadata without attaching. Use these values with ConnectToProject.")]
+        [McpServerTool(Name = "ListPortalProcessProjects"), Description("[L1][Portal]List running TIA process IDs, ISO start times and full project paths from process metadata without attaching. Use these values with ConnectProject.")]
+        public CallToolResult ListPortalProcessProjectsV4()
+            => SessionToolContract.Run("ListPortalProcessProjects", false, false, () => ListPortalProcessProjects());
+
         public ResponseStringList ListPortalProcessProjects()
         {
             try
@@ -110,6 +123,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "EnsureOpennessUserGroup"), Description("[L1][Portal]Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK.")]
+        public Task<CallToolResult> EnsureOpennessUserGroupV4()
+            => SessionToolContract.RunAsync("EnsureOpennessUserGroup", true, false, () => EnsureOpennessUserGroup());
+
         public async Task<ResponseMessage> EnsureOpennessUserGroup()
         {
             try
@@ -127,7 +143,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "Disconnect"), Description("[L1][Portal] Disconnect from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed.")]
+        [McpServerTool(Name = "DisconnectPortal"), Description("[L1][Portal] DisconnectPortal from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed.")]
+        public CallToolResult DisconnectPortalV4()
+            => SessionToolContract.Run("DisconnectPortal", true, true, () => Disconnect());
+
         public ResponseDisconnect Disconnect()
         {
             try
@@ -151,7 +170,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetState"), Description("[L0][Portal] Get cached connection identity and OS process liveness: IsConnected, bound Project name, Session name, PID/start/path/generation and journal health. Does not query project collections, attach or rebind. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject.")]
+        [McpServerTool(Name = "GetSessionState"), Description("[L0][Portal] Get cached connection identity and OS process liveness: IsConnected, bound Project name, Session name, PID/start/path/generation and journal health. Does not query project collections, attach or rebind. Use this to check preconditions before other tools — if IsConnected=false, call ConnectPortal first; if Project is empty, call OpenProject or CreateProject.")]
+        public CallToolResult GetSessionStateV4()
+            => SessionToolContract.Run("GetSessionState", false, false, () => GetState());
+
         public ResponseState GetState()
         {
             try
@@ -188,11 +210,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var process = _session.GetPortalProcessHealth();
                 var dead = process["processAlive"] is JsonValue alive && alive.TryGetValue<bool>(out var running) && !running;
-                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}{McpHints.Recovery(ex)}" + (dead ? $"  ▶ TIA Portal process {process["boundProcessId"]} is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject." : ""), ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}{McpHints.Recovery(ex)}" + (dead ? $"  ▶ TIA Portal process {process["boundProcessId"]} is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachOpenProject." : ""), ex, McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name = "Bootstrap"), Description("[L0][Bootstrap] FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call Connect afterwards based on RecommendedNextTool.")]
+        [McpServerTool(Name = "InitializeEnvironment"), Description("[L0][Bootstrap] FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call ConnectPortal afterwards based on RecommendedNextTool.")]
+        public Task<CallToolResult> InitializeEnvironmentV4()
+            => SessionToolContract.RunAsync("InitializeEnvironment", false, false, () => Bootstrap());
+
         public async Task<ResponseBootstrap> Bootstrap()
         {
             try
@@ -233,13 +258,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else if (portalDto.Connected != true)
                 {
-                    nextTool = "Connect";
-                    reason = "Not connected to TIA Portal yet. Connect first; if a project is already open in TIA UI, then call AttachToOpenProject.";
+                    nextTool = "ConnectPortal";
+                    reason = "Not connected to TIA Portal yet. ConnectPortal first; if a project is already open in TIA UI, then call AttachOpenProject.";
                 }
                 else if (string.IsNullOrWhiteSpace(portalDto.ProjectName) || portalDto.ProjectName == "-")
                 {
-                    nextTool = "AttachToOpenProject";
-                    reason = "Connected to portal but no project bound. Use AttachToOpenProject if a project is already open in TIA UI, or OpenProject/CreateProject otherwise.";
+                    nextTool = "AttachOpenProject";
+                    reason = "Connected to portal but no project bound. Use AttachOpenProject if a project is already open in TIA UI, or OpenProject/CreateProject otherwise.";
                 }
                 else
                 {
@@ -249,10 +274,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var layers = new BootstrapToolLayers
                 {
-                    L0 = new[] { "Bootstrap", "GetState", "RunCapabilitySelfTest" },
+                    L0 = new[] { "InitializeEnvironment", "GetSessionState", "RunCapabilitySelfTest" },
                     L1 = new[]
                     {
-                        "Connect", "Disconnect", "AttachToOpenProject", "OpenProject", "CreateProject",
+                        "ConnectPortal", "DisconnectPortal", "AttachOpenProject", "OpenProject", "CreateProject",
                         "SaveProject", "CloseProject", "GetProjectTree", "GetSoftwareTree",
                         "BuildAndImportPlcArtifact", "CompilePlcSoftware", "DownloadPlc", "ConnectOnlinePlc", "DisconnectOnlinePlc"
                     },
@@ -284,11 +309,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Bootstrap unexpected error: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"InitializeEnvironment unexpected error: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name = "ConnectToProject"), Description("[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first.")]
+        [McpServerTool(Name = "ConnectProject"), Description("[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first.")]
+        public CallToolResult ConnectProjectV4(
+            [Description("processId: exact running TIA PID from ListPortalProcessProjects.")] int processId,
+            [Description("processStartUtc: exact ISO UTC start timestamp from the same process listing; prevents PID reuse.")] string processStartUtc,
+            [Description("projectPath: absolute project file path from that process listing; another path is refused.")] string projectPath)
+            => SessionToolContract.Run("ConnectProject", true, true, () => ConnectToProject(processId, processStartUtc, projectPath));
+
         public ResponseMessage ConnectToProject(
             [Description("processId: exact running TIA PID from ListPortalProcessProjects.")] int processId,
             [Description("processStartUtc: exact ISO UTC start timestamp from the same process listing; prevents PID reuse.")] string processStartUtc,
@@ -298,7 +329,13 @@ namespace TiaMcpServer.ModelContextProtocol
             return new ResponseMessage { Message = "Exact TIA project binding established.", Meta = ResponseMeta.Unstamped(true, ("binding", _session.GetBindingIdentity())) };
         }
 
-        [McpServerTool(Name="ReadPortalInfo"), Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]
+        [McpServerTool(Name="GetPortalInfo"), Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]
+        public CallToolResult GetPortalInfoV4(
+            [Description("includeProcesses: list the TIA Portal processes on the machine.")] bool includeProcesses=true,
+            [Description("includeSessions: list the sessions of the bound portal.")] bool includeSessions=true,
+            [Description("includeProducts: list the installed TIA products / option packages (TiaPortalProduct).")] bool includeProducts=true)
+            => SessionToolContract.Run("GetPortalInfo", false, false, () => ReadPortalInfo(includeProcesses, includeSessions, includeProducts));
+
         public ResponseMessage ReadPortalInfo(
             [Description("includeProcesses: list the TIA Portal processes on the machine.")] bool includeProcesses=true,
             [Description("includeSessions: list the sessions of the bound portal.")] bool includeSessions=true,

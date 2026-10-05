@@ -478,16 +478,6 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<string>? RecommendedNextActions { get; set; }
     }
 
-    public class ResponsePlcProgramExport : ResponseMessage
-    {
-        public string? ExportDir { get; set; }
-        public IEnumerable<string>? ExportedTypes { get; set; }
-        public IEnumerable<string>? ExportedTagTables { get; set; }
-        public IEnumerable<string>? ExportedTechnologyObjects { get; set; }
-        public IEnumerable<string>? ExportedBlocks { get; set; }
-        public IEnumerable<ImportFailure>? Failed { get; set; }
-    }
-
     public class ResponseCompileDiagnose : ResponseMessage
     {
         public string? State { get; set; }

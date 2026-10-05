@@ -128,6 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
+    <EmbeddedResource Include="FullEngineRejections.json" LogicalName="FullEngineRejections.json" />
     <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
     <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
@@ -181,4 +182,5 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
 </Project>

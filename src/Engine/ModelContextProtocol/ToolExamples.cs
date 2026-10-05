@@ -90,7 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name.IndexOf("hmi", StringComparison.OrdinalIgnoreCase) >= 0 && name.EndsWith("Path", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("HMI_RT_1");
             if (name.Equals("blockPath", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("Main");
             if (name.Equals("deviceName", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("PLC_2");
-            if (name.Equals("expectedProject", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("<project name from GetProject>");
+            if (name.Equals("expectedProject", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("<project name from GetProjectInfo>");
             // 2. documented alternatives, then a plain "e.g." value
             var alternatives = PreflightLogic.Alternatives(spec.Description);
             if (alternatives.Count > 0) return JsonValue.Create(alternatives[0]);

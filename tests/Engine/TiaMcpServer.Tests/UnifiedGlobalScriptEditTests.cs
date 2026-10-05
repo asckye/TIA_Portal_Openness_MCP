@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using TiaMcp.Logic.V4.Inputs;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
@@ -148,8 +150,8 @@ namespace TiaMcpServer.Tests
                 check(!Ok(failed) && root.Scripts.Imports == 0 && failed["requiresExplicitRebind"]!.GetValue<bool>(), "failed before-export marks session unhealthy without writing");
 
                 Reset();
-                var bridged = McpServer.CallTool("UpdateUnifiedGlobalScript", new JsonObject { ["softwarePath"] = "HMI_RT_2", ["expectedProject"] = "Wrong", ["moduleName"] = "Navigation", ["scriptCode"] = New }.ToJsonString());
-                check(bridged.Meta!["success"]?.GetValue<bool>() == false && root.Scripts.Imports == 0, "generic tool dispatcher preserves project guard failure");
+                var bridged = McpServer.CallTool("UpdateUnifiedGlobalScript", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject { ["softwarePath"] = "HMI_RT_2", ["expectedProject"] = "Wrong", ["moduleName"] = "Navigation", ["scriptCode"] = New })));
+                check(bridged.IsError == true && root.Scripts.Imports == 0, "generic tool dispatcher preserves project guard failure");
             }
             finally
             {

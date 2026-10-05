@@ -73,7 +73,7 @@ namespace TiaMcpServer.Tests
             check(ToolTransactionRules.ForceRealExecution(calls[0].ArgumentsJson).Contains("\"dryRun\":false") && ToolTransactionRules.ForceRealExecution("{}") == "{\"dryRun\":false}" && ToolTransactionRules.ForceRealExecution("{\"DryRun\":true}") == "{\"DryRun\":false}", "baseleft: inner dryRun forced to false inside a transaction, added when absent (2.7.33 real-project defect)");
             check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("[]")), "baseleft: empty call list refused");
             check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("[{\"name\":\"CallTool\"}]")), "baseleft: CallTool inside a transaction refused");
-            check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("[{\"name\":\"RunToolsInTransaction\"}]")), "baseleft: nested transaction refused");
+            check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("[{\"name\":\"RunToolTransaction\"}]")), "baseleft: nested transaction refused");
             check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("[{\"name\":\"X\",\"arguments\":[]}]")), "baseleft: array arguments refused");
             check(Fails<ArgumentException>(() => ToolTransactionRules.ParseToolCalls("{\"name\":\"X\"}")), "baseleft: object instead of array refused");
             ToolTransactionRules.ValidateTransactionRequest("MCP edit", calls, true, false);

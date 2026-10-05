@@ -1,3 +1,5 @@
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4.Inputs;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
@@ -21,8 +23,16 @@ namespace TiaMcpServer.ModelContextProtocol
         public DiagnosticsTools(IEngineeringSession session) => _session = session;
 
         [McpServerTool(Name = "RunCapabilitySelfTest"), Description("[L0][Diagnostics]Run a read-only MCP/TIA readiness self-test. It checks Openness group membership, connection state, visible portal processes, optional automation context, and optional project tree readback without writing to the project.")]
+        public Task<CallToolResult> RunCapabilitySelfTestV4(
+            [Description("When true, call ConnectPortal before checks if the server is not connected. This is read-only but attaches to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("When true, include GetProjectTree output if a project is open.")] bool includeProjectTree = false,
+            [Description("When true, enumerate TIA Portal process/project details. This may attach to running TIA processes and can be slow on a contended workstation.")] bool inspectPortalProcesses = false,
+            [Description("Expected PLC software path for ValidateAutomationContext.")] string expectedPlcSoftwarePath = "PLC_1",
+            [Description("Expected HMI software path for ValidateAutomationContext.")] string expectedHmiSoftwarePath = "HMI_RT_1")
+            => SessionToolContract.RunAsync("RunCapabilitySelfTest", connectIfNeeded, false, () => RunCapabilitySelfTest(connectIfNeeded, includeProjectTree, inspectPortalProcesses, expectedPlcSoftwarePath, expectedHmiSoftwarePath));
+
         public async Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(
-            [Description("When true, call Connect before checks if the server is not connected. This is read-only but attaches to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("When true, call ConnectPortal before checks if the server is not connected. This is read-only but attaches to TIA Portal.")] bool connectIfNeeded = false,
             [Description("When true, include GetProjectTree output if a project is open.")] bool includeProjectTree = false,
             [Description("When true, enumerate TIA Portal process/project details. This may attach to running TIA processes and can be slow on a contended workstation.")] bool inspectPortalProcesses = false,
             [Description("Expected PLC software path for ValidateAutomationContext.")] string expectedPlcSoftwarePath = "PLC_1",
@@ -147,6 +157,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest"), Description("[L0][Diagnostics]Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations.")]
+        public CallToolResult RunOnlineMonitoringSafetySelfTestV4()
+            => SessionToolContract.Run("RunOnlineMonitoringSafetySelfTest", false, false, () => RunOnlineMonitoringSafetySelfTest());
+
         public ResponseSafetySelfTest RunOnlineMonitoringSafetySelfTest()
         {
             var items = new List<CapabilitySelfTestItem>();
@@ -267,9 +280,17 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GenerateAcceptanceReport"), Description("[L0][Reports]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory.")]
+        public Task<CallToolResult> GenerateAcceptanceReportV4(
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "",
+            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("When true, include project tree output if a project is open.")] bool includeProjectTree = false,
+            [Description("When true, enumerate TIA process/project details. This may be slow if TIA is contended.")] bool inspectPortalProcesses = false,
+            [Description("Optional report title.")] string title = "TIA MCP Acceptance Report")
+            => SessionToolContract.RunAsync("GenerateAcceptanceReport", true, false, () => GenerateAcceptanceReport(outputDirectory, connectIfNeeded, includeProjectTree, inspectPortalProcesses, title));
+
         public async Task<ResponseAcceptanceReport> GenerateAcceptanceReport(
             [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "",
-            [Description("When true, call Connect during self-test if the server is not connected. This may attach to TIA Portal.")] bool connectIfNeeded = false,
+            [Description("When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.")] bool connectIfNeeded = false,
             [Description("When true, include project tree output if a project is open.")] bool includeProjectTree = false,
             [Description("When true, enumerate TIA process/project details. This may be slow if TIA is contended.")] bool inspectPortalProcesses = false,
             [Description("Optional report title.")] string title = "TIA MCP Acceptance Report")
@@ -324,6 +345,15 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GenerateErrorReport"), Description("[L0][Reports]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects.")]
+        public CallToolResult GenerateErrorReportV4(
+            [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, UnexpectedOpennessError.")] string errorCode,
+            [Description("Short human-readable summary.")] string summary,
+            [Description("Detailed error text, stack trace, compile message, or diagnostic context.")] string detail = "",
+            [Description("Comma-separated next actions.")] string recommendedNextActions = "",
+            [Description("Severity: info, warn, error, critical.")] string severity = "error",
+            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory = "")
+            => SessionToolContract.Run("GenerateErrorReport", true, false, () => GenerateErrorReport(errorCode, summary, detail, recommendedNextActions, severity, outputDirectory));
+
         public ResponseErrorReport GenerateErrorReport(
             [Description("Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, UnexpectedOpennessError.")] string errorCode,
             [Description("Short human-readable summary.")] string summary,
@@ -482,9 +512,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "invalidparams":
                     return new List<string> { "Check required parameters and path spelling.", "Read live project tree before retrying.", "Use a resolver tool when the target path is ambiguous." };
                 case "notconnected":
-                    return new List<string> { "Run Connect.", "Check TIA Portal is installed and accessible.", "Run RunCapabilitySelfTest in minimal mode." };
+                    return new List<string> { "Run ConnectPortal.", "Check TIA Portal is installed and accessible.", "Run RunCapabilitySelfTest in minimal mode." };
                 case "projectnotopen":
-                    return new List<string> { "AttachToOpenProject or OpenProject before writing.", "Run GetState and GetProjectTree.", "Avoid opening a project already opened by another session." };
+                    return new List<string> { "AttachOpenProject or OpenProject before writing.", "Run GetSessionState and GetProjectTree.", "Avoid opening a project already opened by another session." };
                 case "preconditionfailed":
                     return new List<string> { "Run the required preflight sequence.", "Read back the target object before writing.", "Use dry-run where available." };
                 case "notfound":

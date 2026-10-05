@@ -17,10 +17,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
 Steps:
 1. EnsureOpennessUserGroup — confirm the Windows user is in 'Siemens TIA Openness' group.
-2. Connect — attach to a running TIA Portal process or launch a new one.
-3. GetState — confirm IsConnected=true.
+2. ConnectPortal — attach to a running TIA Portal process or launch a new one.
+3. GetSessionState — confirm IsConnected=true.
 
-Use the Connect tool to initiate the connection.";
+Use the ConnectPortal tool to initiate the connection.";
         }
 
         [McpServerPrompt(Name = "OpenProject"), Description("Open a TIA Portal project")]
@@ -32,7 +32,7 @@ Common parameter values:
 - projectPath: full path to project file (.ap21) or multi-user session (.als21).
 
 Steps:
-1. Connect (if not already connected).
+1. ConnectPortal (if not already connected).
 2. OpenProject with projectPath.
 3. GetProjectTree — discover device/software paths for further operations.
 
@@ -60,9 +60,9 @@ Use the CloseProject tool to close the current project.";
 Steps:
 1. SaveProject — save any unsaved changes.
 2. CloseProject (optional) — cleanly close the project.
-3. Disconnect — release the Openness handle.
+3. DisconnectPortal — release the Openness handle.
 
-Use the Disconnect tool to remove the connection.";
+Use the DisconnectPortal tool to remove the connection.";
         }
 
         [McpServerPrompt(Name = "GetProjectTree"), Description("Get the full project structure tree")]
@@ -77,7 +77,7 @@ The tree shows:
 - HMI software paths (e.g. 'HMI_RT_1')
 
 Steps:
-1. Connect + OpenProject (if not already done).
+1. ConnectPortal + OpenProject (if not already done).
 2. GetProjectTree — read the tree.
 3. Note the exact softwarePath values for PLC and HMI operations.
 
@@ -100,7 +100,7 @@ IMPORTANT: always call GetProjectTree first when working with an unfamiliar proj
             return $@"Create a new TIA Portal project with PLC + HMI connected via PROFINET.
 
 Steps:
-1. Connect.
+1. ConnectPortal.
 2. CreateProject — directory='{projectDirectory}', name='{projectName}'.
 3. CreateHardwareDevice — family='{plcFamily}', deviceName='{plcDeviceName}'.
 4. CreateHardwareCatalogDevice — keyword='{hmiKeyword}', deviceName='{hmiDeviceName}'.
@@ -142,7 +142,7 @@ The tree shows:
 - Full qualified paths needed for ExportPlcBlock (e.g. 'Program blocks/FBs/FB_Motor')
 
 Steps:
-1. Connect + OpenProject.
+1. ConnectPortal + OpenProject.
 2. GetSoftwareTree — softwarePath='{softwarePath}'.
 3. Note the exact block paths for export/import operations.
 

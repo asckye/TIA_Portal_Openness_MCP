@@ -20,7 +20,7 @@ internal static partial class Program
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     private static Dictionary<string, object> Parse(string value) => Json.Deserialize<Dictionary<string, object>>(value);
-    private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetState" } });
+    private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
     private static string Reply(object id, object value) => Json.Serialize(new { jsonrpc = "2.0", id, result = value });
     private static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
     private static async Task<T> Bounded<T>(Task<T> task, int ms = 5000)

@@ -43,12 +43,15 @@ namespace TiaMcpServer.Tests
             [McpServerTool(Name = "ReadFixture"), System.ComponentModel.Description("[L0][Meta][READ] Read a fixture.")]
             public static ResponseMessage Read(bool success = true) => new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = success } };
             [McpServerTool(Name = "WriteFixture"), System.ComponentModel.Description("[L2][Meta][WRITE] Write a fixture.")]
-            public static ResponseMessage Write(string target, bool dryRun = true, string verdict = "success")
+            public static CallToolResult Write(string target, bool dryRun = true, string verdict = "success")
             {
                 Calls.Add(target + ":" + dryRun);
-                return new ResponseMessage { Message = target, Meta = verdict == "okOnly" && !dryRun ? new JsonObject { ["ok"] = true }
-                    : verdict == "unknown" && !dryRun ? new JsonObject()
-                    : new JsonObject { ["success"] = dryRun || verdict == "success" } };
+                var data = new JsonObject { ["target"] = target };
+                if (dryRun || verdict == "success") return McpServer.V4Result("WriteFixture", data);
+                if (verdict == "okOnly") return new CallToolResult { Content = new[] { new TextContentBlock { Text = "{\"ok\":true}" } } };
+                bool unknown = verdict == "unknown";
+                return McpServer.V4Result("WriteFixture", data, McpServer.InvalidInput("target"),
+                    unknown ? Outcome.Unknown : Outcome.Failed, unknown ? Execution.Unknown : Execution.Completed, Completeness.None);
             }
         }
 
@@ -162,7 +165,7 @@ namespace TiaMcpServer.Tests
                 Assert.Equal(60, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
                 Assert.All(rows, row => Assert.IsType<JsonObject>(row!["arguments"]));
                 Assert.Contains(rows, r => (string?)r!["currentName"] == "PreviewToolCall");
-                Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetState");
+                Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetSessionState");
             }
             Assert.Empty(ToolUsageCatalog.ProfileEntries("19"));
         }

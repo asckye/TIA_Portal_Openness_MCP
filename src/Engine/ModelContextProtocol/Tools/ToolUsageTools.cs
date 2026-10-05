@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
@@ -50,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var example = ToolExamples.Find(name);
                     usage = ToolUsageCatalog.Describe(name, release, "full-engine", McpServer.ToolDescription(method),
                         (JsonObject)JsonNode.Parse(tool.InputSchema.GetRawText())!, example?.ArgumentsJson, example?.Note, operation,
-                        methods.Keys, UsageResultContract(method.ReturnType, name),
+                        methods.Keys, UsageResultContract(name),
                         args => Siemens.ToolVersionPolicy.CallProblem(release, name, key => args[key]?.ToString()));
                     if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                         usage["examples"] = ToolUsageCatalog.Examples(release, "full-engine", methods.Keys, language, exampleId, name, exampleKind)["examples"]!.DeepClone();
@@ -85,23 +84,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static JsonObject UsageResultContract(Type type, string toolName = "", int depth = 0)
+        private static JsonObject UsageResultContract(string toolName)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Threading.Tasks.Task<>)) type = type.GetGenericArguments()[0];
             if (toolName == "CallTool") return new JsonObject { ["type"] = "TargetResult",
                 ["status"] = "Returns the target tool's own result unchanged. Bridge admission failures use the V4 envelope. Read GetToolUsage for the target's result contract." };
-            if (McpServer.IsInfrastructureV4(toolName)) return new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4,
+            return new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4,
                 ["status"] = "Read ok, error and meta.outcome/execution/completeness. Paging is in meta.paging; batch data.items retain each target's result." };
-            var fields = new JsonObject();
-            if (depth < 2 && type.Namespace == typeof(ResponseMessage).Namespace)
-                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    var field = new JsonObject { ["type"] = property.PropertyType.Name };
-                    if (typeof(ResponseMessage).IsAssignableFrom(property.PropertyType)) field["fields"] = UsageResultContract(property.PropertyType, depth: depth + 1)["fields"]!.DeepClone();
-                    fields[JsonNamingPolicy.CamelCase.ConvertName(property.Name)] = field;
-                }
-            return new JsonObject { ["type"] = type.Name, ["fields"] = fields,
-                ["status"] = "Read meta.success/operationSuccess when present and the operation-specific result fields. Call completion alone is not engineering success." };
         }
     }
 }

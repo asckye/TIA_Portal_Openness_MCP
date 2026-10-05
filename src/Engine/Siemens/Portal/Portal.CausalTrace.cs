@@ -49,7 +49,7 @@ namespace TiaMcpServer.Siemens
                 return new ModelContextProtocol.ResponseJsonReport
                 {
                     Ok = false,
-                    Message = "No TIA project is open. Call Connect / OpenProject (or AttachToOpenProject) first.",
+                    Message = "No TIA project is open. Call ConnectPortal / OpenProject (or AttachOpenProject) first.",
                     Data = data
                 };
             }

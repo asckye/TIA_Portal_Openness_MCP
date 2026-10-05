@@ -36,27 +36,6 @@ namespace TiaMcpServer.ModelContextProtocol
             if (request == null) throw new ArgumentNullException(nameof(request));
             var refusal = McpServer.V4Admission(request);
             if (refusal != null) return new ValueTask<CallToolResult>(refusal);
-            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var arguments = request.Params?.Arguments;
-            string problem = "";
-            if (arguments != null)
-                foreach (var pair in arguments)
-                    if (!names.Add(pair.Key))
-                    { problem = "Duplicate argument names differing only by case are ambiguous: " + pair.Key + ". Nothing was executed."; break; }
-            if (problem.Length == 0) problem = McpServer.VersionCallProblem(ProtocolTool.Name, key =>
-            {
-                var args = request.Params?.Arguments;
-                if (args == null) return null;
-                foreach (var pair in args)
-                    if (string.Equals(pair.Key, key, StringComparison.OrdinalIgnoreCase)) return pair.Value.ToString();
-                return null;
-            });
-            if (problem.Length != 0)
-                return new ValueTask<CallToolResult>(new CallToolResult
-                {
-                    IsError = true,
-                    Content = new List<ContentBlock> { new TextContentBlock { Text = problem } }
-                });
             return inner.InvokeAsync(request, cancellationToken);
         }
     }

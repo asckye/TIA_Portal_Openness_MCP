@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseMessage ReadPortalInfo(bool includeProcesses = true, bool includeSessions = true, bool includeProducts = true)
-            => RunHmiStepTool("ReadPortalInfo", meta => {
+            => RunHmiStepTool("GetPortalInfo", meta => {
                 meta["isConnected"] = _portal != null; meta["expectedProject"] = _expectedProjectName;
                 if (includeProcesses)
                 {

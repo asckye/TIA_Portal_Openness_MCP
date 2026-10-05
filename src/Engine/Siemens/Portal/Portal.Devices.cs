@@ -1015,7 +1015,7 @@ namespace TiaMcpServer.Siemens
 
             if (IsProjectNull())
             {
-                problems.Add("Project is null. Use Connect + AttachToOpenProject/OpenProject first.");
+                problems.Add("Project is null. Use ConnectPortal + AttachOpenProject/OpenProject first.");
                 return new ResponseMessage { Message = "Automation context invalid", Meta = meta };
             }
 

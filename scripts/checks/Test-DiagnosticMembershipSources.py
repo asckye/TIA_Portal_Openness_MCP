@@ -4,8 +4,8 @@ import re
 from engine_sources import EngineSources
 
 sources = EngineSources()
-bootstrap = sources.member('Bootstrap', tool=True)
-selftest = sources.member('RunCapabilitySelfTest', tool=True)
+bootstrap = sources.member('Bootstrap', tool=False)
+selftest = sources.member('RunCapabilitySelfTest', tool=False, owner='DiagnosticsTools')
 for name, body in (("Bootstrap", bootstrap), ("RunCapabilitySelfTest", selftest)):
     assert body.count("Siemens.Openness.IsUserInGroupNoFix()") == 1, name
     assert not re.search(r"(?:IsUserInGroup|AddUserToGroupAsync|EnsureOpennessUserGroup)\s*\(", body), name
@@ -16,7 +16,7 @@ assert 'catch (Exception ex)' in selftest and '"fail", ex.Message' in selftest
 assert 'bool connectIfNeeded = false' in selftest
 assert 'if (!isConnected && connectIfNeeded)' in selftest
 assert 'isConnected = _session.ConnectPortal();' in selftest
-ensure = sources.member('EnsureOpennessUserGroup', tool=True)
+ensure = sources.member('EnsureOpennessUserGroup', tool=False)
 assert "await Siemens.Openness.IsUserInGroup()" in ensure
 pure = sources.member('IsUserInGroupNoFix', body_only=True)
 assert re.fullmatch(r"\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\);\s*\}\s*", pure)

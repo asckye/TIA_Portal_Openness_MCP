@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Text.Json;
+using TiaMcp.Logic.V4.Inputs;
 using TiaMcp.Versioning;
 using TiaMcpServer.Siemens;
 
@@ -76,20 +78,20 @@ namespace TiaMcpServer.Tests
             bool isV20 = EngineRouter.CompiledTiaMajorVersion == 20;
             var preflight = ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"action\":\"import\"}");
             check((preflight.Meta?["ok"]?.GetValue<bool?>() == true) != isV20, "preflight agrees with compiled adapter action gate");
-            var imported = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"action\":\"import\"}");
-            check((imported.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true) != isV20, "bridge agrees with compiled adapter action gate");
+            var imported = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{\"action\":\"import\"}")));
+            check((imported.IsError != true) != isV20, "bridge agrees with compiled adapter action gate");
             check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == (isV20 ? 0 : 1), "denial happens before invoking mutation body");
-            var read = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{}");
-            check(read.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true, "mixed-action read remains callable in both builds");
+            var read = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{}")));
+            check(read.IsError != true, "mixed-action read remains callable in both builds");
             int callsBeforeUnknown = ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls;
-            ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"action\":\"futureAction\"}");
+            ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{\"action\":\"futureAction\"}")));
             check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == callsBeforeUnknown, "unknown action cannot invoke body");
-            ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"ACTION\":\"read\",\"action\":\"import\"}");
+            ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{\"ACTION\":\"read\",\"action\":\"import\"}")));
             check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == callsBeforeUnknown, "case-duplicate bridge selectors are rejected before dispatch");
             check(ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"ACTION\":\"read\",\"action\":\"import\"}").Meta?["ok"]?.GetValue<bool?>() == false,
                 "preflight refuses case-duplicate selectors");
-            var safety = ModelContextProtocol.McpServer.CallTool("ListSafetyActivationTests", "{}");
-            check((safety.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true) != isV20, "whole-tool gate also applies to bridge");
+            var safety = ModelContextProtocol.McpServer.CallTool("ListSafetyActivationTests", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{}")));
+            check((safety.IsError != true) != isV20, "whole-tool gate also applies to bridge");
             foreach (var key in new[] { "14", "14sp1", "15", "15.1", "16", "17", "18", "19", "22", "" })
                 check(ToolVersionPolicy.ToolProblem(key, "Connect").Length > 0, key + " tool routing has no implicit adapter");
             foreach (var tool in ToolVersionPolicy.V21Only.Keys)
@@ -152,7 +154,7 @@ namespace TiaMcpServer.Tests
             check(ToolVersionPolicy.CallProblem("20", "ManagePlcDocuments", key => key == "objectKind" ? "type" : key == "action" ? "createFromMasterCopy" : null).Length == 0, "V20 PLC type master-copy route retained");
             foreach (string kind in new[] { "tagDefinition", "textDefinition" })
                 check(ToolVersionPolicy.CallProblem("20", "ManageSivarcBlockDefinition", key => key == "kind" ? kind : null).Length == 0, "V20 SiVArc definition retained " + kind);
-            check(isV20 ? safety.Meta?["toolFound"]?.GetValue<bool?>() == true && safety.Meta?["versionAvailable"]?.GetValue<bool?>() == false : true,
+            check(!isV20 || (string?)ModelContextProtocol.McpServer.ResultBody(safety)?["error"]?["code"] == "UNSUPPORTED_CAPABILITY",
                 "known unavailable tool is distinguished from unknown tool");
             try { OpennessReleaseContract.For("14sp1").RequireAssembly(typeof(TiaVersionCatalogTests).Assembly); check(false, "unbound legacy adapter cannot dispatch"); }
             catch (NotSupportedException) { check(true, "unbound legacy adapter cannot dispatch"); }

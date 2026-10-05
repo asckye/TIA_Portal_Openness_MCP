@@ -52,8 +52,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     // 「没连上」和「路径不存在」都会是 null，对调用方是两件事，一次说清楚。
                     throw new McpException(
-                        $"读不到 '{deviceItemPath}' 的槽位：要么没有连接项目（先 Connect，再 AttachToOpenProject），"
-                        + "要么这个设备项路径不存在（用 GetDeviceItemTree 确认每一段）。",
+                        $"Cannot read slots for '{deviceItemPath}': connect and bind the project with ConnectPortal / AttachOpenProject, "
+                        + "then verify every device-item path segment with GetDeviceItemTree.",
                         McpErrorCode.InvalidParams);
                 }
 

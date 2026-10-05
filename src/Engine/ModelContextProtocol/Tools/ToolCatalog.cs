@@ -90,7 +90,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 tool = McpServerTool.Create(method, target, options);
             }
             var protocol = tool.ProtocolTool;
-            if (inputs.Length == 0 && !McpServer.IsInfrastructureV4(protocol.Name)) return tool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var properties = schema["properties"]!.AsObject();
             var required = schema["required"] as JsonArray ?? new JsonArray();
@@ -106,7 +105,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!input.Parameter.HasDefaultValue) required.Add(name);
             }
             if (required.Count > 0) schema["required"] = required;
-            McpServer.RemoveV4NullDefaults(protocol.Name, schema);
+            McpServer.RemoveV4NullDefaults(schema);
             return new SchemaHintedTool(tool, new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,

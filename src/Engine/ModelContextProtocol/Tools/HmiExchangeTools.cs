@@ -181,7 +181,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region plc software - HmiExchange
 
-        [McpServerTool(Name = "ListHmiScreens"), Description("[L2][HMI] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: Connect + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist.")]
+        [McpServerTool(Name = "ListHmiScreens"), Description("[L2][HMI] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist.")]
         public CallToolResult GetHmiScreensV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath)
             => HmiExchangeContract.Run("ListHmiScreens", false, false, () => GetHmiScreens(softwarePath));

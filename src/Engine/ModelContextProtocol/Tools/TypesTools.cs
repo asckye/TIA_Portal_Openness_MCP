@@ -98,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     throw new McpException(
                         $"No TIA project is open, cannot list types of '{softwarePath}'. "
-                        + "Call Connect / OpenProject (or AttachToOpenProject) first. "
+                        + "Call ConnectPortal / OpenProject (or AttachOpenProject) first. "
                         + "This does NOT mean the PLC has no types.",
                         McpErrorCode.InvalidParams);
                 }

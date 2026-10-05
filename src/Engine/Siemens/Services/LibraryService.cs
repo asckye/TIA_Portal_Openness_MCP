@@ -699,7 +699,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         Ok = false,
                         LibraryPath = libraryPath,
-                        Error = "TIA Portal is not connected. Call Connect first.",
+                        Error = "TIA Portal is not connected. Call ConnectPortal first.",
                         Warnings = new[] { "This is a read-only probe and does not import library content." },
                         Raw = raw
                     };
@@ -830,7 +830,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 if (_session.CurrentPortal == null)
                 {
-                    return GlobalLibraryImportFailure("TIA Portal is not connected. Call Connect first.");
+                    return GlobalLibraryImportFailure("TIA Portal is not connected. Call ConnectPortal first.");
                 }
 
                 if (_session.IsProjectNull())

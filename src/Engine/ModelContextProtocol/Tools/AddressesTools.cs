@@ -56,8 +56,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     // 「没连上」和「设备项不存在」都会返回 null，但对调用方是两件事，分开问一句更有用。
                     throw new McpException(
-                        $"读不到 '{deviceItemPath}' 的地址：要么没有连接项目（先 Connect / AttachToOpenProject），"
-                        + "要么这个设备项路径不存在（用 GetDeviceItemTree 确认每一段）。",
+                        $"Cannot read addresses for '{deviceItemPath}': connect and bind the project with ConnectPortal / AttachOpenProject, "
+                        + "then verify every device-item path segment with GetDeviceItemTree.",
                         McpErrorCode.InvalidParams);
                 }
 
@@ -159,8 +159,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (current == null)
                     {
                         throw new McpException(
-                            $"读不到 '{deviceItemPath}' 的地址：要么没有连接项目（先 Connect / AttachToOpenProject），"
-                            + "要么这个设备项路径不存在（用 GetDeviceItemTree 确认每一段）。",
+                            $"Cannot read addresses for '{deviceItemPath}': connect and bind the project with ConnectPortal / AttachOpenProject, "
+                            + "then verify every device-item path segment with GetDeviceItemTree.",
                             McpErrorCode.InvalidParams);
                     }
 
@@ -307,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => _service.UpdateDeviceAddress(devicePathJson,itemPathJson,ioType,startAddress,propertiesJson,attributesJson,softwarePath,processImageObName,dryRun);
 
         [McpServerTool(Name = "GetDeviceIpAddress"), Description(
-            "[L1][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " Read a device's configured IP address straight from the TIA project (Openness PROFINET node) —" +
             " NOT by probing the CPU over S7 and NOT by exporting/parsing AML. Returns the primary IE IP plus all network nodes" +
             " (address, subnet, type). This is the correct, fast way to discover a PLC's IP before ConnectOnlinePlc/GetPlcLiveValuesS7.")]

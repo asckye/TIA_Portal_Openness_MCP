@@ -43,7 +43,7 @@ internal static partial class Program
         string mode = args[1];
         int major=args.Length>3?int.Parse(args[3]):21;
         string hash=args.Length>4?args[4]:"test-hash";
-        var names=args.Length>5?Json.Deserialize<string[]>(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(args[5]))):new[]{"GetState"};
+        var names=args.Length>5?Json.Deserialize<string[]>(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(args[5]))):new[]{"GetSessionState"};
         if (mode == "hello-hang") { Thread.Sleep(30000); return 0; }
         if (mode == "hello-crash") return 17;
         Console.WriteLine(Json.Serialize(new { kind = "tia-openness-worker", protocol = mode == "bad-protocol" ? 2 : 1,
@@ -198,11 +198,11 @@ internal static partial class Program
             jsonNode = Assembly.Load("System.Text.Json").GetType("System.Text.Json.Nodes.JsonNode", true)!;
             Func<ProcessStartInfo> start = () => { Starts++; return new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,
                 string.Join(" ", new[] { "worker-fixture", mode, Log }.Select(WorkerQuote))); };
-            Supervisor = Activator.CreateInstance(type, All, null, new object[] { start, 21, "test-hash", new[] { "GetState" }, TimeSpan.FromSeconds(timeout) }, null)!;
+            Supervisor = Activator.CreateInstance(type, All, null, new object[] { start, 21, "test-hash", new[] { "GetSessionState" }, TimeSpan.FromSeconds(timeout) }, null)!;
         }
         internal Dictionary<string, object> State => Parse(type.GetMethod("Snapshot", All)!.Invoke(Supervisor, null)!.ToString()!);
         internal Dictionary<string, object> Restart(bool confirm) => Parse(type.GetMethod("Restart", All)!.Invoke(Supervisor, new object[] { confirm })!.ToString()!);
-        internal async Task<Dictionary<string, object>> Call(string name = "GetState", string arguments = "{}", CancellationToken cancellation = default)
+        internal async Task<Dictionary<string, object>> Call(string name = "GetSessionState", string arguments = "{}", CancellationToken cancellation = default)
         {
             var parse = jsonNode.GetMethods().Single(m => m.Name == "Parse" && m.GetParameters()[0].ParameterType == typeof(string));
             object node = parse.Invoke(null, new object?[] { "{\"name\":\"" + name + "\",\"arguments\":" + arguments + "}", null, null })!;
@@ -284,18 +284,18 @@ internal static partial class Program
             Check((bool)f.Restart(false)["dryRun"] && f.Starts == 1, "Preview reset mutated state");
             f.Restart(true);
             await WorkerFailure(f.Call("SaveProject"), false);
-            await WorkerFailure(f.Call("Connect"), false);
+            await WorkerFailure(f.Call("ConnectPortal"), false);
             Check(f.Starts==1, "Blocked operation launched worker");
-            await f.Call("Connect", "{\"projectName\":\"scratch\"}");
+            await f.Call("ConnectPortal", "{\"projectName\":\"scratch\"}");
             Check(!(bool)f.State["explicitBindingRequired"], "Successful binding not recognized");
             await f.Call("SaveProject"); Check(f.Starts==2, "Fresh generation not created");
         });
         await Test("failed binding does not unlock recovered worker", async () => {
             using var f = new WorkerFixture("binding-fails"); f.Restart(true);
-            await f.Call("Connect", "{\"projectName\":\"scratch\"}");
+            await f.Call("ConnectPortal", "{\"projectName\":\"scratch\"}");
             await WorkerFailure(f.Call("SaveProject"), false);
         });
-        foreach (string target in new[] { "ConnectToProject", "Connect" })
+        foreach (string target in new[] { "ConnectProject", "ConnectPortal" })
             await Test("typed bridge recognizes recovered binding: " + target, async () => {
                 using var f = new WorkerFixture(); f.Restart(true);
                 await f.Call("CallTool", "{\"name\":\"" + target + "\",\"arguments\":{\"projectName\":\"scratch\"}}");
@@ -305,7 +305,7 @@ internal static partial class Program
             });
         await Test("failed typed bridge binding keeps recovery locked", async () => {
             using var f = new WorkerFixture("binding-fails"); f.Restart(true);
-            await f.Call("CallTool", "{\"name\":\"Connect\",\"arguments\":{\"projectName\":\"scratch\"}}");
+            await f.Call("CallTool", "{\"name\":\"ConnectPortal\",\"arguments\":{\"projectName\":\"scratch\"}}");
             await WorkerFailure(f.Call("SaveProject"), false);
             Check(f.Dispatches == 1, "Failed bridge unlocked recovery");
         });
@@ -313,7 +313,7 @@ internal static partial class Program
             using var f = new WorkerFixture(); f.Restart(true);
             foreach (string arguments in new[] { "{}", "{\"arguments\":{}}", "{\"arguments\":\"{\\\"projectName\\\":\\\"scratch\\\"}\"}",
                 "{\"argumentsJson\":{\"projectName\":\"scratch\"}}" }) {
-                var values = Parse(arguments); values["name"] = "Connect";
+                var values = Parse(arguments); values["name"] = "ConnectPortal";
                 await WorkerFailure(f.Call("CallTool", Json.Serialize(values)), false);
             }
             Check(f.Starts == 0 && f.Dispatches == 0, "Invalid bridge arguments launched a worker");

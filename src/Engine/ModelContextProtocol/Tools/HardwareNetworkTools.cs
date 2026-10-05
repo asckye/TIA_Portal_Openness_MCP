@@ -469,7 +469,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return GetDeviceItemNetworkInfoCore(deviceItemPath);
             });
 
-        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"), Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices, creates/reuses a subnet on the first, connects the second, and returns readback evidence. Requires: Connect + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"), Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices, creates/reuses a subnet on the first, connects the second, and returns readback evidence. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectDeviceNodesToProfinetSubnet(
             [Description("firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'")] string firstRootPath,
             [Description("secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string secondRootPath,
@@ -530,7 +530,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "GetProjectTopology"), Description(
-            "[L1][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " One-shot, read-only project topology from Openness: every device with its network nodes (IP, subnet, node type)." +
             " Call this early to understand the project's devices and subnets at a glance, instead of probing S7 or parsing AML.")]
         public CallToolResult GetProjectTopology()

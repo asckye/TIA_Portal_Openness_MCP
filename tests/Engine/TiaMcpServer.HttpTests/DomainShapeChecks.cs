@@ -201,7 +201,7 @@ internal static class DomainShapeChecks
             check(ex.InnerException?.GetType().Name == "PortalException"
                 && ex.InnerException.GetType().GetProperty("Code")!.GetValue(ex.InnerException)?.ToString() == "InvalidState"
                 && ex.InnerException.Message ==
-                "No project is open. Call Connect, then AttachToOpenProject / OpenProject first.",
+                "No project is open. Call ConnectPortal, then AttachOpenProject / OpenProject first.",
                 "Disconnected VCI acquisition retains its message and exposes a typed precondition");
         }
         check(roots.Count == 0 && owner.GetValue(first) == null && vci.GetField("_vciCached", all)!.GetValue(first) == null,

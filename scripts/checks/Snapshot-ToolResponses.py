@@ -89,8 +89,8 @@ RESPONSE_LIMIT = 16 * 1024
 # Safety proof for every full-engine tool, including no-argument tools:
 # ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs::WrapTools wraps both
 # profiles in VersionPolicyTool (non-isolated server; isolation is never enabled).
-# McpServer.VersionPolicy.cs::InvokeAsync rejects case-insensitive duplicate names
-# BEFORE VersionCallProblem and inner.InvokeAsync, regardless of inputSchema.
+# McpServer.VersionPolicy.cs::InvokeAsync delegates to V4Admission/BindV4Call,
+# rejecting duplicate names BEFORE version/schema checks and inner.InvokeAsync.
 # McpServer.Profile.cs::GetAllTools/GetLiteTools supply the advertised rosters.
 # McpServer.ToolBridge.cs::CallTool(string,ToolArguments) calls BindV4Call, which
 # rejects case-insensitive duplicate properties BEFORE schema validation, binding
@@ -100,8 +100,6 @@ RESPONSE_LIMIT = 16 * 1024
 # CallTool -> CallTool has an earlier self-recursion guard; record that exact
 # refusal separately, never count it as duplicate-argument admission coverage.
 REJECT_ARGUMENTS = {'SnapshotReject': True, 'snapshotReject': True}
-DUPLICATE_MARKER = ('Duplicate argument names differing only by case are ambiguous: '
-                    'snapshotReject. Nothing was executed.')
 SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
 
 
@@ -174,7 +172,7 @@ PASSIVE_RESOURCE_CALLS = (
      'Reads a fixed page of a bundled document; never executes its instructions.'),
     ('GetV21EcosystemCatalog', {},
      'Reads the dated local JSON survey; no network lookup or native calls.'),
-    ('CheckForUpdate', {'repository': 'x'},
+    ('CheckProductUpdate', {'repository': 'x'},
      'Invalid owner/name returns before HTTP; bin layout has no installRoot.'),
 )
 
@@ -189,7 +187,7 @@ DOMAIN_CALLS = {
     'Hardware': 'GetProjectTopology',
     'PLC-Online': 'GetOnlineState',
     'PLC-Software': 'GetSoftwareTree',
-    'Portal': 'Disconnect',
+    'Portal': 'DisconnectPortal',
     'Project': 'GetProjectTree',
     'VersionControl': 'ListVersionControlWorkspaces',
 }
@@ -492,11 +490,11 @@ def capture_release(args, release, exe, public_api):
             def decoded(name, arguments):
                 return body(call(name, arguments))
 
-            state = decoded('GetState', {})
-            resources.require(state['isConnected'] is False, 'Capture requires a disconnected host')
-            resources.require(state['meta']['journalHealth']['failedWrites'] == 0,
+            state = decoded('GetSessionState', {})
+            resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
+            resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
                               'Journal is not writable; use --temp-root inside the writable worktree')
-            decoded('ReadPortalInfo', {'includeProcesses': False, 'includeSessions': False,
+            decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
             decoded('ListToolCategories', {})
             decoded('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
@@ -507,10 +505,11 @@ def capture_release(args, release, exe, public_api):
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
                 result = decoded(name, arguments)
                 meta = result['meta']
-                if name == 'CheckForUpdate':
+                if name == 'CheckProductUpdate':
+                    meta = result['data']['evidence']
                     resources.require(meta['installRoot'] is None and meta['updaterScript'] is None
                                       and meta['success'] is False and 'releaseApiUrl' not in meta
-                                      and result['message'].startswith("repository must be 'owner/name'"),
+                                      and result['data']['summary'].startswith("repository must be 'owner/name'"),
                                       'Expected bin-layout update refusal before HTTP: ' + reason)
                 else:
                     resources.require(result['ok'] is True and result['data']['total'] > 0,
@@ -544,7 +543,7 @@ def capture_release(args, release, exe, public_api):
 
             # Unknown argument, wrong JSON type, and missing required argument.
             # Safe targets ensure even a diagnostic regression cannot attach TIA.
-            call('GetState', {'unknownParameter': True})
+            call('GetSessionState', {'unknownParameter': True})
             call('FindTools', {'query': 'PLC', 'limit': {'wrong': 'type'}})
             call('BuildPlcUdt', {})
             if release == '20':
@@ -558,10 +557,10 @@ def capture_release(args, release, exe, public_api):
             selected_operations = sorted({(entry['tool'], str(entry['arguments'][key]))
                 for entry in entries.values() for key in ('action', 'operation')
                 if key in entry['arguments'] and entry['tool'] != 'GetToolUsage'})
-            v4 = v4_tools(release)
+            resources.require(registered == v4_tools(release), 'Every full-engine entry must have a generated V4 contract')
             for name in sorted(registered):
                 reply = call(name, REJECT_ARGUMENTS)
-                v4_rejection(reply, name) if name in v4 else rejection(reply, DUPLICATE_MARKER)
+                v4_rejection(reply, name)
             snapshot = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
                 'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
                 'maxResponseChars': 2000000,
@@ -891,12 +890,12 @@ class RawResponseTests(unittest.TestCase):
         self.assertIn('"requestId":"<string:requestId>"', masked)
         self.assertIn('"example":{"requestId":"' + first + '"}', masked)
         self.assertEqual(self.call(sample, 'CallTool'), self.call(sample.replace('"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + first, '"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + second), 'CallTool'))
-        self.assertIn('"requestId":"' + first + '"', mask_raw_text(sample, 'GetState'))
+        self.assertIn('"requestId":"' + first + '"', mask_raw_text(sample, 'GetSessionState'))
 
     def reply(self, text):
         return {'id': 1, 'jsonrpc': '2.0', 'result': {'content': [{'type': 'text', 'text': text}]}}
 
-    def call(self, text, tool='GetState', profile='full'):
+    def call(self, text, tool='GetSessionState', profile='full'):
         entries = {}
         recorder(lambda *a, **kw: self.reply(text), entries, profile)(tool, {})
         return compact(next(iter(entries.values())))
@@ -919,7 +918,7 @@ class RawResponseTests(unittest.TestCase):
                 value = '"2026-10-03T11:12:13.1234567-07:00"'
                 for key in reversed(rule['path']):
                     value = '{ "' + key + '" : ' + value + ' }'
-                tool = rule['tool'] if rule['tool'] != '*' else 'GetState'
+                tool = rule['tool'] if rule['tool'] != '*' else 'GetSessionState'
                 self.assertEqual(mask_raw_text(value, tool),
                                  value.replace('2026-10-03T11:12:13.1234567-07:00', '<string:timestamp>'))
                 other = value.replace('2026-10-03T11:12:13.1234567-07:00', '2027-01-02T00:00:00Z')
@@ -941,13 +940,13 @@ class RawResponseTests(unittest.TestCase):
         ]
         for value in samples:
             with self.subTest(value=value):
-                self.assertEqual(mask_raw_text(value, 'GetState'), value)
+                self.assertEqual(mask_raw_text(value, 'GetSessionState'), value)
         # Builder masks cannot reach tool usage examples or source XML strings.
         self.assertEqual(mask_raw_text(samples[0], 'GetToolUsage'), samples[0])
 
     def test_surrounding_bytes(self):
         value = r'{ "meta" : {"timestamp" : "2026-10-03T11:12:13Z", "n":1.00}, "text":"中文\n\"\\", "array":[{},[null,2]] }'
-        masked = mask_raw_text(value, 'GetState')
+        masked = mask_raw_text(value, 'GetSessionState')
         self.assertEqual(masked, value.replace('2026-10-03T11:12:13Z', '<string:timestamp>'))
         self.assertEqual(self.call(value)['rawTextBlocks'][0]['sha256'],
                          hashlib.sha256(masked.encode('utf-8')).hexdigest())
@@ -957,17 +956,17 @@ class RawResponseTests(unittest.TestCase):
                      '{\u00a0"meta":{"timestamp":"2026-10-03T11:12:13Z"}}',
                      '{"meta":{"timestamp":"2026-10-03T11:12:13Z"}} extra'):
             with self.subTest(text=text):
-                self.assertEqual(mask_raw_text(text, 'GetState'), text)
+                self.assertEqual(mask_raw_text(text, 'GetSessionState'), text)
                 self.assertEqual(self.call(text)['rawTextBlocks'][0]['sha256'],
                                  hashlib.sha256(text.encode('utf-8')).hexdigest())
 
     def test_multiple_blocks_and_protocol_error(self):
         reply = self.reply('first')
         reply['result']['content'] += [{'type': 'image', 'data': 'AA=='}, {'type': 'text', 'text': 'second'}]
-        hashes = raw_text_blocks(reply, 'GetState')
+        hashes = raw_text_blocks(reply, 'GetSessionState')
         self.assertEqual([b['contentIndex'] for b in hashes], [0, 2])
         self.assertEqual(hashes[1]['sha256'], hashlib.sha256(b'second').hexdigest())
-        self.assertEqual(raw_text_blocks({'error': {'message': 'refused'}}, 'GetState'), [])
+        self.assertEqual(raw_text_blocks({'error': {'message': 'refused'}}, 'GetSessionState'), [])
 
     def test_digest_keeps_raw_hashes(self):
         a = self.call('{"b":2,"a":1}', 'GetToolUsage')
@@ -989,7 +988,7 @@ class RawResponseTests(unittest.TestCase):
             with redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(compare(args), 1)
             self.assertIn('rawChanged=1', output.getvalue())
-            self.assertIn('full GetState({}) $/rawTextBlocks/0/sha256', output.getvalue())
+            self.assertIn('full GetSessionState({}) $/rawTextBlocks/0/sha256', output.getvalue())
             write(new, a)
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(compare(args), 0)

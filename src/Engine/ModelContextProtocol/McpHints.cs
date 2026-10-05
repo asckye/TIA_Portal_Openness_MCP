@@ -18,19 +18,19 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // not connected
             if (Has(m, "not connected") || Has(m, "connect first") || Has(m, "_portal") || Has(m, "no tia portal"))
-                return Tip("call Connect first (the server also auto-connects when a TIA Portal is already running).");
+                return Tip("call ConnectPortal first (the server also auto-connects when a TIA Portal is already running).");
 
             // no project bound
             if (Has(m, "no project is open") || Has(m, "project is null"))
-                return Tip("open a project first: AttachToOpenProject(projectName) if it is already open in the TIA UI, else OpenProject(path) or CreateProject.");
+                return Tip("open a project first: AttachOpenProject(projectName) if it is already open in the TIA UI, else OpenProject(path) or CreateProject.");
 
             // project already open by another session/UI
             if (Has(m, "already open") || Has(m, "opened by") || Has(m, "in use by another"))
-                return Tip("the project is already open elsewhere — use AttachToOpenProject(projectName) instead of OpenProject.");
+                return Tip("the project is already open elsewhere — use AttachOpenProject(projectName) instead of OpenProject.");
 
             // stale handle after project switch / TIA UI opened the project (very common)
             if (Has(m, "disposed"))
-                return Tip("the software/project handle went stale (you switched project, or the TIA UI opened it). Re-bind with AttachToOpenProject(projectName) or GetProjectTree, then retry — do not reuse the old handle.");
+                return Tip("the software/project handle went stale (you switched project, or the TIA UI opened it). Re-bind with AttachOpenProject(projectName) or GetProjectTree, then retry — do not reuse the old handle.");
 
             // online-mode lock (export/import/compile require offline)
             if (Has(m, "online mode") || Has(m, "not permitted in online") || Has(m, "supported in online"))

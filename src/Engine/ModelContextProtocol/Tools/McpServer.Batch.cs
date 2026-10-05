@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly BatchPlanStore BatchPlans = new BatchPlanStore();
 
-        [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
+        [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
         public static CallToolResult ReadToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
             [Description("Optional exact bound project name.")] string expectedProject = "")
@@ -122,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
                 var row = BatchRow(rows.Count, name, result);
-                // A legacy target without a verdict must never make the parent successful.
+                // An unreadable target result must never make the parent successful.
                 if (issued && ResultSucceeded(row["result"]) == null) row["outcomeUnknown"] = true;
                 rows.Add(row);
             }
@@ -145,7 +145,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var targetMethod = method!;
                 string description = ToolDescription(targetMethod);
                 bool orchestration = IsBatchOrchestration(targetMethod);
-                bool read = description.Contains("[READ]") || targetMethod.Name == "GetState";
+                bool read = description.Contains("[READ]") || targetMethod.GetCustomAttribute<McpServerToolAttribute>()?.Name == "GetSessionState";
                 bool preview = description.Contains("[WRITE]") && targetMethod.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
                 if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
                 targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, targetMethod)), new InputBudget(), read, preview, orchestration: orchestration);
@@ -156,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal static bool IsBatchOrchestration(MethodInfo method) => method.Name.Contains("Batch")
-            || method.Name == "CallTool" || method.Name == "RunToolsInTransaction"
+            || method.Name == "CallTool" || method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "RunToolTransaction"
             || method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "GetPlcCrossReferences";
 
         private static string StablePreview(JsonNode? value)
@@ -169,8 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (body is not JsonObject obj) return null;
             if (obj["schemaVersion"]?.GetValue<int?>() == 4) return obj["ok"]?.GetValue<bool?>();
-            var meta = (obj["meta"] ?? obj["Meta"]) as JsonObject;
-            return meta?["success"]?.GetValue<bool?>();
+            return null;
         }
         private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
         { ["index"] = index, ["target"] = target, ["result"] = ResultBody(result) };

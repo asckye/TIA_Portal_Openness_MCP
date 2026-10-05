@@ -95,7 +95,7 @@ namespace TiaMcpServer.Tests
             check(PreflightLogic.NeedsProject("WRITE", "ImportBlock") && !PreflightLogic.NeedsProject("SESSION", "Connect") && !PreflightLogic.NeedsProject("OFFLINE", "BuildPlcGlobalDbJson") && !PreflightLogic.NeedsProject("READ", "SearchHardwareCatalog") && !PreflightLogic.NeedsProject("ONLINE", "GetPlcSimAdvancedTags"), "preflight: project prerequisite only for project-bound operations");
 
             // ---- the bridge wiring on the linked tools (no portal in this suite -> prerequisites unknown) ----
-            check(!PreflightLogic.NeedsProject("READ", "ReadOpennessWorkerStatus"), "worker status is independent of a TIA project");
+            check(!PreflightLogic.NeedsProject("READ", "GetOpennessWorkerStatus"), "worker status is independent of a TIA project");
             check(!PreflightLogic.NeedsProject("WRITE", "RestartOpennessWorker"), "worker recovery must not require connecting a faulted worker first");
             var probe = McpServer.PreflightToolCall("setunifiedruntimesettings", "{\"SoftwarePath\":\"HMI\",\"changes\":{\"BitSelection\":true},\"dryRun\":\"false\"}");
             check(probe.Meta!["toolFound"]!.GetValue<bool>() && probe.Meta["tool"]!.GetValue<string>() == "SetUnifiedRuntimeSettings" && probe.Meta["ok"]!.GetValue<bool>() == false, "preflight tool: case-insensitive name resolved, missing expectedProject makes it not ok");
@@ -135,8 +135,8 @@ namespace TiaMcpServer.Tests
             check(gate.Any(p => p == "ListPlcBlocks: example uses 'regexName' which is not a parameter (exact spelling required)") && gate.Any(p => p.EndsWith("no tool of that name (example is stale)")), "examples: validation flags wrong parameter names and stale tools (sentinel)");
 
             // ---- CallTool / FindTools carry the example ----
-            var refusal = McpServer.CallTool("SetUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\"}");
-            check(refusal.Message!.Contains("missing required argument(s): expectedProject, changes") && refusal.Message.Contains("PreviewToolCall"), "bridge: missing-argument refusal points at PreviewToolCall");
+            var refusal = McpServer.CallTool("SetUnifiedRuntimeSettings", new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"softwarePath\":\"HMI\"}")));
+            check((string?)McpServer.ResultBody(refusal)!["error"]!["code"] == "INVALID_ARGUMENT", "bridge: missing arguments use the shared V4 refusal");
 
             // ---- UpdateLogic ----
             check(UpdateLogic.ParseVersion("v2.7.57")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("2.7.57.0")!.SequenceEqual(new[] { 2, 7, 57 }) && UpdateLogic.ParseVersion("latest") == null && UpdateLogic.ParseVersion("") == null, "update: version tags parsed");

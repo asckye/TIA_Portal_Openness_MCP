@@ -1,3 +1,7 @@
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -34,7 +38,10 @@ namespace TiaMcpServer.ModelContextProtocol
             _documents = documents;
         }
 
-        [McpServerTool(Name = "GetProject"), Description("[L1][Project] List all open local projects and multi-user sessions with their attributes. Requires: Connect. Use this to confirm which project is active, or to find the project name for AttachToOpenProject.")]
+        [McpServerTool(Name = "GetProjectInfo"), Description("[L1][Project] List all open local projects and multi-user sessions with their attributes. Requires: ConnectPortal. Use this to confirm which project is active, or to find the project name for AttachOpenProject.")]
+        public CallToolResult GetProjectInfoV4()
+            => SessionToolContract.Run("GetProjectInfo", false, false, () => GetProjects());
+
         public ResponseGetProjects GetProjects()
         {
             try
@@ -71,7 +78,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "OpenProject"), Description("[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: Connect. Closes any currently open project first. After success, call GetProjectTree to explore its structure.")]
+        [McpServerTool(Name = "OpenProject"), Description("[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: ConnectPortal. Closes any currently open project first. After success, call GetProjectTree to explore its structure.")]
+        public CallToolResult OpenProjectV4(
+            [Description("path: defines the path where to the project/session")] string path,
+            [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false,
+            [Description("umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.")] string umacUserName = "",
+            [Description("umacPassword: password of umacUserName; converted to SecureString, never logged or echoed.")] string umacPassword = "",
+            [Description("umacUserType: Project (default) or Global (UMC user).")] string umacUserType = "")
+            => SessionToolContract.Run("OpenProject", true, true, () => OpenProject(path, closeForeignProject, umacUserName, umacPassword, umacUserType));
+
         public ResponseOpenProject OpenProject(
             [Description("path: defines the path where to the project/session")] string path,
             [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false,
@@ -87,7 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "OpenProject refused: TIA Portal already has the project '" + foreign + "' open and this " +
                         "session did not open it - it belongs to the user. OpenProject closes the current project " +
                         "first, which would discard any unsaved edits. To work on that project call " +
-                        "AttachToOpenProject(projectName=\"" + foreign + "\"). To close it anyway pass " +
+                        "AttachOpenProject(projectName=\"" + foreign + "\"). To close it anyway pass " +
                         "closeForeignProject=true - ask the user before you do.",
                         McpErrorCode.InvalidRequest);
 
@@ -141,9 +156,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "AttachToOpenProject"), Description("[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles).")]
+        [McpServerTool(Name = "AttachOpenProject"), Description("[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles).")]
+        public CallToolResult AttachOpenProjectV4(
+            [Description("projectName: exact name shown in TIA (e.g. 'Project1')")] string projectName)
+            => SessionToolContract.Run("AttachOpenProject", true, true, () => AttachToOpenProject(projectName));
+
         public ResponseMessage AttachToOpenProject(
-            [Description("projectName: name shown in TIA (e.g. '项目1')")] string projectName)
+            [Description("projectName: exact name shown in TIA (e.g. 'Project1')")] string projectName)
         {
             try
             {
@@ -165,7 +184,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateProject"), Description("[L1][Project] Create a new empty TIA Portal project. Requires: Connect. After creation, call CreateDevice to add PLCs/HMIs, then GetProjectTree to verify. The project is automatically opened after creation — no separate OpenProject call needed.")]
+        [McpServerTool(Name = "CreateProject"), Description("[L1][Project] Create a new empty TIA Portal project. Requires: ConnectPortal. After creation, call CreateDevice to add PLCs/HMIs, then GetProjectTree to verify. The project is automatically opened after creation — no separate OpenProject call needed.")]
+        public CallToolResult CreateProjectV4(
+            [Description("directoryPath: folder where project will be created")] string directoryPath,
+            [Description("projectName: project name")] string projectName,
+            [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false)
+            => SessionToolContract.Run("CreateProject", true, true, () => CreateProject(directoryPath, projectName, closeForeignProject));
+
         public ResponseMessage CreateProject(
             [Description("directoryPath: folder where project will be created")] string directoryPath,
             [Description("projectName: project name")] string projectName,
@@ -179,7 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "CreateProject refused: TIA Portal already has the project '" + foreign + "' open and this " +
                         "session did not open it - it belongs to the user. CreateProject closes the current project " +
                         "first, which would discard any unsaved edits. To work on that project call " +
-                        "AttachToOpenProject(projectName=\"" + foreign + "\"). To close it anyway pass " +
+                        "AttachOpenProject(projectName=\"" + foreign + "\"). To close it anyway pass " +
                         "closeForeignProject=true - ask the user before you do.",
                         McpErrorCode.InvalidRequest);
 
@@ -203,7 +228,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ScaffoldProject"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
+        [McpServerTool(Name = "BuildProjectScaffold"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
+        public CallToolResult BuildProjectScaffoldV4(
+            [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
+            [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
+            => SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
+
         public ResponseScaffold ScaffoldProject(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
@@ -214,7 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             JsonNode root;
             try { root = JsonNode.Parse(spec) ?? throw new Exception("spec parsed to null"); }
-            catch (Exception ex) { throw new McpException($"ScaffoldProject: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
+            catch (Exception ex) { throw new McpException($"BuildProjectScaffold: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
             string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
             bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
@@ -223,7 +253,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             var projectName = S("projectName");
             if (string.IsNullOrWhiteSpace(projectName))
-                throw new McpException("ScaffoldProject: 'projectName' is required", McpErrorCode.InvalidParams);
+                throw new McpException("BuildProjectScaffold: 'projectName' is required", McpErrorCode.InvalidParams);
             var directoryPath = S("directoryPath");
             if (string.IsNullOrWhiteSpace(directoryPath))
                 directoryPath = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_scaffold_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
@@ -267,8 +297,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 var okN = resp.Steps.Count(s => s.Status == "ok");
                 var failN = resp.Steps.Count(s => s.Status == "failed");
-                resp.Message = $"ScaffoldProject dryRun '{projectName}': {okN} ok, {failN} failed (offline validation, nothing created)." +
-                    (failN == 0 ? " Spec is valid — call ScaffoldProject again with dryRun=false to actually create the project." : " Fix the failed steps, then re-run.");
+                resp.Message = $"BuildProjectScaffold dryRun '{projectName}': {okN} ok, {failN} failed (offline validation, nothing created)." +
+                    (failN == 0 ? " Spec is valid — call BuildProjectScaffold again with dryRun=false to actually create the project." : " Fix the failed steps, then re-run.");
                 resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok, ("dryRun", true));
                 return resp;
             }
@@ -279,10 +309,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!_session.IsConnected()) { _sessionTools.Connect(); Step("connect", "ok"); }
                 else Step("connect", "skipped", "already connected");
             }
-            catch (Exception ex) { Step("connect", "failed", ex.Message); resp.Ok = false; throw new McpException($"ScaffoldProject aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) { Step("connect", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at connect: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             try { CreateProject(directoryPath, projectName); Step("createProject", "ok", directoryPath); }
-            catch (Exception ex) { Step("createProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"ScaffoldProject aborted at createProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) { Step("createProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at createProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             try
             {
@@ -291,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 else throw new McpException($"PLC device add failed: {d.Error}", McpErrorCode.InternalError);
             }
             catch (McpException) { Step("addDevicePlc", "failed", "see error"); resp.Ok = false; throw; }
-            catch (Exception ex) { Step("addDevicePlc", "failed", ex.Message); resp.Ok = false; throw new McpException($"ScaffoldProject aborted at addDevicePlc: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
+            catch (Exception ex) { Step("addDevicePlc", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at addDevicePlc: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             // ---- optional HMI device ----
             bool hmiRequested = !string.IsNullOrWhiteSpace(hmiName);
@@ -339,12 +369,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
             var okCount = resp.Steps.Count(s => s.Status == "ok");
             var failCount = resp.Steps.Count(s => s.Status == "failed");
-            resp.Message = $"ScaffoldProject '{projectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
+            resp.Message = $"BuildProjectScaffold '{projectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
             resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok);
             return resp;
         }
 
-        [McpServerTool(Name = "SaveProject"), Description("[L1][Project] Save the currently open project or session to disk. Requires: Connect + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency.")]
+        [McpServerTool(Name = "SaveProject"), Description("[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency.")]
+        public CallToolResult SaveProjectV4()
+            => SessionToolContract.Run("SaveProject", true, true, () => SaveProject());
+
         public ResponseSaveProject SaveProject()
         {
             try
@@ -386,7 +419,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SaveAsProject"), Description("[L2][Project]Save current TIA-Portal project/session with a new name")]
+        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project]Save current TIA-Portal project/session with a new name")]
+        public CallToolResult SaveProjectCopyV4(
+            [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
+            => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath));
+
         public ResponseSaveAsProject SaveAsProject(
             [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
         {
@@ -419,7 +456,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CloseProject"), Description("[L1][Project] Close the currently open project or multi-user session. Requires: Connect + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open.")]
+        [McpServerTool(Name = "CloseProject"), Description("[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open.")]
+        public CallToolResult CloseProjectV4()
+            => SessionToolContract.Run("CloseProject", true, true, () => CloseProject());
+
         public ResponseCloseProject CloseProject()
         {
             try
@@ -466,7 +506,16 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name="ReadObjectIdentifier"), Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePathJson/itemPathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
+        [McpServerTool(Name="GetObjectIdentifier"), Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePath/itemPath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
+        public CallToolResult GetObjectIdentifierV4(
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            string[]? devicePath = null,
+            string[]? itemPath = null,
+            string softwarePath="",
+            string objectPath="",
+            [Description("identifier: exact identifier of the object as the read action lists it.")] string identifier="")
+            => SessionToolContract.Run("GetObjectIdentifier", false, false, () => ReadObjectIdentifier(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()), softwarePath, objectPath, identifier));
+
         public ResponseMessage ReadObjectIdentifier(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
             string devicePathJson="[]",
@@ -476,7 +525,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("identifier: exact identifier of the object as the read action lists it.")] string identifier="")
             => _session.ReadObjectIdentifier(kind,devicePathJson,itemPathJson,softwarePath,objectPath,identifier);
 
-        [McpServerTool(Name="ShowObjectInEditor"), Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true.")]
+        [McpServerTool(Name="ShowObjectInEditor"), Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true.")]
+        public CallToolResult ShowObjectInEditorV4(
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            string[]? devicePath = null,
+            string[]? itemPath = null,
+            string softwarePath="",
+            string objectPath="",
+            bool dryRun=true)
+            => SessionToolContract.Run("ShowObjectInEditor", !dryRun, false, () => ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()), softwarePath, objectPath, dryRun));
+
         public ResponseMessage ShowObjectInEditor(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
             string devicePathJson="[]",
@@ -486,51 +544,68 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => _session.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
 
-        [McpServerTool(Name="RunToolsInTransaction"), Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). callsJson is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]
-        public ResponseMessage RunToolsInTransaction(
-            [Description("callsJson: JSON array of {name, arguments:{...}} supported tool calls to run inside one transaction.")] string callsJson,
+        [McpServerTool(Name="RunToolTransaction"), Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]
+        public CallToolResult RunToolTransactionV4(
+            [Description("calls: Array of {name, arguments:{...}} supported tool calls to run inside one transaction.")] ToolCall[] calls,
             [Description("text: transaction text shown in TIA's undo history.")] string text,
             bool confirmChange=false,
             bool dryRun=true)
+            => RunTransaction(calls, text, confirmChange, dryRun);
+
+        private CallToolResult RunTransaction(ToolCall[] calls, string text, bool confirmChange, bool dryRun)
         {
-            // envelope: legacy-late-verdict
-            var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["tool"] = "RunToolsInTransaction", ["success"] = false, ["dryRun"] = dryRun, ["mayHaveChanged"] = false };
+            const string tool = "RunToolTransaction";
+            if (calls == null || calls.Length == 0) return V4Reject(tool, InvalidInput("calls"));
+            if (calls.Length > 20) return V4Reject(tool, new Error("Transaction count exceeds its limit.", new LimitExceededDetails("calls", 20, calls.Length)));
+            if (string.IsNullOrWhiteSpace(text) || text.Length > 200) return V4Reject(tool, InvalidInput("text"));
+            if (!dryRun && !confirmChange) return V4Reject(tool, new Error("Transaction execution requires confirmation.", new ConfirmationRequiredDetails(null)));
+            var plan = new JsonArray();
+            var prepared = new List<ToolCall>();
+            foreach (var call in calls)
+            {
+                if (call == null) return V4Reject(tool, InvalidInput("calls"));
+                // Validate the supplied call before applying the transaction's explicit
+                // dryRun=false policy, so an invalid supplied value is never erased.
+                var error = BindV4Call(call.Name, call.Arguments, out var method, out _);
+                if (error != null) return V4Reject(tool, error);
+                if (!TransactionExecution.SupportedTools.Contains(call.Name, StringComparer.OrdinalIgnoreCase))
+                    return V4Reject(tool, InvalidInput("calls"));
+                var arguments = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
+                if (method!.GetParameters().Any(p => p.Name == "dryRun")) arguments["dryRun"] = false;
+                var preflight = PreflightToolCall(call.Name, arguments.ToJsonString());
+                if (preflight.Meta?["ok"]?.GetValue<bool?>() != true)
+                    return V4Reject(tool, new Error("Transaction preflight prerequisites are not satisfied.", new PreconditionFailedDetails("transaction-preflight", call.Name)));
+                prepared.Add(new ToolCall(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(arguments))));
+                plan.Add(new JsonObject { ["name"] = call.Name, ["arguments"] = arguments });
+            }
+            var meta = ResponseMeta.Basic(DateTime.Now, false, ("dryRun", dryRun), ("mayHaveChanged", false), ("calls", plan), ("text", text));
+            if (dryRun)
+            {
+                meta["success"] = true;
+                return SessionToolContract.Map(tool, new ResponseMessage { Message = "Transaction preview: " + calls.Length + " call(s) validated, nothing executed.", Meta = meta }, false, false);
+            }
+            var results = new JsonArray(); meta["results"] = results;
             try
             {
-                var calls = ToolTransactionRules.ParseToolCalls(callsJson);
-                ToolTransactionRules.ValidateTransactionRequest(text, calls, confirmChange, dryRun);
-                var all = McpServer.AllToolMethods(); var plan = new JsonArray(); meta["calls"] = plan;
-                foreach (var call in calls)
+                bool committed = TransactionExecution.Run(prepared.Count, () => _session.BeginTransaction(text), index =>
                 {
-                    if (!all.ContainsKey(call.Name)) throw new ArgumentException("No tool named '" + call.Name + "'.");
-                    TransactionExecution.RequireSupported(call.Name);
-                    call.ArgumentsJson = ToolTransactionRules.ForceRealExecution(call.ArgumentsJson);
-                    var preflight = PreflightToolCall(call.Name, call.ArgumentsJson);
-                    if (preflight.Meta?["ok"]?.GetValue<bool?>() != true)
-                        throw new ArgumentException("Preflight failed for " + call.Name + ": " + preflight.Message);
-                    plan.Add(new JsonObject { ["name"] = call.Name, ["arguments"] = JsonNode.Parse(call.ArgumentsJson) });
-                }
-                meta["text"] = text;
-                if (dryRun) { meta["success"] = true; meta["operationSuccess"] = true; return new ResponseMessage { Message = "Transaction preview: " + calls.Length + " call(s) validated, nothing executed.", Meta = meta }; }
-                var results = new JsonArray(); meta["results"] = results;
-                bool committed = TransactionExecution.Run(calls.Length, () => _session.BeginTransaction(text), index =>
-                {
-                    var call = calls[index];
-                    var response = CallTool(call.Name, call.ArgumentsJson);
-                    bool ok = response.Meta?["operationSuccess"]?.GetValue<bool?>() == true;
-                    JsonNode? payload; try { payload = JsonNode.Parse(response.Message); } catch /* swallow(parse-fallback): plain-text tool responses are retained as the transaction result */ { payload = response.Message; }
+                    var call = prepared[index];
+                    var payload = ResultBody(CallTool(call.Name, call.Arguments));
+                    bool ok = payload?["ok"]?.GetValue<bool?>() == true;
                     results.Add(new JsonObject { ["name"] = call.Name, ["ok"] = ok, ["result"] = payload });
                     if (!ok) meta["stoppedAt"] = call.Name;
                     return ok;
                 }, meta);
-                // envelope: legacy-independent-verdicts
                 meta["success"] = committed; meta["operationSuccess"] = committed; meta["apiCallSuccess"] = true;
-                return new ResponseMessage { Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta = meta };
+                return SessionToolContract.Map(tool, new ResponseMessage { Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta = meta }, true, false);
             }
             catch (Exception ex)
             {
-                meta["error"] = ex.ToString(); meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
-                return new ResponseMessage { Message = "RunToolsInTransaction failed: " + ex.Message, Meta = meta };
+                meta["exceptionType"] = ex.GetType().Name; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
+                // A throwing begin/commit/dispose cannot prove rollback, even if no
+                // inner call returned. Retain all earlier results and do not replay.
+                meta["outcome"] = "unknown";
+                return SessionToolContract.Map(tool, new ResponseMessage { Message = "Transaction outcome is unconfirmed.", Meta = meta }, true, false);
             }
         }
     }

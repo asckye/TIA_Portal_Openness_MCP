@@ -27,18 +27,18 @@ namespace TiaMcpServer.Tests
                 S("limit", "integer", false, "200"),
                 S("ratio", "number", false, "0.5"),
                 S("dryRun", "boolean", false, "true"),
-                S("free", "string", false, "\"\"", "free: any text, e.g. 'x'"),
+                S("free", "array", false, null, "free: array values"),
             };
-            var schema = O("{\"type\":\"object\",\"properties\":{\"softwarePath\":{\"type\":\"string\"},\"action\":{\"type\":\"string\"},\"tableKind\":{\"type\":\"string\"},\"mode\":{\"type\":\"string\"},\"limit\":{\"type\":\"integer\"},\"ratio\":{\"type\":\"number\"},\"dryRun\":{\"type\":\"boolean\"},\"free\":{\"type\":\"string\"}},\"required\":[\"softwarePath\"]}");
+            var schema = O("{\"type\":\"object\",\"properties\":{\"softwarePath\":{\"type\":\"string\"},\"action\":{\"type\":\"string\"},\"tableKind\":{\"type\":\"string\"},\"mode\":{\"type\":\"string\"},\"limit\":{\"type\":\"integer\"},\"ratio\":{\"type\":\"number\"},\"dryRun\":{\"type\":\"boolean\"},\"free\":{\"type\":\"array\"}},\"required\":[\"softwarePath\"]}");
             var r = SchemaHintsLogic.Augment(schema, specs, O("{\"softwarePath\":\"PLC_1\",\"action\":\"read\",\"free\":[\"a\"]}"));
             var props = (JsonObject)schema["properties"]!;
             check(r.Enums == 3 && r.EnumProperties.SequenceEqual(new[] { "action", "tableKind", "mode" }), "schema: enum for pipe / unspaced pipe / slash lists, none for prose");
             check(props["action"]!["enum"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "read", "create", "delete" }), "schema: enum values in documented order");
             check(props["mode"]!["enum"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "default", "singleStep", "" }), "schema: the empty default is added to the enum so the default stays valid");
-            check(props["action"]!["default"]!.GetValue<string>() == "read" && props["limit"]!["default"]!.GetValue<long>() == 200 && Math.Abs(props["ratio"]!["default"]!.GetValue<double>() - 0.5) < 1e-9 && props["dryRun"]!["default"]!.GetValue<bool>() == true && props["free"]!["default"]!.GetValue<string>() == "", "schema: defaults typed per kind");
+            check(props["action"]!["default"]!.GetValue<string>() == "read" && props["limit"]!["default"]!.GetValue<long>() == 200 && Math.Abs(props["ratio"]!["default"]!.GetValue<double>() - 0.5) < 1e-9 && props["dryRun"]!["default"]!.GetValue<bool>() == true && props["free"]!["default"] == null, "schema: defaults typed per kind");
             check(props["softwarePath"]!["default"] == null && props["softwarePath"]!["examples"]!.AsArray()[0]!.GetValue<string>() == "PLC_1" && props["action"]!["examples"]!.AsArray().Count == 1 && props["limit"]!["examples"] == null, "schema: examples only where the worked example has a value, no default for required");
-            check(r.Defaults == 7 && r.Examples == 3 && r.Changed, "schema: counts");
-            check(props["free"]!["examples"]!.AsArray()[0]!.GetValue<string>() == "[\"a\"]", "schema: array example on a string parameter is shown as JSON text");
+            check(r.Defaults == 6 && r.Examples == 3 && r.Changed, "schema: counts");
+            check(props["free"]!["examples"]!.AsArray()[0]!.AsArray()[0]!.GetValue<string>() == "a", "schema: array example retains its JSON array type");
             var again = SchemaHintsLogic.Augment(schema, specs, null);
             check(!again.Changed, "schema: idempotent (existing enum / default / examples kept)");
             check(!SchemaHintsLogic.Augment(O("{\"type\":\"object\"}"), specs, null).Changed, "schema: no properties -> nothing invented");
@@ -84,17 +84,6 @@ namespace TiaMcpServer.Tests
             check(vm["chartPath"]!.GetValue<string>() == "<Folder/Name>" && vm["tablePath"]!.GetValue<string>() == "<Folder/Name>", "derive: object paths are not host paths");
             check(vm["importPath"]!.GetValue<string>().StartsWith(@"C:\Temp\") && vm["logFilePath"]!.GetValue<string>().StartsWith(@"C:\Temp\"), "derive: host paths by name");
 
-            // ---- PreflightSummary (what a failed call carries) ----
-            var summary = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"SoftwarePath\":\"HMI\",\"changes\":{}}"));
-            check(summary["missing"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "expectedProject" }) && summary["caseFixes"]!.AsArray().Count == 1 && summary["example"] is JsonObject && summary["exampleDerived"]!.GetValue<bool>() && summary["next"]!.GetValue<string>().StartsWith("Correct the argument problems"), "summary: missing + case fix + derived example + next step");
-            check(summary["unknown"] == null && summary["typeProblems"] == null && summary["prerequisite"] == null, "summary: empty lists omitted, prerequisite unknown offline");
-            var clean = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changes\":{}}"));
-            check(clean["missing"] == null && clean["next"]!.GetValue<string>().StartsWith("The message names the cause"), "summary: clean arguments -> business-failure guidance");
-            var unknownTool = McpServer.PreflightSummary("NoSuchTool", O("{}"));
-            check(unknownTool["next"]!.GetValue<string>().StartsWith("No tool named 'NoSuchTool'"), "summary: unknown tool");
-            var enumSpecsTool = McpServer.PreflightSummary("SetUnifiedRuntimeSettings", O("{\"softwarePath\":\"HMI\",\"expectedProject\":\"P\",\"changes\":{},\"dryRun\":\"maybe\"}"));
-            check(enumSpecsTool["typeProblems"]!.AsArray().Count == 1, "summary: type problem listed");
-
             // ---- vocabulary (parameters without their own [Description]) ----
             check(ParameterVocabulary.Describe("dryRun")!.StartsWith("dryRun: true (default) previews") && ParameterVocabulary.Describe("nope") == null && ParameterVocabulary.Names.Count >= 60, "vocabulary: common names covered, unknown -> null");
             check(PreflightLogic.Alternatives(ParameterVocabulary.Describe("unitKind")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("action")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("eventType")).Count == 0, "vocabulary: generic texts never turn into a (wrong) enum");
@@ -111,8 +100,8 @@ namespace TiaMcpServer.Tests
             foreach (var recipe in ToolRecipes.All)
                 foreach (var step in recipe.Steps)
                     check(JsonNode.Parse(step.ArgumentsJson) is JsonObject, "recipes: '" + recipe.Topic + "' step " + step.Tool + " is a JSON object");
-            var sentinel = ToolRecipes.ValidateAgainst(tool => tool == "Bootstrap" ? new List<KeyValuePair<string, bool>>() : tool == "Connect" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("project", true) } : null);
-            check(sentinel.Any(p => p.Contains("connect-project step 2 (Connect): 'projectName' is not a parameter")) && sentinel.Any(p => p.Contains("required parameter 'project' missing")) && sentinel.Any(p => p.EndsWith("no tool of that name")), "recipes: validation flags wrong keys, missing required and unknown tools (sentinel)");
+            var sentinel = ToolRecipes.ValidateAgainst(tool => tool == "InitializeEnvironment" ? new List<KeyValuePair<string, bool>>() : tool == "ConnectPortal" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("project", true) } : null);
+            check(sentinel.Any(p => p.Contains("connect-project step 2 (ConnectPortal): 'projectName' is not a parameter")) && sentinel.Any(p => p.Contains("required parameter 'project' missing")) && sentinel.Any(p => p.EndsWith("no tool of that name")), "recipes: validation flags wrong keys, missing required and unknown tools (sentinel)");
             IReadOnlyList<KeyValuePair<string, bool>>? Linked(string tool)
             {
                 var method = ToolBridgeFixture.Catalog.Methods.FirstOrDefault(entry => string.Equals(entry.Key, tool, StringComparison.Ordinal)).Value;
@@ -121,11 +110,12 @@ namespace TiaMcpServer.Tests
             var linkedProblems = ToolRecipes.ValidateAgainst(Linked).Where(p => !p.EndsWith("no tool of that name")).ToList();
             check(linkedProblems.Count == 0, "recipes: steps of linked tools fit" + (linkedProblems.Count > 0 ? ": " + string.Join("; ", linkedProblems) : ""));
 
-            var list = McpServer.GetRecipe("");
-            check(list.Meta!["success"]!.GetValue<bool>() && list.Items!.Count() == ToolRecipes.All.Count && list.Meta["topics"]!.AsArray().Count == ToolRecipes.All.Count, "GetRecipe: empty topic lists every recipe");
-            var one = McpServer.GetRecipe("download-plcsim");
-            check(one.Meta!["success"]!.GetValue<bool>() && one.Meta["steps"]!.AsArray().Count == 11 && one.Items!.Any(i => i.StartsWith("7. DownloadPlc ")) && one.Items!.First().StartsWith("Purpose:"), "GetRecipe: numbered exact calls with expectations");
-            check(!McpServer.GetRecipe("nope").Meta!["success"]!.GetValue<bool>() && McpServer.GetRecipe("nope").Message!.Contains("download-plcsim"), "GetRecipe: unknown topic lists the topics");
+            var usage = new ToolUsageTools();
+            var list = McpServer.ResultBody(usage.GetToolUsage(exampleKind: "sequence"))!;
+            check((bool)list["ok"]! && list["data"]!["examples"]!.AsArray().Count > 0, "usage: lists call sequences");
+            var one = McpServer.ResultBody(usage.GetToolUsage(exampleId: "sequence/download-plcsim"))!;
+            check((bool)one["ok"]! && one["data"]!["examples"]![0]!["steps"]!.AsArray().Count == 11, "usage: preserves the ordered sequence");
+            check((string?)McpServer.ResultBody(usage.GetToolUsage(exampleId: "sequence/nope"))!["error"]!["code"] == "NOT_FOUND", "usage: unknown sequence is not found");
         }
     }
 }

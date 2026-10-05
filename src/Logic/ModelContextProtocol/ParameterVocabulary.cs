@@ -22,7 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["softwarePath"] = "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             ["targetSoftwarePath"] = "targetSoftwarePath: the target PLC software path from GetProjectTree (e.g. 'PLC_1').",
             ["hmiSoftwarePath"] = "hmiSoftwarePath: the HMI software path from GetProjectTree (e.g. 'HMI_RT_1').",
-            ["expectedProject"] = "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            ["expectedProject"] = "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             ["expectedToken"] = "expectedToken: the token a preceding dryRun=true call returned; passing it proves the same change is being applied.",
             ["devicePathJson"] = "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
             ["itemPathJson"] = "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",

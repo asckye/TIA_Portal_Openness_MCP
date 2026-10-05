@@ -21,7 +21,7 @@ namespace TiaMcpServer.Siemens
                 if (entry is not JsonObject o || o["name"] is not JsonValue nameValue) throw new ArgumentException("Each call is {\"name\":\"<tool>\",\"arguments\":{...}}.");
                 var name = nameValue.ToString();
                 if (string.IsNullOrWhiteSpace(name) || name.Any(c => !char.IsLetterOrDigit(c))) throw new ArgumentException("Tool names are plain identifiers: " + name);
-                if (string.Equals(name, "RunToolsInTransaction", StringComparison.OrdinalIgnoreCase) || string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Nested transactions / CallTool are refused inside a transaction.");
+                if (string.Equals(name, "RunToolTransaction", StringComparison.OrdinalIgnoreCase) || string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Nested transactions / CallTool are refused inside a transaction.");
                 var arguments = o["arguments"];
                 if (arguments != null && arguments is not JsonObject) throw new ArgumentException("arguments of " + name + " must be a JSON object.");
                 calls.Add(new ToolCall { Name = name, ArgumentsJson = arguments?.ToJsonString() ?? "{}" });

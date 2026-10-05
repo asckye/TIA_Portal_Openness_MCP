@@ -46,7 +46,7 @@ namespace TiaMcpServer.Tests
                 yield return new object[] { "L", value, "src/Logic/Siemens/PlcTagEditingLogic.cs:48-66" };
             foreach (string value in new[] { "true", "42.5", "\"text\"", "{\"bicoSource\":\"r19\"}", "{\"bicoSource\":\"P2050[0].6\"}", "null", "[]", "{}", "{\"bicoSource\":\"bad\"}", "{\"bicoSource\":\"r19\",\"other\":0}", "{\"BicoSource\":\"r19\"}", "{\"bicoSource\":null}" })
                 yield return new object[] { "V", value, "src/Engine/Siemens/StartdriveLogic.cs:131-158" };
-            foreach (string value in new[] { "[{\"name\":\"GetSessionState\",\"arguments\":{}}]", "[]", "{}", "[null]", "[{\"name\":\"CallTool\",\"arguments\":{}}]", "[{\"name\":\"RunToolsInTransaction\",\"arguments\":{}}]", "[{\"name\":\"GetSessionState\",\"arguments\":[]}]", "[{\"name\":\"bad name\",\"arguments\":{}}]",
+            foreach (string value in new[] { "[{\"name\":\"GetSessionState\",\"arguments\":{}}]", "[]", "{}", "[null]", "[{\"name\":\"CallTool\",\"arguments\":{}}]", "[{\"name\":\"RunToolTransaction\",\"arguments\":{}}]", "[{\"name\":\"GetSessionState\",\"arguments\":[]}]", "[{\"name\":\"bad name\",\"arguments\":{}}]",
                 "[" + string.Join(",", Enumerable.Repeat("{\"name\":\"GetSessionState\",\"arguments\":{}}", 20)) + "]",
                 "[" + string.Join(",", Enumerable.Repeat("{\"name\":\"GetSessionState\",\"arguments\":{}}", 21)) + "]" })
                 yield return new object[] { "C", value, "src/Engine/Siemens/ToolTransactionRules.cs:12-28" };

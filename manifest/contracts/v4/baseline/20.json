@@ -1,8 +1,7 @@
 {
   "liteTools": [
     "ArchiveSavedProject",
-    "AttachToOpenProject",
-    "Bootstrap",
+    "AttachOpenProject",
     "BuildPlcGlobalDb",
     "BuildPlcTagTable",
     "BuildPlcUdt",
@@ -11,34 +10,36 @@
     "CloseProject",
     "CompileHmiDiagnostics",
     "CompilePlcDiagnostics",
-    "Connect",
-    "ConnectToProject",
+    "ConnectPortal",
+    "ConnectProject",
     "CreateHardwareDevice",
     "CreateProject",
     "DeleteExportHandle",
     "DescribeHmiScreen",
-    "Disconnect",
-    "Doctor",
+    "DisconnectPortal",
     "ExportPlcBlock",
     "ExportPlcTagTable",
     "ExportPlcType",
     "FindTools",
     "GenerateBlocksFromExternalSource",
     "GenerateErrorReport",
+    "GetEnvironmentDiagnostics",
     "GetExportContent",
+    "GetOpennessWorkerStatus",
     "GetPlcBlockHierarchy",
     "GetPlcBlockInfo",
     "GetPlcTypeInfo",
-    "GetProject",
+    "GetProjectInfo",
     "GetProjectTree",
+    "GetSessionState",
     "GetSoftwareInfo",
     "GetSoftwareTree",
-    "GetState",
     "GetToolUsage",
     "ImportPlcBlock",
     "ImportPlcExternalSource",
     "ImportPlcTagTable",
     "ImportPlcType",
+    "InitializeEnvironment",
     "ListDevices",
     "ListExportHandles",
     "ListHmiScreens",
@@ -52,7 +53,6 @@
     "OpenProject",
     "PlanArtifactImportOrder",
     "PreviewToolCall",
-    "ReadOpennessWorkerStatus",
     "RestartOpennessWorker",
     "SaveExportContent",
     "SaveProject",
@@ -536,7 +536,7 @@
       "name": "ApplyUnifiedHmiLayout"
     },
     {
-      "descriptionSha256": "617c1f8a2d7f4924548b2f622df6bd7ff334acd800d587d566806b728770fe76",
+      "descriptionSha256": "e57af44266f3c22bd616fdff452e288d991b292ba30bd809db19ca85da334161",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -1177,11 +1177,12 @@
       "name": "AttachDeviceNodeToSubnet"
     },
     {
-      "descriptionSha256": "8c21f853b498a7763da4f80046216be63c98597cdf179312262c162b53d81df9",
+      "descriptionSha256": "38d2f89391d2aa2e4c0f02223591ac284c66b8241bd475080be5747314633cdb",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "projectName": {
-            "description": "projectName: name shown in TIA (e.g. '项目1')",
+            "description": "projectName: exact name shown in TIA (e.g. 'Project1')",
             "examples": [
               "项目1"
             ],
@@ -1193,7 +1194,7 @@
         ],
         "type": "object"
       },
-      "name": "AttachToOpenProject"
+      "name": "AttachOpenProject"
     },
     {
       "descriptionSha256": "f47b5d448d086809957036955577e6dba8d4f4fcadcf6bb04b50e99a527efe89",
@@ -1363,14 +1364,6 @@
         "type": "object"
       },
       "name": "BindUnifiedHmiTagDynamization"
-    },
-    {
-      "descriptionSha256": "76acb2e10bbffa9066303079b3df38b6d1f14fed49be319d08e397e24da2b60c",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "Bootstrap"
     },
     {
       "descriptionSha256": "dab93ef6b925418d004a43254e3d900bf50d8674e94b976a5ceeb804a1064ee8",
@@ -6628,6 +6621,34 @@
       "name": "BuildPlcUdt"
     },
     {
+      "descriptionSha256": "33c4b0ac163114eb3bd1ed621a8ce26c2aa5ea4cc855ace355949bac3cf0db2d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "spec": {
+            "description": "spec: JSON object describing the project to generate. See tool description for keys.",
+            "examples": [
+              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "spec"
+        ],
+        "type": "object"
+      },
+      "name": "BuildProjectScaffold"
+    },
+    {
       "descriptionSha256": "a71accea88bb04bdf79ceb757392ad7e26efc9bc5151cbc9bb8c6de62a158e7f",
       "inputSchema": {
         "additionalProperties": false,
@@ -7584,7 +7605,7 @@
       "name": "BuildUnifiedHmiThemeDesign"
     },
     {
-      "descriptionSha256": "dbc9ebc2c2fa376e98cca8f53fe036fe4c800634d9b22a4e1fe1fa44feba33c5",
+      "descriptionSha256": "40a2613749df06a00b57e5d54a26defc18020ef52e731529ea1feb47c1366ac6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7595,7 +7616,7 @@
           "name": {
             "description": "Exact currently registered tool name from FindTools.",
             "examples": [
-              "GetState"
+              "GetSessionState"
             ],
             "type": "string"
           }
@@ -7608,7 +7629,7 @@
       "name": "CallTool"
     },
     {
-      "descriptionSha256": "0520b92e872c30221c72ae64313a0430bdfff101f3570b8b3b821c44badb8ac4",
+      "descriptionSha256": "554c8a9311c6939cf1f11fdd80a9050f7bf99d65bb264107d8cce3179f60337e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7626,25 +7647,6 @@
         "type": "object"
       },
       "name": "CheckDownloadReadiness"
-    },
-    {
-      "descriptionSha256": "7b2045fe7a7b9909b1a449c80ca0e4f77e2929280c834879d466f1cb9a92211e",
-      "inputSchema": {
-        "properties": {
-          "repository": {
-            "default": "asckye/TIA_Portal_Openness_MCP",
-            "description": "repository: GitHub owner/name to query (default the project's repository).",
-            "type": "string"
-          },
-          "timeoutSeconds": {
-            "default": 15,
-            "description": "timeoutSeconds: HTTP timeout for the GitHub API call (default 15).",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "CheckForUpdate"
     },
     {
       "descriptionSha256": "f2e5de86e49f21ddbf305967b5ceba44a0e4a4cd26bb6b50e23ba6d161f93603",
@@ -7676,6 +7678,26 @@
       "name": "CheckLibraryUpdates"
     },
     {
+      "descriptionSha256": "76e77fe827e6ec44e35cd0ee55f6e9f48c3893ccea5fba7fd49126b77bc2e295",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "repository": {
+            "default": "asckye/TIA_Portal_Openness_MCP",
+            "description": "repository: GitHub owner/name to query (default the project's repository).",
+            "type": "string"
+          },
+          "timeoutSeconds": {
+            "default": 15,
+            "description": "timeoutSeconds: HTTP timeout for the GitHub API call (default 15).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "CheckProductUpdate"
+    },
+    {
       "descriptionSha256": "82bea17e6e906cc6074a9e1438c6c77a553da7d73c5563722ba194c2c78a3018",
       "inputSchema": {
         "additionalProperties": false,
@@ -7693,8 +7715,9 @@
       "name": "ClearExportHandles"
     },
     {
-      "descriptionSha256": "7138565d918d10be4f31b95fed3721ac5c1e3bb63b7cb46880eadfb43f8a59e7",
+      "descriptionSha256": "92d0ea1f86ab28bc0d0c026774bf45b2affa587d69054f5b2ea42cbf4ba8af38",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -7949,7 +7972,7 @@
       "name": "CompareProjects"
     },
     {
-      "descriptionSha256": "a27c8834eefbcfad35c54d3d0688d16c20b3034bff38899b5f7490c838e4f5d5",
+      "descriptionSha256": "4eb2b59c6d979ca2fc087ddcf0bf4d5b75d57aa37b3ef52028f02dc0145eb1c3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11940,7 +11963,7 @@
       "name": "CompileDevice"
     },
     {
-      "descriptionSha256": "93533af2f01e9907bcc7cbe86f177789d4465649ba156f2d76dd3656d9a1fc15",
+      "descriptionSha256": "f631c6411cbb15c3000864f80c82969058cc181770f76bfa4a2eeea74dbc302a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11960,7 +11983,7 @@
       "name": "CompileHmiDiagnostics"
     },
     {
-      "descriptionSha256": "d2c12096647fe4e29a7bc4fcf02f4006f21e216a00c9f540f1be8a3046a58cb6",
+      "descriptionSha256": "93a7d411906b12de7640498f7b192ad73d7fae50d3873b0f3c8709b5e3adefdb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11985,7 +12008,7 @@
       "name": "CompilePlcDiagnostics"
     },
     {
-      "descriptionSha256": "7402339963e99da3b29d76337e481984e8cafffcb74bfea7b58c208a0c7c4af8",
+      "descriptionSha256": "7b206468f1c7c50a6a720c1bf75940255de40e9e9d230022cb3a1a01f25b153e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12077,29 +12100,7 @@
       "name": "ConfigureMotionHardwareConnection"
     },
     {
-      "descriptionSha256": "801c9f8e36244dab41ed2021cb15cf157ac9de766526b2c0d172752271a6c023",
-      "inputSchema": {
-        "properties": {
-          "allowStart": {
-            "default": false,
-            "description": "allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolated for an explicit new instance.",
-            "type": "boolean"
-          },
-          "projectName": {
-            "default": "",
-            "description": "projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectToProject with full identity.",
-            "examples": [
-              "项目1"
-            ],
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "name": "Connect"
-    },
-    {
-      "descriptionSha256": "0347ef7a669083ca0190b2193c91d25cb1a4a80acc608d1eb4a4dbd760ee4f70",
+      "descriptionSha256": "533ce02339f2a1256e200973a16602ed517324bbf5fd3208d2afd98f0f503d0e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12135,15 +12136,16 @@
       "name": "ConnectDeviceNodesToProfinetSubnet"
     },
     {
-      "descriptionSha256": "1592f0cfbbd3d1cffd0da1575c84eb1fa9a68a4d75583b5b0adfeadb850541fb",
+      "descriptionSha256": "533d469bc1db713eeb2279133b1fd93e39cb3dcbe583a032fc8d2ad85d46b952",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
-      "name": "ConnectIsolated"
+      "name": "ConnectIsolatedPortal"
     },
     {
-      "descriptionSha256": "f1c732c63b7d1f85060fdb13cc88af8b8e853356ef2927995f65c7fff49ef034",
+      "descriptionSha256": "7c76a220059a7d55a329c943faf25cc798e07d3d30ab457a3d22c67c45386207",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12204,6 +12206,56 @@
       "name": "ConnectOnlinePlc"
     },
     {
+      "descriptionSha256": "e371f4db39cd2828af9da406e9bd2291a7f5f07041682a0cb2a0088f700df003",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "allowStart": {
+            "default": false,
+            "description": "allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolatedPortal for an explicit new instance.",
+            "type": "boolean"
+          },
+          "projectName": {
+            "default": "",
+            "description": "projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectProject with full identity.",
+            "examples": [
+              "项目1"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ConnectPortal"
+    },
+    {
+      "descriptionSha256": "2e81522484e86c140b671f4aa657189a2cde2f94ef8f37158f756e752c60d04a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "processId": {
+            "description": "processId: exact running TIA PID from ListPortalProcessProjects.",
+            "type": "integer"
+          },
+          "processStartUtc": {
+            "description": "processStartUtc: exact ISO UTC start timestamp from the same process listing; prevents PID reuse.",
+            "type": "string"
+          },
+          "projectPath": {
+            "description": "projectPath: absolute project file path from that process listing; another path is refused.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "processId",
+          "processStartUtc",
+          "projectPath"
+        ],
+        "type": "object"
+      },
+      "name": "ConnectProject"
+    },
+    {
       "descriptionSha256": "3060113699409d6569b7977121e921a7e8cd152813e313c4d4d18d459be2a009",
       "inputSchema": {
         "additionalProperties": false,
@@ -12239,33 +12291,7 @@
       "name": "ConnectProjectToWorkspace"
     },
     {
-      "descriptionSha256": "0c417f11bb856a63985a8e32506f7692263dd3ecf7d61fce9f7ca1a298bac039",
-      "inputSchema": {
-        "properties": {
-          "processId": {
-            "description": "processId: exact running TIA PID from ListPortalProcessProjects.",
-            "type": "integer"
-          },
-          "processStartUtc": {
-            "description": "processStartUtc: exact ISO UTC start timestamp from the same process listing; prevents PID reuse.",
-            "type": "string"
-          },
-          "projectPath": {
-            "description": "projectPath: absolute project file path from that process listing; another path is refused.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "processId",
-          "processStartUtc",
-          "projectPath"
-        ],
-        "type": "object"
-      },
-      "name": "ConnectToProject"
-    },
-    {
-      "descriptionSha256": "bb57969b18f835081e6db95796f97382dc940ff7e1b7da5c9486027a7eb561b4",
+      "descriptionSha256": "07e2d26d55bf7c462e43b3bd606dd661ac0e3446394c35962d54263c54f34efc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12355,7 +12381,7 @@
       "name": "CreateHardwareCatalogDevice"
     },
     {
-      "descriptionSha256": "d992224c01b746e21d3a796267d7ae0ac40262a718fafb711e4a7fb90a9f641c",
+      "descriptionSha256": "ec048efa309a8ae8ab0289cd7ee32698fa163e19811bae81ea376b2002e1496c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12447,7 +12473,7 @@
       "name": "CreateLibraryMasterCopy"
     },
     {
-      "descriptionSha256": "195afc281d194189d7c77c3fffd1e6d7fe4f6d29c9bff0fd1b8df1e88a6f66a3",
+      "descriptionSha256": "efe4cc2d2543d75640dee3db9ef5708796705e3003833b5cc0db2d29b877ce79",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12543,8 +12569,9 @@
       "name": "CreatePlcTypeGroup"
     },
     {
-      "descriptionSha256": "64c8bfca748b8ce48f3d9b014d5e149f04767655c3e8c322e774c77add5972e4",
+      "descriptionSha256": "6f63903acebdc98a79866b1d645d9b14769973150e49d661c2de174d5e52866b",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "closeForeignProject": {
             "default": false,
@@ -13174,7 +13201,7 @@
       "name": "DescribeObjectProperty"
     },
     {
-      "descriptionSha256": "7df7634530dbaab50eae551eb8d3cfb3dbe8e73dd5a25d64148efd395b134d64",
+      "descriptionSha256": "73f9e403facbcd5750e3c0c3343bc85b6f090f4d0f7a590f067fbbad4bceb40b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13307,15 +13334,7 @@
       "name": "DescribeUnifiedScreenItemType"
     },
     {
-      "descriptionSha256": "80ce6e3247646e8958df670047eb5fb15a078dcf0eb80e6459983ac3f22ae445",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "Disconnect"
-    },
-    {
-      "descriptionSha256": "b6a62aafe34ee90717044559a3c9deb658db6856155bb77e2b011c610edd110c",
+      "descriptionSha256": "654ac0b2e6c02dc9034a7f204874c0df04d0146c7593c579b3b2bf13db9ae2d9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13335,7 +13354,7 @@
       "name": "DisconnectOnlinePlc"
     },
     {
-      "descriptionSha256": "429495fb0d29111fbfd99056b578adcf83ed9d3f08d4a6f691d46097d27011d9",
+      "descriptionSha256": "9edccbfda9f7d1adcedb343ffcfa807b6a00845a5fc7f8761cabd040c1f89689",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -13344,24 +13363,16 @@
       "name": "DisconnectOnlinePlcs"
     },
     {
-      "descriptionSha256": "5505dea928ea0d4e477c787b3d6f83633f69727b087d28a250aac00d020ed551",
+      "descriptionSha256": "8d66e0378570cbaf39e968c8175b1d68d1e7045c363af4ad6e7f41c1c810fc74",
       "inputSchema": {
-        "properties": {
-          "fix": {
-            "default": true,
-            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          }
-        },
+        "additionalProperties": false,
+        "properties": {},
         "type": "object"
       },
-      "name": "Doctor"
+      "name": "DisconnectPortal"
     },
     {
-      "descriptionSha256": "9dfd4e0725d4df068feb2abb57de8c7ab3c3791dce3edf6574d4dd5e6fb49be3",
+      "descriptionSha256": "a2c3e7a548fdfb11d251a55cfc41a2022d8863b3980c13ca04d02a10a769cabb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13527,6 +13538,7 @@
     {
       "descriptionSha256": "7e059c31a06bf45367108c59ea7d1e252807caf89ccaed786a4cfe5b3142c281",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -13639,7 +13651,7 @@
       "name": "EnsureUnifiedHmiButtonEventHandler"
     },
     {
-      "descriptionSha256": "8d04b19ef59d7b081c663ee11f5fd9cf164dd247cb21fd00d156047661b864e5",
+      "descriptionSha256": "aeaeffccfe276f8064330c1d18801de8677ced987a0385b18f838ae4543313a4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13703,7 +13715,7 @@
       "name": "EnsureUnifiedHmiDynamization"
     },
     {
-      "descriptionSha256": "da300f71ec9866ddab6f18eed3bf2e9db3ce14f34e90e361cdbd05b6ce012475",
+      "descriptionSha256": "c0d7e9a8a6e3f2f591f5509a23a6c64a9f4734439315a050f2606cda202ffb6b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13735,7 +13747,7 @@
       "name": "EnsureUnifiedHmiScreen"
     },
     {
-      "descriptionSha256": "7f3481ef214951b0093b14cb3d72d4126a9a18ade384d204be9fe6a3dd467090",
+      "descriptionSha256": "08ef96404d7aed2e969dde5c5499ab75d1da83038ea5d69af4eee00fa067b260",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13792,7 +13804,7 @@
       "name": "EnsureUnifiedHmiScreenItem"
     },
     {
-      "descriptionSha256": "7fcac34a1952710dc7cbc1ce3a25b4e90823e1014bed7987e4cc322c3731a365",
+      "descriptionSha256": "62636ee8683b01fee33733b3117cd799ac094fb8abc4ac0dd5ed32880a1da787",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13849,7 +13861,7 @@
       "name": "EnsureUnifiedHmiTag"
     },
     {
-      "descriptionSha256": "a391a8e2a4f2f9ee1b6095c2ff99dd3474fe0e6611c162a5f3f31257914ae2ad",
+      "descriptionSha256": "173ad64b5c152fdeca42231aba3399c5df0ccc167b2a6646efb973dd0730d255",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14341,7 +14353,7 @@
       "name": "ExchangeUnifiedTags"
     },
     {
-      "descriptionSha256": "61c7829e72712f2df5a20df5d3bb12eb7b101427f365a5864b8074e6c06d3a84",
+      "descriptionSha256": "c533d80dbb58648a957727e7dc0f75e53fee17f228d787e6089e86412995ce47",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14363,7 +14375,7 @@
       "name": "ExportAlarmClasses"
     },
     {
-      "descriptionSha256": "6b511f584ca88d4c486ea521019cf734e14b29b177cf716d69fdc16c4f2d938e",
+      "descriptionSha256": "d9e380bacf650f74abbb0b6404f47c500b5d2ea9664a73c57ceea056b1784782",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14400,7 +14412,7 @@
       "name": "ExportAlarmInstanceTexts"
     },
     {
-      "descriptionSha256": "ea705f7fcb1e77afe766b09f54b5a807bef464810bd50982bda0886d26b74819",
+      "descriptionSha256": "ae0f641ab9b8949107896a559c37f445c4ef9bc8fcbdde26de51f73d84dac9b3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14566,7 +14578,7 @@
       "name": "ExportHmiTagTable"
     },
     {
-      "descriptionSha256": "49bb899524401b45cd45ec32e60a6ae509095a98d13d65c366f9b17decf0c18f",
+      "descriptionSha256": "20e1c747f8c7b6e1d49089e6be3cbb9dee68b8e2c66fbc464ee4d37fada5d938",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14598,7 +14610,7 @@
       "name": "ExportOpcUaInterface"
     },
     {
-      "descriptionSha256": "d4dabe786b4bd82121f932b676bf14c66ecbed4c3fdff6a07d0bc1570a206159",
+      "descriptionSha256": "345bc8b10379ed5c30c0ed420dd68306fb2944e2ea7d788599e347ff651c912d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15081,7 +15093,7 @@
       "name": "ExportScadaData"
     },
     {
-      "descriptionSha256": "1cd02c623d7effff0e5226ef963af226a7b1ae5c810cf0d018cc09ac1e6229f7",
+      "descriptionSha256": "193b16ac32d766e00ade4004f519c2f495a5db0edcdc17ca4f232d82d0fb0039",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15108,7 +15120,7 @@
       "name": "ExportTechnologyObject"
     },
     {
-      "descriptionSha256": "56bfe9b018b1ababfc3a317ee27f30b9697bf943dddd15d44d0fffbea03b361a",
+      "descriptionSha256": "3a23347b5b700429fb01f898eceae2fc68f1a752644ef5a13b92c2c927af9e05",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15261,10 +15273,11 @@
     {
       "descriptionSha256": "0d2d7ef7a8134e24b1f6ecd11fdf347dd2f03b97d9051c1b73d0b067964cb8a3",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "connectIfNeeded": {
             "default": false,
-            "description": "When true, call Connect during self-test if the server is not connected. This may attach to TIA Portal.",
+            "description": "When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.",
             "type": "boolean"
           },
           "includeProjectTree": {
@@ -15329,6 +15342,7 @@
     {
       "descriptionSha256": "558a63f806c9a05c4a68426b29e507b53dbb2929dbe0964e3597abd7dfa286e2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "detail": {
             "default": "",
@@ -15797,7 +15811,7 @@
       "name": "GetDeviceAddressing"
     },
     {
-      "descriptionSha256": "1b50d286ef4607c7ac9cdf4f5491b63d8e5e1eb6394427dfb8a46577c869621a",
+      "descriptionSha256": "4372c872c750d47ca8348976374284b5e227e7c89a3211f8f4764f403cc7bcfa",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15835,7 +15849,7 @@
       "name": "GetDeviceInfo"
     },
     {
-      "descriptionSha256": "e26d99dd556b27fdb9dea7632739a4c987ebac5dc68860835d1241d9fbea7469",
+      "descriptionSha256": "4680c5a7f1da8ab54eb0e2aa8d20c23a1996531f58bf8778cf8fc731b15de163",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16085,6 +16099,24 @@
       "name": "GetDriveParameters"
     },
     {
+      "descriptionSha256": "cc70d6b1094de46f0c1da4a1af8e1955d18f78cf874b746b973b1774811e5be4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fix": {
+            "default": true,
+            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetEnvironmentDiagnostics"
+    },
+    {
       "descriptionSha256": "2747b1249d3f02221ddff8936f2a4a95ca68555aa93454bef7f94b1ee6d24d9f",
       "inputSchema": {
         "additionalProperties": false,
@@ -16156,7 +16188,7 @@
       "name": "GetHardwareFeatures"
     },
     {
-      "descriptionSha256": "4c58ddf79056e17473e69ec237b630c909bdc339adb69a7676bcf46a45265181",
+      "descriptionSha256": "e0eb76e8b0e85e26f80f085001c1294eedae5552955465a0e49db9f34b39477d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16173,7 +16205,7 @@
       "name": "GetHmiProgramInfo"
     },
     {
-      "descriptionSha256": "932d3ebfa63e9b69b6f041838452c46c864478f4bf9da7b3038a4296a1fd2c68",
+      "descriptionSha256": "dbc6aaad6c7e01ece4e19cb3c9084964069abcb6eca489e9956bd2ea33b81a0b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16314,6 +16346,73 @@
         "type": "object"
       },
       "name": "GetMotionAxisConfiguration"
+    },
+    {
+      "descriptionSha256": "bc4a21bbdbbc469b5c63c05266feb58cb10e83685f24d1c58965a88ae640f4ba",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "take": {
+            "default": 100,
+            "description": "Number of recent entries, 1..500.",
+            "examples": [
+              100
+            ],
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetNativeInvocationLog"
+    },
+    {
+      "descriptionSha256": "a85ef486995365f71c7868ef0e16f0c792ac11e645a8ddc29d77820c1e6385e4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "identifier": {
+            "default": "",
+            "description": "identifier: exact identifier of the object as the read action lists it.",
+            "type": "string"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "default": "device",
+            "description": "kind: device | deviceItem | plcBlock | plcType | plcTagTable.",
+            "enum": [
+              "device",
+              "deviceItem",
+              "plcBlock",
+              "plcType",
+              "plcTagTable"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "default": "",
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetObjectIdentifier"
     },
     {
       "descriptionSha256": "6c7a860cc4f91baead8a921527d6efc7c8b7b45781f731726fd73ca3e1f96ecf",
@@ -16458,7 +16557,7 @@
       "name": "GetOnlineDriveParameters"
     },
     {
-      "descriptionSha256": "5527e530bf2f26bfbfaf63cde727d432c6cabad473af7a320d899be1c073a1a9",
+      "descriptionSha256": "865061e3e7790fa960a94c8364171b39f18d542e91056c0a05baa43bdb432423",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16516,6 +16615,15 @@
       "name": "GetOpcUaAccessControl"
     },
     {
+      "descriptionSha256": "9971a059bd5cb784e3cec48040352bbcfa3790587bad8cbf8164aefd2c252479",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetOpennessCompatibility"
+    },
+    {
       "descriptionSha256": "6d4085caa5a56f381acff9c4a1b25757731228d63f1fac13014cfe7dd8d24d1d",
       "inputSchema": {
         "additionalProperties": false,
@@ -16546,6 +16654,15 @@
         "type": "object"
       },
       "name": "GetOpennessGuidance"
+    },
+    {
+      "descriptionSha256": "fdc8ae9def93643e83203f693cd7608498ce2ebf20923117ba49646a4da2b8dc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetOpennessWorkerStatus"
     },
     {
       "descriptionSha256": "2f50c5801e721f545bbeb82a7f692e949a828fe333f3a570c17c331058465bbe",
@@ -16645,7 +16762,7 @@
       "name": "GetPlcBlockHierarchy"
     },
     {
-      "descriptionSha256": "c666af481d0689c125bddad7be2f3b8d688752c95d1183185c8e8e3a60c3f43d",
+      "descriptionSha256": "e2782d9c12b0bfd4c656356acef25f4e6673702bb597827ee0d63afe622a5c5c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16903,7 +17020,7 @@
       "name": "GetPlcObjectFingerprints"
     },
     {
-      "descriptionSha256": "f6eff45350f5434b380bbbce9bcfed21ba38b57c0e6f947467d8605ddc278394",
+      "descriptionSha256": "17ec3b3153247a5bd74489302fef4afe7722294da0c62a23cb792c0aa68ff546",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16920,7 +17037,7 @@
       "name": "GetPlcOpcUaConfiguration"
     },
     {
-      "descriptionSha256": "70cb47853be2ffb6309d373ab3653cdeaa49675ec0dd6df85970b6425edc339d",
+      "descriptionSha256": "d1afc3129beee686d917df2390787ce006df5be4f8364c701d1bbe20119acd78",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17223,12 +17340,47 @@
       "name": "GetPlcWebVars"
     },
     {
-      "descriptionSha256": "da2a08e5e810fd785bfd6b4c484c818806736ca4bdaf37c8f6d27a7ce7f48504",
+      "descriptionSha256": "17b394e70951fdcce3f0dc6cbe667ea176db4aa94fd16697cbddd1008d882163",
       "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeProcesses": {
+            "default": true,
+            "description": "includeProcesses: list the TIA Portal processes on the machine.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "includeProducts": {
+            "default": true,
+            "description": "includeProducts: list the installed TIA products / option packages (TiaPortalProduct).",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeSessions": {
+            "default": true,
+            "description": "includeSessions: list the sessions of the bound portal.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetPortalInfo"
+    },
+    {
+      "descriptionSha256": "e564ad78d601ed68606c21a965269e74bacc26dfb1d7606d89a34e89b74f89a2",
+      "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
-      "name": "GetProject"
+      "name": "GetProjectInfo"
     },
     {
       "descriptionSha256": "8c81e375a6ef155a843aa48ffde4b8b79827e7955ff8ed3c4af693fc5680a2a3",
@@ -17272,7 +17424,7 @@
       "name": "GetProjectSettings"
     },
     {
-      "descriptionSha256": "61dd94918dea9c703b1f8db41f5243f5db52eb8fb99f55430b04535d19d60ba9",
+      "descriptionSha256": "04560511b86c65251afabd96a477f7db8061c49bd56ce5ddcc2d00c48052aee6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -17281,7 +17433,7 @@
       "name": "GetProjectTopology"
     },
     {
-      "descriptionSha256": "2d3e255a578801f02c1abf33bb10500ae0bbefdc786ec66cbb7b375cbfa40c70",
+      "descriptionSha256": "960e709f85e3ef93d4aa3cf4814cac5234c22dec24c787775b2878fb4160ad8b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -17373,6 +17525,15 @@
       "name": "GetSafetyBlockSignatures"
     },
     {
+      "descriptionSha256": "e45fc5c5c6a20aeca530bc264bebce3b1498f5cd536f26242634820ee773fa70",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetSessionState"
+    },
+    {
       "descriptionSha256": "79c4d266bdee7213f3751621f1a2879378b5e640122b0739bd4cb8975a101227",
       "inputSchema": {
         "additionalProperties": false,
@@ -17430,7 +17591,7 @@
       "name": "GetSivarcRuleTree"
     },
     {
-      "descriptionSha256": "3c6d7a55c9a8638147322fbcdfdbfe5e0e56978a9f94235176566bfa5f72e06b",
+      "descriptionSha256": "e00c1844a307453099f86030c9d3370bb73b4f8798b90b999b4a311cd7ab64f4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17450,7 +17611,7 @@
       "name": "GetSoftwareInfo"
     },
     {
-      "descriptionSha256": "74b8ea403aad5eb677b474622e8816d3e2887ab6c274e2eefff40fa3d2c419de",
+      "descriptionSha256": "d32e206740373c82b37ecf2fce2fac378718ff90b492cda3e5083756ab677409",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17468,14 +17629,6 @@
         "type": "object"
       },
       "name": "GetSoftwareTree"
-    },
-    {
-      "descriptionSha256": "2d3afc3a98d862e903a7ebc571f81c5a225f96f4809142d74cf79ec4ed837ba0",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "GetState"
     },
     {
       "descriptionSha256": "a4f7d8329c3fc12873f5926f24cef0487593ed94ac3d5f3559cb5a0e5d6e4532",
@@ -17733,7 +17886,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "itemName": {
@@ -17790,7 +17943,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "moduleName": {
@@ -17832,7 +17985,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "itemNames": {
@@ -17931,7 +18084,7 @@
       "name": "GetUnifiedHmiDynamization"
     },
     {
-      "descriptionSha256": "4aa5bb0704d4de43800953896a6dadf7191f630b9596eecd4a357c47449f8dc7",
+      "descriptionSha256": "8e6aa3ea12408a0851aeba0ccd65e3e26d19732e85d4400f7cef9a7d92ff418a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17978,7 +18131,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "pageSize": {
@@ -18242,7 +18395,7 @@
         "additionalProperties": false,
         "properties": {
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "fields": {
@@ -18382,7 +18535,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "itemName": {
@@ -18466,7 +18619,7 @@
       "name": "GetVersionControlStatus"
     },
     {
-      "descriptionSha256": "91425a70cd72cf9e7ca9863bc4b8066a5710dfb63d0f451f5c7088d7b92104a2",
+      "descriptionSha256": "a65480934621fba7c8925d95cf8eb2b42649d8bf8229d73146e9ad2d50686d64",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18488,7 +18641,7 @@
       "name": "ImportAlarmClasses"
     },
     {
-      "descriptionSha256": "56cc3b33c8bcdd8f2e74341746a5381cf5bba11f9bde483b68066a492490d48c",
+      "descriptionSha256": "70c04bf0a8321b8460503291587dde64230c06ff7d484dc264c3cd5b9d6f1edd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18838,7 +18991,7 @@
       "name": "ImportMasterCopyFromGlobalLibrary"
     },
     {
-      "descriptionSha256": "0d1a66917db987b23dfe0f2a921e3cf6cb8da13b1d2f6941e40c3ef3f335db6a",
+      "descriptionSha256": "b3cb6c9707885a20fc19b968713da93ec7ffc2742e02e4170e09421549d5a12b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18900,7 +19053,7 @@
       "name": "ImportPlcAlarmInstanceTexts"
     },
     {
-      "descriptionSha256": "4b12cefb75a40b1bcdae539dcd6b1ec4c25ef827c3111469488861fe74a8c37d",
+      "descriptionSha256": "b12e794f0f226111f6456727ea069fefc9beda6ab7222b0b9bfeee84f3e3c1bf",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19178,7 +19331,7 @@
       "name": "ImportPlcExternalSource"
     },
     {
-      "descriptionSha256": "639622c30c5e08c6cf811af89cce14b5699e2305a0f9b3fc0618f8e891cf9324",
+      "descriptionSha256": "806858356ca3927c8b1f4ed5ded91bfdec1b24e7708c85410b72d42858f0398b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19591,6 +19744,15 @@
       "name": "ImportUnifiedOpcUaAlarms"
     },
     {
+      "descriptionSha256": "fb3bf2bb325313dc83090714077972d68bfb86af2e073a6c4674508f0961803e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "InitializeEnvironment"
+    },
+    {
       "descriptionSha256": "a3ab52caab228cd59902bfc59ca7f18e789aa67b6b5ed81c3cf08ce20453aac1",
       "inputSchema": {
         "additionalProperties": false,
@@ -19608,6 +19770,7 @@
     {
       "descriptionSha256": "03d4b33dbe3c4f04c36f386c1efc78072b01da1fee2de094476d012b27e99468",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "filePath": {
             "description": "Absolute input/output path on the MCP server, with the documented extension.",
@@ -20556,7 +20719,7 @@
       "name": "ListDeviceItemChannels"
     },
     {
-      "descriptionSha256": "f7d661d77aadc57b29154eaedef9b746fb792211c976ef5b8bbc6a635c2ac8e7",
+      "descriptionSha256": "092ac37e5e93f9e8cdf29f8af73d0e284fc6cf56548b148fe538168cb8ae5838",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20710,7 +20873,7 @@
       "name": "ListHmiScreenPaths"
     },
     {
-      "descriptionSha256": "afd4bc185e8411f1406c64677ecfa336ad999fb0c4f0c82cfc2f7c5f9e06ed57",
+      "descriptionSha256": "6c519a7972ab48429f5355d0cdd2eff70ee3ff658cd6a848d613f2d661b932f2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20889,7 +21052,7 @@
       "name": "ListObjectChildren"
     },
     {
-      "descriptionSha256": "acebf99dd0339f9b8eeeb9edc72fae8ed85f04a2d71b0b11131aec40de1b9639",
+      "descriptionSha256": "e3048aa20189b7c143d28e00ff39822a0d57ae8c5349501a5069ad62789a4d46",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20937,7 +21100,7 @@
       "name": "ListPlcExternalSources"
     },
     {
-      "descriptionSha256": "57d84bb80c0332e3983e8cd3e5383f1f5071f06e344f5ca5e5db8d7cdad100ef",
+      "descriptionSha256": "14e0206134aea3f5a51349b9ff0095bdb92290724fe95637fbf827b1aff5aa90",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21072,7 +21235,7 @@
       "name": "ListPlcSystemGroups"
     },
     {
-      "descriptionSha256": "3f4c4213d868852521f18aa28b026474599b17145117a3d9a1622417bd6d8fa3",
+      "descriptionSha256": "4dbebafca52a04682f34c503f60846e8f642632992493e036ab4ce4edc48eb15",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21134,8 +21297,9 @@
       "name": "ListPlcWatchTables"
     },
     {
-      "descriptionSha256": "dbb218d7dff65c1218c3b8218355536257b60d2edd3ffe45e72e2b6b9f1bae1f",
+      "descriptionSha256": "931456dda32aaf373d7b5def11e1881cd07c08d4b399a1b9e632ccbf733b374e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -21231,7 +21395,7 @@
       "name": "ListSivarcRules"
     },
     {
-      "descriptionSha256": "16aaa787cd08d069f71f76c28f6d65f757a576df52d7821db1ea7d03dd293518",
+      "descriptionSha256": "0f76aed2333eff6d0e106ecf4495d53ccfac92f62c08ec35be1293ed8d32e424",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21428,7 +21592,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "pageSize": {
@@ -21486,7 +21650,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "folderPath": {
@@ -21528,7 +21692,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "pageSize": {
@@ -29218,7 +29382,7 @@
       "name": "MonitorPlcWatchTableS7"
     },
     {
-      "descriptionSha256": "df263b537ba55f6bffc17f5d2b4435721a7a77041956ff81e13f505b5eaeb4ce",
+      "descriptionSha256": "64cd8e6fc214729638eeb2fda51afa47908dc55527fe259805cf275a2a45e982",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29250,8 +29414,9 @@
       "name": "MovePlcBlockToGroup"
     },
     {
-      "descriptionSha256": "389487318eb0b5e967817fd9edf28b7c26bb01207d49d95c8af3cc21a62a7ce3",
+      "descriptionSha256": "a753d5572a4c8eea78bab12ce6dcaa18b4a8908c208a335cc64c26878e6ae3e2",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "closeForeignProject": {
             "default": false,
@@ -30053,118 +30218,6 @@
       "name": "ProbeS7CpuIdentity"
     },
     {
-      "descriptionSha256": "a08f3d0efe3ae487341530585b2dff743b4ebdffcfe28b344bf2435e6285f023",
-      "inputSchema": {
-        "properties": {
-          "take": {
-            "default": 100,
-            "description": "Number of recent entries, 1..500.",
-            "examples": [
-              100
-            ],
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadNativeInvocationLog"
-    },
-    {
-      "descriptionSha256": "34145c4c18656d06d1078f52bb5da9df64f39c1e43f3d17577cbca84b1c8df49",
-      "inputSchema": {
-        "properties": {
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
-          },
-          "identifier": {
-            "default": "",
-            "description": "identifier: exact identifier of the object as the read action lists it.",
-            "type": "string"
-          },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
-          },
-          "kind": {
-            "default": "device",
-            "description": "kind: device | deviceItem | plcBlock | plcType | plcTagTable.",
-            "enum": [
-              "device",
-              "deviceItem",
-              "plcBlock",
-              "plcType",
-              "plcTagTable"
-            ],
-            "type": "string"
-          },
-          "objectPath": {
-            "default": "",
-            "description": "objectPath: path of the object inside the software ('Group/Name').",
-            "type": "string"
-          },
-          "softwarePath": {
-            "default": "",
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadObjectIdentifier"
-    },
-    {
-      "descriptionSha256": "9075f9a84c1b8b61e664a1b2b1edae85deaccb5e75552594fbea171141f2d8e7",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "ReadOpennessCompatibility"
-    },
-    {
-      "descriptionSha256": "aa0bedfb04479c859067e1321e058d0404745511c95579baf99551c392824420",
-      "inputSchema": {
-        "properties": {},
-        "type": "object"
-      },
-      "name": "ReadOpennessWorkerStatus"
-    },
-    {
-      "descriptionSha256": "99ddafb01bd8a2fbff2ef2ebee60ad4743c9ee1b49c78d9047a1c0d6c65193cf",
-      "inputSchema": {
-        "properties": {
-          "includeProcesses": {
-            "default": true,
-            "description": "includeProcesses: list the TIA Portal processes on the machine.",
-            "examples": [
-              true
-            ],
-            "type": "boolean"
-          },
-          "includeProducts": {
-            "default": true,
-            "description": "includeProducts: list the installed TIA products / option packages (TiaPortalProduct).",
-            "examples": [
-              false
-            ],
-            "type": "boolean"
-          },
-          "includeSessions": {
-            "default": true,
-            "description": "includeSessions: list the sessions of the bound portal.",
-            "examples": [
-              true
-            ],
-            "type": "boolean"
-          }
-        },
-        "type": "object"
-      },
-      "name": "ReadPortalInfo"
-    },
-    {
       "descriptionSha256": "30582ce398c5e212a0f0659e27db9296276e140b2eff7384ddd0d44b3b75c6e6",
       "inputSchema": {
         "additionalProperties": false,
@@ -30348,6 +30401,7 @@
     {
       "descriptionSha256": "55c28ee7fd4ff77e96282730b0a4cf24eb5c4114cdaf4f9a41862264a9fe726f",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "confirmRestart": {
             "default": false,
@@ -30394,10 +30448,11 @@
     {
       "descriptionSha256": "ae3295ef2936ccae1d34a077b2ba20d3c06f4010ef01940c9c3b0f697e19d016",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
           "connectIfNeeded": {
             "default": false,
-            "description": "When true, call Connect before checks if the server is not connected. This is read-only but attaches to TIA Portal.",
+            "description": "When true, call ConnectPortal before checks if the server is not connected. This is read-only but attaches to TIA Portal.",
             "examples": [
               false
             ],
@@ -30545,6 +30600,7 @@
     {
       "descriptionSha256": "86da1233b54b03a9f15580ae6f24fdb42e897233784ceafad204128b696cee7a",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
@@ -30743,7 +30799,7 @@
       "name": "RunPlcSimAdvancedTestScenario"
     },
     {
-      "descriptionSha256": "fe896764ab23f400358a1bcb927d138610621b664086a3a8ea24332a3f667363",
+      "descriptionSha256": "4324d70f2d3b3b121626cd4224996d05f395cbd00b8a80b503e6cb5f1f73b039",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30836,12 +30892,26 @@
       "name": "RunTestSuiteCase"
     },
     {
-      "descriptionSha256": "ed207169b7c3c7ae5b4334234ca6348c28912338db2817a09de2ed5275a33444",
+      "descriptionSha256": "61522962b60ddfb4b57c6da4ee4257dcfc3dc431bc80e5535ed664d57ae16e17",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "callsJson": {
-            "description": "callsJson: JSON array of {name, arguments:{...}} supported tool calls to run inside one transaction.",
-            "type": "string"
+          "calls": {
+            "description": "calls: Array of {name, arguments:{...}} supported tool calls to run inside one transaction.",
+            "items": {
+              "properties": {
+                "arguments": true,
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "confirmChange": {
             "default": false,
@@ -30859,12 +30929,12 @@
           }
         },
         "required": [
-          "callsJson",
+          "calls",
           "text"
         ],
         "type": "object"
       },
-      "name": "RunToolsInTransaction"
+      "name": "RunToolTransaction"
     },
     {
       "descriptionSha256": "5530b7f47d77c389481ace2fae3071092ee0f080777aeb187b988fe5e8a9bf97",
@@ -30922,22 +30992,6 @@
       "name": "SamplePlcLiveValuesS7"
     },
     {
-      "descriptionSha256": "2ae8facf5b086cbc47e2a891eb0e7feb5c40c0ebbdad008a15c471be0c9f1451",
-      "inputSchema": {
-        "properties": {
-          "newProjectPath": {
-            "description": "newProjectPath: defines the new path where to save the project",
-            "type": "string"
-          }
-        },
-        "required": [
-          "newProjectPath"
-        ],
-        "type": "object"
-      },
-      "name": "SaveAsProject"
-    },
-    {
       "descriptionSha256": "4f583e775f7f1c98fd4790f0e1166a8fcbc818751f406cad0aa14fa618254b2a",
       "inputSchema": {
         "additionalProperties": false,
@@ -30973,39 +31027,30 @@
       "name": "SaveExportContent"
     },
     {
-      "descriptionSha256": "ebb5c3e817d92d21fb9c5c260c75db178c78cd95911d9a2764a125a884ff9231",
+      "descriptionSha256": "cac27043f0a3b4960d57cafb47825ff23cabe5aaef3d8fab5d6d1cb09cca8b76",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {},
         "type": "object"
       },
       "name": "SaveProject"
     },
     {
-      "descriptionSha256": "00a14477c4f792ebbeb8cccffeeae84b690f57ebaf7123546f3e449a25d93d33",
+      "descriptionSha256": "9ff493fce5f0572f33b9fa9a05ca0fb2f078826ce3a38e3b55a1624c82e0786e",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).",
-            "examples": [
-              true
-            ],
-            "type": "boolean"
-          },
-          "spec": {
-            "description": "spec: JSON object describing the project to generate. See tool description for keys.",
-            "examples": [
-              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}"
-            ],
+          "newProjectPath": {
+            "description": "newProjectPath: defines the new path where to save the project",
             "type": "string"
           }
         },
         "required": [
-          "spec"
+          "newProjectPath"
         ],
         "type": "object"
       },
-      "name": "ScaffoldProject"
+      "name": "SaveProjectCopy"
     },
     {
       "descriptionSha256": "8e99fef5e0f0a097812964e34c059f0ec49f6730d29bcb2e1d4f328ab9d3cb54",
@@ -31418,7 +31463,7 @@
       "name": "SetDeviceItemIoAddress"
     },
     {
-      "descriptionSha256": "cb659d712f7de5425f330c75e7f0ad25d405c996ede4869e9bce6c7dc52b7efa",
+      "descriptionSha256": "1b49b17d27fd91ab9897c117e27a7cafa3a3d1b8428434b6f024552d7aed0b92",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31527,7 +31572,7 @@
       "name": "SetPlcProgram"
     },
     {
-      "descriptionSha256": "df15faaafb68be3709abfc069bad733960dfaf33c54c6ff8ee4989f8793f1002",
+      "descriptionSha256": "3d5769699eee19707459a481e5bc79f1ae98fbcd9820f732a3d2af6429557923",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31599,7 +31644,7 @@
       "name": "SetPlcUnitObjectAccess"
     },
     {
-      "descriptionSha256": "690e4069cb382d7a74308e43f36d61a20d4c8f6310dd10e7e52c909a81e387e2",
+      "descriptionSha256": "ada13c2e5625ef4cef4fdd22ffc303bb7f2243744aa23669aa94a6dace85339d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -31805,7 +31850,7 @@
       "name": "SetUnifiedHmiButtonEventScriptCode"
     },
     {
-      "descriptionSha256": "8b5fc1647ef211666a38320aee0afe7382851fe9c319a1b60c1e123b0ba4d301",
+      "descriptionSha256": "7dd6e531c0f3e4adcf32f520a685b20effe1885fe8789c3a1ff97b9770ae6ccd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -32189,7 +32234,7 @@
             "type": "boolean"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProject); the call is refused when another project is bound.",
+            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
             "type": "string"
           },
           "expectedToken": {
@@ -32212,23 +32257,26 @@
       "name": "SetUnifiedRuntimeSettings"
     },
     {
-      "descriptionSha256": "c6def0cc971e3fc186ab7ce71ea09ed004b1734f36b54631db16b5447101cedd",
+      "descriptionSha256": "3f25a46e89fdf61e2a257a198c86c44e1111e2237f2d336e98dafa1345dadabf",
       "inputSchema": {
+        "additionalProperties": false,
         "properties": {
-          "devicePathJson": {
-            "default": "[]",
-            "description": "devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. [\"PLC_1\"] (the array itself or its JSON text).",
-            "type": "string"
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
-          "itemPathJson": {
-            "default": "[]",
-            "description": "itemPathJson: JSON array of exact device-item names below the station, e.g. [\"PROFINET interface_1\"]; [] means the station itself (or its CPU where the tool says so).",
-            "type": "string"
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "kind": {
             "default": "device",

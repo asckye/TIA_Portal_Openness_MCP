@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
@@ -296,7 +295,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             method = null; call = null;
             if (string.IsNullOrWhiteSpace(name)) return InvalidInput("name");
-            if (!AllToolMethods(includeUnavailable: true).TryGetValue(name, out method))
+            if (!AllToolMethods(includeUnavailable: true).TryGetValue(name, out method)
+                || name != (method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name))
                 return new Error("Tool is not registered in this release.", new ToolNotFoundDetails(name));
             var argumentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
@@ -308,8 +308,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (version.Length != 0)
                 return new Error(version, new UnsupportedCapabilityDetails(ReleaseKey, name, null));
             var schema = ToolInputSchema(name, method);
-            var error = IsInfrastructureV4(name) ? ValidateV4Arguments(method, arguments.Json, schema)
-                : new InputSchema(schema).Validate(arguments.Json, "arguments");
+            var error = ValidateV4Arguments(method, arguments.Json, schema);
             if (error != null) return error;
             var parameters = method.GetParameters();
             call = new object?[parameters.Length];
@@ -376,189 +375,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static readonly JsonSerializerOptions V4BindingJson = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         { PropertyNameCaseInsensitive = false };
-
-        // Unregistered C# entry point retained for the not-yet-migrated transaction group.
-        public static ResponseMessage CallTool(string name, string argumentsJson)
-        {
-            string target = (name ?? "").Trim();
-            try
-            {
-                if (target.Length == 0)
-                    return new ResponseMessage { Message = "CallTool: 'name' is required. Call FindTools to look up a tool name.", Meta = BridgeMeta(false) };
-
-                // Self-recursion would be a loop with no purpose; refuse it explicitly.
-                if (string.Equals(target, "CallTool", StringComparison.OrdinalIgnoreCase))
-                    return new ResponseMessage { Message = "CallTool cannot invoke itself. Pass the target tool's own name.", Meta = BridgeMeta(false) };
-
-                if (AllToolMethods(includeUnavailable: true).ContainsKey(target))
-                {
-                    var unavailable = VersionToolProblem(target);
-                    if (unavailable.Length != 0)
-                    {
-                        var denial = BridgeMeta(false); denial["toolFound"] = true; denial["versionAvailable"] = false;
-                        return new ResponseMessage { Message = unavailable, Meta = denial };
-                    }
-                }
-                var all = AllToolMethods();
-                MethodInfo? method;
-                if (!all.TryGetValue(target, out method))
-                {
-                    // A wrong name is the likeliest failure, so spend the message on the fix
-                    // rather than on restating the problem.
-                    var near = all.Keys
-                        .Where(k => k.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0
-                                 || target.IndexOf(k, StringComparison.OrdinalIgnoreCase) >= 0)
-                        .OrderBy(k => k, StringComparer.Ordinal).Take(8).ToList();
-                    // Containment misses the commonest case of all - a typo in the middle of an
-                    // otherwise correct name ("ExportPlcWatchTabel"). Fall back to shared prefix.
-                    if (near.Count == 0)
-                        near = all.Keys
-                            .Select(k => new KeyValuePair<int, string>(CommonPrefixLength(k, target), k))
-                            .Where(x => x.Key >= 6)
-                            .OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal)
-                            .Take(5).Select(x => x.Value).ToList();
-                    return new ResponseMessage
-                    {
-                        Message = "No tool named '" + target + "'." + (near.Count > 0
-                            ? " Did you mean: " + string.Join(", ", near) + "?"
-                            : " Call FindTools with a capability keyword to find the right name."),
-                        Meta = BridgeMeta(false),
-                    };
-                }
-
-                JsonObject args;
-                if (string.IsNullOrWhiteSpace(argumentsJson) || argumentsJson.Trim() == "{}")
-                {
-                    args = new JsonObject();
-                }
-                else
-                {
-                    JsonNode? parsed;
-                    try { parsed = JsonNode.Parse(argumentsJson); }
-                    catch (JsonException jx)
-                    {
-                        return new ResponseMessage
-                        {
-                            Message = "arguments is not valid JSON (" + jx.Message + "). It must be a JSON OBJECT of the " +
-                                      "tool's parameters, e.g. {\"softwarePath\":\"PLC_1\"} - not a bare value, not the tool name.",
-                            Meta = BridgeMeta(false),
-                        };
-                    }
-                    JsonObject? obj = parsed as JsonObject;
-                    if (obj == null)
-                        return new ResponseMessage
-                        {
-                            Message = "arguments must be a JSON object, e.g. {\"softwarePath\":\"PLC_1\"}. " +
-                                      "Expected signature: " + RenderSignature(target, method!),
-                            Meta = BridgeMeta(false),
-                        };
-                    args = obj;
-                }
-
-                var duplicate = DuplicateArgumentProblem(args);
-                if (duplicate.Length != 0) return new ResponseMessage { Message = duplicate, Meta = BridgeMeta(false) };
-                var ps = method.GetParameters();
-                var call = new object?[ps.Length];
-                var missing = new List<string>();
-                JsonObject? normalized = null;
-                for (int i = 0; i < ps.Length; i++)
-                {
-                    var p = ps[i];
-                    // Infrastructure parameters of the async export tools (IMcpServer, RequestContext<...>) are not tool
-                    // arguments; the bridge has no request context of its own, so they are passed as null and the tools only send
-                    // progress notifications when a progress token exists (real project: ExportBlocks / ExportTypes were uncallable
-                    // through CallTool - "missing required argument(s): server, context").
-                    // Native export/readback evidence: docs/reference/real-machine-ledger.md.
-                    if (IsInfrastructureParameter(p.ParameterType)) { call[i] = null; continue; }
-                    // Match case-insensitively: models routinely send PascalCase for a camelCase param.
-                    JsonNode? value = null;
-                    bool found = false;
-                    foreach (var kv in args)
-                    {
-                        if (!string.Equals(kv.Key, p.Name, StringComparison.OrdinalIgnoreCase)) continue;
-                        value = kv.Value; found = kv.Value != null; break;
-                    }
-                    if (!found)
-                    {
-                        if (p.HasDefaultValue) { call[i] = p.DefaultValue; continue; }
-                        missing.Add(p.Name!);
-                        call[i] = p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null;
-                        continue;
-                    }
-                    // An empty string for a parameter whose documented default is a non-empty keyword (unitKind="all",
-                    // kind="all", action="read") means "the default" - callers routinely pass "" for "not specified".
-                    if (p.ParameterType == typeof(string) && p.HasDefaultValue && p.DefaultValue is string defaultText && defaultText.Length > 0
-                        && value is JsonValue emptyCandidate && emptyCandidate.TryGetValue<string>(out var candidateText) && candidateText.Length == 0)
-                    { call[i] = defaultText; continue; }
-                    // An array parameter (InvokeObject / InvokeService args: JsonElement[]) given as a JSON-encoded string.
-                    if (p.ParameterType.IsArray && value is JsonValue encodedArray && encodedArray.TryGetValue<string>(out var encodedText) && encodedText.TrimStart().StartsWith("["))
-                    {
-                        try { value = JsonNode.Parse(encodedText); } catch (JsonException) /* swallow(parse-fallback): an invalid encoded array stays unchanged for normal argument validation */ { }
-                    }
-                    // Lenient coercion - the recurring "format errors" of AI callers. A *Json / string parameter given as the
-                    // object or array itself becomes its JSON text; numbers and booleans given as strings (or 0/1) are parsed; a
-                    // string parameter given as a number / boolean takes its text.
-                    var coerced = CoerceArgument(value!, p.ParameterType);
-                    if (coerced != null) { value = coerced; normalized ??= new JsonObject(); normalized[p.Name!] = value.DeepClone(); }
-                    try { call[i] = value!.Deserialize(p.ParameterType, BridgeJson); }
-                    catch (Exception cx)
-                    {
-                        return new ResponseMessage
-                        {
-                            Message = "Argument '" + p.Name + "' of " + target + " could not be read as " +
-                                      FriendlyTypeName(p.ParameterType) + ": " + cx.Message +
-                                      ". Expected signature: " + RenderSignature(target, method!),
-                            Meta = BridgeMeta(false),
-                        };
-                    }
-                }
-
-                if (missing.Count > 0)
-                {
-                    var example = ToolExamples.FindOrDerive(target, SpecsOf(method!));
-                    return new ResponseMessage
-                    {
-                        Message = target + " is missing required argument(s): " + string.Join(", ", missing) +
-                                  ". Expected signature: " + RenderSignature(target, method!) +
-                                  " " + ToolExamples.Render(example) +
-                                  " PreviewToolCall(name, arguments) checks a corrected call without executing it.",
-                        Meta = BridgeMeta(false),
-                    };
-                }
-
-                object? result = InvokeToolMethod(method!, call);
-                // A refusal such as "action must be one of: read/create/delete (case-sensitive)" whose given value matches one of
-                // the alternatives except for casing is retried once with the canonical spelling; the normalization is reported.
-                var refusal = (result as ResponseMessage)?.Message;
-                if (refusal != null && TryCanonicalizeEnumArgument(refusal, ps, call, out var canonicalName, out var canonicalValue))
-                {
-                    normalized ??= new JsonObject(); normalized[canonicalName] = canonicalValue;
-                    result = InvokeToolMethod(method!, call);
-                }
-                // Tools return their own strongly-typed response objects; hand that JSON through
-                // unchanged so the model sees exactly what a direct call would have produced.
-                string payload = result == null
-                    ? "null"
-                    : JsonSerializer.Serialize(result, result.GetType(), BridgeJson);
-
-                var bridgeMeta = ToolBridgeStatus.Create(true, (result as ResponseMessage)?.Meta);
-                if (normalized != null) bridgeMeta["bridgeNormalizedArguments"] = normalized;
-                return new ResponseMessage
-                {
-                    Message = payload,
-                    Meta = bridgeMeta,
-                };
-            }
-            catch (TargetInvocationException tie)
-            {
-                var inner = tie.InnerException ?? tie;
-                return new ResponseMessage { Message = target + " failed: " + inner.Message, Meta = BridgeMeta(false) };
-            }
-            catch (Exception ex)
-            {
-                return new ResponseMessage { Message = "CallTool('" + target + "') failed: " + ex.Message, Meta = BridgeMeta(false) };
-            }
-        }
 
         // PreviewToolCall uses the same name resolution and parameter matching as CallTool without invoking anything.
         // The report identifies invalid arguments so callers can correct their plan before sending it to TIA.
@@ -674,9 +490,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var prerequisites = new List<string>();
             if (needsProject)
             {
-                if (connected == false) prerequisites.Add("Not connected to TIA Portal - call Connect (or AttachToOpenProject with the project name) first.");
-                else if (connected == true && !projectBound) prerequisites.Add("Connected but no project bound - AttachToOpenProject / OpenProject first.");
-                else if (connected == null) prerequisites.Add("Session state unknown here; GetState tells whether a project is bound.");
+                if (connected == false) prerequisites.Add("Not connected to TIA Portal - call ConnectPortal (or AttachOpenProject with the project name) first.");
+                else if (connected == true && !projectBound) prerequisites.Add("Connected but no project bound - AttachOpenProject / OpenProject first.");
+                else if (connected == null) prerequisites.Add("Session state unknown here; GetSessionState tells whether a project is bound.");
                 else prerequisites.Add("Project '" + project + "' is bound.");
             }
 
@@ -738,59 +554,6 @@ namespace TiaMcpServer.ModelContextProtocol
             return specs;
         }
 
-        // The compact preflight the engine attaches to EVERY failed call (McpServer.ArgDiagnostics.cs), so the
-        // caller gets the corrected plan in the same response instead of guessing a second time. Only what is wrong,
-        // the example and one next step - a failure is where guidance pays, but it must stay small.
-        internal static JsonObject PreflightSummary(string tool, JsonObject args)
-        {
-            var all = AllToolMethods();
-            var summary = new JsonObject();
-            if (!all.TryGetValue(tool ?? "", out var method))
-            {
-                summary["next"] = "No tool named '" + tool + "' - FindTools finds the exact name.";
-                return summary;
-            }
-            string canonical = all.Keys.First(k => string.Equals(k, tool, StringComparison.OrdinalIgnoreCase));
-            var specs = SpecsOf(method);
-            var report = PreflightLogic.Analyze(specs, args);
-            if (report.Missing.Count > 0) summary["missing"] = new JsonArray(report.Missing.Select(x => (JsonNode)x).ToArray());
-            if (report.Unknown.Count > 0) summary["unknown"] = new JsonArray(report.Unknown.Select(x => (JsonNode)x).ToArray());
-            if (report.CaseFixes.Count > 0) summary["caseFixes"] = new JsonArray(report.CaseFixes.Select(x => (JsonNode)x).ToArray());
-            if (report.TypeProblems.Count > 0) summary["typeProblems"] = new JsonArray(report.TypeProblems.Select(x => (JsonNode)x).ToArray());
-            if (report.Warnings.Count > 0) summary["warnings"] = new JsonArray(report.Warnings.Select(x => (JsonNode)x).ToArray());
-            var enumHints = new JsonObject();
-            foreach (var spec in specs)
-            {
-                var alternatives = PreflightLogic.Alternatives(spec.Description);
-                if (alternatives.Count > 0 && args[spec.Name] is JsonValue given && given.TryGetValue<string>(out var text) && !alternatives.Contains(text, StringComparer.Ordinal))
-                    enumHints[spec.Name] = string.Join(" | ", alternatives);
-            }
-            if (enumHints.Count > 0) summary["allowedValues"] = enumHints;
-            bool? connected = null; string? project = null;
-            ReadSessionState(ref connected, ref project);
-            var op = ToolTaxonomy.OperationOf(canonical, ToolDescription(method)).Operation;
-            bool needsProject = PreflightLogic.NeedsProject(op, canonical);
-            bool projectBound = !string.IsNullOrWhiteSpace(project) && project != "-";
-            string? prerequisite = null;
-            if (needsProject && connected == false) prerequisite = "Not connected - Connect (or AttachToOpenProject with the project name) first.";
-            else if (needsProject && connected == true && !projectBound) prerequisite = "No project bound - AttachToOpenProject / OpenProject first.";
-            if (prerequisite != null) summary["prerequisite"] = prerequisite;
-            var example = ToolExamples.FindOrDerive(canonical, specs);
-            summary["example"] = JsonNode.Parse(example.ArgumentsJson);
-            summary["exampleNote"] = example.Note;
-            summary["usageTool"] = new JsonObject { ["name"] = "GetToolUsage", ["arguments"] = new JsonObject { ["toolName"] = canonical } };
-            if (args["action"] is JsonValue action) summary["usageTool"]!["arguments"]!["operation"] = action.DeepClone();
-            else if (args["operation"] is JsonValue operation) summary["usageTool"]!["arguments"]!["operation"] = operation.DeepClone();
-            if (example.Note == ToolExamples.DerivedNote) summary["exampleDerived"] = true;
-            summary["next"] = !report.Ok
-                ? "Correct the argument problems listed here and call once more; PreviewToolCall(name, arguments) checks a corrected call without executing."
-                : prerequisite != null ? prerequisite
-                : "The message names the cause; fix that one thing (real names from GetProjectTree / GetSoftwareTree, documented values, preconditions) and call once more - do not try variants.";
-            var usageNote = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical)["precaution"];
-            if (usageNote != null) summary["next"] = usageNote.DeepClone();
-            return summary;
-        }
-
         /// <summary>Build gate: every recipe step must name a real tool and fit its signature.</summary>
         public static IReadOnlyList<string> ValidateToolRecipes()
         {
@@ -801,38 +564,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 return all[tool].GetParameters().Where(p => !IsInfrastructureParameter(p.ParameterType))
                     .Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
             });
-        }
-
-        [Description("[L0][Guide][READ] Compatibility entry for call sequences stored in the unified GetToolUsage example library. Empty topic lists sequences; a topic returns ordered calls and expected results. No calls are executed.")]
-        public static ResponseStringList GetRecipe(
-            [Description("topic: recipe key from the list, e.g. 'download-plcsim'; empty lists all recipes with their one-line purpose.")] string topic = "")
-        {
-            var meta = BridgeMeta(true);
-            if (string.IsNullOrWhiteSpace(topic))
-            {
-                var lines = ToolRecipes.All.Select(r => r.Topic + " - " + r.Purpose + " (" + r.Steps.Count + " steps)").ToList();
-                meta["topics"] = new JsonArray(ToolRecipes.All.Select(r => (JsonNode)r.Topic).ToArray());
-                return new ResponseStringList { Message = ToolRecipes.All.Count + " recipes. GetToolUsage(exampleId: 'sequence/<topic>', exampleKind: 'sequence') returns the exact calls of one.", Items = lines, Meta = meta };
-            }
-            var recipe = ToolRecipes.Find(topic);
-            if (recipe == null)
-            {
-                meta["success"] = false;
-                return new ResponseStringList { Message = "No recipe '" + topic + "'. Topics: " + string.Join(", ", ToolRecipes.All.Select(r => r.Topic)) + ".", Meta = meta };
-            }
-            var items = new List<string> { "Purpose: " + recipe.Purpose };
-            if (recipe.Preconditions.Length > 0) items.Add("Preconditions: " + recipe.Preconditions);
-            int n = 0;
-            var steps = new JsonArray();
-            foreach (var step in recipe.Steps)
-            {
-                n++;
-                items.Add(n + ". " + step.Tool + " " + step.ArgumentsJson + (step.Expect.Length > 0 ? "  -> " + step.Expect : ""));
-                steps.Add(new JsonObject { ["step"] = n, ["tool"] = step.Tool, ["argumentsJson"] = JsonNode.Parse(step.ArgumentsJson), ["expect"] = step.Expect });
-            }
-            if (recipe.Notes.Length > 0) items.Add("Notes: " + recipe.Notes);
-            meta["topic"] = recipe.Topic; meta["steps"] = steps;
-            return new ResponseStringList { Message = "Recipe '" + recipe.Topic + "': " + recipe.Steps.Count + " steps. Placeholders in angle brackets must be replaced with real names (GetProjectTree / GetSoftwareTree).", Items = items, Meta = meta };
         }
 
         // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.
@@ -853,7 +584,7 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var row in TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey))
             {
                 string name = (string)row!["currentName"]!;
-                if (!IsInfrastructureV4(name)) continue;
+                AssertV4Tool(name);
                 var usage = ResultBody(new ToolUsageTools().GetToolUsage(toolName: name));
                 if (usage?["ok"]?.GetValue<bool?>() != true) { problems.Add(name + ": usage retrieval failed"); continue; }
                 foreach (var args in new[] { row["arguments"]!, usage["data"]!["example"]!["request"]!["params"]!["arguments"]! })
@@ -908,52 +639,6 @@ namespace TiaMcpServer.ModelContextProtocol
         static partial void RecordBridgeEvent(string id, string name, string phase);
         static partial void ValidateRuntimeBinding(MethodInfo method);
 
-        private static readonly Regex EnumRefusal = new Regex(@"(?<name>[A-Za-z][A-Za-z0-9]*) must be (?:one of:?\s*)?(?<values>[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)+)", RegexOptions.Compiled);
-
-        internal static bool TryCanonicalizeEnumArgument(string refusal, ParameterInfo[] ps, object?[] call, out string name, out string canonical)
-        {
-            name = ""; canonical = "";
-            var match = EnumRefusal.Match(refusal ?? "");
-            if (!match.Success) return false;
-            var parameterName = match.Groups["name"].Value;
-            var alternatives = match.Groups["values"].Value.Split('/');
-            for (int i = 0; i < ps.Length; i++)
-            {
-                if (!string.Equals(ps[i].Name, parameterName, StringComparison.OrdinalIgnoreCase) || ps[i].ParameterType != typeof(string)) continue;
-                var given = call[i] as string;
-                if (string.IsNullOrEmpty(given)) return false;
-                var hit = alternatives.FirstOrDefault(a => string.Equals(a, given, StringComparison.OrdinalIgnoreCase) && !string.Equals(a, given, StringComparison.Ordinal));
-                if (hit == null) return false;
-                call[i] = hit; name = ps[i].Name!; canonical = hit;
-                return true;
-            }
-            return false;
-        }
-
-        // Returns the coerced node, or null when the value already fits (or cannot be coerced safely).
-        internal static JsonNode? CoerceArgument(JsonNode value, Type type)
-        {
-            if (value == null) return null;
-            if (type == typeof(string))
-            {
-                if (value is JsonObject || value is JsonArray) return JsonValue.Create(value.ToJsonString());
-                if (value is JsonValue v && !v.TryGetValue<string>(out _)) return JsonValue.Create(v.ToJsonString());
-                return null;
-            }
-            if (value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
-            {
-                var t = text.Trim();
-                if (type == typeof(bool)) return bool.TryParse(t, out var b) ? JsonValue.Create(b) : t == "1" ? JsonValue.Create(true) : t == "0" ? JsonValue.Create(false) : null;
-                if (type == typeof(int) || type == typeof(ushort) || type == typeof(long) || type == typeof(short) || type == typeof(byte) || type == typeof(uint))
-                    return long.TryParse(t, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var l) ? JsonValue.Create(l) : null;
-                if (type == typeof(double) || type == typeof(float) || type == typeof(decimal))
-                    return double.TryParse(t, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? JsonValue.Create(d) : null;
-                return null;
-            }
-            if (type == typeof(bool) && value is JsonValue num && num.TryGetValue<int>(out var n) && (n == 0 || n == 1)) return JsonValue.Create(n == 1);
-            return null;
-        }
-
         private static int CommonPrefixLength(string a, string b)
         {
             int n = Math.Min(a.Length, b.Length), i = 0;
@@ -967,11 +652,5 @@ namespace TiaMcpServer.ModelContextProtocol
                 : ToolBridgeStatus.Create(false);
         }
 
-        private static readonly JsonSerializerOptions BridgeJson = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            // Chinese project/block names must survive the round trip unescaped.
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        };
     }
 }

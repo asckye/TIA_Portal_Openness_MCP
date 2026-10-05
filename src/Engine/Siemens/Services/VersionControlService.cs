@@ -67,7 +67,7 @@ namespace TiaMcpServer.Siemens.Services
                 _vciCached = null;
                 _vciKeepAlive.Clear();
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "No project is open. Call Connect, then AttachToOpenProject / OpenProject first.");
+                    "No project is open. Call ConnectPortal, then AttachOpenProject / OpenProject first.");
             }
             if (_vciCached != null && ReferenceEquals(_vciOwnerProject, project))
                 return _vciCached;

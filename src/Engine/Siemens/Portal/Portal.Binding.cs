@@ -40,8 +40,8 @@ namespace TiaMcpServer.Siemens
         internal void VerifyBinding(string operation)
         {
             if (_bindingFault != null) throw new PortalException(PortalErrorCode.InvalidState, _bindingFault +
-                " The old project binding cannot be reused, even after TIA restarts. ReadOpennessWorkerStatus: if enabled=true, explicitly RestartOpennessWorker(confirmRestart=true); " +
-                "otherwise restart this MCP service. Then ListPortalProcessProjects and ConnectToProject using the new PID/start time/full path. Do not replay the failed write.");
+                " The old project binding cannot be reused, even after TIA restarts. GetOpennessWorkerStatus: if enabled=true, explicitly RestartOpennessWorker(confirmRestart=true); " +
+                "otherwise restart this MCP service. Then ListPortalProcessProjects and ConnectProject using the new PID/start time/full path. Do not replay the failed write.");
             if (_project == null) return;
             if (System.Threading.Thread.CurrentThread.GetApartmentState() != System.Threading.ApartmentState.MTA)
                 throw new PortalException(PortalErrorCode.InvalidState, "Background Openness calls require MTA; no native call attempted.");

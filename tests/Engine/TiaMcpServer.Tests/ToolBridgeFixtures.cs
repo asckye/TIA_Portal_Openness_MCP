@@ -183,13 +183,13 @@ namespace TiaMcpServer.Tests
         }
 
         [Fact]
-        public void BridgeResolvesInstanceFromRootProviderCaseInsensitively()
+        public void BridgeResolvesInstanceFromRootProviderByCanonicalName()
         {
             ToolBridgeFixture.Configure();
             var instance = (InstanceProbeTools)EngineServices.Get(typeof(InstanceProbeTools));
-            var result = McpServer.CallTool("instanceprobe", "{}");
-            Assert.True(result.Meta!["operationSuccess"]!.GetValue<bool>());
-            Assert.Contains("root:default", result.Message);
+            var result = McpServer.CallTool("InstanceProbe", McpServer.EmptyArguments());
+            Assert.NotEqual(true, result.IsError);
+            Assert.Contains("root:default", result.Content.OfType<TextContentBlock>().Single().Text);
             Assert.Equal(1, instance.Calls);
         }
 

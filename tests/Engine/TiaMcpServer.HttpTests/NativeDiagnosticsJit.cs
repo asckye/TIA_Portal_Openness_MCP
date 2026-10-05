@@ -42,11 +42,11 @@ internal static partial class Program
             File.SetLastWriteTimeUtc(prior, DateTime.UtcNow.AddMinutes(-1));
             File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl"), "{\"nativeCallId\":\"pair\",\"phase\":\"RETURNED\",\"binding\":" + newEncoding + "}\n{partial");
             File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl.unrelated"), "{\"phase\":\"unrelated\"}\n");
-            var read = EngineSurface.For(Server).Tool("ReadNativeInvocationLog")!;
+            var read = EngineSurface.For(Server).Tool("GetNativeInvocationLog")!;
             string Read(int take)
             {
                 object response = EngineSurface.For(Server).Invoke(read, new object[] { take })!;
-                return response.GetType().GetProperty("Meta")!.GetValue(response)!.ToString()!;
+                return ((global::ModelContextProtocol.Protocol.CallToolResult)response).StructuredContent!["data"]!["evidence"]!.ToJsonString();
             }
             var meta = Parse(Read(100));
             var records = ((System.Collections.IEnumerable)meta["records"]).Cast<System.Collections.Generic.Dictionary<string, object>>().ToArray();

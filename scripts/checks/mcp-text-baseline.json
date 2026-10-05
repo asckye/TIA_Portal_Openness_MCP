@@ -4162,20 +4162,20 @@
     {
       "kind": "other-literal",
       "fingerprint": "385fc897b84fb0f76b7488578efed6a62c214d633232d650d8b438cf67f52a35",
-      "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiOfflineValidationSuite.cs",
-      "line": 75,
-      "cjk": 22,
-      "literal": "\"只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
-      "reason": "Existing generated offline HMI validation report data."
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "385fc897b84fb0f76b7488578efed6a62c214d633232d650d8b438cf67f52a35",
       "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
       "line": 71,
       "cjk": 22,
       "literal": "\"只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
       "reason": "Existing generated offline release report data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "385fc897b84fb0f76b7488578efed6a62c214d633232d650d8b438cf67f52a35",
+      "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiOfflineValidationSuite.cs",
+      "line": 75,
+      "cjk": 22,
+      "literal": "\"只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
+      "reason": "Existing generated offline HMI validation report data."
     },
     {
       "kind": "other-literal",
@@ -4239,6 +4239,15 @@
       "cjk": 4,
       "literal": "\"打开弹窗\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "3e8871fd94440cad90602f87d8b1720e7bb24f3420bcf6f56a1069ea638376b3",
+      "path": "src/Engine/Cli/CliCommands.cs",
+      "line": 316,
+      "cjk": 16,
+      "literal": "\"READY —— 环境正常。下一步：重启 AI 客户端，让它调用 InitializeEnvironment。\"",
+      "reason": "Existing localized CLI console/doctor output; not MCP response text."
     },
     {
       "kind": "other-literal",
@@ -4709,24 +4718,6 @@
     {
       "kind": "other-literal",
       "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "src/Logic/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs",
-      "line": 102,
-      "cjk": 1,
-      "literal": "\"5T车\"",
-      "reason": "Existing PLC symbols/paths and generated FlgNet XML probe report data."
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderFixtureReadinessAnalyzer.cs",
-      "line": 26,
-      "cjk": 1,
-      "literal": "\"5T车\"",
-      "reason": "Existing generated PLC fixture readiness report data."
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
       "path": "src/Engine/Cli/ReportBuilders.cs",
       "line": 1417,
       "cjk": 1,
@@ -4741,6 +4732,24 @@
       "cjk": 1,
       "literal": "\"5T车\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
+      "path": "src/Logic/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs",
+      "line": 102,
+      "cjk": 1,
+      "literal": "\"5T车\"",
+      "reason": "Existing PLC symbols/paths and generated FlgNet XML probe report data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
+      "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderFixtureReadinessAnalyzer.cs",
+      "line": 26,
+      "cjk": 1,
+      "literal": "\"5T车\"",
+      "reason": "Existing generated PLC fixture readiness report data."
     },
     {
       "kind": "other-literal",
@@ -6475,15 +6484,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "d13f2a26bc3f69541396fd7d58952d52778d6a060b787f352ecb466d968c2c26",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 317,
-      "cjk": 16,
-      "literal": "\"READY —— 环境正常。下一步：重启 AI 客户端，让它调用 Bootstrap。\"",
-      "reason": "Existing localized CLI console/doctor output; not MCP response text."
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "d13fe12bc140c1bac661e28366545031dd121022dd1581bb24f1b6eae87f1692",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs",
       "line": 460,
@@ -6728,20 +6728,20 @@
     {
       "kind": "other-literal",
       "fingerprint": "e15c4fed99736c2abc3a5e97ece516aa98d3ca29a35c3cb0da0f0f6f017e804b",
-      "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiOfflineValidationSuite.cs",
-      "line": 159,
-      "cjk": 22,
-      "literal": "\"- 只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
-      "reason": "Existing generated offline HMI validation report data."
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "e15c4fed99736c2abc3a5e97ece516aa98d3ca29a35c3cb0da0f0f6f017e804b",
       "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
       "line": 243,
       "cjk": 22,
       "literal": "\"- 只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
       "reason": "Existing generated offline release report data."
+    },
+    {
+      "kind": "other-literal",
+      "fingerprint": "e15c4fed99736c2abc3a5e97ece516aa98d3ca29a35c3cb0da0f0f6f017e804b",
+      "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiOfflineValidationSuite.cs",
+      "line": 159,
+      "cjk": 22,
+      "literal": "\"- 只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
+      "reason": "Existing generated offline HMI validation report data."
     },
     {
       "kind": "other-literal",

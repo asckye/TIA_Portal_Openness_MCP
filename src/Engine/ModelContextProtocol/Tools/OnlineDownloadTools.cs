@@ -30,7 +30,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public OnlineDownloadTools(OnlineDownloadService onlineDownload) => _onlineDownload = onlineDownload;
 
         [McpServerTool(Name = "GetOnlineState"), Description(
-            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " Read the current online connection state of a PLC (Offline/Connecting/Online/Incompatible/NotReachable/Protected/Disconnecting)." +
             " Does NOT change state — purely a read operation." +
             " Use before ConnectOnlinePlc to check current state, or after DownloadPlc to verify the CPU is reachable." +
@@ -65,7 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ConnectOnlinePlc"), Description(
-            "[L1][Category:PLC-Online][ONLINE][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:PLC-Online][ONLINE][PreCondition:ConnectPortal+OpenProject]" +
             " Establish an online connection from TIA Portal to the physical PLC." +
             " Required before DownloadPlc to confirm reachability, or for future online monitoring tools." +
             " Returns State=Online on success." +
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DisconnectOnlinePlc"), Description(
-            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " Disconnect the online session between TIA Portal and the physical PLC." +
             " Safe to call even if not currently online. Always go offline when monitoring or download is complete. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GoOfflineV4(
@@ -136,7 +136,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DisconnectOnlinePlcs"), Description(
-            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject]" +
+            "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " Take EVERY PLC in the open project offline in one call and report each PLC's before/after online state." +
             " Use this whenever CompilePlcSoftware/Export*/Import* is blocked by 'operation not permitted in online mode':" +
             " a UI-initiated online session or a second online PLC is NOT released by DisconnectOnlinePlc on a single softwarePath." +
@@ -169,7 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
         [McpServerTool(Name = "CompareSoftwareToOnline"), Description(
-            "[L2][Category:PLC-Online][PreCondition:Connect+OpenProject+ConnectOnlinePlc]" +
+            "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc]" +
             " Compare the offline PLC software in the project against the program currently running on the physical CPU." +
             " Use after editing blocks to confirm what differs from the live CPU before downloading," +
             " or after a download to verify offline/online consistency." +
@@ -202,7 +202,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CheckDownloadReadiness"), Description(
-            "[L1][Category:PLC-Online][PreCondition:Connect+OpenProject+CompilePlcSoftware]" +
+            "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware]" +
             " Check whether a PLC is ready to receive a program download WITHOUT actually downloading." +
             " Verifies: DownloadProvider service is available, a network/IP configuration exists in the hardware config." +
             " Returns Ready=true only when all checks pass." +
@@ -230,11 +230,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DownloadPlc"), Description(
-            "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+CompilePlcSoftware+CheckDownloadReadiness]" +
+            "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness]" +
             " Download the compiled PLC program to the physical CPU over the network." +
             " The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload)." +
             " SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior." +
-            " Workflow: Connect → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState." +
+            " Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState." +
             " On success State=Success or Warning. On Error check Errors[] for details." +
             " Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios." +
             " Set keepActualValues=false only when DB initial values must be reset — this is irreversible." +

@@ -15,11 +15,11 @@ namespace TiaMcpServer.ModelContextProtocol
     // by TiaMcpServer.Tests against the real ToolVersionPolicy in both build modes.
     public static partial class McpServer
     {
-        internal static bool Denied;
-        internal static string? SeenAction;
+        internal static CallToolResult? Refusal;
+        internal static RequestContext<CallToolRequestParams>? SeenRequest;
         internal static string VersionToolProblem(string name) => name == "Hidden" ? "unsupported" : "";
-        internal static string VersionCallProblem(string name, Func<string, string?> argument)
-        { SeenAction = argument("action"); return Denied ? "version unavailable" : ""; }
+        static partial void ValidateV4Admission(RequestContext<CallToolRequestParams> request, ref CallToolResult? result)
+        { SeenRequest = request; result = Refusal; }
         internal static IList<McpServerTool> Build(IList<McpServerTool> tools) => WrapWithVersionPolicy(tools);
     }
 }
@@ -51,25 +51,25 @@ internal static class VersionPolicyTests
         Check(ReferenceEquals(tools[0].ProtocolTool, sink.ProtocolTool), "schema identity preserved");
         var request = new RequestContext<CallToolRequestParams>(server)
         { Params = new CallToolRequestParams { Name = "Visible", Arguments = new Dictionary<string, JsonElement> { ["ACTION"] = JsonSerializer.SerializeToElement("import") } } };
-        McpServer.Denied = true;
+        McpServer.Refusal = new CallToolResult { IsError = true,
+            Content = new List<ContentBlock> { new TextContentBlock { Text = "V4 admission refusal" } } };
         var denial = await tools[0].InvokeAsync(request);
         Check(denial.IsError == true && sink.Calls == 0, "denied before inner worker/SDK body");
-        Check(McpServer.SeenAction == "import", "argument key matching is case insensitive");
-        Check(denial.Content.OfType<TextContentBlock>().Single().Text == "version unavailable", "denial reason preserved");
+        Check(ReferenceEquals(McpServer.SeenRequest, request), "original request reaches the shared admission boundary");
+        Check(ReferenceEquals(denial, McpServer.Refusal), "shared refusal passes through unchanged");
         request.Params = new CallToolRequestParams { Name = "Visible", Arguments = new Dictionary<string, JsonElement>
         { ["ACTION"] = JsonSerializer.SerializeToElement("read"), ["action"] = JsonSerializer.SerializeToElement("import") } };
-        McpServer.Denied = false;
-        Check((await tools[0].InvokeAsync(request)).IsError == true && sink.Calls == 0, "case-duplicate selectors cannot bypass admission");
+        Check((await tools[0].InvokeAsync(request)).IsError == true && sink.Calls == 0, "shared admission refusal never invokes the inner body");
         request.Params = new CallToolRequestParams { Name = "Visible", Arguments = new Dictionary<string, JsonElement>
         { ["action"] = JsonSerializer.SerializeToElement("read") } };
-        McpServer.Denied = false;
+        McpServer.Refusal = null;
         using var cancel = new CancellationTokenSource();
         var success = await tools[0].InvokeAsync(request, cancel.Token);
         Check(success.IsError != true && sink.Calls == 1, "allowed dispatch once");
         Check(sink.LastToken == cancel.Token, "cancellation forwarded");
         request.Params = new CallToolRequestParams { Name = "Visible" };
         await tools[0].InvokeAsync(request);
-        Check(McpServer.SeenAction == null, "omitted arguments preserve default selection");
+        Check(McpServer.SeenRequest!.Params!.Arguments == null, "omitted arguments reach admission unchanged");
         try { await tools[0].InvokeAsync(null!); Check(false, "null request refused"); }
         catch (ArgumentNullException) { Check(true, "null request refused"); }
     }

@@ -74,7 +74,7 @@ namespace TiaMcpServer.Siemens.Services
 
             if (IsProjectNull())
             {
-                throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+                throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
             }
 
             var exportList = new List<PlcBlock>();
@@ -278,7 +278,7 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "DeletePlcBlock: no project is open. Connect / AttachToOpenProject first.");
+                    "DeletePlcBlock: no project is open. ConnectPortal / AttachOpenProject first.");
             }
 
             var block = _session.GetBlock(softwarePath, blockPath);
@@ -405,7 +405,7 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "DeletePlcTagTable: no project is open. Connect / AttachToOpenProject first.");
+                    "DeletePlcTagTable: no project is open. ConnectPortal / AttachOpenProject first.");
             }
 
             var plc = _session.ResolvePlc(softwarePath, dryRun ? PlcAccess.Read : PlcAccess.Write);
@@ -549,7 +549,7 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "DeletePlcType: no project is open. Connect / AttachToOpenProject first.");
+                    "DeletePlcType: no project is open. ConnectPortal / AttachOpenProject first.");
             }
 
             PlcType? type = _session.GetType(softwarePath, typePath);

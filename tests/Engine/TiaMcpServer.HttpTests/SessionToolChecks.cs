@@ -62,13 +62,13 @@ internal static class SessionToolChecks
             var response = (CallToolResult)surface.Invoke(method, args)!;
             return JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!.AsObject();
         }
-        var state = Invoke("CallTool", "{\"name\":\"GetState\",\"arguments\":{}}");
-        check(state["meta"]!["success"]!.GetValue<bool>() && state["message"]!.GetValue<string>().Contains("TIA-Portal MCP server state retrieved"),
-            "CallTool invokes the migrated GetState");
-        var scaffold = Invoke("CallTool", "{\"name\":\"ScaffoldProject\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}}");
-        check(scaffold["meta"]!["success"]!.GetValue<bool>() && scaffold["message"]!.GetValue<string>().Contains("0 ok, 0 failed"),
-            "CallTool invokes the migrated ScaffoldProject preview without connecting");
-        var read = Invoke("RunReadOnlyToolBatch", "{\"operations\":[{\"name\":\"GetState\",\"arguments\":{}},{\"name\":\"ReadPortalInfo\",\"arguments\":{\"includeProcesses\":false}}]}");
+        var state = Invoke("CallTool", "{\"name\":\"GetSessionState\",\"arguments\":{}}");
+        check(state["ok"]!.GetValue<bool>() && state["data"]!["summary"]!.GetValue<string>().Contains("TIA-Portal MCP server state retrieved"),
+            "CallTool invokes the migrated GetSessionState");
+        var scaffold = Invoke("CallTool", "{\"name\":\"BuildProjectScaffold\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}}");
+        check(scaffold["ok"]!.GetValue<bool>() && scaffold["data"]!["summary"]!.GetValue<string>().Contains("0 ok, 0 failed"),
+            "CallTool invokes the migrated BuildProjectScaffold preview without connecting");
+        var read = Invoke("RunReadOnlyToolBatch", "{\"operations\":[{\"name\":\"GetSessionState\",\"arguments\":{}},{\"name\":\"GetPortalInfo\",\"arguments\":{\"includeProcesses\":false}}]}");
         check(read["data"]!["items"]!.AsArray().Count == 2 && read["ok"]!.GetValue<bool>(),
             "RunReadOnlyToolBatch resolves both migrated session readers offline");
         var validate = facade.GetMethod("ValidateBatch", all)!;

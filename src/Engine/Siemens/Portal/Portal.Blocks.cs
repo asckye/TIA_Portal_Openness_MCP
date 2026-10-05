@@ -282,7 +282,7 @@ namespace TiaMcpServer.Siemens
             {
                 if (IsProjectNull())
                 {
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
                 }
 
                 var block = Guard.RequireNotNull(GetBlock(softwarePath, blockPath), "Block", blockPath);
@@ -329,7 +329,7 @@ namespace TiaMcpServer.Siemens
             {
                 if (IsProjectNull())
                 {
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
                 }
 
                 var type = Guard.RequireNotNull(GetType(softwarePath, typePath), "Type", typePath);
@@ -412,7 +412,7 @@ namespace TiaMcpServer.Siemens
             try
             {
                 if (IsProjectNull())
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
                 var softwareContainer = GetSoftwareContainer(softwarePath);
                 if (softwareContainer?.Software is not PlcSoftware plcSoftware)
@@ -556,7 +556,7 @@ namespace TiaMcpServer.Siemens
             try
             {
                 if (IsProjectNull())
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
+                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
                 var softwareContainer = GetSoftwareContainer(softwarePath);
                 if (softwareContainer?.Software is not PlcSoftware plcSoftware)

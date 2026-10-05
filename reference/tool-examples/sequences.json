@@ -14,7 +14,7 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "GetState",
+        "tool": "GetSessionState",
         "arguments": {},
         "expect": "The operator-intended project is already bound; no automatic reconnect."
       },
@@ -60,19 +60,19 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "Bootstrap",
+        "tool": "InitializeEnvironment",
         "arguments": {},
         "expect": "serverVersion, connected=false, recommendedNextTool Connect"
       },
       {
-        "tool": "Connect",
+        "tool": "ConnectPortal",
         "arguments": {
           "projectName": "<project name as shown in TIA>"
         },
         "expect": "Meta.boundProcessId = the process holding the project, startedNew false"
       },
       {
-        "tool": "GetState",
+        "tool": "GetSessionState",
         "arguments": {},
         "expect": "project = the wanted project"
       },

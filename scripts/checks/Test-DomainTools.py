@@ -472,8 +472,8 @@ CASES = {
     'EngineeringAudit': [('GetPlcBlockScopes', 'disconnected', {'softwarePath': PLC})]
         + actions('ManagePlcBlockDocuments', 'list read export import', softwarePath=PLC),
     'EngineeringDiagnostics': [('InspectSimaticSdCompatibility', 'invalid-version', {'filePath': '', 'tiaMajor': 19}),
-           ('ReadOpennessCompatibility', 'metadata', {}),
-           ('ReadNativeInvocationLog', 'invalid-count', {'take': 0})],
+           ('GetOpennessCompatibility', 'metadata', {}),
+           ('GetNativeInvocationLog', 'invalid-count', {'take': 0})],
     'OfflineAnalysis': [
         ('ComparePlcBlockDocuments', 'invalid-page', {'offset': -1}),
         ('ScanPlcSourceAnnotations', 'invalid-page', {'directory': '', 'offset': -1}),
@@ -897,26 +897,26 @@ CASES['PlcBlocks'] = [
 # no case may attach, start TIA, or change Windows group membership.
 CASES['Session'] = [
     (name, 'duplicate-argument', {'probe': True, 'PROBE': False})
-    for name in ('Connect', 'ConnectIsolated', 'ListPortalProcessProjects', 'EnsureOpennessUserGroup')
+    for name in ('ConnectPortal', 'ConnectIsolatedPortal', 'ListPortalProcessProjects', 'EnsureOpennessUserGroup')
 ] + [
-    ('GetState', 'disconnected', {}),
-    ('Disconnect', 'disconnected', {}),
-    ('Bootstrap', 'offline', {}),
-    ('ConnectToProject', 'invalid-identity', {'processId': -1, 'processStartUtc': 'invalid', 'projectPath': ''}),
-    ('ReadPortalInfo', 'disconnected', {'includeProcesses': False, 'includeSessions': False, 'includeProducts': False}),
+    ('GetSessionState', 'disconnected', {}),
+    ('DisconnectPortal', 'disconnected', {}),
+    ('InitializeEnvironment', 'offline', {}),
+    ('ConnectProject', 'invalid-identity', {'processId': -1, 'processStartUtc': 'invalid', 'projectPath': ''}),
+    ('GetPortalInfo', 'disconnected', {'includeProcesses': False, 'includeSessions': False, 'includeProducts': False}),
 ]
 CASES['ProjectSession'] = [
-    ('GetProject', 'disconnected', {}),
+    ('GetProjectInfo', 'disconnected', {}),
     ('OpenProject', 'invalid-extension', {'path': 'offline.invalid'}),
-    ('AttachToOpenProject', 'empty-name', {'projectName': ''}),
+    ('AttachOpenProject', 'empty-name', {'projectName': ''}),
     ('CreateProject', 'disconnected', {'directoryPath': 'C:/domain-offline', 'projectName': 'Offline'}),
-    ('ScaffoldProject', 'preview', {'spec': '{"projectName":"Offline","directoryPath":"C:/domain-offline"}', 'dryRun': True}),
+    ('BuildProjectScaffold', 'preview', {'spec': '{"projectName":"Offline","directoryPath":"C:/domain-offline"}', 'dryRun': True}),
     ('SaveProject', 'disconnected', {}),
-    ('SaveAsProject', 'disconnected', {'newProjectPath': 'C:/domain-offline.ap21'}),
+    ('SaveProjectCopy', 'disconnected', {'newProjectPath': 'C:/domain-offline.ap21'}),
     ('CloseProject', 'disconnected', {}),
-    ('ReadObjectIdentifier', 'disconnected', {}),
+    ('GetObjectIdentifier', 'disconnected', {}),
     ('ShowObjectInEditor', 'preview', {'dryRun': True}),
-    ('RunToolsInTransaction', 'preview', {'callsJson': '[{"name":"CreatePlcTypeGroup","arguments":{"softwarePath":"PLC_1","groupPath":"Offline"}}]', 'text': 'Offline preview', 'dryRun': True}),
+    ('RunToolTransaction', 'preview', {'callsJson': '[{"name":"CreatePlcTypeGroup","arguments":{"softwarePath":"PLC_1","groupPath":"Offline"}}]', 'text': 'Offline preview', 'dryRun': True}),
 ]
 # Both optional native probes stay disabled, including in the acceptance report.
 CASES['Diagnostics'] = [
@@ -1004,17 +1004,17 @@ def diagnostics_reply(reply, profile, name, arguments):
 
 
 SESSION_TERMINALS = {
-    'GetState': 'TIA-Portal MCP server state retrieved', 'Disconnect': 'Disconnected from TIA-Portal',
-    'Bootstrap': 'RecommendedNextTool', 'ConnectToProject': "An error occurred invoking 'ConnectToProject'.",
-    'ReadPortalInfo': 'Portal diagnostics read; no modification.', 'GetProject': 'Open projects and sessions retrieved',
-    'OpenProject': 'Invalid project file extension', 'AttachToOpenProject': 'projectName is required',
-    'CreateProject': 'Failed to create project', 'ScaffoldProject': "ScaffoldProject dryRun 'Offline': 0 ok, 0 failed",
-    'SaveProject': 'Failed to save project', 'SaveAsProject': 'Failed saving local project',
-    'CloseProject': 'Failed closing project', 'ReadObjectIdentifier': 'Project is null',
-    'ShowObjectInEditor': 'Project is null', 'RunToolsInTransaction': 'Transaction preview: 1 call(s) validated',
+    'GetSessionState': 'TIA-Portal MCP server state retrieved', 'DisconnectPortal': 'Disconnected from TIA-Portal',
+    'InitializeEnvironment': 'RecommendedNextTool', 'ConnectProject': "An error occurred invoking 'ConnectProject'.",
+    'GetPortalInfo': 'Portal diagnostics read; no modification.', 'GetProjectInfo': 'Open projects and sessions retrieved',
+    'OpenProject': 'Invalid project file extension', 'AttachOpenProject': 'projectName is required',
+    'CreateProject': 'Failed to create project', 'BuildProjectScaffold': "ScaffoldProject dryRun 'Offline': 0 ok, 0 failed",
+    'SaveProject': 'Failed to save project', 'SaveProjectCopy': 'Failed saving local project',
+    'CloseProject': 'Failed closing project', 'GetObjectIdentifier': 'Project is null',
+    'ShowObjectInEditor': 'Project is null', 'RunToolTransaction': 'Transaction preview: 1 call(s) validated',
 }
-SESSION_THROWS = {'ConnectToProject', 'OpenProject', 'AttachToOpenProject', 'CreateProject',
-                  'SaveProject', 'SaveAsProject', 'CloseProject'}
+SESSION_THROWS = {'ConnectProject', 'OpenProject', 'AttachOpenProject', 'CreateProject',
+                  'SaveProject', 'SaveProjectCopy', 'CloseProject'}
 
 
 def session_reply(reply, profile, name, case):
@@ -1036,7 +1036,7 @@ def session_reply(reply, profile, name, case):
         decoded = json.dumps(json.loads(raw), ensure_ascii=False)
     except ValueError:
         decoded = raw
-    marker = 'processStartUtc must be the ISO timestamp' if name == 'ConnectToProject' and profile == 'lite' else SESSION_TERMINALS[name]
+    marker = 'processStartUtc must be the ISO timestamp' if name == 'ConnectProject' and profile == 'lite' else SESSION_TERMINALS[name]
     resources.require(marker in decoded, f'{name}/{case}: wrong offline terminal: {raw}')
     return raw
 
@@ -1076,7 +1076,7 @@ SOFTWARE_REPLY_MARKERS = {
                                     'InvokeObject', 'DescribeService', 'InvokeService')},
     'GetObjectProperty': 'Null',
     'InspectSimaticSdCompatibility': ("An error occurred invoking 'InspectSimaticSdCompatibility'", 'tiaMajor must be 20/21'),
-    'ReadOpennessCompatibility': 'installedPatch', 'ReadNativeInvocationLog': 'take',
+    'GetOpennessCompatibility': 'installedPatch', 'GetNativeInvocationLog': 'take',
     **{name: 'InvalidParams' for name in ('ComparePlcBlockDocuments', 'ScanPlcSourceAnnotations', 'ExtractPlcBlockMetrics')},
     **{name: 'INVALID_ARGUMENT' for name, _, _ in CASES['XmlBuilder']},
     'BuildAndImportPlcArtifact': 'INVALID_ARGUMENT'
@@ -1499,7 +1499,7 @@ def capture(args, exe, harness, profile, isolated):
                         reached_child = True
                 responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
         if isolated and reached_child:
-            reply = rpc('tools/call', params={'name': 'ReadOpennessWorkerStatus', 'arguments': {}})
+            reply = rpc('tools/call', params={'name': 'GetOpennessWorkerStatus', 'arguments': {}})
             status = json.loads(reply['result']['content'][0]['text'])
             resources.require(status['meta']['worker']['state'] == 'Ready', 'Domain calls never reached the isolated child')
     return names, responses
@@ -1512,7 +1512,7 @@ class SelfTests(unittest.TestCase):
             '_20261003_123456.md', '_<clock:operationId>.md').replace(
             '"GeneratedAt": "2026-10-03T12:34:56+00:00"', '"GeneratedAt": "<string:timestamp>"')
         self.assertEqual(mask_report_json(raw, 'GenerateErrorReport'), expected)
-        self.assertEqual(mask_report_json(raw, 'GetState'), raw)
+        self.assertEqual(mask_report_json(raw, 'GetSessionState'), raw)
         for before, after in [('C:/same/', 'D:/changed/'), ('NotConnected', 'Changed'), ('.md', '.txt'), ('Summary', 'Detail2')]:
             self.assertNotEqual(mask_report_json(raw.replace(before, after), 'GenerateErrorReport'), expected)
 

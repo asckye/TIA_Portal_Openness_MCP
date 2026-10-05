@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public TechnologyObjectsTools(TechnologyObjectsService service) => _service = service;
 
         [McpServerTool(Name = "ListTechnologyObjects"), Description(
-            "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject]" +
             " List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. - root group AND user folders (Folder = '' for the root)." +
             " Returns each TO's Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion)." +
             " Use this to discover TO names before ExportTechnologyObject." +
@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportTechnologyObject"), Description(
-            "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject]" +
             " Export a single Technology Object (axis, cam, measuring input, etc.) to an XML file." +
             " The XML can be inspected, modified offline, and re-imported with ImportTechnologyObject." +
             " Use ListTechnologyObjects first to confirm the exact TO name. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportTechnologyObjectsToDirectory"), Description(
-            "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject]" +
             " Batch-export all (or regex-filtered) Technology Objects to XML files in a directory." +
             " Each TO is saved as '<TOName>.xml'. Returns lists of exported names and any failures." +
             " Use regexName to filter by TO name, e.g. 'Axis_.*' for all axes. Current native policy; V4 safety behavior is not yet accepted.")]

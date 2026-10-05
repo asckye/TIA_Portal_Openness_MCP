@@ -60,8 +60,6 @@ namespace TiaMcpServer.Tests
                 return McpServer.V4Result("FindTools", JsonSerializer.SerializeToNode(new { paths, label, count, limit })!.AsObject());
             }
 
-            [McpServerTool(Name = "LegacyDefaults"), Description("[READ] Legacy SDK default fixture.")]
-            public static ResponseMessage Legacy(string[] paths = null!, string label = null!, int? count = null) => new ResponseMessage();
         }
 
         public void Dispose() => ToolBridgeFixture.Configure();
@@ -267,10 +265,6 @@ namespace TiaMcpServer.Tests
             }
             Assert.Equal(3, calls);
             Assert.True((bool)Body(await tool.InvokeAsync(Request("FindTools", "{\"count\":null}")))["ok"]!);
-            var legacy = typeof(SdkDefaults).GetMethod("Legacy")!;
-            Assert.Equal(McpServerTool.Create(legacy).ProtocolTool.InputSchema.GetRawText(), ToolCatalog.CreateTool(legacy).ProtocolTool.InputSchema.GetRawText());
-            Assert.True(tools.Single(t => t.ProtocolTool.Name == "LegacyDefaults").ProtocolTool.InputSchema.GetProperty("properties").GetProperty("paths").TryGetProperty("default", out var fallback));
-            Assert.Equal(JsonValueKind.Null, fallback.ValueKind);
         }
 
         [Fact]
@@ -278,9 +272,7 @@ namespace TiaMcpServer.Tests
         {
             const string json = "{\"properties\":{\"input\":{\"default\":null,\"anyOf\":[{\"type\":\"array\",\"items\":{\"type\":\"string\",\"default\":null}}],\"examples\":[{\"default\":null}]}},\"$defs\":{\"child\":{\"type\":\"string\",\"default\":null}}}";
             var schema = JsonNode.Parse(json)!.AsObject();
-            McpServer.RemoveV4NullDefaults("LegacyDefaults", schema);
-            Assert.Equal(json, schema.ToJsonString());
-            McpServer.RemoveV4NullDefaults("FindTools", schema);
+            McpServer.RemoveV4NullDefaults(schema);
             Assert.False(schema["properties"]!["input"]!.AsObject().ContainsKey("default"));
             Assert.False(schema["properties"]!["input"]!["anyOf"]![0]!["items"]!.AsObject().ContainsKey("default"));
             Assert.False(schema["$defs"]!["child"]!.AsObject().ContainsKey("default"));

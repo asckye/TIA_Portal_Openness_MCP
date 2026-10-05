@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public OpcUaTools(OpcUaService service) => _service = service;
 
         [McpServerTool(Name = "GetPlcOpcUaConfiguration"), Description(
-            "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
             " Read the full OPC UA server configuration for a PLC: server interfaces, SIMATIC interfaces, and reference namespaces — each with their Name, Enabled state, and key properties." +
             " Use this to audit what OPC UA interfaces exist before enabling or exporting them." +
             " Enabled=true means the interface is active and will be downloaded to the CPU. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => _service.ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun);
 
         [McpServerTool(Name = "SetOpcUaInterfaceEnabled"), Description(
-            "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
             " Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace." +
             " Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU." +
             " interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'." +
@@ -88,7 +88,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportOpcUaInterface"), Description(
-            "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
             " Export an OPC UA server interface or reference namespace to an XML file." +
             " The exported XML can be inspected, modified, and re-imported." +
             " interfaceType: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted.")]
@@ -111,7 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportOpcUaInterface"), Description(
-            "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject]" +
+            "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject]" +
             " Import an OPC UA server interface or reference namespace from an XML file." +
             " If an interface with the same name (derived from the file name) already exists, it is updated in place." +
             " Otherwise a new interface is created." +

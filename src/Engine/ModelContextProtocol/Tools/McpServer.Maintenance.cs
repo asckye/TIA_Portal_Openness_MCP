@@ -1,3 +1,5 @@
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4.Inputs;
 using ModelContextProtocol.Server;
 using System;
 using System.ComponentModel;
@@ -64,11 +66,16 @@ namespace TiaMcpServer.ModelContextProtocol
             return null;
         }
 
-        [McpServerTool(Name = "CheckForUpdate"), Description(
+        [McpServerTool(Name = "CheckProductUpdate"), Description(
             "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +
             "(name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, " +
             "run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). " +
             "The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.")]
+        public static Task<CallToolResult> CheckProductUpdateV4(
+            [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
+            [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)
+            => SessionToolContract.RunAsync("CheckProductUpdate", false, false, () => CheckForUpdate(repository, timeoutSeconds));
+
         public static async Task<ResponseStringList> CheckForUpdate(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
             [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)

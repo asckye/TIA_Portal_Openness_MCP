@@ -166,8 +166,8 @@ namespace TiaMcpServer.Siemens.Services
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    "ListTechnologyObjects: no project is open. Call Connect + OpenProject "
-                    + "(or AttachToOpenProject) first.");
+                    "ListTechnologyObjects: no project is open. Call ConnectPortal + OpenProject "
+                    + "(or AttachOpenProject) first.");
             }
 
             var plc = _session.GetPlcSoftware(softwarePath);

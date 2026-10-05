@@ -15,7 +15,7 @@ namespace TiaMcpServer
             lock(Gate) return new JsonObject {
                 ["httpAlive"]=true, ["mcpHostReady"]=Phase=="Ready", ["phase"]=Phase,
                 ["lastError"]=LastError, ["tiaAvailability"]="NotProbed",
-                ["tiaCheck"]="Use GetState for TIA/project state; HTTP readiness never launches or attaches TIA." };
+                ["tiaCheck"]="Use GetSessionState for TIA/project state; HTTP readiness never launches or attaches TIA." };
         }
     }
 }
