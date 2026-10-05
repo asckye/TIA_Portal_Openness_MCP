@@ -49,13 +49,15 @@ internal static class Program
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-DEVICE");
+            bool sessionCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-SESSION");
             bool importCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-IMPORT");
             bool exportCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-EXPORT");
             var methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => WorkerOperations.Names.Contains(m.Name) || deviceCandidateEnabled && m.Name == WorkerOperations.DeviceCreationCandidate
                     || importCandidateEnabled && m.Name == WorkerOperations.PlcImportCandidate
-                    || exportCandidateEnabled && m.Name == WorkerOperations.PlcExportCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
-            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0) + (exportCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
+                    || exportCandidateEnabled && m.Name == WorkerOperations.PlcExportCandidate
+                    || sessionCandidateEnabled && m.Name == WorkerOperations.SessionCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
+            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0) + (exportCandidateEnabled ? 1 : 0) + (sessionCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
             var sessionOutcome=new WorkerSessionOutcomeState();
             bool disconnectAttempted=false;
             bool disconnected=false;
@@ -90,13 +92,13 @@ internal static class Program
                     readOnly=WorkerOperations.IsReadOnly(name);
                     if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                     var values = WorkerJson.ParseArguments(request.ArgumentsJson);
-                    if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate)
+                    if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate)
                     {
                         if (values.ContainsKey("bindingEpoch")) throw new ArgumentException("The worker owns the binding epoch.");
                         values["bindingEpoch"] = System.Text.Json.JsonSerializer.SerializeToElement(bindingEpoch);
                         var candidateMode = WorkerJson.Get(values, "mode");
                         string? mode = candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString();
-                        readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode);
+                        readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode);
                     }
                     if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                     if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
@@ -122,7 +124,8 @@ internal static class Program
                     var result = method.Invoke(engine, call);
                     if (result is TiaMcp.Adapters.Contracts.Candidates.DeviceCandidateReply deviceCandidate && deviceCandidate.RequiresSessionReset
                         || result is TiaMcp.Adapters.Contracts.Candidates.ImportCandidateReply importCandidate && importCandidate.RequiresSessionReset
-                        || result is TiaMcp.Adapters.Contracts.Candidates.ExportCandidateReply exportCandidate && exportCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
+                        || result is TiaMcp.Adapters.Contracts.Candidates.ExportCandidateReply exportCandidate && exportCandidate.RequiresSessionReset
+                        || result is TiaMcp.Adapters.Contracts.Candidates.SessionCandidateReply sessionCandidate && sessionCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) sessionOutcome.MarkUncertain();

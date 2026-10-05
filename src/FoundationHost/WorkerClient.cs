@@ -64,14 +64,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             await channel!.ConnectAsync(TimeSpan.FromMinutes(2),token);
             token.ThrowIfCancellationRequested();
-            var dryRun=arguments["dryRun"]?.GetValue<bool>() ?? true;
-            var change=operation is "Attach" or "BindProject" || (!dryRun && operation is "OpenProject" or "CreateProject" or "CloseProject")
-                ? BindingChange.Advance : operation=="Disconnect" ? BindingChange.MayAdvance : BindingChange.None;
+            var change = BindingChangeFor(operation, arguments);
             string response;
             try
             {
                 response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token);
                 sent=true;
             }
             catch(ChannelFailure failure)
@@ -90,6 +88,20 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         }
         catch(Exception ex)
         {
+            if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
+            {
+                int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
+                bool matching = false;
+                try
+                {
+                    using var selected = Process.GetProcessById(selectedPid ?? 0);
+                    var expected = (string?)arguments["candidate"]?["Check"]?["Request"]?["ProcessStartUtc"];
+                    matching = !selected.HasExited && (expected == null || new DateTimeOffset(selected.StartTime.ToUniversalTime()) == DateTimeOffset.Parse(expected, System.Globalization.CultureInfo.InvariantCulture));
+                }
+                catch (Exception) /* swallow(env-probe): timeout guidance does not claim a matching process after exit or access denial */ { }
+                string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.TimeoutReason(true, matching);
+                if (reason != null) ex.Data["sessionReason"] = reason;
+            }
             if(channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
             ex.Data["foundationRequestSent"] = sent;
             outcome.Failed(sent,ex);
@@ -105,5 +117,25 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         // Close our input only. Never kill a TIA process or replay a timed-out call.
         if (process != null) { try { if(channel!=null) channel.Dispose(); else process.StandardInput.Close(); } catch (IOException) /* swallow(teardown): a broken worker input pipe must not prevent releasing local process and semaphore resources */ { } process.Dispose(); }
         serial.Dispose();
+    }
+
+    internal static BindingChange BindingChangeFor(string operation, JsonObject arguments)
+    {
+        if (operation == WorkerOperations.SessionCandidate)
+            return WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) ? BindingChange.None : BindingChange.MayAdvance;
+        var dryRun = arguments["dryRun"]?.GetValue<bool>() ?? true;
+        return operation is "Attach" or "BindProject" || (!dryRun && operation is "OpenProject" or "CreateProject" or "CloseProject")
+            ? BindingChange.Advance : operation == "Disconnect" ? BindingChange.MayAdvance : BindingChange.None;
+    }
+
+    internal void InvalidateCandidateSession()
+    {
+        serial.Wait();
+        try
+        {
+            var failure = new IOException("The candidate outcome is unknown; inspect TIA before a new session.");
+            outcome.Failed(true, failure); channel?.Invalidate(failure);
+        }
+        finally { serial.Release(); }
     }
 }

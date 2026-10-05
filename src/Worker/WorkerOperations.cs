@@ -6,6 +6,8 @@ namespace TiaMcp.PlcWorker
     internal static class WorkerOperations
     {
         internal const string DeviceCreationCandidate = "CreateHardwareDeviceCandidate";
+        internal const string SessionCandidate = "SessionCandidate";
+        internal static bool IsSessionPreview(string name, string? mode) => name == SessionCandidate && (mode == null || mode == "preview");
         internal const string PlcExportCandidate = "ExportPlcCandidate";
         internal const string PlcImportCandidate = "ImportPlcCandidate";
         internal static bool IsExportPreview(string name, string? mode) => name == PlcExportCandidate && (mode == null || mode == "preview");

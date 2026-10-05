@@ -44,6 +44,7 @@ namespace TiaMcpServer.Siemens
 
         private bool IsPortalNull()
         {
+            sessionCandidateAdapter?.VerifyOwnedState();
             if (_portal == null)
             {
                 _logger?.LogWarning("No TIA portal available.");
@@ -63,6 +64,7 @@ namespace TiaMcpServer.Siemens
 
         private bool IsSessionNull()
         {
+            sessionCandidateAdapter?.VerifyOwnedState();
             if (_session == null)
             {
                 _logger?.LogWarning("No TIA session available.");

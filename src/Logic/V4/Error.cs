@@ -321,10 +321,13 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.OutcomeUnknown;
         [JsonPropertyOrder(0)] public string? Stage { get; }
         [JsonPropertyOrder(1)] public IReadOnlyDictionary<string, JsonElement> Evidence { get; }
-        public OutcomeUnknownDetails(string? stage, IReadOnlyDictionary<string, JsonElement> evidence)
+        [JsonPropertyOrder(2), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Reason { get; }
+        public OutcomeUnknownDetails(string? stage, IReadOnlyDictionary<string, JsonElement> evidence, string? reason = null)
         {
             Stage = stage;
             Evidence = V4Validation.Object(evidence);
+            if (reason != null && reason != "awaiting-openness-confirmation") throw new System.ArgumentException("Unknown session timeout reason.");
+            Reason = reason;
             V4Validation.Details(this);
         }
     }
@@ -340,4 +343,3 @@ namespace TiaMcp.Logic.V4
         }
     }
 }
-

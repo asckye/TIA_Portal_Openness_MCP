@@ -30,6 +30,28 @@ internal static class CandidateWire
             throw new InvalidDataException("Incomplete candidate observation.");
         return reply;
     }
+
+    internal static SessionCandidateReply Session(JsonNode? body, JsonObject args)
+    {
+        var reply = Read<SessionCandidateReply>(body); string action = Action(args);
+        if (reply.Fault != null)
+        { if (reply.RequiresSessionReset || reply.Attempt != null) throw new InvalidDataException("Conflicting session preflight observation."); return reply; }
+        if (action == "execute")
+        {
+            var attempt = reply.Attempt ?? throw new InvalidDataException("Missing session native outcome.");
+            Attempt(attempt.Issued, attempt.RequiresSessionReset, attempt.Fault != null);
+            if (attempt.Reason != null && attempt.Reason != SessionPrimitives.ConfirmationReason) throw new InvalidDataException("Unknown session timeout reason.");
+            if (reply.RequiresSessionReset != attempt.RequiresSessionReset) throw new InvalidDataException("Conflicting session reset state.");
+            if (attempt.After != null) TiaMcp.Logic.V4.SessionCandidateSession.ValidateObservation(attempt.After);
+            if (attempt.Fault == null) CandidateExecution.VerifySessionReadback(Read<SessionCandidateCall>(args["candidate"]).Check!, attempt.After!);
+        }
+        else
+        {
+            if (action != "observe" || reply.Attempt != null || reply.RequiresSessionReset || reply.Observation == null) throw new InvalidDataException("Incomplete session observation.");
+            TiaMcp.Logic.V4.SessionCandidateSession.ValidateObservation(reply.Observation);
+        }
+        return reply;
+    }
     internal static ImportCandidateReply Import(JsonNode? body, JsonObject args)
     {
         var reply = Read<ImportCandidateReply>(body); string action = Action(args);

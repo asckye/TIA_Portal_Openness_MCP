@@ -61,10 +61,11 @@ internal static class FoundationV4Result
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, true);
         }
         bool unknown = mutation && exception is not WorkerOperationException { KnownNoMutation: true };
+        string? reason = exception == null ? null : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         return Wire(release, name, id, data,
             unknown ? Outcome.Unknown : Outcome.ReadFailed, unknown ? Execution.Unknown : Execution.ReadOnly,
             unknown ? Completeness.Unknown : Completeness.None,
-            unknown ? new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("worker", details))
+            unknown ? new Error(reason == null ? "The operation outcome is unknown; inspect the retained evidence before a new session." : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationGuidance, new OutcomeUnknownDetails("worker", details, reason))
                 : new Error("Foundation read failed.", new NativeOperationFailedDetails(null, null, details)), true, unknown);
     }
 

@@ -39,6 +39,7 @@ namespace TiaMcpServer.Siemens
         };
         internal void VerifyBinding(string operation)
         {
+            sessionCandidateAdapter?.VerifyOwnedState();
             if (_bindingFault != null) throw new PortalException(PortalErrorCode.InvalidState, _bindingFault +
                 " The old project binding cannot be reused, even after TIA restarts. GetOpennessWorkerStatus: if enabled=true, explicitly RestartOpennessWorker(confirmRestart=true); " +
                 "otherwise restart this MCP service. Then ListPortalProcessProjects and ConnectProject using the new PID/start time/full path. Do not replay the failed write.");
@@ -88,7 +89,16 @@ namespace TiaMcpServer.Siemens
                 try { return InvocationJournal.Native("TiaPortal.Attach", () => process.Attach()); }
                 catch (Exception ex) { if (IsSecurityRefusal(ex)) lease.ReleaseCleanly(); else lease.Dispose(); throw; }
             }, late => { try { late.Dispose(); lease.ReleaseCleanly(); } finally { lease.Dispose(); } }, ConnectLogic.AttachTimeoutMsPerProcess);
-            if (attached == null) throw new PortalException(PortalErrorCode.InvalidState, "Attach timed out; no second instance will be probed or started. Inspect diagnostics before retrying.");
+            if (attached == null)
+            {
+                var timeout = new PortalException(PortalErrorCode.InvalidState, "Attach timed out. Answer the TIA Portal Openness access prompt (Yes / Yes to all), then inspect the session state and retry.");
+                bool matching = false;
+                try { matching = ProcessStart(pid) == ticks; }
+                catch (Exception) /* swallow(env-probe): a vanished or inaccessible process cannot establish a confirmation-dialog reason */ { }
+                var reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.TimeoutReason(true, matching);
+                if (reason != null) timeout.Data["sessionReason"] = reason;
+                throw timeout;
+            }
             _portal = attached; _processLease = lease; _boundProcessId = pid; _processStartTicks = ticks;
             try
             {

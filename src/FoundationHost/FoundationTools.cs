@@ -87,7 +87,7 @@ internal static class FoundationTools
     internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
 }
 
-internal sealed class FoundationTool : McpServerTool
+internal sealed partial class FoundationTool : McpServerTool
 {
     private readonly Definition definition;
     private readonly IFoundationWorker worker;

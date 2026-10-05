@@ -443,7 +443,14 @@ for k in keys[-2:]:
 # map is generated from the same transition decisions as the source checks.
 candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
     '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
-def candidate_example(entry, family):
+def candidate_example(entry, family, release):
+    if family == 'P6-SESSION':
+        example = {"processId": 1234, "processStartUtc": "2026-10-03T00:00:00Z", "startNew": False,
+                   "reuseOpen": entry in ('ConnectProject', 'AttachOpenProject'), "upgrade": "reject", "mode": "preview", "confirm": False}
+        if entry in ('ConnectProject', 'AttachOpenProject', 'OpenProject'):
+            suffix = '14' if release == '14sp1' else '15_1' if release == '15.1' else release
+            example['projectPath'] = r"C:\authorized-project-copy\Project_1.ap" + suffix
+        return example
     if family == 'P6-DEVICE':
         return {"typeIdentifier": "<exact catalog TypeIdentifier>", "deviceName": "Device_1",
                 "family": "GSD" if entry == "CreateGsdDevice" else "S7-1500", "mode": "preview", "confirm": False}
@@ -466,7 +473,7 @@ def candidate_example(entry, family):
     return example
 
 behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
-    "example": candidate_example(entry, family)}
+    "example": candidate_example(entry, family, k)}
     for k in keys for entry, family in sorted(candidate_entries.items()) if entry in {renames[n] for n in tools[k]}]
 runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
            "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}

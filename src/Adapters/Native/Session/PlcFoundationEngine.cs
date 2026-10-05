@@ -69,7 +69,7 @@ namespace TiaMcp.PlcFoundation
             if (Thread.CurrentThread.ManagedThreadId != ownerThread)
                 throw new InvalidOperationException("Use the owning STA thread; cross-thread native access is refused.");
         }
-        private TiaPortal Portal() { Check(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
+        private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
         // No process launch, automatic process selection, kill, project upgrade or UI interaction.

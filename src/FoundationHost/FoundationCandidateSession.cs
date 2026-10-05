@@ -7,7 +7,7 @@ using TiaMcp.PlcWorker;
 
 namespace TiaMcp.LegacyHost;
 
-internal sealed class FoundationCandidateSession(IFoundationWorker worker)
+internal sealed partial class FoundationCandidateSession(IFoundationWorker worker)
 {
     private static readonly ConditionalWeakTable<IFoundationWorker, FoundationCandidateSession> Sessions = new();
     internal static FoundationCandidateSession For(IFoundationWorker worker) => Sessions.GetValue(worker, w => new(w));

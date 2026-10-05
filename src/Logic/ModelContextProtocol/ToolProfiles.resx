@@ -406,6 +406,35 @@
   "behaviorEntries": [
     {
       "releaseKey": "14sp1",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap14"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ExportPlcBlock",
       "family": "P6-EXPORT",
       "example": {
@@ -560,6 +589,50 @@
       }
     },
     {
+      "releaseKey": "14sp1",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap14"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
       "releaseKey": "15.1",
       "entry": "ExportPlcBlock",
       "family": "P6-EXPORT",
@@ -715,6 +788,50 @@
       }
     },
     {
+      "releaseKey": "15.1",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap16"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
       "releaseKey": "16",
       "entry": "ExportPlcBlock",
       "family": "P6-EXPORT",
@@ -870,6 +987,50 @@
       }
     },
     {
+      "releaseKey": "16",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap16"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
       "releaseKey": "17",
       "entry": "ExportPlcBlock",
       "family": "P6-EXPORT",
@@ -1025,6 +1186,50 @@
       }
     },
     {
+      "releaseKey": "17",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
       "releaseKey": "18",
       "entry": "ExportPlcBlock",
       "family": "P6-EXPORT",
@@ -1177,6 +1382,50 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -1344,6 +1593,79 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ConnectProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
       }
     },
     {
@@ -1633,6 +1955,79 @@
       }
     },
     {
+      "releaseKey": "20",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "AttachOpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ConnectPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ConnectProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": true,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+      }
+    },
+    {
       "releaseKey": "21",
       "entry": "CreateDevice",
       "family": "P6-DEVICE",
@@ -1916,6 +2311,21 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "OpenProject",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false,
+        "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
       }
     }
   ],

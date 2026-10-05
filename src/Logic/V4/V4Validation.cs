@@ -212,7 +212,7 @@ namespace TiaMcp.Logic.V4
             {
                 Require(value.ProcessId > 0 && value.ProcessStartUtc != null && value.BindingEpoch >= 0,
                     "Project identity requires a process start time, PID and binding epoch.");
-                Text(value.ProjectFile, "projectFile");
+                if (value.ProjectFile != null) Text(value.ProjectFile, "projectFile");
             }
         }
 

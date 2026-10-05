@@ -33,8 +33,12 @@ namespace TiaMcpServer.ModelContextProtocol
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
             var evidence = new JsonObject { ["exceptionType"] = exception.GetType().Name };
+            string? reason = new[] { "ConnectPortal", "ConnectProject", "AttachOpenProject" }.Contains(tool, StringComparer.Ordinal)
+                ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
+            var unknown = reason == null ? Unknown(evidence) : new Error(TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationGuidance,
+                new OutcomeUnknownDetails("session operation", Evidence(evidence), reason));
             return Result(tool, new JsonObject { ["evidence"] = evidence },
-                writes ? Unknown(evidence) : new Error("The diagnostic read could not be completed.", new InternalErrorDetails(null)),
+                writes ? unknown : new Error("The diagnostic read could not be completed.", new InternalErrorDetails(null)),
                 writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
         }
 
