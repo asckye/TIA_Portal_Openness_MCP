@@ -1,0 +1,74 @@
+{
+  "release": "v3.3.0",
+  "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.3.0",
+  "sourceCommit": "889a2bd836c8f8f77506dcf885bdca20438bcd73",
+  "publishedAtUtc": "2026-10-05T00:31:52Z",
+  "formalRelease": true,
+  "package": {
+    "name": "TIA_MCP_Delivery_v3.3.0_20261003.zip",
+    "bytes": 137889009,
+    "sha256": "3e9f54114d6f0f2b5283368655ecebad9558e5b74dca47e5b4cdb41cad15d80e",
+    "files": 3309
+  },
+  "assets": [
+    {
+      "name": "TIA_MCP_Delivery_v3.3.0_20261003.sha256",
+      "bytes": 104,
+      "digest": "sha256:e8f8e59f9c45c232e12dd254f188bfc42ed932babfe061f10369f9e25530d55f",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256"
+    },
+    {
+      "name": "TIA_MCP_Delivery_v3.3.0_20261003.zip",
+      "bytes": 137889009,
+      "digest": "sha256:3e9f54114d6f0f2b5283368655ecebad9558e5b74dca47e5b4cdb41cad15d80e",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "validate-bundle",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37247357974",
+      "headSha": "889a2bd836c8f8f77506dcf885bdca20438bcd73"
+    },
+    {
+      "name": "offline-checks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37247357899",
+      "headSha": "889a2bd836c8f8f77506dcf885bdca20438bcd73"
+    },
+    {
+      "name": "Verify v3.3.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37247880461",
+      "headSha": "889a2bd836c8f8f77506dcf885bdca20438bcd73"
+    }
+  ],
+  "releaseKeys": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ],
+  "bundledDotnet": "10.0.12",
+  "realMachineAcceptance": {
+    "status": "passed",
+    "dates": "2026-10-04/05",
+    "candidate": {
+      "commit": "9847e141",
+      "sha256": "a84ca290865c64a679f03a0c4ce6c3a181c1ed1bbea9bbd61ecd68c9bc3d8307"
+    },
+    "record": "docs/reference/real-machine-ledger.md#330-验收结果2026-10-0405"
+  },
+  "nativeTiaExecuted": true,
+  "vmDeployed": true
+}

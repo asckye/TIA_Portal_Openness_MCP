@@ -2,33 +2,28 @@
 
 ## Current state
 
-Current local development merges the configurator and Studio into one WPF/.NET 10
-workbench. `TiaMcpConfigurator.exe` is now the compatibility launcher for that single
-main window. The embedded configuration module preserves existing settings and service
-ownership; the title bar keeps the release picker and one Project / View / Tools / Help
-menu. View switches between Engineering and MCP & clients (Ctrl+1 / Ctrl+2) and owns language
-and theme choices. The current page appears beside the app title in the caption; Help exposes
-updates from either page without switching pages. The native
-Framework bridge and per-release MCP engines remain separate backend processes.
-This local change is not part of the published v3.2.0 asset described below. Native TIA
-acceptance for the merge remains NOT RUN. Local verification completed with 622 WPF
-checks, 45 Studio core checks, 157 configuration checks in each of the Framework and
-.NET 10 hosts, 7,367 foundation checks (one native-related skip), all eight adapter
-builds and 17,936 V20/V21 local stress calls. Strict bundle validation passed. Evidence
-is in the current build manifests and `bin-build/unified-*-build.log` / Studio test logs.
-The host lacked ASP.NET Core 8; this run used a SHA-512-verified Microsoft 8.0.19 archive
-under `bin-build/dotnet-test-runtime` with process-local `DOTNET_ROOT` and `DOTNET_ROOT_X64`.
-That private test runtime is not part of the delivery. The system installation was not changed.
+Published [v3.3.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.3.0) from
+`889a2bd836c8f8f77506dcf885bdca20438bcd73` on 2026-10-05. Both pre-release CI workflows and the independent
+published-asset verification passed; see the [publication evidence](../../manifest/publication-v3.3.0.json),
+[release notes](../releases/v3.3.0.md) and [CHANGELOG](../../CHANGELOG.md). The release contains:
 
+- one WPF/.NET 10 workbench (configurator and Studio merged; `TiaMcpConfigurator.exe` remains the launcher) with menus
+  grouped by owner (Project, View, PLC, MCP, Tools, Help) and an MCP service state chip in the title bar;
+- V14 SP1–V19 foundation hosts on .NET 10 and Microsoft .NET 10.0.12 bundled in `runtime/dotnet`, so a target computer
+  needs only .NET Framework 4.8 for the Openness workers and engines;
+- strict PLC name resolution (G9) on V20/V21 and the V15.1 `.ap15_1` project-file fix found during acceptance.
 
-Published [v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) from `299f947d4b54a92873e9321a39f6b3dc39279e11`. Both pre-release CI workflows and the independent published-asset verification passed. The release ZIP includes the original beginner guide; the subsequent documentation cleanup is maintained on master. See [publication evidence](../../manifest/publication-v3.2.0.json) and the [current beginner guide (Chinese)](../getting-started/beginners.zh-CN.md).
+The per-VM real-machine acceptance (Foundation MCP on V14 SP1–V19, Studio on V14 SP1/V16/V21, G9 and engine smoke on
+V20/V21) passed on 2026-10-04/05; results are in the
+[real-machine ledger](../reference/real-machine-ledger.md#330-验收结果2026-10-0405). The work behind the default-off
+`TiaSharedAdapterPaths` switch (engine VCI primitives, Studio shared adapter sessions) is not released and its native
+acceptance remains **NOT RUN**.
 
-The v3.2.0 release build includes eight MCP runtimes, the configurator and direct
-Openness Studio. All eight exact SDK targets have compiled; the full V20/V21 and
-multi-version functional build gates have completed. Publication and independent
-GitHub asset verification are separate steps: consult the actual
-[GitHub Release](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) for their
-current outcome. New native acceptance remains **NOT RUN**.
+3.3.1 is in progress on separate branches until it is verified: the software's own files (journal, leases,
+configuration, UI settings, logs, reports, scratch) move to a writable `<bundle>\data` folder with per-user fallback,
+and the delivery ZIP becomes runtime-only (no source tree or development files). Smaller 3.3.x items are the Openness
+access prompt hint on a first-attach timeout, journal retention, a Chinese message when .NET Framework 4.8 is missing,
+the garbled bridge stderr line, and release-pipeline speedups.
 
 Only `master` is maintained. Exact release keys are `14sp1`, `15.1`, `16`, `17`,
 `18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC
