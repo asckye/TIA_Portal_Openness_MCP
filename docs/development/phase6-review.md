@@ -26,9 +26,9 @@
 |---|---|---|
 | P 路径段 | `string[]`；`{"devicePath":["PLC_1"]}` | 段边界、转义、大小写、深度及根路径含义；不按斜杠/逗号重新拆分 |
 | S 名称/文件列表 | `string[]`；`{"extensions":[".scl"]}` | 逐操作允许值、重复项、长度、数量；harmonizeOptions 是名称数组而非对象 |
-| N 数字列表 | `int32[]`；`{"numbers":[1000]}` | 拒绝小数和溢出，原有参数号范围保持 |
+| N 数字列表 | `int32[]`；`{"numbers":[1000]}`；原 parser 接受 `{number,arrayIndex}` 处用 `ParameterRef{number:int32,arrayIndex?:int32}[]`（省略下标即原 -1） | 拒绝小数和溢出，原有参数号、下标范围与数量保持 |
 | R 反射路径 | `PropertyStep{property:string,name?:string,index?:int32}[]`；`{"objectPath":[{"property":"TagTables","name":"Table"}]}` | name/index 选择规则、原有属性准入和遍历预算；不开放任意 CLR 类型 |
-| M 属性字典 | `AttributeMap<Scalar>`，`Scalar=string\|number\|bool\|null`；`{"properties":{"ExternalWritable":true}}` | 按动作/版本限制属性、可写性、值类型和范围；CPU 使用 `{"settings":{"exactAttributes":{"Name":"PLC_1"}}}`，键须来自该操作支持的原生属性；不把这个形状当成所有 CPU 都支持 Name 的证明 |
+| M 属性字典 | `AttributeMap<Scalar>`，`Scalar=string\|number\|bool\|null`；`{"properties":{"ExternalWritable":true}}`；原本支持复合属性的 HMI 屏幕项属性写入使用 `CompositeAttributeMap=map<string,Scalar\|map<string,Scalar>>`（仅一层，如 `{"Font":{"Size":14}}`） | 按动作/版本限制属性、可写性、值类型和范围；CPU 使用 `{"settings":{"exactAttributes":{"Name":"PLC_1"}}}`，键须来自该操作支持的原生属性；不把这个形状当成所有 CPU 都支持 Name 的证明 |
 | L 文本/回答 | `map<string,string>`；`{"comments":{"en-US":"Motor"}}`；accessLevels 特例为 `map<string,int32>` | culture、提示 ID/选项及访问等级枚举；凭据不回显 |
 | V 原生值 | `NativeValue=Scalar\|NativeValue[]\|map<string,NativeValue>`，每个 action 收窄为其 parser 已允许的分支；`{"value":42.5}` | 数组/对象只在原操作支持时接收，原有深度和数据类型检查保留 |
 | C 调用 | `ToolCall{name:string,arguments:ToolArguments}[]`；`{"operations":[{"name":"GetSessionState","arguments":{}}]}` | arguments 按目标 V4 inputSchema 校验；直接 CallTool 的 arguments 是对象；读批次、预览和事务各保留 allowlist、数量和嵌套限制 |
@@ -1684,10 +1684,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Siemens/TestSuiteLogic.cs](../../src/Logic/Siemens/TestSuiteLogic.cs):135 | `RequireText(softwarePath, "softwarePath", 1024);` |
 | [Siemens/TestSuiteLogic.cs](../../src/Logic/Siemens/TestSuiteLogic.cs):141 | `RequireText(opcUaServerAddress, "opcUaServerAddress", 1024);` |
 | [Siemens/WatchTableImportValidation.cs](../../src/Logic/Siemens/WatchTableImportValidation.cs):13 | `using var reader = XmlReader.Create(file, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });` |
+| [V4/Inputs/NativeValueInputs.cs](../../src/Logic/V4/Inputs/NativeValueInputs.cs):33 | `if (name.Length < 2 \|\| name.Length > 64 \|\| "pPrR".IndexOf(name[0]) < 0) return false;` |
+| [V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs):89 | `if (nameCount < 0 \|\| nameCount > 200) throw new ArgumentOutOfRangeException(nameof(nameCount));` |
+| [V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs):97 | `if (nameCount < 0 \|\| nameCount > 200) throw new ArgumentOutOfRangeException(nameof(nameCount));` |
 | [V4/Plan.cs](../../src/Logic/V4/Plan.cs):80 | `V4Validation.Require(exists ? byteLength >= 0 && sha256 != null : byteLength == null && sha256 == null,` |
+| [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):58 | `internal const int MaximumInputDepth = 64;` |
+| [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):68 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = MaximumInputDepth + 1 });` |
+| [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 220 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 226 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -2113,7 +2119,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 已完成项目 | 当前文件 |
 |---|---|
-| P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验 | [V4/Envelope.cs](../../src/Logic/V4/Envelope.cs)<br>[V4/Error.cs](../../src/Logic/V4/Error.cs)<br>[V4/Paging.cs](../../src/Logic/V4/Paging.cs)<br>[V4/Plan.cs](../../src/Logic/V4/Plan.cs)<br>[V4/ResultMapping.cs](../../src/Logic/V4/ResultMapping.cs)<br>[V4/V4Json.cs](../../src/Logic/V4/V4Json.cs)<br>[V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs) |
+| P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验 | [V4/Envelope.cs](../../src/Logic/V4/Envelope.cs)<br>[V4/Error.cs](../../src/Logic/V4/Error.cs)<br>[V4/Inputs/CompositeAttributeMap.cs](../../src/Logic/V4/Inputs/CompositeAttributeMap.cs)<br>[V4/Inputs/DriveFunctionPolicy.cs](../../src/Logic/V4/Inputs/DriveFunctionPolicy.cs)<br>[V4/Inputs/InputSchema.cs](../../src/Logic/V4/Inputs/InputSchema.cs)<br>[V4/Inputs/InputValidation.cs](../../src/Logic/V4/Inputs/InputValidation.cs)<br>[V4/Inputs/InputValues.cs](../../src/Logic/V4/Inputs/InputValues.cs)<br>[V4/Inputs/MapInputs.cs](../../src/Logic/V4/Inputs/MapInputs.cs)<br>[V4/Inputs/NativeValueInputs.cs](../../src/Logic/V4/Inputs/NativeValueInputs.cs)<br>[V4/Inputs/ParameterRef.cs](../../src/Logic/V4/Inputs/ParameterRef.cs)<br>[V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs)<br>[V4/Inputs/ToolCallInputs.cs](../../src/Logic/V4/Inputs/ToolCallInputs.cs)<br>[V4/Paging.cs](../../src/Logic/V4/Paging.cs)<br>[V4/Plan.cs](../../src/Logic/V4/Plan.cs)<br>[V4/ResultMapping.cs](../../src/Logic/V4/ResultMapping.cs)<br>[V4/V4Json.cs](../../src/Logic/V4/V4Json.cs)<br>[V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs) |
 | D334：源码目录迁移完成；产品名/运行目录仍待 36–39 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) |
 
 台账已核对：P6-DEVICE、P6-IMPORT、P6-EXPORT、P6-SESSION、P6-CLOSE、P6-SOURCE、P6-COMPILE、P6-FALLBACK，八族全部 NOT RUN；P6-PRODUCT 也为 NOT RUN。未运行任何原生调用。

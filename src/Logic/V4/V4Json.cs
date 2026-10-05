@@ -55,6 +55,37 @@ namespace TiaMcp.Logic.V4
                 ?? throw new JsonException("A V4 value must not be null.");
         }
 
+        internal const int MaximumInputDepth = 64;
+
+        internal sealed class InputDepthException : JsonException { }
+
+        // One extra level lets adapters diagnose their own depth budget. For deeper
+        // input, identify the reader boundary without relying on localized messages.
+        internal static JsonElement ParseInput(string json)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = MaximumInputDepth + 1 });
+                return document.RootElement.Clone();
+            }
+            catch (JsonException) when (ReachedInputDepth(json))
+            { throw new InputDepthException(); }
+        }
+
+        private static bool ReachedInputDepth(string json)
+        {
+            var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });
+            try
+            {
+                while (reader.Read())
+                    if ((reader.TokenType == JsonTokenType.StartArray || reader.TokenType == JsonTokenType.StartObject)
+                        && reader.CurrentDepth == MaximumInputDepth) return true;
+            }
+            catch (JsonException) /* swallow(parse-fallback): syntax failed before the depth boundary; retain the original parse error */
+            { return false; }
+            return false;
+        }
+
         public static JsonElement? Data<T>(T value)
         {
             if (value == null) return null;
