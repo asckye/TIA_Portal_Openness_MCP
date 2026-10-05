@@ -133,7 +133,7 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <WrapPanel>
-            <Button x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="10,0" FontSize="11" Margin="0,0,8,0">
+            <Button x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="14,0" Margin="0,0,8,0">
               <Button.Content>
                 <MultiBinding Converter="{StaticResource Glass.Value}" ConverterParameter="export">
                   <Binding Path="Engineering.SourceFormat" />
@@ -141,12 +141,12 @@
                 </MultiBinding>
               </Button.Content>
             </Button>
-            <Button Content="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Glass.Button}" Padding="10,0" FontSize="11" Margin="0,0,8,0" />
+            <Button Content="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Glass.Button}" Padding="14,0" Margin="0,0,8,0" />
             <Border Width="1" Height="22" Background="{DynamicResource Ui.Separator}" Margin="0,0,8,0" />
-            <Button x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="10,0" FontSize="11" Margin="0,0,8,0" />
-            <Button x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="10,0" FontSize="11" />
+            <Button x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="14,0" Margin="0,0,8,0" />
+            <Button x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Glass.Button}" Padding="14,0" />
           </WrapPanel>
-          <Button Grid.Column="1" Content="{l:Tr Glass.CompileSoftware}" Command="{Binding Engineering.Compile}" Style="{StaticResource Glass.Outline}" Padding="12,0" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Bottom" />
+          <Button Grid.Column="1" Content="{l:Tr Glass.CompileSoftware}" Command="{Binding Engineering.Compile}" Style="{StaticResource Glass.Outline}" Padding="16,0" FontWeight="Bold" BorderThickness="1.5" Margin="8,0,0,0" VerticalAlignment="Bottom" />
         </Grid>
         <Border x:Name="AtlasBar" Grid.Row="4" Margin="0,10,0,0" Padding="12,10" CornerRadius="10" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
           <Border.Style>

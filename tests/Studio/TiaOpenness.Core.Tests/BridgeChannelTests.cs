@@ -29,6 +29,29 @@ public sealed class BridgeChannelTests
     private static Process Child(BridgeClient client) => (Process)typeof(BridgeClient)
         .GetField("_process", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(client)!;
 
+    [Fact]
+    public async Task Chinese_stderr_round_trips_through_the_real_bridge_start_and_log_reader()
+    {
+        const string method = "不存在的方法_中文诊断";
+        var diagnostic = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var bridge = new BridgeClient(Array.Empty<string>());
+        bridge.Log += (_, e) =>
+        {
+            if (e.Line.StartsWith("[bridge] " + method + " -> ", StringComparison.Ordinal))
+                diagnostic.TrySetResult(e.Line);
+        };
+        bridge.Start(BridgeExe, forceMock: true, opennessVersion: "21");
+        var process = Child(bridge);
+        Assert.Equal(65001, process.StartInfo.StandardOutputEncoding!.CodePage);
+        Assert.Equal(65001, process.StartInfo.StandardErrorEncoding!.CodePage);
+        var response = await bridge.CallRawAsync(method);
+        Assert.NotNull(response.Error);
+        Assert.Contains(method, response.Error.Message);
+        Assert.Equal("[bridge] " + method + " -> " + response.Error.Code + " " + response.Error.Message,
+            await diagnostic.Task.WaitAsync(Budget));
+        Assert.Null((await bridge.CallRawAsync("session.state")).Error);
+    }
+
     [Theory]
     [InlineData("release")]
     [InlineData("bridge-hash")]

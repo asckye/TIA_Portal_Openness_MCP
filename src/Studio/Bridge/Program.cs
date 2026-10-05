@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using TiaMcp.WorkerChannel;
 using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Abstractions;
@@ -15,6 +16,9 @@ namespace TiaOpenness.Bridge
         [STAThread]
         public static int Main(string[] args)
         {
+            // Redirected diagnostics must match BridgeClient's UTF-8 readers even
+            // when the Windows console code page is GBK. Never emit a BOM on stdout.
+            Console.OutputEncoding = new UTF8Encoding(false);
             if (System.Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
                 TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
             var forceMock = HasFlag(args, "--mock");

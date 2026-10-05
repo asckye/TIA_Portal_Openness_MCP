@@ -13,6 +13,8 @@ using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.Controls;
 
+public enum LogLevel { Default, Info, Warning, Error, Debug }
+
 public sealed class EnumIndexConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToInt32(value);
@@ -89,7 +91,28 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public double InspectionCardHeight => HasInspection ? 148 : 85;
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
-    public sealed record LogRow(string Time, string Message);
+    public sealed record LogRow(string Time, string Message)
+    {
+        // The activity source is plain text. Only explicit leading severity labels
+        // affect presentation; words inside paths/messages must not change the tone.
+        public LogLevel Level
+        {
+            get
+            {
+                var match = Regex.Match(Message,
+                    @"^\s*(?:\[(?<level>INFO|INFORMATION|WARN|WARNING|ERROR|DEBUG|信息|警告|错误|调试)\]|(?<level>INFO|INFORMATION|WARN|WARNING|ERROR|FAILED|DEBUG|信息|警告|错误|失败|调试)(?:\s*[:：]|\s|$))",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                return match.Groups["level"].Value.ToUpperInvariant() switch
+                {
+                    "INFO" or "INFORMATION" or "信息" => LogLevel.Info,
+                    "WARN" or "WARNING" or "警告" => LogLevel.Warning,
+                    "ERROR" or "FAILED" or "错误" or "失败" => LogLevel.Error,
+                    "DEBUG" or "调试" => LogLevel.Debug,
+                    _ => LogLevel.Default,
+                };
+            }
+        }
+    }
     public IReadOnlyList<LogRow> LogRows => model.Activity.Log.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))
         .Select(line => line.TrimEnd('\r')).Select(line => line.Length > 8 && line[2] == ':' && line[5] == ':'
             ? new LogRow(line[..8], line[8..].TrimStart()) : new LogRow("", line)).ToArray();

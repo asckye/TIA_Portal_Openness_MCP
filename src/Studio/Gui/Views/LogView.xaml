@@ -1,4 +1,4 @@
-<UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.LogView" x:Name="PageRoot">
+<UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.LogView" x:Name="PageRoot">
   <Border x:Name="LogCard" Style="{StaticResource Glass.Card}">
     <Grid>
       <Grid.RowDefinitions>
@@ -26,7 +26,27 @@
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Time}" Style="{StaticResource Glass.Mono}" FontSize="11.5" Foreground="{DynamicResource Ui.TertiaryLabel}" />
-                <TextBlock Grid.Column="1" Text="{Binding Message}" ToolTip="{Binding Message}" Style="{StaticResource Glass.Mono}" FontSize="11.5" Foreground="{DynamicResource Ui.LogText}" />
+                <TextBlock Grid.Column="1" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="11.5">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Mono}">
+                      <Setter Property="Foreground" Value="{DynamicResource Ui.LogText}" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding Level}" Value="{x:Static controls:LogLevel.Info}">
+                          <Setter Property="Foreground" Value="{DynamicResource Ui.Accent}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Level}" Value="{x:Static controls:LogLevel.Warning}">
+                          <Setter Property="Foreground" Value="{DynamicResource Ui.Orange}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Level}" Value="{x:Static controls:LogLevel.Error}">
+                          <Setter Property="Foreground" Value="{DynamicResource Ui.Red}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Level}" Value="{x:Static controls:LogLevel.Debug}">
+                          <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>

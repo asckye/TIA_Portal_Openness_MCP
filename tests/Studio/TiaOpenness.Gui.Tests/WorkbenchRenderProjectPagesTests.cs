@@ -43,6 +43,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
             ("atlas-failed-zh-light", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Light, "failed"),
             ("vc-zh-light", "VersionControl", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
             ("log-zh-light", "Log", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
+            ("log-zh-dark", "Log", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
             ("ops-zh-dark-connected", "Engineering", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
             ("blocks-zh-dark", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
             ("vc-zh-dark", "VersionControl", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
@@ -57,7 +58,14 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                 using var trace = new BindingPathTests.BindingTrace();
                 var previous = ThemeManager.Current.Theme;
                 ThemeManager.Current.Theme = state.Item6;
-                var window = new MainWindow(ProjectPageTestSupport.Model(state.Item3, state.Item4, state.Item1 != "vc-empty-zh-light"), false, preview: new TiaMcpConfigurator.ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14", "192.168.86.131", false, false, false, "", "", [] ));
+                var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, state.Item1 != "vc-empty-zh-light");
+                if (state.Item2 == "Log")
+                    typeof(Services.WorkbenchActivity).GetProperty("Log")!.SetValue(model.Activity, model.Activity.Log
+                        + "20:45:00  [INFO] 工程已加载 · Project loaded\n"
+                        + "20:45:01  Warning: 程序块需要重新编译\n"
+                        + "20:45:02  [ERROR] 导入失败 · Import failed\n"
+                        + "20:45:03  [DEBUG] 读取程序块列表 · Reading blocks\n");
+                var window = new MainWindow(model, false, preview: new TiaMcpConfigurator.ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14", "192.168.86.131", false, false, false, "", "", [] ));
                 try
                 {
                     window.ShowConfiguration(false);
