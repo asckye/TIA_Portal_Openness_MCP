@@ -60,7 +60,7 @@ public class GlassViewTests(WpfContext wpf)
         {
             var oldTheme = ThemeManager.Current.Theme;
             ThemeManager.Current.Theme = theme;
-            var window = new MainWindow();
+            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             var model = (MainViewModel)window.DataContext;
             try
             {

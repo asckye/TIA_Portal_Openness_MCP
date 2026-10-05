@@ -31,12 +31,19 @@ namespace TiaDesktop.Glass
             Document.ColumnWidth = double.PositiveInfinity;
         }
 
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            // RichTextBox adds caret padding while attaching its document to the template.
+            Document.PagePadding = new Thickness(0);
+        }
+
         private static void Refresh(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             var view = (GlassLogView)sender;
             view.Document.Blocks.Clear();
-            var table = new Table { CellSpacing = 0 };
-            table.Columns.Add(new TableColumn { Width = new GridLength(68) });
+            var table = new Table { CellSpacing = 0, Margin = new Thickness(0) };
+            table.Columns.Add(new TableColumn { Width = new GridLength(72) });
             table.Columns.Add(new TableColumn());
             var rows = new TableRowGroup();
             foreach (string raw in (view.LogText ?? "").Split('\n'))
@@ -54,7 +61,7 @@ namespace TiaDesktop.Glass
                     || message.Contains(" error(s), ") || message.Contains(" 个错误,"))
                     body.SetResourceReference(TextElement.ForegroundProperty, "Ui.Accent");
                 var row = new TableRow();
-                row.Cells.Add(new TableCell(stamp) { Padding = new Thickness(0, 0, 8, 6) });
+                row.Cells.Add(new TableCell(stamp) { Padding = new Thickness(0, 0, 12, 6) });
                 row.Cells.Add(new TableCell(body) { Padding = new Thickness(0, 0, 0, 6) });
                 rows.Rows.Add(row);
             }

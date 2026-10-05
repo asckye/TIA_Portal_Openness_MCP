@@ -16,8 +16,8 @@ public class LocTests(WpfContext wpf)
     [Fact]
     public void Looks_up_the_active_language()
     {
-        wpf.RunWithLanguage(AppLanguage.English, () => Assert.Equal("Blocks", Loc.Current["Tab.Blocks"]));
-        wpf.RunWithLanguage(AppLanguage.Chinese, () => Assert.Equal("程序块", Loc.Current["Tab.Blocks"]));
+        wpf.RunWithLanguage(AppLanguage.English, () => Assert.Equal("Program blocks", Loc.Current["Tree.ProgramBlocks"]));
+        wpf.RunWithLanguage(AppLanguage.Chinese, () => Assert.Equal("程序块", Loc.Current["Tree.ProgramBlocks"]));
     }
 
     /// <summary>

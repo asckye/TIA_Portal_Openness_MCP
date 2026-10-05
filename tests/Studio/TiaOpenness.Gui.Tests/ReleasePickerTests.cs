@@ -16,7 +16,7 @@ public class ReleasePickerTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
-            var window = new MainWindow();
+            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             try
             {
                 var model = (MainViewModel)window.DataContext;
@@ -34,8 +34,20 @@ public class ReleasePickerTests(WpfContext wpf)
                     Assert.Equal(release.Key, model.SelectedReleaseKey);
                 }
                 picker.SelectedValue = "15.1";
+                window.ShowConfiguration(false);
+                var configuration = window.Configuration!;
+                var mcpPicker = (ComboBox)configuration.FindName("Version");
+                Assert.True(mcpPicker.IsEnabled);
+                Assert.True(mcpPicker.IsHitTestVisible);
+                Assert.Equal("15.1", configuration.SelectedReleaseKey);
+                mcpPicker.SelectedValue = "20";
+                Assert.Equal("20", model.SelectedReleaseKey);
+                Assert.Equal("20", picker.SelectedValue);
+                picker.SelectedValue = "15.1";
+                Assert.Equal("15.1", configuration.SelectedReleaseKey);
                 Loc.Current.Language = AppLanguage.Chinese;
                 Assert.Equal("15.1", model.SelectedReleaseKey);
+                Assert.Equal("15.1", configuration.SelectedReleaseKey);
                 Assert.True(model.CanSelectRelease);
             }
             finally { window.Close(); }

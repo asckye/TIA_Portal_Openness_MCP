@@ -36,7 +36,7 @@ public class GlassInteractionTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
-            var window = new MainWindow();
+            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             try
             {
                 var model=(MainViewModel)window.DataContext;model.IsVcTab=true;
@@ -65,16 +65,16 @@ public class GlassInteractionTests(WpfContext wpf)
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
             var previous=ThemeManager.Current.Theme;
-            var window=new MainWindow();
+            var window=new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             try
             {
                 var model=window.DataContext;
                 var content=(FrameworkElement)window.Content;window.Content=null;
                 var host=new Border {Child=content,DataContext=model};
                 host.Measure(new Size(1200,780));host.Arrange(new Rect(0,0,1200,780));host.UpdateLayout();
-                UnifiedDesktopTests.ClickMenu((MenuItem)window.FindName("ChineseMenu"));
+                UnifiedDesktopTests.ClickControl((RadioButton)((TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent")).FindName("Chinese"));
                 Assert.True(Loc.Current.IsChinese);
-                UnifiedDesktopTests.ClickMenu((MenuItem)window.FindName("DarkThemeMenu"));
+                UnifiedDesktopTests.ClickControl((RadioButton)((TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent")).FindName("Dark"));
                 Assert.Equal(AppTheme.Dark,ThemeManager.Current.Theme);
                 Assert.Same(model,window.DataContext);
             }

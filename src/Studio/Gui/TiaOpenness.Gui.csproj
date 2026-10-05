@@ -17,6 +17,7 @@
     <Compile Include="../../Shared/BundleLayout.cs" Link="Configuration/BundleLayout.cs" />
     <Compile Include="../../Shared/DataLocations.cs" Link="Configuration/DataLocations.cs" />
     <Resource Include="Fonts/*.ttf"/>
+    <Resource Include="Fonts/*.otf"/>
     <Content Include="Fonts/*OFL.txt" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
   <Target Name="CopyNativeBridge" AfterTargets="Build">

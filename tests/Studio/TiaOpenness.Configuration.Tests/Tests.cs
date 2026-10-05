@@ -105,6 +105,206 @@ namespace TiaMcpConfigurator
             finally { listener.Stop(); }
         }
 
+        private static void WorkbenchUiTests(string output)
+        {
+            Directory.CreateDirectory(output);
+            int previousChecks = passed;
+            var app = new App { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+            app.InitializeComponent();
+            // Drain the queued application startup before pinning this offline view's appearance.
+            app.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            ThemeManager.Current.Theme = AppTheme.Light;
+            Loc.Current.Language = AppLanguage.English;
+            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
+            window.ShowConfiguration(false, AppDomain.CurrentDomain.BaseDirectory);
+            using (var form = window.Configuration)
+            {
+                var versions = (System.Windows.Controls.ComboBox)form.FindName("Version");
+                Assert(versions.Items.Cast<TiaVersionDescriptor>().Select(x => x.Key).SequenceEqual(TiaVersionCatalog.Runnable.Select(x => x.Key))
+                    && versions.Items.Cast<TiaVersionDescriptor>().All(x => x.IsRunnable), "version picker is populated only from runnable catalog descriptors");
+                Assert(versions.DisplayMemberPath == "DisplayName" && versions.SelectedValuePath == "Key" && (string)versions.SelectedValue == "21",
+                    "version picker displays catalog names, selects stable keys and defaults to V21");
+                versions.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("MajorVersion", System.ComponentModel.ListSortDirection.Ascending));
+                versions.SelectedValue = "20";
+                Assert(versions.SelectedIndex == versions.Items.Count - 2 && ((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V20"),
+                    "selecting the V20 catalog key uses its identity even when the display order is reversed");
+                versions.Items.SortDescriptions.Clear();
+                versions.SelectedValue = "21";
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V21"),
+                    "selecting the V21 catalog key restores the active engine version");
+                var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
+                var runUpdate = (System.Windows.Controls.Button)settings.FindName("RunUpdate");
+                var installedItem = (System.Windows.Controls.TextBlock)settings.FindName("UpdateInstalledItem");
+                string installed = UpdateCheck.Installed(AppDomain.CurrentDomain.BaseDirectory);
+                string ExpectedInstalled() => installed ?? Loc.Current["Config.EngineOutsideBundle"];
+                Assert(window.FindName("MenuBar") == null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled
+                    && runUpdate.Visibility == System.Windows.Visibility.Collapsed
+                    && ((System.Windows.Controls.Button)settings.FindName("CheckUpdate")).Content.ToString() == "Check updates",
+                    "settings own update actions; run stays disabled and hidden until a newer release is known");
+                Assert(installedItem.Text == ExpectedInstalled(), "English settings name the installed engine version from the delivery manifest");
+                void AssertShellLabels(bool chinese)
+                {
+                    string Content(string name) => ((System.Windows.Controls.ContentControl)(window.FindName(name) ?? settings.FindName(name))).Content.ToString();
+                    var labels = new (Func<string> Read, string En, string Zh)[] {
+                        (() => Content("RailEngineering"), "Project operations", "工程操作"),
+                        (() => Content("RailMcp"), "MCP & clients", "MCP 与客户端"),
+                        (() => Content("SettingsButton"), "Engine & MCP settings…", "引擎 & MCP 设置…"),
+                        (() => ((System.Windows.Controls.TextBlock)settings.FindName("UpdateStateItem")).Text, "Not checked yet", "尚未检查"),
+                        (() => Content("CheckUpdate"), "Check updates", "检查更新"),
+                        (() => Content("RunUpdate"), "Update engine…", "更新引擎…"),
+                        (() => Content("OpenReleases"), "Open", "打开"),
+                        (() => Content("ExportDiagnostics"), "Export diagnostics", "导出诊断包"),
+                        (() => Content("OpenProjectPage"), "Open", "打开"),
+                        (() => Content("RailLog"), "Log", "日志")
+                    };
+                    Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
+                        (chinese ? "Chinese" : "English") + " save both label");
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("McpStatusText")).Text.StartsWith(chinese ? "MCP 服务 ·" : "MCP service ·")
+                        && ((System.Windows.Controls.RadioButton)window.FindName("RailMcp")).IsChecked == true
+                        && ((System.Windows.Controls.RadioButton)window.FindName("RailEngineering")).IsChecked == false,
+                        (chinese ? "Chinese" : "English") + " caption and rail track the configuration page");
+                    foreach (var (read, en, zh) in labels)
+                        Assert(read() == (chinese ? zh : en), (chinese ? "Chinese" : "English") + " shell/settings label: " + en);
+                }
+                // The window is not shown yet, so bindings refresh when the dispatcher runs.
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                AssertShellLabels(false);
+                Assert(form.FindName("MenuBar") == null, "configuration has no second menu");
+                Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Visibility == System.Windows.Visibility.Visible,
+                    "save both is a visible page action");
+                Loc.Current.Language = AppLanguage.Chinese;
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                Assert(installedItem.Text == ExpectedInstalled(), "Chinese settings name the installed engine version from the delivery manifest");
+                AssertShellLabels(true);
+                Loc.Current.Language = AppLanguage.English;
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                AssertShellLabels(false);
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("ClientSelection")).ToolTip != null
+                    && settings.FindName("OpenProjectPage") != null && settings.FindName("VersionText") != null && settings.FindName("OpenReleases") != null,
+                    "client instructions and settings project home, about version and GitHub Releases remain reachable");
+                var generate = (System.Windows.Controls.Button)form.FindName("GenerateKey");
+                generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+                var password = (System.Windows.Controls.PasswordBox)form.FindName("Key");
+                Assert(password.Password.Length >= 24 && ((System.Windows.Controls.TextBlock)form.FindName("KeyPlaceholder")).Visibility == System.Windows.Visibility.Collapsed, "generated key updates masked input and placeholder");
+                var reveal = (System.Windows.Controls.CheckBox)form.FindName("ShowKey");
+                reveal.IsChecked = true; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                Assert(((System.Windows.Controls.TextBox)form.FindName("KeyVisible")).Text == password.Password, "show-key control preserves generated value");
+                reveal.IsChecked = false; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                password.Password = ""; ((System.Windows.Controls.TextBox)form.FindName("KeyVisible")).Text = "";
+                var choices = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
+                choices.SelectedItems.Add(choices.Items.Cast<ClientProfile>().First(x => !choices.SelectedItems.Contains(x)));
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
+                choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
+                ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.0.2.10";
+                form.CapturePage(Path.Combine(output, "remote.png"), 0);
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text == "192.0.2.10:8765"
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "idle"
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "1 selected"
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).ToolTip.ToString() == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
+                Assert(((System.Windows.Controls.Border)form.FindName("SecretBand")).Visibility == System.Windows.Visibility.Visible
+                    && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible, "remote mode shows the shared secret band and the address row");
+                form.CapturePage(Path.Combine(output, "local.png"), 1);
+                // Local mode preserves configuration values while disabling HTTP-only operations.
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text.StartsWith("stdio")
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "local mode reports the stdio transport");
+                Assert(((System.Windows.Controls.Border)form.FindName("SecretBand")).Visibility == System.Windows.Visibility.Visible
+                    && !((System.Windows.Controls.Grid)form.FindName("SecretField")).IsEnabled
+                    && !((System.Windows.Controls.Grid)form.FindName("AddressRow")).IsEnabled
+                    && !((System.Windows.Controls.Grid)form.FindName("ServerActions")).IsEnabled
+                    && ((System.Windows.Controls.Border)form.FindName("ServerPane")).Opacity == .45,
+                    "local mode dims the HTTP card and disables address, secret and service actions");
+                form.CapturePage(Path.Combine(output, "remote.png"), 0);
+                var list = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
+                var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
+                var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
+                Assert(list.ActualHeight <= clientPane.ActualHeight && list.ActualHeight < 400, "client list fits inside its card");
+                Assert(Math.Abs(serverPane.ActualHeight - 158) < 1 && clientPane.ActualHeight > 200 && clientPane.ActualHeight < 400, "Glass service and client cards use the handoff heights");
+                // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
+                var shell = (System.Windows.FrameworkElement)window.Content;
+                var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
+                double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
+                Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
+                var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
+                Assert(caption.ActualHeight == 40 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 0, "title bar occupies the top 40 pixels");
+                using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
+                    Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
+                        >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
+                form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
+                window.Width = window.MinWidth; window.Height = window.MinHeight;
+                form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
+                Assert(window.MinWidth == 1200 && window.MinHeight == 780 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
+                    "minimum window size keeps the three-column client layout");
+                window.Width = 1200; window.Height = 780;
+                var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Manrope");
+                System.Windows.Media.GlyphTypeface glyph;
+                Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
+                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");
+                ThemeManager.Current.Theme = AppTheme.Dark;
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF0B1420", "dark palette switches live");
+                ThemeManager.Current.Theme = AppTheme.Light;
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFE7ECF1", "light palette switches live");
+                string preservedSecret = "language-switch-fixture";
+                password.Password = preservedSecret;
+                Loc.Current.Language = AppLanguage.Chinese;
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
+                    && ((System.Windows.Controls.Button)form.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
+                Assert(password.Password == preservedSecret && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
+                    && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the secret, address, client and version");
+                ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
+                Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "同一台电脑，一次完成"
+                    && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "Chinese local mode is localized");
+                Loc.Current.Language = AppLanguage.English;
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                Assert(((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked == true
+                    && ((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
+                ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
+                // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
+                string capture = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
+                if (!String.IsNullOrEmpty(capture))
+                {
+                    Directory.CreateDirectory(capture);
+                    var fixture = new[] {
+                        new ClientProfile("claude-code", "Claude Code", @"~\.claude.json", "fixture") { Detected=true },
+                        new ClientProfile("codex", "Codex", @"~\.codex\config.toml", "fixture") { Detected=true },
+                        new ClientProfile("vscode", "VS Code", @"%AppData%\Code\User\mcp.json", "fixture") { Detected=true },
+                        new ClientProfile("cursor", "Cursor", @"~\.cursor\mcp.json", "fixture")
+                    };
+                    list.ItemsSource = fixture;
+                    for (int i=0;i<3;i++) list.SelectedItems.Add(fixture[i]);
+                    password.Password="visual-fixture-not-a-real-secret";
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● Detected via registry";
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, auth passed, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
+                    ((TiaDesktop.Glass.GlassLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
+                    ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
+                    form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
+                    ThemeManager.Current.Theme = AppTheme.Dark;
+                    form.CapturePage(Path.Combine(capture,"configurator-dark.png"),0);
+                    form.CapturePage(Path.Combine(capture,"configurator-local-dark.png"),1);
+                    Loc.Current.Language = AppLanguage.Chinese;
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● 已通过注册表检测";
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
+                    ((TiaDesktop.Glass.GlassLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
+                    ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
+                    form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
+                    form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);
+                    ThemeManager.Current.Theme = AppTheme.Light;
+                    form.CapturePage(Path.Combine(capture,"configurator-zh-light.png"),0);
+                    form.CapturePage(Path.Combine(capture,"configurator-local-zh-light.png"),1);
+
+                }
+
+                window.Close();
+            }
+            Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
+            if (passed - previousChecks < 68) throw new Exception("Expected at least 68 workbench UI checks.");
+        }
+
         [STAThread]
         public static int Main(string[] args)
         {
@@ -119,7 +319,13 @@ namespace TiaMcpConfigurator
             }
             try
             {
-                string output = Path.GetFullPath(args.Length > 0 ? args[0] : Path.Combine(AppContext.BaseDirectory, "test-output"));
+                bool uiOnly = args.Length > 0 && args[0] == "--ui-only";
+                string output = Path.GetFullPath(args.Length > (uiOnly ? 1 : 0) ? args[uiOnly ? 1 : 0] : Path.Combine(AppContext.BaseDirectory, "test-output"));
+                if (uiOnly)
+                {
+                    WorkbenchUiTests(output);
+                    Console.WriteLine("UI checks passed: " + passed); return 0;
+                }
                 string temp = Path.Combine(output, "run-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(temp);
                 Assert(ConfigCore.Prefix("192.0.2.10", 8765) == "http://192.0.2.10:8765/", "canonical IPv4 endpoint");
                 Reject(() => ConfigCore.Prefix("[http://192.0.2.10/](http://192.0.2.10/)", 8765), "reject markdown URL");
@@ -264,191 +470,7 @@ namespace TiaMcpConfigurator
                 Assert(launch.StartsWith("-NoProfile -ExecutionPolicy Bypass -NoExit -File \"C:\\TIA MCP\\scripts\\operations\\Update-Engine.ps1\" -InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator"), "update: the updater is launched visibly with the install root (no trailing backslash), the caller pid and the relaunch switch");
                 Assert(UpdateCheck.Launch(delivery, 1).FileName.EndsWith("powershell.exe") && UpdateCheck.Launch(delivery, 1).UseShellExecute && UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: Windows PowerShell runs scripts\\operations\\Update-Engine.ps1 from the install root");
                 Assert(UpdateCheck.RunningEngines().All(x => x.StartsWith("TiaMcpServer.exe PID ")), "update: running engines are listed by pid (the updater refuses while any runs)");
-                var app = new App { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
-                app.InitializeComponent();
-                // App's constructor queues OnStartup, which restores the saved language and theme; run it before the
-                // values below are pinned, otherwise the first dispatcher pump replaces them (CI starts in English).
-                app.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-                ThemeManager.Current.Theme = AppTheme.Light;
-                Loc.Current.Language = AppLanguage.English;
-                var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
-                window.ShowConfiguration(false, AppDomain.CurrentDomain.BaseDirectory);
-                using (var form = window.Configuration)
-                {
-                    var versions = (System.Windows.Controls.ComboBox)form.FindName("Version");
-                    Assert(versions.Items.Cast<TiaVersionDescriptor>().Select(x => x.Key).SequenceEqual(TiaVersionCatalog.Runnable.Select(x => x.Key))
-                        && versions.Items.Cast<TiaVersionDescriptor>().All(x => x.IsRunnable), "version picker is populated only from runnable catalog descriptors");
-                    Assert(versions.DisplayMemberPath == "DisplayName" && versions.SelectedValuePath == "Key" && (string)versions.SelectedValue == "21",
-                        "version picker displays catalog names, selects stable keys and defaults to V21");
-                    versions.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("MajorVersion", System.ComponentModel.ListSortDirection.Ascending));
-                    versions.SelectedValue = "20";
-                    Assert(versions.SelectedIndex == versions.Items.Count - 2 && ((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V20"),
-                        "selecting the V20 catalog key uses its identity even when the display order is reversed");
-                    versions.Items.SortDescriptions.Clear();
-                    versions.SelectedValue = "21";
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V21"),
-                        "selecting the V21 catalog key restores the active engine version");
-                    // 2.8.0: the update lives in the menu bar (maintainer: "做成到菜单栏里"); nothing on the page, and the run item
-                    // stays disabled until a check found a newer release.
-                    var menuBar = (System.Windows.Controls.Menu)window.FindName("MenuBar");
-                    var runUpdate = (System.Windows.Controls.MenuItem)window.FindName("RunUpdate");
-                    var installedItem = (System.Windows.Controls.MenuItem)window.FindName("UpdateInstalledItem");
-                    Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)window.FindName("CheckUpdate")).Header.ToString().StartsWith("_Check for Updates"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
-                    Assert(installedItem.Header.ToString().StartsWith("Engine "), "English update menu names the installed engine version from the delivery manifest");
-                    void AssertMenuLabels(bool chinese)
-                    {
-                        var labels = new[] {
-                            ("EngineeringMenu", "_Engineering", "工程操作(_E)"),
-                            ("ConfigurationMenu", "MCP & _clients", "MCP 与客户端(_C)"),
-                            ("UpdateMenu", "_Update", "更新(_U)"),
-                            ("UpdateStateItem", "Not checked yet", "尚未检查"),
-                            ("CheckUpdate", "_Check for Updates", "检查更新(_C)"),
-                            ("RunUpdate", "Update _Engine…", "更新引擎…(_R)"),
-                            ("OpenReleases", "Open _GitHub Releases", "打开 GitHub Releases(_G)"),
-                            ("ShowClientHelp", "Selected Client _Instructions", "所选客户端的使用说明(_I)"),
-                            ("OpenProjectPage", "Open _Project Page", "打开项目主页(_P)"),
-                            ("AboutItem", "_About", "关于(_A)")
-                        };
-                        Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
-                            (chinese ? "Chinese" : "English") + " save both label");
-                        Assert(((System.Windows.Controls.TextBlock)window.FindName("CaptionPage")).Text == "· " + Loc.Current["Desktop.Configuration"]
-                            && ((System.Windows.Controls.MenuItem)window.FindName("ConfigurationMenu")).IsChecked
-                            && !((System.Windows.Controls.MenuItem)window.FindName("EngineeringMenu")).IsChecked,
-                            (chinese ? "Chinese" : "English") + " caption and page menu track the configuration page");
-                        foreach (var (name, en, zh) in labels)
-                            Assert(((System.Windows.Controls.MenuItem)window.FindName(name)).Header.ToString() == (chinese ? zh : en),
-                                (chinese ? "Chinese" : "English") + " menu label: " + name);
-                    }
-                    // The window is never shown here, so bindings refresh only when the dispatcher runs.
-                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    AssertMenuLabels(false);
-                    Assert(form.FindName("MenuBar") == null, "configuration has no second menu");
-                    Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Visibility == System.Windows.Visibility.Visible,
-                        "save both is a visible page action");
-                    Loc.Current.Language = AppLanguage.Chinese;
-                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    Assert(installedItem.Header.ToString().StartsWith("引擎 ") || installedItem.Header.ToString().StartsWith("引擎版本未知"), "update menu names the installed engine version from manifest\\delivery.json");
-                    AssertMenuLabels(true);
-                    Loc.Current.Language = AppLanguage.English;
-                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    AssertMenuLabels(false);
-                    Assert(window.FindName("ShowClientHelp") != null && window.FindName("OpenProjectPage") != null && window.FindName("AboutItem") != null && window.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
-                    var generate = (System.Windows.Controls.Button)form.FindName("GenerateKey");
-                    generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
-                    var password = (System.Windows.Controls.PasswordBox)form.FindName("Key");
-                    Assert(password.Password.Length >= 24 && ((System.Windows.Controls.TextBlock)form.FindName("KeyPlaceholder")).Visibility == System.Windows.Visibility.Collapsed, "generated key updates masked input and placeholder");
-                    var reveal = (System.Windows.Controls.CheckBox)form.FindName("ShowKey");
-                    reveal.IsChecked = true; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                    Assert(((System.Windows.Controls.TextBox)form.FindName("KeyVisible")).Text == password.Password, "show-key control preserves generated value");
-                    reveal.IsChecked = false; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                    password.Password = ""; ((System.Windows.Controls.TextBox)form.FindName("KeyVisible")).Text = "";
-                    var choices = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
-                    choices.SelectedItems.Add(choices.Items[1]);
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
-                    choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
-                    ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.0.2.10";
-                    form.CapturePage(Path.Combine(output, "remote.png"), 0);
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text == "192.0.2.10:8765"
-                        && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "idle"
-                        && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
-                    Assert(((System.Windows.Controls.Border)form.FindName("SecretBand")).Visibility == System.Windows.Visibility.Visible
-                        && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible, "remote mode shows the shared secret band and the address row");
-                    form.CapturePage(Path.Combine(output, "local.png"), 1);
-                    // stdio 本机模式既不用地址也不用密钥：这两块必须真的消失，否则界面在教用户填无用的值。
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text.StartsWith("stdio")
-                        && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "local", "local mode reports the stdio transport");
-                    Assert(((System.Windows.Controls.Border)form.FindName("SecretBand")).Visibility == System.Windows.Visibility.Collapsed
-                        && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Collapsed
-                        && ((System.Windows.Controls.Grid)form.FindName("ServerActions")).Visibility == System.Windows.Visibility.Collapsed
-                        && ((System.Windows.Controls.Border)form.FindName("LocalNote")).Visibility == System.Windows.Visibility.Visible, "local mode hides address, secret and service controls");
-                    // 右栏的卡片列表必须在卡内滚动：否则 11 张卡片会把右栏拉长，左栏被迫留一大片空白。
-                    form.CapturePage(Path.Combine(output, "remote.png"), 0);
-                    var list = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
-                    var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
-                    var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
-                    Assert(list.ActualHeight <= list.MaxHeight + 1 && list.MaxHeight < 400, "client list is capped so it scrolls inside its card");
-                    Assert(Math.Abs(serverPane.ActualHeight - 176) < 1 && clientPane.ActualHeight > 250 && clientPane.ActualHeight < 400, "Glass service and client cards use the handoff heights");
-                    // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
-                    var shell = (System.Windows.FrameworkElement)window.Content;
-                    var pill = (System.Windows.Controls.TextBlock)form.FindName("Status");
-                    double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
-                    Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
-                    Assert(menuBar.ActualHeight > 10 && menuBar.ActualHeight < 60 && menuBar.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y < 40, "menu bar lays out as a slim strip at the top of the window");
-                    using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
-                        Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
-                            >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
-                    form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
-                    window.MinWidth = 1000; window.MinHeight = 720; window.Width = 1000; window.Height = 720;
-                    form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
-                    Assert((int)form.Resources["ClientColumns"] == 2, "compact window uses two client columns");
-                    window.Width = 1200; window.Height = 780;
-                    var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Manrope");
-                    System.Windows.Media.GlyphTypeface glyph;
-                    Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
-                        && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");
-                    ThemeManager.Current.Theme = AppTheme.Dark;
-                    Assert(((System.Windows.Media.SolidColorBrush)form.Background).Color.ToString() == "#FF0B1420", "dark palette switches live");
-                    ThemeManager.Current.Theme = AppTheme.Light;
-                    Assert(((System.Windows.Media.SolidColorBrush)form.Background).Color.ToString() == "#FFE7ECF1", "light palette switches live");
-                    string preservedSecret = "language-switch-fixture";
-                    password.Password = preservedSecret;
-                    Loc.Current.Language = AppLanguage.Chinese;
-                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
-                        && ((System.Windows.Controls.Button)form.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
-                        && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
-                    Assert(password.Password == preservedSecret && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
-                        && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the secret, address, client and version");
-                    ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
-                    Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "同机连接，一次配置"
-                        && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "本地", "Chinese local mode is localized");
-                    Loc.Current.Language = AppLanguage.English;
-                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    Assert(((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked == true
-                        && ((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
-                    ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
-                    // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
-                    string capture = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
-                    if (!String.IsNullOrEmpty(capture))
-                    {
-                        Directory.CreateDirectory(capture);
-                        var fixture = new[] {
-                            new ClientProfile("claude-code", "Claude Code", @"~\.claude.json", "fixture") { Detected=true },
-                            new ClientProfile("codex", "Codex", @"~\.codex\config.toml", "fixture") { Detected=true },
-                            new ClientProfile("vscode", "VS Code", @"%AppData%\Code\User\mcp.json", "fixture") { Detected=true },
-                            new ClientProfile("cursor", "Cursor", @"~\.cursor\mcp.json", "fixture")
-                        };
-                        list.ItemsSource = fixture;
-                        for (int i=0;i<3;i++) list.SelectedItems.Add(fixture[i]);
-                        password.Password="visual-fixture-not-a-real-secret";
-                        ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● Detected via registry";
-                        ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
-                        ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, auth passed, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
-                        ((System.Windows.Controls.TextBox)form.FindName("Log")).Text="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
-                        ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
-                        form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
-                        ThemeManager.Current.Theme = AppTheme.Dark;
-                        form.CapturePage(Path.Combine(capture,"configurator-dark.png"),0);
-                        form.CapturePage(Path.Combine(capture,"configurator-local-dark.png"),1);
-                        Loc.Current.Language = AppLanguage.Chinese;
-                        window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                        ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● 已通过注册表检测";
-                        ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
-                        ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
-                        ((System.Windows.Controls.TextBox)form.FindName("Log")).Text="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
-                        ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
-                        form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
-                        form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);
-                        ThemeManager.Current.Theme = AppTheme.Light;
-                        form.CapturePage(Path.Combine(capture,"configurator-zh-light.png"),0);
-                        form.CapturePage(Path.Combine(capture,"configurator-local-zh-light.png"),1);
-
-                    }
-
-                    window.Close();
-                }
-                Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
+                WorkbenchUiTests(output);
                 if (passed < 182) throw new Exception("Expected at least 182 configuration checks.");
                 Console.WriteLine("Passed: " + passed); return 0;
             }

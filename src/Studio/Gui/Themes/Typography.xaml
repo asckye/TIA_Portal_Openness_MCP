@@ -1,15 +1,15 @@
-<!-- Embedded Manrope UI faces and JetBrains Mono values; Windows fonts supply CJK fallback. -->
+<!-- Embedded Manrope UI faces, Noto Sans SC fallback and JetBrains Mono values. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
-  <FontFamily x:Key="Ui.Font">/TiaOpenness;component/Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI</FontFamily>
+  <FontFamily x:Key="Ui.Font">/TiaOpenness;component/Fonts/#Manrope, /TiaOpenness;component/Fonts/#Noto Sans SC, Microsoft YaHei UI</FontFamily>
   <FontFamily x:Key="Ui.FontMono">/TiaOpenness;component/Fonts/#JetBrains Mono, Consolas</FontFamily>
 
   <sys:Double x:Key="Ui.FontSize.Caption">11</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Small">11</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Body">12</sys:Double>
-  <sys:Double x:Key="Ui.FontSize.Title">17</sys:Double>
+  <sys:Double x:Key="Ui.FontSize.Title">18</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Heading">22</sys:Double>
 
   <Style x:Key="Ui.Text.Body" TargetType="TextBlock">

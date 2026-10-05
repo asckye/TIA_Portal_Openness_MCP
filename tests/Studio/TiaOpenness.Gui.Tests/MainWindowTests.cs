@@ -42,7 +42,7 @@ public class MainWindowTests(WpfContext wpf)
 
     private static Rendered Render()
     {
-        var window = new MainWindow();
+        var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
 
         var content = (UIElement)window.Content;
         window.Content = null;
@@ -121,7 +121,7 @@ public class MainWindowTests(WpfContext wpf)
             using var rendered = Render();
 
             var labels = Descendants<TextBlock>(rendered.Host).Select(t => t.Text).ToList();
-            Assert.Contains("设备", labels);
+            Assert.Contains("功能页", labels);
             Assert.Contains("尚未打开项目", labels);
         });
     }
@@ -174,7 +174,7 @@ public class MainWindowTests(WpfContext wpf)
     /// means its binding did not resolve.
     /// </summary>
     [Theory]
-    [InlineData("View", 3)]
+    [InlineData("Rail", 8)]
     [InlineData("SyncDirection", 2)]
     public void Every_picker_group_has_one_and_only_one_choice(string group, int expectedSegments)
     {
@@ -229,7 +229,7 @@ public class MainWindowTests(WpfContext wpf)
                 .ToList();
 
             Assert.Contains(Loc.Current["Blocks.Empty.Title"], visible);
-            Assert.Contains(Loc.Current["Glass.Disconnected"], visible);
+            Assert.Contains(Loc.Current["Shell.Engineering"], visible);
 
             // And the grids behind them are hidden rather than merely empty.
             Assert.DoesNotContain(Descendants<DataGrid>(rendered.Host), IsShown);
@@ -303,7 +303,7 @@ public class MainWindowTests(WpfContext wpf)
                 .Where(IsShown)
                 .Where(b => b is Button or RadioButton)
                 // The language switch is text-only and has a template of its own.
-                .Where(b => (b as RadioButton)?.GroupName != "View")
+                .Where(b => (b as RadioButton)?.GroupName != "Rail")
                 .ToList();
 
             Assert.True(buttons.Count >= 12, "only found " + buttons.Count + " buttons");

@@ -37,7 +37,7 @@ public class TranslationBindingTests(WpfContext wpf)
             try
             {
                 Loc.Current.Language = AppLanguage.English;
-                var label = Bound("Tab.VersionControl");
+                var label = Bound("Shell.VersionControl");
                 Assert.Equal("Version control", label.Text);
 
                 Loc.Current.Language = AppLanguage.Chinese;

@@ -89,7 +89,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
             });
             var dialogs = new FakeDialogService();
             var model = new MainViewModel(client, dialogs);
-            var window = new MainWindow(model);
+            var window = new MainWindow(model, false);
             var root = (FrameworkElement)window.Content;
             window.Content = null;
             var host = new Border { Child = root, DataContext = model, Width = 1200, Height = 780 };
@@ -98,7 +98,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
             try
             {
                 Layout(host); // Empty engineering state and title-bar bindings.
-                Assert.True(Find<ComboBox>(window, "ReleasePicker").ActualWidth > 0);
+                Assert.Equal(8, Find<ComboBox>(window, "ReleasePicker").Items.Count);
                 RealizePickers(host);
 
                 model.Session.ProjectPath = @"D:\fixture\Line.ap21";
@@ -194,7 +194,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 {
                     Find<RadioButton>(configuration, mode).IsChecked = true;
                     Layout(host);
-                    Assert.True(configuration.ActualWidth > 1000);
+                    Assert.Equal(960, configuration.ActualWidth);
                     var clients = Find<ListBox>(configuration, "ClientChoices");
                     RealizeItems(host, clients, clients.Items.Count);
                     RealizePickers(configuration);

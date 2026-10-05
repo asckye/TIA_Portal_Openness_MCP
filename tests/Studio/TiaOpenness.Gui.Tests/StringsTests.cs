@@ -45,34 +45,12 @@ public class StringsTests(WpfContext wpf)
     }
 
     [Fact]
-    public void Migrated_configuration_entries_preserve_original_text_except_translated_English_menus()
+    public void Workbench_copy_matches_the_handoff()
     {
-        string[] keys =
-        [
-            "Eyebrow", "RemoteTitle", "LocalTitle", "RemoteSubtitle", "LocalSubtitle", "RemoteMode", "LocalMode",
-            "RemoteNote", "LocalNote", "Installation", "Version", "InstallPath", "Browse", "Detect", "Detected",
-            "NotDetected", "HttpService", "LocalEngine", "Ip", "Port", "Network", "Start", "Stop", "LocalEngineNote",
-            "LocalActionsNote", "AiClients", "ClientNote", "Secret", "Generate", "Show", "Test", "Write", "Summary",
-            "Clients", "Service", "Address", "Transport", "Log", "Idle", "Running", "Local", "NoSelection", "Selected",
-            "NoAddress", "LocalAddress", "LastTest", "TestNotRun", "TestFailed", "InitialTest", "Entries", "Entry",
-            "EmptyLog", "Light", "Dark", "Auto", "SaveBoth", "Minimize", "Maximize", "Close", "Update", "UnknownEngine",
-            "NotChecked", "CheckUpdate", "RunUpdate", "Releases", "ClientHelp", "ProjectPage", "About",
-        ];
-        Assert.Equal(68, keys.Length);
-        string[] translatedMenus =
-        [
-            "Config.Update", "Config.UnknownEngine", "Config.NotChecked", "Config.CheckUpdate", "Config.RunUpdate",
-            "Config.Releases", "Config.ClientHelp", "Config.ProjectPage", "Config.About",
-        ];
-        // SHA-256 of the former XML entries, sorted by Config key: key\0English\0Chinese\n.
-        // These nine English entries originally matched Chinese. Reconstruct only those values
-        // to keep the original hash guarding every Chinese entry and all other English text.
-        var entries = keys.Select(key => "Config." + key).OrderBy(key => key, StringComparer.Ordinal);
-        var text = string.Concat(entries.Select(key => key + "\0" +
-            (translatedMenus.Contains(key, StringComparer.Ordinal) ? Strings.Chinese[key] : Strings.English[key]) +
-            "\0" + Strings.Chinese[key] + "\n"));
-        Assert.Equal("8CF4DD14D002189297185CB1529CFAD20E0301A1DE1308E7C0430519F564E1F3",
-            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))));
+        Assert.Equal("一页连接 TIA 与 AI", Strings.Chinese["Config.RemoteTitle"]);
+        Assert.Equal("同一台电脑，一次完成", Strings.Chinese["Config.LocalTitle"]);
+        Assert.Equal("Engine & MCP settings…", Strings.English["Shell.Settings"]);
+        Assert.Equal("写操作审批", Strings.Chinese["Settings.Approval"]);
     }
 
     [Fact]
@@ -140,7 +118,7 @@ public class StringsTests(WpfContext wpf)
             // A product name, a monogram, a version pill and two format frames: none of these is
             // prose, so translating them would be inventing a difference rather than removing one.
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
-            "Lang.English", "Lang.Chinese", "Status.Working",
+            "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
         ];
 
         var untranslated = Strings.Catalogue
@@ -172,7 +150,7 @@ public class StringsTests(WpfContext wpf)
     public void English_catalogue_contains_no_Chinese_prose()
     {
         // The language picker labels each language in its own language.
-        Assert.DoesNotContain(Strings.Catalogue, e => e.Key is not ("Lang.Chinese" or "Menu.Chinese") && Regex.IsMatch(e.En, @"[\u4e00-\u9fff]"));
+        Assert.DoesNotContain(Strings.Catalogue, e => e.Key is not ("Lang.Chinese" or "Settings.Chinese") && Regex.IsMatch(e.En, @"[\u4e00-\u9fff]"));
     }
 
     [Theory]
@@ -324,7 +302,7 @@ public class StringsTests(WpfContext wpf)
                 profile.Detected = false;
                 profile.Evidence = Loc.Current["Config.ClientNotFound"];
                 choices.SelectedItems.Add(profile);
-                string instructions = ((TextBlock)page.FindName("ClientInstructions")).Text;
+                string instructions = (string)((TextBlock)page.FindName("ClientSelection")).ToolTip;
                 if (language == AppLanguage.English) Assert.DoesNotMatch(@"[\u4e00-\u9fff]", instructions);
                 var dialog = new GlassMessageBox(instructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
                 try

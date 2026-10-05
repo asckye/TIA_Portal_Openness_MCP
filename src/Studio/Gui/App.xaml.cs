@@ -20,6 +20,13 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // A test host loads the real application resources without launching another window,
+        // reading user preferences, or starting configuration/update probes in the background.
+        if (System.Reflection.Assembly.GetEntryAssembly() != typeof(App).Assembly)
+        {
+            base.OnStartup(e);
+            return;
+        }
         if (e.Args.Length > 0 && e.Args[0] == "--network")
         {
             // The elevated network helper never opens the workbench: no StartupUri is set on this path

@@ -37,26 +37,33 @@ public partial class MainWindow
     internal void ShowConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {
         EnsureConfiguration(loadExisting, bundleRoot);
-        OptionsOverlay.Visibility = Visibility.Collapsed;
-        _model.IsConfigurationPage = true;
+        Navigate("Mcp");
     }
 
     internal void EnsureConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {
         if (Configuration == null)
         {
-            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration);
+            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration, _preview);
             Configuration = page;
             page.SelectedReleaseKey = _model.SelectedReleaseKey;
             page.SetReleaseEnabled(_model.CanSelectRelease);
             page.CanUpdate = () => _model.CanSelectRelease;
             page.ServiceStateChanged += OnServiceStateChanged;
+            page.ReleaseChanged += OnConfigurationReleaseChanged;
             ConfigurationHost.Content = page;
             _model.PropertyChanged += OnDesktopModelChanged;
+            UpdateMcpStatus();
         }
     }
 
-    internal void ShowEngineering() => _model.IsConfigurationPage = false;
+    internal void ShowEngineering() => Navigate("Engineering");
+
+    private void OnConfigurationReleaseChanged(object? sender, EventArgs e)
+    {
+        if (Configuration != null) _model.SelectedReleaseKey = Configuration.SelectedReleaseKey;
+        UpdateShell();
+    }
 
     private void OnPageExecuted(object sender, ExecutedRoutedEventArgs e)
     {
@@ -65,24 +72,6 @@ public partial class MainWindow
         catch (Exception ex)
         {
             ShowEngineering();
-            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-    private void OnHelpOpened(object sender, RoutedEventArgs e)
-    {
-        if (e.OriginalSource != HelpMenu) return;
-        try { EnsureConfiguration(); }
-        catch (Exception ex)
-        {
-            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-    private void OnMcpOpened(object sender, RoutedEventArgs e)
-    {
-        if (e.OriginalSource != McpMenu) return;
-        try { EnsureConfiguration(); Configuration!.SyncServiceMenu(); }
-        catch (Exception ex)
-        {
             TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -96,9 +85,12 @@ public partial class MainWindow
     private void UpdateMcpStatus()
     {
         var state = Configuration?.ServiceStateKey ?? "Config.Idle";
-        McpStatusText.Text = "MCP · " + Loc.Current[state];
+        var version = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
+        var endpoint = Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"];
+        var status = state == "Config.Local" ? "stdio" : Loc.Current[state];
+        McpStatusText.Text = Loc.Current.T("Shell.Status", status, version, endpoint) + (HasProject ? " · " + _model.Session.ProjectName : "");
+        McpStatusText.ToolTip = McpStatusText.Text;
         McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Ui.Accent" : "Ui.StatusIdle");
-        McpStatus.ToolTip = Loc.Current.T("Caption.McpTip", Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"]);
     }
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -112,6 +104,7 @@ public partial class MainWindow
         if (Configuration != null)
         {
             Configuration.ServiceStateChanged -= OnServiceStateChanged;
+            Configuration.ReleaseChanged -= OnConfigurationReleaseChanged;
             Configuration.Dispose();
         }
     }

@@ -1,413 +1,424 @@
-<UserControl x:Class="TiaMcpConfigurator.ConfigurationView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:glass="clr-namespace:TiaDesktop.Glass" Background="{DynamicResource Ui.WindowBackground}" Foreground="{DynamicResource Ui.Label}" FontFamily="{DynamicResource Ui.Font}" FontSize="12" UseLayoutRounding="True">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:glass="clr-namespace:TiaDesktop.Glass" x:Class="TiaMcpConfigurator.ConfigurationView" Foreground="{DynamicResource Ui.Label}" FontFamily="{DynamicResource Ui.Font}" FontSize="12" UseLayoutRounding="True">
   <UserControl.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="../Themes/Glass.xaml"/>
-      </ResourceDictionary.MergedDictionaries>
-      <Style TargetType="Button" BasedOn="{StaticResource Glass.Button}"/>
-      <Style TargetType="TextBox" BasedOn="{StaticResource Glass.Field}"/>
-      <Style TargetType="ComboBox" BasedOn="{StaticResource Glass.Combo}"/>
-      <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}"/>
-      <Style x:Key="ModeCard" TargetType="RadioButton">
-        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-          <Setter.Value>
-            <ControlTemplate TargetType="RadioButton">
-              <Border x:Name="Panel" Background="{DynamicResource Ui.CardBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Padding="20,17">
-                <ContentPresenter/>
-              </Border>
-              <ControlTemplate.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                  <Setter TargetName="Panel" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
-                  <Setter TargetName="Panel" Property="BorderThickness" Value="2"/>
-                  <Setter TargetName="Panel" Property="Padding" Value="19,16"/>
-                </Trigger>
-              </ControlTemplate.Triggers>
-            </ControlTemplate>
-          </Setter.Value>
-        </Setter>
-      </Style>
-      <Style x:Key="ClientChoice" TargetType="ListBoxItem">
-        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-        <Setter Property="Margin" Value="0,0,8,8"/>
-        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-          <Setter.Value>
-            <ControlTemplate TargetType="ListBoxItem">
-              <Border x:Name="Tile" CornerRadius="12" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1" Padding="13,11" Height="80">
-                <Grid>
-                  <ContentPresenter/>
-                  <Border x:Name="Check" Width="15" Height="15" CornerRadius="8" BorderBrush="{DynamicResource Ui.DashedBorder}" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <TextBlock x:Name="Tick" Text="" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" Visibility="Collapsed" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                  </Border>
-                </Grid>
-              </Border>
-              <ControlTemplate.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                  <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
-                  <Setter TargetName="Tile" Property="BorderThickness" Value="2"/>
-                  <Setter TargetName="Tile" Property="Padding" Value="12,10"/>
-                  <Setter TargetName="Check" Property="Background" Value="{DynamicResource Ui.Accent}"/>
-                  <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
-                  <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
-                </Trigger>
-              </ControlTemplate.Triggers>
-            </ControlTemplate>
-          </Setter.Value>
-        </Setter>
-      </Style>
-      <DataTemplate x:Key="ClientTile">
-        <StackPanel ToolTip="{Binding Tooltip}">
-          <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="13" Margin="0,0,18,3"/>
-          <TextBlock FontSize="11">
+    <Style TargetType="Button" BasedOn="{StaticResource Glass.Button}"/>
+    <Style TargetType="TextBox" BasedOn="{StaticResource Glass.Field}"/>
+    <Style TargetType="ComboBox" BasedOn="{StaticResource Glass.Combo}"/>
+    <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}"/>
+    <Style x:Key="ModeCard" TargetType="RadioButton">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="Panel" Background="{DynamicResource Ui.ModeBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Padding="18,12">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Panel" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
+                <Setter TargetName="Panel" Property="BorderThickness" Value="2"/>
+                <Setter TargetName="Panel" Property="Padding" Value="17,11"/>
+                <Setter TargetName="Panel" Property="Background" Value="{DynamicResource Ui.CardBackground}"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Panel" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="ModeChip" TargetType="Border" BasedOn="{StaticResource Glass.Chip}">
+      <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}"/>
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
+      <Setter Property="Padding" Value="8,3"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+          <Setter Property="Background" Value="{DynamicResource Ui.Accent}"/>
+          <Setter Property="TextElement.Foreground" Value="{DynamicResource Ui.OnAccent}"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="ClientChoice" TargetType="ListBoxItem">
+      <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Margin" Value="0,0,8,4"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListBoxItem">
+            <Border x:Name="Tile" Height="32" CornerRadius="10" Background="{DynamicResource Ui.TileBackground}" BorderBrush="{DynamicResource Ui.TileBorder}" BorderThickness="1" Padding="9,0">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="16"/>
+                  <ColumnDefinition Width="9"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Check" Width="16" Height="16" CornerRadius="8" BorderBrush="{DynamicResource Ui.CheckBorder}" BorderThickness="1">
+                  <TextBlock x:Name="Tick" Text="✓" FontSize="9" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                </Border>
+                <ContentPresenter Grid.Column="2" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
+                <Setter TargetName="Tile" Property="BorderThickness" Value="2"/>
+                <Setter TargetName="Tile" Property="Padding" Value="8,0"/>
+                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource Ui.TileSelected}"/>
+                <Setter TargetName="Check" Property="Background" Value="{DynamicResource Ui.Accent}"/>
+                <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
+                <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <DataTemplate x:Key="ClientTile">
+      <Grid ToolTip="{Binding Tooltip}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding DisplayName}" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,5,0"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Ellipse Width="6" Height="6" Margin="0,0,5,0">
+            <Ellipse.Style>
+              <Style TargetType="Ellipse">
+                <Setter Property="Fill" Value="{DynamicResource Ui.CheckBorder}"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Detected}" Value="True">
+                    <Setter Property="Fill" Value="{DynamicResource Ui.Accent}"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Ellipse.Style>
+          </Ellipse>
+          <TextBlock FontSize="10.5" FontWeight="SemiBold">
             <TextBlock.Style>
               <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}">
                 <Setter Property="Text" Value="{l:Tr Config.NotDetected}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}"/>
                 <Style.Triggers>
                   <DataTrigger Binding="{Binding Detected}" Value="True">
-                    <Setter Property="Text" Value="{l:Tr Config.Detected}"/>
+                    <Setter Property="Text" Value="{l:Tr Mcp.Detected}"/>
                     <Setter Property="Foreground" Value="{DynamicResource Ui.Accent}"/>
                   </DataTrigger>
                 </Style.Triggers>
               </Style>
             </TextBlock.Style>
           </TextBlock>
-          <TextBlock Text="{Binding Path}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,3,0,0"/>
         </StackPanel>
-      </DataTemplate>
-      <Style TargetType="PasswordBox">
-        <Setter Property="SelectionBrush" Value="{DynamicResource Ui.SelectionFill}"/>
-        <Setter Property="SelectionTextBrush" Value="{DynamicResource Ui.SelectionText}"/>
-        <Setter Property="SelectionOpacity" Value="1"/>
-        <Setter Property="CaretBrush" Value="{DynamicResource Ui.Label}"/>
-        <Setter Property="Height" Value="38"/>
-        <Setter Property="Padding" Value="12,8"/>
-        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-        <Setter Property="FontFamily" Value="{DynamicResource Ui.FontMono}"/>
-        <Setter Property="Template">
-          <Setter.Value>
-            <ControlTemplate TargetType="PasswordBox">
-              <Border CornerRadius="10" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
-                <ScrollViewer x:Name="PART_ContentHost"/>
-              </Border>
-            </ControlTemplate>
-          </Setter.Value>
-        </Setter>
-      </Style>
-    </ResourceDictionary>
+      </Grid>
+    </DataTemplate>
   </UserControl.Resources>
-  <Grid Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True">
-    <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-420,-322,0,0" IsHitTestVisible="False"/>
-    <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-380,-302" IsHitTestVisible="False"/>
+  <Grid x:Name="Panes">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="16"/>
+      <ColumnDefinition Width="284"/>
+    </Grid.ColumnDefinitions>
     <Grid>
-      <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Padding="24,12,24,24">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="20"/>
-            <ColumnDefinition Width="340"/>
-          </Grid.ColumnDefinitions>
-          <Grid x:Name="Panes">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="70"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="68"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="158"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="142"/>
+      </Grid.RowDefinitions>
+      <StackPanel Margin="6,2,6,0">
+        <ux:TrackedTextBlock Tracking="0.14" x:Name="PageStep" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" Foreground="{DynamicResource Ui.Accent}"/>
+        <ux:TrackedTextBlock Tracking="-0.02" x:Name="PageTitle" Height="29" LineHeight="29" LineStackingStrategy="BlockLineHeight" FontSize="26" FontWeight="Bold" Margin="0,3,0,0"/>
+        <TextBlock x:Name="PageSubtitle" Height="18" LineHeight="18" LineStackingStrategy="BlockLineHeight" FontSize="13" Foreground="{DynamicResource Ui.SecondaryLabel}" Margin="0,3,0,0"/>
+      </StackPanel>
+      <Grid Grid.Row="2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="14"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <RadioButton x:Name="RemoteNav" Grid.Column="0" Style="{StaticResource ModeCard}" IsChecked="True">
+          <StackPanel>
+            <DockPanel>
+              <Border DockPanel.Dock="Right" Style="{StaticResource ModeChip}">
+                <TextBlock Text="HTTP" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
+              </Border>
+              <TextBlock Text="{l:Tr Config.RemoteMode}" FontSize="14" FontWeight="Bold"/>
+            </DockPanel>
+            <TextBlock Text="{l:Tr Config.RemoteNote}" FontSize="11.5" Foreground="{DynamicResource Ui.SecondaryLabel}" Margin="0,4,0,0"/>
+          </StackPanel>
+        </RadioButton>
+        <RadioButton x:Name="LocalNav" Grid.Column="2" Style="{StaticResource ModeCard}">
+          <StackPanel>
+            <DockPanel>
+              <Border DockPanel.Dock="Right" Style="{StaticResource ModeChip}">
+                <TextBlock Text="STDIO" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
+              </Border>
+              <TextBlock Text="{l:Tr Config.LocalMode}" FontSize="14" FontWeight="Bold"/>
+            </DockPanel>
+            <TextBlock Text="{l:Tr Config.LocalNote}" FontSize="11.5" Foreground="{DynamicResource Ui.SecondaryLabel}" Margin="0,4,0,0"/>
+          </StackPanel>
+        </RadioButton>
+      </Grid>
+      <Grid Grid.Row="4">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="14"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border x:Name="InstallationCard" Style="{StaticResource Glass.Card}" Padding="18,16">
+          <Grid>
             <Grid.RowDefinitions>
-              <RowDefinition Height="126"/>
-              <RowDefinition Height="102"/>
-              <RowDefinition Height="18"/>
-              <RowDefinition Height="176"/>
-              <RowDefinition Height="18"/>
-              <RowDefinition Height="*"/>
+              <RowDefinition Height="20"/>
+              <RowDefinition Height="10"/>
+              <RowDefinition Height="52"/>
+              <RowDefinition Height="10"/>
+              <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
-            <StackPanel Margin="6,7,0,0">
-              <TextBlock x:Name="PageStep" Text="{l:Tr Config.Eyebrow}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" Foreground="{DynamicResource Ui.Accent}"/>
-              <TextBlock x:Name="PageTitle" FontSize="30" FontWeight="Bold" Margin="0,4,0,4"/>
-              <TextBlock x:Name="PageSubtitle" FontSize="14" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" LineHeight="19" MaxWidth="630" HorizontalAlignment="Left"/>
+            <DockPanel>
+              <TextBlock x:Name="DetectionSource" DockPanel.Dock="Right" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Ui.Label}"/>
+              <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Glass.Heading}"/>
+            </DockPanel>
+            <Grid Grid.Row="2">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <StackPanel>
+                <TextBlock Text="{l:Tr Config.Version}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,4"/>
+                <ComboBox x:Name="Version" Tag="FilledTriangle" ItemContainerStyle="{StaticResource Shell.VersionItem}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"/>
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Tr Config.InstallPath}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,4"/>
+                <TextBox x:Name="TiaPath" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}" Style="{StaticResource Shell.PathField}"/>
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="4" Orientation="Horizontal">
+              <Button x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Height="30" Margin="0,0,8,0"/>
+              <Button x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" Height="30"/>
             </StackPanel>
-            <Grid Grid.Row="1">
+          </Grid>
+        </Border>
+        <Border x:Name="ServerPane" Grid.Column="2" Style="{StaticResource Glass.Card}" Padding="18,16">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="20"/>
+              <RowDefinition Height="10"/>
+              <RowDefinition Height="52"/>
+              <RowDefinition Height="10"/>
+              <RowDefinition Height="30"/>
+            </Grid.RowDefinitions>
+            <DockPanel>
+              <TextBlock x:Name="ServerCardNote" DockPanel.Dock="Right" Text="HTTP" Style="{StaticResource Glass.Mono}" FontSize="10"/>
+              <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Glass.Heading}"/>
+            </DockPanel>
+            <Grid x:Name="AddressRow" Grid.Row="2">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="14"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="90"/>
               </Grid.ColumnDefinitions>
-              <RadioButton x:Name="RemoteNav" GroupName="Modes" IsChecked="True" Style="{StaticResource ModeCard}">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="26"/>
-                    <RowDefinition Height="*"/>
-                  </Grid.RowDefinitions>
-                  <TextBlock Text="{l:Tr Config.RemoteMode}" FontSize="15" FontWeight="Bold"/>
-                  <Border HorizontalAlignment="Right">
-                    <Border.Style>
-                      <Style TargetType="Border" BasedOn="{StaticResource Glass.Chip}">
-                        <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}"/>
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource Ui.Accent}"/>
-                          </DataTrigger>
-                        </Style.Triggers>
-                      </Style>
-                    </Border.Style>
-                    <TextBlock Text="HTTP" FontSize="10" FontWeight="Bold">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                              <Setter Property="Foreground" Value="{DynamicResource Ui.OnAccent}"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </Border>
-                  <TextBlock Grid.Row="1" Text="{l:Tr Config.RemoteNote}" FontSize="12" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"/>
-                </Grid>
-              </RadioButton>
-              <RadioButton x:Name="LocalNav" Grid.Column="2" GroupName="Modes" Style="{StaticResource ModeCard}">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="26"/>
-                    <RowDefinition Height="*"/>
-                  </Grid.RowDefinitions>
-                  <TextBlock Text="{l:Tr Config.LocalMode}" FontSize="15" FontWeight="Bold"/>
-                  <Border HorizontalAlignment="Right">
-                    <Border.Style>
-                      <Style TargetType="Border" BasedOn="{StaticResource Glass.Chip}">
-                        <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}"/>
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource Ui.Accent}"/>
-                          </DataTrigger>
-                        </Style.Triggers>
-                      </Style>
-                    </Border.Style>
-                    <TextBlock Text="STDIO" FontSize="10">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                              <Setter Property="Foreground" Value="{DynamicResource Ui.OnAccent}"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </Border>
-                  <TextBlock Grid.Row="1" Text="{l:Tr Config.LocalNote}" FontSize="12" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"/>
-                </Grid>
-              </RadioButton>
+              <StackPanel>
+                <TextBlock Text="{l:Tr Config.Ipv4}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,4"/>
+                <TextBox x:Name="ServerAddress" FontFamily="{DynamicResource Ui.FontMono}"/>
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Tr Config.Port}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,4"/>
+                <TextBox x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}"/>
+              </StackPanel>
             </Grid>
-            <Grid Grid.Row="3">
+            <Grid x:Name="ServerActions" Grid.Row="4">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <Grid>
-                <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-                <Border x:Name="InstallationCard" Style="{StaticResource Glass.Card}" Padding="20,18">
-                  <Grid>
-                    <Grid.RowDefinitions>
-                      <RowDefinition Height="26"/>
-                      <RowDefinition Height="62"/>
-                      <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Glass.Heading}"/>
-                    <Grid Grid.Row="1" Margin="0,8,0,0">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                      </Grid.ColumnDefinitions>
-                      <StackPanel>
-                        <TextBlock Text="{l:Tr Config.Version}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,6"/>
-                        <ComboBox x:Name="Version" DisplayMemberPath="DisplayName" SelectedValuePath="Key" Height="36"/>
-                      </StackPanel>
-                      <StackPanel Grid.Column="2">
-                        <TextBlock Text="{l:Tr Config.InstallPath}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,6"/>
-                        <TextBox x:Name="TiaPath" Height="36" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                      </StackPanel>
-                    </Grid>
-                    <Grid Grid.Row="2" Margin="0,12,0,0">
-                      <StackPanel Orientation="Horizontal">
-                        <Button x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Height="32"/>
-                        <Button x:Name="DetectTia" Content="{l:Tr Config.Detect}" Height="32" Margin="8,0,0,0"/>
-                      </StackPanel>
-                      <TextBlock x:Name="DetectionSource" Text="{l:Tr Config.NotDetected}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Right" FontSize="11"/>
-                    </Grid>
-                  </Grid>
-                </Border>
-              </Grid>
+              <Button x:Name="Network" Content="{l:Tr Config.Network}" Height="30"/>
               <Grid Grid.Column="2">
-                <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-                <Border x:Name="ServerPane" Style="{StaticResource Glass.Card}" Padding="20,18">
-                  <Grid>
-                    <Grid.RowDefinitions>
-                      <RowDefinition Height="26"/>
-                      <RowDefinition Height="62"/>
-                      <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock x:Name="ServerCardTitle" Style="{StaticResource Glass.Heading}"/>
-                    <TextBlock x:Name="ServerCardNote" Style="{StaticResource Glass.Mono}" HorizontalAlignment="Right" FontSize="10"/>
-                    <Grid x:Name="AddressRow" Grid.Row="1" Margin="0,8,0,0">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="90"/>
-                      </Grid.ColumnDefinitions>
-                      <StackPanel>
-                        <TextBlock Text="{l:Tr Config.Ip}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,6"/>
-                        <TextBox x:Name="ServerAddress" Tag="192.0.2.10" Height="36" FontFamily="{DynamicResource Ui.FontMono}"/>
-                      </StackPanel>
-                      <StackPanel Grid.Column="2">
-                        <TextBlock Text="{l:Tr Config.Port}" Style="{StaticResource Glass.Muted}" Margin="0,0,0,6"/>
-                        <TextBox x:Name="ServerPort" Text="8765" Height="36" FontFamily="{DynamicResource Ui.FontMono}"/>
-                      </StackPanel>
-                    </Grid>
-                    <Grid x:Name="ServerActions" Grid.Row="2" Margin="0,12,0,0">
-                      <StackPanel Orientation="Horizontal">
-                        <Button x:Name="Network" Content="{l:Tr Config.Network}" Height="32"/>
-                        <Button x:Name="StartServer" Content="{l:Tr Config.Start}" Height="32" Margin="8,0,0,0">
-                          <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource Glass.Primary}">
-                              <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="False">
-                                  <Setter Property="Visibility" Value="Collapsed"/>
-                                </Trigger>
-                              </Style.Triggers>
-                            </Style>
-                          </Button.Style>
-                        </Button>
-                        <Button x:Name="StopServer" Content="{l:Tr Config.Stop}" Height="32" IsEnabled="False" Margin="8,0,0,0">
-                          <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource Glass.Button}">
-                              <Setter Property="Visibility" Value="Collapsed"/>
-                              <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="True">
-                                  <Setter Property="Visibility" Value="Visible"/>
-                                </Trigger>
-                              </Style.Triggers>
-                            </Style>
-                          </Button.Style>
-                        </Button>
-                      </StackPanel>
-                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{DynamicResource Ui.StatusIdle}" Margin="0,0,5,0"/>
-                        <TextBlock Text="{Binding Text,ElementName=LinkState}" Style="{StaticResource Glass.Muted}"/>
-                        <TextBlock x:Name="Status" Text="{l:Tr Config.Idle}" Visibility="Collapsed"/>
-                      </StackPanel>
-                    </Grid>
-                    <Border x:Name="LocalNote" Grid.Row="1" Visibility="Collapsed">
-                      <TextBlock Text="{l:Tr Config.LocalEngineNote}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap"/>
-                    </Border>
-                    <TextBlock x:Name="LocalActionsNote" Grid.Row="2" Visibility="Collapsed" Text="{l:Tr Config.LocalActionsNote}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap"/>
-                  </Grid>
-                </Border>
+                <Button x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Glass.Primary}" Height="30"/>
+                <Button x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Glass.Button}" Height="30" IsEnabled="False" Visibility="Collapsed"/>
               </Grid>
+              <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{DynamicResource Ui.StatusIdle}" Margin="6,0"/>
+                <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Glass.Muted}"/>
+              </StackPanel>
             </Grid>
-            <Grid Grid.Row="5">
-              <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-              <Border x:Name="ClientPane" Style="{StaticResource Glass.Card}" Padding="20,18">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="32"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="38"/>
-                  </Grid.RowDefinitions>
-                  <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{l:Tr Config.AiClients}" FontWeight="Bold"/>
-                    <TextBlock x:Name="ClientSelection" Style="{StaticResource Glass.Muted}" FontSize="12" Cursor="Hand"/>
-                  </StackPanel>
-                  <Button x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}" Height="28" HorizontalAlignment="Right"/>
-                  <ListBox x:Name="ClientChoices" Grid.Row="1" Style="{StaticResource Glass.List}" ItemContainerStyle="{StaticResource ClientChoice}" ItemTemplate="{StaticResource ClientTile}" SelectionMode="Multiple" MaxHeight="250" VerticalAlignment="Top" Margin="-2,0,-8,8">
-                    <ListBox.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <UniformGrid Columns="{DynamicResource ClientColumns}"/>
-                      </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                  </ListBox>
-                  <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="*"/>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Border x:Name="SecretBand" Margin="0,0,10,0">
+          </Grid>
+        </Border>
+      </Grid>
+      <Border x:Name="ClientPane" Grid.Row="6" Style="{StaticResource Glass.Card}" Padding="18,14">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="18"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel>
+              <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Glass.Heading}" Margin="0,0,4,0"/>
+              <TextBlock x:Name="ClientSelection" Style="{StaticResource Glass.Muted}" FontSize="12" Cursor="Hand"/>
+            </DockPanel>
+            <TextBlock Grid.Column="1" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Glass.Muted}" FontSize="10.5"/>
+          </Grid>
+          <ListBox x:Name="ClientChoices" Grid.Row="2" Style="{StaticResource Glass.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource ClientChoice}" ItemTemplate="{StaticResource ClientTile}" Margin="-2,0,-10,0" Padding="0" VerticalAlignment="Top">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3"/>
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+          </ListBox>
+        </Grid>
+      </Border>
+      <Border x:Name="SecretBand" Grid.Row="8" Style="{StaticResource Glass.Card}" Padding="18,14">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="18"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="36"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="36"/>
+          </Grid.RowDefinitions>
+          <DockPanel>
+            <TextBlock Text="{l:Tr Mcp.SecretNote}" DockPanel.Dock="Right" Style="{StaticResource Glass.Muted}" FontSize="10.5"/>
+            <TextBlock Text="{l:Tr Mcp.SecretTitle}" Style="{StaticResource Glass.Heading}"/>
+          </DockPanel>
+          <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="SecretField">
+              <PasswordBox x:Name="Key" FontFamily="{DynamicResource Ui.FontMono}" FontSize="12" Padding="12,6" Background="{DynamicResource Ui.FieldBackground}" Foreground="{DynamicResource Ui.Label}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
+                <PasswordBox.Template>
+                  <ControlTemplate TargetType="PasswordBox">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="10">
                       <Grid>
-                        <Grid.ColumnDefinitions>
-                          <ColumnDefinition Width="*"/>
-                          <ColumnDefinition Width="Auto"/>
-                          <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <PasswordBox x:Name="Key" PasswordChar="·" FontSize="16"/>
-                        <TextBox x:Name="KeyVisible" Visibility="Collapsed" Height="38" FontFamily="{DynamicResource Ui.FontMono}"/>
-                        <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Config.Secret}" Foreground="{DynamicResource Ui.PlaceholderLabel}" Margin="12,0" IsHitTestVisible="False"/>
-                        <Button x:Name="GenerateKey" Grid.Column="1" Content="{l:Tr Config.Generate}" Width="81" Height="38" Margin="10,0,0,0"/>
-                        <CheckBox x:Name="ShowKey" Grid.Column="2" Content="{l:Tr Config.Show}" Style="{StaticResource Glass.Button}" Width="60" Height="38" Margin="10,0,0,0"/>
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                        <TextBlock x:Name="Mask" Text="••••" Margin="12,0" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False"/>
                       </Grid>
                     </Border>
-                    <Button x:Name="TestClient" Grid.Column="1" Content="{l:Tr Config.Test}" Style="{StaticResource Glass.Outline}" Width="140" Height="38" Margin="0,0,10,0"/>
-                    <Button x:Name="SaveClient" Grid.Column="2" Content="{l:Tr Config.Write}" ToolTip="{l:Tr Config.ClientNote}" Width="152" FontSize="13" Height="38" Background="{DynamicResource Ui.StrongFill}" Foreground="{DynamicResource Ui.StrongText}"/>
-                  </Grid>
-                  <TextBlock x:Name="ClientInstructions" Visibility="Collapsed"/>
-                </Grid>
-              </Border>
+                    <ControlTemplate.Triggers>
+                      <MultiTrigger>
+                        <MultiTrigger.Conditions>
+                          <Condition Property="Tag" Value="HasSecret"/>
+                          <Condition Property="IsKeyboardFocusWithin" Value="False"/>
+                        </MultiTrigger.Conditions>
+                        <Setter TargetName="PART_ContentHost" Property="Opacity" Value="0"/>
+                        <Setter TargetName="Mask" Property="Visibility" Value="Visible"/>
+                      </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </PasswordBox.Template>
+              </PasswordBox>
+              <TextBox x:Name="KeyVisible" FontFamily="{DynamicResource Ui.FontMono}" Height="36" Visibility="Collapsed"/>
+              <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" Foreground="{DynamicResource Ui.TertiaryLabel}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" Margin="12,0" IsHitTestVisible="False"/>
             </Grid>
+            <Button x:Name="GenerateKey" Grid.Column="1" Content="{l:Tr Config.Generate}" Height="36" Margin="8,0,0,0"/>
+            <CheckBox x:Name="ShowKey" Grid.Column="2" Content="{l:Tr Config.Show}" Style="{StaticResource Glass.Button}" Height="36" Margin="8,0,0,0"/>
           </Grid>
-          <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-              <RowDefinition Height="253"/>
-              <RowDefinition Height="14"/>
-              <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border x:Name="SummaryCard" Style="{StaticResource Glass.Card}" Padding="22">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="30"/>
-                  <RowDefinition Height="28"/>
-                  <RowDefinition Height="28"/>
-                  <RowDefinition Height="28"/>
-                  <RowDefinition Height="28"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Text="{l:Tr Config.Summary}" Style="{StaticResource Glass.Heading}"/>
-                <Border Style="{StaticResource Glass.Chip}" HorizontalAlignment="Right" VerticalAlignment="Top">
-                  <TextBlock x:Name="LinkState" Text="{l:Tr Config.Idle}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
-                </Border>
-                <TextBlock x:Name="LinkLeftLabel" Grid.Row="1" Text="{l:Tr Config.Clients}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
-                <TextBlock x:Name="LinkClient" Grid.Row="1" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <TextBlock x:Name="LinkRightLabel" Grid.Row="2" Text="{l:Tr Config.Service}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
-                <TextBlock x:Name="LinkServer" Grid.Row="2" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <TextBlock Grid.Row="3" Text="{l:Tr Config.Address}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
-                <TextBlock x:Name="LinkEndpoint" Grid.Row="3" HorizontalAlignment="Right" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11"/>
-                <TextBlock Grid.Row="4" Text="{l:Tr Config.Transport}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
-                <TextBlock x:Name="Transport" Grid.Row="4" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <Border Grid.Row="5" Background="{DynamicResource Ui.PanelBackground}" CornerRadius="10" Padding="13,9" Margin="0,10,0,0">
-                  <TextBlock x:Name="LastTest" Text="{l:Tr Config.InitialTest}" FontSize="11" TextWrapping="Wrap" LineHeight="17"/>
-                </Border>
-              </Grid>
-            </Border>
-            <Grid Grid.Row="2">
-              <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-              <Border x:Name="ConfigurationLogCard" Style="{StaticResource Glass.Card}" Padding="22,18">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="28"/>
-                    <RowDefinition Height="*"/>
-                  </Grid.RowDefinitions>
-                  <TextBlock Text="{l:Tr Config.Log}" Style="{StaticResource Glass.Heading}"/>
-                  <TextBlock x:Name="LogCount" Text="{l:Tr Config.EmptyLog}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Right"/>
-                  <TextBox x:Name="Log" Grid.Row="1" Height="Auto" MinHeight="0" Background="Transparent" BorderThickness="0" Padding="0,3" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" TextBlock.LineHeight="24" TextBlock.LineStackingStrategy="BlockLineHeight" IsReadOnly="True" VerticalContentAlignment="Top" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"/>
-                  <glass:GlassLogView Grid.Row="1" LogText="{Binding Text,ElementName=Log}" Foreground="{DynamicResource Ui.Label}"/>
-                </Grid>
-              </Border>
-            </Grid>
+          <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}" Height="36" FontSize="11.5"/>
+            <TextBlock x:Name="WriteTargets" Grid.Column="1" Style="{StaticResource Glass.Muted}" Margin="12,0" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+            <Button x:Name="TestClient" Grid.Column="2" Content="{l:Tr Config.Test}" Style="{StaticResource Glass.Outline}" Height="36" FontSize="12"/>
+            <Button x:Name="SaveClient" Grid.Column="3" Content="{l:Tr Config.Write}" ToolTip="{l:Tr Config.Write}" Background="{DynamicResource Ui.StrongFill}" Foreground="{DynamicResource Ui.StrongText}" Height="36" MaxWidth="144" Margin="8,0,0,0"/>
           </Grid>
         </Grid>
-      </ScrollViewer>
+      </Border>
+    </Grid>
+    <Grid Grid.Column="2">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="232"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Border x:Name="SummaryCard" Style="{StaticResource Glass.Card}" Padding="22,20" Background="{DynamicResource Ui.SummaryBackground}" TextElement.Foreground="{DynamicResource Ui.SummaryText}">
+        <Border.ToolTip>
+          <TextBlock x:Name="Status"/>
+        </Border.ToolTip>
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="112"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="40"/>
+          </Grid.RowDefinitions>
+          <DockPanel>
+            <Border DockPanel.Dock="Right" Background="{DynamicResource Ui.SummaryPill}" CornerRadius="99" Padding="9,4">
+              <StackPanel Orientation="Horizontal">
+                <Ellipse Width="6" Height="6" Fill="{Binding Fill,ElementName=StatusDot}" Margin="0,0,6,0"/>
+                <TextBlock x:Name="LinkState" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
+              </StackPanel>
+            </Border>
+            <TextBlock Text="{l:Tr Config.Summary}" Style="{StaticResource Glass.Heading}"/>
+          </DockPanel>
+          <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="28"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Text="{l:Tr Mcp.Clients}" FontSize="12" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+            <TextBlock x:Name="LinkClient" Grid.Row="0" Grid.Column="1" FontSize="12" FontWeight="SemiBold" TextAlignment="Right" Margin="8,0,0,0"/>
+            <TextBlock Grid.Row="1" Text="{l:Tr Config.Service}" FontSize="12" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+            <TextBlock x:Name="LinkServer" Grid.Row="1" Grid.Column="1" FontSize="12" FontWeight="SemiBold" TextAlignment="Right" Margin="8,0,0,0"/>
+            <TextBlock Grid.Row="2" Text="{l:Tr Config.Address}" FontSize="12" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+            <TextBlock x:Name="LinkEndpoint" Grid.Row="2" Grid.Column="1" FontSize="11" FontWeight="Normal" TextAlignment="Right" Margin="8,0,0,0" FontFamily="{DynamicResource Ui.FontMono}"/>
+            <TextBlock Grid.Row="3" Text="{l:Tr Config.Transport}" FontSize="12" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+            <TextBlock x:Name="Transport" Grid.Row="3" Grid.Column="1" FontSize="12" FontWeight="SemiBold" TextAlignment="Right" Margin="8,0,0,0"/>
+          </Grid>
+          <Border Grid.Row="4" Background="{DynamicResource Ui.NoteBackground}" BorderBrush="{DynamicResource Ui.NoteBorder}" BorderThickness="1" CornerRadius="10" Padding="12,10">
+            <TextBlock x:Name="LastTest" FontSize="11" Foreground="{DynamicResource Ui.SummaryText}"/>
+          </Border>
+        </Grid>
+      </Border>
+      <Border x:Name="ConfigurationLogCard" Grid.Row="2" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.SidebarBackground}" Padding="20,18">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <DockPanel>
+            <Button x:Name="ClearLog" Content="{l:Tr Glass.Clear}" DockPanel.Dock="Right" Style="{StaticResource Glass.Quiet}" Foreground="{DynamicResource Ui.Accent}" Margin="12,0,0,0"/>
+            <TextBlock x:Name="LogCount" DockPanel.Dock="Right" Style="{StaticResource Glass.Muted}" FontSize="10.5"/>
+            <TextBlock Text="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Glass.Heading}"/>
+          </DockPanel>
+          <glass:GlassLogView x:Name="ActivityLog" Grid.Row="2" Foreground="{DynamicResource Ui.LogText}">
+            <glass:GlassLogView.Template>
+              <ControlTemplate TargetType="glass:GlassLogView">
+                <ScrollViewer x:Name="PART_ContentHost" Padding="0"/>
+              </ControlTemplate>
+            </glass:GlassLogView.Template>
+          </glass:GlassLogView>
+        </Grid>
+      </Border>
     </Grid>
   </Grid>
 </UserControl>

@@ -18,17 +18,16 @@
         <ResourceDictionary Source="Themes/Window.xaml" />
         <ResourceDictionary Source="Themes/Glass.xaml" />
         <ResourceDictionary Source="Themes/Glass.Studio.xaml" />
+        <ResourceDictionary Source="Themes/Shell.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
       <ux:InverseBooleanToVisibilityConverter x:Key="NotBoolToVisibility" />
-
-      <!-- There is deliberately no implicit TextBlock style here. Foreground, FontFamily and
-           FontSize are all the same inheritable properties on Control and TextElement, so the
-           values set on the window reach every TextBlock on their own - and, more importantly,
-           a selected list row can override them for its children. An implicit style setter
-           would outrank that inheritance and leave selected rows with unreadable text on the
-           selection fill. -->
+      <!-- Text appearance stays inherited so selected rows can supply their own foreground. -->
+      <Style TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+      </Style>
     </ResourceDictionary>
   </Application.Resources>
 </Application>

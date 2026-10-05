@@ -21,6 +21,7 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="16"/>
     <Setter Property="Padding" Value="22,18"/>
+    <Setter Property="Effect" Value="{DynamicResource Glass.SurfaceShadow}"/>
   </Style>
   <Style x:Key="Glass.Chip" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Ui.AccentSoft}"/>
@@ -34,9 +35,9 @@
   <ControlTemplate x:Key="Glass.ButtonTemplate" TargetType="ButtonBase">
     <Grid>
       <Border x:Name="Shadow" Visibility="Collapsed" CornerRadius="17" Background="{TemplateBinding Background}" Effect="{DynamicResource Glass.AccentShadow}"/>
-      <Border x:Name="Surface" CornerRadius="17" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-      </Border>
+      <Border x:Name="Surface" CornerRadius="17" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"/>
+      <Border x:Name="Hover" CornerRadius="17" Background="{DynamicResource Ui.ControlHover}" Opacity="0" IsHitTestVisible="False"/>
+      <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="False"/>
     </Grid>
     <ControlTemplate.Triggers>
       <Trigger Property="Tag" Value="AccentPill">
@@ -46,14 +47,14 @@
         <Trigger.EnterActions>
           <BeginStoryboard>
             <Storyboard>
-              <DoubleAnimation Storyboard.TargetName="Surface" Storyboard.TargetProperty="Opacity" To="0.88" Duration="0:0:0.12"/>
+              <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0:0:0.12"/>
             </Storyboard>
           </BeginStoryboard>
         </Trigger.EnterActions>
         <Trigger.ExitActions>
           <BeginStoryboard>
             <Storyboard>
-              <DoubleAnimation Storyboard.TargetName="Surface" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.12"/>
+              <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.12"/>
             </Storyboard>
           </BeginStoryboard>
         </Trigger.ExitActions>
@@ -81,6 +82,7 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="ContentTemplate"><Setter.Value><DataTemplate><TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/></DataTemplate></Setter.Value></Setter>
     <Setter Property="Template" Value="{StaticResource Glass.ButtonTemplate}"/>
   </Style>
   <Style x:Key="Glass.Primary" TargetType="ButtonBase" BasedOn="{StaticResource Glass.Button}">
@@ -105,42 +107,6 @@
     <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
     <Setter Property="Width" Value="32"/>
     <Setter Property="Height" Value="32"/>
-  </Style>
-  <Style x:Key="Glass.Nav" TargetType="RadioButton" BasedOn="{StaticResource Glass.Button}">
-    <Setter Property="HorizontalContentAlignment" Value="Left"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
-    <Setter Property="Height" Value="36"/>
-    <Setter Property="FontSize" Value="13"/>
-    <Setter Property="FontWeight" Value="Normal"/>
-    <Setter Property="Margin" Value="0,0,0,2"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="RadioButton">
-          <Border x:Name="Surface" CornerRadius="10" Background="{TemplateBinding Background}" Padding="12,0">
-            <ContentPresenter VerticalAlignment="Center"/>
-          </Border>
-          <ControlTemplate.Triggers>
-            <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Ui.SegmentThumb}"/>
-              <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-              <Setter Property="FontWeight" Value="Bold"/>
-            </Trigger>
-            <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Surface" Property="Opacity" Value="0.8"/>
-            </Trigger>
-          </ControlTemplate.Triggers>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
-  <Style x:Key="Glass.NavAction" TargetType="Button" BasedOn="{StaticResource Glass.Button}">
-    <Setter Property="HorizontalContentAlignment" Value="Left"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
-    <Setter Property="Height" Value="38"/>
-    <Setter Property="FontSize" Value="13"/>
-    <Setter Property="FontWeight" Value="Normal"/>
   </Style>
   <Style x:Key="Glass.Field" TargetType="TextBox">
     <Setter Property="Height" Value="34"/>
@@ -189,18 +155,27 @@
       <Setter.Value>
         <ControlTemplate TargetType="ComboBox">
           <Grid>
-            <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+            <ToggleButton Focusable="False" Tag="{TemplateBinding Tag}" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
               <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
                   <Border CornerRadius="10" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
-                    <TextBlock Text="" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="8" Foreground="{DynamicResource Ui.SecondaryLabel}" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <Grid>
+                      <TextBlock x:Name="Chevron" Text="" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="8" Foreground="{DynamicResource Ui.SecondaryLabel}" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                      <Path x:Name="Triangle" Data="M0,0 L5,0 L2.5,3 Z" Width="5" Height="3" Fill="{DynamicResource Ui.SecondaryLabel}" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </Grid>
                   </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="Tag" Value="FilledTriangle">
+                      <Setter TargetName="Chevron" Property="Visibility" Value="Collapsed"/>
+                      <Setter TargetName="Triangle" Property="Visibility" Value="Visible"/>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
                 </ControlTemplate>
               </ToggleButton.Template>
             </ToggleButton>
             <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" Margin="12,0,28,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
             <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
-              <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" Background="{DynamicResource Ui.WindowBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1" CornerRadius="10" Padding="6">
+              <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" Background="{DynamicResource Ui.MenuBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1" CornerRadius="10" Padding="6">
                 <ScrollViewer MaxHeight="320">
                   <ItemsPresenter/>
                 </ScrollViewer>
@@ -261,96 +236,6 @@
             <ContentPresenter/>
           </Border>
         </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
-  <!-- Keep WPF Menu/MenuItem navigation and access keys; replace only their chrome. -->
-  <Style x:Key="Glass.MenuSeparator" TargetType="Separator">
-    <Setter Property="OverridesDefaultStyle" Value="True"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="Separator">
-          <Border Height="1" Margin="10,5" Background="{DynamicResource Ui.Separator}"/>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
-  <ControlTemplate x:Key="Glass.MenuItemTemplate" TargetType="MenuItem">
-    <Grid>
-      <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Grid x:Name="GlyphColumn" Width="20">
-            <TextBlock x:Name="CheckGlyph" Text="✓" Visibility="Collapsed" VerticalAlignment="Center" Foreground="{DynamicResource Ui.AccentText}"/>
-            <Ellipse x:Name="RadioGlyph" Width="6" Height="6" Fill="{DynamicResource Ui.AccentText}" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed"/>
-          </Grid>
-          <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
-          <TextBlock x:Name="Accelerator" Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{DynamicResource Ui.SecondaryLabel}" Margin="28,0,8,0" VerticalAlignment="Center"/>
-          <TextBlock x:Name="Arrow" Grid.Column="3" Text="›" Width="12" Visibility="Hidden" VerticalAlignment="Center"/>
-        </Grid>
-      </Border>
-      <Popup x:Name="PART_Popup" IsOpen="{Binding IsSubmenuOpen,RelativeSource={RelativeSource TemplatedParent}}" Placement="Right" PlacementTarget="{Binding ElementName=Surface}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-        <Grid Margin="8" UseLayoutRounding="True">
-          <Border Background="{DynamicResource Ui.CardBackground}" CornerRadius="12" Effect="{DynamicResource Glass.PopupShadow}" IsHitTestVisible="False"/>
-          <Border Background="{DynamicResource Ui.CardBackground}" BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="1" CornerRadius="12" Padding="6" TextElement.Foreground="{DynamicResource Ui.Label}" TextElement.FontFamily="{DynamicResource Ui.Font}">
-            <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="600">
-              <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" KeyboardNavigation.TabNavigation="Cycle" Grid.IsSharedSizeScope="True"/>
-            </ScrollViewer>
-          </Border>
-        </Grid>
-      </Popup>
-    </Grid>
-    <ControlTemplate.Triggers>
-      <Trigger Property="HasItems" Value="True"><Setter TargetName="Arrow" Property="Visibility" Value="Visible"/></Trigger>
-      <Trigger Property="IsChecked" Value="True"><Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible"/></Trigger>
-      <MultiTrigger>
-        <MultiTrigger.Conditions><Condition Property="IsChecked" Value="True"/><Condition Property="Tag" Value="Radio"/></MultiTrigger.Conditions>
-        <Setter TargetName="CheckGlyph" Property="Visibility" Value="Collapsed"/>
-        <Setter TargetName="RadioGlyph" Property="Visibility" Value="Visible"/>
-      </MultiTrigger>
-      <Trigger Property="Role" Value="TopLevelHeader">
-        <Setter TargetName="GlyphColumn" Property="Visibility" Value="Collapsed"/>
-        <Setter TargetName="Accelerator" Property="Visibility" Value="Collapsed"/>
-        <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed"/>
-        <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
-        <Setter TargetName="PART_Popup" Property="HorizontalOffset" Value="-8"/>
-      </Trigger>
-      <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource Ui.AccentSoft}"/></Trigger>
-      <Trigger Property="IsSubmenuOpen" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource Ui.AccentSoft}"/></Trigger>
-      <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}"/></Trigger>
-    </ControlTemplate.Triggers>
-  </ControlTemplate>
-  <Style x:Key="Glass.SubmenuItem" TargetType="MenuItem">
-    <Setter Property="OverridesDefaultStyle" Value="True"/>
-    <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}"/>
-    <Setter Property="FontSize" Value="12"/>
-    <Setter Property="Padding" Value="10,7"/>
-    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-    <Setter Property="Template" Value="{StaticResource Glass.MenuItemTemplate}"/>
-  </Style>
-  <Style x:Key="Glass.MenuItem" TargetType="MenuItem" BasedOn="{StaticResource Glass.SubmenuItem}">
-    <Setter Property="Padding" Value="9,6"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-  </Style>
-  <Style TargetType="MenuItem" BasedOn="{StaticResource Glass.SubmenuItem}"/>
-  <Style x:Key="Glass.MenuBar" TargetType="Menu">
-    <Style.Resources><Style TargetType="Separator" BasedOn="{StaticResource Glass.MenuSeparator}"/></Style.Resources>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-    <Setter Property="OverridesDefaultStyle" Value="True"/>
-    <Setter Property="ItemContainerStyle" Value="{StaticResource Glass.MenuItem}"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="Menu"><StackPanel Orientation="Horizontal" IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/></ControlTemplate>
       </Setter.Value>
     </Setter>
   </Style>

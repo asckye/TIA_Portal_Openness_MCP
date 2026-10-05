@@ -8,17 +8,20 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _model;
     private readonly bool _loadExistingConfiguration;
+    private readonly TiaMcpConfigurator.ConfigurationPreview? _preview;
 
     public MainWindow() : this(new MainViewModel()) { }
 
-    internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true)
+    internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true, Services.Stubs.IApprovalService? approvals = null, Services.Stubs.IDiagnosticBundleService? diagnostics = null, TiaMcpConfigurator.ConfigurationPreview? preview = null)
     {
+        _preview = preview;
         _model = model;
         _loadExistingConfiguration = loadExistingConfiguration;
-        _model.SelectedReleaseKey = InitialReleaseKey(System.Environment.GetCommandLineArgs());
+        _model.SelectedReleaseKey = preview?.ReleaseKey ?? InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
         DataContext = _model;
         Root.Tag = new Controls.GlassResults(_model);
+        InitializeShell(approvals, diagnostics);
         UpdateMcpStatus();
         Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
         ToWorkspace.Checked += OnSyncDirection;
@@ -28,14 +31,14 @@ public partial class MainWindow : Window
             transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, null);
             transform.X = ToWorkspace.IsChecked == true ? 0 : ToWorkspace.ActualWidth;
         };
-        _model.PropertyChanged += (_, e) => {
-            if (e.PropertyName == nameof(MainViewModel.IsVcTab)) DetailColumn.Width = new GridLength(_model.IsVcTab ? 340 : 320);
-        };
         Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
-        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeConfiguration(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
+        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeShell(); DisposeConfiguration(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
         Loaded += async (_, _) => {
+            if (!_loadExistingConfiguration) return;
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
-            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "--mcp") >= 0) ShowConfiguration();
+            var args = System.Environment.GetCommandLineArgs();
+            if (System.Array.IndexOf(args, "--tab") >= 0) Navigate(_model.IsVcTab ? "VersionControl" : _model.IsLogTab ? "Log" : "Engineering");
+            else ShowConfiguration();
         };
     }
 
@@ -64,18 +67,8 @@ public partial class MainWindow : Window
     private void OnInspectOptions(object sender, RoutedEventArgs e) => ShowOptions(InspectOptions, "Toolbar.Inspect");
     private void OnWorkspaceOptions(object sender, RoutedEventArgs e) => ShowOptions(WorkspaceOptions, "Glass.NewWorkspace");
     private void OnCloseOptions(object sender, RoutedEventArgs e) => OptionsOverlay.Visibility = Visibility.Collapsed;
-    private void OnSoftware(object sender, RoutedEventArgs e) { ShowEngineering(); _model.IsBlocksTab = true; SoftwarePicker.IsDropDownOpen = true; }
-    private void OnGit(object sender, RoutedEventArgs e) { ShowEngineering(); _model.IsVcTab = true; }
-    private void OnRadioMenuClick(object sender, RoutedEventArgs e)
-    {
-        // MenuItem toggles before Click; a radio choice must remain selected on a second click.
-        ((MenuItem)sender).SetCurrentValue(MenuItem.IsCheckedProperty, true);
-    }
-    private void OnEngineeringView(object sender, RoutedEventArgs e)
-    {
-        OnRadioMenuClick(sender, e);
-        ShowEngineering();
-    }
+    private void OnSoftware(object sender, RoutedEventArgs e) { Navigate("Blocks"); SoftwarePicker.IsDropDownOpen = true; }
+    private void OnGit(object sender, RoutedEventArgs e) { Navigate("VersionControl"); }
     private void OnMappedFile(object sender, RoutedEventArgs e) => _model.VersionControl.SelectedVcItem = (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
     private void OnMappedFilter(object sender, RoutedEventArgs e)
     {

@@ -25,9 +25,15 @@ namespace TiaMcpConfigurator
         public Window Window { get; private set; }
         private readonly string root;
         public event EventHandler ServiceStateChanged;
+        public event EventHandler ReleaseChanged;
+        private readonly ConfigurationPreview? preview;
+        private string clientInstructions = "";
+        private string activityLog = "";
+        internal string ActivityLogText => activityLog;
+        private bool DisplayRunning => preview?.Running ?? HasRunningServer;
         public bool HasRunningServer { get { return server != null && !server.HasExited; } }
         public bool LocksRelease { get { return busy || HasRunningServer; } }
-        public string ServiceStateKey { get { return !Remote ? "Config.Local" : HasRunningServer ? "Config.Running" : "Config.Idle"; } }
+        public string ServiceStateKey { get { return !Remote ? "Config.Local" : DisplayRunning ? "Config.Running" : "Config.Idle"; } }
         public string ServiceEndpoint
         {
             get
@@ -36,22 +42,12 @@ namespace TiaMcpConfigurator
                 return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
             }
         }
-        // The MCP menu runs the page actions, so each item is available exactly when its button is.
-        public void SyncServiceMenu()
-        {
-            bool http = Find<Grid>("ServerActions").Visibility == Visibility.Visible;
-            Find<MenuItem>("McpStartItem").IsEnabled = http && Find<Button>("StartServer").IsEnabled;
-            Find<MenuItem>("McpStopItem").IsEnabled = http && Find<Button>("StopServer").IsEnabled;
-            Find<MenuItem>("McpNetworkItem").IsEnabled = http && Find<Button>("Network").IsEnabled;
-            Find<MenuItem>("McpTestItem").IsEnabled = Find<Button>("TestClient").Visibility == Visibility.Visible && Find<Button>("TestClient").IsEnabled;
-            Find<MenuItem>("McpWriteItem").IsEnabled = Find<Button>("SaveClient").IsEnabled;
-        }
         public string SelectedReleaseKey
         {
             get { return SelectedVersion; }
             set { Find<ComboBox>("Version").SelectedValue = TiaVersionCatalog.RequireRunnable(value).Key; }
         }
-        public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = false; }
+        public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = enabled && !LocksRelease; }
         public Func<bool> CanUpdate { get; set; }
         private Process server;
         private UpdateInfo latest;   // last successful update check
@@ -61,7 +57,7 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
-        private T Find<T>(string name) where T : FrameworkElement { return (T)(FindName(name) ?? Window.FindName(name)); }
+        private T Find<T>(string name) where T : FrameworkElement { return (T)(FindName(name) ?? Window.FindName(name) ?? ((TiaOpenness.Gui.Views.SettingsView)Window.FindName("SettingsContent")).FindName(name)); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
         private string SelectedVersion
         {
@@ -79,21 +75,23 @@ namespace TiaMcpConfigurator
         private void SetSecret(string value) { Find<TextBox>("KeyVisible").Text = value; Find<PasswordBox>("Key").Password = value; }
 
         public ConfigurationView(Window owner, string bundleRoot, bool loadExisting = true)
+            : this(owner, bundleRoot, loadExisting, null) { }
+
+        internal ConfigurationView(Window owner, string bundleRoot, bool loadExisting, ConfigurationPreview? preview)
         {
+            this.preview = preview;
             Window = owner;
             root = bundleRoot;
             InitializeComponent();
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = "21";
-            Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
-            SizeChanged += delegate { Resources["ClientColumns"] = ActualWidth < 1180 ? 2 : 4; };
             var choices = Find<ListBox>("ClientChoices");
-            var cards = ClientProfiles.All(); choices.ItemsSource = cards;
+            var cards = preview?.Clients ?? ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
             Append(Loc.Current.T("Config.ClientDetection", String.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
             choices.SelectionChanged += delegate { UpdateInstructions(); };
-            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
+            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
             Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
             Find<TextBox>("KeyVisible").TextChanged += delegate { UpdateKeyPlaceholder(); };
             Find<CheckBox>("ShowKey").Click += delegate {
@@ -102,6 +100,7 @@ namespace TiaMcpConfigurator
                 else Find<PasswordBox>("Key").Password = Find<TextBox>("KeyVisible").Text;
                 Find<TextBox>("KeyVisible").Visibility = show ? Visibility.Visible : Visibility.Collapsed;
                 Find<PasswordBox>("Key").Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+                ShowKey.Content = Loc.Current[show ? "Mcp.Hide" : "Config.Show"];
                 UpdateKeyPlaceholder();
             };
             Find<RadioButton>("RemoteNav").Checked += delegate { Mode(true); };
@@ -120,20 +119,14 @@ namespace TiaMcpConfigurator
             Click("Network", async delegate { await OnNetwork(); });
             Click("TestClient", async delegate { await OnTestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
-            MenuClick("McpStartItem", OnStartServer);
-            MenuClick("McpStopItem", OnStopServer);
-            MenuClick("McpNetworkItem", async delegate { await OnNetwork(); });
-            MenuClick("McpTestItem", async delegate { await OnTestClient(); });
-            MenuClick("McpWriteItem", delegate { SaveClients(Remote); });
-            MenuClick("CheckUpdate", async delegate { await OnCheckUpdate(true); });
-            MenuClick("RunUpdate", OnRunUpdate);
-            MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
-            MenuClick("ShowClientHelp", delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
-            MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
-            MenuClick("AboutItem", delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current.T("Config.AboutDetails", Assembly.GetExecutingAssembly().GetName().Version, UpdateCheck.Installed(root) ?? Loc.Current["Config.UnknownInstalledEngine"], root), Loc.Current["Config.AboutCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
+            Click("ClearLog", delegate { activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount(); });
+            Click("CheckUpdate", async delegate { await OnCheckUpdate(true); });
+            Click("RunUpdate", OnRunUpdate);
+            Click("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
+            Click("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
             ShowInstalledVersion();
-            Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); };
-            if (loadExisting)
+            Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); ReleaseChanged?.Invoke(this, EventArgs.Empty); };
+            if (loadExisting && preview == null)
             {
                 Window.Width = Math.Max(Window.MinWidth, Math.Min(Window.Width, SystemParameters.WorkArea.Width - 32));
                 Window.Height = Math.Max(Window.MinHeight, Math.Min(Window.Height, SystemParameters.WorkArea.Height - 32));
@@ -141,15 +134,29 @@ namespace TiaMcpConfigurator
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
                 var ignored = OnCheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
-            else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
+            else if (preview == null) { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
+            else
+            {
+                versions.SelectedValue = preview.ReleaseKey;
+                TiaPath.Text = preview.InstallPath;
+                ServerAddress.Text = preview.Address;
+                tiaDetected = preview.Detected;
+                StopServer.IsEnabled = preview.Running;
+                SetSecret(preview.Secret);
+                LocalNav.IsChecked = preview.Local;
+                RemoteNav.IsChecked = !preview.Local;
+            }
             UpdateLanguage();
             Loc.Current.LanguageChanged += OnLanguageChanged;
             Append(Loc.Current["Config.Ready"]);
             Window.Closing += OnClosing;
-            // The desktop owns the version selector; this field only mirrors its state.
-            Find<ComboBox>("Version").IsHitTestVisible = false;
-            Find<ComboBox>("Version").Focusable = false;
-            Find<ComboBox>("Version").IsEnabled = false;
+            if (preview != null)
+            {
+                activityLog = preview.Log;
+                ActivityLog.LogText = activityLog;
+                logEntries = activityLog.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+                UpdateLogCount();
+            }
         }
 
         private void OnLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); }
@@ -172,15 +179,22 @@ namespace TiaMcpConfigurator
         private void UpdateDetectionLabel()
         {
             Find<TextBlock>("DetectionSource").Text = tiaDetected ? "● " + Loc.Current["Config.Detected"] : Loc.Current["Config.NotDetected"];
-            Find<TextBlock>("DetectionSource").SetResourceReference(TextBlock.ForegroundProperty, tiaDetected ? "Ui.Accent" : "Ui.TertiaryLabel");
+            Find<TextBlock>("DetectionSource").SetResourceReference(TextBlock.ForegroundProperty, tiaDetected ? "Ui.Accent" : "Ui.Label");
         }
         private void UpdateLastTest()
-        { Find<TextBlock>("LastTest").Text = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]); }
+        {
+            var note = Find<TextBlock>("LastTest");
+            note.ToolTip = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]);
+            note.Inlines.Clear();
+            var label = new System.Windows.Documents.Run(Loc.Current.T("Config.LastTest", "")) { FontWeight = FontWeights.SemiBold };
+            label.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "Ui.NoteAccent");
+            note.Inlines.Add(label);
+            note.Inlines.Add(lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Mcp.TestNotRun"]);
+        }
         private void UpdateLogCount()
         { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
-        private void MenuClick(string name, Action action) { Find<MenuItem>(name).Click += delegate { Guard(action); }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
         private void SetStatus(string key, params object[] args) { SetLocalizedText("Status", TextBlock.TextProperty, key, args); }
         private void ServiceStatus(bool active)
@@ -189,51 +203,52 @@ namespace TiaMcpConfigurator
             UpdateLink();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
-        private void UpdateKeyPlaceholder() { Find<TextBlock>("KeyPlaceholder").Visibility = String.IsNullOrEmpty(Secret()) ? Visibility.Visible : Visibility.Collapsed; }
+        private void UpdateKeyPlaceholder()
+        {
+            Find<TextBlock>("KeyPlaceholder").Visibility = String.IsNullOrEmpty(Secret()) ? Visibility.Visible : Visibility.Collapsed;
+            Find<PasswordBox>("Key").Tag = String.IsNullOrEmpty(Find<PasswordBox>("Key").Password) ? null : "HasSecret";
+        }
 
         // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
-            var eyebrow = Find<TextBlock>("PageStep"); eyebrow.Inlines.Clear();
-            foreach (char character in Loc.Current["Config.Eyebrow"])
-            {
-                eyebrow.Inlines.Add(new System.Windows.Documents.Run(character.ToString()));
-                eyebrow.Inlines.Add(new System.Windows.Documents.InlineUIContainer(new Border { Width = 1.54 }));
-            }
+            Find<TextBlock>("PageStep").Text = Loc.Current["Config.Eyebrow"];
             Find<TextBlock>("PageTitle").Text = Loc.Current[remote ? "Config.RemoteTitle" : "Config.LocalTitle"];
             Find<TextBlock>("PageSubtitle").Text = Loc.Current[remote ? "Config.RemoteSubtitle" : "Config.LocalSubtitle"];
-            Find<TextBlock>("ServerCardTitle").Text = Loc.Current[remote ? "Config.HttpService" : "Config.LocalEngine"];
             Find<TextBlock>("ServerCardNote").Text = remote ? "HTTP" : "stdio";
             Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
-            Find<Grid>("AddressRow").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
-            Find<Grid>("ServerActions").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
-            Find<Border>("LocalNote").Visibility = remote ? Visibility.Collapsed : Visibility.Visible;
-            Find<TextBlock>("LocalActionsNote").Visibility = remote ? Visibility.Collapsed : Visibility.Visible;
-            Find<Border>("SecretBand").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
-            Find<Button>("TestClient").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
+            ServerPane.Opacity = remote ? 1 : .45;
+            AddressRow.IsEnabled = remote;
+            ServerActions.IsEnabled = remote;
+            SecretField.IsEnabled = GenerateKey.IsEnabled = ShowKey.IsEnabled = SaveBoth.IsEnabled = TestClient.IsEnabled = remote;
+            ShowKey.Content = Loc.Current[ShowKey.IsChecked == true ? "Mcp.Hide" : "Config.Show"];
             UpdateLink();
-            Find<ScrollViewer>("ContentScroll").ScrollToTop();
         }
         private void UpdateLink()
         {
             bool remote = Remote;
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : selected.Count == 1 ? selected[0].DisplayName : Loc.Current.T("Config.Selected", selected.Count);
+            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : Loc.Current.T("Config.Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = String.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName));
             Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
-            bool running = server != null && !server.HasExited;
+            bool running = DisplayRunning;
             string address = Text("ServerAddress");
             Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
+            ServiceStatusText.Text = LinkState.Text;
+            StatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, running ? "Ui.Accent" : "Ui.StatusIdle");
+            StartServer.Visibility = running ? Visibility.Collapsed : Visibility.Visible;
+            StopServer.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateInstructions()
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("ClientSelection").Text = Loc.Current.T("Config.Selected", selected.Count);
-            Find<TextBlock>("ClientInstructions").Text = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
+            Find<TextBlock>("ClientSelection").Text = Loc.Current.T("Mcp.ClientCounts", selected.Count, ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
+            WriteTargets.Text = Loc.Current["Mcp.WillWrite"] + " " + String.Join("; ", selected.Select(x => x.DisplayName + " → " + x.Path));
+            clientInstructions = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
                 String.Join("\n", selected.Select(x => Loc.Current.T(x.Detected ? "Config.ClientInstructionsDetected" : "Config.ClientInstructionsNotDetected", x.Name, x.Hint, x.Evidence)));
-            Find<TextBlock>("ClientSelection").ToolTip = Find<TextBlock>("ClientInstructions").Text;
+            Find<TextBlock>("ClientSelection").ToolTip = clientInstructions;
             UpdateLink();
         }
         private void Append(string message)
@@ -241,8 +256,9 @@ namespace TiaMcpConfigurator
             if (closing) return;
             if (!Window.Dispatcher.CheckAccess()) { Window.Dispatcher.BeginInvoke(new Action<string>(Append), message); return; }
             if (!String.IsNullOrEmpty(runningKey)) message = message.Replace(runningKey, "[redacted]");
-            var log = Find<TextBox>("Log"); if (log.Text.Length > 40000) { log.Clear(); logEntries = 0; }
-            log.AppendText(DateTime.Now.ToString("HH:mm:ss") + "   " + message + Environment.NewLine); log.ScrollToEnd();
+            if (activityLog.Length > 40000) { activityLog = ""; logEntries = 0; }
+            activityLog += DateTime.Now.ToString("HH:mm:ss") + "   " + message + Environment.NewLine;
+            ActivityLog.LogText = activityLog;
             logEntries++; UpdateLogCount();
         }
         private void Report(Exception ex)
@@ -264,6 +280,7 @@ namespace TiaMcpConfigurator
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
         {
+            if (preview != null) return;
             var found = ConfigCore.DetectTia(SelectedVersion);
             tiaDetected = found.Key != null; UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
@@ -339,20 +356,27 @@ namespace TiaMcpConfigurator
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
 
-        // ---- menu "更新": check against GitHub, then hand over to Update-Engine.ps1 with this window closed.
+        // Check for updates, then hand over to the existing updater with this window closed.
         private void ShowInstalledVersion()
         {
+            Find<TextBlock>("PackageText").Text = TiaOpenness.Gui.Views.SettingsView.ReadPackageName(root);
+            if (preview != null)
+            {
+                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion.TrimStart('v'));
+                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.NotChecked");
+                return;
+            }
             string installed = UpdateCheck.Installed(root);
-            if (installed == null) { SetLocalizedText("UpdateInstalledItem", MenuItem.HeaderProperty, "Config.EngineOutsideBundle"); Find<MenuItem>("CheckUpdate").IsEnabled = false; return; }
-            SetLocalizedText("UpdateInstalledItem", MenuItem.HeaderProperty, "Config.InstalledEngine", installed, UpdateCheck.InstalledPackage(root));
-            if (UpdateCheck.IsSourceRepository(root)) SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.SourceRepositoryUpdate");
+            if (installed == null) { SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle"); Find<Button>("CheckUpdate").IsEnabled = false; return; }
+            SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", installed);
+            if (UpdateCheck.IsSourceRepository(root)) SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
         }
         private async Task OnCheckUpdate(bool explicitRequest)
         {
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
-            var check = Find<MenuItem>("CheckUpdate");
-            check.IsEnabled = false; SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.CheckingUpdate");
+            var check = Find<Button>("CheckUpdate");
+            check.IsEnabled = false; SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.CheckingUpdate");
             try
             {
                 var info = await Task.Run(() => UpdateCheck.Latest(installed, UpdateCheck.Repository));
@@ -360,21 +384,21 @@ namespace TiaMcpConfigurator
                 if (info.UpdateAvailable)
                 {
                     var size = info.ZipSizeText.Length > 0 ? LocalizedText.Key("Config.UpdateSize", info.ZipSizeText) : LocalizedText.Empty;
-                    SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.UpdateAvailable", info.Latest, size);
-                    SetLocalizedText("UpdateMenu", MenuItem.HeaderProperty, "Config.UpdateMenuAvailable", info.Latest);
-                    Find<MenuItem>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
+                    SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpdateAvailable", info.Latest, size);
+                    Find<Button>("RunUpdate").Visibility = Visibility.Visible;
+                    Find<Button>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
                     Append(Loc.Current.T("Config.UpdateAvailableLog", installed, info.Latest, size, info.ReleaseUrl));
                 }
                 else
                 {
-                    SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.UpToDate", info.Tag); SetLocalizedText("UpdateMenu", MenuItem.HeaderProperty, "Config.Update");
-                    Find<MenuItem>("RunUpdate").IsEnabled = false;
+                    SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpToDate", info.Tag); Find<Button>("RunUpdate").Visibility = Visibility.Collapsed;
+                    Find<Button>("RunUpdate").IsEnabled = false;
                     Append(Loc.Current.T("Config.UpToDateLog", installed, info.Source));
                 }
             }
             catch (Exception ex)
             {
-                SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.CannotCheckUpdate", ex.GetBaseException().Message);
+                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.CannotCheckUpdate", ex.GetBaseException().Message);
                 if (explicitRequest) Append(Loc.Current.T("Config.UpdateCheckFailed", ex.GetBaseException().Message));
             }
             finally { check.IsEnabled = true; }
@@ -476,7 +500,7 @@ namespace TiaMcpConfigurator
         {
             Find<RadioButton>(mode == 0 ? "RemoteNav" : "LocalNav").IsChecked = true;
             Window.Show(); Window.UpdateLayout(); Window.Dispatcher.Invoke(new Action(delegate { }), DispatcherPriority.Render);
-            if (scrollToBottom) { Find<ScrollViewer>("ContentScroll").ScrollToBottom(); Window.UpdateLayout(); Window.Dispatcher.Invoke(new Action(delegate { }), DispatcherPriority.Render); }
+            if (scrollToBottom) ActivityLog.ScrollToEnd();
             // Render() draws the panel at its layout offset, so the bitmap must also cover the margin on
             // both sides — sizing it from ActualWidth alone cut the right edge (and the status pill with it).
             var content = (FrameworkElement)Window.Content;
