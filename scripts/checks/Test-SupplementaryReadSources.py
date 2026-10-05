@@ -18,7 +18,8 @@ for folder in ['Native','Policy']:
  for f in (src/'Adapters'/folder).rglob('*.cs'):
   assert f in files, f'Native source/policy omitted from explicit adapter source inventory: {f}'
 code='\n'.join(f.read_text(encoding='utf-8-sig') for f in files if f.name!='OpennessAdapter.cs')
-ops=set(re.findall(r'"([A-Za-z]+)"',(src/'Worker/WorkerOperations.cs').read_text(encoding='utf-8-sig')))
+# Operation names are PascalCase literals; lower-case literals there are argument values (for example mode "preview").
+ops=set(re.findall(r'"([A-Z][A-Za-z]+)"',(src/'Worker/WorkerOperations.cs').read_text(encoding='utf-8-sig')))
 methods=set(re.findall(r'public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(',code))
 assert ops<=methods, f'Worker operations absent from adapter sources: {sorted(ops-methods)}'
 spec=importlib.util.spec_from_file_location('tia_features',root/'scripts/checks/Check-TiaFeatures.py')
