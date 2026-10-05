@@ -70,5 +70,30 @@
     "record": "docs/reference/real-machine-ledger.md#330-验收结果2026-10-0405"
   },
   "nativeTiaExecuted": true,
-  "vmDeployed": true
+  "vmDeployed": true,
+  "runtimePackage": {
+    "name": "TIA_MCP_Runtime_v3.3.0_20261003.zip",
+    "bytes": 129138586,
+    "sha256": "281d57adc43adf650a00f2175f8c1451fc818c7af9a81563b60011587bd1fd34",
+    "files": 1609,
+    "addedAtUtc": "2026-10-05T00:46:42Z",
+    "derivedFrom": "TIA_MCP_Delivery_v3.3.0_20261003.zip",
+    "rule": "every file is byte-identical to the same path in the full package; source tree and development files left out; not separately re-accepted (testing moves to 4.0)",
+    "assets": [
+      {
+        "name": "TIA_MCP_Runtime_v3.3.0_20261003.sha256",
+        "bytes": 102,
+        "digest": "sha256:0960040b5879ed1f8bf62e40b5f2cdf57c245b1fee3516c834b7bb607a60333d",
+        "state": "uploaded",
+        "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.3.0/TIA_MCP_Runtime_v3.3.0_20261003.sha256"
+      },
+      {
+        "name": "TIA_MCP_Runtime_v3.3.0_20261003.zip",
+        "bytes": 129138586,
+        "digest": "sha256:281d57adc43adf650a00f2175f8c1451fc818c7af9a81563b60011587bd1fd34",
+        "state": "uploaded",
+        "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.3.0/TIA_MCP_Runtime_v3.3.0_20261003.zip"
+      }
+    ]
+  }
 }
