@@ -64,13 +64,13 @@ Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，�
 工作台（Studio）的配置页、客户端桥接与更新探测由 P6-38 改用同一规则：`BundleLayout.ResolveWorkbenchRoot` /
 `RequireWorkbenchRoot`（显式根、`TIA_MCP_BUNDLE_ROOT`、已知锚点；无效显式根不回退），引擎、bridge 与 adapter 位置取自产品表
 （`GetProduct`、`WorkbenchEnginePath`、`WorkbenchBridgePath`）；缺目标版本引擎即拒绝，源码 worktree 拒绝安装更新。
-Studio 的共享数据目录副本仍通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用旧的 `FindRootForStudio`，待 P6-39 收口；原生路径选择不变。
+Studio 的共享数据目录副本通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用 `FindWorkbenchRoot`，采用同一启动选择与 Workbench 锚点；原生路径选择不变。
 正式相邻 bridge/adapters 部署保持，`TiaSharedAdapterPaths` 默认 false，仍遵守 G3/J 原生验收边界。
 根启动器仍只启动 `runtime/studio/TiaOpenness.exe`。
 
 V21 生态目录查询仍读取两个完整引擎嵌入的 `TiaMcp.V21Ecosystem.json`，磁盘副本缺失不影响查询。
 [`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建引擎。
-Python 解释器仍由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；其现有缺省环境由 P6-39 处理。
+Python 解释器由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；缺省环境位于用户的 `TiaMcp/ecosystem-python`。
 这些生态工具属于 V20/V21，不加入 Foundation。
 
 ### 软件自身的数据目录
@@ -79,7 +79,7 @@ Python 解释器仍由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；其现有缺省环境
 程序集之间共享缓存；之后不会因环境变量或目录权限变化重新选择。顺序如下：
 
 1. 非空 `TIA_MCP_DATA_DIRECTORY`：必须为绝对路径；无效值报错，不静默回退。
-2. 引擎/Foundation 启动选定根（未初始化的调用方使用 `BundleLayout.FindRoot(AppContext.BaseDirectory)`）下的 `data`：创建目录，写入并删除小探测文件；成功才采用。Studio 继续使用旧根入口。
+2. 引擎/Foundation 启动选定根下的 `data`：创建目录，写入并删除小探测文件；成功才采用。未初始化的链接副本先用 `FindRoot`，再用 `FindWorkbenchRoot`，使 Studio 的首次解析也采用 P6-38 的 Workbench 根规则与启动选择，包括显式根与开发测试锚点。
 3. 未找到包根或探测失败（例如安装于不可写的 `C:\Program Files`）时，沿用各用途原有的用户目录。
 
 | 数据根下的目录 | 内容 | 无数据根时的原位置 |
@@ -88,8 +88,9 @@ Python 解释器仍由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；其现有缺省环境
 | `leases` | 实例租约 | `%LOCALAPPDATA%\TiaMcp\instance-leases` |
 | `config` | `http-v<版本>.json`、`client.json` 等本机配置 | `%LOCALAPPDATA%\TiaPortalMcp` |
 | `ui` | `ui.settings` 语言与主题偏好 | `%LOCALAPPDATA%\TiaOpennessStudio` |
-| `logs` | `TiaMcpServer.log`、`TiaMcpServer.hmi-read.log`、`TiaMcpServer.native-export.log` | `%TEMP%` |
-| `logs/audit` | 写调用与审批事件的哈希链 JSONL；独立于诊断日志保留 | `%LOCALAPPDATA%\TiaMcp\logs\audit` |
+| `logs/<releaseKey>` | 引擎/Foundation 共用每进程主日志，另有 HMI 读取与原生导出日志；文件名含 PID、启动 UTC、GUID | `%TEMP%\TiaMcp\logs\<releaseKey>` |
+| `logs/studio` | Workbench 崩溃日志，同样按进程命名 | `%TEMP%\TiaMcp\logs\studio` |
+| `logs/audit` | 每数据根一条写调用与审批哈希链；不受普通/诊断日志保留影响 | `%LOCALAPPDATA%\TiaMcp\logs\audit` |
 | `reports` | 未指定输出目录时的诊断报告 | `%TEMP%\TiaMcpReports` |
 | `temp` | 引擎与 Studio 的临时文件、默认 scaffold 和 mock 工程 | `%TEMP%` |
 
@@ -101,7 +102,29 @@ Python 解释器仍由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；其现有缺省环境
 已有目标文件不覆盖，旧文件不移动、不删除。诊断、租约、日志和临时文件不迁移。
 客户端自身的配置（`ClientProfiles`、`McpConfigInstaller`、`ConfigCore.ClaudePath`）、Siemens ProgramData 读取、
 TIA 默认 `MyDocuments\Automation` 工程目录、URL ACL 与防火墙设置保持原行为。
-Studio 的崩溃日志仍在可执行文件旁；伴随 Python 环境也保持原位置。
+日志目录不可写时使用表中的用途回退；显式 `TIA_MCP_DATA_DIRECTORY` 不可写立即报错，不静默改写目的地。
+无可写日志位置报 `IO_FAILED`，诊断/审计写失败报 `DIAGNOSTIC_WRITE_FAILED`，均包含目的路径，不写入可执行文件旁。
+AI 调用面板与保留时间窗口继续读取 `diagnostics/calls-*.jsonl*`；审计页与 `tia audit verify` 分别校验主目录单链及已存在的用户回退单链，报告各自的目录、文件和链内断点；不合并链或重编号。
+环境页尾部读取、诊断 ZIP 与 `tia doctor` 使用发布键/studio 日志目录，读者也检查用户回退目录。
+
+宿主启动和运行消息合并写入 `TiaMcpServer-<PID>-<yyyyMMdd-HHmmss-fffffff UTC>-<GUID N>.log`，不再产生 startup 副本。
+HMI 读取、原生导出和 Studio 崩溃日志分别以 `TiaMcpServer.hmi-read`、`TiaMcpServer.native-export`、`TiaOpenness.crash` 为前缀。
+宿主与 Workbench 启动时检查主目录和 `%TEMP%\TiaMcp\logs` 下全部正式发布键及 `studio` 目录；
+固定常量 `PlainLogCopies = 32` 按用途前缀保留最新 32 份（mtime UTC 降序，路径 ordinal 排序打破并列）。
+此规则只匹配上述产品前缀与完整 PID/启动时间/GUID 命名，可含一个会话 GUID；不递归、不穿过 reparse point、不碰其他文件。
+较旧但仍被打开/锁定的文件及 PID 和启动 UTC 都匹配活动进程的文件保留，因此文件数可能暂时超过 32；进程时间无法检查时也保留。
+清理失败每进程只向 stderr/Trace 报一次 `IO_FAILED`，继续启动；普通日志写失败每用途每进程报一次，原操作行为不变。
+该文件数量常量独立于下文调用 JSONL 的大小/份数配置，审计链不自动删除。
+
+
+伴随 Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；
+显式 `TIA_MCP_PLC_TOOLS_PYTHON` 优先，缺省目录缺失或不可写报 `IO_FAILED` 与具体路径。
+不创建安装目录环境，不复制或执行旧 `TiaMcp_Output` 环境；开发者须显式指定解释器或安装脚本的 `-EnvironmentPath`。
+
+私人报告/fixture CLI 要求 `--workspace-root <existing-absolute-directory>`，独立于 `--bundle-root`；
+HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目录分析要求具体 `--global-library-probe-json-path`。
+`TMP_EXPORT` 等已知夹具布局只在显式工作区内解释；PLC Builder 套件同时接收 fixtureDirectory 与 workspaceRoot，不从夹具反推根。
+缺输入返回 `INVALID_ARGUMENT`，CLI 语法退出 64；不猜 cwd、私人模板目录或最新报告。
 
 更新器按新包的 `delivery-files.json` 接受运行资源包。备份到 `.previous` 后，使用固定 `legacyCleanup` 规则与旧包
 `manifest/release-file-hashes.json` 的交集清理已交付的开发文件；只删除哈希仍匹配的旧文件，保留用户新增或改写的内容。
@@ -121,9 +144,9 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
   `EcosystemFiles.Guidance` 的文档 ID 仍按指南根路径截取生成，不额外规范化。
 - 引擎、Foundation 和 CLI 不再触发祖先兼容探测；嵌套暂存缺资源也拒绝借用外层仓库。
   Studio 调用方剩余根探测由 P6-38 处理，完整交付包的重定位仍需独立验收。
-- 软件自身的配置、诊断、日志和临时数据按上节优先写入包内；崩溃日志、伴随 Python 环境保持原位置。
+- 软件自身的配置、诊断、日志和临时数据按上节优先写入包内；Python 环境独立位于 LocalAppData。
 - P6-37 删除 R4–R6 的 `TMP_EXPORT`/cwd 根猜测，并将默认 HMI 模板改为选定根下的 `templates/hmi`。
-  显式私人工作区、HMI 模板和输出参数仍保持原值；私人输入缺省的后续变更由 P6-39 处理。
+  P6-39 进一步要求私人工作区与 HMI 模板显式输入，保留明确给出的输出路径。
 - P1-07 的 G7 前置阻塞已解除，整体目录重组仍待阶段 4 完成后进行。
 
 ### 检查器与离线证明
@@ -230,7 +253,7 @@ P3-18 将最后三个产品余项文件按职责拆开，产品与测试均不�
 | D-G7-3 | P6-37 已删除引擎/Foundation/CLI 的兼容探测；Studio 收口由 P6-38 执行 |
 | D-G7-4 | 开发锚点编入产品，只认枚举出的引擎、Foundation 和测试宿主输出；其他测试布局显式给根 |
 | D-G7-5 | `v21-ecosystem.json` 已直接嵌入 V20/V21 引擎；指南仍读取随包文件，改为嵌入前需另做差分证明 |
-| D-G7-6 | 原迁往 LocalAppData 的方向由 D331 维护者决定替代：软件自身数据优先留在包内，旧用户路径作为兼容回退；崩溃日志与伴随 Python 环境不变 |
+| D-G7-6 | 软件自身数据优先留在包内，旧用户路径作为回退；P6-39 崩溃日志接 data/logs/studio，Python 默认位于 LocalAppData |
 | D-G7-7 | G7-5 已修复 Studio 的 worktree `.git` 判断，文件和目录都禁止安装更新（仅 UI 行为） |
 | D-G7-8 | 私有工作区默认值阶段 0–5 不动，阶段 6 删除或改为显式输入 |
 | D-P5-1…6 | 见上文“注释与 `*Leftovers`”与“用户可见文案语言”；D-P5-3/5（新文本英文、4.0 统一英文）由维护者决定（2026-10-03） |
@@ -249,15 +272,16 @@ V20/V21 引擎与 Foundation MCP 宿主记录目录中分类为写操作的请�
 不包含换行；第一条的 `previousHash` 为 64 个零，其余为上一条的哈希。字段重排或等价 JSON 转义不改变哈希。
 10 MiB 轮转后的第一条仍链接上一文件末条；单条大于上限时保持完整行。审计文件不自动删除。
 
-全部宿主在同一数据根下，先以 `FileShare.None` 打开持久的 `.audit.lock`，再读取末条、分配序号、轮转、
-追加并 `Flush(true)`，最后关闭锁。校验和读取也持有此锁；操作系统在进程退出时释放句柄。锁文件不删除，
+同一数据根的所有宿主/链接副本共同写入 `logs/audit` 的一条链，先以 `FileShare.None` 打开该链的 `.audit.lock`，再读取末条、分配序号、轮转、
+追加并 `Flush(true)`，最后关闭锁。校验和读取以只读访问独占同一个锁文件，便于读取只读安装的历史链；缺锁文件时仍需目录允许创建。操作系统在进程退出时释放句柄。锁文件不删除，
 避免删除后创建新锁导致并行写入；竞争每 10 ms 重试，30 秒超时报 I/O 错误。成功写入不会交错或覆盖其他进程的行。
 若崩溃留下不完整末行，追加拒绝自动修复；校验报告该行，需操作员保留证据后处理。
-审计 I/O 失败用 Trace 记录，不修改工具结果或重试工程操作；写入成功才具有落盘保证。
+审计 I/O 失败以 `DIAGNOSTIC_WRITE_FAILED` 写入 stderr 与 Trace，不修改工具结果或重试工程操作；写入成功才具有落盘保证。
 
-`tia audit verify [--path <绝对目录>]` 输出一份 JSON 报告：`passed,count,breakIndex,file,reason`。
-链完整退出 0，第一处断链或读取失败退出 3；`breakIndex` 从 1 起，是预期记录位置。
-工作台“审计日志”的校验按钮使用同一校验器，也显示第一处断链并允许跳转。
+`tia audit verify --path <绝对目录>` 输出一份 JSON 报告：`chain,passed,count,breakIndex,file,reason`。
+未指定路径时输出主目录及已存在用户回退目录各自的报告数组；每个目录单独从 genesis 校验，序号不合并。
+所有链完整退出 0，任一链断链或读取失败退出 3；`breakIndex` 从 1 起，是预期记录位置。
+工作台“审计日志”的校验按钮使用同一校验器，显示失败链的目录、文件与第一处断链，切换到该链后允许跳转；通过时列出校验过的目录。
 用户可以删除整份日志、截去完整记录组成的尾部，或重写整条链；没有外部可信锚点或签名，
 哈希链只检测保留记录的中间修改、缺失和插入，不证明日志完整或事件真实性。空目录和完整行尾部截断可通过校验。
 

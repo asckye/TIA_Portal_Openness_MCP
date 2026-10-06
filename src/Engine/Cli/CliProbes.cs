@@ -321,7 +321,7 @@ namespace TiaMcpServer
 
             if (success == null)
             {
-                throw new InvalidOperationException("Failed to add a 1511C device. See TiaMcpServer.log for attempted MLFB/version combinations.");
+                throw new InvalidOperationException("Failed to add a 1511C device. See the process TiaMcpServer-*.log files in the host log directory for attempted MLFB/version combinations.");
             }
 
             Program.LogDiag($"Added exact 1511C: {successMlfb}/{successVersion}");
@@ -436,7 +436,7 @@ namespace TiaMcpServer
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_KTP700_Basic_HmiImport_" + DateTime.Now.ToString("yyyyMMdd_HHmm")
                 : options.ProjectName!;
-            var workspace = Directory.GetCurrentDirectory();
+            var workspace = options.RequireWorkspaceRoot();
             var screenImportPath = Path.Combine(workspace, "TMP_EXPORT", "optimized_hmi", "Screens", "主画面_优化.xml");
             var probeDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Ktp700HmiImport_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(probeDir);
@@ -1557,7 +1557,7 @@ namespace TiaMcpServer
             Program.LogDiag(save.Message ?? "Project saved");
             ReportBuilders.TryWriteText(Path.Combine(importDir, "MotorUnifiedDesign.json"), hmiDesignJson);
             PlcHmiSyncXml.WriteMotorMinimalReport(projectDirectory, projectName, importDir, treeAfterHardware.Tree ?? "", compile, plcAttempts, hmiAttempts, hmiReadbackSummary, hmiDesignJson, hardwareDeviation, hmiConnectionSummary, networkProbeSummary);
-            HmiTemplateBuilder.SyncMotorMinimalArtifacts(projectName, projectDirectory, importDir);
+            HmiTemplateBuilder.SyncMotorMinimalArtifacts(projectName, projectDirectory, importDir, options.RequireWorkspaceRoot());
             Program.LogDiag("Motor minimal test report written.");
 
             string ProbeMotorNetworkBestEffort()

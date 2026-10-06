@@ -105,12 +105,16 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool HasVerification => _verification != null;
     public bool VerificationBroken => _verification?.Passed == false;
     public FeatureTone VerificationTone => _verification?.Passed switch { true => FeatureTone.Success, false => FeatureTone.Warning, _ => FeatureTone.Muted };
-    public string VerificationText => _verification?.Passed switch
-    {
-        true => Loc.Current.T("Audit.Pass", _verification.Count.ToString("N0")),
-        false => Loc.Current.T("Audit.Break", _verification.BreakIndex),
-        _ => Loc.Current["Feature.NotConnected"],
-    };
+    public string VerificationText => _verification?.Chains.Count > 0
+        ? string.Join(" · ", _verification.Chains.Select(chain => (chain.Passed
+            ? Loc.Current.T("Audit.Pass", chain.Count.ToString("N0")) : Loc.Current.T("Audit.Break", chain.BreakIndex))
+            + " · " + chain.Chain + (chain.File == null ? "" : " · " + chain.File)))
+        : _verification?.Passed switch
+        {
+            true => Loc.Current.T("Audit.Pass", _verification.Count.ToString("N0")),
+            false => Loc.Current.T("Audit.Break", _verification.BreakIndex),
+            _ => Loc.Current["Feature.NotConnected"],
+        };
     public long? BreakIndex => _verification?.BreakIndex;
     public string Coverage => Audit.Coverage.Resolve();
     public void Verify() => Run(() => { _verification = Audit.Verify(); _auditSelection = null; Raise(null); return LocalizedText.Empty; });

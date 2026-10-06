@@ -63,6 +63,10 @@ namespace TiaOpenness.Core.Environment
         public string DataRoot { get; set; }
         public string ConfigDirectory { get; set; }
         public string LogsDirectory { get; set; }
+        public string DiagnosticsDirectory { get; set; }
+        public string AuditDirectory { get; set; }
+        public string[] LogReadRoots { get; set; }
+        public string[] AuditReadRoots { get; set; }
         public bool UserFallback { get; set; }
         public string HttpPrefix { get; set; }
         public string HttpConfigurationPath { get; set; }

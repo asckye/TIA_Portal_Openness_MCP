@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (timeoutSeconds < 1 || timeoutSeconds > 60) throw new ArgumentException("timeoutSeconds 1..60 required.");
                 var root = EcosystemFiles.RepositoryRoot();
                 var bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/simaticml_decode_bridge.py");
-                var python = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? Path.Combine(root, "TiaMcp_Output", "ecosystem-python", "Scripts", "python.exe");
+                var python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
                 if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Configure TIA_MCP_PLC_TOOLS_PYTHON to Python 3.11+.");
                 var run = await EcosystemFiles.Run(python, new[] { "-I", "-B", "-X", "utf8", bridge }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
                 meta["exitCode"] = run["exitCode"]!.DeepClone(); meta["timedOut"] = run["timedOut"]!.DeepClone();
@@ -84,6 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["success"] = ok; meta["operationSuccess"] = ok;
                 return new ResponseMessage { Message = ok ? "Analysis-only decoded logic; do not import this output." : "Decode refused or failed; inspect data.error.", Meta = meta };
             } catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
+            catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }
         }
     }

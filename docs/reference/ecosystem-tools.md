@@ -17,6 +17,13 @@
 
 随包许可、依赖与版权见[第三方清单](../licenses/THIRD-PARTY-NOTICES.md)。Siemens PublicAPI 和第三方测试工程不随交付包分发。
 
+伴随 Python 环境由 `scripts/ecosystem/Install-PlcTools.ps1` 准备，默认位于
+`%LOCALAPPDATA%\TiaMcp\ecosystem-python`；需要 Python 3.12+。引擎优先使用显式
+`TIA_MCP_PLC_TOOLS_PYTHON`，否则读取该环境的 `Scripts\python.exe`。LocalAppData 缺失、
+环境不可写或解释器不存在时返回 `IO_FAILED` 与路径，不从旧私人环境自动复制或执行。
+开发者可用 `-EnvironmentPath <absolute-path>` 保留自选位置；维护者现有仓库 `TiaMcp_Output`
+环境也必须通过该参数或解释器变量显式选择，不作为默认值。
+
 ## 现有工具用途
 
 | 工具 | 使用范围与结果判断 |

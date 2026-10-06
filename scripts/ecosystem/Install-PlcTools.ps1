@@ -1,12 +1,22 @@
 param([string]$Python = 'python', [string]$EnvironmentPath = '')
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-if (!$EnvironmentPath) { $EnvironmentPath = Join-Path $repo 'TiaMcp_Output/ecosystem-python' }
+if (!$EnvironmentPath) {
+    if (!$env:LOCALAPPDATA -or ![IO.Path]::IsPathRooted($env:LOCALAPPDATA)) { throw "IO_FAILED: LocalAppData is unavailable: $env:LOCALAPPDATA/TiaMcp/ecosystem-python" }
+    $EnvironmentPath = Join-Path $env:LOCALAPPDATA 'TiaMcp/ecosystem-python'
+}
+if (![IO.Path]::IsPathRooted($EnvironmentPath)) { throw "IO_FAILED: EnvironmentPath must be absolute: $EnvironmentPath" }
 $environment = [IO.Path]::GetFullPath($EnvironmentPath)
+try {
+    [IO.Directory]::CreateDirectory($environment) | Out-Null
+    $probePath = Join-Path $environment ('.write-probe-' + [Guid]::NewGuid().ToString('N'))
+    $probe = [IO.File]::Open($probePath, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try { $probe.WriteByte(0) } finally { $probe.Dispose(); [IO.File]::Delete($probePath) }
+} catch { throw "IO_FAILED: Python environment is not writable: $environment; $($_.Exception.Message)" }
 & $Python -c 'import sys; assert sys.version_info >= (3,12), "Python 3.12+ required"'
 if ($LASTEXITCODE) { throw 'Unsupported Python' }
 & $Python -m venv $environment
-if ($LASTEXITCODE) { throw 'venv creation failed' }
+if ($LASTEXITCODE) { throw "IO_FAILED: venv creation failed: $environment" }
 $exe = Join-Path $environment 'Scripts/python.exe'
 # The bridges import the pinned source trees directly. Only their external runtime
 # dependencies are installed; local pyproject.toml/build tooling is not delivered.

@@ -72,6 +72,13 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string Names(string[]? input, string? omitted)
             => input == null ? omitted! : V4Json.Serialize(input);
 
+        internal static string Workspace(string workspaceRoot)
+        {
+            if (string.IsNullOrWhiteSpace(workspaceRoot) || !System.IO.Path.IsPathRooted(workspaceRoot) || !System.IO.Directory.Exists(workspaceRoot))
+                throw new Rejected(McpServer.InvalidInput("workspaceRoot"));
+            return workspaceRoot;
+        }
+
         internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool writes = false, bool current = false, int? offset = null, int? limit = null)
         {
             try
@@ -96,6 +103,9 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult Failure(string tool, Exception error, bool writes, bool current)
         {
             var cause = error.InnerException ?? error;
+            if (cause is DataLocationIOException io)
+                return Result(tool, null, new Error(io.Message, new IoFailedDetails("ecosystem-python", io.TargetPath)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (cause is BundleResourceUnavailableException resource)
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);

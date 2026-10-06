@@ -56,11 +56,11 @@ namespace TiaMcpServer
         internal static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
             => GlobalLibraryPackageAnalyzer.AppendSectionSummary(md, parent, key, title);
 
-        internal static void SyncMotorMinimalArtifacts(string projectName, string projectDirectory, string importDir)
+        internal static void SyncMotorMinimalArtifacts(string projectName, string projectDirectory, string importDir, string workspaceRoot)
         {
             try
             {
-                var packRoot = Path.Combine(Directory.GetCurrentDirectory(), "TIA_MCP_AI_PACK");
+                var packRoot = CliOptions.RequireInput(workspaceRoot, "--workspace-root");
                 var refRoot = Path.Combine(packRoot, "references", "motor_minimal_latest_fixed");
                 var reportsRoot = Path.Combine(packRoot, "references", "reports");
                 Directory.CreateDirectory(refRoot);
@@ -607,9 +607,7 @@ END_DATA_BLOCK
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_HMI_Template_Validation_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 : options.ProjectName!;
-            var templateDirectory = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? TiaOpenness.Shared.BundleLayout.RequirePath(TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory), "templates/hmi", true)
-                : options.HmiTemplateDirectory!;
+            var templateDirectory = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
 
             Directory.CreateDirectory(projectDirectory);
             var reportDir = Path.Combine(projectDirectory, projectName + "_reports");
@@ -734,9 +732,7 @@ END_DATA_BLOCK
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_HMI_Template_Binding_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 : options.ProjectName!;
-            var templateDirectory = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? TiaOpenness.Shared.BundleLayout.RequirePath(TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory), "templates/hmi", true)
-                : options.HmiTemplateDirectory!;
+            var templateDirectory = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             Directory.CreateDirectory(projectDirectory);
             var reportDir = Path.Combine(projectDirectory, projectName + "_reports");
             Directory.CreateDirectory(reportDir);
@@ -1058,16 +1054,14 @@ END_DATA_BLOCK
 
         internal static void RunValidateMappedHmiTemplateBindings(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
+            var workspaceRoot = options.RequireWorkspaceRoot();
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
                 : options.ProjectDirectory!;
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_Mapped_HMI_Template_Binding_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 : options.ProjectName!;
-            var templateDirectory = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var templateDirectory = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var plcExportDirectory = options.PlcExportDirectory ?? "";
             var mappingPath = options.HmiTemplateMappingPath ?? "";
             var tiaStepTimeoutSeconds = Math.Max(15, options.TiaStepTimeoutSeconds ?? 90);

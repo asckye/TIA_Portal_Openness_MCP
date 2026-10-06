@@ -290,10 +290,13 @@ namespace TiaOpenness.Shared
         }
 
         public static string RequireWorkbenchRoot(string baseDirectory, string explicitRoot = null)
+            => FindWorkbenchRoot(baseDirectory, explicitRoot)
+                ?? throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+
+        public static string FindWorkbenchRoot(string baseDirectory, string explicitRoot = null)
         {
             if (explicitRoot == null && AppDomain.CurrentDomain.GetData(SelectionKey) is string selected) return selected;
-            return ResolveWorkbenchRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"))
-                ?? throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
+            return ResolveWorkbenchRoot(baseDirectory, explicitRoot, Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT"));
         }
 
         public static string InitializeWorkbench(string baseDirectory, string[] args, out string[] remaining)

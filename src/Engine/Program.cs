@@ -22,8 +22,7 @@ namespace TiaMcpServer
 {
     public class Program
     {
-        private static string DiagLogPath => Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.log");
-        private static readonly string DiagLogPathLocal = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.startup.log");
+        private static string LogReleaseKey => EngineRouter.CompiledTiaMajorVersion.ToString();
 
         private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)
         {
@@ -55,6 +54,8 @@ namespace TiaMcpServer
             {
                 var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);
                 TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
+                TiaOpenness.Shared.DataLocations.InitializeHost(LogReleaseKey);
+            TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
             }
             catch (ArgumentException error)
             {
@@ -108,7 +109,14 @@ namespace TiaMcpServer
                     return;
                 }
 
-                var options = CliOptions.ParseArgs(args);
+                CliOptions options;
+                try { options = CliOptions.ParseArgs(args); options.ValidatePrivateInputs(); }
+                catch (ArgumentException error)
+                {
+                    Console.Error.WriteLine(error.Message);
+                    Environment.ExitCode = 64;
+                    return;
+                }
 
                 // Default logging to stderr (mode 1) when the user doesn't pass --logging,
                 // so errors are visible out of the box. Users can opt out with --logging 0
@@ -879,10 +887,10 @@ namespace TiaMcpServer
         }
         internal static void LogDiag(string message)
         {
-            // Console may be swallowed by host; always persist to %TEMP%.
+            // Console may be swallowed by the host; persist the process log.
             try { Console.Error.WriteLine(message); } catch /* swallow(logging-failure): a closed stderr stream must not interrupt diagnostic file writes */ { }
-            try { File.AppendAllText(DiagLogPath, message + Environment.NewLine); } catch /* swallow(logging-failure): failure to append the temporary diagnostic log must not interrupt the local log attempt */ { }
-            try { File.AppendAllText(DiagLogPathLocal, message + Environment.NewLine); } catch /* swallow(logging-failure): failure to append the local diagnostic log must not escape the logging helper */ { }
+            try { TiaOpenness.Shared.DataLocations.Current.AppendLog("TiaMcpServer.log", LogReleaseKey, message); }
+            catch (Exception error) { TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer", error); }
         }
 
         private static void LogExceptionSafe(Exception ex)

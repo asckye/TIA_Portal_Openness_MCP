@@ -15,6 +15,9 @@ namespace TiaOpenness.Gui.Services;
 public sealed class AuditLogService : ObservableObject, IAuditLogService, IDisposable
 {
     private readonly string _directory, _diagnostics, _settingsPath;
+    private readonly string[]? _chains;
+    private string[] Directories => _chains ?? DataLocations.Current.AuditReadRoots;
+    private string _viewDirectory;
     private readonly Action<string> _open;
     private readonly DispatcherTimer _timer;
     private IReadOnlyList<AuditEvent> _events = Array.Empty<AuditEvent>();
@@ -23,9 +26,11 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     private bool _disposed, _refreshing;
     private string _stamp = "";
 
-    public AuditLogService(string? directory = null, string? diagnostics = null, string? settingsPath = null, Action<string>? open = null)
+    public AuditLogService(string? directory = null, string? diagnostics = null, string? settingsPath = null, Action<string>? open = null, string[]? chains = null)
     {
         _directory = directory ?? DataLocations.Current.AuditDirectory;
+        _chains = chains ?? (directory == null ? null : new[] { directory });
+        _viewDirectory = _directory;
         _diagnostics = diagnostics ?? DataLocations.Current.DiagnosticsDirectory;
         _settingsPath = settingsPath ?? JournalRetention.SettingsPath;
         _open = open ?? (path => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }));
@@ -48,28 +53,38 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     }
     public AuditVerification Verify()
     {
-        var report = new AuditLog(_directory).Verify();
+        var reports = Directories.Select(path => new AuditLog(path).Verify()).ToArray();
+        var broken = reports.FirstOrDefault(report => !report.Passed);
+        // Show the failing chain's own indices so JumpToBreak never selects another chain's row.
+        if (broken?.Chain != null && _viewDirectory != broken.Chain)
+        {
+            _viewDirectory = broken.Chain;
+            _events = Array.Empty<AuditEvent>(); Raise(nameof(Events)); Raise(nameof(TotalCount));
+        }
         Refresh();
-        return new AuditVerification(report.Passed, report.Count, report.BreakIndex);
+        return new AuditVerification(broken == null, broken?.Count ?? reports.Sum(report => report.Count), broken?.BreakIndex)
+        { Chain = broken?.Chain, File = broken?.File, Chains = reports.Select(report => new AuditChainVerification(report.Chain!, report.Passed, report.Count, report.BreakIndex, report.File)).ToArray() };
     }
     public LocalizedText OpenFolder()
     {
-        Directory.CreateDirectory(_directory); _open(_directory); return LocalizedText.Empty;
+        try { Directory.CreateDirectory(_viewDirectory); _open(_viewDirectory); return LocalizedText.Empty; }
+        catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+        { throw new IOException("DIAGNOSTIC_WRITE_FAILED: " + _viewDirectory + ": " + ex.Message, ex); }
     }
     internal void Refresh()
     {
         if (_disposed) return;
         try
         {
-            var snapshot = ReadSnapshot();
+            var snapshot = ReadSnapshot(_viewDirectory);
             Apply(snapshot.Events, snapshot.Coverage, snapshot.Retention); _stamp = Stamp();
         }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
         { Trace.TraceWarning("Audit view unavailable: " + ex.GetType().Name); }
     }
-    private (AuditEvent[] Events, JournalCoverage Coverage, JournalRetention Retention) ReadSnapshot()
+    private (AuditEvent[] Events, JournalCoverage Coverage, JournalRetention Retention) ReadSnapshot(string directory)
     {
-        var rows = new AuditLog(_directory).Read();
+        var rows = new AuditLog(directory).Read();
         var events = rows.Select((row, index) => new AuditEvent(index + 1L, DateTimeOffset.Parse(row.Utc), row.Event switch
         {
             "request" => AuditEventType.Request, "start" => AuditEventType.Start, "end" => AuditEventType.End,
@@ -84,8 +99,8 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
         _coverage = coverage; _retention = retention;
         Raise(nameof(Coverage)); Raise(nameof(FileSizeMb)); Raise(nameof(Copies));
     }
-    private string Stamp() => string.Join("|", new[] { _directory, _diagnostics }.Where(Directory.Exists)
-        .SelectMany(d => Directory.GetFiles(d)).Where(p => !p.EndsWith(".lock", StringComparison.Ordinal))
+    private string Stamp() => string.Join("|", Directories.Append(_diagnostics).Where(Directory.Exists)
+        .SelectMany(d => Directory.GetFiles(d, "*")).Where(p => !p.EndsWith(".lock", StringComparison.Ordinal))
         .Append(_settingsPath).Where(File.Exists).OrderBy(p => p, StringComparer.Ordinal)
         .Select(p => { var file = new FileInfo(p); return p + ":" + file.Length + ":" + file.LastWriteTimeUtc.Ticks; }));
     private async void OnTick(object? sender, EventArgs e)
@@ -96,8 +111,9 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
         {
             var stamp = Stamp();
             if (_stamp == stamp) return;
-            var snapshot = await Task.Run(ReadSnapshot);
-            if (_disposed) return;
+            string directory = _viewDirectory;
+            var snapshot = await Task.Run(() => ReadSnapshot(directory));
+            if (_disposed || directory != _viewDirectory) return;
             Apply(snapshot.Events, snapshot.Coverage, snapshot.Retention); _stamp = stamp;
         }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)

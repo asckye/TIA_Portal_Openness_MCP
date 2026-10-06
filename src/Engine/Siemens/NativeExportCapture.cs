@@ -22,7 +22,14 @@ namespace TiaMcpServer.Siemens
         internal string? Format, FailurePhase;
         private readonly string scope;
         private static readonly object LogGate = new object();
-        private static readonly string DiagnosticLog = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.native-export.log");
+        private static string? DiagnosticLog
+        {
+            get
+            {
+                try { return TiaOpenness.Shared.DataLocations.Current.LogFile("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey); }
+                catch (Exception ex) { TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.native-export", ex); return null; }
+            }
+        }
 
         private NativeExportCapture(string scope, bool libraryVersion)
         { this.scope = scope; Script = !libraryVersion; }
@@ -36,7 +43,8 @@ namespace TiaMcpServer.Siemens
             var text = string.Format("[native-export] utc={0:O} operation={1} phase={2} outcome={3}{4}",
                 DateTime.UtcNow, OperationId, Phase, outcome, error == null ? "" : Environment.NewLine + error);
             try { Console.Error.WriteLine(text); } catch /* swallow(logging-failure): closed stderr must not fail the native export read */ { }
-            try { lock (LogGate) { File.AppendAllText(DiagnosticLog, text + Environment.NewLine); } } catch /* swallow(logging-failure): diagnostic file IO must not replace the native export result */ { }
+            try { lock (LogGate) { TiaOpenness.Shared.DataLocations.Current.AppendLog("TiaMcpServer.native-export.log", TiaOpenness.Shared.DataLocations.HostReleaseKey, text); } }
+            catch (Exception ex) { TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.native-export", ex); }
         }
 
         internal static NativeExportCapture Read(object target, string scope, bool libraryVersion, DirectoryInfo directory)

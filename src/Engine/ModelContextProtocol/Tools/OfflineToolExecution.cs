@@ -47,6 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 if (cause is TiaOpenness.Shared.BundleResourceUnavailableException) throw;
+                if (cause is TiaOpenness.Shared.DataLocationIOException) throw;
                 meta["error"] = cause.ToString();
                 ResponseMeta.Failed(meta);
                 meta["status"] = cause is PortalException pex ? pex.Code.ToString()

@@ -17,7 +17,9 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public static JsonObject Run(string workspaceRoot, string reportDirectory)
         {
-            workspaceRoot = Path.GetFullPath(string.IsNullOrWhiteSpace(workspaceRoot) ? Directory.GetCurrentDirectory() : workspaceRoot);
+            if (string.IsNullOrWhiteSpace(workspaceRoot) || !Path.IsPathRooted(workspaceRoot) || !Directory.Exists(workspaceRoot))
+                throw new ArgumentException("INVALID_ARGUMENT: An existing absolute workspaceRoot is required.", nameof(workspaceRoot));
+            workspaceRoot = Path.GetFullPath(workspaceRoot);
             Directory.CreateDirectory(reportDirectory);
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var suiteDir = Path.Combine(reportDirectory, "preflight_" + stamp);

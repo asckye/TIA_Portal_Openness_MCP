@@ -13,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly object Sync = new object();
         private static readonly int ProcessId = Process.GetCurrentProcess().Id;
-        private static readonly string ProcessKey = ProcessId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N");
+        private static readonly string ProcessKey = TiaOpenness.Shared.DataLocations.ProcessKey;
         private static readonly AsyncLocal<string?> Current = new AsyncLocal<string?>();
         private static IJournalSink sink = new FileJournalSink();
         private static Func<string>? correlationSource;
@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public void Write(Func<string> row)
             {
                 var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
-                if (!Path.IsPathRooted(root)) throw new IOException("Diagnostic path must be absolute.");
+                if (!Path.IsPathRooted(root)) throw new IOException("Diagnostic path must be absolute: " + root);
                 Directory.CreateDirectory(root);
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");
                 string text = row();
@@ -85,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 lock (Sync) sink.Write(row);
             }
-            catch (Exception ex) { lock (Sync) { failedWrites++; lastWriteFailure = ex.GetType().Name; } try { Console.Error.WriteLine("Invocation journal unavailable: " + ex.GetType().Name); } catch /* swallow(logging-failure): stderr may be unavailable while reporting a journal write failure */ { } }
+            catch (Exception ex) { lock (Sync) { failedWrites++; lastWriteFailure = ex.GetType().Name; } try { Console.Error.WriteLine("DIAGNOSTIC_WRITE_FAILED: " + ex.Message); } catch /* swallow(logging-failure): stderr may be unavailable while reporting a journal write failure */ { } }
         }
         internal static string FormatRow(DateTime utc, string id, string name, string phase, int processId, string? objectType, string? objectPath,
             string? binding, int threadId, string apartment, JsonLineObject? details)

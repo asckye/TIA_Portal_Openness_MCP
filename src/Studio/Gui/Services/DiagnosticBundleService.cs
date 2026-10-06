@@ -153,7 +153,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         writer.Write(text);
     }
 
-    private static (string Text, bool Truncated) Read(DiagnosticInput input)
+    internal static (string Text, bool Truncated) Read(DiagnosticInput input)
     {
         int limit = input.Tail ? 262144 : 2097152;
         string? content = input.Content;
@@ -185,30 +185,42 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
             if (Path.GetExtension(file).ToLowerInvariant() is ".json" or ".settings" or ".config")
                 inputs.Add(new("config", file, "config/" + Path.GetFileName(file)));
         inputs.Add(new("config", DataLocations.Current.UiFilePath, "config/ui.settings"));
-        inputs.Add(new("workbench-log", App.CrashLogPath, "logs/workbench/crash.log", true));
-        inputs.Add(new("workbench-log", Path.Combine(context.LogsDirectory, "TiaOpenness.log"), "logs/workbench/workbench.log", true));
+        var logRoots = context.LogReadRoots ?? new[] { context.LogsDirectory };
+        for (int index = 0; index < logRoots.Length; index++)
+            AddLogs(inputs, Path.Combine(logRoots[index], "studio"), "workbench-log", "logs/studio" + (logRoots.Length == 1 ? "" : "/root-" + (index + 1)));
         // The existing operation log is held by the open Workbench, rather than persisted to a file.
         var activity = System.Windows.Application.Current?.Dispatcher.Invoke(() => System.Windows.Application.Current.Windows
             .OfType<MainWindow>().Select(window => ((ViewModels.MainViewModel)window.DataContext).Activity.Log).ToArray()) ?? [];
         for (int index = 0; index < activity.Length; index++)
             inputs.Add(new("workbench-log", "current Workbench activity " + (index + 1), "logs/workbench/activity-" + (index + 1) + ".log", true, activity[index]));
         if (activity.Length == 0) inputs.Add(new("workbench-log", "current Workbench activity", "logs/workbench/activity.log", true));
-        inputs.Add(new("host-log", Path.Combine(context.LogsDirectory, "TiaMcpServer.log"), "logs/hosts/shared.log", true));
-        string diagnostics = DataLocations.Current.DiagnosticsDirectory;
+        string diagnostics = context.DiagnosticsDirectory ?? DataLocations.Current.DiagnosticsDirectory;
         var journals = Directory.Exists(diagnostics) ? Directory.GetFiles(diagnostics, "calls-*.jsonl*")
             .OrderByDescending(File.GetLastWriteTimeUtc).Take(64).ToArray() : [];
         foreach (string journal in journals)
             inputs.Add(new("host-log", journal, "logs/hosts/journal/" + Path.GetFileName(journal), true));
         if (journals.Length == 0) inputs.Add(new("host-log", Path.Combine(diagnostics, "calls-*.jsonl"), "logs/hosts/journal", true));
-        if (context.BundleRoot != null)
-            foreach (var release in TiaVersionCatalog.All)
+        foreach (var release in TiaVersionCatalog.Runnable)
+        {
+            for (int index = 0; index < logRoots.Length; index++)
+                AddLogs(inputs, Path.Combine(logRoots[index], release.Key), "host-log", "logs/hosts/" + release.Key + (logRoots.Length == 1 ? "" : "/root-" + (index + 1)));
+            if (context.BundleRoot != null)
             {
                 string host = EnvironmentBundleFiles.Host(context.BundleRoot, release.Key);
-                inputs.Add(new("host-log", Path.Combine(Path.GetDirectoryName(host)!, "TiaMcpServer.startup.log"), "logs/hosts/" + release.Key + "/startup.log", true));
-                inputs.Add(new("host-log", Path.Combine(context.LogsDirectory, "v" + release.Key + ".log"), "logs/hosts/" + release.Key + "/host.log", true));
                 string config = release.IsFullEngine ? host + ".config" : Path.ChangeExtension(host, ".runtimeconfig.json");
                 inputs.Add(new("host-config", config, "config/hosts/" + release.Key + "/" + Path.GetFileName(config)));
             }
+        }
+        var auditRoots = context.AuditReadRoots ?? new[] { context.AuditDirectory ?? DataLocations.Current.AuditDirectory };
+        for (int index = 0; index < auditRoots.Length; index++)
+            foreach (var file in Directory.Exists(auditRoots[index]) ? Directory.GetFiles(auditRoots[index], "audit-*.jsonl").OrderByDescending(File.GetLastWriteTimeUtc).Take(64) : [])
+                inputs.Add(new("host-log", file, "logs/audit/chain-" + (index + 1) + "/" + Path.GetFileName(file), true));
         return inputs;
+    }
+
+    internal static void AddLogs(List<DiagnosticInput> inputs, string directory, string kind, string archive)
+    {
+        var files = Directory.Exists(directory) ? Directory.GetFiles(directory, "*.log").OrderByDescending(File.GetLastWriteTimeUtc).Take(64).ToArray() : [];
+        foreach (var file in files) inputs.Add(new(kind, file, archive + "/" + Path.GetFileName(file), true));
     }
 }

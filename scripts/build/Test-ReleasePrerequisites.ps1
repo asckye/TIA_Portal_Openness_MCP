@@ -183,7 +183,10 @@ $probes = @(
     }},
     @{Name='Ecosystem Python'; Check={
         $candidate = $EcosystemPython
-        if (-not $candidate) { $candidate = Join-Path $RepoRoot 'TiaMcp_Output/ecosystem-python/Scripts/python.exe' }
+        if (-not $candidate) {
+            Assert-PrerequisiteValue ([bool]$env:LOCALAPPDATA -and [IO.Path]::IsPathRooted($env:LOCALAPPDATA)) "IO_FAILED: LocalAppData is unavailable: $env:LOCALAPPDATA/TiaMcp/ecosystem-python"
+            $candidate = Join-Path $env:LOCALAPPDATA 'TiaMcp/ecosystem-python/Scripts/python.exe'
+        }
         $settings.EcosystemPython = Resolve-ReleaseCommand $candidate
         $bridge = Join-Path $RepoRoot 'scripts/ecosystem/plc_tools_bridge.py'
         $code = "import runpy,sys; assert sys.version_info >= (3,12); import reportlab; m=runpy.run_path(sys.argv[1]); group,errors=m['load_groups'](); assert not errors, errors; assert len(m['catalog'](group)) >= 49"

@@ -21,6 +21,10 @@ catch (TiaOpenness.Shared.BundleResourceUnavailableException ex) { Console.Error
 catch (ArgumentException ex) { Console.Error.WriteLine("RESOURCE_UNAVAILABLE: " + ex.Message); return 64; }
 try { options = HostOptions.Parse(args, AppContext.BaseDirectory); }
 catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 2; }
+TiaOpenness.Shared.DataLocations.InitializeHost(options.ReleaseKey);
+TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
+var fileLogger = new HostFileLogger(options.ReleaseKey);
+fileLogger.Write("TiaMcpServer.log", DateTimeOffset.UtcNow.ToString("O") + " release=" + options.ReleaseKey);
 
 if (options.CatalogOnly)
 {
@@ -36,6 +40,7 @@ if (options.Transport == "http")
     var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
+    builder.Logging.AddProvider(fileLogger);
     builder.Logging.SetMinimumLevel(LogLevel.Warning);
     builder.WebHost.UseSetting("urls", options.HttpPrefix);
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
@@ -74,6 +79,7 @@ else
     using var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled);
     var builder = Host.CreateEmptyApplicationBuilder(settings: null);
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
+    builder.Logging.AddProvider(fileLogger);
     builder.Logging.SetMinimumLevel(LogLevel.Warning);
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
         .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled));

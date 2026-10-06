@@ -40,7 +40,13 @@ public interface ICallJournalService : INotifyPropertyChanged
 
 public sealed record AuditEvent(long Index, DateTimeOffset Time, AuditEventType Type, string ToolObject,
     string Result, string Hash);
-public sealed record AuditVerification(bool? Passed, int Count = 0, long? BreakIndex = null);
+public sealed record AuditChainVerification(string Chain, bool Passed, int Count, long? BreakIndex, string? File);
+public sealed record AuditVerification(bool? Passed, int Count = 0, long? BreakIndex = null)
+{
+    public string? Chain { get; init; }
+    public string? File { get; init; }
+    public IReadOnlyList<AuditChainVerification> Chains { get; init; } = Array.Empty<AuditChainVerification>();
+}
 
 public interface IAuditLogService : INotifyPropertyChanged
 {

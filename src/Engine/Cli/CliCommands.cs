@@ -35,7 +35,8 @@ namespace TiaMcpServer.Cli
                     case "prewarm": return Prewarm(args);
                     case "config": return Config(args);
                     case "doctor": return DoctorCli(args);
-                    case "audit": return TiaOpenness.Shared.AuditCli.Verify(Opt(args, "--path") ?? TiaOpenness.Shared.DataLocations.Current.AuditDirectory, Console.Out);
+                    case "audit": return TiaOpenness.Shared.AuditCli.Verify(Opt(args, "--path") is string auditPath
+                        ? new[] { auditPath } : TiaOpenness.Shared.DataLocations.Current.AuditReadRoots, Console.Out);
                     case "schema": Console.WriteLine(SchemaText); return 0;
                     case "version": Console.WriteLine("tia " + AssemblyVersion()); return 0;
                     default: PrintUsage(); return 0;
@@ -146,6 +147,13 @@ namespace TiaMcpServer.Cli
                 : "tia doctor — environment check" + (fix ? " (fix mode)" : " (read-only; pass --fix to auto-add the Openness group)"));
 
             bool ready = true;
+            try
+            {
+                string logs = TiaOpenness.Shared.DataLocations.Current.LogDirectory(TiaMcpServer.Siemens.EngineRouter.CompiledTiaMajorVersion.ToString());
+                Console.WriteLine("Logs: " + logs);
+                Console.WriteLine("Diagnostics: " + TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory);
+            }
+            catch (IOException error) { Console.Error.WriteLine(error.Message); ready = false; }
 
             void Line(bool ok, string name, string detail, string? fixHint)
             {

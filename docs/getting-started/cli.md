@@ -2,6 +2,20 @@
 
 本页适用于 V20/V21 完整引擎的 CLI。V14 SP1–V19 基础引擎不提供同一套 `gen` / `patch` 命令。首次使用可先完成[新手指南](beginners.zh-CN.md)；MCP 客户端配置使用[配置器](configuration.md)。
 
+包资源使用 `--bundle-root` / `TIA_MCP_BUNDLE_ROOT`。私人报告和夹具命令另需
+`--workspace-root <existing-absolute-directory>`；工作区不从 cwd 或包根推断。
+HMI 模板命令必须同时给出 `--hmi-template-directory <absolute-directory>`，组件目录分析还需
+`--global-library-probe-json-path <absolute-file>`。缺失输入返回 `INVALID_ARGUMENT`、退出 64。
+已知 `TMP_EXPORT`/报告布局只在明确选择的工作区内解释。
+
+`tia doctor` 显示实际日志与诊断目录。宿主启动及运行消息共用 `data/logs/<releaseKey>/TiaMcpServer-<processKey>.log`，
+Workbench 崩溃日志位于 `data/logs/studio`；进程键含 PID、启动 UTC、GUID。只读安装的普通日志回退到 `%TEMP%\TiaMcp\logs`。
+每次宿主/Workbench 启动按用途保留最新 32 份，跳过锁定/活动进程文件及非产品文件；写入失败每用途每进程报告一次 `IO_FAILED`。
+审计写入 `data/logs/audit` 的共享单链，只读安装回退到 `%LOCALAPPDATA%\TiaMcp\logs\audit`，失败报 `DIAGNOSTIC_WRITE_FAILED`。
+`tia audit verify` 分别校验主目录和已存在的回退链，报告链目录、断点文件及序号；显式数据根不回退。
+Python 默认环境为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python`；自选解释器用 `TIA_MCP_PLC_TOOLS_PYTHON`，
+安装步骤见[生态工具](../reference/ecosystem-tools.md)。
+
 ## 选择匹配的引擎
 
 从完整交付包根目录打开 PowerShell。下列命令以 V21 为例；V20 使用 `runtime\v20\TiaMcp.Engine.V20.exe` 并核对 spec 中各输入格式是否支持 V20。非默认安装位置使用该引擎支持的 `--tia-portal-location` 和匹配的 `--tia-major-version`。

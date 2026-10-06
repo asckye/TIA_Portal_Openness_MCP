@@ -22,6 +22,26 @@ public sealed class CallJournalTests : IDisposable
                 ["completeness"] = completeness } }.ToJsonString();
 
     public CallJournalTests() => Directory.CreateDirectory(root);
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Call_panel_keeps_diagnostic_evidence_separate_from_release_logs(bool readOnly)
+    {
+        string bundle = Path.Combine(root, "bundle");
+        string output = Directory.CreateDirectory(Path.Combine(bundle, "runtime", "v21")).FullName;
+        Directory.CreateDirectory(Path.Combine(bundle, "manifest"));
+        File.WriteAllText(Path.Combine(bundle, "manifest", "package-manifest.json"), "{}");
+        if (readOnly) File.WriteAllText(Path.Combine(bundle, "data"), "blocked");
+        var locations = DataLocations.Resolve(output, null, Path.Combine(root, "local"), Path.Combine(root, "temp"));
+        string calls = locations.DiagnosticsDirectory;
+        Directory.CreateDirectory(calls);
+        File.WriteAllLines(Path.Combine(calls, "calls-two-processes.jsonl"), Rows("path-check", result: Envelope()));
+        locations.AppendLog("TiaMcpServer.log", "21", "ordinary log");
+        using var reader = new CallJournalReader(calls, false);
+        Assert.Equal("request", Assert.Single(reader.Calls).RequestId);
+        Assert.NotEqual(calls, locations.LogDirectory("21"));
+        Assert.Empty(Directory.GetFiles(output));
+    }
     private static string[] Rows(string id, string args = "{}", string result = null, string host = "engine")
     {
         var rows = new List<string>();

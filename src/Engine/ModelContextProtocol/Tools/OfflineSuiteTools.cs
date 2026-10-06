@@ -218,7 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult RunOfflineReleaseValidationSuiteV4(
             [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
             [Description("reportDirectory: directory where suite files and reports will be written.")] string reportDirectory)
-            => OfflineContracts.Run("RunOfflineReleaseValidationSuite", () => RunOfflineReleaseValidationSuite(workspaceRoot, reportDirectory), writes: true, current: false);
+            => OfflineContracts.Run("RunOfflineReleaseValidationSuite", () => RunOfflineReleaseValidationSuite(OfflineContracts.Workspace(workspaceRoot), reportDirectory), writes: true, current: false);
 
         public ResponseJsonReport RunOfflineReleaseValidationSuite(
             [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
@@ -364,7 +364,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult RunClassicHmiTemporaryImportPreflightV4(
             [Description("workspaceRoot: repository/workspace root.")] string workspaceRoot,
             [Description("reportDirectory: directory where preflight files and reports will be written.")] string reportDirectory)
-            => OfflineContracts.Run("RunClassicHmiTemporaryImportPreflight", () => RunClassicHmiTemporaryImportPreflight(workspaceRoot, reportDirectory), writes: true, current: false);
+            => OfflineContracts.Run("RunClassicHmiTemporaryImportPreflight", () => RunClassicHmiTemporaryImportPreflight(OfflineContracts.Workspace(workspaceRoot), reportDirectory), writes: true, current: false);
 
         public ResponseJsonReport RunClassicHmiTemporaryImportPreflight(
             [Description("workspaceRoot: repository/workspace root.")] string workspaceRoot,

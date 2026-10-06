@@ -777,7 +777,7 @@ config_specs = [
     (S+"Gui/Configuration/ClientProfiles.cs", r'"(tia-portal(?:-vm)?)"', "server key 保留，command/args 改用新产品表"),
     (E+"Cli/McpConfigInstaller.cs", r'"(mcpServers|servers|tia-portal)"', "JSON/TOML 根及 server key 保留，command/args 更新"),
     (F+"HostOptions.cs", r'"(--worker-exe|--tia-release|--tia-version|--tia-portal-location)"', "精确版本与显式 worker 输入继续支持"),
-    (E+"ModelContextProtocol/Tools/EcosystemTools.cs", r'"(TIA_MCP_PLC_TOOLS_PYTHON)"', "显式 Python 优先；缺省环境改到 LocalAppData"),
+    (SH+"DataLocations.cs", r'"(TIA_MCP_PLC_TOOLS_PYTHON)"', "P6-39：显式 Python 优先；缺省环境为 LocalAppData/TiaMcp/ecosystem-python"),
 ]
 config_rows = []
 for path, pattern, change in config_specs:
@@ -801,13 +801,13 @@ layout_policies = [
     (S+"Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
     (S+"Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
     (SH+"DataLocations.cs", "TIA_MCP_DATA_DIRECTORY", "显式数据根或 bundle/data；不可写时按用途回退用户目录", "沿用数据根政策；logs 按发布键/studio 分组"),
-    (SH+"InvocationJournal.cs", "DiagnosticsDirectory", "data/diagnostics 调用日志；10 MiB + 一份 previous", "P6-45 读取；P6-46 配置保留与时间窗口，审计另存 logs/audit"),
-    (E+"Program.cs", "DiagLogPathLocal", "主日志经 DataLocations；启动日志仍在安装目录", "数据根 logs/<releaseKey>；只读安装沿用用户目录回退"),
-    (S+"Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "数据根 logs/studio；只读安装沿用用户目录回退"),
-    (E+"ModelContextProtocol/Tools/EcosystemTools.cs", "ecosystem-python", "包根下私有 Python 缺省", "显式解释器或 LocalAppData 环境"),
-    (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "TMP_EXPORT/src/cwd 探测", "显式 workspace/fixture 根"),
-    (E+"Cli/HmiTemplateBuilder.cs", "TIA_MCP_AI_PACK", "私有 HMI 模板默认输入", "显式模板路径"),
-    (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", "TMP_EXPORT", "私有套件夹具探测", "显式 fixture 根，workspaceRoot 不猜测"),
+    (SH+"InvocationJournal.cs", "DiagnosticsDirectory", "P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流", "P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链"),
+    (E+"Program.cs", "AppendLog", "P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log", "只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED"),
+    (S+"Gui/App.xaml.cs", ".crash.log", "P6-39：Studio 崩溃日志在 logs/studio，PID/启动时间文件名", "Workbench 根政策；无可写位置报 IO_FAILED"),
+    (E+"ModelContextProtocol/Tools/EcosystemTools.cs", "EcosystemPythonExecutable", "P6-39：LocalAppData/TiaMcp/ecosystem-python，显式 Python 优先", "不执行或迁移旧私有环境；缺失/不可写报 IO_FAILED"),
+    (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "P6-39：显式 --workspace-root；无包根/cwd/私人目录探测", "缺输入 INVALID_ARGUMENT；CLI 语法退出 64"),
+    (E+"Cli/HmiTemplateBuilder.cs", "RequireInput", "P6-39：显式 HMI 模板路径与 workspace 输出根", "缺输入 INVALID_ARGUMENT；不猜 TIA_MCP_AI_PACK"),
+    (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", "string workspaceRoot", "P6-39：显式 fixtureDirectory 与 workspaceRoot；不从夹具反推包根", "缺输入 INVALID_ARGUMENT；先拒绝再写报告"),
     (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", "WithAutoOffline", "错误文本触发下线再执行", "D1/L5 后 OFFLINE_REQUIRED，不重试"),
     (E+"Siemens/Services/OnlineDownloadService.cs", "ApplyConfiguration", "配置失败/候选路线继续", "D1/L5 后显式路线，失败/未知即停止"),
 ]
@@ -825,7 +825,7 @@ section("E. 布局、构建、打包、校验、Studio 和文档修改位置（�
 SCAN_TERMS = {
     "产品": r"TiaMcp\.(?:FoundationHost|Engine\.V(?:20|21))|TiaOpenness(?:\.Launcher)?\.exe|TiaMcpServer(?:[\"'<])|TiaMcpConfigurator",
     "根定位": r"TIA_MCP_REPOSITORY_ROOT|FindBundleRoot|FindInstallRoot|FindSiblingExe|BundleLayout|RepositoryRoot",
-    "写入/工作区": r"ecosystem-python|DiagLogPathLocal|startup\.log|\.crash\.log|GetWorkspaceRoot|TMP_EXPORT|TIA_MCP_AI_PACK",
+    "写入/工作区": r"ecosystem-python|DiagLogPathLocal|TiaMcpServer\.log|\.crash\.log|GetWorkspaceRoot|TMP_EXPORT|TIA_MCP_AI_PACK",
 }
 scan = []
 excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")

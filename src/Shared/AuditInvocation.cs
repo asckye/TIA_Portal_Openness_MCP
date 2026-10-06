@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 
 namespace TiaOpenness.Shared
@@ -15,7 +16,7 @@ namespace TiaOpenness.Shared
         {
             if (!write) return null;
             try { return new AuditInvocation(log ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool); }
-            catch (Exception ex) { Trace.TraceWarning("Audit log unavailable: " + ex.GetType().Name); return null; }
+            catch (Exception ex) { ReportFailure(ex); return null; }
         }
         internal void Complete(string? json)
         {
@@ -40,8 +41,10 @@ namespace TiaOpenness.Shared
         private void Emit(string kind, string? outcome = null)
         {
             try { log.Append(kind, requestId, host, release, tool, outcome); }
-            catch (Exception ex) { Trace.TraceWarning("Audit event unavailable: " + ex.GetType().Name); }
+            catch (Exception ex) { ReportFailure(ex); }
         }
+        private static void ReportFailure(Exception ex)
+            => DataLocations.ReportFailure("DIAGNOSTIC_WRITE_FAILED", ex);
         public void Dispose() => End("unknown");
     }
 }

@@ -16,8 +16,8 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public static JsonObject Run(string workspaceRoot, string reportDirectory)
         {
-            if (string.IsNullOrWhiteSpace(workspaceRoot))
-                throw new ArgumentException("Workspace root is required.", nameof(workspaceRoot));
+            if (string.IsNullOrWhiteSpace(workspaceRoot) || !Path.IsPathRooted(workspaceRoot) || !Directory.Exists(workspaceRoot))
+                throw new ArgumentException("INVALID_ARGUMENT: An existing absolute workspaceRoot is required.", nameof(workspaceRoot));
             if (string.IsNullOrWhiteSpace(reportDirectory))
                 throw new ArgumentException("Report directory is required.", nameof(reportDirectory));
 
@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var hmiTemplateDir = Path.Combine(workspaceRoot, "docs", "hmi_templates");
             var hmiTemplateMappingPath = Path.Combine(workspaceRoot, "docs", "hmi_template_mappings", "tia-hmi-template-plc-mapping.release.json");
 
-            var plcSuite = PlcBuilderOfflineValidationSuite.Run(plcFixtureDir, Path.Combine(suiteDir, "plc_builder"));
+            var plcSuite = PlcBuilderOfflineValidationSuite.Run(plcFixtureDir, Path.Combine(suiteDir, "plc_builder"), workspaceRoot);
             var classicSuite = ClassicHmiOfflineValidationSuite.Run(Path.Combine(suiteDir, "classic_hmi"));
             var classicImportPreflight = ClassicHmiTemporaryImportPreflightSuite.Run(workspaceRoot, Path.Combine(suiteDir, "classic_hmi_temporary_import_preflight"));
             var plcSymbolProbe = PlcSymbolManifestBuilder.RunProbe(Path.Combine(suiteDir, "plc_symbol_manifest"));

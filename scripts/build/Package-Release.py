@@ -83,7 +83,7 @@ def main():
     require(not any((name.startswith('runtime/') and name != 'runtime/README.md') or name == 'TiaOpenness.exe' for name in tracked),
             'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaOpenness.exe')
     # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
-    # configurator - never "whatever is on disk" (an engine started locally leaves TiaMcpServer.startup.log there).
+    # configurator. Other local output files are excluded from the delivery package.
     metadata = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))
     delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
     multi_path = root / 'manifest/multi-version-build.json'

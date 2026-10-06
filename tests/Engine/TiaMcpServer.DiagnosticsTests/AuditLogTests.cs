@@ -85,6 +85,33 @@ internal static class AuditLogTests
                 Check(child.ExitCode == sample.Exit && text.Trim().Split('\n').Length == 1 && JsonNode.Parse(text)!["passed"]!.GetValue<bool>() == (sample.Exit == 0), "CLI exit and one JSON report");
             }
         }
+        string independent = Fresh("independent-writers");
+        var writers = new[] { new AuditLog(independent, 1500), new AuditLog(independent, 1500) };
+        using (var start = new System.Threading.ManualResetEventSlim(false))
+        {
+            var tasks = writers.Select((writer, id) => System.Threading.Tasks.Task.Run(() =>
+            {
+                start.Wait();
+                for (int i = 0; i < 60; i++) writer.Append("request", id + ":" + i, "fixture", "21", "WriteFixture");
+            })).ToArray();
+            start.Set(); System.Threading.Tasks.Task.WaitAll(tasks);
+        }
+        var shared = new AuditLog(independent);
+        Check(shared.Verify().Passed && shared.Verify().Count == 120 && shared.Read().Select(row => row.RequestId).Distinct().Count() == 120,
+            "independent writers use the real cross-process lock and preserve one chain through rotation");
+        using (var output = new StringWriter())
+        {
+            Check(AuditCli.Verify(new[] { independent, Fresh("removed") }, output) == 3, "both root chains verified separately");
+            var reports = JsonNode.Parse(output.ToString())!.AsArray();
+            Check(reports.Count == 2 && reports[0]!["passed"]!.GetValue<bool>() && !reports[1]!["passed"]!.GetValue<bool>()
+                && reports[0]!["count"]!.GetValue<int>() == 120 && reports[1]!["breakIndex"]!.GetValue<int>() == 2
+                && reports[1]!["chain"]!.GetValue<string>() == Fresh("removed") && reports[1]!["file"]!.GetValue<string>().StartsWith("audit-"),
+                "CLI reports the chain and file without merging indices");
+        }
+        string readOnlyLock = Path.Combine(independent, ".audit.lock");
+        File.SetAttributes(readOnlyLock, FileAttributes.ReadOnly);
+        try { Check(shared.Verify().Passed && shared.Read().Count == 120, "read-only audit lock supports verification and reading without write access"); }
+        finally { File.SetAttributes(readOnlyLock, FileAttributes.Normal); }
         Console.WriteLine("COMPLETE: " + checks + " audit chain checks passed; no TIA connection");
     }
 }

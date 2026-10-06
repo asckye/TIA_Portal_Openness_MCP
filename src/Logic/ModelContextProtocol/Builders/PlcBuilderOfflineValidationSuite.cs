@@ -14,8 +14,12 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class PlcBuilderOfflineValidationSuite
     {
-        public static JsonObject Run(string fixtureDirectory, string reportDirectory)
+        public static JsonObject Run(string fixtureDirectory, string reportDirectory, string workspaceRoot)
         {
+            if (string.IsNullOrWhiteSpace(workspaceRoot) || !Path.IsPathRooted(workspaceRoot) || !Directory.Exists(workspaceRoot))
+                throw new ArgumentException("INVALID_ARGUMENT: An existing absolute workspaceRoot is required.", nameof(workspaceRoot));
+            if (string.IsNullOrWhiteSpace(fixtureDirectory) || !Path.IsPathRooted(fixtureDirectory) || !Directory.Exists(fixtureDirectory))
+                throw new ArgumentException("INVALID_ARGUMENT: An existing absolute fixtureDirectory is required.", nameof(fixtureDirectory));
             Directory.CreateDirectory(reportDirectory);
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var suiteDir = Path.Combine(reportDirectory, "suite_" + stamp);
@@ -32,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var structuredText = StructuredTextXmlBuilder.RunProbe(fixtureDirectory, probeReportDir);
             var fcBlock = PlcFcBlockXmlComposer.RunProbe(fixtureDirectory, probeReportDir);
             var globalDb = PlcGlobalDbXmlBuilder.RunProbe(fixtureDirectory, probeReportDir);
-            var flgNetCall = FlgNetCallXmlBuilder.RunProbe(ResolveWorkspaceRoot(fixtureDirectory), probeReportDir);
+            var flgNetCall = FlgNetCallXmlBuilder.RunProbe(workspaceRoot, probeReportDir);
 
             var items = new JsonArray(
                 SuiteItem("fixture-readiness", "PLC Builder 金样本就绪检查", fixture),
@@ -84,9 +88,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["semanticEqual"] = result["semanticEqual"]?.GetValue<bool?>()
             };
         }
-
-        private static string ResolveWorkspaceRoot(string fixtureDirectory)
-            => TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory);
 
         private static string BuildMarkdown(JsonObject root, string jsonPath)
         {

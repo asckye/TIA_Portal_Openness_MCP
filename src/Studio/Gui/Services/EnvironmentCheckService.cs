@@ -42,7 +42,8 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
             {
                 Findings = Capture();
                 Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
-                LogTail = [DateTimeOffset.Now.ToString("HH:mm:ss") + " — " + Findings.Count + " checks"];
+                var context = _context();
+                LogTail = ReadLogTail(context.LogReadRoots ?? new[] { context.LogsDirectory });
             }
             catch (Exception ex)
             {
@@ -55,6 +56,25 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     }
 
     public IReadOnlyList<EnvironmentFinding> Capture() => new WorkbenchEnvironmentChecks(_context(), _sources()).Run();
+
+    internal static IReadOnlyList<string> ReadLogTail(params string[] logsDirectories)
+    {
+        var redactor = new DiagnosticRedactor();
+        var rows = new List<string>();
+        foreach (string logsDirectory in logsDirectories.Distinct())
+        foreach (string key in TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(r => r.Key).Append("studio"))
+        {
+            string directory = Path.Combine(logsDirectory, key);
+            if (!Directory.Exists(directory)) continue;
+            foreach (string file in Directory.GetFiles(directory, "*.log").OrderByDescending(File.GetLastWriteTimeUtc).Take(2))
+            {
+                var tail = DiagnosticBundleService.Read(new DiagnosticInput("log", file, "", true));
+                rows.Add(Path.GetFileName(file));
+                rows.AddRange(redactor.Redact(tail.Text).Text.Split('\n').TakeLast(20));
+            }
+        }
+        return rows.TakeLast(200).ToArray();
+    }
 
     public LocalizedText Fix(string checkId)
     {
@@ -107,6 +127,8 @@ public static class EnvironmentServiceContext
         {
             BundleRoot = BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory), DataRoot = root,
             UserFallback = data.Root == null, ConfigDirectory = data.ConfigDirectory, LogsDirectory = data.LogsDirectory,
+            DiagnosticsDirectory = data.DiagnosticsDirectory, AuditDirectory = data.AuditDirectory,
+            LogReadRoots = data.LogReadRoots, AuditReadRoots = data.AuditReadRoots,
         };
         LoadEndpoint(context);
         return context;

@@ -11,9 +11,7 @@ namespace TiaOpenness.Gui;
 public partial class App : Application
 {
     /// <summary>Where the crash log lands, so a field failure can be sent back as one file.</summary>
-    public static string CrashLogPath { get; } = Path.Combine(
-        Path.GetDirectoryName(Environment.ProcessPath) ?? Path.GetTempPath(),
-        (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "TiaOpenness") + ".crash.log");
+    public static string CrashLogPath => TiaOpenness.Shared.DataLocations.Current.LogFile("TiaOpenness.crash.log", "studio");
 
     /// <summary>Language and appearance as they were left last time.</summary>
     public static UiSettings Settings { get; private set; } = new();
@@ -36,6 +34,7 @@ public partial class App : Application
             Shutdown(ex is ArgumentException ? 64 : 70);
             return;
         }
+        TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
         if (args.Length > 0 && args[0] == "--network")
         {
             // The elevated network helper never opens the workbench: no StartupUri is set on this path
@@ -114,19 +113,22 @@ public partial class App : Application
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        string details;
         try
         {
             File.AppendAllText(CrashLogPath,
                 $"{DateTimeOffset.Now:O}{System.Environment.NewLine}{e.Exception}{System.Environment.NewLine}{System.Environment.NewLine}");
+            details = Loc.Current.T("Dialog.Error.Details", CrashLogPath);
         }
-        catch (Exception) /* swallow(logging-failure): failure to append the crash log must not prevent the original exception dialog */
+        catch (Exception error)
         {
-            // Reporting the original failure matters more than logging it.
+            details = "IO_FAILED: " + error.Message;
+            TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", error);
         }
 
         MessageBox.Show(
             e.Exception.Message + System.Environment.NewLine + System.Environment.NewLine +
-            Loc.Current.T("Dialog.Error.Details", CrashLogPath),
+            details,
             Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
     }

@@ -28,6 +28,7 @@ namespace TiaOpenness.Shared
 
     internal sealed class AuditVerificationReport
     {
+        public string? Chain { get; set; }
         public bool Passed { get; set; }
         public int Count { get; set; }
         public long? BreakIndex { get; set; }
@@ -42,7 +43,7 @@ namespace TiaOpenness.Shared
         private static readonly string[] Events = { "request", "start", "end", "approval-granted", "approval-denied", "approval-timeout", "approval-switch" };
         private readonly string directory;
         private readonly long maxBytes;
-        internal static AuditLog Current => new AuditLog(DataLocations.Current.AuditDirectory);
+        internal static AuditLog Current => new AuditLog(DataLocations.Current.WritableAuditDirectory);
         internal AuditLog(string directory, long maxBytes = 10 * 1024 * 1024)
         {
             this.directory = Path.GetFullPath(directory);
@@ -93,10 +94,10 @@ namespace TiaOpenness.Shared
 
         internal AuditVerificationReport Verify()
         {
-            var report = new AuditVerificationReport { Passed = true };
+            var report = new AuditVerificationReport { Chain = directory, Passed = true };
             try
             {
-                using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock")))
+                using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock"), readOnly: true))
                 {
                     string previous = Genesis;
                     foreach (string file in Files())
@@ -128,7 +129,7 @@ namespace TiaOpenness.Shared
 
         internal IReadOnlyList<AuditRecord> Read()
         {
-            using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock")))
+            using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock"), readOnly: true))
             {
                 var rows = new List<AuditRecord>();
                 foreach (string file in Files())

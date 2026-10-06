@@ -84,7 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!Path.IsPathRooted(workingDirectory) || !Directory.Exists(workingDirectory)) throw new ArgumentException("workingDirectory must exist and be absolute.");
                 string root = EcosystemFiles.RepositoryRoot();
                 string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
-                string python = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? Path.Combine(root, "TiaMcp_Output", "ecosystem-python", "Scripts", "python.exe");
+                string python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
                 if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Run Install-PlcTools.ps1 and configure TIA_MCP_PLC_TOOLS_PYTHON.");
                 meta["arguments"] = args.DeepClone(); meta["workingDirectory"] = workingDirectory; meta["python"] = python;
                 // envelope: legacy-single-verdict
@@ -97,6 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage { Message = "Companion exited; inspect success, exitCode, stdout and stderr. This does not certify TIA compatibility or live PLC behavior.", Meta = meta };
             }
             catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
+            catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Companion failed: " + ex.Message, Meta = meta }; }
         }
     }

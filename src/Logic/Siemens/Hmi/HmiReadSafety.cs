@@ -59,7 +59,7 @@ namespace TiaMcpServer.Siemens
     {
         private static readonly object LogGate = new object();
         private static StreamWriter? Writer;
-        internal static readonly string LogPath = Path.Combine(TiaOpenness.Shared.DataLocations.Current.LogsDirectory, "TiaMcpServer.hmi-read.log");
+        internal static string LogPath => TiaOpenness.Shared.DataLocations.Current.LogFile("TiaMcpServer.hmi-read.log", TiaOpenness.Shared.DataLocations.HostReleaseKey);
         internal string OperationId { get; } = Guid.NewGuid().ToString("N");
         internal string Phase { get; private set; } = "start";
         internal string? LastAttemptedPath { get; private set; }
@@ -86,11 +86,13 @@ namespace TiaMcpServer.Siemens
                     Writer.WriteLine(row.ToJsonString());
                 }
             }
-            catch (Exception ex) { LogError = ex.GetType().Name + ": " + ex.Message; }
+            catch (Exception ex) { LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.hmi-read", ex); }
         }
         internal void AddTo(JsonObject meta)
         {
-            meta["operationId"] = OperationId; meta["diagnosticLog"] = LogPath;
+            meta["operationId"] = OperationId;
+            try { meta["diagnosticLog"] = LogPath; }
+            catch (Exception ex) { meta["diagnosticLog"] = null; LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.hmi-read", ex); }
             meta["phase"] = Phase; meta["lastAttemptedPath"] = LastAttemptedPath;
             meta["lastCompletedPath"] = LastCompletedPath; meta["diagnosticLogError"] = LogError;
         }

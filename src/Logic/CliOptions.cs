@@ -34,6 +34,45 @@ namespace TiaMcpServer
         public bool ValidatePlcHmiSyncMinimal { get; set; }
         public bool ValidatePlcChineseCommentsMinimal { get; set; }
         public string? HmiTemplateDirectory { get; set; }
+        public string? WorkspaceRoot { get; set; }
+
+        public string RequireWorkspaceRoot()
+        {
+            if (!AbsolutePath(WorkspaceRoot) || !System.IO.Directory.Exists(WorkspaceRoot))
+                throw new System.ArgumentException("INVALID_ARGUMENT: --workspace-root requires an existing absolute directory: " + WorkspaceRoot);
+            return System.IO.Path.GetFullPath(WorkspaceRoot);
+        }
+        public static string RequireInput(string? value, string option)
+        {
+            if (!AbsolutePath(value) || !System.IO.Directory.Exists(value) && !System.IO.File.Exists(value))
+                throw new System.ArgumentException("INVALID_ARGUMENT: " + option + " requires an explicit absolute path: " + value);
+            return value;
+        }
+        private static bool AbsolutePath(string? value) => !string.IsNullOrWhiteSpace(value) && System.IO.Path.IsPathRooted(value)
+            && (System.IO.Path.DirectorySeparatorChar != '\\' || System.IO.Path.GetPathRoot(value)!.Length >= 3);
+
+        public void ValidatePrivateInputs()
+        {
+            if (AnalyzeReferenceAssets || AnalyzeGlobalLibraryPackage || AnalyzeHmiTemplateReference || AnalyzeHmiComponentCatalog
+                || RunHmiActionScriptRecipeProbe || RunHmiTemplateLayoutProbe || RunClassicHmiMinimalPackageProbe || RunClassicHmiOfflineSuite
+                || RunClassicHmiTemporaryImportPreflight || RunPlcSymbolManifestProbe || RunOfflineReleaseSuite || RebuildReleaseHandoff
+                || RunHmiTemplatePlcSyncPrecheckSuite || AnalyzeHmiTemplatePlcMapping || GenerateHmiTemplateMappingSkeleton
+                || GenerateGlobalLibraryProbeReport || GenerateHmiTemplateSyncPrecheck || GeneratePlcBuilderFixtureReadiness
+                || RunPlcBuilderOfflineSuite || RunPlcTagTableBuilderProbe || RunPlcUdtBuilderProbe || RunStructuredTextBuilderProbe
+                || RunPlcFcBlockComposerProbe || RunPlcGlobalDbBuilderProbe || RunFlgNetCallBuilderProbe
+                || ValidateMappedHmiTemplateBindings || ProbeKtp700BasicHmiImport || RunMotorMinimalTest
+                || GenerateMonitoringReadOnlyReport || ValidateUnifiedHmiActionSyntaxCheck || ValidateGlobalLibraryMasterCopyImport)
+                RequireWorkspaceRoot();
+            if (ValidateUnifiedHmiTemplates || ValidateUnifiedHmiTemplateBindings || ValidateMappedHmiTemplateBindings
+                || AnalyzeHmiTemplateReference || AnalyzeHmiComponentCatalog || RunHmiActionScriptRecipeProbe || RunHmiTemplateLayoutProbe
+                || RunHmiTemplatePlcSyncPrecheckSuite || AnalyzeHmiTemplatePlcMapping || GenerateHmiTemplateMappingSkeleton || GenerateHmiTemplateSyncPrecheck)
+                RequireInput(HmiTemplateDirectory, "--hmi-template-directory");
+            if (AnalyzeHmiComponentCatalog) RequireInput(GlobalLibraryProbeJsonPath, "--global-library-probe-json-path");
+            if (AnalyzeReferenceAssets || AnalyzeHmiTemplateReference) RequireInput(ReferenceProjectPath, "--reference-project-path");
+            if (AnalyzeReferenceAssets || AnalyzeHmiTemplateReference) RequireInput(ReferenceGlobalLibraryPath, "--reference-global-library-path");
+            if (AnalyzeGlobalLibraryPackage || GenerateGlobalLibraryProbeReport || ValidateGlobalLibraryMasterCopyImport)
+                RequireInput(string.IsNullOrWhiteSpace(GlobalLibraryPackagePath) ? ReferenceGlobalLibraryPath : GlobalLibraryPackagePath, "--global-library-package-path");
+        }
         public bool CreateHardwareHmiConnection { get; set; }
         public bool DeepHardwareHmiConnectionScan { get; set; }
         public bool ListPortalProcessProjects { get; set; }
@@ -137,6 +176,12 @@ namespace TiaMcpServer
             {
                 switch (args[i].ToLowerInvariant())
                 {
+                    case "--workspace-root":
+                        if (options.WorkspaceRoot != null || ++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--"))
+                            throw new System.ArgumentException("INVALID_ARGUMENT: --workspace-root requires one absolute directory.");
+                        options.WorkspaceRoot = args[i];
+                        options.RequireWorkspaceRoot();
+                        break;
                     case "--isolate-openness": options.IsolateOpenness = true; break;
                     case "--openness-worker-child": options.OpennessWorkerChild = true; break;
                     case "--worker-timeout-seconds":

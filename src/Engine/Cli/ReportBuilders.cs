@@ -41,29 +41,15 @@ namespace TiaMcpServer
             }
         }
 
-        private static string FindLatestReport(string reportDir, string searchPattern)
-        {
-            if (!Directory.Exists(reportDir))
-                return "";
-
-            return Directory.EnumerateFiles(reportDir, searchPattern, SearchOption.TopDirectoryOnly)
-                .OrderByDescending(File.GetLastWriteTime)
-                .FirstOrDefault() ?? "";
-        }
-
-        private static string GetWorkspaceRoot()
-            => TiaOpenness.Shared.BundleLayout.RequireRoot(AppContext.BaseDirectory);
+        private static string GetWorkspaceRoot(CliOptions options)
+            => options.RequireWorkspaceRoot();
 
         internal static void RunAnalyzeReferenceAssets(CliOptions options)
         {
             var report = new CliReport();
-            var workspaceRoot = GetWorkspaceRoot();
-            var referenceProject = string.IsNullOrWhiteSpace(options.ReferenceProjectPath)
-                ? Path.Combine(workspaceRoot, "reference", "XM_Mxxxx_PL007N_MP301_002_V21")
-                : options.ReferenceProjectPath!;
-            var referenceLibrary = string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
-                ? Path.Combine(workspaceRoot, "reference", "HMI_Template_Suite_WinCC_Unified_V18", "HMI Template Suite (WinCC Unified)_V18_V21")
-                : options.ReferenceGlobalLibraryPath!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var referenceProject = CliOptions.RequireInput(options.ReferenceProjectPath, "--reference-project-path");
+            var referenceLibrary = CliOptions.RequireInput(options.ReferenceGlobalLibraryPath, "--reference-global-library-path");
             var reportDir = string.IsNullOrWhiteSpace(options.ReferenceReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "reference_analysis")
                 : options.ReferenceReportDirectory!;
@@ -100,11 +86,9 @@ namespace TiaMcpServer
 
         internal static void RunAnalyzeGlobalLibraryPackage(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
-                ? string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
-                    ? Path.Combine(workspaceRoot, "reference", "HMI_Template_Suite_WinCC_Unified_V18", "HMI Template Suite (WinCC Unified)_V18_V21")
-                    : options.ReferenceGlobalLibraryPath!
+                ? CliOptions.RequireInput(options.ReferenceGlobalLibraryPath, "--reference-global-library-path")
                 : options.GlobalLibraryPackagePath!;
             var reportDir = string.IsNullOrWhiteSpace(options.GlobalLibraryReportDirectory)
                 ? string.IsNullOrWhiteSpace(options.ReferenceReportDirectory)
@@ -140,16 +124,10 @@ namespace TiaMcpServer
 
         internal static void RunAnalyzeHmiTemplateReference(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
-            var referenceProject = string.IsNullOrWhiteSpace(options.ReferenceProjectPath)
-                ? Path.Combine(workspaceRoot, "reference", "XM_Mxxxx_PL007N_MP301_002_V21")
-                : options.ReferenceProjectPath!;
-            var referenceLibrary = string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
-                ? Path.Combine(workspaceRoot, "reference", "HMI_Template_Suite_WinCC_Unified_V18", "HMI Template Suite (WinCC Unified)_V18_V21")
-                : options.ReferenceGlobalLibraryPath!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
+            var referenceProject = CliOptions.RequireInput(options.ReferenceProjectPath, "--reference-project-path");
+            var referenceLibrary = CliOptions.RequireInput(options.ReferenceGlobalLibraryPath, "--reference-global-library-path");
             var reportDir = string.IsNullOrWhiteSpace(options.HmiTemplateReferenceReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "hmi_template_reference")
                 : options.HmiTemplateReferenceReportDirectory!;
@@ -174,13 +152,9 @@ namespace TiaMcpServer
 
         internal static void RunAnalyzeHmiComponentCatalog(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
-            var probeJson = string.IsNullOrWhiteSpace(options.GlobalLibraryProbeJsonPath)
-                ? FindLatestReport(Path.Combine(workspaceRoot, "reports", "global_library_probe"), "global_library_probe_*.json")
-                : options.GlobalLibraryProbeJsonPath!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
+            var probeJson = CliOptions.RequireInput(options.GlobalLibraryProbeJsonPath, "--global-library-probe-json-path");
             var reportDir = string.IsNullOrWhiteSpace(options.HmiComponentCatalogReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "hmi_component_catalog")
                 : options.HmiComponentCatalogReportDirectory!;
@@ -195,10 +169,8 @@ namespace TiaMcpServer
 
         internal static void RunHmiActionScriptRecipeProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var reportDir = string.IsNullOrWhiteSpace(options.HmiTemplateReferenceReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "hmi_action_script_recipe")
                 : options.HmiTemplateReferenceReportDirectory!;
@@ -228,10 +200,8 @@ namespace TiaMcpServer
 
         internal static void RunHmiTemplateLayoutProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var reportDir = string.IsNullOrWhiteSpace(options.HmiTemplateLayoutReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "hmi_template_layout")
                 : options.HmiTemplateLayoutReportDirectory!;
@@ -306,7 +276,7 @@ namespace TiaMcpServer
 
         internal static void RunGeneratePlcBuilderFixtureReadiness(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -325,7 +295,7 @@ namespace TiaMcpServer
 
         internal static void RunClassicHmiMinimalPackageProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiPackageReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "classic_hmi_minimal_package_probe")
                 : options.ClassicHmiPackageReportDirectory!;
@@ -446,7 +416,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcSymbolManifestProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.PlcSymbolManifestReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "plc_symbol_manifest")
                 : options.PlcSymbolManifestReportDirectory!;
@@ -459,7 +429,7 @@ namespace TiaMcpServer
 
         internal static void RunClassicHmiOfflineSuite(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiOfflineSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "classic_hmi_offline_suite")
                 : options.ClassicHmiOfflineSuiteReportDirectory!;
@@ -472,7 +442,7 @@ namespace TiaMcpServer
 
         internal static void RunOfflineReleaseSuite(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "offline_release_suite")
                 : options.OfflineReleaseSuiteReportDirectory!;
@@ -494,7 +464,7 @@ namespace TiaMcpServer
                 throw new InvalidOperationException("--offline-release-suite-json-path is required for --rebuild-release-handoff.");
             }
 
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "offline_release_handoff_rebuilt")
                 : options.OfflineReleaseSuiteReportDirectory!;
@@ -510,10 +480,8 @@ namespace TiaMcpServer
 
         internal static void RunHmiTemplatePlcSyncPrecheckSuite(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var plcXmlPath = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -529,7 +497,7 @@ namespace TiaMcpServer
 
         internal static void RunClassicHmiTemporaryImportPreflight(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiTemporaryImportPreflightReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "classic_hmi_temporary_import_preflight")
                 : options.ClassicHmiTemporaryImportPreflightReportDirectory!;
@@ -593,7 +561,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcBuilderOfflineSuite(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -601,7 +569,7 @@ namespace TiaMcpServer
                 ? Path.Combine(workspaceRoot, "reports", "plc_builder_suite")
                 : options.PlcBuilderSuiteReportDirectory!;
 
-            var root = PlcBuilderOfflineValidationSuite.Run(fixtureDir, reportDir);
+            var root = PlcBuilderOfflineValidationSuite.Run(fixtureDir, reportDir, workspaceRoot);
             Program.LogDiag("PLC builder offline validation suite report written:");
             Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
             Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
@@ -610,7 +578,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcTagTableBuilderProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -627,7 +595,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcUdtBuilderProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -644,7 +612,7 @@ namespace TiaMcpServer
 
         internal static void RunStructuredTextBuilderProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -661,7 +629,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcFcBlockComposerProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -678,7 +646,7 @@ namespace TiaMcpServer
 
         internal static void RunPlcGlobalDbBuilderProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "_verify")
                 : options.PlcExportDirectory!;
@@ -695,7 +663,7 @@ namespace TiaMcpServer
 
         internal static void RunFlgNetCallBuilderProbe(CliOptions options)
         {
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var reportDir = string.IsNullOrWhiteSpace(options.PlcBuilderProbeReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "plc_builder_probes")
                 : options.PlcBuilderProbeReportDirectory!;
@@ -710,7 +678,7 @@ namespace TiaMcpServer
         internal static void RunGenerateMonitoringReadOnlyReport(CliOptions options)
         {
             var report = new CliReport();
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var requestedSoftwarePath = string.IsNullOrWhiteSpace(options.PlcSoftwarePath) ? "PLC_1" : options.PlcSoftwarePath!;
             var softwarePath = requestedSoftwarePath;
             var reportDir = string.IsNullOrWhiteSpace(options.MonitoringReportDirectory)
@@ -919,11 +887,9 @@ namespace TiaMcpServer
         internal static void RunGenerateGlobalLibraryProbeReport(CliOptions options)
         {
             var report = new CliReport();
-            var workspaceRoot = GetWorkspaceRoot();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
-                ? string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
-                    ? Path.Combine(workspaceRoot, "reference", "HMI_Template_Suite_WinCC_Unified_V18", "HMI Template Suite (WinCC Unified)_V18_V21")
-                    : options.ReferenceGlobalLibraryPath!
+                ? CliOptions.RequireInput(options.ReferenceGlobalLibraryPath, "--reference-global-library-path")
                 : options.GlobalLibraryPackagePath!;
             var reportDir = string.IsNullOrWhiteSpace(options.GlobalLibraryProbeReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "global_library_probe")
@@ -980,11 +946,9 @@ namespace TiaMcpServer
 
         internal static void RunValidateGlobalLibraryMasterCopyImport(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
-                ? string.IsNullOrWhiteSpace(options.ReferenceGlobalLibraryPath)
-                    ? Path.Combine(workspaceRoot, "reference", "HMI_Template_Suite_WinCC_Unified_V18", "HMI Template Suite (WinCC Unified)_V18_V21")
-                    : options.ReferenceGlobalLibraryPath!
+                ? CliOptions.RequireInput(options.ReferenceGlobalLibraryPath, "--reference-global-library-path")
                 : options.GlobalLibraryPackagePath!;
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1093,7 +1057,7 @@ namespace TiaMcpServer
 
         internal static void RunValidateUnifiedHmiActionSyntaxCheck(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
+            var workspaceRoot = GetWorkspaceRoot(options);
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
                 : options.ProjectDirectory!;
@@ -1215,10 +1179,8 @@ namespace TiaMcpServer
 
         internal static void RunGenerateHmiTemplateSyncPrecheck(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var softwarePath = string.IsNullOrWhiteSpace(options.PlcSoftwarePath) ? "Zone1_PLC1516TF" : options.PlcSoftwarePath!;
             var tagTableRegex = options.PlcTagTableRegex ?? "";
             var maxTagTablesToExport = Math.Max(0, options.MaxPlcTagTablesToExport ?? 0);
@@ -1356,10 +1318,8 @@ namespace TiaMcpServer
 
         internal static void RunGenerateHmiTemplateMappingSkeleton(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var plcExportDirectory = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "Source", "5T车", "Blocks")
                 : options.PlcExportDirectory!;
@@ -2111,10 +2071,8 @@ namespace TiaMcpServer
 
         internal static void RunAnalyzeHmiTemplatePlcMapping(CliOptions options)
         {
-            var workspaceRoot = Directory.GetCurrentDirectory();
-            var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
-                ? Path.Combine(workspaceRoot, "docs", "hmi_templates")
-                : options.HmiTemplateDirectory!;
+            var workspaceRoot = GetWorkspaceRoot(options);
+            var templateDir = CliOptions.RequireInput(options.HmiTemplateDirectory, "--hmi-template-directory");
             var plcExportDirectory = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
                 ? Path.Combine(workspaceRoot, "TMP_EXPORT", "Source", "5T车", "Blocks")
                 : options.PlcExportDirectory!;

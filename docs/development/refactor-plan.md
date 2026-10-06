@@ -201,7 +201,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | done |
 | P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | done |
 | P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测；[路径清单](phase6-review.md#phase6-path-p6-38) | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | done |
-| P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | todo |
+| P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | done |
 | P6-40 | 更新 `reference/tool-examples`、`src/Engine/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `scripts/generate/Generate-ToolUsage.py`、`Generate-ToolCapabilityMatrix.ps1`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | todo |
 | P6-41 | 按规范第 7 节在 `manifest/contracts/v4` 建立逐发布键快照和 CI 检查；现有 Snapshot-ToolContracts/Responses 脚本生成，3.x 基线逐字节归档至 `manifest/history/contracts-v3`，禁止用改哈希掩盖差异；P6-41a 已提前完成 3.x 归档、归档守护与静态 V4 检查；[路径清单](phase6-review.md#phase6-path-p6-41) | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | todo |
 | P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族；[路径清单](phase6-review.md#phase6-path-p6-42) | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
