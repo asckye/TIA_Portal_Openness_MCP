@@ -120,6 +120,9 @@ foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Force) {
 }
 foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.prefixes)) {
     if ($NoBinaries -and ($path -in @('TiaOpenness.exe','runtime/tools/TiaMcp.Updater.exe','runtime/tools/TiaMcp.Updater.exe.config') -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
+    # Outside a package the updater is staged in bin-build/updater; Package-Release copies it to runtime/tools.
+    if (-not $PackageMode -and $path -in @('runtime/tools/TiaMcp.Updater.exe','runtime/tools/TiaMcp.Updater.exe.config') -and
+        (Test-Path -LiteralPath (Join-Path (Join-Path $root 'bin-build/updater') (Split-Path $path -Leaf)))) { Ok "Staged updater build output present: $path"; continue }
     if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
     else { Fail "Missing delivery resource: $path" }
 }
