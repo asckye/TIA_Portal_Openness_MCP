@@ -275,24 +275,27 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
         {
-            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(AllToolMethods(includeUnavailable: true).TryGetValue(name ?? "", out _)
-                && ToolCatalog.IsWrite(name ?? ""), "engine", ReleaseKey, name ?? "");
+            bool write = AllToolMethods(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
+            bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "engine", ReleaseKey, name ?? "");
             var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
             if (error != null)
             {
                 var rejected = V4TargetReject("CallTool", error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
-                return AuditBridgeResult(audit, rejected);
+                return AuditBridgeResult(audit, rejected, disabled);
             }
             if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
-                return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")));
-            try { return AuditBridgeResult(audit, ToolResult(InvokeToolMethod(method!, call!))); }
+                return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
+            try { return AuditBridgeResult(audit, ApprovedBridgeCall(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
+                () => ToolResult(InvokeToolMethod(method!, call!))), disabled); }
             catch (Exception ex)
-            { return AuditBridgeResult(audit, TargetFailure(name, ex, true)); }
+            { return AuditBridgeResult(audit, TargetFailure(name, ex, true), disabled); }
         }
 
-        private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result)
+        private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result, bool disabled = false)
         {
+            result = FinishApproval(result, null, disabled);
             if (audit != null) audit.Complete(ResultBody(result)?.ToJsonString());
             return result;
         }

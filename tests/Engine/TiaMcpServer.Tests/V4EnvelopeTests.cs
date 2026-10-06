@@ -56,7 +56,7 @@ namespace TiaMcpServer.Tests
                 (new TargetAmbiguousDetails("PLC", new[] { "PLC_A", "PLC_B" }), """{"code":"TARGET_AMBIGUOUS","message":"Failure.","details":{"target":"PLC","candidates":["PLC_A","PLC_B"]}}"""),
                 (new IdentityMismatchDetails("project", "epoch:1", "epoch:2"), """{"code":"IDENTITY_MISMATCH","message":"Failure.","details":{"target":"project","expected":"epoch:1","actual":"epoch:2"}}"""),
                 (new AlreadyExistsDetails("Block"), """{"code":"ALREADY_EXISTS","message":"Failure.","details":{"target":"Block"}}"""),
-                (new ConfirmationRequiredDetails(Hash), """{"code":"CONFIRMATION_REQUIRED","message":"Failure.","details":{"planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}"""),
+                (new ConfirmationRequiredDetails(Hash), """{"code":"CONFIRMATION_REQUIRED","message":"Failure.","details":{"reason":"plan-confirmation","planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","requestId":null}}"""),
                 (new PlanStaleDetails(Hash, "input changed"), """{"code":"PLAN_STALE","message":"Failure.","details":{"planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"input changed"}}"""),
                 (new PreconditionFailedDetails("borrowed", "project"), """{"code":"PRECONDITION_FAILED","message":"Failure.","details":{"condition":"borrowed","target":"project"}}"""),
                 (new OfflineRequiredDetails(new[] { "PLC_A" }), """{"code":"OFFLINE_REQUIRED","message":"Failure.","details":{"targets":["PLC_A"]}}"""),
@@ -435,7 +435,7 @@ namespace TiaMcpServer.Tests
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
             Assert.Equal(25, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(7, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(8, Enum.GetValues<WarningCode>().Length);
             Assert.Equal(25, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 

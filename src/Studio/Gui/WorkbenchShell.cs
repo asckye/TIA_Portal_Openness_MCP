@@ -18,7 +18,7 @@ public partial class MainWindow
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
     {
-        Approvals = approvals ?? new ApprovalServiceStub();
+        Approvals = approvals ?? new Services.ApprovalService();
         _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals);
@@ -39,6 +39,7 @@ public partial class MainWindow
         SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
         OperationsContent.EnvironmentRequested -= OnEnvironmentRequested;
         Approvals.PropertyChanged -= OnApprovalChanged;
+        (Approvals as IDisposable)?.Dispose();
         _model.Session.PropertyChanged -= OnShellSessionChanged;
         _model.Engineering.PropertyChanged -= OnShellSessionChanged;
         Loc.Current.LanguageChanged -= OnShellLanguageChanged;
@@ -63,6 +64,8 @@ public partial class MainWindow
         PendingBadge.Content = Loc.Current.T("Shell.Pending", Approvals.PendingCount);
         PendingBadge.Visibility = Approvals.PendingCount > 0 ? Visibility.Visible : Visibility.Collapsed;
         ApprovalOffPill.Visibility = Approvals.Enabled ? Visibility.Collapsed : Visibility.Visible;
+        McpApprovalSwitch.IsChecked = Approvals.Enabled;
+        UpdateMcpStatus();
         RailBlocks.IsEnabled = RailVersionControl.IsEnabled = HasProject;
         RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v') + " · " + TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
         if (_drawer != null)
@@ -150,6 +153,13 @@ public partial class MainWindow
         SettingsButton.SetResourceReference(Control.ForegroundProperty, "Ui.Label");
     }
     private void OnDisableApprovalRequested(object? sender, EventArgs e) => ConfirmOverlay.Visibility = Visibility.Visible;
+    private void OnMcpMenu(object sender, MouseButtonEventArgs e) { ((FrameworkElement)sender).ContextMenu.IsOpen = true; e.Handled = true; }
+    private void OnApprovalMenu(object sender, RoutedEventArgs e)
+    {
+        if (Approvals.Enabled) OnDisableApprovalRequested(sender, EventArgs.Empty);
+        else Approvals.Enabled = true;
+        McpApprovalSwitch.IsChecked = Approvals.Enabled;
+    }
     private void OnCancelApprovalOff(object sender, RoutedEventArgs e) { ConfirmOverlay.Visibility = Visibility.Collapsed; SettingsContent.UpdateApproval(); }
     private void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { Approvals.Enabled = false; ConfirmOverlay.Visibility = Visibility.Collapsed; }
     private void OnDiagnostics(object sender, RoutedEventArgs e)

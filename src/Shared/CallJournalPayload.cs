@@ -8,7 +8,11 @@ using System.Text.RegularExpressions;
 namespace TiaOpenness.Shared
 {
     // Linked by producers and the reader; sanitization precedes every size limit.
+#if TIA_APPROVAL_PRIVATE_JOURNAL
+    internal static class ApprovalJournalPayload
+#else
     public static class CallJournalPayload
+#endif
     {
         public const int Limit = 4096;
         public const string Hidden = "••••";
@@ -19,7 +23,7 @@ namespace TiaOpenness.Shared
         public static string Redact(string json)
             => Bound(Sanitize(json));
 
-        internal static string Sanitize(string json)
+        public static string Sanitize(string json)
         {
             try
             {

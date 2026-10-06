@@ -290,33 +290,108 @@ internal static partial class Program
     private static async Task SerializedCallGuardTests()
     {
         int before = Passed;
-        foreach (var scenario in new[] { "read-exception", "write-exception", "legacy-result", "cancel-before-call" })
-            await Test("direct SDK dispatch guard returns V4: " + scenario, async () => {
-                var fixture = new SdkGuardFixture(scenario == "write-exception", scenario == "legacy-result");
-                var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.SerializedCallTool", true)!;
-                var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { fixture }, null)!;
-                using var cancellation = new CancellationTokenSource();
-                if (scenario == "cancel-before-call") cancellation.Cancel();
-                var result = await tool.InvokeAsync(null!, cancellation.Token);
-                var text = result.Content.Cast<ModelContextProtocol.Protocol.TextContentBlock>().Single().Text;
-                var body = Parse(text);
-                Check(Json.Serialize(Parse(result.StructuredContent!.ToString())) == Json.Serialize(body)
-                    && (int)body["schemaVersion"] == 4 && !(bool)body["ok"] && result.IsError == true, "SDK guard is not a matching V4 error");
-                var error = (Dictionary<string, object>)body["error"];
-                var meta = (Dictionary<string, object>)body["meta"];
-                bool unknown = scenario == "write-exception", cancelled = scenario == "cancel-before-call";
-                Check((string)error["code"] == (unknown ? "OUTCOME_UNKNOWN" : cancelled ? "CANCELLED" : "INTERNAL_ERROR")
-                    && (string)meta["outcome"] == (unknown ? "unknown" : cancelled ? "rejected-before-operation" : "read-failed")
-                    && (string)meta["execution"] == (unknown ? "unknown" : cancelled ? "not-started" : "read-only")
-                    && (bool)meta["requiresSessionReset"] == unknown, "SDK guard lost typed outcome details: " + scenario + " " + text);
-                Check(fixture.Calls == (cancelled ? 0 : 1) && !text.Contains("SECRET") && !body.ContainsKey("message"), "SDK guard leaked arguments or dispatched cancellation");
-            });
+        string? previous = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+        string data = Path.Combine(Path.GetTempPath(), "tia-sdk-approval-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(data, "config"));
+        File.WriteAllText(Path.Combine(data, "config", "approval.settings"), "enabled=false\ntimeoutSeconds=120\n");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", data);
+            foreach (var scenario in new[] { "read-exception", "write-exception", "legacy-result", "cancel-before-call" })
+                await Test("direct SDK dispatch guard returns V4: " + scenario, async () => {
+                    var fixture = new SdkGuardFixture(scenario == "write-exception", scenario == "legacy-result");
+                    var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.SerializedCallTool", true)!;
+                    var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { fixture }, null)!;
+                    using var cancellation = new CancellationTokenSource();
+                    if (scenario == "cancel-before-call") cancellation.Cancel();
+                    var result = await tool.InvokeAsync(null!, cancellation.Token);
+                    var text = result.Content.Cast<ModelContextProtocol.Protocol.TextContentBlock>().Single().Text;
+                    var body = Parse(text);
+                    Check(Json.Serialize(Parse(result.StructuredContent!.ToString())) == Json.Serialize(body)
+                        && (int)body["schemaVersion"] == 4 && !(bool)body["ok"] && result.IsError == true, "SDK guard is not a matching V4 error");
+                    var error = (Dictionary<string, object>)body["error"];
+                    var meta = (Dictionary<string, object>)body["meta"];
+                    bool unknown = scenario == "write-exception", cancelled = scenario == "cancel-before-call";
+                    Check((string)error["code"] == (unknown ? "OUTCOME_UNKNOWN" : cancelled ? "CANCELLED" : "INTERNAL_ERROR")
+                        && (string)meta["outcome"] == (unknown ? "unknown" : cancelled ? "rejected-before-operation" : "read-failed")
+                        && (string)meta["execution"] == (unknown ? "unknown" : cancelled ? "not-started" : "read-only")
+                        && (bool)meta["requiresSessionReset"] == unknown, "SDK guard lost typed outcome details: " + scenario + " " + text);
+                    Check(fixture.Calls == (cancelled ? 0 : 1) && !text.Contains("SECRET") && !body.ContainsKey("message"), "SDK guard leaked arguments or dispatched cancellation");
+                    if (unknown)
+                    {
+                        var warnings = (IList)meta["warnings"];
+                        Check(warnings.Cast<Dictionary<string, object>>().Count(w => (string)w["code"] == "APPROVAL_DISABLED") == 1,
+                            "SDK guard omitted or duplicated the disabled approval warning");
+                    }
+                });
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previous);
+            try { Directory.Delete(data, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
         Console.WriteLine("COMPLETE: " + (Passed-before) + " direct SDK guard checks passed; no native call executed");
+    }
+
+    private sealed class GuardRequestServer : System.Runtime.Remoting.Proxies.RealProxy
+    {
+        internal GuardRequestServer() : base(typeof(ModelContextProtocol.Server.IMcpServer)) { }
+        public override System.Runtime.Remoting.Messaging.IMessage Invoke(System.Runtime.Remoting.Messaging.IMessage message)
+            => new System.Runtime.Remoting.Messaging.ReturnMessage(null, null, 0, null,
+                (System.Runtime.Remoting.Messaging.IMethodCallMessage)message);
+    }
+    private sealed class ParentBridgeGuardFixture : ModelContextProtocol.Server.McpServerTool
+    {
+        private readonly WorkerFixture worker;
+        internal ParentBridgeGuardFixture(WorkerFixture worker) { this.worker = worker; }
+        public override ModelContextProtocol.Protocol.Tool ProtocolTool => new() { Name = "CallTool" };
+        public override async ValueTask<ModelContextProtocol.Protocol.CallToolResult> InvokeAsync(
+            ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            try { await worker.Call("CallTool", "{\"name\":\"CreatePlcBlockGroup\",\"arguments\":{}}", cancellationToken); }
+            catch (Exception ex)
+            {
+                var host = Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost", true)!;
+                return (ModelContextProtocol.Protocol.CallToolResult)host.GetMethod("Error", All)!.Invoke(null,
+                    new object[] { "CallTool", ex, worker.Supervisor })!;
+            }
+            throw new Exception("Expected isolated worker guard");
+        }
     }
 
     private static async Task WorkerSupervisorTests()
     {
         int before = Passed;
+        foreach (var mode in new[] { "hello-crash", "crash" })
+            await Test("parent bridge write guard retains disabled approval warning: " + mode, async () => {
+                string? previous = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+                string data = Path.Combine(Path.GetTempPath(), "tia-parent-approval-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(Path.Combine(data, "config"));
+                File.WriteAllText(Path.Combine(data, "config", "approval.settings"), "enabled=false\ntimeoutSeconds=120\n");
+                try
+                {
+                    Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", data);
+                    using var fixture = new WorkerFixture(mode);
+                    var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.AuditCallTool", true)!;
+                    var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null,
+                        new object[] { new ParentBridgeGuardFixture(fixture) }, null)!;
+                    var request = new ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams>(
+                        (ModelContextProtocol.Server.IMcpServer)new GuardRequestServer().GetTransparentProxy()) {
+                        Params = new ModelContextProtocol.Protocol.CallToolRequestParams { Name = "CallTool",
+                            Arguments = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
+                                "{\"name\":\"CreatePlcBlockGroup\",\"arguments\":{}}") }
+                    };
+                    var result = await tool.InvokeAsync(request);
+                    var body = CheckWorkerEnvelope(result, mode == "crash");
+                    var warnings = (IList)((Dictionary<string, object>)body["meta"])["warnings"];
+                    Check(warnings.Cast<Dictionary<string, object>>().Count(w => (string)w["code"] == "APPROVAL_DISABLED") == 1,
+                        "Parent CallTool guard omitted or duplicated the disabled warning");
+                    Check(fixture.Dispatches == (mode == "crash" ? 1 : 0), "Guard dispatched or replayed unexpectedly");
+                }
+                finally { Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previous); }
+            });
         await Test("production worker start preserves relative path context and omits HTTP credentials", () => {
             var optionsType = FindServerType(Server, "TiaMcpServer.CliOptions");
             var options = Activator.CreateInstance(optionsType)!;

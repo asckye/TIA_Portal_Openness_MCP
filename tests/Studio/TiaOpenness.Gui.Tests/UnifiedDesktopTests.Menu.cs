@@ -96,7 +96,7 @@ public sealed partial class UnifiedDesktopTests
         wpf.Run(() =>
         {
             var diagnostics = new FeaturePageFixtures.Diagnostics();
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, diagnostics: diagnostics);
+            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals: new Services.Stubs.ApprovalServiceStub(), diagnostics: diagnostics);
             try
             {
                 window.OpenSettings();

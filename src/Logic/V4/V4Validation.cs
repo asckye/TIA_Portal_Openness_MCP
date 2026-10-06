@@ -160,7 +160,12 @@ namespace TiaMcp.Logic.V4
                     Release(capability.ReleaseKey);
                     break;
                 case ConfirmationRequiredDetails confirmation:
+                    Require(confirmation.Reason == "denied" || confirmation.Reason == "timeout"
+                        || confirmation.Reason == "workbench-unavailable" || confirmation.Reason == "plan-confirmation", "Invalid confirmation reason.");
                     if (confirmation.PlanHash != null) Hash(confirmation.PlanHash);
+                    if (confirmation.RequestId != null) Text(confirmation.RequestId, "requestId");
+                    if (confirmation.Reason != "plan-confirmation")
+                        Require(confirmation.PlanHash != null && confirmation.RequestId != null, "Approval refusal requires request identity and digest.");
                     break;
                 case PlanStaleDetails stale:
                     if (stale.PlanHash != null) Hash(stale.PlanHash);

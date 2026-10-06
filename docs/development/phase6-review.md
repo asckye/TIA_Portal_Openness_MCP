@@ -115,7 +115,7 @@ X 的其他具名类型如下；封闭字段及枚举以表中对应工具的现
 | TARGET_AMBIGUOUS | 非唯一目标；target、candidates |
 | IDENTITY_MISMATCH | PID/start time、工程或绑定纪元不一致；target、expected、actual（脱敏） |
 | ALREADY_EXISTS | 拒绝覆盖；target |
-| CONFIRMATION_REQUIRED | 执行缺少确认；planHash |
+| CONFIRMATION_REQUIRED | 执行缺少确认；reason（denied / timeout / workbench-unavailable / plan-confirmation）、planHash、requestId |
 | PLAN_STALE | 计划、输入文件、目录库存或状态已变化；planHash、reason |
 | PRECONDITION_FAILED | 借用、脏工程、所有权等前提；condition、target |
 | OFFLINE_REQUIRED | 目标或受影响设备需离线；targets |
@@ -132,7 +132,9 @@ X 的其他具名类型如下；封闭字段及枚举以表中对应工具的现
 | OUTCOME_UNKNOWN | 写入/传输/通道中断导致结果未知；stage、evidence；禁止自动重放 |
 | INTERNAL_ERROR | 非原生未分类故障；diagnosticId；堆栈仅入日志 |
 
-`meta.warnings` 为 `{code,message,details}[]`，code 初始闭集为 `INCOMPLETE_DATA`（不完整观察）、`NATIVE_WARNING`（原生诊断）、`CANDIDATE_ONLY`（构造候选未验证导入）、`UNVERIFIED_BEHAVIOR`（current 政策）、`CLEANUP_FAILED`（清理失败）、`NATIVE_CAPABILITY_LIMIT`（SDK 能力自身限制）、`DIAGNOSTIC_WRITE_FAILED`（日志不可写）。警告不把工程失败转为成功；cleanup 若使状态未知则仍为 unknown。
+`meta.warnings` 为 `{code,message,details}[]`，code 初始闭集为 `INCOMPLETE_DATA`（不完整观察）、`NATIVE_WARNING`（原生诊断）、`CANDIDATE_ONLY`（构造候选未验证导入）、`UNVERIFIED_BEHAVIOR`（current 政策）、`CLEANUP_FAILED`（清理失败）、`NATIVE_CAPABILITY_LIMIT`（SDK 能力自身限制）、`DIAGNOSTIC_WRITE_FAILED`（日志不可写）、`APPROVAL_DISABLED`（本次 MCP 写调用关闭了工作台审批，details={enabled:false}）。警告不把工程失败转为成功；cleanup 若使状态未知则仍为 unknown。
+
+P6-44：CONFIRMATION_REQUIRED 的 reason 为上述四值的必填闭集。既有 D1 确认拒绝使用 plan-confirmation；planHash 与 requestId 始终输出，可为 null。宿主审批拒绝必须给出本次请求的非空 requestId 和 SHA-256 planHash（无计划时为规范化参数及目标身份的摘要），且 outcome=rejected-before-operation、execution=not-started。批准绑定这两个值，仅允许一次执行尝试；审批关闭不取消 D1 确认与计划校验。
 
 分页时 `meta.paging={mode:"offset"|"cursor",offset:int32|null,limit:int32,nextOffset:int32|null,cursor:string|null,nextCursor:string|null,total:int32|null,complete:bool}`；不用分页则 null。页大小上限取原工具，offset 非负，游标限定于同一 release/session/binding/查询/快照，不得跨工程复用。complete 表示该快照已读完，next 字段为 null；不能用它代替工程结果完整性。大结果缓存另给 `data.export={id:string,mediaType:string,byteLength:int64,sha256:string,expiresUtc:string|null}`，由 ListExportHandles/GetExportContent/SaveExportContent/DeleteExportHandle/ClearExportHandles 提供完整生命周期。原来的页身份和校验信息放入 data，过期/缺失返回 NOT_FOUND，不偷偷创建新快照。
 
@@ -319,14 +321,21 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
   按单个调用判断：只读调用不排队，批次逐项列出写项。CLI 由本机用户直接执行，不经审批。
 - 流程：D1 已切换的族在 apply 处、仍为 current 的族在执行前，宿主把待批请求（请求 ID、tool、releaseKey、目标工程身份、
   对象与动作清单、planHash 或参数摘要）推送给工作台并等待；用户逐条批准或拒绝。批准只对该请求 ID 与 planHash 生效一次。
+  session、save/close、source、compile 及 device/import/export 的 safe-v4 apply 共用该审批点；候选 apply 视为写调用，
+  不改工具目录原有 SESSION/FILE/EXECUTE 分类或 D1 开关。候选 preview 保持不排队。
 - 结果：拒绝、超时（默认 120 秒，可配置）或工作台未连接均为操作前拒绝：outcome=rejected-before-operation、
   execution=not-started，错误码 CONFIRMATION_REQUIRED，详情区分 denied/timeout/workbench-unavailable
   （扩展 ConfirmationRequiredDetails 时先改第 3 节）。不确定即拒绝，不放行。
 - 开关：默认开启；在 MCP 菜单关闭后只保留 D1 的 confirm/planHash 检查。状态在标题栏 MCP 状态片和每次写结果的
   meta.warnings 中可见，设置保存在 `data\config`。
+  关闭期间的宿主 V4 出口（成功、准入/审批拒绝、失败、取消和 worker 中断的 unknown，含 CallTool、批次写项）
+  均携带 APPROVAL_DISABLED；保留既有错误码、outcome/execution 和脱敏证据。SDK 在宿主派发前抛出的协议错误
+  （例如无法解码 tools/call、未知 SDK 工具或无效基础请求形态）不属于 V4 结果，没有评估审批，也不添加审批元数据。
+  宿主拥有的退出不再返回原始异常文本；取消/中断终结已有批准为 unknown，管道失联使待批项失效。
 - 通道：审批走宿主与工作台之间的本机通道（仅当前用户可连接的命名管道），不作为 MCP 工具或 HTTP 端点暴露，MCP 客户端不能自行批准。
   威胁模型是“AI 经 MCP 工具越权写入”，不防同一用户下的恶意本机进程，文档须写明。
 - 等待审批不占用 Openness 线程，不改 Siemens 调用顺序、线程归属与会话。
+  审批决定与开关事件复用每个 data 根唯一的审计链，工作台审计视图读取该链，不按宿主另建审批日志。
 
 **AI 调用面板（P6-45）**
 
@@ -1525,7 +1534,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):29 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
 | [ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs):162 | `if (response is ResponseXmlBuild xml && xml.Xml != null && xml.Xml.Length > 1048576)` |
 | [ModelContextProtocol/Tools/LibraryTools.cs](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs):315 | `if (action == "harmonizeProject") LibraryDeepLogic.JoinHarmonizeOptions(HardwareNetworkLogic.ParseNames(harmonizeOptionsJson, "harmonizeOptions", 2));` |
-| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):141 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
+| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs):143 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
 | [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs):516 | `if (conflicts.Count > 16)` |
 | [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs):149 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
@@ -1913,7 +1922,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,202 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/release-workflow.md](../../docs/development/release-workflow.md) | 根定位:14,24 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:30; 根定位:49,52 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:57,69; 根定位:17,52,53,56,64,154,164,166,167,168,187,251; 写入/工作区:54,73,120,126,148 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:81,93; 根定位:41,76,77,80,88,178,188,190,191,192,211,275; 写入/工作区:78,97,144,150,172 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/validation.md](../../docs/development/validation.md) | 产品:418,419,440,469; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138 | 修改引用并回归 |
@@ -2009,7 +2018,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs](../../src/Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs) | 写入/工作区:271,368 | 修改引用并回归 |
 | [src/Logic/ModelContextProtocol/UpdateLogic.cs](../../src/Logic/ModelContextProtocol/UpdateLogic.cs) | 产品:11,139 | 修改引用并回归 |
 | [src/Logic/Properties/AssemblyInfo.cs](../../src/Logic/Properties/AssemblyInfo.cs) | 产品:3,4,5 | 修改引用并回归 |
-| [src/Logic/TiaMcp.Logic.csproj](../../src/Logic/TiaMcp.Logic.csproj) | 根定位:16 | 修改引用并回归 |
+| [src/Logic/TiaMcp.Logic.csproj](../../src/Logic/TiaMcp.Logic.csproj) | 根定位:18 | 修改引用并回归 |
 | [src/Runtime/OpcUaLiveReader.cs](../../src/Runtime/OpcUaLiveReader.cs) | 产品:47 | 修改引用并回归 |
 | [src/Shared/BundleLayout.cs](../../src/Shared/BundleLayout.cs) | 产品:221,265,266,267,268,269,270,271,272; 根定位:35,37,40,96 | 修改引用并回归 |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs) | 根定位:89,91; 写入/工作区:280,281 | 修改引用并回归 |
@@ -2035,7 +2044,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Studio/Gui/MainWindow.xaml.cs](../../src/Studio/Gui/MainWindow.xaml.cs) | 产品:11,15 | 修改引用并回归 |
 | [src/Studio/Gui/Services/CallJournalService.cs](../../src/Studio/Gui/Services/CallJournalService.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/Gui/Services/EnvironmentCheckService.cs](../../src/Studio/Gui/Services/EnvironmentCheckService.cs) | 产品:9; 根定位:128 | 修改引用并回归 |
-| [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:19 | 修改引用并回归 |
+| [src/Studio/Gui/TiaOpenness.Gui.csproj](../../src/Studio/Gui/TiaOpenness.Gui.csproj) | 根定位:20 | 修改引用并回归 |
 | [src/Studio/Gui/Views/SettingsView.xaml.cs](../../src/Studio/Gui/Views/SettingsView.xaml.cs) | 产品:7 | 修改引用并回归 |
 | [src/Studio/Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs) | 产品:29 | 修改引用并回归 |
 | [src/Studio/README.md](../../src/Studio/README.md) | 产品:4,27,46 | 修改引用并回归 |

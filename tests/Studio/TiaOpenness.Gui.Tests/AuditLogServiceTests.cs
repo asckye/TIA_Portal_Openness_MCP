@@ -13,6 +13,26 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class AuditLogServiceTests(WpfContext wpf)
 {
     [Fact]
+    public void Host_approval_events_and_workbench_switch_share_the_visible_audit_chain()
+    {
+        wpf.Run(() =>
+        {
+            string root = Path.GetFullPath(Path.Combine("bin-build", "P6-44", "round2", "audit", Guid.NewGuid().ToString("N")));
+            string directory = Path.Combine(root, "logs", "audit");
+            var host = new AuditLog(directory); var workbench = new AuditLog(directory);
+            host.Append("request", "r", "engine", "21", "WriteFixture");
+            host.Approval("r", "engine", "21", "WriteFixture", "granted", new string('a', 64));
+            host.Approval("r2", "foundation", "19", "WriteFixture", "denied");
+            host.Approval("r3", "engine", "20", "WriteFixture", "timeout");
+            new ApprovalSettings(false).Save(Path.Combine(root, "config", "approval.settings"), workbench);
+            using var view = new AuditLogService(directory, Path.Combine(root, "diagnostics"), Path.Combine(root, "config", "retention"), _ => { });
+            Assert.Equal(new[] { AuditEventType.Request, AuditEventType.Approve, AuditEventType.Reject, AuditEventType.Timeout, AuditEventType.Toggle },
+                view.Events.Select(row => row.Type));
+            var report = view.Verify(); Assert.True(report.Passed); Assert.Single(report.Chains); Assert.Equal(5, report.Count);
+            Assert.Equal(new long[] { 1, 2, 3, 4, 5 }, host.Read().Select(row => row.Index));
+        });
+    }
+    [Fact]
     public void Real_service_reads_verifies_persists_opens_and_notifies()
     {
         wpf.Run(() =>

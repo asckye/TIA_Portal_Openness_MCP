@@ -54,14 +54,17 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly bool saveCloseCandidate;
     private readonly bool sourceCandidate;
     private readonly bool compileCandidate;
+    private readonly Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
     internal FoundationV4Tool(McpServerTool inner, string release) : this(inner, release, null) { }
 
-    internal FoundationV4Tool(McpServerTool inner, string release, Func<string, BehaviorPolicy>? policyForTest)
+    internal FoundationV4Tool(McpServerTool inner, string release, Func<string, BehaviorPolicy>? policyForTest,
+        Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null)
     {
         this.inner = inner; this.release = release;
+        this.approvalSettings = approvalSettings;
         var source = inner.ProtocolTool;
         deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
@@ -152,15 +155,29 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
 
     public override Tool ProtocolTool => tool;
+    private bool Candidate => deviceCandidate || importCandidate || exportCandidate || sessionCandidate || saveCloseCandidate || sourceCandidate || compileCandidate;
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
-        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(inner is FoundationTool { IsWrite: true }, "foundation", release, tool.Name);
-        var result = await InvokeCoreAsync(request, cancellationToken);
+        bool write = inner is FoundationTool { IsWrite: true } || Candidate && request.Params?.Arguments?.TryGetValue("mode", out var mode) == true
+            && mode.ValueKind == JsonValueKind.String && mode.GetString() == "apply";
+        var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+        TiaOpenness.Shared.ApprovalOutcome? approval = null;
+        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name);
+        var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value);
+        var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
+        if (body != null && (approval != null || write && !settings.Enabled))
+        {
+            body = TiaOpenness.Shared.ApprovalResult.Decorate(body, write && !settings.Enabled, approval?.Request.RequestId);
+            result = new CallToolResult { IsError = result.IsError, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+            if (approval != null) await TiaOpenness.Shared.ApprovalClient.Complete(approval,
+                (string?)body["error"]?["code"] == "CANCELLED" ? "unknown" : (string?)body["meta"]?["outcome"] ?? "unknown");
+        }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
         return result;
     }
 
-    private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+    private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken,
+        TiaOpenness.Shared.ApprovalSettings settings, Action<TiaOpenness.Shared.ApprovalOutcome> capture)
     {
         string id = Meta.Correlate(null);
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
@@ -184,6 +201,24 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            bool preview = Candidate
+                && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
+            if ((inner is FoundationTool { IsWrite: true } || Candidate) && !preview)
+            {
+                var pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
+                    (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
+                var approval = await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken);
+                capture(approval);
+                if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(approval.Reason, pending.PlanHash, id))));
+                if (!approval.Disabled && pending.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
+                    JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
+                {
+                    await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
+                    return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                        new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
+                }
+            }
             if (compileCandidate) return Recorded(await ((FoundationTool)inner).InvokeCompileCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (sourceCandidate) return Recorded(await ((FoundationTool)inner).InvokeSourceCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (saveCloseCandidate) return Recorded(await ((FoundationTool)inner).InvokeSaveCloseCandidateAsync(args, release, tool.Name, id, cancellationToken));

@@ -21,6 +21,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private JsonObject? disconnectAcknowledgement;
     private readonly WorkerOutcomeState outcome=new();
     private readonly Queue<string> diagnostics = new();
+    private JsonObject approvalIdentity = new();
+    internal string ApprovalIdentity => approvalIdentity.ToJsonString();
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {
@@ -81,6 +83,16 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
+            if (operation == "Disconnect") approvalIdentity = new JsonObject();
+            else if (result is JsonObject values)
+            {
+                var identity = (JsonObject)approvalIdentity.DeepClone();
+                foreach (var key in new[] { "ProjectFile", "ProjectPath", "ProcessId", "ProcessStartUtc", "BindingEpoch", "SessionId", "Identity" })
+                    if (values[key] != null) identity[key] = values[key]!.DeepClone();
+                identity["BindingEpoch"] = channel.BindingEpoch;
+                if (operation == "Attach") identity["ProcessId"] = arguments["processId"]!.GetValue<int>();
+                approvalIdentity = identity;
+            }
             if(operation=="Attach") attachedProcessId=arguments["processId"]!.GetValue<int>();
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();

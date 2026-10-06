@@ -84,6 +84,7 @@ public partial class MainWindow
         var endpoint = Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"];
         var status = state == "Config.Local" ? "stdio" : Loc.Current[state];
         McpStatusText.Text = Loc.Current.T("Shell.Status", status, version, endpoint) + (HasProject ? " · " + _model.Session.ProjectName : "");
+        if (Approvals != null) McpStatusText.Text += " · " + Loc.Current[Approvals.Enabled ? "Approval.EnabledStatus" : "Shell.ApprovalOff"];
         McpStatusText.ToolTip = McpStatusText.Text;
         McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Ui.Accent" : "Ui.StatusIdle");
     }

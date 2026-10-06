@@ -1,0 +1,8 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ApprovalSettings.cs" Link="Shared/ApprovalSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ApprovalProtocol.cs" Link="Shared/ApprovalProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ApprovalPipe.cs" Link="Shared/ApprovalPipe.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ApprovalResult.cs" Link="Shared/ApprovalResult.cs" />
+  </ItemGroup>
+</Project>

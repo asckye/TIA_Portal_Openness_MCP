@@ -1,0 +1,106 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.V4;
+using TiaOpenness.Shared;
+
+namespace TiaMcpServer.ModelContextProtocol
+{
+    public static partial class McpServer
+    {
+        private static readonly AsyncLocal<bool> McpApprovalContext = new AsyncLocal<bool>();
+        private static readonly AsyncLocal<int> ApprovalPreviewDepth = new AsyncLocal<int>();
+        private sealed class InternalPreviewScope : IDisposable
+        {
+            private readonly int previous = ApprovalPreviewDepth.Value;
+            internal InternalPreviewScope() { ApprovalPreviewDepth.Value = previous + 1; }
+            public void Dispose() => ApprovalPreviewDepth.Value = previous;
+        }
+        internal static IDisposable BeginReadOnlyApprovalPreview() => new InternalPreviewScope();
+        internal static bool ApprovalWrite(string tool, string arguments)
+        {
+            if (ToolCatalog.IsWrite(tool)) return true;
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            return BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
+                && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var value) && value == "apply";
+        }
+        internal static bool ApprovalResultWrite(string tool, string arguments)
+        {
+            if (!string.Equals(tool, "CallTool", StringComparison.OrdinalIgnoreCase)) return ApprovalWrite(tool, arguments);
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            return args["name"] is JsonValue name && name.TryGetValue<string>(out var target)
+                && !string.Equals(target, "CallTool", StringComparison.OrdinalIgnoreCase)
+                && AllToolMethods(includeUnavailable: true).ContainsKey(target)
+                && ApprovalWrite(target, (args["arguments"] as JsonObject)?.ToJsonString() ?? "{}");
+        }
+        internal static async Task<ApprovalOutcome?> WaitForApproval(string tool, string arguments, CancellationToken token)
+        {
+            if (tool == "SaveExportContent" && JsonNode.Parse(arguments)?["outputPath"] is JsonValue output
+                && output.TryGetValue<string>(out var path) && ApprovalSettings.IsAdministrativeTarget(path))
+                return ApprovalClient.RejectAdministrativeWrite(PendingApproval.Create("engine", ReleaseKey, tool, arguments, null, 120));
+            if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch") return null;
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
+                && (string?)args["mode"] != "apply") return null;
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            string? identity = null;
+            ApprovalBindingIdentity(ref identity);
+            var pending = PendingApproval.Create("engine", ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds);
+            if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
+            try { return await ApprovalClient.Wait(pending, settings, token).ConfigureAwait(false); }
+            finally { if (settings.Enabled) ApprovalWaitSignal("end", settings.TimeoutSeconds); }
+        }
+        static partial void ApprovalWaitSignal(string phase, int seconds);
+        static partial void ApprovalBindingIdentity(ref string? identity);
+        internal static CallToolResult ApprovalRefusal(ApprovalOutcome approval)
+            => FinishApproval(V4Reject(approval.Request.Tool, new Error(approval.Request.Tool == "SaveExportContent"
+                ? "MCP cannot write Workbench approval settings." : "Workbench confirmation is required before this write.",
+                new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))), approval);
+        internal static CallToolResult ChangedApprovalRefusal(ApprovalOutcome approval)
+        {
+            ApprovalClient.Complete(approval, "rejected-before-operation").GetAwaiter().GetResult();
+            return ApprovalRefusal(new ApprovalOutcome(approval.Request, false, "denied"));
+        }
+        internal static CallToolResult FinishApproval(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
+        {
+            if (approval == null && !disabled) return result;
+            var body = ResultBody(result);
+            if (body == null)
+            {
+                if (approval != null) ApprovalClient.Complete(approval, completion ?? "unknown").GetAwaiter().GetResult();
+                return result;
+            }
+            body = ApprovalResult.Decorate(body, disabled || approval?.Disabled == true, approval?.Request.RequestId);
+            if (approval != null) ApprovalClient.Complete(approval, completion ?? (string?)body["meta"]?["outcome"] ?? "unknown").GetAwaiter().GetResult();
+            return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+        }
+        internal static CallToolResult ApprovedBridgeCall(string name, string arguments, Func<CallToolResult> invoke)
+        {
+            if (!McpApprovalContext.Value) return invoke(); // Local user's CLI is outside MCP.
+            if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
+                ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
+            var approval = WaitForApproval(name, arguments, CancellationToken.None).GetAwaiter().GetResult();
+            if (approval?.Reason != null) return ApprovalRefusal(approval);
+            if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
+            try { return FinishApproval(invoke(), approval, ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
+            catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
+        }
+        internal static bool ApprovalStillMatches(ApprovalOutcome approval, string arguments)
+        {
+            if (approval.Disabled) return true;
+            try
+            {
+                string? identity = null; ApprovalBindingIdentity(ref identity);
+                return PendingApproval.Create("engine", ReleaseKey, approval.Request.Tool, arguments, identity,
+                    approval.Request.TimeoutSeconds).ArgumentDigest == approval.Request.ArgumentDigest;
+            }
+            catch (Exception) /* swallow(fail-open-guard): an unreadable identity refuses the write before execution */ { return false; }
+        }
+        internal static bool EnterMcpApprovalContext() { bool previous = McpApprovalContext.Value; McpApprovalContext.Value = true; return previous; }
+        internal static void LeaveMcpApprovalContext(bool previous) => McpApprovalContext.Value = previous;
+    }
+}

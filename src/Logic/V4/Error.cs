@@ -149,10 +149,17 @@ namespace TiaMcp.Logic.V4
     public sealed class ConfirmationRequiredDetails : ErrorDetails
     {
         internal override ErrorCode Code => ErrorCode.ConfirmationRequired;
-        [JsonPropertyOrder(0)] public string? PlanHash { get; }
+        [JsonPropertyOrder(0)] public string Reason { get; }
+        [JsonPropertyOrder(1)] public string? PlanHash { get; }
+        [JsonPropertyOrder(2)] public string? RequestId { get; }
         public ConfirmationRequiredDetails(string? planHash)
+            : this("plan-confirmation", planHash, null) { }
+        [JsonConstructor]
+        public ConfirmationRequiredDetails(string reason, string? planHash, string? requestId)
         {
+            Reason = reason;
             PlanHash = planHash;
+            RequestId = requestId;
             V4Validation.Details(this);
         }
     }

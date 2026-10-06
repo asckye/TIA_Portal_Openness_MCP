@@ -5,6 +5,7 @@ internal static partial class Strings
     private static (string Key, string En, string Zh)[] FeaturePageCatalogue =>
     [
         ("Feature.NotConnected", "Not connected yet.", "尚未接入。"),
+        ("Approval.EnabledStatus", "Approval on", "审批开启"),
         ("Feature.Count", "{0} events", "{0} 条"),
         ("Feature.Copy", "Copy", "复制"),
         ("Feature.OpenFolder", "Open folder", "打开文件夹"),

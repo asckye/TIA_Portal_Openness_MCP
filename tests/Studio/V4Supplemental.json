@@ -286,6 +286,9 @@
       "message": "Failure.",
       "details": {
         "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ,
+        "reason": "plan-confirmation",
+        "requestId": null
       }
     },
     "meta": {

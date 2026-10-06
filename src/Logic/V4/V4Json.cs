@@ -224,6 +224,9 @@ namespace TiaMcp.Logic.V4
                     throw new JsonException("error requires code, message and details.");
                 var code = codeJson.Deserialize<ErrorCode>(options);
                 if (!DetailTypes.TryGetValue(code, out var detailType)) throw new JsonException("Unknown error code.");
+                if (code == ErrorCode.ConfirmationRequired && (!detailsJson.TryGetProperty("reason", out _)
+                    || !detailsJson.TryGetProperty("planHash", out _) || !detailsJson.TryGetProperty("requestId", out _)))
+                    throw new JsonException("Confirmation details require reason, planHash and requestId.");
                 var details = (ErrorDetails?)detailsJson.Deserialize(detailType, options)
                     ?? throw new JsonException("Error details must be an object.");
                 return new Error(messageJson.GetString()!, details);

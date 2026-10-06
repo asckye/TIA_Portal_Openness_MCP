@@ -45,7 +45,8 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <DockPanel VerticalAlignment="Center">
+          <DockPanel VerticalAlignment="Center" MouseLeftButtonUp="OnMcpMenu">
+            <DockPanel.ContextMenu><ContextMenu><MenuItem x:Name="McpApprovalSwitch" Header="{l:Tr Settings.Approval}" IsCheckable="True" Click="OnApprovalMenu"/></ContextMenu></DockPanel.ContextMenu>
             <Ellipse x:Name="McpStatusDot" Width="6" Height="6" Fill="{DynamicResource Ui.StatusIdle}" Margin="0,0,8,0"/>
             <TextBlock x:Name="McpStatusText" Style="{StaticResource Glass.Muted}" FontSize="11.5"/>
           </DockPanel>

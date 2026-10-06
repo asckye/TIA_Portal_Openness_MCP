@@ -158,7 +158,15 @@ namespace TiaMcpServer.Isolation
                 meta["tiaMcpWorkerGeneration"] = ticket;
                 InvocationJournal.Write(id, "worker:" + name, "BEFORE");
                 dispatched = true; // A partially written pipe request also has an unknown outcome.
-                var result = await Within(worker.RequestAsync("tools/call", parameters, progress), elapsed, cancellation).ConfigureAwait(false);
+                var approvalWait = new ApprovalWaitBudget();
+                Action<JsonObject> notifications = frame =>
+                {
+                    if (frame["params"] is JsonObject details && details["tiaApprovalWait"] is JsonValue phase
+                        && phase.TryGetValue<string>(out var signal) && details["seconds"] is JsonValue seconds && seconds.TryGetValue<int>(out var count))
+                        approvalWait.Signal(signal, count);
+                    else progress?.Invoke(frame);
+                };
+                var result = await Within(worker.RequestAsync("tools/call", parameters, notifications), elapsed, cancellation, approvalWait).ConfigureAwait(false);
                 if (result["error"] == null && result["result"]?["content"] is not JsonArray)
                     throw new IOException("Malformed worker tool result.");
                 // Validate SDK content before releasing the gate. A malformed typed result
@@ -193,15 +201,19 @@ namespace TiaMcpServer.Isolation
             }
         }
 
-        private async Task<T> Within<T>(Task<T> task, Stopwatch elapsed, CancellationToken cancellation)
+        private async Task<T> Within<T>(Task<T> task, Stopwatch elapsed, CancellationToken cancellation, ApprovalWaitBudget? approvalWait = null)
         {
             _ = task.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
             using var timer = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
-            var remaining = deadline - elapsed.Elapsed;
-            if (remaining <= TimeSpan.Zero) throw new TimeoutException();
-            var delay = Task.Delay(remaining, timer.Token);
-            var done = await Task.WhenAny(task, delay).ConfigureAwait(false);
-            if (done != task && !task.IsCompleted) { cancellation.ThrowIfCancellationRequested(); throw new TimeoutException(); }
+            while (!task.IsCompleted)
+            {
+                cancellation.ThrowIfCancellationRequested();
+                var remaining = deadline - elapsed.Elapsed + (approvalWait?.Excluded ?? TimeSpan.Zero);
+                if (remaining <= TimeSpan.Zero) throw new TimeoutException();
+                var delay = Task.Delay(approvalWait == null || remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100), timer.Token);
+                var done = await Task.WhenAny(task, delay).ConfigureAwait(false);
+                if (done == task) break;
+            }
             timer.Cancel();
             return await task.ConfigureAwait(false);
         }

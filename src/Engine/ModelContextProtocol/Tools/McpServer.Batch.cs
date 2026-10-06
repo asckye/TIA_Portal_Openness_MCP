@@ -49,6 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (error != null) return V4TargetReject(tool, error, current: CurrentBehaviorTargets(tool, JsonSerializer.SerializeToElement(new { operations }, V4BindingJson)));
             try
             {
+                using var approvalPreview = BeginReadOnlyApprovalPreview();
                 var plan = new BatchPlanStore.Plan { Project = expectedProject, State = BatchState(expectedProject),
                     Operations = JsonNode.Parse(V4Json.Serialize(validated))!.AsArray() };
                 var rows = new JsonArray();
@@ -85,6 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Preview token is missing, expired or already consumed.", new NotFoundDetails(token))); }
             try
             {
+                using var approvalPreview = BeginReadOnlyApprovalPreview();
                 if (BatchState(plan.Project) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(token, "identity")));
                 int index = 0;
                 foreach (var op in plan.Operations.OfType<JsonObject>())
@@ -168,7 +170,12 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string StablePreview(JsonNode? value)
         {
             var copy = value?.DeepClone();
-            if (copy?["schemaVersion"]?.GetValue<int?>() == 4) copy["meta"]!.AsObject().Remove("requestId");
+            if (copy?["schemaVersion"]?.GetValue<int?>() == 4)
+            {
+                copy["meta"]!.AsObject().Remove("requestId");
+                if (copy["meta"]!["warnings"] is JsonArray warnings)
+                    for (int i = warnings.Count - 1; i >= 0; i--) if ((string?)warnings[i]?["code"] == "APPROVAL_DISABLED") warnings.RemoveAt(i);
+            }
             return BatchPlanStore.Stable(copy);
         }
         internal static bool? ResultSucceeded(JsonNode? body)
@@ -178,7 +185,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return null;
         }
         private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
-        { ["index"] = index, ["target"] = target, ["result"] = ResultBody(result) };
+        { ["index"] = index, ["target"] = target, ["result"] = ResultBody(FinishApproval(result, null,
+            McpApprovalContext.Value && ToolCatalog.IsWrite(target) && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled)) };
 
         private static CallToolResult BatchResult(string tool, JsonArray rows, bool write)
         {

@@ -1,10 +1,13 @@
 using System.Reflection;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.LegacyHost;
 using TiaMcp.Logic.V4;
+using TiaOpenness.Shared;
 using Xunit;
 
 public sealed class PlcImportBoundaryTests
@@ -13,6 +16,27 @@ public sealed class PlcImportBoundaryTests
     { Params = new() { Name = "ImportPlcBlock", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
     private static FoundationV4Tool Tool(CandidateWorkerFixture worker, string name, string release, bool safe) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker), release,
         family => family == "P6-IMPORT" && safe ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current);
+    private static void AssertApprovalDisabled(Envelope envelope)
+        => Assert.Single(envelope.Meta.Warnings, warning => warning.Code == WarningCode.ApprovalDisabled);
+    private sealed class DisabledApprovalState : IDisposable
+    {
+        private readonly string settingsPath;
+        internal DisabledApprovalState()
+        {
+            var root = Path.Combine(Path.GetTempPath(), "tia-foundation-import-approval-" + Guid.NewGuid().ToString("N"));
+            var config = Path.Combine(root, "config"); Directory.CreateDirectory(config);
+            settingsPath = Path.Combine(config, "approval.settings");
+            File.WriteAllText(settingsPath, "enabled=false\ntimeoutSeconds=120\n", new UTF8Encoding(false));
+            Assert.False(ApprovalSettings.Load(settingsPath).Enabled);
+        }
+        internal Func<ApprovalSettings> Load => () => ApprovalSettings.Load(settingsPath);
+        public void Dispose()
+        {
+            try { Directory.Delete(Path.GetDirectoryName(Path.GetDirectoryName(settingsPath)!)!, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
     private static Envelope Body(CallToolResult result)
     {
         string text = ((TextContentBlock)result.Content.Single()).Text; Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(text)));
@@ -49,17 +73,22 @@ public sealed class PlcImportBoundaryTests
     [InlineData(false, false)] [InlineData(true, false)] [InlineData(false, true)]
     public async Task UnknownAndMalformedNativeReplyPreserveUncertaintyAndPoisonOutcome(bool malformed, bool corruptReadback)
     {
-        var worker = new CandidateWorkerFixture(); var tool = Tool(worker, "ImportBlock", "19", true);
+        using var approval = new DisabledApprovalState();
+        var worker = new CandidateWorkerFixture();
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportBlock"), worker), "19",
+            family => family == "P6-IMPORT" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, approval.Load);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
         var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok); Assert.Equal(0, worker.Import.Calls);
         args["mode"] = "apply"; args["confirm"] = true; args["expectedPlanHash"] = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString(); args["expectedProjectFile"] = @"C:\Test.ap19";
         worker.Import.Fault = malformed || corruptReadback ? "" : "during-after";
         worker.Malformed = malformed; worker.CorruptReadback = corruptReadback;
         var result = Body(await tool.InvokeAsync(Request(args)));
+        AssertApprovalDisabled(result);
         Assert.Equal(Outcome.Unknown, result.Meta.Outcome); Assert.True(result.Meta.RequiresSessionReset); Assert.Equal(1, worker.Import.Calls);
         Assert.NotNull(result.Error!.Details); Assert.False(string.IsNullOrWhiteSpace(result.Meta.RequestId));
         Assert.True(worker.Outcome.Poisoned); Assert.Throws<InvalidOperationException>(() => worker.Outcome.RequireUsable());
         int calls = worker.Calls; var replay = Body(await tool.InvokeAsync(Request(args))); Assert.Equal(ErrorCode.SessionResetRequired, replay.Error!.Code); Assert.Equal(calls, worker.Calls);
+        AssertApprovalDisabled(replay);
 
     }
     [Theory]
@@ -69,13 +98,17 @@ public sealed class PlcImportBoundaryTests
     [InlineData("identity-after", false, true)] [InlineData("wrong-parent", false, true)] [InlineData("content-mismatch", false, true)]
     public async Task RemoteBoundaryRetainsTheNativeFaultMatrix(string fault, bool ok, bool unknown)
     {
-        var worker = new CandidateWorkerFixture(); var tool = Tool(worker, "ImportBlock", "19", true);
+        using var approval = new DisabledApprovalState();
+        var worker = new CandidateWorkerFixture();
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportBlock"), worker), "19",
+            family => family == "P6-IMPORT" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, approval.Load);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
         var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok);
         args["mode"] = "apply"; args["confirm"] = true;
         args["expectedPlanHash"] = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString(); args["expectedProjectFile"] = @"C:\Test.ap19";
         worker.Import.Fault = fault;
         var result = Body(await tool.InvokeAsync(Request(args)));
+        AssertApprovalDisabled(result);
         Assert.Equal(ok, result.Ok); Assert.Equal(unknown, result.Meta.RequiresSessionReset);
         Assert.Equal(fault == "before" ? 0 : 1, worker.Import.Calls); Assert.Equal(unknown, worker.Outcome.Poisoned);
         if (unknown) Assert.Equal(Outcome.Unknown, result.Meta.Outcome);
