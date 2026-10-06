@@ -667,7 +667,7 @@ TASK_PATHS = {
     "P6-53": ["scripts/build", "scripts/checks", ".github/workflows", "docs/development/release-workflow.md", "docs/development/validation.md", ".gitattributes"],
     "P6-54": [E+"Program.cs", E+"Isolation", "src/Logic/CliOptions.cs", E+"ModelContextProtocol/Tools/McpServer.Worker.cs", E+"ModelContextProtocol/Tools/SessionTools.cs", E+"Runtime/EnvironmentDoctor.cs", S+"Gui/Configuration", "scripts/checks/Test-RelocatedBundle.py", "docs/reference/real-machine-ledger.md"],
     "P6-55": ["src/FoundationHost", "src/Worker", "src/Adapters/Native/Plc", "src/Adapters/Native/Session/PlcFoundationEngine.cs", "src/Adapters.Contracts/AdapterPreconditionException.cs", "src/Shared/AuditInvocation.cs", "src/Shared/ApprovalPipe.cs", E+"ModelContextProtocol/Tools/McpServer.Approval.cs", "reference/tool-examples/calls.json"],
-    "P6-56": ["scripts/checks/Snapshot-ToolResponses.py", "scripts/checks/Test-ResourceDiscovery.py", E+"Runtime/EnvironmentDoctor.cs", "manifest/contracts/v4/responses"],
+    "P6-56": ["scripts/checks/Snapshot-ToolResponses.py", "scripts/checks/Test-ResourceDiscovery.py", "scripts/build/Run-ReleaseBuild.ps1", E+"Runtime/EnvironmentDoctor.cs", E+"ModelContextProtocol/Tools/McpServer.Doctor.cs", E+"ModelContextProtocol/Tools/SessionTools.cs", E+"Isolation/OpennessReadinessGuard.cs", "src/FoundationHost/LegacyHostPassiveDiagnostics.cs", "src/FoundationHost/LegacyHostPassiveDiagnosticTools.cs", TE+"TiaMcpServer.HttpTests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.Tests", "manifest/contracts/v4", "docs/development/release-workflow.md", "docs/development/validation.md"],
 }
 for task in MIGRATION_GROUPS:
     paths = sorted(p for p in owners if owners[p] == task)
