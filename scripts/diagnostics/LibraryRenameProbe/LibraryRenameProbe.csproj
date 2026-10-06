@@ -9,6 +9,7 @@
     <SiemensEngineeringDirectory Condition="'$(SiemensEngineeringDirectory)' == ''">$(MSBuildThisFileDirectory)..\..\..\sdk\TIA_V21_PublicAPI\V21\net48</SiemensEngineeringDirectory>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="BuildPackage.cs" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="Siemens.Engineering.Base, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b">
       <HintPath>$(SiemensEngineeringDirectory)\Siemens.Engineering.Base.dll</HintPath>

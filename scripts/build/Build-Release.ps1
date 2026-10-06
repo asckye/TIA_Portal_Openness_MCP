@@ -16,7 +16,6 @@ $expectedCheckCounts=[ordered]@{
     diagnosticBehavior=@{value=36;mode='min'}
     diagnosticRejection=@{value=5;mode='min'}
     nativeMcpSafety=@{value=8;mode='min'}
-    crashEvidence=@{value=6;mode='min'}
     nativeJournalReader=@{value=3;mode='min'}
     adapterJournal=@{value=8;mode='min'}
     processLeases=@{value=2;mode='min'}
@@ -197,12 +196,16 @@ if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplet
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--self-test') 'native-mcp-safety.log'
 $nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
 Assert-MatchedCheckCount 'nativeMcpSafety' $nativeMcpSafety 'Native MCP safety checks incomplete'
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
-$crashEvidence=[regex]::Match((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
-Assert-MatchedCheckCount 'crashEvidence' $crashEvidence 'Crash evidence collector checks incomplete'
+$shippedToolsProject=Join-Path $repo 'tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj'
+Restore $shippedToolsProject @()
+$guiTestsProject=Join-Path $repo 'tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj'
+Restore $guiTestsProject @()
+$writeGuardPassed=Run-DotnetSuite 'write-guard' 'write-guard.log'
+$crashEvidencePassed=Run-DotnetSuite 'crash-evidence' 'crash-evidence-tests.log'
+$writeGuardProject=Join-Path $repo 'src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj'
+Run $Dotnet @('publish',$writeGuardProject,'-c','Release','-o',(Join-Path $repo 'runtime/tools'),'--no-restore','-p:PublishAot=false','-p:UseAppHost=true','-p:UseSharedCompilation=false') 'write-guard-publish.log'
 Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
 Run $Python @((Join-Path $repo 'scripts/checks/Test-VersionCatalogWiring.py')) 'version-catalog-wiring.log'
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-WriteGuard.ps1')) 'write-guard.log'
 $offline=Join-Path $repo 'tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj'
 Restore $offline @()
 $offlinePassed=Run-DotnetSuite 'offline' 'offline.log'
@@ -238,7 +241,7 @@ Assert-CheckCount 'diagnosticRejection' $diagnosticTests.rejectionChecks 'Native
 if($diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate incomplete'}
 # Compile the separate opt-in native harness, but execute ONLY its offline safety
 # checks here. Live TIA creation belongs to a dedicated, explicitly enabled run.
-$common=@{diagnosticTests=$diagnosticTests}
+$common=@{diagnosticTests=$diagnosticTests;crashEvidenceChecksPassed=$crashEvidencePassed;writeGuardChecksPassed=$writeGuardPassed}
 [IO.File]::WriteAllText((Join-Path $sharedOut 'common.json'),($common|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
 } else {
     $harness=Join-Path $repo 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
@@ -248,7 +251,7 @@ $common=@{diagnosticTests=$diagnosticTests}
     $diagnosticTests=(Get-Content (Join-Path $sharedOut 'common.json') -Raw | ConvertFrom-Json).diagnosticTests
     $nativeSupervisor=[regex]::Match((Get-Content (Join-Path $sharedOut 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
     $nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $sharedOut 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
-    $crashEvidence=[regex]::Match((Get-Content (Join-Path $sharedOut 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
+    $crashEvidencePassed=[int](Get-Content (Join-Path $sharedOut 'common.json') -Raw | ConvertFrom-Json).crashEvidenceChecksPassed
 }
 $checks=[ordered]@{}
 if($PipelineMajor) {
@@ -387,7 +390,7 @@ foreach($major in @($PipelineMajor)) {
     $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['v21EcosystemAdapters']=$v21Ecosystem
     $checks["V$major"]['isolatedLocalStability']=$isolatedStability
-    $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=[int]$processLeases.Groups[1].Value;nativeMcpSafetyChecksPassed=[int]$nativeMcpSafety.Groups[1].Value;crashEvidenceChecksPassed=[int]$crashEvidence.Groups[1].Value;nativeMcpExecuted=$false}
+    $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=[int]$processLeases.Groups[1].Value;nativeMcpSafetyChecksPassed=[int]$nativeMcpSafety.Groups[1].Value;crashEvidenceChecksPassed=$crashEvidencePassed;nativeMcpExecuted=$false}
     $categories=[ordered]@{}
     $coverage.sites | Group-Object category | ForEach-Object {$categories[$_.Name]=$_.Count}
     $checks["V$major"]['nativeDiagnostics']=[ordered]@{status='passed';sites=$coverage.count;categories=$categories;uncoveredSupportedBoundaries=0;coverageSha256=(Get-FileHash $coveragePath).Hash.ToLowerInvariant();instrumenterSha256=$coverage.instrumenterSha256;jitPrepared=[int]$nativeJit.Groups[1].Value;openGenericWrappers=[int]$nativeJit.Groups[2].Value;fixture=$diagnosticTests;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py')).Hash.ToLowerInvariant();liveTiaExecuted=$false;scope='Engine-owned Openness call sites; not SDK/server internals or a native stability claim'}
@@ -458,7 +461,7 @@ $manifest.capabilities.liteProfile.toolCount=$liteNames.Count
 $manifest.capabilities.liteProfile.note='Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative.'
 $manifest.validationStatus='Both runtimes compiled and tested locally; new real-project acceptance remains pending'
 WriteJson $manifestPath $manifest
-$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo 'runtime/v21'),$verifierDirectory -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config' -or ($_.DirectoryName -eq $verifierDirectory -and $_.Name -in 'NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json')} | Sort-Object FullName | ForEach-Object {
+$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo 'runtime/v21'),(Join-Path $repo 'runtime/tools'),$verifierDirectory -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config' -or ($_.DirectoryName -eq $verifierDirectory -and $_.Name -in 'NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json')} | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.

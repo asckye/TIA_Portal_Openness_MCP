@@ -110,6 +110,13 @@ if ($Strict) {
         }
     }
 }
+foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Force) {
+    $relative = $file.FullName.Substring($root.Length + 1).Replace('\\', '/')
+    if ((IsDeliveryFile $relative) -and $relative.StartsWith('runtime/', [StringComparison]::Ordinal) -or
+        (IsDeliveryFile $relative) -and $relative.StartsWith('hooks/', [StringComparison]::Ordinal)) {
+        if ($file.Extension -in '.cs', '.csproj') { Fail "Shipped runtime/hook tree contains source: $relative" }
+    }
+}
 foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.prefixes)) {
     if ($NoBinaries -and ($path -eq 'TiaOpenness.exe' -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
     if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
@@ -136,11 +143,14 @@ $bundleResourcePaths = @(
     'reference/v21-ecosystem.json',
     'scripts/ecosystem/plc_tools_bridge.py',
     'scripts/ecosystem/simaticml_decode_bridge.py',
+    'runtime/tools/TiaMcp.WriteGuard.exe',
     'scripts/operations/Update-Engine.ps1',
     'templates'
 )
 foreach ($resource in $bundleResourcePaths) {
     if (Test-Path -LiteralPath (Join-Path $root $resource)) { Ok "Bundle resource present: $resource" }
+    elseif ($resource -eq 'runtime/tools/TiaMcp.WriteGuard.exe' -and -not $PackageMode -and $NoBinaries) { Ok "Generated bundle resource will be built before packaging: $resource" }
+    elseif ($resource -eq 'runtime/tools/TiaMcp.WriteGuard.exe' -and -not $PackageMode -and (Test-Path -LiteralPath (Join-Path $root 'src/Tools/WriteGuard/bin/Release/net10.0/TiaMcp.WriteGuard.exe'))) { Ok "Generated bundle resource build output present: $resource" }
     else { Fail "Missing bundle resource: $resource" }
 }
 foreach ($guiFile in @(
@@ -247,26 +257,14 @@ if ($NoBinaries) { $exe = $null }
 elseif (!(Test-Path -LiteralPath $exe)) { Fail "Missing V21 runtime: $exe"; $exe=$null }
 else { Ok "TiaMcp.Engine.V21.exe present ($exe)" }
 
-# Sentinel: every launcher must point at an engine that actually exists in this checkout.
-# The .cmd/.bat files and this script drifted apart once already — the validator checked one
-# path while every user ran another — so the launchers are now parsed and verified here.
-$launchers = @('scripts\operations\预热.bat','scripts\operations\生成工程.bat')
+# The generation and prewarm shortcuts are documented as direct engine commands.
 foreach ($removed in @('tia.cmd','tia-v20.cmd','配置MCP.bat','配置MCP-v20.bat')) {
     if (Test-Path -LiteralPath (Join-Path $root $removed)) { Fail "Replaced launcher must be removed: $removed" }
 }
-foreach ($rel in $launchers) {
-    $lp = Join-Path $root $rel
-    if (-not (Test-Path -LiteralPath $lp)) { Fail ("Missing launcher: " + $rel); continue }
-    $ldir = Split-Path -Parent $lp
-    $text = Get-Content -LiteralPath $lp -Raw -Encoding UTF8
-    $refs = @([regex]::Matches($text, '%~dp0([^"%]*TiaMcp\.Engine\.V(?:20|21)\.exe)') |
-              ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
-    if ($refs.Count -eq 0) { Fail ($rel + ': references no TiaMcp.Engine.V21.exe path'); continue }
-    if ($NoBinaries) { Ok ($rel + ' -> ' + ($refs -join ' ; ') + ' (existence not checked without binaries)'); continue }
-    $anyPresent = $false
-    foreach ($r in $refs) { if (Test-Path -LiteralPath (Join-Path $ldir $r)) { $anyPresent = $true } }
-    if ($anyPresent) { Ok ($rel + ' -> an engine present in this checkout') }
-    else { Fail ($rel + ' points at no engine present here: ' + ($refs -join ' ; ')) }
+$cliGuide = Join-Path $root 'docs/getting-started/cli.md'
+$cliText = if (Test-Path -LiteralPath $cliGuide) { Get-Content -LiteralPath $cliGuide -Raw -Encoding UTF8 } else { '' }
+foreach ($command in @('runtime\v21\TiaMcp.Engine.V21.exe gen <spec>', 'runtime\v21\TiaMcp.Engine.V21.exe prewarm', 'runtime\v20\TiaMcp.Engine.V20.exe gen <spec>', 'runtime\v20\TiaMcp.Engine.V20.exe prewarm')) {
+    if ($cliText.Contains($command)) { Ok "Documented CLI command: $command" } else { Fail "Missing documented CLI command: $command" }
 }
 
 # The engine ships the trimmed lite roster by default, so it MUST carry the FindTools/CallTool

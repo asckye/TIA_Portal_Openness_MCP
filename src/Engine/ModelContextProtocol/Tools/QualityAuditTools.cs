@@ -37,7 +37,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         string root = EcosystemFiles.RepositoryRoot();
                         string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
                         string python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
-                        if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("PDF renderer requires Install-PlcTools.ps1 and its Python environment.");
+                        if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("PDF renderer requires `tia install-plc-tools` and its Python environment.");
                         var request = new JsonObject { ["mode"] = "audit-pdf", ["outputPath"] = output.FullName, ["report"] = result.DeepClone() };
                         var render = EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", bridge }, output.DirectoryName!, request.ToJsonString(), 60).GetAwaiter().GetResult();
                         meta["pdfRenderer"] = render;

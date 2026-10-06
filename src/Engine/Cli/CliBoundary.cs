@@ -10,8 +10,8 @@ namespace TiaMcpServer.Cli
     internal static class CliBoundary
     {
         private static readonly string[] Tools = { "gen", "patch", "compile", "export", "import", "describe" };
-        private static readonly string[] Commands = { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "schema", "version", "help", "--help", "-h", "audit" };
-        private static readonly string[] Values = { "--plc", "--out", "--block", "--from", "--host", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--worker-timeout-seconds" };
+        private static readonly string[] Commands = { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "install-plc-tools", "schema", "version", "help", "--help", "-h", "audit" };
+        private static readonly string[] Values = { "--plc", "--out", "--block", "--from", "--host", "--python", "--environment-path", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--worker-timeout-seconds" };
         private static string Canonical(string option) => new[] { "-tia-major-version", "-tia-portal-location", "-profile", "-logging", "-with-ui" }.Contains(option.ToLowerInvariant()) ? "-" + option : option;
 
         internal static bool IsTool(string[] args) => args.Length > 0 && Tools.Contains(args[0].ToLowerInvariant());
@@ -53,6 +53,7 @@ namespace TiaMcpServer.Cli
                 case "prewarm": allowed.Add("--stop"); break;
                 case "doctor": allowed.Add("--fix"); break;
                 case "config": allowed.UnionWith(new[] { "--host", "--print" }); break;
+                case "install-plc-tools": allowed.UnionWith(new[] { "--python", "--environment-path" }); break;
             }
             int paths = 0;
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

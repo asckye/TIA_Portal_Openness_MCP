@@ -27,6 +27,16 @@ MCP `WRITE` / `ONLINE-WRITE` 操作默认须由 Workbench 审批后才派发。�
 .\runtime\v21\TiaMcp.Engine.V21.exe schema
 .\runtime\v21\TiaMcp.Engine.V21.exe gen .\spec.json --dry-run
 .\runtime\v21\TiaMcp.Engine.V21.exe gen .\spec.json --json
+runtime\v21\TiaMcp.Engine.V21.exe install-plc-tools
+```
+
+直接使用 V21 CLI 的生成和预热命令：
+
+```text
+runtime\v21\TiaMcp.Engine.V21.exe gen <spec>
+runtime\v21\TiaMcp.Engine.V21.exe prewarm
+runtime\v20\TiaMcp.Engine.V20.exe gen <spec>
+runtime\v20\TiaMcp.Engine.V20.exe prewarm
 ```
 
 `schema` 输出当前 spec 字段；`--dry-run` 离线校验输入，不创建工程。实际生成后查看每个步骤结果、实际工程位置及编译诊断，不能只根据进程有输出判断成功。
@@ -62,6 +72,6 @@ MCP `WRITE` / `ONLINE-WRITE` 操作默认须由 Workbench 审批后才派发。�
 
 现有蓝图见 [templates/project-blueprints](../../templates/project-blueprints)。文件中的 `__BUNDLE__` 会解析为交付包根目录。模板不是任意版本的通用工程：UDT/DB builder 有显式八版输出，其余 PLC builder 仍为 V21 候选格式，见 [Builder 说明](../guides/plc/builders.md)。
 
-`scripts\operations\生成工程.bat` 支持拖入一个 spec 文件，默认选择包内 V21 引擎；V20 用户直接调用匹配 EXE，避免用文件是否存在来决定目标版本。
+生成工程和预热不再需要批处理快捷方式；从交付根目录直接运行上面的 V20 或 V21 引擎命令。`install-plc-tools` 为用户 Python 3.12+ 创建伴随环境；pip 按当前索引设置联网安装，也可通过 `PIP_NO_INDEX=1` 配合本地 wheel 缓存或索引离线安装。
 
 关闭前台 `prewarm` 可按 Ctrl+C。`prewarm --stop` 关闭其 TIA 实例，预热进程本身仍需结束。完整工程流程见[项目生成](../guides/project-generation.md)。

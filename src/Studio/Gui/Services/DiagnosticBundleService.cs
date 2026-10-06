@@ -181,6 +181,9 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
     public static IReadOnlyList<DiagnosticInput> Inputs(EnvironmentCheckContext context)
     {
         var inputs = new List<DiagnosticInput>();
+        inputs.Add(new("windows-event", "local Windows event/process/dump inventory", "windows/tia-exit-evidence.json", false,
+            TiaExitEvidenceCollector.Capture()));
+        inputs.Add(TiaExitEvidenceCollector.NativeExportLogInput(DataLocations.Current.SystemTempDirectory));
         foreach (string file in Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory).OrderBy(p => p).Take(128) : [])
             if (Path.GetExtension(file).ToLowerInvariant() is ".json" or ".settings" or ".config")
                 inputs.Add(new("config", file, "config/" + Path.GetFileName(file)));

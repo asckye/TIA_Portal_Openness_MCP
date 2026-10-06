@@ -160,6 +160,11 @@ namespace TiaMcpServer
                     Environment.ExitCode = Cli.CliCommands.Run(args);
                     return;
                 }
+                if (args.Length > 0 && string.Equals(args[0], "install-plc-tools", StringComparison.OrdinalIgnoreCase))
+                {
+                    Environment.ExitCode = Cli.CliCommands.Run(args);
+                    return;
+                }
                 TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(tiaMajorVersion);
 
                 // Version-aware self-routing: this exe's IL is bound to one TIA major

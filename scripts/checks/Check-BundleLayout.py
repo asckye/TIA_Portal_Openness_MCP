@@ -16,6 +16,7 @@ VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
 LAUNCHER = 'src/Studio/Launcher/Launcher.cs'
 GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
+GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe'}
 
 
 def load_delivery(root):
@@ -113,14 +114,17 @@ def check(root, tracked):
                    (root / GUI_PROJECT).read_text(encoding='utf-8-sig'))
     validated = validated_paths((root / VALIDATOR).read_text(encoding='utf-8-sig'))
     errors = []
+    for name in tracked or ():
+        if name.startswith(('runtime/', 'hooks/')) and Path(name).suffix.lower() in ('.cs', '.csproj'):
+            errors.append('Shipped runtime/hook tree contains source: ' + name)
     for path in paths:
         target = root / path
-        if not target.exists():
+        if not target.exists() and not (tracked is not None and path in GENERATED_RESOURCES):
             errors.append('Missing resource: ' + path)
         # An extracted or staged bundle has no Git work tree; existence and validation still apply there.
         if tracked is not None:
             in_tree = path in tracked if not target.is_dir() else any(p.startswith(path + '/') for p in tracked)
-            if not in_tree:
+            if not in_tree and path not in GENERATED_RESOURCES:
                 errors.append('Resource is not in the Git file set: ' + path)
         if path not in validated:
             errors.append('Resource is not checked by Validate-Bundle: ' + path)
@@ -135,18 +139,18 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
-    def test_python_installer_covers_external_runtime_dependencies(self):
+    def test_csharp_installer_covers_external_runtime_dependencies(self):
         expected = set()
         for path in (ROOT / 'third_party/siemens-plc-tools').rglob('pyproject.toml'):
             project = tomllib.loads(path.read_text(encoding='utf-8'))['project']
             expected.update(d for d in project.get('dependencies', []) if not d.startswith('plc-'))
             for extra in ('opcua', 'web'):
                 expected.update(d for d in project.get('optional-dependencies', {}).get(extra, []) if not d.startswith('plc-'))
-        installer = (ROOT / 'scripts/ecosystem/Install-PlcTools.ps1').read_text(encoding='utf-8-sig')
-        actual = re.search(r'\$dependencies = @\((.*?)\n\)', installer, re.S)
+        installer = (ROOT / 'src/Engine/Cli/InstallPlcToolsCommand.cs').read_text(encoding='utf-8-sig')
+        actual = re.search(r'ExternalPackages\s*=\s*\{(.*?)\n\s*\};', installer, re.S)
         self.assertIsNotNone(actual)
-        self.assertEqual(set(re.findall(r"'([^']+)'", actual[1])), expected)
-        self.assertIn('@dependencies pytest pytest-asyncio pytest-cov reportlab', installer)
+        self.assertEqual(set(re.findall(r'"([^"\n]+)"', actual[1])), expected)
+        self.assertTrue(all(f'"{name}"' in installer for name in ('pytest', 'pytest-asyncio', 'pytest-cov', 'reportlab')))
 
     def test_shipped_license_copies_are_unchanged(self):
         for source, copy in (
@@ -166,6 +170,7 @@ class LayoutChecks(unittest.TestCase):
         for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',
+                     'runtime/tools/TiaMcp.WriteGuard.exe',
                      'plugin/skill/SKILL.md',
                      'third_party/siemens-plc-tools/packages/plc-code/src/plc_code/cli.py',
                      'third_party/simaticml-decoder/src/simaticml_decoder/parse.py'):

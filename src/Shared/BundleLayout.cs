@@ -15,6 +15,7 @@ namespace TiaOpenness.Shared
         V21EcosystemCatalog,
         PlcToolsBridge,
         SimaticMlDecodeBridge,
+        WriteGuardExecutable,
         UpdateScript,
         Templates
     }
@@ -104,6 +105,7 @@ namespace TiaOpenness.Shared
                 { BundleResource.V21EcosystemCatalog, "reference/v21-ecosystem.json" },
                 { BundleResource.PlcToolsBridge, "scripts/ecosystem/plc_tools_bridge.py" },
                 { BundleResource.SimaticMlDecodeBridge, "scripts/ecosystem/simaticml_decode_bridge.py" },
+            { BundleResource.WriteGuardExecutable, "runtime/tools/TiaMcp.WriteGuard.exe" },
                 { BundleResource.UpdateScript, "scripts/operations/Update-Engine.ps1" },
                 { BundleResource.Templates, "templates" }
             };

@@ -19,12 +19,15 @@
 
 MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；拒绝、超时或工作台不可用会在操作前返回 `CONFIRMATION_REQUIRED`。审计记录保存在数据根的 `data/logs/audit`，可通过 Workbench 审计页或 `tia audit verify` 检查。哈希链只能验证留存记录间的连续性，不能证明完整日志未被删除。引擎日志和诊断调用包位于 `data/logs` 与 `data/diagnostics`；只读安装时使用运行时布局文档列出的用户目录回退。
 
-伴随 Python 环境由 `scripts/ecosystem/Install-PlcTools.ps1` 准备，默认位于
-`%LOCALAPPDATA%\TiaMcp\ecosystem-python`；需要 Python 3.12+。引擎优先使用显式
+伴随 Python 环境由交付引擎命令 `tia install-plc-tools` 准备，默认位于
+`%LOCALAPPDATA%\TiaMcp\ecosystem-python`；需要 Python 3.12+。从交付根目录运行
+`runtime\v21\TiaMcp.Engine.V21.exe install-plc-tools`，V20 用户改用对应的 V20 引擎。
+命令创建 venv 并安装随包版本锁定的依赖；pip 沿用当前配置，可使用在线索引或
+`PIP_NO_INDEX=1` 与本地 wheel 缓存/索引。引擎优先使用显式
 `TIA_MCP_PLC_TOOLS_PYTHON`，否则读取该环境的 `Scripts\python.exe`。LocalAppData 缺失、
 环境不可写或解释器不存在时返回 `IO_FAILED` 与路径，不从旧私人环境自动复制或执行。
-开发者可用 `-EnvironmentPath <absolute-path>` 保留自选位置；维护者现有仓库 `TiaMcp_Output`
-环境也必须通过该参数或解释器变量显式选择，不作为默认值。
+可用 `--environment-path <absolute-path>` 保留自选位置，或用 `--python <executable>` 选择 Python；
+维护者现有仓库 `TiaMcp_Output` 环境也必须显式选择，不作为默认值。
 
 ## 现有工具用途
 

@@ -114,6 +114,7 @@ def main():
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
     required_exes = ['TiaOpenness.exe', 'runtime/v20/TiaMcp.Engine.V20.exe', 'runtime/v21/TiaMcp.Engine.V21.exe']
+    required_exes += ['runtime/tools/TiaMcp.WriteGuard.exe']
     if multi is not None:
         required_exes += [f'runtime/v{key}/TiaMcp.FoundationHost.exe' for key in multi['studioReleaseKeys'][:6]]
         required_exes += ['runtime/studio/TiaOpenness.exe']
@@ -141,7 +142,7 @@ def main():
     require(runtime_names == {r['path'] for r in inventory}, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'tests/Engine/', 'build-tools/native-call-weaver/', 'src/Shared/', 'third_party/TiaGitAddIn.Core/', 'third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
+    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/','src/Tools/WriteGuard/','tests/Engine/','tests/Tools/','build-tools/native-call-weaver/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
@@ -256,7 +257,10 @@ def main():
                 'src/Studio/Gui/Themes/Palette.Dark.xaml',
                 'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
                 'tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs',
-                'scripts/operations/预热.bat', 'scripts/operations/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
+                'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.WriteGuard.dll',
+                'runtime/tools/TiaMcp.WriteGuard.deps.json', 'runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json',
+                'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
+                'docs/getting-started/cli.md', 'scripts/README.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'plugin/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
     required += ['src/Runtime/' + name for name in

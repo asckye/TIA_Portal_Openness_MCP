@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/tia-write-guard.ps1\"",
+        "command": "\"${CLAUDE_PLUGIN_ROOT}/runtime/tools/TiaMcp.WriteGuard.exe\"",
             "timeout": 20
           }
         ]

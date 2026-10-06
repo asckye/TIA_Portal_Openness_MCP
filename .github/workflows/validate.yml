@@ -46,16 +46,17 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - name: Release safety scripts and production PLC name fixture
+      - name: Release safety suites and production PLC name fixture
         shell: powershell
         run: |
           python scripts/checks/Test-NativeLifecycle.py --self-test
           if ($LASTEXITCODE) { throw 'Native supervisor self-tests failed' }
           python scripts/checks/Test-NativeMcpSession.py --self-test
           if ($LASTEXITCODE) { throw 'Native MCP self-tests failed' }
-          & ./scripts/checks/Test-CrashEvidence.ps1
-          & ./scripts/checks/Test-WriteGuard.ps1
-          if ($LASTEXITCODE) { throw 'Write guard tests failed' }
+          python scripts/checks/Test-DotnetSuites.py --suite crash-evidence
+          if ($LASTEXITCODE) { throw 'Crash evidence suite failed' }
+          python scripts/checks/Test-DotnetSuites.py --suite write-guard
+          if ($LASTEXITCODE) { throw 'Write guard suite failed' }
           & ./scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
           if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Script calls must use registered V4 tools

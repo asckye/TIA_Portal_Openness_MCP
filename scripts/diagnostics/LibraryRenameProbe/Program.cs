@@ -17,14 +17,23 @@ namespace LibraryRenameProbe
             Console.OutputEncoding = new UTF8Encoding(false);
             try
             {
-                if (args.SequenceEqual(new[] { "--self-test" })) return Options.SelfTest();
-                if (args.Length == 0 || args.SequenceEqual(new[] { "--help" }))
+                if (args.SequenceEqual(new[] { "--self-test" }))
+                {
+                    int checks = Options.SelfTest();
+                    if (checks != 0) return checks;
+                    CampaignRunner.SelfTest();
+                    return 0;
+                }
+                if (args.Length == 0) return RunDefaultCampaign();
+                if (args.SequenceEqual(new[] { "--help" }))
                 {
                     Console.WriteLine("V21 Unified library rename diagnostic. No native calls by default.\n" +
-                        "Use Run-Tests.cmd on the VM. --self-test is offline; --preflight reads installation metadata.\n" +
+                        "Double-click this executable to run the VM campaign. --self-test is offline; --preflight reads installation metadata.\n" +
+                        "Run --campaign --source <diagnostic .al21> [--timeout-seconds <60..1800>] to select an input.\n" +
                         "Native: --stage prepare|run --case <case> --output <owned directory> --source <diagnostic .al21>");
                     return 0;
                 }
+                if (args[0] == "--campaign") return RunDefaultCampaign(args.Skip(1).ToArray());
                 bool preflight = args.SequenceEqual(new[] { "--preflight" });
                 Options? options = preflight ? null : Options.Parse(args);
                 string api = InstalledApi();
@@ -47,6 +56,51 @@ namespace LibraryRenameProbe
                 return Native.Run(options!);
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); return 2; }
+        }
+
+        private static int RunDefaultCampaign(string[]? args = null)
+        {
+            string source = @"C:\Users\SIEMENS\Documents\Automation\MCP_Rename_Diagnostics_20261001\library-general-1133\MCP_GeneralScripts_Rename_20261001_1133\MCP_GeneralScripts_Rename_20261001_1133.al21";
+            int timeout = 600;
+            args = args ?? Array.Empty<string>();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--source" && i + 1 < args.Length) source = args[++i];
+                else if (args[i] == "--timeout-seconds" && i + 1 < args.Length && int.TryParse(args[++i], out var seconds)) timeout = seconds;
+                else throw new ArgumentException("Expected --source <diagnostic .al21> and/or --timeout-seconds <60..1800>.");
+            }
+            if (timeout < 60 || timeout > 1800) throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be 60..1800 seconds.");
+            int exitCode = 2;
+            try
+            {
+                if (Options.SelfTest() != 0) return 2;
+                CampaignRunner.SelfTest();
+                string api = InstalledApi();
+                string basePath = Path.Combine(api, "Siemens.Engineering.Base.dll");
+                var identity = AssemblyName.GetAssemblyName(basePath);
+                if (identity.Version.Major != 21 || BitConverter.ToString(identity.GetPublicKeyToken()).Replace("-", "").ToLowerInvariant() != "29bfe5fdf4ba5d3b")
+                    throw new InvalidOperationException("Installed V21 API identity mismatch");
+                Console.WriteLine("Installed API: " + identity.FullName + "; file version " + System.Diagnostics.FileVersionInfo.GetVersionInfo(basePath).FileVersion);
+                AppDomain.CurrentDomain.AssemblyResolve += (_, ev) =>
+                {
+                    var requested = new AssemblyName(ev.Name);
+                    if (!requested.Name.StartsWith("Siemens.Engineering", StringComparison.Ordinal)) return null;
+                    string path = Path.Combine(api, requested.Name + ".dll");
+                    if (!File.Exists(path)) return null;
+                    if (!string.Equals(AssemblyName.GetAssemblyName(path).FullName, requested.FullName, StringComparison.OrdinalIgnoreCase))
+                        throw new FileLoadException("Exact installed API identity mismatch: " + requested.Name);
+                    return Assembly.LoadFrom(path);
+                };
+                exitCode = CampaignRunner.Run(Assembly.GetExecutingAssembly().Location, source,
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "results"), timeout, new WindowsCampaignHost());
+            }
+            catch (Exception ex) { Console.Error.WriteLine(ex); exitCode = 2; }
+            finally
+            {
+                Console.WriteLine("Campaign finished with exit code " + exitCode + ". Press any key to close.");
+                try { Console.ReadKey(true); } catch (InvalidOperationException) { }
+            }
+            return exitCode;
         }
 
         static string InstalledApi()

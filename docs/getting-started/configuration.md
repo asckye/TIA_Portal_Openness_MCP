@@ -114,7 +114,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。拒
 
 需要命令行诊断时使用 [CLI 指南](cli.md)。V20/V21 可选工作进程隔离的参数与恢复方式见[隔离指南](../guides/openness-worker-isolation.md)，配置器没有对应勾选项。
 
-作为 Claude Code 插件使用时，还会加载仓库的 `hooks/tia-write-guard.ps1`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
+作为 Claude Code 插件使用时，还会运行随包的 `runtime/tools/TiaMcp.WriteGuard.exe`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
 
 手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由配置器生成，避免复制不匹配参数。
 

@@ -1,10 +1,12 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Text;
 using System.Text.RegularExpressions;
 using TiaOpenness.Shared;
 
@@ -41,18 +43,75 @@ namespace TiaOpenness.Core.Environment
         {
             using (var identity = WindowsIdentity.GetCurrent())
             {
-                string sid = identity.User.Value;
-                return BooleanOutput(PowerShell("$g=Get-LocalGroup -Name 'Siemens TIA Openness' -ErrorAction SilentlyContinue; " +
-                    "if(!$g){'false'}else{[bool](@(Get-LocalGroupMember -Group $g | Where-Object {$_.SID.Value -eq '" + sid + "'}).Count)}"));
+                IntPtr resume = IntPtr.Zero;
+                while (true)
+                {
+                    IntPtr buffer = IntPtr.Zero;
+                    int read, total;
+                    int status = NetLocalGroupGetMembers(null, "Siemens TIA Openness", 0, out buffer, -1,
+                        out read, out total, ref resume);
+                    try
+                    {
+                        if (status == 1376 || status == 2220) return false;
+                        if (status != 0 && status != 234) throw new Win32Exception(status);
+                        for (int index = 0; index < read; index++)
+                        {
+                            var row = (LocalGroupMember0)Marshal.PtrToStructure(IntPtr.Add(buffer, index * IntPtr.Size), typeof(LocalGroupMember0));
+                            if (row.Sid != IntPtr.Zero && new SecurityIdentifier(row.Sid).Equals(identity.User)) return true;
+                        }
+                        if (status == 0) return false;
+                    }
+                    finally { if (buffer != IntPtr.Zero) NetApiBufferFree(buffer); }
+                }
             }
         }
 
         private static string[] PortOwners(int port)
         {
-            var output = PowerShell("@(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object {$_.LocalPort -eq " + port + "}) | " +
-                "ForEach-Object {$p=Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; " +
-                "'{0}:{1} PID={2} {3}' -f $_.LocalAddress,$_.LocalPort,$_.OwningProcess,$p.ProcessName}");
-            return output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray();
+            var owners = new System.Collections.Generic.List<string>();
+            ReadTcpTable(2, port, owners);
+            ReadTcpTable(23, port, owners);
+            return owners.Distinct().ToArray();
+        }
+
+        private static void ReadTcpTable(int addressFamily, int requestedPort, System.Collections.Generic.List<string> owners)
+        {
+            int size = 0;
+            int status = GetExtendedTcpTable(IntPtr.Zero, ref size, true, addressFamily, 3, 0);
+            if (status != 122 && status != 0) throw new Win32Exception(status);
+            if (size <= sizeof(uint)) return;
+            IntPtr table = Marshal.AllocHGlobal(size);
+            try
+            {
+                status = GetExtendedTcpTable(table, ref size, true, addressFamily, 3, 0);
+                if (status != 0) throw new Win32Exception(status);
+                int rows = Marshal.ReadInt32(table);
+                int rowSize = addressFamily == 2 ? 24 : 56;
+                for (int index = 0; index < rows; index++)
+                {
+                    IntPtr row = IntPtr.Add(table, sizeof(uint) + checked(index * rowSize));
+                    uint rawPort = unchecked((uint)Marshal.ReadInt32(row, addressFamily == 2 ? 8 : 20));
+                    int localPort = (int)(((rawPort & 0xff) << 8) | ((rawPort >> 8) & 0xff));
+                    if (localPort != requestedPort) continue;
+                    int pid = Marshal.ReadInt32(row, addressFamily == 2 ? 20 : 52);
+                    IPAddress address;
+                    if (addressFamily == 2) address = new IPAddress(BitConverter.GetBytes(Marshal.ReadInt32(row, 4)));
+                    else
+                    {
+                        byte[] bytes = new byte[16];
+                        Marshal.Copy(row, bytes, 0, bytes.Length);
+                        long scope = unchecked((uint)Marshal.ReadInt32(row, 16));
+                        address = new IPAddress(bytes, scope);
+                    }
+                    string processName = "";
+                    try { using (var process = Process.GetProcessById(pid)) processName = process.ProcessName; }
+                    catch (ArgumentException) /* swallow(probe-optional): process exit or PID reuse leaves this listener name unavailable */ { }
+                    catch (InvalidOperationException) /* swallow(probe-optional): a changing process has no stable listener name to report */ { }
+                    owners.Add(address + ":" + localPort.ToString(System.Globalization.CultureInfo.InvariantCulture) +
+                        " PID=" + pid.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + processName);
+                }
+            }
+            finally { Marshal.FreeHGlobal(table); }
         }
 
         private static bool? UrlReserved(string prefix)
@@ -89,25 +148,21 @@ namespace TiaOpenness.Core.Environment
         {
             var uri = new Uri(prefix);
             // Canonical IPv4 is validated by the configuration service before this method.
-            string address = uri.Host, port = uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var output = PowerShell("$r=Get-NetFirewallRule -Name 'TIA-MCP-" + address + "-" + port + "' -ErrorAction SilentlyContinue; " +
-                "if(!$r){'false'}else{$p=$r|Get-NetFirewallPortFilter; $a=$r|Get-NetFirewallAddressFilter; " +
-                "[bool]($r.Enabled -eq 'True' -and $r.Direction -eq 'Inbound' -and $r.Action -eq 'Allow' " +
-                "-and $p.Protocol -eq 'TCP' -and $p.LocalPort -eq '" + port + "' -and $a.LocalAddress -contains '" + address + "')}" );
-            return BooleanOutput(output);
+            string address = uri.Host;
+            return WindowsFirewallRule.IsAllowed("TIA-MCP-" + address + "-" + uri.Port, address, uri.Port);
         }
 
-        private static bool? BooleanOutput(string output)
-        { return bool.TryParse(output.Trim(), out var value) ? value : (bool?)null; }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LocalGroupMember0 { internal IntPtr Sid; }
 
-        private static string PowerShell(string command)
-        {
-            var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes("$ErrorActionPreference='Stop'; " +
-                "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); " + command));
-            var result = LocalProcess.Run(Path.Combine(System.Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"),
-                new[] { "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded }, System.Environment.SystemDirectory, null, 10).GetAwaiter().GetResult();
-            if (!result.Success || !result.DataComplete) throw new InvalidOperationException("Local Windows inspection unavailable: " + result.Stderr);
-            return result.Stdout;
-        }
+        [DllImport("Netapi32.dll", CharSet = CharSet.Unicode)]
+        private static extern int NetLocalGroupGetMembers(string serverName, string groupName, int level, out IntPtr buffer,
+            int preferredMaximumLength, out int entriesRead, out int totalEntries, ref IntPtr resumeHandle);
+
+        [DllImport("Netapi32.dll")]
+        private static extern int NetApiBufferFree(IntPtr buffer);
+
+        [DllImport("iphlpapi.dll", SetLastError = true)]
+        private static extern int GetExtendedTcpTable(IntPtr table, ref int size, bool order, int addressFamily, int tableClass, int reserved);
     }
 }

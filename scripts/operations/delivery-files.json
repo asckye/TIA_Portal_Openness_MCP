@@ -33,7 +33,11 @@
       "docs/licenses/Manrope-OFL.txt",
       "docs/licenses/JetBrainsMono-OFL.txt",
       "docs/licenses/NotoSansSC-OFL.txt",
-      "docs/licenses/SiemensCodeSnippets-LICENSE.md"
+      "docs/licenses/SiemensCodeSnippets-LICENSE.md",
+      "runtime/tools/TiaMcp.WriteGuard.exe",
+      "runtime/tools/TiaMcp.WriteGuard.dll",
+      "runtime/tools/TiaMcp.WriteGuard.deps.json",
+      "runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json"
     ],
     "prefixes": [
       "runtime/",
@@ -63,7 +67,21 @@
     ]
   },
   "exclude": {
-    "files": [],
+    "files": [
+      "hooks/tia-write-guard.ps1",
+      "scripts/operations/生成工程.bat",
+      "scripts/operations/预热.bat",
+      "scripts/ecosystem/Install-PlcTools.ps1",
+      "scripts/diagnostics/Collect-TiaExitEvidence.cmd",
+      "scripts/diagnostics/Collect-TiaCrashEvidence.ps1",
+      "scripts/checks/Test-CrashEvidence.ps1",
+      "scripts/checks/Test-WriteGuard.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.cmd",
+      "scripts/diagnostics/LibraryRenameProbe/Build-Package.ps1",
+      "scripts/operations/vci-watch/register-task.ps1"
+    ],
     "prefixes": [
       "runtime/verification/",
       "scripts/operations/vci-watch/"
@@ -80,7 +98,20 @@
       "TiaPortalOpenness.slnx",
       "Version.props",
       "docs/reference/real-machine-ledger.md",
-      "tools/README.md"
+      "tools/README.md",
+      "hooks/tia-write-guard.ps1",
+      "scripts/operations/生成工程.bat",
+      "scripts/operations/预热.bat",
+      "scripts/ecosystem/Install-PlcTools.ps1",
+      "scripts/diagnostics/Collect-TiaExitEvidence.cmd",
+      "scripts/diagnostics/Collect-TiaCrashEvidence.ps1",
+      "scripts/checks/Test-CrashEvidence.ps1",
+      "scripts/checks/Test-WriteGuard.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
+      "scripts/diagnostics/LibraryRenameProbe/Run-Tests.cmd",
+      "scripts/diagnostics/LibraryRenameProbe/Build-Package.ps1",
+      "scripts/operations/vci-watch/register-task.ps1"
     ],
     "prefixes": [
       "tools/",

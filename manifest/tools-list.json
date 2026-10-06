@@ -1,9 +1,9 @@
 {
     "package":  "TIA_MCP_Delivery_v2.7.2-asckye.6-defects.1",
-    "generatedAt":  "2026-10-05T14:42:56.0156555+00:00",
+    "generatedAt":  "2026-10-06T13:54:15.5852572+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.3.0.0",
-    "exeSha256":  "fc8d2990c58fe4522a47c684d12553083f08cd05dc35186dc67fbdc22d09bde0",
+    "exeSha256":  "45da94c75fec4f6650cecf5928ad62179adba465fcf8ea2ac7a63e00807d60c4",
     "toolCount":  488,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
@@ -491,7 +491,7 @@
                       "parameters":  [
 
                                      ],
-                      "description":  "[L1][VersionControl] List this project\u0027s version control (VCI) workspaces: name, folder on disk, language, and how many objects are mapped. A workspace is the plain-text mirror of the project that Git can actually diff and commit. Read-only. Requires TIA V21+ and an open project. Current native policy; V4 native acceptance is pending.",
+                      "description":  "[L1][VersionControl] List this project\u0027s version control (VCI) workspaces: name, folder on disk, language, and how many objects are mapped. A workspace is the plain-text mirror of the project that Git can actually diff and commit. Read-only. Requires TIA V21+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -824,7 +824,7 @@
                                          "confirmDelete",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"action\":\"list\",\"name\":\"FC_Add\",\"filePath\":\"C:\\\\Temp\\\\FC_Add.scl\",\"dryRun\":true,\"confirmDelete\":false}"
                   },
                   {
@@ -1780,7 +1780,7 @@
                                          "fileNameWithoutExtension",
                                          "importOption"
                                      ],
-                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"FC_Add\",\"importOption\":\"Override\"}"
                   },
                   {
@@ -1822,7 +1822,7 @@
                                          "regexName",
                                          "importOption"
                                      ],
-                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"regexName\":\"\"}"
                   },
                   {
@@ -1839,7 +1839,7 @@
                                          "groupPath",
                                          "importPath"
                                      ],
-                      "description":  "[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: ConnectPortal + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportPlcBlockDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → BuildAndImportPlcArtifact. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: ConnectPortal + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportPlcBlockDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → BuildAndImportPlcArtifact. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.xml\"}"
                   },
                   {
@@ -1914,7 +1914,7 @@
                                          "regexName",
                                          "overwrite"
                                      ],
-                      "description":  "[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -1931,7 +1931,7 @@
                                          "groupPath",
                                          "importPath"
                                      ],
-                      "description":  "[L1][PLC-Software]Import a type from file into the plc software Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L1][PLC-Software]Import a type from file into the plc software Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\UDT_Status.xml\"}"
                   },
                   {
@@ -1985,7 +1985,7 @@
                                          "regexName",
                                          "overwrite"
                                      ],
-                      "description":  "[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -2002,7 +2002,7 @@
                                          "groupPath",
                                          "filePath"
                                      ],
-                      "description":  "[L2][PLC-Software]Import one PLC external source file into a group (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software]Import one PLC external source file into a group (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -2026,7 +2026,7 @@
                                          "stopOnImportFailure",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -2043,7 +2043,7 @@
                                          "folderPath",
                                          "importPath"
                                      ],
-                      "description":  "[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\Tags.xml\"}"
                   },
                   {
@@ -2490,7 +2490,7 @@
                       "parameters":  [
                                          "softwarePath"
                                      ],
-                      "description":  "[L2][PLC-Software]List PLC external source names (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software]List PLC external source names (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\"}"
                   },
                   {
@@ -2646,7 +2646,7 @@
                       "parameters":  [
                                          "newProjectPath"
                                      ],
-                      "description":  "[L2][Project]Save current TIA-Portal project/session with a new name",
+                      "description":  "[L2][Project]Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -2701,7 +2701,7 @@
                       "parameters":  [
 
                                      ],
-                      "description":  "[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency.",
+                      "description":  "[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -3110,7 +3110,7 @@
                                          "dryRun",
                                          "timeoutSeconds"
                                      ],
-                      "description":  "[L2][Simulation][ONLINE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ installed by scripts/ecosystem/Install-PlcTools.ps1; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.",
+                      "description":  "[L2][Simulation][ONLINE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.",
                       "example":  null
                   },
                   {
@@ -3346,7 +3346,7 @@
                                          "sclContent",
                                          "outputPath"
                                      ],
-                      "description":  "[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake/乱码). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: \u0027Cannot create SW.Blocks.CompileUnit... token not supported\u0027): the user imports the .scl manually in TIA via project tree → \u0027External source files\u0027 → \u0027Add new external file\u0027, then right-clicks the source → \u0027Generate blocks from source\u0027. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: \u0027Cannot create SW.Blocks.CompileUnit... token not supported\u0027): the user imports the .scl manually in TIA via project tree → \u0027External source files\u0027 → \u0027Add new external file\u0027, then right-clicks the source → \u0027Generate blocks from source\u0027. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
                       "example":  "{\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"}"
                   },
                   {
@@ -3619,7 +3619,7 @@
                                          "dryRun",
                                          "changedOnly"
                                      ],
-                      "description":  "[L1][VersionControl] Synchronize a VCI workspace. direction=\u0027ProjectToWorkspace\u0027 writes the TIA project\u0027s objects out as text files (do this before `git commit`); \u0027WorkspaceToProject\u0027 reads the text files back INTO the project (do this after `git pull` / to restore a reviewed version). DEFAULTS TO dryRun=true: the default call only reports what WOULD be synchronized. WorkspaceToProject OVERWRITES blocks in the open project — compile and save afterwards, and it requires a Pro license (exporting is free). Current native policy; V4 native acceptance is pending.",
+                      "description":  "[L1][VersionControl] Synchronize a VCI workspace. direction=\u0027ProjectToWorkspace\u0027 writes the TIA project\u0027s objects out as text files (do this before `git commit`); \u0027WorkspaceToProject\u0027 reads the text files back INTO the project (do this after `git pull` / to restore a reviewed version). DEFAULTS TO dryRun=true: the default call only reports what WOULD be synchronized. WorkspaceToProject OVERWRITES blocks in the open project — compile and save afterwards, and it requires a Pro license (exporting is free). Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -4938,7 +4938,7 @@
                                          "umacPassword",
                                          "umacUserType"
                                      ],
-                      "description":  "[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: ConnectPortal. Closes any currently open project first. After success, call GetProjectTree to explore its structure.",
+                      "description":  "[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: ConnectPortal. Closes any currently open project first. After success, call GetProjectTree to explore its structure. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"path\":\"C:\\\\Examples\\\\Example.ap21\"}"
                   },
                   {
@@ -5030,7 +5030,7 @@
                                          "softwarePath",
                                          "externalSourceName"
                                      ],
-                      "description":  "[L2][PLC-Software]Delete a PLC external source by name so ImportPlcExternalSource can replace it (idempotent). Name may include or omit .scl. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software]Delete a PLC external source by name so ImportPlcExternalSource can replace it (idempotent). Name may include or omit .scl. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5242,7 +5242,7 @@
                                          "deviceName",
                                          "preferredText"
                                      ],
-                      "description":  "[L2][Hardware]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
+                      "description":  "[L2][Hardware]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5260,7 +5260,7 @@
                                          "deviceName",
                                          "family"
                                      ],
-                      "description":  "[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: \u0027add CPU 1211C AC/DC/RLY\u0027 → family=\u0027S7-1200\u0027. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
+                      "description":  "[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: \u0027add CPU 1211C AC/DC/RLY\u0027 → family=\u0027S7-1200\u0027. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"preferredMlfb\":\"6ES7 515-2AM02-0AB0\",\"preferredVersion\":\"V2.9\",\"deviceName\":\"PLC_2\",\"family\":\"S7-1500\"}"
                   },
                   {
@@ -5297,7 +5297,7 @@
                                          "deviceName",
                                          "preferredDap"
                                      ],
-                      "description":  "[L2][Hardware]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
+                      "description":  "[L2][Hardware]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5314,7 +5314,7 @@
                                          "processStartUtc",
                                          "projectPath"
                                      ],
-                      "description":  "[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first.",
+                      "description":  "[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5333,7 +5333,7 @@
                                          "maxObjects",
                                          "walkTrace"
                                      ],
-                      "description":  "[L2][VersionControl] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending.",
+                      "description":  "[L2][VersionControl] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5350,7 +5350,7 @@
                                          "version",
                                          "deviceName"
                                      ],
-                      "description":  "[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
+                      "description":  "[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"}"
                   },
                   {
@@ -5432,7 +5432,7 @@
                                          "workspaceName",
                                          "folderPath"
                                      ],
-                      "description":  "[L2][VersionControl] Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Requires TIA V21+ and an open project. Current native policy; V4 native acceptance is pending.",
+                      "description":  "[L2][VersionControl] Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Requires TIA V21+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -5834,7 +5834,7 @@
                       "parameters":  [
 
                                      ],
-                      "description":  "[L1][Portal] DisconnectPortal from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed.",
+                      "description":  "[L1][Portal] DisconnectPortal from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -6528,7 +6528,7 @@
                       "parameters":  [
                                          "projectName"
                                      ],
-                      "description":  "[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles).",
+                      "description":  "[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles). Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"projectName\":\"\\u9879\\u76EE1\"}"
                   },
                   {
@@ -6766,7 +6766,7 @@
                       "parameters":  [
 
                                      ],
-                      "description":  "[L1][Portal] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal.",
+                      "description":  "[L1][Portal] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -6804,7 +6804,7 @@
                                          "projectName",
                                          "allowStart"
                                      ],
-                      "description":  "[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.",
+                      "description":  "[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"projectName\":\"\\u9879\\u76EE1\"}"
                   },
                   {
@@ -6837,7 +6837,7 @@
                                          "softwarePath",
                                          "password"
                                      ],
-                      "description":  "[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: ConnectPortal + OpenProject. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: ConnectPortal + OpenProject. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\"}"
                   },
                   {
@@ -6853,7 +6853,7 @@
                                          "softwarePath",
                                          "password"
                                      ],
-                      "description":  "[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returns basic success/failure. For structured error/warning details use CompilePlcDiagnostics instead. Must compile before ExportPlcBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returns basic success/failure. For structured error/warning details use CompilePlcDiagnostics instead. Must compile before ExportPlcBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\"}"
                   },
                   {
@@ -7052,7 +7052,7 @@
                       "parameters":  [
 
                                      ],
-                      "description":  "[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open.",
+                      "description":  "[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -7689,7 +7689,7 @@
                                          "workspaceName",
                                          "changedOnly"
                                      ],
-                      "description":  "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the TIA project and the text files on disk. This is the input for a change log — it names exactly what changed before you commit. Read-only, changes nothing. Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. Current native policy; V4 native acceptance is pending.",
+                      "description":  "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the TIA project and the text files on disk. This is the input for a change log — it names exactly what changed before you commit. Read-only, changes nothing. Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -8480,7 +8480,7 @@
                                          "softwarePath",
                                          "externalSourceName"
                                      ],
-                      "description":  "[L2][PLC-Software]Generate blocks from a PLC external source by name (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software]Generate blocks from a PLC external source by name (best-effort) Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"externalSourceName\":\"FC_Add\"}"
                   },
                   {
@@ -8536,7 +8536,7 @@
                                          "exportPath",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software] Export one block to an XML file. Requires: ConnectPortal + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified \u0027Group/Subgroup/Name\u0027 from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportPlcBlockDocuments. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software] Export one block to an XML file. Requires: ConnectPortal + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified \u0027Group/Subgroup/Name\u0027 from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportPlcBlockDocuments. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Examples\\\\exports\"}"
                   },
                   {
@@ -8554,7 +8554,7 @@
                                          "exportPath",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Examples\\\\exports\"}"
                   },
                   {
@@ -8643,7 +8643,7 @@
                                          "regexName",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"regexName\":\"\"}"
                   },
                   {
@@ -8663,7 +8663,7 @@
                                          "regexName",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  null
                   },
                   {
@@ -8715,7 +8715,7 @@
                                          "typePath",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software]Export a type from the plc software Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software]Export a type from the plc software Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"typePath\":\"UDT_Status\"}"
                   },
                   {
@@ -8735,7 +8735,7 @@
                                          "regexName",
                                          "preservePath"
                                      ],
-                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
+                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"regexName\":\"FB_.*\"}"
                   },
                   {
@@ -8772,7 +8772,7 @@
                                          "tagTableName",
                                          "exportPath"
                                      ],
-                      "description":  "[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file Current native policy; V4 safety behavior is not yet accepted.",
+                      "description":  "[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportPlcTagTable.xml\"}"
                   },
                   {

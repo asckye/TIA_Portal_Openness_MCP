@@ -20,14 +20,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from mcp_results import envelope
 
 import datetime
+import argparse
+import getpass
 import io
 import json
 import os
 import queue
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
+import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG = os.path.join(HERE, "config.json")
@@ -313,7 +318,93 @@ def project_signal(project_folder):
     return newest or None
 
 
+def register_task(argv):
+    parser = argparse.ArgumentParser(description="Register or remove the TIA VCI watch scheduled task.")
+    parser.add_argument("--interval-minutes", type=int, default=10)
+    parser.add_argument("--remove", action="store_true")
+    options = parser.parse_args(argv)
+    task_name = "TiaVciWatch"
+    schtasks = shutil.which("schtasks.exe") or shutil.which("schtasks")
+    if not schtasks:
+        raise RuntimeError("schtasks.exe was not found.")
+    if options.remove:
+        result = subprocess.run([schtasks, "/Delete", "/TN", task_name, "/F"], capture_output=True,
+                                text=True, encoding="utf-8", errors="replace", creationflags=NO_WINDOW)
+        if result.returncode:
+            raise RuntimeError((result.stderr or result.stdout).strip())
+        print("已删除计划任务 %s" % task_name)
+        return 0
+    if options.interval_minutes < 1 or options.interval_minutes > 1440:
+        parser.error("--interval-minutes must be between 1 and 1440")
+    script = os.path.join(HERE, "watch.py")
+    if not os.path.isfile(script):
+        raise RuntimeError("找不到 %s" % script)
+    pythonw = shutil.which("pythonw.exe") or shutil.which("pythonw")
+    if not pythonw:
+        python = shutil.which("python.exe") or shutil.which("python")
+        if python:
+            candidate = os.path.join(os.path.dirname(python), "pythonw.exe")
+            if os.path.isfile(candidate):
+                pythonw = candidate
+    if not pythonw or not os.path.isfile(pythonw):
+        raise RuntimeError("找不到 pythonw.exe（%s）" % (pythonw or "pythonw"))
+
+    namespace = "http://schemas.microsoft.com/windows/2004/02/mit/task"
+    ET.register_namespace("", namespace)
+    tag = lambda name: "{%s}%s" % (namespace, name)
+    root = ET.Element(tag("Task"), {"version": "1.2"})
+    registration = ET.SubElement(root, tag("RegistrationInfo"))
+    ET.SubElement(registration, tag("Description")).text = "博途程序变更自动导出+git提交（只读附着，绝不打开工程、绝不写工程）"
+    triggers = ET.SubElement(root, tag("Triggers"))
+    trigger = ET.SubElement(triggers, tag("CalendarTrigger"))
+    start = (datetime.datetime.now().astimezone() + datetime.timedelta(minutes=1)).replace(microsecond=0)
+    ET.SubElement(trigger, tag("StartBoundary")).text = start.isoformat()
+    ET.SubElement(trigger, tag("Enabled")).text = "true"
+    repetition = ET.SubElement(trigger, tag("Repetition"))
+    ET.SubElement(repetition, tag("Interval")).text = "PT%dM" % options.interval_minutes
+    ET.SubElement(repetition, tag("Duration")).text = "P3650D"
+    ET.SubElement(repetition, tag("StopAtDurationEnd")).text = "false"
+    ET.SubElement(ET.SubElement(trigger, tag("ScheduleByDay")), tag("DaysInterval")).text = "1"
+    principals = ET.SubElement(root, tag("Principals"))
+    principal = ET.SubElement(principals, tag("Principal"), {"id": "Author"})
+    domain = os.environ.get("USERDOMAIN", "")
+    user = getpass.getuser()
+    ET.SubElement(principal, tag("UserId")).text = (domain + "\\" if domain else "") + user
+    ET.SubElement(principal, tag("LogonType")).text = "InteractiveToken"
+    ET.SubElement(principal, tag("RunLevel")).text = "LeastPrivilege"
+    settings = ET.SubElement(root, tag("Settings"))
+    for name, value in (("AllowStartIfOnBatteries", "true"), ("DontStopIfGoingOnBatteries", "true"),
+                        ("StartWhenAvailable", "true"), ("ExecutionTimeLimit", "PT15M"),
+                        ("MultipleInstancesPolicy", "IgnoreNew"), ("Priority", "7")):
+        ET.SubElement(settings, tag(name)).text = value
+    actions = ET.SubElement(root, tag("Actions"), {"Context": "Author"})
+    action = ET.SubElement(actions, tag("Exec"))
+    ET.SubElement(action, tag("Command")).text = pythonw
+    ET.SubElement(action, tag("Arguments")).text = subprocess.list2cmdline([script])
+    ET.SubElement(action, tag("WorkingDirectory")).text = HERE
+    xml_data = ET.tostring(root, encoding="utf-16", xml_declaration=True)
+    xml_path = None
+    try:
+        with tempfile.NamedTemporaryFile(prefix="TiaVciWatch-", suffix=".xml", delete=False) as temp:
+            xml_path = temp.name
+            temp.write(xml_data)
+        result = subprocess.run([schtasks, "/Create", "/TN", task_name, "/XML", xml_path, "/F"],
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=NO_WINDOW)
+        if result.returncode:
+            raise RuntimeError((result.stderr or result.stdout).strip())
+    finally:
+        if xml_path and os.path.exists(xml_path):
+            os.unlink(xml_path)
+    print("已注册计划任务 %s，每 %d 分钟一轮。" % (task_name, options.interval_minutes))
+    print("查看：schtasks /Query /TN %s /V /FO LIST" % task_name)
+    print("暂停：schtasks /Change /TN %s /DISABLE    恢复：schtasks /Change /TN %s /ENABLE" % (task_name, task_name))
+    print("卸载：python watch.py --register-task --remove")
+    return 0
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--register-task":
+        return register_task(sys.argv[2:])
     if sys.stderr is not None:
         print("Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.", file=sys.stderr, flush=True)
     cfg = json.load(io.open(CONFIG, encoding="utf-8"))

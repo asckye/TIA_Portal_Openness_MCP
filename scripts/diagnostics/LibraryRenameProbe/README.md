@@ -21,10 +21,10 @@ Windows PowerShell 5.1 now reads UTF-8 result JSON explicitly, preserving Chines
 ## Run on the TIA virtual machine
 
 1. Extract the complete ZIP to a local directory on the VM, such as `C:\Temp\LibraryRenameProbe`.
-2. Double-click **Run-Tests.cmd**. No Visual Studio or .NET SDK is required; installed TIA V21 Openness and .NET Framework 4.8 are required.
+2. Double-click **LibraryRenameProbe.exe**. It runs offline and V21 installation checks, then runs the nine-case campaign. Installed TIA V21 Openness and .NET Framework 4.8 are required; no Visual Studio or .NET SDK is needed on the VM.
 3. If the Siemens Openness firewall asks, check that the requesting program is this `LibraryRenameProbe.exe` before allowing it. Use a Windows account already configured for Openness.
 4. Keep the console open. Nine cases create independent headless TIA sessions; allow roughly 10–20 minutes, depending on the VM. Each stage has a ten-minute timeout.
-5. Read `results\<timestamp>\summary.json` and `cases.json`. Return that results directory for analysis. Exit code 1 means one or more cases failed, which is expected when reproducing the crash; it does not mean the evidence was lost.
+5. The console waits for a key after the campaign. Read `results\<timestamp>\summary.json` and `cases.json` beside the EXE. Return that results directory for analysis. Exit code 1 means one or more cases failed, which is expected when reproducing the crash; it does not mean the evidence was lost.
 
 The default input is the diagnostic `.al21` already created on this VM:
 
@@ -32,10 +32,10 @@ The default input is the diagnostic `.al21` already created on this VM:
 C:\Users\SIEMENS\Documents\Automation\MCP_Rename_Diagnostics_20261001\library-general-1133\MCP_GeneralScripts_Rename_20261001_1133\MCP_GeneralScripts_Rename_20261001_1133.al21
 ```
 
-If it has moved, start PowerShell in the extracted directory:
+If it has moved, run the EXE from Command Prompt in the extracted directory:
 
-```powershell
-.\Run-Tests.ps1 -SourceLibrary 'D:\Diagnostics\MCP_GeneralScripts_Rename_20261001_1133.al21'
+```text
+LibraryRenameProbe.exe --campaign --source "D:\Diagnostics\MCP_GeneralScripts_Rename_20261001_1133.al21"
 ```
 
 Copy the **whole global-library directory**, not just its `.al21` file. The input must retain the diagnostic filename prefix and contain the recorded type GUID `04254662-9034-496e-a436-109c945e1de2` and both original committed versions. Arbitrary user projects are not accepted.
@@ -77,6 +77,7 @@ After `NonRecoverableException`, the probe makes no more Openness calls on that 
 ```powershell
 dotnet build .\LibraryRenameProbe.csproj -c Release -p:SiemensEngineeringDirectory='C:\SDK\V21\net48'
 .\bin\Release\net48\LibraryRenameProbe.exe --self-test
+dotnet run .\BuildPackage.cs -- --sdk-directory 'C:\SDK\V21\net48'
 ```
 
 The compiler uses the V21 PublicAPI as references only. No Siemens SDK binaries are redistributed. Runtime resolution uses the installed TIA registry location and exact assembly identity. `--self-test` loads no Siemens assemblies and makes no native calls. `--preflight` reads installation identity only; it does not prove a valid license or firewall/group permissions.

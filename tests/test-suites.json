@@ -31,6 +31,24 @@
     "maximumSkipped": 0,
     "arguments": []
   },
+  "write-guard": {
+    "project": "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj",
+    "minimumPassed": 3,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~WriteGuardPortTests"
+    ]
+  },
+  "crash-evidence": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 7,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~CrashEvidencePortTests"
+    ]
+  },
   "foundation": {
     "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
     "minimumPassed": 6848,

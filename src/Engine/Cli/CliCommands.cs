@@ -35,6 +35,7 @@ namespace TiaMcpServer.Cli
                     case "prewarm": return Prewarm(args);
                     case "config": return Config(args);
                     case "doctor": return DoctorCli(args);
+                    case "install-plc-tools": return InstallPlcToolsCommand.Run(args);
                     case "audit": return TiaOpenness.Shared.AuditCli.Verify(Opt(args, "--path") is string auditPath
                         ? new[] { auditPath } : TiaOpenness.Shared.DataLocations.Current.AuditReadRoots, Console.Out);
                     case "schema": Console.WriteLine(SchemaText); return 0;
@@ -279,6 +280,8 @@ USAGE
                                                           Copilot above 128 and Windsurf above 100)
   tia doctor   [--fix]                                    Environment check: TIA install, exe/version match, Openness
                                                           group, AI host configs. --fix auto-adds the Openness group
+  tia install-plc-tools [--python PATH] [--environment-path DIR]
+                                                          Install pinned companion dependencies in the user's Python 3.12+ environment
   tia schema                                              Print the spec field reference
   tia audit verify [--path DIR]                            Verify the audit chain; JSON report, exit 0 intact / 3 broken
   tia version

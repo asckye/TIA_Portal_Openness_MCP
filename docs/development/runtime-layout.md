@@ -58,6 +58,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 | Foundation 开发输出 | `src/FoundationHost/bin/<configuration>/net10.0` |
 | 引擎测试宿主输出 | `tests/Engine/TiaMcpServer.HttpTests/bin/<configuration>/net48`；`tests/Engine/TiaMcpServer.LegacyHostTests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcpServer.Tests/bin/<configuration>/net10.0` |
 | Studio 安装输出（既有） | `runtime/studio`、`runtime/studio/bridge` |
+| 随包独立工具 | `runtime/tools`；apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装 .NET |
 | Studio 开发输出（既有） | `src/Studio/Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`src/Studio/Bridge/bin/<configuration>/net48` |
 | 随包 .NET 运行时 | `runtime/dotnet`；apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装 .NET |
 
@@ -69,6 +70,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 | 根标记、交付清单 | `manifest/package-manifest.json`、`manifest/delivery.json` |
 | 指南及来源 | `reference/siemens-openness/skills`、`reference/siemens-openness/UPSTREAM.json` |
 | V21 生态目录参考副本 | `reference/v21-ecosystem.json` |
+| Claude Code 写入防护工具 | `runtime/tools/TiaMcp.WriteGuard.exe`，由 `hooks/hooks.json` 通过 `${CLAUDE_PLUGIN_ROOT}` 启动 |
 | PLC Tools、SimaticML 桥接 | `scripts/ecosystem/plc_tools_bridge.py`、`scripts/ecosystem/simaticml_decode_bridge.py` |
 | 更新脚本 | `scripts/operations/Update-Engine.ps1` |
 | CLI 模板 | `templates`、默认 HMI 模板 `templates/hmi`；`__BUNDLE__` 引用的具体文件/目录也必须存在于选定根 |

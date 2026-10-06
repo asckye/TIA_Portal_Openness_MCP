@@ -17,8 +17,7 @@ namespace TiaMcpServer.Runtime
     ///   * Zone.Identifier streams on downloaded DLLs, which prevent .NET from loading them;
     ///   * missing .NET Framework 4.8.
     ///
-    /// Each check carries both languages: the CLI is invoked from Chinese .bat files by Chinese
-    /// engineers, while the MCP tool's output is consumed by a model alongside English tool text.
+    /// Each check carries both languages for the CLI and MCP output consumed alongside English tool text.
     /// </summary>
     public static class EnvironmentDoctor
     {

@@ -212,7 +212,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-47 | 工作台环境体检页与一键诊断包；复用 doctor，补 Openness 首次确认提示与 data 可写检查；[路径清单](phase6-review.md#phase6-path-p6-47) | 38、39 | T GUI/Core/config；逐项结果与修复文本中英文、密钥脱敏、只读安装 | done |
 | P6-48 | 梯形图出图与程序图册：抽出 RenderPlcVisualDiff 的布局/SVG 为共享逻辑，新增八版单块出图与整机图册工具、检查结论标注、工作台入口；见规范第 8 节；[路径清单](phase6-review.md#phase6-path-p6-48) | 24；自行导出时服从当时导出族状态 | T Logic/宿主/GUI、V；RenderPlcVisualDiff 输出逐字节不变；每版真实导出样本的渲染快照；HTML 自包含、不覆盖已有文件；N 仅复用既有只读导出调用 | done |
 | P6-49 | 发布前修复：会话工具在原生调用前失败时不报未知结果、首次附加超时提示 Openness 确认、工作台子进程日志编码、.NET Framework 4.8 前提检查；第 2 轮把保存/另存/关闭纳入工作台审批；[路径清单](phase6-review.md#phase6-path-p6-49) | 44、47 | T、V；只改列出的响应快照调用；不改 D1 开关 | todo |
-| P6-50 | 随包脚本改为 C#：写入防护钩子改为 C# 程序、删除两个中文 .bat（改用命令行）、Install-PlcTools 改为 C# 命令、TIA 退出证据并入工作台诊断包、vci-watch 注册与 LibraryRenameProbe 运行器改写；[路径清单](phase6-review.md#phase6-path-p6-50) | 47 | T；钩子判定与旧脚本逐例一致、诊断包脱敏；随包无 .ps1/.bat/.cmd | todo |
+| P6-50 | 随包脚本改为 C#：写入防护钩子改为 C# 程序、删除两个中文 .bat（改用命令行）、Install-PlcTools 改为 C# 命令、TIA 退出证据并入工作台诊断包、vci-watch 注册与 LibraryRenameProbe 运行器改写；[路径清单](phase6-review.md#phase6-path-p6-50) | 47 | T；钩子判定与旧脚本逐例一致、诊断包脱敏；随包无 .ps1/.bat/.cmd | done |
 | P6-51 | 更新器改为 C#，替代 Update-Engine.ps1：运行中拒绝、下载与 SHA-256 校验、备份、含自身的替换、失败回滚、源码目录拒绝、旧文件清理；引擎与工作台的更新提示同步；[路径清单](phase6-review.md#phase6-path-p6-51) | 38、50 | T；本地假发布源全流程、中断回滚、3.3→4.0 升级路径 | todo |
 | P6-52 | 开发检查去 PowerShell：反射类发布检查与工具清单生成改 C#，能力矩阵生成与覆盖审计改 C# 单文件程序，适配器构建检查改写；[路径清单](phase6-review.md#phase6-path-p6-52) | 42 | T、C；各检查断言数不少于原脚本，生成结果逐字节一致 | todo |
 | P6-53 | 构建发布链改 C#：Release、Build-Release、Run-ReleaseBuild、多版本构建、验包、预检等；CI 工作流；仓库检查禁止新增 .ps1/.bat/.cmd；[路径清单](phase6-review.md#phase6-path-p6-53) | 50、51、52 | 完整发布链从干净目录通过，产物清单与改写前一致 | todo |

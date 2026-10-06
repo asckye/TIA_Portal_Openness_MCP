@@ -267,13 +267,8 @@ namespace TiaMcpConfigurator
             string sddl = "D:(A;;GX;;;" + sid.Value + ")";
             if (!existing.Contains(sddl))
                 RunChecked(netsh, "http add urlacl " + Quote("url=" + prefix) + " " + Quote("sddl=" + sddl));
-            // All interpolated values are canonical IPv4/integer; no user-entered shell text.
             string rule = "TIA-MCP-" + address + "-" + port;
-            string command = "$ErrorActionPreference='Stop'; $r=Get-NetFirewallRule -Name '" + rule + "' -ErrorAction SilentlyContinue; " +
-                "if($r){Set-NetFirewallRule -Name '" + rule + "' -Enabled True -Direction Inbound -Action Allow -Profile Any -Protocol TCP -LocalAddress '" + address + "' -LocalPort " + port + " -RemoteAddress LocalSubnet | Out-Null}" +
-                "else{New-NetFirewallRule -Name '" + rule + "' -DisplayName 'TIA MCP TCP " + port + "' -Enabled True -Direction Inbound -Action Allow -Profile Any -Protocol TCP -LocalAddress '" + address + "' -LocalPort " + port + " -RemoteAddress LocalSubnet | Out-Null}";
-            RunChecked(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"),
-                "-NoProfile -NonInteractive -EncodedCommand " + Convert.ToBase64String(Encoding.Unicode.GetBytes(command)));
+            TiaOpenness.Shared.WindowsFirewallRule.Configure(rule, "TIA MCP TCP " + port, address, port);
         }
     }
 

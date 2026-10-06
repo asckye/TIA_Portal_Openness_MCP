@@ -18,7 +18,7 @@ Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试�
 
 ## 日志与读取
 
-使用已有 `GetNativeInvocationLog(take=100)` 获取近期记录，或用 [证据收集脚本](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) 保存日志及 Windows 事件。目录默认是 `%LOCALAPPDATA%\TiaMcp\diagnostics`，可通过绝对路径环境变量 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 设置。
+使用已有 `GetNativeInvocationLog(take=100)` 获取近期记录，或在 Workbench 环境页导出诊断包。诊断包包含脱敏后的近期调用/运行日志、最近 24 小时匹配的 Windows 事件、TIA/引擎进程清单、崩溃转储文件清单及 `%TEMP%\TiaMcpServer.native-export.log`（如存在）；不会复制转储内容、连接或启动 TIA，也不修改转储策略。Windows 事件和日志仍可能含有隐私信息，分享前请检查诊断包。
 
 细粒度记录包含：
 

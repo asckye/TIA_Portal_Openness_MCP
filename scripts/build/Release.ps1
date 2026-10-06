@@ -166,13 +166,13 @@ function FirstExisting([string[]]$candidates) { foreach ($c in $candidates) { if
 
 function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
     # Preserve the exact engine sourceFiles contract enforced by Package-Release.py.
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
         'third_party/TiaGitAddIn.Core','third_party/SiemensOpcUaModelled')
     $extensions = @('.cs','.csproj','.props','.targets','.xml','.json')
     $files = @()
     if ($Kind -eq 'engine') { $files += Get-Item -LiteralPath (Join-Path $Root 'Version.props') }
     else {
-        $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','src/Shared','src/Studio','tests/Studio','third_party/tia-openness-studio',
+        $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','src/Shared','src/Studio','tests/Studio','third_party/tia-openness-studio',
             'build-tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate')
         $extensions = @('.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json')
     }
@@ -184,7 +184,7 @@ function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][strin
     }
 }
 function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','tests/Engine','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
         'third_party/eido-import-planner','third_party/siemens-plc-tools','third_party/SiemensOpcUaModelled','third_party/simaticml-decoder','third_party/TiaGitAddIn.Core','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate','scripts/ecosystem',
         'reference','templates')
     if ($Kind -eq 'multi') { $roots += @('src/Studio','tests/Studio','third_party/tia-openness-studio') }
@@ -369,9 +369,8 @@ function Invoke-ReleaseEarlyGates {
     Run $Python @('scripts/checks/Test-VersionCatalogWiring.py') 'version catalog wiring'
     Run $Python @('scripts/checks/Test-NativeLifecycle.py','--self-test') 'native supervisor safety (no live branch)'
     Run $Python @('scripts/checks/Test-NativeMcpSession.py','--self-test') 'native MCP safety (no live branch)'
-    foreach ($script in @('Test-CrashEvidence.ps1','Test-WriteGuard.ps1')) {
-        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',"scripts/checks/$script") $script
-    }
+    Run $Python @('scripts/checks/Test-DotnetSuites.py','--suite','crash-evidence') 'C# crash evidence suite'
+    Run $Python @('scripts/checks/Test-DotnetSuites.py','--suite','write-guard') 'C# write guard suite'
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Test-DownloadRouteSelection.ps1','-SourceOnly','-PublicApiDirectory',$V21ReferenceRoot,'-Python',$Python) 'download route production source fixture'
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Test-MatchPlcName.ps1','-SourceOnly','-Python',$Python) 'PLC name production source fixture'
     Say ('Early gates passed; {0:N2}s' -f $timer.Elapsed.TotalSeconds)
