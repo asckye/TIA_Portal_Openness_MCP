@@ -1915,7 +1915,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:30; 根定位:49,52 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:57,69; 根定位:17,52,53,56,64,154,164,166,167,168,187,251; 写入/工作区:54,73,120,126,148 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/development/validation.md](../../docs/development/validation.md) | 产品:413,414,435,464; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/validation.md](../../docs/development/validation.md) | 产品:418,419,440,469; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138 | 修改引用并回归 |
 | [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:21,24,25,26,27; 写入/工作区:9,16 | 修改引用并回归 |
 | [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5,17,18 | 修改引用并回归 |
@@ -1942,13 +1942,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,33,68; 根定位:11 | 修改引用并回归 |
-| [scripts/build/Build-MultiVersion.ps1](../../scripts/build/Build-MultiVersion.ps1) | 产品:57,70,80,82 | 修改引用并回归 |
-| [scripts/build/Build-Release.ps1](../../scripts/build/Build-Release.ps1) | 产品:386 | 修改引用并回归 |
+| [scripts/build/Build-MultiVersion.ps1](../../scripts/build/Build-MultiVersion.ps1) | 产品:79,92,102,104 | 修改引用并回归 |
+| [scripts/build/Build-Release.ps1](../../scripts/build/Build-Release.ps1) | 产品:393 | 修改引用并回归 |
 | [scripts/build/Build-Studio.ps1](../../scripts/build/Build-Studio.ps1) | 产品:83 | 修改引用并回归 |
-| [scripts/build/Package-MultiVersion.py](../../scripts/build/Package-MultiVersion.py) | 产品:50 | 修改引用并回归 |
+| [scripts/build/Package-MultiVersion.py](../../scripts/build/Package-MultiVersion.py) | 产品:35,36,85 | 修改引用并回归 |
 | [scripts/build/Package-Release.py](../../scripts/build/Package-Release.py) | 产品:3,83,84,104,116,118,119,231; 根定位:23,214,226,227,228 | 修改引用并回归 |
-| [scripts/build/Prepare-Delivery.ps1](../../scripts/build/Prepare-Delivery.ps1) | 产品:31,32,33,34 | 修改引用并回归 |
-| [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:18,58,357,359,360,493; 根定位:253 | 修改引用并回归 |
+| [scripts/build/Prepare-Delivery.ps1](../../scripts/build/Prepare-Delivery.ps1) | 产品:41,42,43,44 | 修改引用并回归 |
+| [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:18,58,181,185,416,421,490,492,493,647; 根定位:323 | 修改引用并回归 |
+| [scripts/build/Run-ReleaseBuild.ps1](../../scripts/build/Run-ReleaseBuild.ps1) | 产品:184 | 修改引用并回归 |
 | [scripts/build/Test-ReleasePrerequisites.ps1](../../scripts/build/Test-ReleasePrerequisites.ps1) | 产品:119; 写入/工作区:187,188 | 修改引用并回归 |
 | [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 产品:166,195,197,198; 根定位:14,100,104 | 修改引用并回归 |
 | [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,27 | 修改引用并回归 |
@@ -2042,7 +2043,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Engine/TiaMcpServer.HttpTests/README.md](../../tests/Engine/TiaMcpServer.HttpTests/README.md) | 产品:14,16 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.LegacyHostTests/BundleRootTests.cs](../../tests/Engine/TiaMcpServer.LegacyHostTests/BundleRootTests.cs) | 根定位:55,56,57,58,61 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs) | 根定位:10,13,52,69,87,91,109,118,119,130,133,137,139,148,155,158,172,173,185,186,187,188,189,190,192,194 | 修改引用并回归 |
-| [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 产品:329,334,347,348,350,356,357,373; 根定位:294,424; 写入/工作区:46,50,60,62,96,113,115,123,279,349,354 | 修改引用并回归 |
+| [tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs](../../tests/Engine/TiaMcpServer.Tests/DataLocationsTests.cs) | 产品:329,334,347,348,350,356,357,375; 根定位:294,426; 写入/工作区:46,50,60,62,96,113,115,123,279,349,354 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,86,93 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:49,72,109,113; 根定位:13,25,31,32,33,50,51,53,56,58,74,76,87,88,89,90,100,101,102,112,113 | 修改引用并回归 |
 | [tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json](../../tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json) | 写入/工作区:16937,36687 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -2067,7 +2068,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:69 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 166 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 167 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 
