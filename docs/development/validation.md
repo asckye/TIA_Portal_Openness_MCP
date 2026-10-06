@@ -20,7 +20,7 @@
 
 交付内容以 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 为准；规则、打包预览和许可保留见
 [发布流程](release-workflow.md#交付清单与两种校验模式)。仓库模式继续验证源码与开发文件；解包模式无需源码，
-从仓库运行 `Validate-Bundle.ps1 -BundleRoot <包根> -PackageMode -Strict` 和
+从仓库运行 `dotnet run --project build-tools/release -- validate-bundle -BundleRoot <包根> -PackageMode -Strict` 和
 `Check-Repository.py --root <包根> --package-mode`。缺少 `Version.props` 也会自动选择包模式。
 包模式检查交付资源、运行文件/版本/哈希、三份构建记录、工具数、用户文档和许可证；相对链接悬空即失败。
 `runtime/verification/` 的 IL 检查留在正式打包前的仓库阶段，发布资产不携带验证器。
@@ -90,7 +90,7 @@ Offline 指不需要 Siemens 程序集；NuGet 依赖仍须已缓存或可还原
 约定文件夹不存在时，引擎/NativeTests 保留已安装 SDK 的原有回退；缺少匹配程序集会报错并列出所需目录。
 
 完整方案排除 `reference/` 示例、`LibraryRenameProbe` 和没有合理默认版本的 `TiaMcpServer.PlcWorker`。
-worker 继续由 `Build-PlcAdapterWorkers.ps1` 逐个传入 `TiaReleaseKey` 构建，产物统一位于 `bin/<key>/Release/net48/`；
+worker 继续由 `build-plc-workers` 逐个传入 `TiaReleaseKey` 构建，产物统一位于 `bin/<key>/Release/net48/`；
 `ApiCompileChecks` 的独立/方案默认是 V21，现有脚本仍显式选择八版。
 V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器通过方案依赖先构建织入工具。
 解决方案构建只用于开发；下面的脚本验证、打包和发布门禁仍是发布路径，构建不执行原生 TIA 测试。
@@ -161,17 +161,17 @@ python scripts/checks/Inventory-ResponseEnvelopes.py
 python scripts/checks/Check-TiaFeatures.py
 python scripts/checks/Check-BundleLayout.py --self-test
 python scripts/checks/Check-BundleLayout.py
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
+dotnet run --project build-tools/release -- validate-bundle -Strict
 python scripts/checks/Test-DotnetSuites.py --self-test
 python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
 python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
+dotnet run --project build-tools/release -- build-configurator -Test
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
 `Check-Repository.py` 同时运行纯 Python 的 [BundleLayout 检查](../../scripts/checks/Check-BundleLayout.py)：
-读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `Validate-Bundle.ps1`
+读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `validate-bundle`
 实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
 不调用 dotnet，也不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
 （offline/offline-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
@@ -245,14 +245,14 @@ PromptRegistration 的既有 Windows 清理失败已仅在测试中修复：释�
 
 ApiMetadata 是独立 theory；未设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 时在发现阶段跳过，foundation 门禁通过过滤器排除它，从而保持原有 1 项跳过预算。
 运行 foundation-api 前设置该变量为八版 PublicAPI 的父目录，并先构建当前仓库的八版 adapter/worker；适配器根目录由测试源码所在的仓库布局推导，无需命令行路径。
-`Build-MultiVersion.ps1 -Test` 运行 foundation-api 和上述六个独立套件，将通过、失败、跳过、总数及门禁阈值写入 `multi-version-build.json` 的 `validation.dotnetSuites`。
+`dotnet run --project build-tools/release -- build-multi-version -Test` 运行 foundation-api 和上述六个独立套件，将通过、失败、跳过、总数及门禁阈值写入 `multi-version-build.json` 的 `validation.dotnetSuites`。
 
-未迁移的控制台用例仍必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块在实际 .NET 10 桌面宿主执行，保留至少 157 项检查。`Build-Configurator.ps1 -Test` 需要 .NET 10 SDK；Framework csc 仅编译兼容启动器，配置测试通过后生成同格式的 `configurator-build.json`。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
+未迁移的控制台用例仍必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块在实际 .NET 10 桌面宿主执行，保留至少 157 项检查。`dotnet run --project build-tools/release -- build-configurator -Test` 需要 .NET 10 SDK；Framework csc 仅编译兼容启动器，配置测试通过后生成同格式的 `configurator-build.json`。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
 合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。
 
 GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR CI 不比对构建记录中的源码哈希；
 交付检查使用 `-Strict -NoBinaries -SkipSourceHashes`，仍核对必需文件、JSON、版本及 delivery.json 绑定的构建记录哈希。
-发布流程重新生成构建记录，再由 `Validate-Bundle.ps1 -Strict`、`Package-Release.py` 和发布后验包完整验证源码哈希。
+发布流程重新生成构建记录，再由 `dotnet run --project build-tools/release -- validate-bundle -Strict`、`Package-Release.py` 和发布后验包完整验证源码哈希。
 托管 runner 没有 Siemens PublicAPI，不能替代本机完整构建。修改编译输入后必须在发布前重新构建，不能手填 manifest 哈希。
 
 ### 注释与 MCP 中文门禁
@@ -354,21 +354,21 @@ P4-E2 仍要求六版 Foundation 响应快照 `changed=0, rawChanged=0`、八版
 
 ## 发布脚本的日常验证
 
-发布前的低成本门禁不再留到完整引擎构建之后。`validate.yml` 日常运行两种 PowerShell 的仓库包验证、
+发布前的低成本门禁不再留到完整引擎构建之后。`validate.yml` 日常运行仓库包验证、
 CHANGELOG 规则、预检和复用自测、并行流水线自测、发布文档断言、原生监督器/MCP 安全自测、崩溃证据、写保护和生产源码 PLC 名称匹配。
 `offline-checks.yml` 已覆盖仓库/链接、失效工具引用、BundleLayout/交付集合自测、示例目录及版本目录接线。
 CHANGELOG 可以先提交下一版本条目，但必须同时提交对应发布说明；此时 `Version.props`、插件与旧 manifest 保持原发布版本，
 `-NoBinaries` 验证旧记录之间的一致性。发布模式和包模式仍要求精确一致。
 
 ```powershell
-powershell -NoProfile -File scripts/build/Test-ReleasePrerequisites.ps1 -SelfTest
-powershell -NoProfile -File scripts/build/Release.ps1 -SelfTest
-powershell -NoProfile -File scripts/build/Build-Release.ps1 -SelfTest
-powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -SelfTest
-pwsh -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -DryRun
+dotnet run --project build-tools/release -- prerequisites -SelfTest
+dotnet run --project build-tools/release -- release -SelfTest
+dotnet run --project build-tools/release -- build-release -SelfTest
+dotnet run --project build-tools/release -- run-release-build -SelfTest
+dotnet run --project build-tools/release -- run-release-build -DryRun
 python scripts/build/Package-MultiVersion.py --self-test
-powershell -NoProfile -File scripts/checks/Validate-Bundle.ps1 -SelfTest
-pwsh -NoProfile -File scripts/build/Release.ps1 -DocumentationOnly
+dotnet run --project build-tools/release -- validate-bundle -SelfTest
+dotnet run --project build-tools/release -- release -DocumentationOnly
 dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
 # 需要本机 V21 PublicAPI 和 .NET Framework 4.8 targeting pack；列入日常本机验证，不等待发布。
 dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicApiDirectory <V21-net48-SDK> -Python <python.exe>
@@ -378,25 +378,25 @@ dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicA
 不复制算法，不修改生产源码，不构建完整引擎，不连接 TIA；路由夹具仍引用真实 PublicAPI，并使用原有假路由对象。
 完整构建后还会对实际 V21 程序重跑这两项检查。其余本机二进制/API/传输门禁继续由下文的完整八版本构建运行。
 
-独立早期门禁为 `Release.ps1 -Version X.Y.Z -EarlyGatesOnly -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>`，
+独立早期门禁为 `dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOnly -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>`，
 须在版本、文档已机械更新后运行；它不执行预检、版本修改、归档、完整引擎构建或任何 Git 写入/远程操作。
-`Validate-Bundle.ps1 -PendingRelease X.Y.Z -Strict -NoBinaries -SkipSourceHashes` 仅供这个阶段使用：
+`dotnet run --project build-tools/release -- validate-bundle -PendingRelease X.Y.Z -Strict -NoBinaries -SkipSourceHashes` 仅供这个阶段使用：
 分别验证新源码版本/文档和旧 manifest 内部一致性，不能用于发布产物验证。
-预检独立运行用 `Test-ReleasePrerequisites.ps1 -PublicApiRoot <SDK-root> -Offline`，离线模式只接受已有 SHA-512 正确的缓存及显式/环境令牌。
+预检独立运行用 `dotnet run --project build-tools/release -- prerequisites -PublicApiRoot <SDK-root> -Offline`，离线模式只接受已有 SHA-512 正确的缓存及显式/环境令牌。
 伴随 Python 用 `TIA_MCP_PLC_TOOLS_PYTHON` 指定；构建中的 V21 生态夹具也使用该解释器，避免预检与执行环境不同。
 
 预检、复用、CHANGELOG 和并发自测均报告通过/失败数量；复用覆盖相同输入、改源码、增删源码、改/缺二进制、改 release/fileVersion，
-以及旧输出目录的保留移动、准备→完整引擎→完成记录的顺序、准备阶段输入/产物变化拒绝和哈希绑定审计证据恢复。审查链自测覆盖错误顺序、尾点 bundle 路径，以及成功、PowerShell 异常和 native 非零退出时的记录恢复。上述自测均用 Windows PowerShell 5.1 和 PowerShell 7 运行。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
+以及旧输出目录的保留移动、准备→完整引擎→完成记录的顺序、准备阶段输入/产物变化拒绝和哈希绑定审计证据恢复。审查链自测覆盖错误顺序、尾点 bundle 路径，以及成功、PowerShell 异常和 native 非零退出时的记录恢复。发布链自测由 .NET 10 测试套件运行。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
 沙箱内 Python 3.12 的 `TemporaryDirectory` 可能因私有 ACL 返回 `WinError 5`；原生监督器/MCP 的离线自测遇到该错误应记录为未通过，
 由维护者在普通本机环境复跑，不跳过门禁、不进入 live 分支。
 
 ## 完整八版本构建
 
 ```powershell
-pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-此命令先构建 Foundation worker、Studio、全部适配器及 bundled .NET，执行功能和传输检查，再运行 V20/V21 `Build-Release.ps1`，最后完成八版本审计和记录。release/fileVersion 从 `Version.props` 读取，不依赖旧 `release-build.json`。
+此命令先构建 Foundation worker、Studio、全部适配器及 bundled .NET，执行功能和传输检查，再运行 V20/V21 `build-release`，最后完成八版本审计和记录。release/fileVersion 从 `Version.props` 读取，不依赖旧 `release-build.json`。
 `-PrepareOnly -Test` 只保存准备证据；完整引擎完成后用同参数的 `-CompleteOnly -Test` 验证输入与产物未变并完成记录。
 只有完整引擎源码、版本、二进制和哈希绑定审计输入均匹配时，才使用 `-SkipFullEngines`；缺失/过期证据明确失败。
 维护审查脚本及完整九步顺序见[发布流程](release-workflow.md#离线审查完整构建链)。

@@ -6,7 +6,6 @@
   "targetTiaMajorVersion": 21,
   "requiredBundleFiles": [
     "README.md",
-    "scripts/checks/Validate-Bundle.ps1",
     "docs/guides/project-generation.md",
     "plugin/skill/SKILL.md",
     "manifest/tools-list.json",

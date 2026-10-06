@@ -64,7 +64,7 @@
 - **引擎在进程内使用适配器（必需）**：HMI 和设备代码与 PLC 路径共用同一个 `TiaPortal`/`ProjectBase`，第二个 Openness 客户端会
   与引擎的进程租约冲突。`TiaMcpServer.V20/V21` 引用 `Adapter.20/21`（都是 net48）；PLC 扩展面通过仅 net48 的类型化入口
   `PlcServices.Over(Func<ProjectBase>)` 建在阶段 3 内核持有的句柄上。Unified HMI、设备、在线和 Safety 仍留在引擎。
-- **织入**：适配器已在构建时织入并校验；`Build-Release.ps1`、`Build-Studio.ps1`、`Validate-Bundle.ps1` 对打包的副本重新校验。
+- **织入**：适配器已在构建时织入并校验；`build-release`、`build-studio`、`validate-bundle` 对打包的副本重新校验。
   适配器日志增加输出接口，引擎只写一份带同一关联 ID 的日志（前提：P2-04 合并两份 `InvocationJournal`）。“西门子成员多重集
   不变”的验收改为引擎 ∪ 适配器，每步附预期增减清单。
 - **版本特性**：一张表 `build/TiaFeatures.props`，适配器、Studio 和引擎共同导入。先输出现有宏名：`PLC_SOURCE_RESULTS`、
@@ -237,8 +237,8 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 没有注册属性的 Foundation/Studio 辅助类不被当作引擎领域服务。工具重名、成员跨程序集重名和公开类型冲突均有检查；
 原有 Portal 优先于引擎服务的规则不掩盖适配器重名。旧引擎基线仍可由比较工具读取。
 
-`Build-Release.ps1` 在复制后再次校验适配器，并把校验器及其运行依赖放入 `runtime/verification`，纳入 runtimeFiles
-哈希清单；`Validate-Bundle.ps1` 直接使用随包校验器复验 DLL，不构建、不加载西门子程序集，完整验包需要 .NET 8。
+`build-release` 在复制后再次校验适配器，并把校验器及其运行依赖放入 `runtime/verification`，纳入 runtimeFiles
+哈希清单；`validate-bundle` 直接使用随包校验器复验 DLL，不构建、不加载西门子程序集，完整验包需要 .NET 10。
 三份必需文件清单覆盖新增源码、两版适配器/Contracts 和校验器，`-NoBinaries` 的干净检出路径保持跳过全部运行产物。
 
 成员多重集的验收边界现在为引擎 ∪ 适配器；第 H 步唯一预期增量是加入该版本适配器自己的完整成员多重集，

@@ -63,7 +63,7 @@ def main():
         assert f'manifest/{name}.json' in files, f'Missing {name} record; run the complete release build chain first'
     records = {name: json.loads(files[f'manifest/{name}.json'].decode('utf-8-sig')) for name in ('release-build', 'configurator-build', 'multi-version-build')}
     multi = records['multi-version-build']
-    assert multi['validation']['foundationTransportExecuted'] and multi['validation']['studioFunctionalTestsExecuted'], 'Run Build-MultiVersion.ps1 -Test first'
+    assert multi['validation']['foundationTransportExecuted'] and multi['validation']['studioFunctionalTestsExecuted'], 'Run dotnet run --project build-tools/release -- build-multi-version -Test first'
     assert set(multi['studioReleaseKeys']) == {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'}
     for record in records.values():
         for row in record['sourceFiles']:

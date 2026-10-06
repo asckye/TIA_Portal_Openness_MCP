@@ -166,7 +166,7 @@ function FirstExisting([string[]]$candidates) { foreach ($c in $candidates) { if
 
 function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
     # Preserve the exact engine sourceFiles contract enforced by Package-Release.py.
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','build-tools/release','src/Shared',
         'third_party/TiaGitAddIn.Core','third_party/SiemensOpcUaModelled')
     $extensions = @('.cs','.csproj','.props','.targets','.xml','.json','.config','.manifest','.resx')
     $files = @()
@@ -184,7 +184,7 @@ function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][strin
     }
 }
 function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','build-tools/release','src/Shared',
         'third_party/eido-import-planner','third_party/siemens-plc-tools','third_party/SiemensOpcUaModelled','third_party/simaticml-decoder','third_party/TiaGitAddIn.Core','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate','scripts/ecosystem',
         'reference','templates')
     if ($Kind -eq 'multi') { $roots += @('src/Studio','tests/Studio','third_party/tia-openness-studio') }

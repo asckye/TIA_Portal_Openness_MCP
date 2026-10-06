@@ -68,6 +68,13 @@ def product_name_errors(root, names):
     return errors
 
 
+def forbidden_script_errors(names):
+    """Reject tracked Windows command and PowerShell files after the C# migration."""
+    forbidden = {'.ps1', '.psm1', '.bat', '.cmd'}
+    return ['Forbidden tracked script file: ' + name for name in sorted(set(names))
+            if Path(name).suffix.lower() in forbidden]
+
+
 def product_name_self_test():
     import uuid
     scratch = ROOT / 'bin-build' / ('product-names-' + uuid.uuid4().hex)
@@ -105,7 +112,7 @@ def product_name_self_test():
         scratch.rmdir()
 
 
-def check(root, no_binaries=False, package_mode=False):
+def check(root, no_binaries=False, package_mode=False, enforce_script_free=False):
     rules = layout.load_delivery(root)
     package_mode = package_mode or not (root / 'Version.props').is_file()
     errors = archive_errors(root) if not package_mode else []
@@ -113,8 +120,15 @@ def check(root, no_binaries=False, package_mode=False):
         errors.extend(changelog_version_errors(root))
     if (root / '.git').exists():
         names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root).decode('utf-8').split('\0')
+        tracked_names = subprocess.check_output(['git', 'ls-files', '-z'], cwd=root).decode('utf-8').split('\0')
     else:
-        names = (path.relative_to(root).as_posix() for path in root.rglob('*') if path.is_file())
+        names = [path.relative_to(root).as_posix() for path in root.rglob('*') if path.is_file()]
+        tracked_names = names
+    remaining_scripts = forbidden_script_errors(filter(None, tracked_names))
+    if enforce_script_free:
+        errors.extend(remaining_scripts)
+    elif remaining_scripts:
+        print(f'[INFO] {len(remaining_scripts)} tracked Windows script file(s) remain during migration.')
     errors.extend(product_name_errors(root, filter(None, names)))
     count = 0
     for source in documents(root):
@@ -168,8 +182,7 @@ def check(root, no_binaries=False, package_mode=False):
             if not layout.delivery_resource(path, rules):
                 errors.append('Bundle resource excluded from delivery: ' + path)
         for path in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
-            if path != 'scripts/checks/Validate-Bundle.ps1':
-                required(path, 'blueprint')
+            required(path, 'blueprint')
         roster = read('manifest/tools-list.json')
         names = [row['name'] for row in roster['tools']]
         if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:
@@ -256,7 +269,7 @@ def check(root, no_binaries=False, package_mode=False):
 
 def changelog_version_errors(root):
     """The strict delivery check compares the newest CHANGELOG entry with the packaged version, so an entry written ahead of
-    Version.props fails every release candidate; Release.ps1 adds the entry and bumps the version in one release commit."""
+    Version.props fails every release candidate; the C# release command adds the entry and bumps the version in one release commit."""
     props = (root / 'Version.props').read_text(encoding='utf-8-sig')
     release = re.search(r'<TiaMcpRelease>([^<]+)</TiaMcpRelease>', props)
     entry = re.search(r'(?m)^## \[(\d+\.\d+\.\d+)\]', (root / 'CHANGELOG.md').read_text(encoding='utf-8-sig'))
@@ -264,7 +277,7 @@ def changelog_version_errors(root):
         return ['CHANGELOG.md or Version.props has no release version']
     if entry.group(1) != release.group(1).strip():
         return [f'Newest CHANGELOG entry {entry.group(1)} differs from Version.props {release.group(1).strip()}; '
-                'write the entry in the release commit (Release.ps1), keep drafts in docs/releases']
+                'write the entry in the release commit (release command), keep drafts in docs/releases']
     return []
 
 
@@ -289,10 +302,16 @@ def main():
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--self-test', action='store_true', help='Exercise retired product reference rejection and historical/namespace exemptions')
     parser.add_argument('--package-mode', action='store_true', help='Validate the runtime-only delivery, also detected when Version.props is absent')
+    parser.add_argument('--enforce-script-free', action='store_true',
+                        help='Reject tracked PowerShell/batch files after their migration is complete')
     parser.add_argument('--no-binaries', action='store_true',
                         help='source checkout without build outputs: skip the existence of runtime/*/TiaMcp.Engine.V21.exe and TiaOpenness.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
     if args.self_test:
+        script_names = ['scripts/old.ps1', 'hooks/old.PSM1', 'scripts/old.bat', 'scripts/old.cmd', 'scripts/current.py']
+        assert len(forbidden_script_errors(script_names)) == 4
+        assert forbidden_script_errors(['scripts/current.py']) == []
+        print('Tracked script language self-tests: 5 passed, 0 failed.')
         product_name_self_test()
         archive_self_test()
         changelog_self_test()
@@ -302,7 +321,7 @@ def main():
     assert local_target(args.root, source, '../README.md') is None
     assert local_target(args.root, source, '../__missing_repository_check__.md')
     assert local_target(args.root, source, '../../../__outside__.md')
-    count, errors = check(args.root, args.no_binaries, args.package_mode)
+    count, errors = check(args.root, args.no_binaries, args.package_mode, args.enforce_script_free)
     for error in errors:
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')

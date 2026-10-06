@@ -56,7 +56,7 @@ Foundation and full-engine schemas remain release-specific.
 After engine or test changes, use the authorized PublicAPI directories and run:
 
 ```powershell
-pwsh -NoProfile -File ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
 Use [validation](validation.md) for the checks required by the changed paths and

@@ -1,14 +1,14 @@
 name: Verify published release
 run-name: Verify ${{ github.event.release.tag_name || inputs.tag }}
 
-# Since 2.8.1 the delivery ZIP is built and uploaded from the maintainer's machine by scripts/build/Release.ps1
+# Since 2.8.1 the delivery ZIP is built and uploaded from the maintainer's machine by the C# release tool
 # (the engine cannot be compiled on hosted runners: Siemens PublicAPI is not redistributable, and the binaries are
 # not tracked in Git). This workflow is the independent check that runs when a release is published:
 #   - the tag equals "v" + manifest/delivery.json release and points at master HEAD;
 #   - the ZIP + .sha256 assets download, the digest matches;
 #   - the ZIP holds the delivery-filtered tag files byte-for-byte, the runtimes with the hashes recorded in
 #     manifest/release-build.json and the configurator with manifest/configurator-build.json
-#     (scripts/checks/Verify-ReleaseAsset.py), and the unpacked package passes Validate-Bundle.ps1 -Strict.
+#     (scripts/checks/Verify-ReleaseAsset.py), and the unpacked package passes the C# validate-bundle command.
 # A red run means the published asset does not match the reviewed source: fix and re-release (new patch version);
 # nothing here modifies the release. Run workflow (workflow_dispatch) re-verifies an existing tag with the current
 # checks; then the tag only has to be an ancestor of master instead of master HEAD.
@@ -42,30 +42,31 @@ jobs:
         with:
           python-version: '3.12'
       - name: Tag must match manifest/delivery.json and sit on master (HEAD for a fresh release, an ancestor on re-verification)
-        shell: pwsh
+        shell: bash
         run: |
-          git fetch origin "refs/tags/$($env:tag):refs/tags/$($env:tag)" --quiet
-          $tagCommit = (git rev-list -n 1 $env:tag).Trim()
-          $master = (git rev-parse HEAD).Trim()
-          if ("${{ github.event_name }}" -eq 'release') {
-            if ($tagCommit -ne $master) { throw "Tag $env:tag points at $tagCommit but master HEAD is $master" }
-          } else {
-            git merge-base --is-ancestor $tagCommit $master
-            if ($LASTEXITCODE -ne 0) { throw "Tag $env:tag ($tagCommit) is not on master" }
-          }
-          git worktree add tagtree $tagCommit --quiet
-          $tagDelivery = Get-Content tagtree/manifest/delivery.json -Raw | ConvertFrom-Json
-          if ($env:tag -ne "v$($tagDelivery.release)") { throw "Tag $env:tag does not match its own manifest/delivery.json release $($tagDelivery.release)" }
-          "package=$($tagDelivery.package)" >> $env:GITHUB_ENV
+          set -euo pipefail
+          git fetch origin "refs/tags/${tag}:refs/tags/${tag}" --quiet
+          tag_commit=$(git rev-list -n 1 "$tag")
+          master=$(git rev-parse HEAD)
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            test "$tag_commit" = "$master" || { echo "Tag $tag points at $tag_commit but master HEAD is $master" >&2; exit 1; }
+          else
+            git merge-base --is-ancestor "$tag_commit" "$master" || { echo "Tag $tag ($tag_commit) is not on master" >&2; exit 1; }
+          fi
+          git worktree add tagtree "$tag_commit" --quiet
+          readarray -t delivery < <(python -c 'import json; d=json.load(open("tagtree/manifest/delivery.json", encoding="utf-8-sig")); print(d["release"]); print(d["package"])')
+          test "$tag" = "v${delivery[0]}" || { echo "Tag $tag does not match manifest release ${delivery[0]}" >&2; exit 1; }
+          echo "package=${delivery[1]}" >> "$GITHUB_ENV"
       - name: Download the ZIP and its .sha256 from the release
-        shell: pwsh
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          New-Item -ItemType Directory -Force -Path assets | Out-Null
-          gh release download $env:tag --repo ${{ github.repository }} --dir assets --pattern "$env:package.zip" --pattern "$env:package.sha256"
-          Get-ChildItem assets | ForEach-Object { "{0}  {1} bytes" -f $_.Name, $_.Length }
-          if (-not (Test-Path "assets/$env:package.zip") -or -not (Test-Path "assets/$env:package.sha256")) { throw "release $env:tag lacks $env:package.zip or its .sha256" }
+          set -euo pipefail
+          mkdir -p assets
+          gh release download "$tag" --repo ${{ github.repository }} --dir assets --pattern "$package.zip" --pattern "$package.sha256"
+          ls -l assets
+          test -f "assets/$package.zip" -a -f "assets/$package.sha256" || { echo "release $tag lacks its ZIP or .sha256" >&2; exit 1; }
       - name: ZIP equals the filtered tag tree plus the validated runtime binaries
         run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip" --root tagtree
       - uses: actions/setup-dotnet@v6
@@ -73,13 +74,17 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Unpacked package passes the strict bundle validation
         # Release-only IL verification runs before packaging; extracted checks use records and hashes.
-        shell: pwsh
+        shell: bash
         run: |
-          Expand-Archive -LiteralPath "assets/$env:package.zip" -DestinationPath unpacked -Force
-          ./scripts/checks/Validate-Bundle.ps1 -BundleRoot "unpacked/$env:package" -Strict -PackageMode
-          python scripts/checks/Check-Repository.py --root "unpacked/$env:package" --package-mode
+          set -euo pipefail
+          python -c 'import pathlib, sys, zipfile; z=zipfile.ZipFile(sys.argv[1]); root=pathlib.Path("unpacked").resolve(); [(root / n).parent.mkdir(parents=True, exist_ok=True) for n in z.namelist()]; [z.extract(n, root) for n in z.namelist()]' "assets/$package.zip"
+          dotnet run --project build-tools/release -- validate-bundle -BundleRoot "unpacked/$package" -Strict -PackageMode
+          python scripts/checks/Check-Repository.py --root "unpacked/$package" --package-mode
       - name: Summary
-        shell: pwsh
+        shell: bash
         run: |
-          $digest = (Get-FileHash "assets/$env:package.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
-          "## $env:tag verified`n`n$env:package.zip - SHA-256 $digest - matches the tree of $((git rev-list -n 1 $env:tag).Trim()) (checks from master $((git rev-parse HEAD).Trim()))" >> $env:GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          digest=$(sha256sum "assets/$package.zip" | cut -d ' ' -f 1)
+          tag_commit=$(git rev-list -n 1 "$tag")
+          master=$(git rev-parse HEAD)
+          printf '## %s verified\n\n%s.zip - SHA-256 %s - matches the tree of %s (checks from master %s)\n' "$tag" "$package" "$digest" "$tag_commit" "$master" >> "$GITHUB_STEP_SUMMARY"

@@ -6,7 +6,7 @@ name: validate-bundle
 # (required files, JSON parse, blueprint list, tool roster, build records and
 # version consistency). Source hashes are regenerated and fully verified at
 # release time. Since 2.8.1 the engine runtimes and TiaOpenness.exe are not
-# tracked in Git (the maintainer builds them locally and Release.ps1 uploads the
+# tracked in Git (the maintainer builds them locally and the C# release tool uploads the
 # delivery ZIP), so the checks run with --no-binaries / -NoBinaries here; the
 # uploaded ZIP is verified by the "Verify published release" workflow.
 
@@ -23,29 +23,22 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Documentation links and repository entrypoints
-        run: python scripts/checks/Check-Repository.py --no-binaries
-      - name: Offline bundle validation
-        shell: pwsh
-        run: ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
-      - name: Windows PowerShell bundle validation and CHANGELOG self-tests
-        shell: powershell
-        run: |
-          & ./scripts/checks/Validate-Bundle.ps1 -SelfTest
-          if ($LASTEXITCODE) { throw 'CHANGELOG self-tests failed' }
-          & ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
-          if ($LASTEXITCODE) { throw 'Windows PowerShell bundle validation failed' }
-      - name: Release prerequisites, reuse and documentation assertions
-        shell: pwsh
-        run: |
-          ./scripts/build/Test-ReleasePrerequisites.ps1 -SelfTest
-          ./scripts/build/Release.ps1 -SelfTest
-          ./scripts/build/Build-Release.ps1 -SelfTest
-          ./scripts/build/Release.ps1 -DocumentationOnly
-          ./scripts/checks/Validate-Bundle.ps1 -SelfTest
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+      - name: Documentation links and repository entrypoints
+        run: python scripts/checks/Check-Repository.py --no-binaries
+      - name: Offline bundle validation
+        run: dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes
+      - name: C# bundle validator self-tests
+        run: |
+          dotnet run --project build-tools/release -- validate-bundle -SelfTest
+      - name: Release prerequisites, reuse and documentation assertions
+        run: |
+          dotnet test tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj -c Release --nologo
+          dotnet run --project build-tools/release -- preflight
+          dotnet run --project build-tools/release -- release -DocumentationOnly
+          dotnet run --project build-tools/release -- run-release-build -DryRun
       - name: Release safety suites and production PLC name fixture
         shell: powershell
         run: |
@@ -60,20 +53,16 @@ jobs:
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
           if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Script calls must use registered V4 tools
-        shell: pwsh
+        shell: bash
         run: |
+          set -euo pipefail
           python scripts/checks/Check-ScriptToolCalls.py --self-test
-          if ($LASTEXITCODE) { throw 'Script tool checker self-tests failed' }
           python scripts/checks/Check-ScriptToolCalls.py
-          if ($LASTEXITCODE) { throw 'Unregistered script tool calls' }
           python scripts/mcp_results.py
-          if ($LASTEXITCODE) { throw 'V4 result decoder tests failed' }
           python scripts/checks/Test-ScriptClients.py
-          if ($LASTEXITCODE) { throw 'Script client tests failed' }
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py
       - name: Supplementary read and worker dispatch source contracts
         run: python scripts/checks/Test-SupplementaryReadSources.py
       - name: Build launcher and test .NET 10 configuration page
-        shell: powershell
-        run: ./scripts/build/Build-Configurator.ps1 -Test
+        run: dotnet run --project build-tools/release -- build-configurator -Test

@@ -1,4 +1,4 @@
-"""Check the BCL resource table against Git and Validate-Bundle's enforced list; no dotnet."""
+"""Check the BCL resource table against Git and the C# bundle validator; no dotnet."""
 import argparse
 import json
 from pathlib import Path, PurePosixPath
@@ -12,7 +12,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'src/Shared/BundleLayout.cs'
-VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
+VALIDATOR = 'build-tools/release/BundleManifestRequirements.cs'
 LAUNCHER = 'src/Studio/Launcher/Launcher.cs'
 GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
@@ -78,13 +78,13 @@ def resource_paths(source):
 
 
 def validated_paths(source):
-    match = re.search(r'^\$bundleResourcePaths = @\(\s*(.*?)^\)', source, re.M | re.S)
-    if not match or not re.search(r'foreach \(\$resource in \$bundleResourcePaths\)\s*\{\s*'
-            r'if \(Test-Path -LiteralPath \(Join-Path \$root \$resource\)\)', source):
-        raise ValueError('Validate-Bundle must enforce its bundleResourcePaths list')
-    rows = re.findall(r"'([^']+)'", match[1])
-    if not rows or re.sub(r"'[^']+'|[\s,]", '', match[1]):
-        raise ValueError('Unrecognized Validate-Bundle resource list')
+    match = re.search(r'BundleResourcePaths\s*=\s*\[(.*?)\];', source, re.S)
+    if not match or not re.search(r'MissingBundleResources\s*\(.*?=>\s*BundleResourcePaths\s*\.Where\(resource\s*=>\s*'
+            r'!File\.Exists\(Path\.Combine\(root,\s*resource\.Replace', source, re.S):
+        raise ValueError('C# bundle validator must enforce its BundleResourcePaths list')
+    rows = re.findall(r'"([^"\\]+)"', match[1])
+    if not rows or re.sub(r'"[^"\\]+"|[\s,]', '', match[1]):
+        raise ValueError('Unrecognized C# bundle resource list')
     return set(rows)
 
 
@@ -128,7 +128,7 @@ def check(root, tracked):
             if not in_tree and path not in GENERATED_RESOURCES:
                 errors.append('Resource is not in the Git file set: ' + path)
         if path not in validated:
-            errors.append('Resource is not checked by Validate-Bundle: ' + path)
+            errors.append('Resource is not checked by the C# bundle validator: ' + path)
         if not delivery_resource(path, rules):
             errors.append('Resource is not in the delivery set: ' + path)
         if target.is_dir():
@@ -188,7 +188,7 @@ class LayoutChecks(unittest.TestCase):
                      'AGENTS.md', 'Version.props', 'RELEASE_STATUS.txt', '.github/workflows/release.yml',
                      'TiaMcp.Updater.exe', 'TiaMcp.Updater.exe.config',
                      'src/Engine/Program.cs', 'docs/development/runtime-layout.md',
-                     'scripts/checks/Validate-Bundle.ps1', 'reference/tool-examples/README.md',
+                     'build-tools/release/TiaMcp.ReleaseTool.csproj', 'reference/tool-examples/README.md',
                      'manifest/contracts/tools.json', 'manifest/history/old.json',
                      'third_party/siemens-plc-tools/packages/plc-code/tests/test_cli.py',
                      'third_party/simaticml-decoder/pyproject.toml',
@@ -232,7 +232,7 @@ class LayoutChecks(unittest.TestCase):
     def test_validator_must_actually_use_list(self):
         source = (ROOT / VALIDATOR).read_text(encoding='utf-8-sig')
         with self.assertRaises(ValueError):
-            validated_paths(source.replace('foreach ($resource in $bundleResourcePaths)', 'foreach ($resource in @())'))
+            validated_paths(source.replace('=> BundleResourcePaths', '=> Array.Empty<string>()'))
 
     def test_missing_untracked_and_unvalidated_resources(self):
         parent = ROOT / 'bin-build'
@@ -264,8 +264,8 @@ class LayoutChecks(unittest.TestCase):
             self.assertFalse(any('Git file set' in error for error in bundle_errors))
             self.assertIn('Missing resource: manifest/delivery.json', bundle_errors)
             validator = root / VALIDATOR
-            validator.write_text(validator.read_text(encoding='utf-8').replace("    'templates'", "    'unrelated'"), encoding='utf-8')
-            self.assertIn('Resource is not checked by Validate-Bundle: templates', check(root, tracked)[1])
+            validator.write_text(validator.read_text(encoding='utf-8').replace('"templates"', '"unrelated"'), encoding='utf-8')
+            self.assertIn('Resource is not checked by the C# bundle validator: templates', check(root, tracked)[1])
         finally:
             self.assertEqual(root.resolve().parent, parent.resolve())
             shutil.rmtree(root)

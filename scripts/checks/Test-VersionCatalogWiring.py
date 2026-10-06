@@ -113,11 +113,10 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertFalse(list(version))
 
     def test_shared_source_build_and_package_inputs(self):
-        build = read(ROOT / 'scripts/build/Build-Configurator.ps1')
-        self.assertIn('dotnet run --project $configurationTests -c Release', build)
-        self.assertNotIn('/main:TiaMcpConfigurator.Tests', build)
+        build = read(ROOT / 'build-tools/release/ReleaseCommands.cs')
         self.assertIn('TiaOpenness.Configuration.Tests.csproj', build)
-        self.assertIn('@(Get-Item $versionCatalog)', build)
+        self.assertIn('build-configurator', build)
+        self.assertNotIn('/main:TiaMcpConfigurator.Tests', build)
         package = read(ROOT / 'scripts/build/Package-Release.py')
         self.assertIn('Logic/Siemens/TiaVersionCatalog.cs', package)
         project = ET.parse(ROOT / 'tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj')

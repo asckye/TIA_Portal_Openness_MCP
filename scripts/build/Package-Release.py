@@ -1,9 +1,9 @@
 """Build the complete public delivery ZIP from the clean, committed tree plus the local build outputs.
 
 Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaOpenness.exe are not tracked in Git:
-Build-Release.ps1 produces them locally and records their hashes in manifest/release-build.json and
+the C# release tool produces them locally and records their hashes in manifest/release-build.json and
 manifest/configurator-build.json, which ARE committed. Packaging filters tracked files through
-scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. Release.ps1 uploads the ZIP.
+scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. The C# release command uploads the ZIP.
 """
 import argparse
 from collections import Counter
@@ -92,7 +92,8 @@ def main():
     if multi is not None:
         require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
         require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
-        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'configurationFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run Build-MultiVersion.ps1 -Test before publication')
+        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'configurationFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run build-multi-version -Test before publication')
+    if multi is not None:
         require(multi['studioReleaseKeys'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], 'Eight release adapters are required')
         existing = {row['path']: row['sha256'] for row in inventory}
         for row in multi['files']:
@@ -111,7 +112,7 @@ def main():
         print(f'note: {extra} is on disk but not in the validated runtime inventory; left out of the package')
     for name in tracked + binaries:
         path = (generated.get(name, root / name)).resolve()
-        require(path.is_relative_to(root) and path.is_file(), f'Missing file (run Build-Release.ps1 for the binaries): {name}')
+        require(path.is_relative_to(root) and path.is_file(), f'Missing file (run build-release for the binaries): {name}')
         require(not re.search(r'(^|/)(\.git|bin-build|PublicAPI|source-review|obj|obj-v20)(/|$)', name, re.I), f'Private/build path: {name}')
         require(not name.lower().endswith(('.log', '.pdb', '.patch', '.user', '.pfx', '.key')),
                 f'Unexpected release file: {name}')
@@ -151,7 +152,7 @@ def main():
     require(runtime_names == runtime_inventory | separately_built_updater, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'src/Updater/','src/Tools/WriteGuard/','tests/Engine/', 'tests/Updater/','tests/Tools/','build-tools/native-call-weaver/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json', '.config', '.manifest', '.resx')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
+    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'src/Updater/','src/Tools/WriteGuard/','tests/Engine/', 'tests/Updater/','tests/Tools/','build-tools/native-call-weaver/', 'build-tools/release/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json', '.config', '.manifest', '.resx')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
@@ -215,8 +216,9 @@ def main():
     desktop_projects = tuple(studio + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
     gui_inputs = {n for n in files if n.startswith(studio + 'Gui/Fonts/') or
                   (n.startswith(desktop_projects) and Path(n).suffix in ('.cs', '.xaml', '.csproj')) or
-                  (n.startswith('tests/Studio/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj'))} | {
-        'scripts/build/Build-Configurator.ps1', 'Version.props',
+                  (n.startswith('tests/Studio/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj')) or
+                  (n.startswith('build-tools/release/') and Path(n).suffix == '.cs')} | {
+        'Version.props',
         studio + 'Launcher/Launcher.cs',
         studio + 'Directory.Build.props', 'tests/Studio/Directory.Build.props',
         'src/Logic/Siemens/TiaVersionCatalog.cs',
@@ -231,7 +233,7 @@ def main():
         if not row['path'].lower().endswith(('.ttf', '.otf')):
             data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
-    require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
+    require(not any(Path(n).suffix.lower() in ('.ps1', '.psm1', '.bat', '.cmd') for n in files), 'PowerShell, batch, and cmd files must not be shipped')
     required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
                 'src/Updater/TiaMcp.Updater.csproj', 'src/Updater/Updater.cs', 'src/Updater/Program.cs',
                 'src/Updater/app.manifest', 'src/Updater/App.config', 'src/Updater/UpdaterText.cs', 'src/Updater/UpdaterMessages.resx',
@@ -241,7 +243,7 @@ def main():
                 'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
                 'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
                 'src/Adapters.Contracts/packages.lock.json',
-                'TiaOpenness.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
+                'TiaOpenness.exe', 'docs/getting-started/configuration.md',
                 'src/Studio/Launcher/Launcher.cs',
                 'src/Studio/Gui/Themes/Glass.xaml',
                 'src/Studio/Gui/Controls/GlassLogView.cs',
@@ -298,8 +300,8 @@ def main():
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     # Validate compiler inputs and release-only IL verifier in the repository before
     # projecting the delivery set. Source/build evidence never enters the ZIP.
-    subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-                    str(CHECKS / 'Validate-Bundle.ps1'), '-BundleRoot', str(root), '-Strict'], check=True)
+    subprocess.run(['dotnet', 'run', '--project', str(ROOT / 'build-tools/release'), '--',
+                    'validate-bundle', '-BundleRoot', str(root), '-Strict'], cwd=ROOT, check=True)
     files = {name: data for name, data in files.items() if layout.delivered(name, rules)}
     require(all(name in files for name in required_exes), 'Delivery rules exclude a required executable/license')
     require(all(layout.delivered(row['path'], rules) or row['path'].startswith('runtime/verification/')
@@ -314,8 +316,8 @@ def main():
         path.write_bytes(data)
     # The validator checks configuration launcher targets, blueprints, JSON, tool roster,
     # exact binary versions and build hashes in the actual delivery directory.
-    subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-                    str(CHECKS / 'Validate-Bundle.ps1'), '-BundleRoot', str(stage), '-Strict', '-PackageMode'], check=True)
+    subprocess.run(['dotnet', 'run', '--project', str(ROOT / 'build-tools/release'), '--',
+                    'validate-bundle', '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=ROOT, check=True)
     subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py'), '--root', str(stage), '--package-mode'], check=True)
     with zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for name, data in sorted(files.items()):

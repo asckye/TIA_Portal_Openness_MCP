@@ -28,7 +28,7 @@
 | `docs/development/evidence` | 机器审计和 legacy 历史证据 |
 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` | 构建生成的八个 MCP 运行目录 |
 | `runtime/studio` | 统一桌面程序及 `bridge/adapters` 内的八版适配器 |
-| `runtime/dotnet` | 构建时由 `scripts/build/Get-BundledDotnet.ps1` 从微软官方压缩包展开的 .NET 10 运行时，不入 Git |
+| `runtime/dotnet` | 构建时由 `scripts/build/get-bundled-dotnet` 从微软官方压缩包展开的 .NET 10 运行时，不入 Git |
 | `TiaOpenness.exe` | 统一工作台入口（程序集名 `TiaOpenness.Launcher`），不再打开独立配置器窗口 |
 | `reference/tool-examples` | 可编辑的调用、语言文件、返回解释和调用顺序 |
 | `reference/siemens-openness`、`reference/siemens-code-snippets` | 固定来源的官方示例与授权记录 |
@@ -72,7 +72,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 
 `tests/Engine/TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的行 JSON 替身，
 由 `worker-channel`、`scripts/checks/Test-FoundationTransport.py` 使用，并由 CI 与
-`scripts/build/Build-MultiVersion.ps1` 构建。夹具不连接 TIA；第 A 步删除了无生产调用方的预览协议
+`dotnet run --project build-tools/release -- build-multi-version` 构建。夹具不连接 TIA；第 A 步删除了无生产调用方的预览协议
 与两个预览夹具，规则映射见[适配器设计](adapter-merge.md#第-a-步最终规则核对)。
 
 ## 文档入口

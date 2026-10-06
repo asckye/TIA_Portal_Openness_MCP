@@ -1,4 +1,10 @@
 {
+  "release-tool": {
+    "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
+    "minimumPassed": 30,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
   "offline": {
     "project": "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
     "minimumPassed": 5153,

@@ -63,7 +63,7 @@ the loaded PublicAPI assembly, not only the product folder.
 ## Build and package
 
 The release package contains all eight MCP runtimes, Studio, and its eight adapters.
-`Release.ps1` builds the public package after multi-version validation;
+`dotnet run --project build-tools/release -- release` builds the public package after multi-version validation;
 `Package-MultiVersion.py` creates a local development archive. SDK and PublicAPI
 directories are local build inputs and are not included in the repository or public
 package. See the [release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) and

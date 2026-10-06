@@ -5,4 +5,4 @@
 - 本地 SDK、用户工程、设计交接和密钥不纳入发布。第三方来源和许可证保留；纯逻辑优先复用，共用代码与版本 API 差异分别维护。
 - 引擎或测试源码变动后按 `docs/development/validation.md` 完成对应构建及全部版本检查。文档变动核对链接、路径、工具适用版本和引用；不手工改测试哈希。
 - 仅维护 master。使用明确的 `git add` 路径，不用 `git add -A`。运行二进制不进 Git；英文提交，不添加 AI 署名。
-- 发布使用 `scripts/build/Release.ps1 -Version X.Y.Z -Summary "..."`，流程见 `docs/development/release-workflow.md`。发布后更新当前交接及 `manifest/publication-vX.Y.Z.json`，历史变化记录在 CHANGELOG 和 GitHub Releases。
+- 发布使用 `dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "..."`，流程见 `docs/development/release-workflow.md`。发布后更新当前交接及 `manifest/publication-vX.Y.Z.json`，历史变化记录在 CHANGELOG 和 GitHub Releases。

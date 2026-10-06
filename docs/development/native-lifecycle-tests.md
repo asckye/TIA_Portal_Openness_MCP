@@ -17,7 +17,7 @@
 
 ## 本地构建和默认行为
 
-现有 `Build-Release.ps1` 自动编译两版，仅运行各自的 `--self-test` 和 Python 监督器的假进程故障测试；不运行 live 分支。单独构建示例（将 SDK 路径替换为实际路径）：
+现有 `build-release` 命令自动编译两版，仅运行各自的 `--self-test` 和 Python 监督器的假进程故障测试；不运行 live 分支。单独构建示例（将 SDK 路径替换为实际路径）：
 
 ```powershell
 dotnet build tests/Engine/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj -c Release -p:SiemensEngineeringDirectory=C:\SDK\V20

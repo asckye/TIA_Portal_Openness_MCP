@@ -43,7 +43,7 @@ Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试�
 
 ## 验证与交付检查
 
-`Build-Release.ps1` 会运行：
+`dotnet run --project build-tools/release -- build-release` 会运行：
 
 1. 独立假 API 的实际执行测试：构造、属性/索引器、反射、泛型、值类型、`ref/out`、异常原样传播、遍历与释放、集合快捷路径、日志内容及 I/O 故障。
 2. 测试进程主动退出：确认最后一条原生 `BEFORE` 已持久化，且不存在伪造的完成记录。该测试不启动 TIA。

@@ -113,17 +113,16 @@ jobs:
       - name: Foundation contracts and functional tests
         run: python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership --suite adapter-contracts --suite worker-channel --suite compile-candidate --suite compile-candidate-no-safety --suite fallback-vci-modern --suite fallback-vci-initial --suite fallback-vci-classic
       - name: Build host and synthetic worker without Siemens SDKs
-        shell: pwsh
+        shell: bash
         run: |
+          set -euo pipefail
           dotnet publish src/FoundationHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/ci-foundation
-          if ($LASTEXITCODE) { throw 'Host build failed' }
           dotnet build tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
-          if ($LASTEXITCODE) { throw 'Fixture build failed' }
-          foreach ($key in @('14sp1','15.1','16','17','18','19')) {
-            $target = "runtime/v$key"
-            New-Item -ItemType Directory -Force $target | Out-Null
-            Get-ChildItem bin-build/ci-foundation -File | Copy-Item -Destination $target
-            [IO.File]::WriteAllText((Join-Path $target 'release-key.txt'), $key)
-          }
+          for key in 14sp1 15.1 16 17 18 19; do
+            target="runtime/v$key"
+            mkdir -p "$target"
+            cp bin-build/ci-foundation/* "$target/"
+            printf '%s' "$key" > "$target/release-key.txt"
+          done
       - name: Six real STDIO hosts and isolated HTTP sessions
         run: python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/ci-foundation-results

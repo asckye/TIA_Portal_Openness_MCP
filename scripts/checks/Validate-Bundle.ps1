@@ -124,6 +124,8 @@ foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.pre
     if (-not $PackageMode -and $path -in @('runtime/tools/TiaMcp.Updater.exe','runtime/tools/TiaMcp.Updater.exe.config') -and
         (Test-Path -LiteralPath (Join-Path (Join-Path $root 'bin-build/updater') (Split-Path $path -Leaf)))) { Ok "Staged updater build output present: $path"; continue }
     if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
+    elseif (-not $PackageMode -and $path -in @('runtime/tools/TiaMcp.Updater.exe','runtime/tools/TiaMcp.Updater.exe.config') -and
+        (Test-Path -LiteralPath (Join-Path $root ('bin-build/updater/' + [IO.Path]::GetFileName($path))))) { Ok "Generated delivery resource build output present: $path" }
     else { Fail "Missing delivery resource: $path" }
 }
 if ($PackageMode) {
