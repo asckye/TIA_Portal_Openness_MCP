@@ -117,5 +117,23 @@
     "minimumPassed": 17,
     "maximumSkipped": 0,
     "arguments": ["-p:TestCompileSafety=false"]
+  },
+  "fallback-vci-modern": {
+    "project": "tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj",
+    "minimumPassed": 13,
+    "maximumSkipped": 0,
+    "arguments": ["-p:TestVciFamily=modern"]
+  },
+  "fallback-vci-initial": {
+    "project": "tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj",
+    "minimumPassed": 15,
+    "maximumSkipped": 0,
+    "arguments": ["-p:TestVciFamily=initial"]
+  },
+  "fallback-vci-classic": {
+    "project": "tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj",
+    "minimumPassed": 13,
+    "maximumSkipped": 0,
+    "arguments": ["-p:TestVciFamily=classic"]
   }
 }

@@ -43,6 +43,9 @@ internal static class PilotToolChecks
         {
             string name = (string)entry!["currentName"]!;
             var method = surface.Tool(name);
+            var selected = ((IReadOnlyDictionary<string, MethodInfo>)facade.GetMethod("AllToolMethods", all)!.Invoke(null, new object[] { true })!)[name];
+            var selectedPolicy = selected.GetCustomAttributes().SingleOrDefault(a => a.GetType().Name == "BehaviorCandidateAttribute");
+            if (selectedPolicy != null && (string?)selectedPolicy.GetType().GetProperty("Family")!.GetValue(selectedPolicy) == "P6-FALLBACK") method = selected;
             var tool = (McpServerTool)facade.GetMethod("CreateTool", all)!.Invoke(null, new object[] { name, method })!;
             var arguments = usage.GetParameters().Select(p => p.Name == "toolName" ? name : p.DefaultValue).ToArray();
             var result = (CallToolResult)surface.Invoke(usage, arguments)!;
@@ -54,9 +57,13 @@ internal static class PilotToolChecks
             var example = data["example"]!;
             check((string?)example["kind"] == "parameterized-call-example", name + " serves a parameterized example");
             var served = example["request"]!["params"]!["arguments"]!.AsObject();
-            foreach (var value in entry["arguments"]!.AsObject())
+            var expected = entry["arguments"]!.AsObject();
+            var candidate = method.GetCustomAttributes().SingleOrDefault(a => a.GetType().Name == "BehaviorCandidateAttribute");
+            if (candidate != null && (string?)candidate.GetType().GetProperty("Family")!.GetValue(candidate) == "P6-FALLBACK")
+                expected = (JsonObject)Program.FindServerType(server, "TiaMcp.Logic.V4.BehaviorCapabilities").GetMethod("CandidateExample", all)!.Invoke(null, new object[] { release, name })!;
+            foreach (var value in expected)
                 check(SameExample(value.Value, served[value.Key], release), name + "." + value.Key + " preserves the generated example");
-            foreach (var value in served.Where(p => !entry["arguments"]!.AsObject().ContainsKey(p.Key)))
+            foreach (var value in served.Where(p => !expected.ContainsKey(p.Key)))
                 check(JsonNode.DeepEquals(actual["properties"]![value.Key]!["default"], value.Value), name + "." + value.Key + " uses its declared default");
             var schema = Activator.CreateInstance(schemaType, new object[] { tool.ProtocolTool.InputSchema })!;
             foreach (var sample in new JsonNode[] { served })

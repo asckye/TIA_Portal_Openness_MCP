@@ -196,7 +196,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-31 | D1 save/close 的借用/脏工程/LocalSession 策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-31) | 30、I；发布切换等待 L5-CLOSE | T、N；显式保存、独立 discard 确认、借用拒绝与所属线程 | done |
 | P6-32 | D1 PLC 路径及外部源计划/生成/删除策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-32) | 31、I；发布切换等待 L5-SOURCE | T、N；G9 空/错误/歧义路径、删除核实、14sp1 observation、不重放 | done |
 | P6-33 | D1 编译离线前提与 Safety 会话对称清理候选与切换；[路径清单](phase6-review.md#phase6-path-p6-33) | 32、I；发布切换等待 L5-COMPILE | T、N；不自动下线、清理失败、根/叶诊断、各入口目标范围 | done |
-| P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |
+| P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | done |
 | P6-35 | 汇总逐版/逐族行为能力与 V4 schema 缺省；未验收族保持 current，并重新生成实际发布快照；[路径清单](phase6-review.md#phase6-path-p6-35) | 26；已进入发布的 27–34 必须对应 L5 通过；其余明确延期 | T、V；schema 不广告未实现安全策略、UNVERIFIED_BEHAVIOR 可见；不改 G3/J 默认开关 | todo |
 | P6-36 | 三个 EXE/程序集输出名与根 TiaOpenness 启动器；集中修改 build/package/validate/织入/反射/必需清单；[路径清单](phase6-review.md#phase6-path-p6-36) | 25、I | T；八版产物身份/依赖/织入不漏；Strict 验包，新根启动器打开工作台 | done |
 | P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | done |

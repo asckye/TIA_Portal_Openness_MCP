@@ -441,9 +441,17 @@ for k in keys[-2:]:
 
 # One embedded record per release, contract version and V4 target. The registration
 # map is generated from the same transition decisions as the source checks.
-candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
-    '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
+candidate_entries = sorted(set(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
+    '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs')))))
 def candidate_example(entry, family, release):
+    if family == 'P6-FALLBACK':
+        example = {"route": "", "retryPolicy": "never", "refreshReadHandle": False, "mode": "preview", "confirm": False}
+        if entry in ('DownloadPlc', 'DownloadPlcToFolder', 'CompilePlcSoftware', 'ExportPlcBlockDocuments', 'ImportPlcBlockDocuments'): example['softwarePath'] = 'PLC_1'
+        if entry == 'DownloadPlcToFolder': example['destinationDirectory'] = r'C:\authorized-project-copy\card'
+        if entry == 'ExportPlcBlockDocuments': example.update(blockPath='Block_1', exportPath=r'C:\authorized-project-copy\documents')
+        if entry == 'ImportPlcBlockDocuments': example.update(importPath=r'C:\authorized-project-copy\documents', fileNameWithoutExtension='Block_1')
+        if entry == 'CreateVersionControlWorkspace': example.update(workspaceName='reviewed', folderPath=r'C:\authorized-project-copy\workspace')
+        return example
     if family == 'P6-COMPILE':
         example = {"mode": "preview", "confirm": False, "offlinePolicy": "require"}
         if entry == "CompileDevice": example.update(devicePath=["Device_1"], itemPath=[])
@@ -495,7 +503,7 @@ def candidate_example(entry, family, release):
 
 behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
     "example": candidate_example(entry, family, k)}
-    for k in keys for entry, family in sorted(candidate_entries.items()) if entry in {renames[n] for n in tools[k]}]
+    for k in keys for entry, family in candidate_entries if entry in {renames[n] for n in tools[k]} and (family != 'P6-FALLBACK' or k in ('20', '21'))]
 runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
            "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}
 for k in keys[-2:]:

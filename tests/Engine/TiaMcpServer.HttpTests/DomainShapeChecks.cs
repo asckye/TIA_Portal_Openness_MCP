@@ -70,6 +70,17 @@ internal static class DomainShapeChecks
             foreach (var tool in methods)
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+                var selected = ((IReadOnlyDictionary<string, MethodInfo>)facade.GetMethod("AllToolMethods", all)!.Invoke(null, new object[] { true })!)[name];
+                var policy = selected.GetCustomAttributes().SingleOrDefault(a => a.GetType().Name == "BehaviorCandidateAttribute");
+                if (policy != null && (string?)policy.GetType().GetProperty("Family")!.GetValue(policy) == "P6-FALLBACK")
+                {
+                    var candidate = surface.Target(selected); var native = provider.GetService(service);
+                    check(candidate != null && ReferenceEquals(candidate, surface.Target(selected)) && selected.ReturnType.Name == "CallToolResult", name + " fallback is the selected singleton envelope boundary");
+                    check(native != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(native), session)
+                        && selected.DeclaringType!.GetFields(all).Any(field => field.FieldType == service && ReferenceEquals(field.GetValue(candidate), native)), name + " fallback shares its native service and session");
+                    continue;
+                }
                 if (domain.Name == "Library" && new[] { "AnalyzeGlobalLibraryPackage", "PlanGlobalLibraryTemplateReuse",
                     "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout" }.Contains(name))
                 {

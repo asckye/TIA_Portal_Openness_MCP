@@ -42,7 +42,7 @@ using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 namespace TiaMcpServer.Siemens.Services
 {
     // Historical native observations lack a recorded PLCSIM version/date; see docs/reference/real-machine-ledger.md.
-    internal sealed class OnlineDownloadService
+    internal sealed partial class OnlineDownloadService
     {
         private readonly IEngineeringSession _session;
 

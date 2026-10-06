@@ -37,7 +37,7 @@ namespace TiaMcpServer.Siemens.Services
     // The generic reflection tools cannot reach any of this: they navigate properties from an
     // object, and VersionControlInterface is a *service*, so the traversal dead-ends immediately.
     // Hence a purpose-built toolset.
-    internal sealed class VersionControlService
+    internal sealed partial class VersionControlService
     {
         private readonly IEngineeringSession _session;
 

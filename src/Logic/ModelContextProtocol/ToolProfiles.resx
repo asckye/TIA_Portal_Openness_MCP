@@ -2444,6 +2444,19 @@
     },
     {
       "releaseKey": "20",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ConnectIsolatedPortal",
       "family": "P6-SESSION",
       "example": {
@@ -2483,6 +2496,18 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -2535,6 +2560,20 @@
     },
     {
       "releaseKey": "20",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "workspaceName": "reviewed",
+        "folderPath": "C:\\authorized-project-copy\\workspace"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -2555,6 +2594,33 @@
       "example": {
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "DownloadPlc",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "DownloadPlcToFolder",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "destinationDirectory": "C:\\authorized-project-copy\\card"
       }
     },
     {
@@ -2583,6 +2649,21 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcBlockDocuments",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "blockPath": "Block_1",
+        "exportPath": "C:\\authorized-project-copy\\documents"
       }
     },
     {
@@ -2672,6 +2753,18 @@
     },
     {
       "releaseKey": "20",
+      "entry": "GetVersionControlStatus",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -2684,6 +2777,21 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ImportPlcBlockDocuments",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\authorized-project-copy\\documents",
+        "fileNameWithoutExtension": "Block_1"
       }
     },
     {
@@ -2837,6 +2945,18 @@
     },
     {
       "releaseKey": "20",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ManagePlcExternalSources",
       "family": "P6-SOURCE",
       "example": {
@@ -2883,6 +3003,18 @@
         "mode": "preview",
         "confirm": false,
         "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -2963,6 +3095,19 @@
     },
     {
       "releaseKey": "21",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "ConnectIsolatedPortal",
       "family": "P6-SESSION",
       "example": {
@@ -3002,6 +3147,18 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -3054,6 +3211,20 @@
     },
     {
       "releaseKey": "21",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "workspaceName": "reviewed",
+        "folderPath": "C:\\authorized-project-copy\\workspace"
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -3074,6 +3245,33 @@
       "example": {
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "DownloadPlc",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "DownloadPlcToFolder",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "destinationDirectory": "C:\\authorized-project-copy\\card"
       }
     },
     {
@@ -3102,6 +3300,21 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcBlockDocuments",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "blockPath": "Block_1",
+        "exportPath": "C:\\authorized-project-copy\\documents"
       }
     },
     {
@@ -3191,6 +3404,18 @@
     },
     {
       "releaseKey": "21",
+      "entry": "GetVersionControlStatus",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -3203,6 +3428,21 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ImportPlcBlockDocuments",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false,
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\authorized-project-copy\\documents",
+        "fileNameWithoutExtension": "Block_1"
       }
     },
     {
@@ -3356,6 +3596,18 @@
     },
     {
       "releaseKey": "21",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "ManagePlcExternalSources",
       "family": "P6-SOURCE",
       "example": {
@@ -3402,6 +3654,18 @@
         "mode": "preview",
         "confirm": false,
         "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "P6-FALLBACK",
+      "example": {
+        "route": "",
+        "retryPolicy": "never",
+        "refreshReadHandle": false,
+        "mode": "preview",
+        "confirm": false
       }
     }
   ],

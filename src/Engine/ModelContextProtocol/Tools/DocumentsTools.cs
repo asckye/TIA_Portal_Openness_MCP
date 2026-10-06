@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     throw new McpException("ExportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
-                if (OnlineToolPolicy.WithAutoOffline(() => _domain.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath)))
+                if (OnlineToolPolicy.WithAutoOffline(() => _domain.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath), softwarePath))
                 {
                     return new ResponseExportAsDocuments
                     {
@@ -297,7 +297,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (EngineeringGroupOperations.Parts(fileNameWithoutExtension).Length != 1 || fileNameWithoutExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                     throw new ArgumentException("fileNameWithoutExtension must be one safe document basename.");
                 var formatPreflight = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")), Engineering.TiaMajorVersion, null);
-                var ok = OnlineToolPolicy.WithAutoOffline(() => _domain.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option));
+                var ok = OnlineToolPolicy.WithAutoOffline(() => _domain.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option), softwarePath);
                 if (ok)
                 {
                     // Read-back verification: confirm the block is actually present after import.

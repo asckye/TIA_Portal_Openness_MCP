@@ -54,6 +54,17 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
         {
+            if (BehaviorCapabilities.Select(typeof(PlcToolContract).Assembly, McpServer.ReleaseKey, "P6-FALLBACK") == BehaviorPolicy.SafeV4
+                && (tool == "CompilePlcSoftware" || tool == "ExportPlcBlockDocuments" || tool == "ImportPlcBlockDocuments"))
+                for (Exception? error = exception; error != null; error = error.InnerException)
+                    if (error is TiaMcp.Adapters.Contracts.Candidates.CandidateObservationException observed)
+                    {
+                        var envelope = FallbackSession.Result(McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), null,
+                            FallbackSession.Map(observed.Fault, ""), Outcome.RejectedBeforeOperation, Execution.NotStarted);
+                        var wire = McpResult.From(envelope);
+                        return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()),
+                            Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
+                    }
             if (exception is Rejection rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (exception is PlcBlockVerificationException)

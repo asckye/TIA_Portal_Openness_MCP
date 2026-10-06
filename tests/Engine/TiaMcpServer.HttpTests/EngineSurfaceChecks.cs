@@ -110,7 +110,11 @@ internal static class EngineSurfaceChecks
         check(entries.Cast<object>().All(entry =>
         {
             var type = entry.GetType();
-            return engine.Tool((string)type.GetProperty("Key")!.GetValue(entry)!) == (MethodInfo)type.GetProperty("Value")!.GetValue(entry)!;
+            var selected = (MethodInfo)type.GetProperty("Value")!.GetValue(entry)!;
+            var policy = selected.GetCustomAttributes().SingleOrDefault(a => a.GetType().Name == "BehaviorCandidateAttribute");
+            var current = engine.Tool((string)type.GetProperty("Key")!.GetValue(entry)!);
+            return selected == current || policy != null && (string?)policy.GetType().GetProperty("Family")!.GetValue(policy) == "P6-FALLBACK"
+                && current.GetCustomAttribute<McpServerToolAttribute>() != null;
         }), "EngineSurface matches every tool in the woven engine catalog");
 
         var services = server.GetType("TiaMcpServer.EngineServices", true)!;

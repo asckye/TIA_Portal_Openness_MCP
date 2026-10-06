@@ -46,7 +46,11 @@ namespace TiaMcp.Logic.V4
         }
 
         private static JsonObject? Entry(string release, string entry) => Catalog.Value["behaviorEntries"]!.AsArray()
-            .OfType<JsonObject>().SingleOrDefault(r => (string?)r["releaseKey"] == release && (string?)r["entry"] == entry);
+            .OfType<JsonObject>().Where(r => (string?)r["releaseKey"] == release && (string?)r["entry"] == entry)
+            .OrderBy(r => (string?)r["family"] == "P6-FALLBACK" ? 1 : 0)
+            .FirstOrDefault(r => Select(typeof(BehaviorCapabilities).Assembly, release, (string)r["family"]!) == BehaviorPolicy.SafeV4)
+            ?? Catalog.Value["behaviorEntries"]!.AsArray().OfType<JsonObject>()
+                .FirstOrDefault(r => (string?)r["releaseKey"] == release && (string?)r["entry"] == entry);
 
         public static BehaviorPolicy EntryPolicy(Assembly product, string release, string entry, BehaviorPolicy fallback)
         {
@@ -75,11 +79,14 @@ namespace TiaMcp.Logic.V4
         {
             var matches = candidates.Select(m => new { Method = m, Policy = m.GetCustomAttribute<BehaviorCandidateAttribute>() })
                 .Where(c => c.Policy != null && c.Policy.Entry == entry).ToArray();
-            if (matches.Length > 1) throw new InvalidOperationException("Duplicate behavior candidate for " + entry);
+            if (matches.Select(c => c.Policy!.Family).Distinct(StringComparer.Ordinal).Count() != matches.Length
+                || matches.Length > 1 && (matches.Length != 2 || !matches.Any(c => c.Policy!.Family == "P6-FALLBACK")))
+                throw new InvalidOperationException("Duplicate behavior candidate for " + entry);
             if (matches.Length == 0) return current;
-            var candidate = matches[0];
-            return (select?.Invoke(candidate.Policy!.Family) ?? Select(current.DeclaringType!.Assembly, release, candidate.Policy!.Family))
-                == BehaviorPolicy.SafeV4 ? candidate.Method : current;
+            // The entry's owning family takes precedence when both isolated test policies are selected.
+            var candidate = matches.OrderBy(c => c.Policy!.Family == "P6-FALLBACK" ? 1 : 0).FirstOrDefault(c =>
+                (select?.Invoke(c.Policy!.Family) ?? Select(current.DeclaringType!.Assembly, release, c.Policy!.Family)) == BehaviorPolicy.SafeV4);
+            return candidate?.Method ?? current;
         }
     }
 }

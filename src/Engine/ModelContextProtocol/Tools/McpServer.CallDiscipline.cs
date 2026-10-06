@@ -29,7 +29,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var raw = ToolCatalog.CreateTool(method).ProtocolTool.InputSchema;
             var schema = (JsonObject)JsonNode.Parse(raw.GetRawText())!;
-            SchemaHintsLogic.Augment(schema, SpecsOf(method), null);
+            var candidate = method.GetCustomAttribute<BehaviorCandidateAttribute>();
+            SchemaHintsLogic.Augment(schema, SpecsOf(method), candidate?.Family == "P6-FALLBACK" ? BehaviorCapabilities.CandidateExample(ReleaseKey, name) : null);
             PreserveTypedSchemas(schema, raw, method);
             InfrastructureSchema(name, schema);
             schema["additionalProperties"] = false;

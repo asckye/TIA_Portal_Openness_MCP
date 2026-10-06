@@ -111,7 +111,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Foundation contracts and functional tests
-        run: python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership --suite adapter-contracts --suite worker-channel --suite compile-candidate --suite compile-candidate-no-safety
+        run: python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership --suite adapter-contracts --suite worker-channel --suite compile-candidate --suite compile-candidate-no-safety --suite fallback-vci-modern --suite fallback-vci-initial --suite fallback-vci-classic
       - name: Build host and synthetic worker without Siemens SDKs
         shell: pwsh
         run: |
