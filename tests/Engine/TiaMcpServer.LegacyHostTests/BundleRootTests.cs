@@ -31,9 +31,11 @@ public sealed class BundleRootTests : IDisposable
         Assert.Equal(release, options.ReleaseKey);
         Assert.Equal(scratch, options.BundleRoot);
         Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.PlcWorker." + release + ".exe"), options.WorkerExe);
+        Assert.True(options.BundledWorker);
         string worker = At("explicit worker 中文.exe");
         options = HostOptions.Parse(new[] { "--bundle-root", scratch, "--worker-exe", worker, "--release-key", release, "--offline" }, directory);
         Assert.Equal(worker, options.WorkerExe);
+        Assert.False(options.BundledWorker);
         Assert.Throws<InvalidOperationException>(() => HostOptions.Parse(new[] { "--release-key", release == "19" ? "18" : "19" }, directory));
     }
 

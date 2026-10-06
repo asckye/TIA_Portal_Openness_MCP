@@ -24,6 +24,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private readonly Queue<string> diagnostics = new();
     private JsonObject approvalIdentity = new();
     internal string ApprovalIdentity => approvalIdentity.ToJsonString();
+    // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
+    internal bool Bundled { get; init; } = true;
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {

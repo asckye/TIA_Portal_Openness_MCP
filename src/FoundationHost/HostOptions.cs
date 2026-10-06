@@ -6,6 +6,8 @@ internal sealed class HostOptions
 {
     public required string ReleaseKey { get; init; }
     public required string WorkerExe { get; init; }
+    // False when --worker-exe replaces the bundled worker (test fixtures and development builds).
+    public bool BundledWorker { get; init; } = true;
     public required string ApiDirectory { get; init; }
     public string? ApiDirectorySource { get; init; }
     public required string BundleRoot { get; init; }
@@ -72,6 +74,7 @@ internal sealed class HostOptions
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release,
             WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
+            BundledWorker = !options.ContainsKey("--worker-exe"),
             ApiDirectory = api, ApiDirectorySource = apiSource, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key
         };
     }

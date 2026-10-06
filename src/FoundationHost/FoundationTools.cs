@@ -94,7 +94,7 @@ internal sealed partial class FoundationTool : McpServerTool
     private readonly Tool tool;
     internal bool IsNative => definition.ResponseMember != "PlcRender";
     internal bool RequiresTia => IsNative && definition.ResponseMember != "RuntimeQuery";
-    internal bool UsesProductionWorker => worker is WorkerClient;
+    internal bool UsesProductionWorker => worker is WorkerClient { Bundled: true };
     internal string? ApprovalIdentity => (worker as WorkerClient)?.ApprovalIdentity;
     internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
         || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";

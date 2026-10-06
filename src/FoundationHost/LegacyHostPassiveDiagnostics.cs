@@ -251,7 +251,8 @@ internal static class LegacyHostToolRegistry
         tools.Add(new ToolUsageTool(releaseKey, () => tools));
         for (int i = 0; i < tools.Count; i++)
         {
-            Func<JsonObject>? readinessForTool = worker is WorkerClient ? readiness : null;
+            // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
+            Func<JsonObject>? readinessForTool = worker is WorkerClient { Bundled: true } ? readiness : null;
             tools[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool));
         }
         return tools.AsReadOnly();

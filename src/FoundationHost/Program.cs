@@ -30,7 +30,7 @@ fileLogger.Write("TiaMcpServer.log", DateTimeOffset.UtcNow.ToString("O") + " rel
 
 if (options.CatalogOnly)
 {
-    using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false);
+    using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false) { Bundled = options.BundledWorker };
     Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "plc-foundation", nativeAcceptance = "NOT RUN",
         behaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(FoundationV4Tool).Assembly, options.ReleaseKey),
         tools = LegacyHostToolRegistry.Create(catalogWorker, options.ReleaseKey, false, options.ApiDirectory, options.ApiDirectorySource).Select(t => t.ProtocolTool) }));
@@ -49,7 +49,7 @@ if (options.Transport == "http")
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
         .WithHttpTransport(o => {
             o.ConfigureSessionOptions = (context, server, cancellationToken) => {
-                var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled);
+                var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
                 context.Items["foundationWorker"] = worker;
                 var toolCollection = new McpServerPrimitiveCollection<McpServerTool>();
                 foreach (var tool in LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource)) toolCollection.Add(tool);
@@ -79,7 +79,7 @@ if (options.Transport == "http")
 }
 else
 {
-    using var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled);
+    using var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
     var builder = Host.CreateEmptyApplicationBuilder(settings: null);
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
     builder.Logging.AddProvider(fileLogger);
