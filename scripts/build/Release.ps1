@@ -307,7 +307,7 @@ function Get-ReleaseReuseReason([string]$Kind) {
         foreach ($major in @(20,21)) {
             $check = $record.validation.runtimes."V$major"
             if ($check.localStability.status -ne 'passed' -or $check.localStability.runs.Count -ne 4 -or $check.isolatedLocalStability.status -ne 'passed' -or $check.isolatedLocalStability.runs.Count -ne 4 -or -not $check.isolatedLocalStability.isolatedWorker) { return "V$major validation incomplete" }
-            if ($check.approvalSafety.status -ne 'passed' -or $check.approvalSafety.checksPassed -ne 3 -or -not $check.approvalSafety.defaultEnabled -or -not $check.approvalSafety.directWriteRefusedBeforeDispatch -or -not $check.approvalSafety.callToolWriteRefusedBeforeDispatch -or -not $check.approvalSafety.readSucceeded -or $check.approvalSafety.workbenchConnected -or $check.approvalSafety.tiaConnected) { return "V$major default-approval gate incomplete" }
+            if ($check.approvalSafety.status -ne 'passed' -or $check.approvalSafety.checksPassed -ne 4 -or -not $check.approvalSafety.defaultEnabled -or -not $check.approvalSafety.directWriteRefusedBeforeDispatch -or -not $check.approvalSafety.callToolWriteRefusedBeforeDispatch -or -not $check.approvalSafety.readSucceeded -or $check.approvalSafety.workbenchConnected -or $check.approvalSafety.tiaConnected) { return "V$major default-approval gate incomplete" }
         }
         $property = 'runtimeFiles'
     } else {

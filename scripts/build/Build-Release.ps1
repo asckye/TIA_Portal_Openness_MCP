@@ -21,7 +21,7 @@ $expectedCheckCounts=[ordered]@{
     processLeases=@{value=2;mode='min'}
     workerFaults=@{value=25;mode='min'}
     workerProtocol=@{value=58;mode='min'}
-    approvalSafety=@{value=3;mode='exact'}
+    approvalSafety=@{value=4;mode='exact'}
     softwareLookup=@{value=45;mode='min'}
     engineeringApiV20=@{value=2840;mode='min'}
     engineeringApiV21=@{value=3126;mode='min'}
@@ -347,7 +347,7 @@ foreach($major in @($PipelineMajor)) {
     Run $Python @((Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py'),'--product','engine','--major',"$major",'--exe',$exe,'--portal-root',$api,'--host-harness',$harness,'--public-api',$api,'--temp-root',$env:TEMP,'--output',$approvalOut) "approval-safety-v$major.log" $true
     $approvalResult=Get-Content (Join-Path $approvalOut 'result.json') -Raw | ConvertFrom-Json
     Assert-CheckCount 'approvalSafety' $approvalResult.checksPassed "V$major default-approval checks incomplete"
-    if($approvalResult.status -ne 'passed' -or $approvalResult.checksExpected -ne 3 -or $approvalResult.workbenchConnected -ne $false -or $approvalResult.tiaConnected -ne $false -or
+    if($approvalResult.status -ne 'passed' -or $approvalResult.checksExpected -ne 4 -or $approvalResult.workbenchConnected -ne $false -or $approvalResult.tiaConnected -ne $false -or
         $approvalResult.results.direct -ne 'refused-before-dispatch; read-succeeded' -or $approvalResult.results.CallTool -ne 'refused-before-dispatch') {throw "V$major default-approval gate result is invalid"}
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
