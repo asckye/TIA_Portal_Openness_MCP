@@ -368,6 +368,8 @@ namespace TiaOpenness.Shared.Tests
         [Fact]
         public void Retention_failure_is_reported_once_and_does_not_interrupt_cleanup()
         {
+            // A read-only file blocks deletion only on Windows; elsewhere the directory's permissions decide.
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT) return;
             var locations = Resolve();
             string directory = locations.LogDirectory("21");
             for (int index = 0; index < 40; index++) OldLog(directory, "TiaMcpServer", index);
