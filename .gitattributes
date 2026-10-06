@@ -16,3 +16,7 @@ tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/** -text
 
 # Frozen 3.x contract evidence must retain its original bytes.
 manifest/history/contracts-v3/** -text
+
+# GitHub language statistics: renderer goldens are test data and the tool examples are snippets in target languages.
+tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/** linguist-generated
+reference/tool-examples/** linguist-documentation
