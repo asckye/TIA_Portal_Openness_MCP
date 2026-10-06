@@ -16,6 +16,8 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcRuntimeQueries.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/SessionCandidateAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcSessionCandidate.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/SaveCloseAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcSaveCloseCandidate.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcRuntimeQueryPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/MutationIdentityPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCompilePolicy.cs" />

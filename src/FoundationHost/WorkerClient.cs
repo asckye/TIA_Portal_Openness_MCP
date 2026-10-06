@@ -69,7 +69,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             try
             {
                 response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token);
                 sent=true;
             }
             catch(ChannelFailure failure)
@@ -121,6 +121,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     internal static BindingChange BindingChangeFor(string operation, JsonObject arguments)
     {
+        if (operation == WorkerOperations.SaveCloseCandidate)
+            return WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"])
+                || (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "save" ? BindingChange.None : BindingChange.MayAdvance;
         if (operation == WorkerOperations.SessionCandidate)
             return WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) ? BindingChange.None : BindingChange.MayAdvance;
         var dryRun = arguments["dryRun"]?.GetValue<bool>() ?? true;

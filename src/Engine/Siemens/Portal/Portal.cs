@@ -171,7 +171,7 @@ namespace TiaMcpServer.Siemens
         public void Dispose()
         {
             migrationPages.Dispose();
-            ProjectOwnership.Release(_projectOpenedByUs && sessionCandidateAdapter == null,
+            ProjectOwnership.Release(_projectOpenedByUs && sessionCandidateAdapter == null && saveCloseAdapter == null,
                 () => (_project as Project)?.Close(),
                 () => DisconnectPortal(),
                 ex => _logger?.LogWarning(ex, "Error releasing the Openness session"));

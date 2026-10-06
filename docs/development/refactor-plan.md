@@ -193,7 +193,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-28 | D1 PLC 块/类型/表导入安全策略候选与切换；原生导入及文件准备策略；[路径清单](phase6-review.md#phase6-path-p6-28) | 27、I；发布切换等待 L5-IMPORT | T、N；不修版本/BOM、覆盖拒绝、显式覆盖能力、批次中止/内容回读 | done |
 | P6-29 | D1 PLC 导出/SD/批量发布安全策略候选与切换；原生导出及文件发布策略；[路径清单](phase6-review.md#phase6-path-p6-29) | 28、I；发布切换等待 L5-EXPORT | T、N；暂存、原文件保全、partial、文件系统故障、对象范围不扩大 | done |
 | P6-30 | D1 connect/open 的进程/工程身份与升级副本策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-30) | 29、I；发布切换等待 L5-SESSION | T、N；PID 重用、绑定、拒绝升级/副本升级、不启动、不关闭外部工程 | done |
-| P6-31 | D1 save/close 的借用/脏工程/LocalSession 策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-31) | 30、I；发布切换等待 L5-CLOSE | T、N；显式保存、独立 discard 确认、借用拒绝与所属线程 | todo |
+| P6-31 | D1 save/close 的借用/脏工程/LocalSession 策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-31) | 30、I；发布切换等待 L5-CLOSE | T、N；显式保存、独立 discard 确认、借用拒绝与所属线程 | done |
 | P6-32 | D1 PLC 路径及外部源计划/生成/删除策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-32) | 31、I；发布切换等待 L5-SOURCE | T、N；G9 空/错误/歧义路径、删除核实、14sp1 observation、不重放 | todo |
 | P6-33 | D1 编译离线前提与 Safety 会话对称清理候选与切换；[路径清单](phase6-review.md#phase6-path-p6-33) | 32、I；发布切换等待 L5-COMPILE | T、N；不自动下线、清理失败、根/叶诊断、各入口目标范围 | todo |
 | P6-34 | D1 下载配置失败/自动下线及 VCI 失效句柄的显式路线策略候选与切换；[路径清单](phase6-review.md#phase6-path-p6-34) | 33、I；发布切换等待 L5-FALLBACK | T、N；逐中断点证明已执行/未知，读句柄刷新不能重放写入 | todo |

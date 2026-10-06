@@ -444,6 +444,11 @@ for k in keys[-2:]:
 candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
     '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
 def candidate_example(entry, family, release):
+    if family == 'P6-CLOSE':
+        example = {"mode": "preview", "confirm": False}
+        if entry == 'CloseProject': example.update(saveChanges=False, discardChanges=False, confirmDiscard=False)
+        if entry == 'SaveProjectCopy': example['newProjectPath'] = r"C:\authorized-project-copy\NewProject"
+        return example
     if family == 'P6-SESSION':
         example = {"processId": 1234, "processStartUtc": "2026-10-03T00:00:00Z", "startNew": False,
                    "reuseOpen": entry in ('ConnectProject', 'AttachOpenProject'), "upgrade": "reject", "mode": "preview", "confirm": False}

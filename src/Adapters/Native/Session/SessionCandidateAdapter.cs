@@ -27,6 +27,8 @@ namespace TiaMcp.Adapters.Native.Session
         private readonly bool localSessionOpenSupported;
         private SessionRequest? pendingRequest;
         private TiaPortal? expectedPortal;
+        private TiaPortal? nonOwningAttachment;
+        public bool IsNonOwningAttachment => nonOwningAttachment != null && ReferenceEquals(nonOwningAttachment, portal());
         private EngineeringProject? expectedProject;
         private SessionState? expectedState;
         private long epoch;
@@ -111,6 +113,7 @@ namespace TiaMcp.Adapters.Native.Session
             var selected = TiaPortal.GetProcesses().Single(p => p.Id == request.ProcessId);
             if (Start(selected.Id) != request.ProcessStartUtc) CandidatePrimitives.Fail("identity", "process-id-start-time");
             var handle = selected.Attach();
+            nonOwningAttachment = handle;
             // Retain the handle even if post-attach observation fails. Never close an unknown project.
             attached(handle, request.ProcessId, request.ProcessStartUtc); Remember();
         }

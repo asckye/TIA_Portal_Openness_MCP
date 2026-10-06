@@ -52,6 +52,26 @@ internal static class CandidateWire
         }
         return reply;
     }
+    internal static SaveCloseReply SaveClose(JsonNode? body, JsonObject args)
+    {
+        var reply = Read<SaveCloseReply>(body); string action = Action(args);
+        if (reply.Fault != null)
+        { if (reply.RequiresSessionReset || reply.Attempt != null || reply.Observation != null) throw new InvalidDataException("Conflicting save/close preflight reply."); return reply; }
+        if (action == "execute")
+        {
+            var attempt = reply.Attempt ?? throw new InvalidDataException("Missing save/close outcome.");
+            Attempt(attempt.Issued, attempt.RequiresSessionReset, attempt.Fault != null);
+            if (reply.RequiresSessionReset != attempt.RequiresSessionReset || reply.Observation != null) throw new InvalidDataException("Conflicting save/close reset state.");
+            if (attempt.After != null) TiaMcp.Logic.V4.SaveCloseSession.ValidateObservation(attempt.After);
+            if (attempt.Fault == null) CandidateExecution.VerifySaveCloseReadback(Read<SaveCloseCall>(args["candidate"]).Check!, attempt.After!);
+        }
+        else
+        {
+            if (action != "observe" || reply.Attempt != null || reply.RequiresSessionReset || reply.Observation == null) throw new InvalidDataException("Incomplete save/close observation.");
+            TiaMcp.Logic.V4.SaveCloseSession.ValidateObservation(reply.Observation);
+        }
+        return reply;
+    }
     internal static ImportCandidateReply Import(JsonNode? body, JsonObject args)
     {
         var reply = Read<ImportCandidateReply>(body); string action = Action(args);
