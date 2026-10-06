@@ -16,7 +16,7 @@ namespace TiaOpenness.Shared
         PlcToolsBridge,
         SimaticMlDecodeBridge,
         WriteGuardExecutable,
-        UpdateScript,
+        Updater,
         Templates
     }
 
@@ -106,7 +106,7 @@ namespace TiaOpenness.Shared
                 { BundleResource.PlcToolsBridge, "scripts/ecosystem/plc_tools_bridge.py" },
                 { BundleResource.SimaticMlDecodeBridge, "scripts/ecosystem/simaticml_decode_bridge.py" },
             { BundleResource.WriteGuardExecutable, "runtime/tools/TiaMcp.WriteGuard.exe" },
-                { BundleResource.UpdateScript, "scripts/operations/Update-Engine.ps1" },
+                { BundleResource.Updater, "runtime/tools/TiaMcp.Updater.exe" },
                 { BundleResource.Templates, "templates" }
             };
 

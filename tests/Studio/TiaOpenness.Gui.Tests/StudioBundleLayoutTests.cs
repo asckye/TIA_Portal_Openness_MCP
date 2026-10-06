@@ -25,7 +25,8 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
     {
         Put(scratch, "manifest/package-manifest.json", "{}");
         Put(scratch, "manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"fixture.zip\"}");
-        Put(scratch, "scripts/operations/Update-Engine.ps1");
+        Put(scratch, "runtime/tools/TiaMcp.Updater.exe");
+        Put(scratch, "runtime/tools/TiaMcp.Updater.exe.config");
         foreach (var release in TiaVersionCatalog.Runnable)
             Put(scratch, "runtime/v" + release.Key + "/" + BundleLayout.GetProduct(release.Key).Executable);
     }
@@ -216,7 +217,7 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
         File.SetAttributes(At(scratch, "manifest/package-manifest.json"), FileAttributes.ReadOnly);
         Assert.Equal("4.0.0", UpdateCheck.Installed(scratch));
         Assert.Equal("fixture.zip", UpdateCheck.InstalledPackage(scratch));
-        Assert.Equal(At(scratch, "scripts/operations/Update-Engine.ps1"), UpdateCheck.UpdaterPath(scratch));
+        Assert.Equal(At(scratch, "runtime/tools/TiaMcp.Updater.exe"), UpdateCheck.UpdaterPath(scratch));
         Assert.False(UpdateCheck.IsSourceRepository(scratch));
         Assert.True(UpdateCheck.Launch(scratch, 123).UseShellExecute);
         string nested = At(scratch, "staging");

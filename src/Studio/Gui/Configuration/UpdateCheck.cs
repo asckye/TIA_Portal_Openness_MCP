@@ -11,9 +11,7 @@ using System.Text.RegularExpressions;
 namespace TiaMcpConfigurator
 {
     // the update band of the configurator. Everything that can be tested without network or UI lives here;
-    // the update itself stays in scripts\operations\Update-Engine.ps1 (stop, download + verify, back up, replace),
-    // which the configurator launches in its own PowerShell window after closing itself - the updater refuses while
-    // TiaOpenness.exe runs because it replaces that file too.
+    // the .NET Framework updater performs the stop, download + verify, backup and replacement outside the installed files.
     public sealed class UpdateInfo
     {
         public string Installed { get; set; }
@@ -31,7 +29,7 @@ namespace TiaMcpConfigurator
     public static class UpdateCheck
     {
         public const string Repository = "asckye/TIA_Portal_Openness_MCP";
-        public const string UpdaterRelativePath = @"scripts\operations\Update-Engine.ps1";
+        public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
         public static string ReleasePageUrl(string repository) { return "https://github.com/" + repository + "/releases/latest"; }
         public static string ReleaseApiUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases/latest"; }
 
@@ -53,7 +51,7 @@ namespace TiaMcpConfigurator
         public static string UpdaterPath(string root)
         {
             root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
-            return TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/operations/Update-Engine.ps1");
+            return TiaOpenness.Shared.BundleLayout.RequirePath(root, UpdaterRelativePath.Replace('\\', '/'));
         }
         // The source repository also carries manifest\delivery.json and the updater; updating there would overwrite
         // tracked files, so the button is disabled for both a checkout and a worktree.
@@ -141,32 +139,33 @@ namespace TiaMcpConfigurator
         private static string UserAgent() { return "TiaMcpConfigurator/" + Assembly.GetExecutingAssembly().GetName().Version; }
 
         // Engines that would make the updater refuse (it never kills them); the configurator itself is closed before launch.
-        public static List<string> RunningEngines()
+        public static List<string> RunningEngines(string root = null)
         {
             var list = new List<string>();
-            foreach (string name in TiaMcp.Versioning.TiaVersionCatalog.Runnable
-                .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct())
+            var names = TiaMcp.Versioning.TiaVersionCatalog.Runnable
+                .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct().ToList();
+            names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => "TiaMcp.PlcWorker." + release.Key).Distinct());
+            string boundary = String.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            foreach (string name in names.Distinct())
             foreach (var p in Process.GetProcessesByName(name))
             {
-                string path = ""; try { path = p.MainModule.FileName; } catch /* swallow(env-probe): an unavailable process module path still leaves the engine PID visible in the updater check */ { }
+                string path = ""; try { path = p.MainModule.FileName; } catch /* swallow(env-probe): an unavailable process module path still leaves the PID visible in the updater check */ { }
+                if (boundary != null && path.Length > 0 && !path.StartsWith(boundary, StringComparison.OrdinalIgnoreCase)) continue;
                 list.Add(name + ".exe PID " + p.Id + (path.Length > 0 ? "（" + path + "）" : ""));
             }
             return list;
         }
 
-        // powershell -NoExit keeps the updater window open so its log (or FAIL line) stays readable; -WaitForPid lets the
-        // script wait for this configurator to exit before its running-process check; -RelaunchConfigurator reopens it.
+        // The console updater waits for this configurator to exit before its running-process check, then reopens it.
         public static string LaunchArguments(string updaterPath, string root, int waitForPid)
         {
-            // A trailing backslash inside quotes would escape the closing quote on PowerShell's command line.
-            return "-NoProfile -ExecutionPolicy Bypass -NoExit -File " + ConfigCore.Quote(updaterPath) + " -InstallRoot " + ConfigCore.Quote(root.TrimEnd('\\', '/')) + " -WaitForPid " + waitForPid + " -RelaunchConfigurator";
+            return "-InstallRoot " + ConfigCore.Quote(root.TrimEnd('\\', '/')) + " -WaitForPid " + waitForPid + " -RelaunchConfigurator";
         }
         public static ProcessStartInfo Launch(string root, int waitForPid)
         {
             root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, root);
             if (IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
-            string shell = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe");
-            return new ProcessStartInfo(shell, LaunchArguments(UpdaterPath(root), root, waitForPid)) { UseShellExecute = true, WorkingDirectory = root };
+            return new ProcessStartInfo(UpdaterPath(root), LaunchArguments(UpdaterPath(root), root, waitForPid)) { UseShellExecute = true, WorkingDirectory = root };
         }
     }
 }

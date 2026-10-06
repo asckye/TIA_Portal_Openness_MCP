@@ -531,6 +531,15 @@ def invoke_reflection_probe(bundle_root: Path, dotnet_runtime: Path, probe_dll: 
     return expected
 
 
+def invoke_updater_source_refusal(updater: Path, source_root: Path) -> str:
+    result = subprocess.run([str(updater), "-InstallRoot", str(source_root), "-Check"],
+                            cwd=updater.parent, text=True, encoding="utf-8", errors="replace",
+                            timeout=20, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if result.returncode == 0 or "source checkout" not in result.stdout.lower():
+        raise CheckFailure(f"Updater did not refuse a source checkout (exit={result.returncode}): {result.stdout[-2000:]}")
+    return result.stdout.strip()
+
+
 def root_launcher_probe(bundle_root: Path, probe_output: Path, launcher: Path) -> str:
     marker = bundle_root.parent / f"launcher-target-{uuid.uuid4().hex}.json"
     studio = bundle_root / "runtime" / "studio"
@@ -673,9 +682,8 @@ def run_bundle_check(args: argparse.Namespace) -> int:
             print(f"PASS selected V21 engine missing: {marker}")
         finally:
             missing_saved.rename(missing_engine)
-        marker = invoke_reflection_probe(ROOT, destination / "runtime" / "dotnet" / "dotnet.exe",
-                                         probe_output / "TiaOpenness.dll", gui_copy, "--update-source", "21")
-        print(f"PASS source checkout update refused: {marker}")
+        refusal = invoke_updater_source_refusal(destination / "runtime" / "tools" / "TiaMcp.Updater.exe", ROOT)
+        print(f"PASS updater refused source checkout: {refusal}")
 
         before = file_inventory(destination)
         acl_applied = True

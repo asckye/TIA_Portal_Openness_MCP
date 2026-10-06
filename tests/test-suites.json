@@ -49,6 +49,24 @@
       "FullyQualifiedName~CrashEvidencePortTests"
     ]
   },
+  "updater": {
+    "project": "tests/Updater/TiaMcp.Updater.Tests.csproj",
+    "minimumPassed": 20,
+    "maximumSkipped": 0,
+    "arguments": [],
+    "platforms": {
+      "linux": {
+        "minimumPassed": 19,
+        "maximumSkipped": 1,
+        "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
+      },
+      "macos": {
+        "minimumPassed": 19,
+        "maximumSkipped": 1,
+        "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
+      }
+    }
+  },
   "foundation": {
     "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
     "minimumPassed": 6848,

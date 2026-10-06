@@ -72,7 +72,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 | V21 生态目录参考副本 | `reference/v21-ecosystem.json` |
 | Claude Code 写入防护工具 | `runtime/tools/TiaMcp.WriteGuard.exe`，由 `hooks/hooks.json` 通过 `${CLAUDE_PLUGIN_ROOT}` 启动 |
 | PLC Tools、SimaticML 桥接 | `scripts/ecosystem/plc_tools_bridge.py`、`scripts/ecosystem/simaticml_decode_bridge.py` |
-| 更新脚本 | `scripts/operations/Update-Engine.ps1` |
+| 更新器 | `runtime/tools/TiaMcp.Updater.exe` 及其 `.config`（.NET Framework 4.8） |
 | CLI 模板 | `templates`、默认 HMI 模板 `templates/hmi`；`__BUNDLE__` 引用的具体文件/目录也必须存在于选定根 |
 
 `EcosystemFiles.RepositoryRoot` 现在只返回公共解析器选定的根；指南不再要求 Python 桥接文件作为根标记。
@@ -85,7 +85,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，显式 `--worker-exe` 保持优先；
 默认 worker 位于选定根的 `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`。
 引擎更新检查只把选定根下的正式 `runtime/v<key>` 输出认作安装；开发输出保持原有的非安装响应，
-正式安装缺交付清单或更新脚本时报告选定根下的预期路径。
+正式安装缺交付清单或 `runtime/tools/TiaMcp.Updater.exe` 时报告选定根下的预期路径。
 
 工作台（Studio）的配置页、客户端桥接与更新探测由 P6-38 改用同一规则：`BundleLayout.ResolveWorkbenchRoot` /
 `RequireWorkbenchRoot`（显式根、`TIA_MCP_BUNDLE_ROOT`、已知锚点；无效显式根不回退），引擎、bridge 与 adapter 位置取自产品表
@@ -152,17 +152,17 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 `TMP_EXPORT` 等已知夹具布局只在显式工作区内解释；PLC Builder 套件同时接收 fixtureDirectory 与 workspaceRoot，不从夹具反推根。
 缺输入返回 `INVALID_ARGUMENT`，CLI 语法退出 64；不猜 cwd、私人模板目录或最新报告。
 
+`runtime/tools/TiaMcp.Updater.exe` 面向 Windows 和 .NET Framework 4.8，不依赖随包 `runtime/dotnet`；启动更新/回滚前将自身和配置复制到系统临时目录，使其可以替换根启动器、运行时文件及 `runtime/tools` 下的自身。更新过程使用 Windows 扩展路径处理长路径，并在操作前检查当前包的引擎、Foundation、worker 和 Workbench 进程；列出 PID 后退出，不会终止这些进程。`-Check` 只检查版本和资产，默认调用执行更新，`-Rollback` 恢复最新备份；从包根手动运行时要传入 `-InstallRoot .`，命令行和运行方式见[配置指南](../getting-started/configuration.md#更新)。
+
 更新器按新包的 `delivery-files.json` 接受运行资源包。备份到 `.previous` 后，使用固定 `legacyCleanup` 规则与旧包
 `manifest/release-file-hashes.json` 的交集清理已交付的开发文件；只删除哈希仍匹配的旧文件，保留用户新增或改写的内容。
 `plugin/skill/` 和 `third_party/` 中继续交付的 Python 源码保留，不按整目录递归清除。旧 `tools/` 文件、运行文件及 manifest 也仅删除记录中确认且新包不再包含的项。
 没有旧完整文件记录时，只从构建记录识别旧运行二进制，不猜测其他文件的所有权。
 备份附带本次新包文件收据，回滚先删除备份中不存在且未被用户改写的新文件，再恢复原文件，避免叠加出混合布局。
 `data`、`.previous`、`.update`、`TiaMcp_Output` 不参与开发路径清理；数据目录在覆盖和回滚时保留。
-更新的 `tia-mcp-update-*` 与清空目录用的 `tia-mcp-empty-*` 优先位于包根的 `data\temp`。
-按 ZIP 实际条目（含顶层包名）计算的最长解压路径必须小于 240 字符，否则两者沿用 `%TEMP%`；
-Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完整包最长相对文件名为 158 字符，
-加上顶层包名为 191 字符；默认 `C:\TIA_MCP_Delivery_v<版本>_<日期>` 布局即使位于盘根也超过阈值，
-因此走 `%TEMP%` 分支。较短的安装目录可使用包内 scratch，脚本会输出本次选择的解压路径。`data` 已加入根 `.gitignore`。
+下载 ZIP、校验和及展开目录保存在系统临时目录，完成或失败后清理暂存文件；不再受 PowerShell 260 字符路径限制。
+`data`、日志与用户新增或修改过的文件在覆盖和回滚时保留。更新器只按旧交付哈希清理退役开发文件，
+每次更新记录新文件清单以便安全回滚，并只保留最近两份备份。`data` 已加入根 `.gitignore`。
 
 ### 兼容边界与风险
 

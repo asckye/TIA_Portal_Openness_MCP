@@ -3,6 +3,8 @@
   "include": {
     "files": [
       "TiaOpenness.exe",
+      "runtime/tools/TiaMcp.Updater.exe",
+      "runtime/tools/TiaMcp.Updater.exe.config",
       "runtime/README.md",
       "manifest/package-manifest.json",
       "manifest/delivery.json",
@@ -80,7 +82,8 @@
       "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
       "scripts/diagnostics/LibraryRenameProbe/Run-Tests.cmd",
       "scripts/diagnostics/LibraryRenameProbe/Build-Package.ps1",
-      "scripts/operations/vci-watch/register-task.ps1"
+      "scripts/operations/vci-watch/register-task.ps1",
+      "scripts/operations/Update-Engine.ps1"
     ],
     "prefixes": [
       "runtime/verification/",
@@ -94,6 +97,7 @@
       "AGENTS.md",
       "CLAUDE.md",
       "RELEASE_STATUS.txt",
+      "scripts/operations/Update-Engine.ps1",
       "TiaPortalOpenness.Offline.slnx",
       "TiaPortalOpenness.slnx",
       "Version.props",
@@ -111,7 +115,9 @@
       "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
       "scripts/diagnostics/LibraryRenameProbe/Run-Tests.cmd",
       "scripts/diagnostics/LibraryRenameProbe/Build-Package.ps1",
-      "scripts/operations/vci-watch/register-task.ps1"
+      "scripts/operations/vci-watch/register-task.ps1",
+      "TiaMcp.Updater.exe",
+      "TiaMcp.Updater.exe.config"
     ],
     "prefixes": [
       "tools/",

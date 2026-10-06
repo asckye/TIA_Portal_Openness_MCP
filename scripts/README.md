@@ -33,6 +33,6 @@
 | 诊断 | [openness-dynamic-coverage.json](diagnostics/openness-dynamic-coverage.json) | 经反射 / 泛型到达、类型名不出现在源码里的 Openness 类型登记表（`pattern` / `tool` / `mechanism` / `verified`），覆盖审计据此计入"动态覆盖" |
 | 操作 | [CLI 入门](../docs/getting-started/cli.md) | 生成工程和预热直接运行 `runtime\v21\TiaMcp.Engine.V21.exe gen <spec>` / `prewarm`；V20 使用对应 `runtime\v20` EXE |
 | 操作 | [vci-watch](operations/vci-watch/watch.py) | `python watch.py --register-task [--interval-minutes 10]` 注册当前用户的 `pythonw.exe` 计划任务；`python watch.py --register-task --remove` 删除 |
-| 操作 | [Update-Engine.ps1](operations/Update-Engine.ps1) | 在已解压的交付包里就地更新到最新 GitHub Release（只在线，机器要能访问 github.com；2.7.62 去掉了离线包路径）：引擎在运行就拒绝并列出 pid，下载 ZIP + `.sha256` 校验、解压到 `%TEMP%`、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件（2.8.0 起不受 260 字符路径限制）；`-Check` 只比版本，`-Rollback` 换回上一版；`-WaitForPid` / `-RelaunchConfigurator` 供配置器菜单“更新引擎…”调用；不碰 TIA 与客户端配置 |
+| 操作 | `runtime/tools/TiaMcp.Updater.exe` | 在已解压的交付包里更新或回滚；手动运行时从包根传入 `-InstallRoot .`；支持 `-Check`、`-Version`、`-Force`、`-Repository`、`-TimeoutSeconds`、`-WaitForPid`、`-Rollback` 和 `-RelaunchConfigurator`；不连接 TIA、不结束进程，保留用户数据及未归更新器所有的文件 |
 
 详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。按旧版本构建/打包脚本和 Python 预热桥接已由统一流程替代并删除。

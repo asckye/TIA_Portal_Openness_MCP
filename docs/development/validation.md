@@ -31,11 +31,14 @@
 ```powershell
 python scripts/checks/Check-BundleLayout.py --self-test
 python scripts/checks/Verify-ReleaseAsset.py --self-test
-pwsh -NoProfile -File scripts/operations/Update-Engine.ps1 -SelfTest
+dotnet test tests/Updater/TiaMcp.Updater.Tests.csproj -c Release
+dotnet build src/Updater/TiaMcp.Updater.csproj -c Release -f net48
+bin-build/updater/TiaMcp.Updater.exe -SelfTest
 ```
 
-更新器自检只在当前 worktree 的 `bin-build` 中创建离线夹具，覆盖已交付开发文件删除、未知/改写文件保留、
-保护目录、路径越界和回滚新增文件清理，不连接网络或真实安装。资产自检用内存 tag 树和本地 ZIP，
+更新器离线套件通过假发布源和文件系统夹具验证版本检查、成功替换、校验和失败、API 页面回退、运行进程拒绝、
+源码 checkout 拒绝、长路径、替换中断回滚、显式回滚、自替换、根启动器替换、legacy cleanup、数据和未知文件保留；
+不连接网络或真实安装。资产自检用内存 tag 树和本地 ZIP，
 检查缺失/多余文件、误带验证器、二进制哈希、sidecar 和 tag 内容优先于 checkout。
 
 ## 重定位与只读安装检查

@@ -118,7 +118,7 @@ foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Force) {
     }
 }
 foreach ($path in @($deliveryRules.include.files) + @($deliveryRules.include.prefixes)) {
-    if ($NoBinaries -and ($path -eq 'TiaOpenness.exe' -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
+    if ($NoBinaries -and ($path -in @('TiaOpenness.exe','runtime/tools/TiaMcp.Updater.exe','runtime/tools/TiaMcp.Updater.exe.config') -or ($path.StartsWith('runtime/') -and $path -ne 'runtime/README.md'))) { continue }
     if (Test-Path -LiteralPath (Join-Path $root $path)) { Ok "Delivery resource present: $path" }
     else { Fail "Missing delivery resource: $path" }
 }
@@ -144,13 +144,15 @@ $bundleResourcePaths = @(
     'scripts/ecosystem/plc_tools_bridge.py',
     'scripts/ecosystem/simaticml_decode_bridge.py',
     'runtime/tools/TiaMcp.WriteGuard.exe',
-    'scripts/operations/Update-Engine.ps1',
+    'runtime/tools/TiaMcp.Updater.exe',
     'templates'
 )
 foreach ($resource in $bundleResourcePaths) {
     if (Test-Path -LiteralPath (Join-Path $root $resource)) { Ok "Bundle resource present: $resource" }
     elseif ($resource -eq 'runtime/tools/TiaMcp.WriteGuard.exe' -and -not $PackageMode -and $NoBinaries) { Ok "Generated bundle resource will be built before packaging: $resource" }
     elseif ($resource -eq 'runtime/tools/TiaMcp.WriteGuard.exe' -and -not $PackageMode -and (Test-Path -LiteralPath (Join-Path $root 'src/Tools/WriteGuard/bin/Release/net10.0/TiaMcp.WriteGuard.exe'))) { Ok "Generated bundle resource build output present: $resource" }
+    elseif ($resource -eq 'runtime/tools/TiaMcp.Updater.exe' -and -not $PackageMode -and $NoBinaries) { Ok "Generated bundle resource will be built before packaging: $resource" }
+    elseif ($resource -eq 'runtime/tools/TiaMcp.Updater.exe' -and -not $PackageMode -and (Test-Path -LiteralPath (Join-Path $root 'bin-build/updater/TiaMcp.Updater.exe'))) { Ok "Generated bundle resource build output present: $resource" }
     else { Fail "Missing bundle resource: $resource" }
 }
 foreach ($guiFile in @(

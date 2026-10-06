@@ -166,15 +166,15 @@ function FirstExisting([string[]]$candidates) { foreach ($c in $candidates) { if
 
 function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
     # Preserve the exact engine sourceFiles contract enforced by Package-Release.py.
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
         'third_party/TiaGitAddIn.Core','third_party/SiemensOpcUaModelled')
-    $extensions = @('.cs','.csproj','.props','.targets','.xml','.json')
+    $extensions = @('.cs','.csproj','.props','.targets','.xml','.json','.config','.manifest','.resx')
     $files = @()
     if ($Kind -eq 'engine') { $files += Get-Item -LiteralPath (Join-Path $Root 'Version.props') }
     else {
         $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','src/Shared','src/Studio','tests/Studio','third_party/tia-openness-studio',
             'build-tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate')
-        $extensions = @('.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json')
+        $extensions = @('.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json','.resx')
     }
     $files += Get-ChildItem ($roots | ForEach-Object { Join-Path $Root $_ }) -Recurse -File | Where-Object {
         $_.Extension -in $extensions -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'
@@ -184,7 +184,7 @@ function Get-ReleaseSources([string]$Root, [ValidateSet('engine','multi')][strin
     }
 }
 function Get-ReleaseValidationInputs([string]$Root, [ValidateSet('engine','multi')][string]$Kind) {
-    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Tools/WriteGuard','tests/Engine','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
+    $roots = @('src/Engine','src/FoundationHost','src/Worker','src/Logic','src/Runtime','src/WorkerChannel','src/Adapters','src/Adapters.Contracts','src/Updater','src/Tools/WriteGuard','tests/Engine','tests/Updater','tests/Tools','tests/test-suites.json','build-tools/native-call-weaver','src/Shared',
         'third_party/eido-import-planner','third_party/siemens-plc-tools','third_party/SiemensOpcUaModelled','third_party/simaticml-decoder','third_party/TiaGitAddIn.Core','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate','scripts/ecosystem',
         'reference','templates')
     if ($Kind -eq 'multi') { $roots += @('src/Studio','tests/Studio','third_party/tia-openness-studio') }

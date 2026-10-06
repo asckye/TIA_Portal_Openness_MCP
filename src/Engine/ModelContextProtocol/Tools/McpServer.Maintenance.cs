@@ -62,8 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "CheckProductUpdate"), Description(
             "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +
-            "(name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, " +
-            "run by the maintainer with every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe stopped (it refuses while one runs; -Rollback restores the previous install). " +
+            "(name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. " +
+            "It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. " +
             "The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.")]
         public static Task<CallToolResult> CheckProductUpdateV4(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
@@ -84,8 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool updaterPresent = updater != null && File.Exists(updater);
             meta["installRoot"] = root;
             meta["updaterScript"] = updaterPresent ? updater : null;
-            meta["howToUpdate"] = new JsonArray(UpdateLogic.HowToUpdate(updater, updaterPresent).Select(x => (JsonNode)x).ToArray());
-            var lines = UpdateLogic.HowToUpdate(updater, updaterPresent).ToList();
+            meta["howToUpdate"] = new JsonArray(UpdateLogic.HowToUpdate(updater, updaterPresent, root).Select(x => (JsonNode)x).ToArray());
+            var lines = UpdateLogic.HowToUpdate(updater, updaterPresent, root).ToList();
 
             if (!UpdateLogic.IsValidRepository(repository))
             {

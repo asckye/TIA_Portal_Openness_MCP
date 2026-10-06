@@ -91,9 +91,27 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。`Sa
 
 ## 更新
 
-先结束工程操作并保存需要保留的修改，结束工作台的工程会话、AI 中的 TIA 会话和 MCP 服务。可下载新版本完整 ZIP 到新目录，再用新配置器写入客户端配置。
+### 从 3.x 升级到 4.0
 
-交付目录也可使用 **帮助 → 更新 → 更新引擎…**。更新器检查下载校验和、备份到 `.previous`，替换交付文件后重新打开配置器；日志保留在更新窗口。源码 Git 工作区使用仓库的开发流程，不由交付更新器覆盖。虚拟机服务端更新完成后重新启动服务。
+3.x 到 4.0 必须全新安装。下载完整的 4.0 ZIP 并解压到一个新文件夹；不要覆盖 3.x 文件夹。3.3 的 PowerShell 更新器会在备份或替换前检查包是否包含它要求的旧布局文件。4.0 不再包含这些文件，因此 3.3 更新器会报告 `package is incomplete` 并退出，不会改动现有安装。保留旧文件夹，直到 4.0 工作台连接及客户端配置确认完成。
+
+4.0 的 engine 可执行文件名和 MCP 工具名都已变化。用新目录里的 Workbench 为每个 AI 客户端重新生成配置，并重启客户端、刷新工具缓存；不要沿用 3.x 客户端启动命令。
+
+| 3.3 中的数据 | 4.0 中的位置 | 搬迁方式 |
+|---|---|---|
+| 连接设置：`%LOCALAPPDATA%\TiaPortalMcp\` 下的 `http-v<版本>.json`、`client.json` | 可写交付目录的 `data\config\` | 首次启动时，4.0 在目标文件缺失时自动复制这些旧设置文件；保留 3.3 原文件作为备份。它们不是 AI 客户端的 MCP 启动配置。 |
+| Workbench 界面偏好：`%LOCALAPPDATA%\TiaOpennessStudio\ui.settings` | `data\ui\ui.settings` | 首次启动时目标文件缺失才会自动复制；保留原文件。 |
+| 审批状态 | 3.3 没有 Workbench MCP 审批状态文件；4.0 为 `data\config\approval.settings` | 无 3.3 状态可搬。新装 4.0 默认开启审批；以后重装 4.0 时，关闭程序后可复制该文件以保留审批开关和超时设置。 |
+| 普通日志：`%LOCALAPPDATA%\TiaMcp\logs\<releaseKey>\` 和 `studio\` | `data\logs\<releaseKey>\` 和 `data\logs\studio\` | 4.0 不自动搬日志。旧日志留在原处即可；如需在新 Workbench 中查看，可在两边程序关闭后复制对应子目录到新目录，避免覆盖已有文件。 |
+| 审计数据 | 3.3 没有 4.0 的审批审计哈希链；4.0 保存在 `data\logs\audit\` | 没有 3.3 审计链可搬。迁移已有 4.0 安装时，如需保留校验链，关闭所有程序后完整复制整个 `audit` 目录，不要只复制其中一部分。 |
+
+当交付目录不可写时，4.0 的设置回退到 `%LOCALAPPDATA%\TiaPortalMcp` 和 `%LOCALAPPDATA%\TiaOpennessStudio\ui.settings`，engine/Workbench 日志回退到 `%TEMP%\TiaMcp\logs\<releaseKey>` / `studio`，审批审计回退到 `%LOCALAPPDATA%\TiaMcp\logs\audit`。从 4.0 开始，后续版本更新使用随包的 C# 更新器。
+
+### 从 4.0 更新到后续版本
+
+先结束工程操作并保存需要保留的修改，关闭 Workbench、AI 中的 TIA 会话及 MCP 服务。交付目录可使用 **帮助 → 更新 → 更新引擎…**。随包 `runtime/tools/TiaMcp.Updater.exe` 检查下载校验和、备份到 `.previous`，替换交付文件后重新打开 Workbench；日志显示在更新器控制台。更新前会等待指定的 Workbench 退出，并拒绝正在运行的引擎、Foundation 宿主或 worker。用户数据目录和未归更新器所有的文件会保留，`.previous` 最多保留两份。源码 Git 工作区使用仓库的开发流程，不由交付更新器覆盖。虚拟机服务端更新完成后重新启动服务。
+
+无界面时从交付根目录运行 `runtime/tools/TiaMcp.Updater.exe -InstallRoot . -Check` 检查版本，去掉 `-Check` 执行更新，或运行 `runtime/tools/TiaMcp.Updater.exe -InstallRoot . -Rollback` 恢复最近一次更新前的备份。可用 `-Version vX.Y.Z` 选择版本、`-Force` 重装、`-Repository owner/name` 指定发布仓库、`-TimeoutSeconds n` 设置网络超时、`-WaitForPid n` 等待一个进程退出，成功后用 `-RelaunchConfigurator` 重新打开 Workbench。更新器使用随 Windows 提供的 .NET Framework 4.8，因此替换 `runtime` 中的 .NET 运行时不会影响正在运行的更新器；它会先复制自身和配置到临时目录，再对安装目录进行更新。
 
 工作台的更新检查和更新启动入口会拒绝 Git checkout、worktree（包括 `.git` 文件）以及保留源码标记的源码包；
 放在这些目录中的暂存包同样拒绝更新。只读安装仍能读取产品和客户端连接信息，软件自身数据沿用上述用户目录回退；

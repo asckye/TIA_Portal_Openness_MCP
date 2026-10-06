@@ -425,7 +425,7 @@ namespace TiaMcpConfigurator
             if (busy) return;
             if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.StopServiceBeforeUpdate"]);
-            var running = UpdateCheck.RunningEngines();
+            var running = UpdateCheck.RunningEngines(root);
             if (running.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", String.Join(Loc.Current["Config.ReasonSeparator"], running)));
             string updater = UpdateCheck.UpdaterPath(root);
             if (!File.Exists(updater)) throw new InvalidOperationException(Loc.Current.T("Config.UpdaterMissing", updater));

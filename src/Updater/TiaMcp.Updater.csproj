@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>TiaMcp.Updater</AssemblyName>
+    <RootNamespace>TiaMcp.Updater</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <OutputPath Condition="'$(UpdaterTestSource)' != 'true'">$(MSBuildThisFileDirectory)..\..\bin-build\updater\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UpdaterTestSource)' == 'true'">
+    <DefineConstants>$(DefineConstants);UPDATER_TEST_SOURCE</DefineConstants>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\bin-build\updater-test\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>

@@ -7,12 +7,11 @@ using System.Text.RegularExpressions;
 namespace TiaMcpServer.ModelContextProtocol
 {
     // The pure part of CheckForUpdate - version parsing / comparison and the GitHub "latest release" JSON.
-    // The engine only REPORTS; replacing the files is scripts/operations/Update-Engine.ps1, which refuses while any
-    // TiaMcp.Engine.V21.exe runs: all engines must stop before their files are replaced.
+    // The engine only REPORTS; the standalone .NET Framework updater replaces delivery files after all bundle processes stop.
     public static class UpdateLogic
     {
         public const string DefaultRepository = "asckye/TIA_Portal_Openness_MCP";
-        public const string UpdaterRelativePath = @"scripts\operations\Update-Engine.ps1";
+        public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
 
         public sealed class Asset
         {
@@ -130,15 +129,16 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string Text(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? (v.GetString() ?? "") : "";
         private static bool Flag(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
 
-        /// <summary>The manual update steps; the engine never replaces its own files.</summary>
-        public static IReadOnlyList<string> HowToUpdate(string? updaterPath, bool updaterPresent)
+        /// <summary>The manual command line; the engine never replaces its own files.</summary>
+        public static IReadOnlyList<string> HowToUpdate(string? updaterPath, bool updaterPresent, string? installRoot = null)
         {
             var updater = updaterPresent && updaterPath != null ? updaterPath : UpdaterRelativePath;
+            var root = installRoot ?? "<bundle-root>";
             return new[]
             {
-                "1. Stop every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe (and TiaOpenness.exe) on the TIA machine - the updater refuses while one runs; it never kills them.",
-                "2. On that machine (it needs access to github.com): powershell -NoProfile -ExecutionPolicy Bypass -File \"" + updater + "\" - downloads the ZIP + .sha256, verifies, backs up the current install to .previous, replaces runtime/manifest and overlays the rest.",
-                "3. Start the engine again and call InitializeEnvironment - serverVersion must show the new version. -Rollback restores the previous install.",
+                "1. Stop every TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe / TiaMcp.PlcWorker.<key>.exe and TiaOpenness.exe for this bundle. The updater lists PIDs and never kills processes.",
+                "2. On the TIA machine (which needs access to github.com), run \"" + updater + "\" -InstallRoot \"" + root + "\" -Check to inspect the release, or run it without -Check to update. It verifies the ZIP SHA-256, backs up the install to .previous, and replaces delivery files. Use -Rollback to restore the newest backup.",
+                "3. Start the engine again and call InitializeEnvironment - serverVersion must show the new version.",
             };
         }
 
@@ -147,7 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (latest == null) return "Engine " + current + "; the latest release could not be determined.";
             var v = latest.Version ?? latest.Tag;
             if (comparison == null) return "Engine " + current + "; latest release tag '" + latest.Tag + "' is not a version tag.";
-            if (comparison < 0) return "Update available: engine " + current + " -> " + v + " (" + latest.Tag + ", published " + latest.PublishedAt + "). Stop the engine, then run Update-Engine.ps1.";
+            if (comparison < 0) return "Update available: engine " + current + " -> " + v + " (" + latest.Tag + ", published " + latest.PublishedAt + "). Stop every process from this bundle, then run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root>.";
             if (comparison == 0) return "Engine " + current + " is the latest release (" + latest.Tag + ").";
             return "Engine " + current + " is newer than the latest published release " + v + " (local build).";
         }

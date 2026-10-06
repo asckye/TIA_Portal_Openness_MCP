@@ -11,7 +11,7 @@ namespace TiaOpenness.Gui.Tests;
 // Frozen pre-G7-5 bodies; only visibility changes for the differential fixture.
 internal static class StudioLookupBaseline
 {
-    public const string UpdaterRelativePath = @"scripts\operations\Update-Engine.ps1";
+    public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
     internal static string FindBundleRoot(string start)
     {
         for (var directory = new DirectoryInfo(start); directory != null; directory = directory.Parent)

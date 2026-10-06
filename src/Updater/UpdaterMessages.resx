@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="InvalidArguments" xml:space="preserve"><value>参数错误</value></data>
+  <data name="StageFailed" xml:space="preserve"><value>无法暂存更新器</value></data>
+  <data name="Failure" xml:space="preserve"><value>失败</value></data>
+  <data name="Staged" xml:space="preserve"><value>更新器已复制到临时目录并启动</value></data>
+  <data name="SelfTestPassed" xml:space="preserve"><value>更新器离线自检通过</value></data>
+  <data name="SelfTestFailed" xml:space="preserve"><value>自检失败</value></data>
+  <data name="InstallRoot" xml:space="preserve"><value>安装目录</value></data>
+  <data name="InstalledVersion" xml:space="preserve"><value>当前版本</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>发现更新</value></data>
+  <data name="UpToDate" xml:space="preserve"><value>已是最新版本</value></data>
+  <data name="NewerInstalled" xml:space="preserve"><value>已安装版本较新</value></data>
+  <data name="ReleaseAsset" xml:space="preserve"><value>发布资源</value></data>
+  <data name="NothingToDo" xml:space="preserve"><value>无需更新（使用 -Force 可重新安装）</value></data>
+  <data name="WorkbenchExited" xml:space="preserve"><value>工作台进程已退出</value></data>
+  <data name="ProcessesRunning" xml:space="preserve"><value>引擎仍在运行，请先关闭；更新器不会结束进程</value></data>
+  <data name="ApiFallback" xml:space="preserve"><value>GitHub API 不可用，改读发布页</value></data>
+  <data name="GitHubApi" xml:space="preserve"><value>GitHub 接口</value></data>
+  <data name="ReleasePage" xml:space="preserve"><value>发布页</value></data>
+  <data name="Downloading" xml:space="preserve"><value>正在下载</value></data>
+  <data name="ChecksumMismatch" xml:space="preserve"><value>SHA-256 不匹配，未更改安装</value></data>
+  <data name="ChecksumVerified" xml:space="preserve"><value>SHA-256 已验证</value></data>
+  <data name="PathTooLong" xml:space="preserve"><value>Windows 扩展路径长度超限（32,767 个字符）；请缩短 TEMP 或安装路径后重试</value></data>
+  <data name="Backup" xml:space="preserve"><value>备份当前安装</value></data>
+  <data name="Overlay" xml:space="preserve"><value>清理已记录的旧文件并覆盖交付资源</value></data>
+  <data name="UpdateDone" xml:space="preserve"><value>更新完成</value></data>
+  <data name="InterruptedRollback" xml:space="preserve"><value>已恢复更新前文件</value></data>
+  <data name="Extracted" xml:space="preserve"><value>正在解压</value></data>
+  <data name="PreserveModified" xml:space="preserve"><value>保留已修改文件</value></data>
+  <data name="RollingBack" xml:space="preserve"><value>回滚</value></data>
+  <data name="RollbackDone" xml:space="preserve"><value>回滚完成</value></data>
+  <data name="Relaunching" xml:space="preserve"><value>重新打开工作台</value></data>
+  <data name="RelaunchFailed" xml:space="preserve"><value>无法重新打开工作台</value></data>
+  <data name="UsageCheck" xml:space="preserve"><value>从包根运行时传入 -InstallRoot .；使用 -Check 检查发布，或使用 -Rollback 恢复最近一次备份。</value></data>
+</root>

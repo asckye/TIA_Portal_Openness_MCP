@@ -297,7 +297,9 @@ namespace TiaOpenness.Shared.Tests
             var allowed = new System.Collections.Generic.Dictionary<string, int>
             {
                 ["src/Studio/Gui/Configuration/ClientProfiles.cs"] = 2,
-                ["src/Engine/Cli/McpConfigInstaller.cs"] = 1
+                ["src/Engine/Cli/McpConfigInstaller.cs"] = 1,
+                ["src/Updater/Program.cs"] = 1,
+                ["src/Updater/Updater.cs"] = 1
             };
             foreach (string tree in new[] { "src", "src/Shared", "src/Studio" })
                 foreach (string path in Directory.EnumerateFiles(Path.Combine(root, tree), "*.cs", SearchOption.AllDirectories))

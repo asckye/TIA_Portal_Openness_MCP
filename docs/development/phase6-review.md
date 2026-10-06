@@ -1887,7 +1887,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Cli/McpConfigInstaller.cs](../../src/Engine/Cli/McpConfigInstaller.cs):86 `RequireEngine` | P6-37 已改：目标版本引擎缺失时报 RESOURCE_UNAVAILABLE，不再使用自身 | 缺版本引擎报 RESOURCE_UNAVAILABLE |
 | [Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs):27 `FindBundleRoot` | P6-38：仅委托 BundleLayout.RequireWorkbenchRoot，校验正式包标记或已知 Studio 锚点 | 显式根或已知锚点 |
 | [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):80 `RequireWorkbenchRoot` | P6-38 已改：工作台经 BundleLayout 严格定位根并从产品表取引擎路径 | 严格根校验、新产品目录 |
-| [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):44 `RequirePath` | P6-38 已改：资源只在包根内严格解析，缺失即报错 | 严格资源解析，worktree 更新保护保留 |
+| [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):42 `RequirePath` | P6-38 已改：资源只在包根内严格解析，缺失即报错 | 严格资源解析，worktree 更新保护保留 |
 | [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):77 `BundleLayout` | P6-38：BundleLayout.RequireWorkbenchBridge 使用正式相邻布局或已知 worktree 输出锚点；不猜同级 Debug/Release | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
 | [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |

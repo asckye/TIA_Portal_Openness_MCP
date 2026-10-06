@@ -215,6 +215,15 @@ $offlineV20Passed=Run-DotnetSuite 'offline-v20' 'offline-v20.log'
 $versionPolicyProject=Join-Path $repo 'tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj'
 Restore $versionPolicyProject @()
 $versionPolicySdkPassed=Run-DotnetSuite 'version-policy' 'version-policy-sdk.log'
+$updaterSuiteProject=Join-Path $repo 'tests/Updater/TiaMcp.Updater.Tests.csproj'
+Restore $updaterSuiteProject @()
+$updaterPassed=Run-DotnetSuite 'updater' 'updater.log'
+$updaterProject=Join-Path $repo 'src/Updater/TiaMcp.Updater.csproj'
+Restore $updaterProject @()
+Run $Dotnet @('build',$updaterProject,'-c','Release','-f','net48','--no-restore','-v:q') 'build-updater.log'
+$updaterExe=Join-Path $repo 'bin-build/updater/TiaMcp.Updater.exe'
+$updaterConfig=Join-Path $repo 'bin-build/updater/TiaMcp.Updater.exe.config'
+if(!(Test-Path -LiteralPath $updaterExe) -or !(Test-Path -LiteralPath $updaterConfig)){throw 'The .NET Framework updater output is incomplete.'}
 $harnessProject=Join-Path $repo 'tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj'
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
@@ -475,6 +484,6 @@ $validationArtifacts=@(foreach($major in @(20,21)) {
         [ordered]@{path=$path.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $path).Hash.ToLowerInvariant()}
     }
 })
-WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs;validationArtifacts=$validationArtifacts})
+WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;updaterPassed=$updaterPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs;validationArtifacts=$validationArtifacts})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate."

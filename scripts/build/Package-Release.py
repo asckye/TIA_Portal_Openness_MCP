@@ -101,19 +101,25 @@ def main():
             if row['path'] not in existing:
                 inventory.append(row)
                 existing[row['path']] = row['sha256']
-    binaries = ['TiaOpenness.exe'] + sorted(row['path'] for row in inventory)
+    binaries = ['TiaOpenness.exe', 'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config'] + sorted(row['path'] for row in inventory)
+    generated = {
+        'runtime/tools/TiaMcp.Updater.exe': root / 'bin-build/updater/TiaMcp.Updater.exe',
+        'runtime/tools/TiaMcp.Updater.exe.config': root / 'bin-build/updater/TiaMcp.Updater.exe.config',
+    }
     on_disk = {p.relative_to(root).as_posix() for p in (root / 'runtime').rglob('*') if p.is_file() and p.name != 'README.md'}
     for extra in sorted(on_disk - set(binaries)):
         print(f'note: {extra} is on disk but not in the validated runtime inventory; left out of the package')
     for name in tracked + binaries:
-        path = (root / name).resolve()
+        path = (generated.get(name, root / name)).resolve()
         require(path.is_relative_to(root) and path.is_file(), f'Missing file (run Build-Release.ps1 for the binaries): {name}')
         require(not re.search(r'(^|/)(\.git|bin-build|PublicAPI|source-review|obj|obj-v20)(/|$)', name, re.I), f'Private/build path: {name}')
         require(not name.lower().endswith(('.log', '.pdb', '.patch', '.user', '.pfx', '.key')),
                 f'Unexpected release file: {name}')
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
-    required_exes = ['TiaOpenness.exe', 'runtime/v20/TiaMcp.Engine.V20.exe', 'runtime/v21/TiaMcp.Engine.V21.exe']
+    required_exes = ['TiaOpenness.exe', 'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
+                     'runtime/v20/TiaMcp.Engine.V20.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
+                     'manifest/package-manifest.json']
     required_exes += ['runtime/tools/TiaMcp.WriteGuard.exe']
     if multi is not None:
         required_exes += [f'runtime/v{key}/TiaMcp.FoundationHost.exe' for key in multi['studioReleaseKeys'][:6]]
@@ -139,10 +145,13 @@ def main():
     source_release = ET.fromstring(files['Version.props']).findtext('.//TiaMcpRelease')
     require(source_release + '.0' == version and source_release == metadata['release'], 'Source version differs from validated build')
     runtime_names = {n for n in files if n.startswith('runtime/') and n != 'runtime/README.md'}
-    require(runtime_names == {r['path'] for r in inventory}, 'Runtime file inventory changed after validation')
+    separately_built_updater = {'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config'}
+    runtime_inventory = {r['path'] for r in inventory}
+    require(not (separately_built_updater & runtime_inventory), 'Updater files must come from the validated updater build output, not the runtime inventory')
+    require(runtime_names == runtime_inventory | separately_built_updater, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/','src/Tools/WriteGuard/','tests/Engine/','tests/Tools/','build-tools/native-call-weaver/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
+    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'src/Updater/','src/Tools/WriteGuard/','tests/Engine/', 'tests/Updater/','tests/Tools/','build-tools/native-call-weaver/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json', '.config', '.manifest', '.resx')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
@@ -224,6 +233,9 @@ def main():
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
+                'src/Updater/TiaMcp.Updater.csproj', 'src/Updater/Updater.cs', 'src/Updater/Program.cs',
+                'src/Updater/app.manifest', 'src/Updater/App.config', 'src/Updater/UpdaterText.cs', 'src/Updater/UpdaterMessages.resx',
+                'tests/Updater/TiaMcp.Updater.Tests.csproj', 'tests/Updater/UpdaterTests.cs',
                 'src/Shared/BundleLayout.cs',
                 'scripts/checks/Check-BundleLayout.py',
                 'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',

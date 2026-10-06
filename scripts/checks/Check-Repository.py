@@ -84,15 +84,17 @@ def product_name_self_test():
                  'scripts/current.ps1': 'TiaMcp.Engine.V20.exe TiaMcp.Engine.V21.exe TiaMcp.FoundationHost.exe TiaOpenness.exe',
                  'scripts/process.ps1': 'Get-Process -Name "' + old_engine + '"',
                  'src/identity.csproj': '<AssemblyName>' + old_engine + '</AssemblyName>',
-                 'scripts/dumps.ps1': "-match '^(Portal|" + old_engine + r")\.'"}
+                 'scripts/dumps.ps1': "-match '^(Portal|" + old_engine + r")\.'",
+                 'scripts/build/Build-Release.ps1': old + '; runtime/v21/' + old,
+                 launcher: 'retired launcher filename'}
         for name, value in cases.items():
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(value, encoding='utf-8')
         errors = product_name_errors(root, cases)
-        assert len(errors) == 7, errors
+        assert len(errors) == 9, errors
         assert len(product_name_errors(root, ['runtime/v21/' + old])) == 1
-        print('Product-name self-tests: 12 passed, 0 failed.')
+        print('Product-name self-tests: 13 passed, 0 failed.')
     finally:
         assert scratch.resolve().parent == (ROOT / 'bin-build').resolve()
         for path in sorted(scratch.rglob('*'), key=lambda p: len(p.parts), reverse=True):
@@ -140,7 +142,7 @@ def check(root, no_binaries=False, package_mode=False):
         target = (root / name).resolve()
         if not target.is_relative_to(root.resolve()):
             errors.append(f'{label}: external path: {name}')
-        elif no_binaries and (name.endswith('.exe') or (name.startswith('runtime/') and name != 'runtime/README.md')):
+        elif no_binaries and (name.endswith('.exe') or name == 'runtime/tools/TiaMcp.Updater.exe.config' or (name.startswith('runtime/') and name != 'runtime/README.md')):
             return   # build outputs live outside Git since 2.8.1
         elif not target.exists():
             errors.append(f'{label}: missing or external path: {name}')
@@ -194,6 +196,10 @@ def check(root, no_binaries=False, package_mode=False):
     required('src/Shared/BundleLayout.cs', 'bundle layout')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
+    for name in ('TiaMcp.Updater.csproj', 'Program.cs', 'Updater.cs', 'UpdaterText.cs', 'UpdaterMessages.resx', 'app.manifest', 'App.config'):
+        required('src/Updater/' + name, 'updater source')
+    required('tests/Updater/TiaMcp.Updater.Tests.csproj', 'updater tests')
+    required('tests/Updater/UpdaterTests.cs', 'updater tests')
     for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json'):
         required('src/WorkerChannel/' + name, 'worker channel source')
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):

@@ -16,7 +16,8 @@ VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
 LAUNCHER = 'src/Studio/Launcher/Launcher.cs'
 GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
-GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe'}
+GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.Updater.exe',
+                       'runtime/tools/TiaMcp.Updater.exe.config'}
 
 
 def load_delivery(root):
@@ -168,6 +169,7 @@ class LayoutChecks(unittest.TestCase):
     def test_delivery_includes_runtime_resources_and_plugin(self):
         rules = load_delivery(ROOT)
         for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
+                     'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',
                      'runtime/tools/TiaMcp.WriteGuard.exe',
@@ -184,6 +186,7 @@ class LayoutChecks(unittest.TestCase):
         rules = load_delivery(ROOT)
         for path in ('runtime/verification/NativeCallWeaver.dll', 'runtime/verification/Mono.Cecil.dll',
                      'AGENTS.md', 'Version.props', 'RELEASE_STATUS.txt', '.github/workflows/release.yml',
+                     'TiaMcp.Updater.exe', 'TiaMcp.Updater.exe.config',
                      'src/Engine/Program.cs', 'docs/development/runtime-layout.md',
                      'scripts/checks/Validate-Bundle.ps1', 'reference/tool-examples/README.md',
                      'manifest/contracts/tools.json', 'manifest/history/old.json',
@@ -193,6 +196,9 @@ class LayoutChecks(unittest.TestCase):
                      'runtime/../private.key', '/runtime/file.dll', 'runtime\\file.dll'):
             with self.subTest(path=path):
                 self.assertFalse(delivered(path, rules))
+        self.assertIn('TiaMcp.Updater.exe', rules['legacyCleanup']['files'])
+        self.assertIn('TiaMcp.Updater.exe.config', rules['legacyCleanup']['files'])
+        self.assertFalse(delivered('scripts/operations/Update-Engine.ps1', rules))
 
     def test_launcher_matches_installed_anchor_and_gui_filename(self):
         layout, launcher, project = [(ROOT / path).read_text(encoding='utf-8-sig')
