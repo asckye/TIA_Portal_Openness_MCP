@@ -314,6 +314,10 @@ def main():
     capture_parser.add_argument('--public-api-root', type=Path,
                                 help='Root containing TIA_V20_PublicAPI and TIA_V21_PublicAPI (default: <repo>/sdk, else the repo root)')
     capture_parser.set_defaults(run=capture)
+    verify_parser = commands.add_parser('verify', help='Check the static V4 release inventory and generated rosters')
+    verify_parser.add_argument('--repo-root', type=Path, default=Path(__file__).resolve().parents[2])
+    verify_parser.add_argument('--baseline', type=Path, help='Contract directory (default: <repo-root>/manifest/contracts/v4/baseline)')
+    verify_parser.set_defaults(run=verify)
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)
     compare_parser.add_argument('--current', type=Path, required=True)
@@ -324,9 +328,70 @@ def main():
     args = parser.parse_args()
     try:
         return args.run(args)
-    except (OSError, ValueError, KeyError, AssertionError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, KeyError, TypeError, AssertionError, subprocess.SubprocessError) as error:
         print(f'ERROR: {error}', file=sys.stderr)
         return 1
+
+
+def exact_release_files(directory):
+    expected = {release + '.json' for release in RELEASES}
+    actual = {path.name for path in directory.iterdir()}
+    if actual != expected or any(not path.is_file() or path.is_symlink() for path in directory.iterdir()):
+        raise ValueError(f'{directory}: expected exactly eight release files; '
+                         f'missing={sorted(expected - actual)}, extra={sorted(actual - expected)}')
+
+
+def unique_names(names, label):
+    if not isinstance(names, list) or any(not isinstance(name, str) or not name for name in names):
+        raise ValueError(label + ': expected a list of tool names')
+    if len(names) != len(set(names)):
+        raise ValueError(label + ': duplicate tool names')
+    return set(names)
+
+
+def catalog_rosters(root):
+    import xml.etree.ElementTree as ET
+    resource = root / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
+    catalog = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)['releases']
+    rosters = {}
+    for release in RELEASES:
+        rows = catalog[release]
+        names = unique_names([row['currentName'] for row in rows], f'V{release} catalog')
+        profile = 'full' if release in ('20', '21') else 'plc-foundation'
+        full = {row['currentName'] for row in rows if profile in row['profiles']}
+        lite = {row['currentName'] for row in rows if 'lite' in row['profiles']}
+        if not full or full != names or (release not in ('20', '21') and lite):
+            raise ValueError(f'V{release}: invalid generated full/lite catalog profiles')
+        rosters[release] = full, lite
+    return rosters
+
+
+def verified_contracts(directory, root):
+    exact_release_files(directory)
+    snapshots = load_snapshots(directory)
+    rosters = catalog_rosters(root)
+    for release, snapshot in snapshots.items():
+        names = unique_names([tool['name'] for tool in snapshot['tools']], f'V{release} full roster')
+        full, lite = rosters[release]
+        if names != full:
+            raise ValueError(f'V{release}: full roster differs from generated catalog: {sorted(names ^ full)}')
+        expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
+        if snapshot['profile'] != expected_profile:
+            raise ValueError(f'V{release}: invalid contract profile')
+        if release in ('20', '21'):
+            if unique_names(snapshot['liteTools'], f'V{release} lite roster') != lite:
+                raise ValueError(f'V{release}: lite roster differs from generated catalog')
+        elif 'liteTools' in snapshot:
+            raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
+    return snapshots
+
+
+def verify(args):
+    root = args.repo_root.resolve()
+    snapshots = verified_contracts(args.baseline or root / 'manifest/contracts/v4/baseline', root)
+    print(f'V4 contracts verified: {len(snapshots)} releases, '
+          f'{sum(len(snapshot["tools"]) for snapshot in snapshots.values())} tool records; 0 issues.')
+    return 0
 
 
 if __name__ == '__main__':

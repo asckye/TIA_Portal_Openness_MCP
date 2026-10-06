@@ -1154,6 +1154,11 @@ def main():
     capture_parser.add_argument('--temp-root', type=Path, default=Path(tempfile.gettempdir()),
                                 help='Parent for disposable host journals (use a writable worktree directory in a sandbox)')
     capture_parser.set_defaults(run=capture)
+    verify_parser = commands.add_parser('verify', help='Check static V4 inventories, rosters and captured response coverage')
+    verify_parser.add_argument('--repo-root', type=Path, default=Path(__file__).resolve().parents[2])
+    verify_parser.add_argument('--baseline', type=Path, help='Contract directory (default: <repo-root>/manifest/contracts/v4/baseline)')
+    verify_parser.add_argument('--responses', type=Path, help='Response directory (default: <repo-root>/manifest/contracts/v4/responses)')
+    verify_parser.set_defaults(run=verify)
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
@@ -1167,9 +1172,90 @@ def main():
     args = parser.parse_args()
     try:
         return args.run(args)
-    except (OSError, ValueError, KeyError, AssertionError, queue.Empty, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, KeyError, TypeError, AssertionError, queue.Empty, subprocess.SubprocessError) as error:
         print(f'ERROR: {error}', file=sys.stderr)
         return 1
+
+
+def verify_coverage(release, baseline, snapshot, lite):
+    names = {tool['name'] for tool in baseline['tools']}
+    coverage = snapshot['coverage']
+
+    def roster(field, expected):
+        actual = contracts.unique_names(coverage[field], f'V{release} {field}')
+        if actual != expected:
+            raise ValueError(f'V{release}: {field} differs from capture roster: {sorted(actual ^ expected)}')
+
+    def skipped(field, expected):
+        reasons = coverage[field]
+        if not isinstance(reasons, dict) or set(reasons) != expected or any(
+                not isinstance(reason, str) or not reason for reason in reasons.values()):
+            raise ValueError(f'V{release}: {field} must give a reason for each skipped tool')
+
+    if coverage['registeredTools'] != len(names):
+        raise ValueError(f'V{release}: registeredTools differs from baseline')
+    calls = {identity(call): call for call in snapshot['calls']}
+    for call in snapshot['calls']:
+        # compact writes either the complete protocol response or its reviewed digest.
+        if ('response' in call) == ('responseDigest' in call):
+            raise ValueError(f'V{release}: call must carry one response or responseDigest: {identity(call)}')
+        if 'responseDigest' in call:
+            digest = call['responseDigest']
+            if not re.fullmatch('[0-9a-f]{64}', digest['sha256']) or type(digest['length']) is not int or digest['length'] <= 0:
+                raise ValueError(f'V{release}: invalid response digest: {identity(call)}')
+        elif not isinstance(call['response'], dict) or not call['response']:
+            raise ValueError(f'V{release}: empty protocol response: {identity(call)}')
+
+    def required_call(profile, tool, arguments):
+        key = (profile, tool, canonical(arguments))
+        if key not in calls:
+            raise ValueError(f'V{release}: missing response coverage for {profile}/{tool}/{canonical(arguments)}')
+
+    if release in FULL_RELEASES:
+        if snapshot['profiles'] != ['full', 'lite']:
+            raise ValueError(f'V{release}: invalid response profiles')
+        rejected, passive, profile = names, set(), 'full'
+        skipped('directSkipped', set())
+        skipped('bridgeSkipped', set())
+        roster('bridgeRejectedTools', names - {'CallTool'})
+        roster('bridgeSelfGuardTools', {'CallTool'})
+        roster('liteAdvertisedTools', lite)
+        for name in names:
+            required_call('lite', 'CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS})
+    else:
+        if snapshot['profiles'] != ['plc-foundation'] or 'liteAdvertisedTools' in coverage:
+            raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
+        # Match capture_foundation's reviewed host-side admission allowlist.
+        rejected = {tool['name'] for tool in baseline['tools']
+                    if (tool['name'] in FOUNDATION_WORKER_TOOLS or tool['name'] in FOUNDATION_MARKERS)
+                    and not any(key.lower() == 'snapshotreject'
+                                for key in tool['inputSchema'].get('properties', {}))}
+        passive, profile = {'InitializeEnvironment', 'RunCapabilitySelfTest'}, 'plc-foundation'
+        skipped('directSkipped', names - rejected)
+        skipped('bridgeSkipped', names)
+        skipped('passiveSkipped', {'GetSessionState'})
+        roster('bridgeRejectedTools', set())
+        roster('passiveTools', passive)
+        for name in passive:
+            required_call(profile, name, {})
+    roster('directRejectedTools', rejected)
+    roster('calledTools', rejected | passive)
+    for name in rejected:
+        required_call(profile, name, REJECT_ARGUMENTS)
+
+
+def verify(args):
+    root = args.repo_root.resolve()
+    baseline = contracts.verified_contracts(args.baseline or root / 'manifest/contracts/v4/baseline', root)
+    directory = args.responses or root / 'manifest/contracts/v4/responses'
+    contracts.exact_release_files(directory)
+    snapshots = load_snapshots(directory)
+    rosters = contracts.catalog_rosters(root)
+    for release, snapshot in snapshots.items():
+        verify_coverage(release, baseline[release], snapshot, rosters[release][1])
+    print(f'V4 responses verified: {len(snapshots)} releases, '
+          f'{sum(len(snapshot["calls"]) for snapshot in snapshots.values())} calls; 0 issues.')
+    return 0
 
 
 if __name__ == '__main__':

@@ -46,7 +46,7 @@ def names(task):
     if task == 'P6-08':
         old = set()
         for release in FOUNDATION_RELEASES:
-            path = ROOT / 'manifest/contracts/baseline' / (release + '.json')
+            path = ROOT / 'manifest/history/contracts-v3/baseline' / (release + '.json')
             old |= {tool['name'] for tool in json.loads(path.read_text('utf-8-sig'))['tools']}
     else:
         g = _generator()

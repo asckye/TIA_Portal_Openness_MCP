@@ -18,7 +18,7 @@ NEW_V4_TOOLS = {
 }
 files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE, REJECTIONS})
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
-snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
+snap = {k: json.loads(read(f"manifest/history/contracts-v3/baseline/{k}.json")) for k in keys}
 tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
 names = sorted(set().union(*(set(t) for t in tools.values())))
 catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96) + r" \| ([^|]+) \|$", read("docs/reference/version-tool-catalog.md"), re.M))
@@ -819,8 +819,8 @@ SCAN_TERMS = {
 }
 scan = []
 excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")
-for f in sorted(files):
-    if f.startswith(excluded) or f == "CHANGELOG.md" or f.startswith("third_party/"): continue
+for f in sorted(files, key=lambda p: p.replace("manifest/history/contracts-v3/", "manifest/contracts/")):
+    if (f.startswith(excluded) and not f.startswith("manifest/history/contracts-v3/")) or f == "CHANGELOG.md" or f.startswith("third_party/"): continue
     if pathlib.PurePosixPath(f).suffix.lower() not in {".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".slnx", ".config", ".gitignore", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml"}: continue
     content = rejections_text if f == REJECTIONS else read(f)
     hits = {kind: [str(i) for i,l in enumerate(content.splitlines(), 1) if re.search(pattern, l)] for kind,pattern in SCAN_TERMS.items()}

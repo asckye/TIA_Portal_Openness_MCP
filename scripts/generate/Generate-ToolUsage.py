@@ -59,7 +59,7 @@ def registered_rosters(root=ROOT):
     targets = appendix_names(root)
     additions = new_v4_tools(root)
     targets.update({n: n for n in additions})
-    baseline = {key: read(root / f'manifest/contracts/baseline/{key}.json')['tools']
+    baseline = {key: read(root / f'manifest/history/contracts-v3/baseline/{key}.json')['tools']
                 for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
     for name, entry in additions.items():
         for key in entry['releases']:

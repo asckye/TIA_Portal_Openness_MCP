@@ -270,6 +270,10 @@ def main():
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
         required += [f'runtime/v{key}/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll')]
         required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
+    required += ['manifest/history/contracts-v3/README.md', 'manifest/history/contracts-v3/provenance.json']
+    required += [f'{directory}/{category}/{key}.json'
+                 for directory in ('manifest/history/contracts-v3', 'manifest/contracts/v4')
+                 for category in ('baseline', 'responses') for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')]
     require(all(n in files for n in required), 'Full delivery entries or documentation missing')
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     # Validate compiler inputs and release-only IL verifier in the repository before

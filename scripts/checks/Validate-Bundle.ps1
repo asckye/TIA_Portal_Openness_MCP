@@ -532,6 +532,21 @@ if ($Strict -and -not $PendingRelease -and (Test-Path -LiteralPath (Join-Path $r
     if ($failures.Count -eq 0) { Ok $(if ($PackageMode) { 'Delivery records and package resources match (source checks run in the repository)' } elseif ($NoBinaries -and $SkipSourceHashes) { 'Build records and versions match (binaries and source hashes not checked)' } elseif ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } elseif ($SkipSourceHashes) { 'Both runtime versions and build manifest hashes match (source hashes not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
 }
 
+if (-not $PackageMode) {
+    $contractPaths = @('manifest/history/contracts-v3/README.md', 'manifest/history/contracts-v3/provenance.json')
+    foreach ($directory in @('manifest/history/contracts-v3', 'manifest/contracts/v4')) {
+        foreach ($category in @('baseline', 'responses')) {
+            foreach ($key in @('14sp1', '15.1', '16', '17', '18', '19', '20', '21')) {
+                $contractPaths += "$directory/$category/$key.json"
+            }
+        }
+    }
+    foreach ($path in $contractPaths) {
+        if (Test-Path -LiteralPath (Join-Path $root $path) -PathType Leaf) { Ok "Contract snapshot present: $path" }
+        else { Fail "Missing contract snapshot: $path" }
+    }
+}
+
 if ($failures.Count -gt 0) {
     Write-Host ""
     Write-Host "Validation FAILED ($($failures.Count) issue(s))." -ForegroundColor Red

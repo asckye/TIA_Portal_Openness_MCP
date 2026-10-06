@@ -1921,10 +1921,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 产品:48 | 历史证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 产品:24,76 | 历史证据只读保留，不作为 V4 改写目标 |
 | [manifest/configurator-build.json](../../manifest/configurator-build.json) | 产品:6; 根定位:15 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/baseline/20.json](../../manifest/contracts/baseline/20.json) | 写入/工作区:16609 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/history/contracts-v3/baseline/20.json](../../manifest/history/contracts-v3/baseline/20.json) | 写入/工作区:16609 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/history/contracts-v3/baseline/21.json](../../manifest/history/contracts-v3/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/history/contracts-v3/responses/20.json](../../manifest/history/contracts-v3/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/history/contracts-v3/responses/21.json](../../manifest/history/contracts-v3/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30632 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31414 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:75 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |

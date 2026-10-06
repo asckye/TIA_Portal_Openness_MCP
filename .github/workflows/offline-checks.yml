@@ -54,6 +54,7 @@ jobs:
           python3 scripts/checks/Check-McpText.py --self-test
           python3 scripts/checks/Inventory-ResponseEnvelopes.py --self-test
           python3 scripts/checks/Check-EnvelopeRewrite.py --self-test
+          python3 scripts/checks/Check-Repository.py --self-test
           python3 scripts/checks/Test-EngineSources.py
       - name: Diagnostic membership contracts
         run: python3 scripts/checks/Test-DiagnosticMembershipSources.py
@@ -71,6 +72,10 @@ jobs:
         run: python3 scripts/checks/Test-VersionCatalogWiring.py
       - name: Domain fixture source coverage
         run: python3 scripts/checks/Test-DomainTools.py --source-only
+      - name: Static V4 contract inventories and response coverage
+        run: |
+          python3 scripts/checks/Snapshot-ToolContracts.py verify
+          python3 scripts/checks/Snapshot-ToolResponses.py verify
 
   studio-tests:
     runs-on: windows-latest

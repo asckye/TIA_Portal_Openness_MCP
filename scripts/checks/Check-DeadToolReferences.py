@@ -34,7 +34,7 @@ sys.modules[spec.name] = text_literals
 spec.loader.exec_module(text_literals)
 # Historical registered names identify later renames even without a leading
 # "Use" verb. These are comparison facts, never runtime aliases.
-HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/contracts/baseline').glob('*.json')
+HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/history/contracts-v3/baseline').glob('*.json')
                     for tool in json.loads(path.read_text(encoding='utf-8'))['tools']}
 
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。

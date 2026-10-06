@@ -145,7 +145,7 @@ if ($SelfTest) {
     $rows = @(Invoke-PrerequisiteChecks $cases)
     $expected = @('PASS','FAIL','PASS','FAIL','FAIL','FAIL','FAIL','FAIL','PASS','PASS','PASS')
     if ($rows[9].Detail -ne 'A' -or $rows[10].Detail -ne 'B') { throw 'Probe data was not bound per probe' }
-    $managedCases = @{' M manifest/release-build.json'=$true; ' M Version.props'=$true; ' M scripts/build/Release.ps1'=$false; '?? manifest/new.json'=$false; ' M manifest/contracts/baseline/21.json'=$false}
+    $managedCases = @{' M manifest/release-build.json'=$true; ' M Version.props'=$true; ' M scripts/build/Release.ps1'=$false; '?? manifest/new.json'=$false; ' M manifest/history/contracts-v3/baseline/21.json'=$false}
     foreach ($case in $managedCases.GetEnumerator()) { if ((Test-ReleaseManagedChange $case.Key) -ne $case.Value) { throw ('Release-managed filter failed: ' + $case.Key) } }
     for ($i=0; $i -lt $expected.Count; $i++) {
         if ($rows[$i].Result -ne $expected[$i]) { throw "Prerequisite self-test failed: $($cases[$i].Name)" }

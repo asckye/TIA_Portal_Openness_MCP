@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "readOnly": true,
+  "readOnlyRule": "Preserve the archived bytes and inventory; never recapture, reserialize, normalize line endings or recompute in-file hashes.",
+  "readmeSha256": "840518387b609a1739fa6baeb6d476e3648255aa917e8ef7d647d0247f93ebc3",
+  "files": [
+    {
+      "path": "baseline/14sp1.json",
+      "sourcePath": "manifest/contracts/baseline/14sp1.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "14sp1",
+      "sha256": "494254c5369403803aeb886fb0ceb4746a2778cf98b81b82bee4ba8c1a665133"
+    },
+    {
+      "path": "baseline/15.1.json",
+      "sourcePath": "manifest/contracts/baseline/15.1.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "15.1",
+      "sha256": "f156166ae6556cda7c440db7932d4cd0f16c6a172d0183844458c280eca3ec8a"
+    },
+    {
+      "path": "baseline/16.json",
+      "sourcePath": "manifest/contracts/baseline/16.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "16",
+      "sha256": "040a536c6b4bfd7a22ccd77545c4c3c2f0c4c95b786a28ca8c7f35df6e994c03"
+    },
+    {
+      "path": "baseline/17.json",
+      "sourcePath": "manifest/contracts/baseline/17.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "17",
+      "sha256": "9d545f7fefe62151ecaca3f9f894cf8439311073e0438b442d698670bf969489"
+    },
+    {
+      "path": "baseline/18.json",
+      "sourcePath": "manifest/contracts/baseline/18.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "18",
+      "sha256": "8876802295fb6001583002766cd92111cd45945a59fea1208d706353e7b3f15b"
+    },
+    {
+      "path": "baseline/19.json",
+      "sourcePath": "manifest/contracts/baseline/19.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "19",
+      "sha256": "685c73c96259eee720da60a0c1995172273b0526b0cb4dbbf963e1aa1a387872"
+    },
+    {
+      "path": "baseline/20.json",
+      "sourcePath": "manifest/contracts/baseline/20.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "20",
+      "sha256": "350a11e550d51559d689a600d88b1068e9763d555a445d5851d325ad2e6f4c04"
+    },
+    {
+      "path": "baseline/21.json",
+      "sourcePath": "manifest/contracts/baseline/21.json",
+      "sourceCommit": "ca46e8c5b3b46c5250a514287549e4aa5c6b5a6b",
+      "release": "3.2.0",
+      "releaseKey": "21",
+      "sha256": "87b344a6280a0c6483d9414f6ab953fea77fbe2acca6b0e1c0bf1451568380b0"
+    },
+    {
+      "path": "responses/14sp1.json",
+      "sourcePath": "manifest/contracts/responses/14sp1.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "14sp1",
+      "sha256": "5ec580d6c9e62dd2b25d7a0a4a5c19e86d779ab1e45fa9ae7d6c96150a63eb83"
+    },
+    {
+      "path": "responses/15.1.json",
+      "sourcePath": "manifest/contracts/responses/15.1.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "15.1",
+      "sha256": "1cbfb9cc0ee3721c695f0c79290a39ffb909e6b1ffd6a0d557cc41e94431fac6"
+    },
+    {
+      "path": "responses/16.json",
+      "sourcePath": "manifest/contracts/responses/16.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "16",
+      "sha256": "ded6f9d5bbf884d8c205ad4ac130c869793346338b6813fd3c4c0d6886c5ecf2"
+    },
+    {
+      "path": "responses/17.json",
+      "sourcePath": "manifest/contracts/responses/17.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "17",
+      "sha256": "730f5b04c466135a840d41887a0582906c1ebc3274605821e2f431cced7c625c"
+    },
+    {
+      "path": "responses/18.json",
+      "sourcePath": "manifest/contracts/responses/18.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "18",
+      "sha256": "4056ebc82b660d86397fb2480942ebfb57be5eb834e811da0cd6c8299864fce9"
+    },
+    {
+      "path": "responses/19.json",
+      "sourcePath": "manifest/contracts/responses/19.json",
+      "sourceCommit": "4573a6bdea27c9c070eee6c774e8e81c43a2d13a",
+      "release": "3.2.0",
+      "releaseKey": "19",
+      "sha256": "68949d83490ac511047b3ae8a79b0f409a9182373053a53e6ec7476bb29ae71c"
+    },
+    {
+      "path": "responses/20.json",
+      "sourcePath": "manifest/contracts/responses/20.json",
+      "sourceCommit": "994e06fd1429a19853d2c5765ccb063c80485c38",
+      "release": "3.2.0",
+      "releaseKey": "20",
+      "sha256": "8e45cdedf84d0753439a7984bf8af87cf0e1601c9a01d13b668fa92910167ac1"
+    },
+    {
+      "path": "responses/21.json",
+      "sourcePath": "manifest/contracts/responses/21.json",
+      "sourceCommit": "994e06fd1429a19853d2c5765ccb063c80485c38",
+      "release": "3.2.0",
+      "releaseKey": "21",
+      "sha256": "82e163d4d7774d27b4653a9f9b2e03dbff4c68427ce3f09f7a4b45339bda7216"
+    }
+  ]
+}

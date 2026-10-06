@@ -106,7 +106,7 @@ def product_name_self_test():
 def check(root, no_binaries=False, package_mode=False):
     rules = layout.load_delivery(root)
     package_mode = package_mode or not (root / 'Version.props').is_file()
-    errors = []
+    errors = archive_errors(root) if not package_mode else []
     if (root / '.git').exists():
         names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root).decode('utf-8').split('\0')
     else:
@@ -189,8 +189,8 @@ def check(root, no_binaries=False, package_mode=False):
             required(f'runtime/v{key}/' + name, 'worker channel host')
         for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
             required(f'runtime/v{key}/worker/' + name, 'worker channel dependency')
-    for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
-        required(name, 'blueprint')
+    for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles'] + contract_required_paths():
+        required(name, 'blueprint/contract snapshot')
     studio = 'src/Studio/'
     required(studio + 'Core/Rpc/BridgeChannel.cs', 'Studio channel codec')
     required('runtime/studio/TiaMcp.WorkerChannel.dll', 'Studio client channel')
@@ -242,6 +242,7 @@ def main():
     args = parser.parse_args()
     if args.self_test:
         product_name_self_test()
+        archive_self_test()
         return 0
     # Negative sentinel: a broken link and a traversal must fail; a valid file must pass.
     source = args.root / 'docs/README.md'
@@ -253,6 +254,87 @@ def main():
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')
     return bool(errors)
+
+
+def contract_required_paths():
+    return ['manifest/history/contracts-v3/README.md', 'manifest/history/contracts-v3/provenance.json'] + [
+        f'{directory}/{category}/{release}.json'
+        for directory in ('manifest/history/contracts-v3', 'manifest/contracts/v4')
+        for category in ('baseline', 'responses')
+        for release in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')]
+
+
+def archive_errors(root):
+    import hashlib
+    archive = root / 'manifest/history/contracts-v3'
+    errors = []
+    for category in ('baseline', 'responses'):
+        if (root / 'manifest/contracts' / category).exists():
+            errors.append('Retired contract directory returned: manifest/contracts/' + category)
+    try:
+        provenance_path = archive / 'provenance.json'
+        # Freeze the provenance too: editing recorded hashes must not bless changed evidence.
+        provenance_sha256 = '53cd89d882e8668d5bf3fdb15d6e34b20758424552ccdbf0fbad33db5eba82ce'
+        if hashlib.sha256(provenance_path.read_bytes()).hexdigest() != provenance_sha256:
+            raise ValueError('Contract archive provenance changed')
+        provenance = json.loads(provenance_path.read_text(encoding='utf-8'))
+        expected = {f'{category}/{release}.json' for category in ('baseline', 'responses')
+                    for release in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+        records = {record['path']: record for record in provenance['files']}
+        if set(records) != expected or len(provenance['files']) != 16 or provenance['readOnly'] is not True:
+            raise ValueError('Contract archive provenance inventory/read-only rule changed')
+        actual = {path.relative_to(archive).as_posix() for path in archive.rglob('*') if path.is_file()}
+        expected |= {'README.md', 'provenance.json'}
+        if actual != expected:
+            errors.append(f'Contract archive inventory differs: missing={sorted(expected - actual)}, extra={sorted(actual - expected)}')
+        for name, digest in [(name, row['sha256']) for name, row in records.items()] + [
+                ('README.md', provenance['readmeSha256'])]:
+            path = archive / name
+            if not path.is_file() or path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                errors.append('Contract archive SHA-256 mismatch or missing file: ' + name)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append('Contract archive: ' + str(error))
+    return errors
+
+
+def archive_self_test():
+    import shutil
+    import uuid
+    (ROOT / 'bin-build').mkdir(exist_ok=True)
+    root = ROOT / 'bin-build' / ('archive-guard-' + uuid.uuid4().hex)
+    root.mkdir()
+    try:
+        archive = root / 'manifest/history/contracts-v3'
+        shutil.copytree(ROOT / 'manifest/history/contracts-v3', archive)
+        assert not archive_errors(root), archive_errors(root)
+        path = archive / 'baseline/21.json'
+        original = path.read_bytes()
+        path.write_bytes(bytes([original[0] ^ 1]) + original[1:])
+        assert any('SHA-256 mismatch' in error for error in archive_errors(root))
+        path.unlink()
+        assert any('missing=' in error for error in archive_errors(root))
+        path.write_bytes(original)
+        extra = archive / 'responses/22.json'
+        extra.write_bytes(b'{}')
+        assert any('extra=' in error for error in archive_errors(root))
+        extra.unlink()
+        for name in ('README.md', 'provenance.json'):
+            path = archive / name
+            original = path.read_bytes()
+            path.write_bytes(original + b' ')
+            assert archive_errors(root), name
+            path.write_bytes(original)
+        for category in ('baseline', 'responses'):
+            path = root / 'manifest/contracts' / category
+            path.mkdir(parents=True)
+            (path / 'unexpected.txt').write_bytes(b'old-location write')
+            assert any('Retired contract directory' in error for error in archive_errors(root))
+            (path / 'unexpected.txt').unlink()
+            path.rmdir()
+    finally:
+        assert root.resolve().parent == (ROOT / 'bin-build').resolve()
+        shutil.rmtree(root)
+    print('Contract archive self-tests: 8 passed, 0 failed.')
 
 
 if __name__ == '__main__':
