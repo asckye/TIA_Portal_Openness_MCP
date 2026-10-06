@@ -9,8 +9,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IList<McpServerTool> WrapTools(IList<McpServerTool> tools)
         {
             foreach (var tool in tools) AssertV4Tool(tool.ProtocolTool.Name);
-            return WrapWithAuditCalls(WrapWithVersionPolicy(Isolation.IsolatedWorkerHost.Current != null ? Isolation.IsolatedWorkerHost.Wrap(tools) :
-                WrapWithSerializedCalls(WrapWithResponseGuard(tools))));
+            var guarded = Isolation.IsolatedWorkerHost.Current != null
+                ? Isolation.IsolatedWorkerHost.Wrap(tools)
+                : WrapWithSerializedCalls(WrapWithResponseGuard(tools));
+            return WrapWithAuditCalls(WrapWithVersionPolicy(Isolation.OpennessReadinessGuard.Wrap(guarded)));
         }
     }
 }

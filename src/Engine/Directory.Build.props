@@ -5,6 +5,7 @@
     <TiaPublicApiReleaseKey>$(TiaBuildVersion)</TiaPublicApiReleaseKey>
     <TiaReleaseKey>$(TiaBuildVersion)</TiaReleaseKey>
     <TiaFeatureProfile>Engine</TiaFeatureProfile>
+    <TiaMcpWorkerIsolationDefault Condition="'$(TiaMcpWorkerIsolationDefault)' == ''">false</TiaMcpWorkerIsolationDefault>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaPublicApi.props" />
   <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaFeatures.props" />

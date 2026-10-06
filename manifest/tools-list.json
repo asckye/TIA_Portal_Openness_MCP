@@ -1,9 +1,9 @@
 {
-  "package": "TIA_MCP_Delivery_v3.3.0_20261003",
-  "generatedAt": "2026-10-06T14:31:19.9653775+00:00",
+  "package": "TIA_MCP_Delivery_v3.3.0_20261006",
+  "generatedAt": "2026-10-06T15:38:22.4241788+00:00",
   "source": "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
   "fileVersion": "3.3.0.0",
-  "exeSha256": "7b210fb384e5ac193594ece4b5389667bb84e23f627b0d43ac6150f5cd3a9540",
+  "exeSha256": "0788a9e4604cfd6c0831a78e190e76299cdfbfb5962eb2b83d9bd08a3aa568a3",
   "toolCount": 488,
   "note": "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -8173,7 +8173,7 @@
       "method": "GetOpennessWorkerStatusV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Isolation requires --isolate-openness; a healthy worker is not proof of native TIA stability.",
+      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Use --isolate-openness or --no-isolate-openness to override the build default; a healthy worker is not proof of native TIA stability.",
       "example": null
     },
     {

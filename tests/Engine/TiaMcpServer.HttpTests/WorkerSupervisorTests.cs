@@ -18,23 +18,19 @@ internal static partial class Program
     }
     private static ProcessStartInfo TestWorkerStart(string exe, string api, int major, object options)
     {
-        string? fault=Environment.GetEnvironmentVariable("TIA_MCP_TEST_WORKER_FAULT");
-        if(!string.IsNullOrEmpty(fault)) {
-            var mcp=EngineSurface.For(Server);
-            bool lite=(bool)mcp.Invoke(mcp.ToolMethod("IsLiteProfile",All),null)!;
-            var roster=(IEnumerable)mcp.Invoke(mcp.ToolMethod(lite?"GetLiteTools":"GetAllTools",All),null)!;
-            var names=roster.Cast<object>().Select(t=>{var p=t.GetType().GetProperty("ProtocolTool")!.GetValue(t)!;return (string)p.GetType().GetProperty("Name")!.GetValue(p)!;}).ToArray();
-            var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;
-            var hash=(string)isolated.GetMethod("Hash",All)!.Invoke(null,new object[]{exe})!;
-            return new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,string.Join(" ",new[]{"worker-fixture",fault,
-                Path.Combine(Path.GetTempPath(),"tia-worker-fault-"+Guid.NewGuid().ToString("N")+".log"),major.ToString(),hash,
-                Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Json.Serialize(names)))}.Select(WorkerQuote)));
-        }
-        using var parent = Process.GetCurrentProcess();
-        var values = new[] { exe, "isolated-worker-host", api, "--tia-major-version", major.ToString(), "--transport", "stdio", "--logging", "0",
-            "--worker-parent-pid", parent.Id.ToString(), "--worker-parent-start", parent.StartTime.ToUniversalTime().Ticks.ToString(),
-            "--profile", (string?)options.GetType().GetProperty("Profile")!.GetValue(options) ?? Environment.GetEnvironmentVariable("TIA_MCP_PROFILE") ?? "lite" };
-        return new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, string.Join(" ", values.Select(WorkerQuote)));
+        if (!Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>()
+            .Any(attribute => attribute.Key == "TiaMcpTestWorkerDouble" && attribute.Value == "enabled"))
+            throw new InvalidOperationException("The worker test double requires a TiaMcpTestWorkerDouble test build.");
+        string fault = Environment.GetEnvironmentVariable("TIA_MCP_TEST_WORKER_FAULT") ?? "ok";
+        var mcp = EngineSurface.For(Server);
+        bool lite = (bool)mcp.Invoke(mcp.ToolMethod("IsLiteProfile", All), null)!;
+        var roster = (IEnumerable)mcp.Invoke(mcp.ToolMethod(lite ? "GetLiteTools" : "GetAllTools", All), null)!;
+        var names = roster.Cast<object>().Select(t => { var p = t.GetType().GetProperty("ProtocolTool")!.GetValue(t)!; return (string)p.GetType().GetProperty("Name")!.GetValue(p)!; }).ToArray();
+        var isolated = Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost", true)!;
+        var hash = (string)isolated.GetMethod("Hash", All)!.Invoke(null, new object[] { exe })!;
+        return new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, string.Join(" ", new[] { "worker-fixture", fault,
+            Path.Combine(Path.GetTempPath(), "tia-worker-fault-" + Guid.NewGuid().ToString("N") + ".log"), major.ToString(), hash,
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Json.Serialize(names))) }.Select(WorkerQuote)));
     }
 
     private static int RunWorkerFixture(string[] args)

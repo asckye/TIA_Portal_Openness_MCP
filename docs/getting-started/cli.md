@@ -55,6 +55,14 @@ runtime\v20\TiaMcp.Engine.V20.exe prewarm
 
 `gen`、`patch`、`describe`、`compile`、`export`、`import` 在标准输出只打印一份 V4 结果 JSON（与 MCP 工具结果相同的信封），诊断信息只写到标准错误。退出码：`0` 成功；`2` 操作前被拒绝（未执行）；`3` 失败或读取失败；`4` 部分完成；`5` 结果未知（需重置会话后核对工程状态）；`64` 命令或参数写法错误；`70` 无法建立工具运行环境。`4`、`5` 不能当作成功处理。工程、源文件和输出目录均指运行 CLI 的电脑；相对路径以当前工作目录解析。需要 TIA 窗口时按命令支持使用 `--with-ui`。
 
+### V20/V21 MCP 服务的隔离开关
+
+隔离开关只用于 MCP 服务启动，不改变 `gen`、`patch`、`describe`、`compile` 等显式 CLI 子命令。4.0 发布版默认关闭；启动 MCP 服务时用 `--isolate-openness` 强制开启，用 `--no-isolate-openness` 强制关闭。Workbench 生成的客户端配置不会预先写入任一开关，只有用户主动修改启动命令时才会选择。
+
+V20/V21 服务进程在 TIA 缺失、版本不匹配或 Openness 用户组尚未就绪时仍提供诊断。调用需要 TIA 的工具会返回 `RESOURCE_UNAVAILABLE`，资源为 `tia-openness-environment`，并以 `rejected-before-operation` / `not-started` 表示没有派发原生操作。先检查 `InitializeEnvironment` 和 `GetEnvironmentDiagnostics` 的原因及修复步骤。隔离状态与环境就绪状态可通过 `GetOpennessWorkerStatus` 查看。
+
+The V20/V21 MCP host remains available when TIA is missing, the installed release does not match, or the current user is not in the Siemens Openness group. TIA-dependent calls return `RESOURCE_UNAVAILABLE` (`tia-openness-environment`) with `rejected-before-operation` / `not-started`; read-only diagnostics remain available. Release builds default to isolation off. Use `--isolate-openness` to force it on or `--no-isolate-openness` to force it off. Generated Workbench client commands include neither switch unless the user changes them. These switches apply to MCP host startup, not explicit CLI subcommands.
+
 ## 让 AI 生成 spec
 
 先复制 `schema` 输出，再向 AI 说明工程目标：

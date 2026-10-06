@@ -42,7 +42,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         int fixes = 0;
         var service = new EnvironmentCheckService(() => fixture.Context, Sources, _ => fixes++);
         service.Recheck(); await service.Completion;
-        Assert.Equal(0, fixes); Assert.Equal(17, service.Findings.Count);
+        Assert.Equal(0, fixes); Assert.Equal(18, service.Findings.Count);
         Assert.All(service.Groups.SelectMany(g => g.Rows), row => Assert.NotEqual(Services.CheckStatus.Unchecked, row.Status));
         service.Fix("url"); Assert.Equal(0, fixes);
         string host = EnvironmentBundleFiles.Host(fixture.Root, "21");

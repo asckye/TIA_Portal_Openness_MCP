@@ -195,3 +195,9 @@ Studio 不需要配置 MCP，也不需要 AI 客户端。下面使用中文界�
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
 软件自己的连接记录、界面偏好、普通日志、审计记录和调用诊断分别保存在交付包的 `data\config`、`data\ui`、`data\logs` 和 `data\diagnostics` 中，更新会保留 `data`。MCP 写操作默认在派发前等待 Workbench 审批；`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 即使在目录中标为 `SESSION` 也须审批；连接、附着、打开和断开仍不审批。拒绝、超时或工作台未连接都不会开始操作。审计写入 `data\logs\audit`，可由 `tia audit verify` 校验保留链，但哈希链不能证明整段记录未被删除。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。伴随 PLC Tools 的 Python 默认解释器是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`，可用 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖。详见[配置说明](configuration.md)。
+
+### V20/V21 服务启动与隔离
+
+V20/V21 MCP 服务即使没有检测到 TIA、安装版本与引擎不匹配，或当前用户尚未加入 `Siemens TIA Openness` 组，也会保持服务启动，让 AI 读取诊断和工具目录。`InitializeEnvironment` 与环境诊断会说明原因和修复步骤；需要 TIA 的调用会返回 `RESOURCE_UNAVAILABLE`，并标记操作尚未开始。先按提示安装对应版本及 Openness，或把当前用户加入本机 Openness 组并注销、重新登录。
+
+4.0 发布版默认不启用 Openness 工作进程隔离。配置器生成的客户端命令不加入隔离参数；用户自行编辑启动命令时可用 `--isolate-openness` 启用，或用 `--no-isolate-openness` 明确关闭。用 `GetOpennessWorkerStatus` 查看当前状态。真机验收完成前，默认保持关闭。

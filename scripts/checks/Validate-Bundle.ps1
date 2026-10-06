@@ -99,14 +99,15 @@ Write-Host "Bundle root: $root"
 Write-Host ("Validation mode: " + $(if ($PackageMode) { 'package' } else { 'repository' }))
 if ($Strict) {
     # ECMA-335 custom-attribute SerString sequence; no assembly code is loaded.
-    $testPolicyMarker = 'TiaMcpTestPolicy'
+    $testPolicyMarkers = @('TiaMcpTestPolicy', 'TiaMcpTestWorkerDouble')
     $policyFiles = @(Get-ChildItem -LiteralPath $root -File | Where-Object { $_.Extension -in '.dll','.exe' })
     if (Test-Path -LiteralPath (Join-Path $root 'runtime')) {
         $policyFiles += @(Get-ChildItem -LiteralPath (Join-Path $root 'runtime') -Recurse -File | Where-Object { $_.Extension -in '.dll','.exe' })
     }
     foreach ($policyFile in $policyFiles) {
-        if ([Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($policyFile.FullName)).Contains($testPolicyMarker)) {
-            Fail "Test-only behavior policy assembly cannot enter a release bundle: $($policyFile.FullName)"
+        $bytes = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($policyFile.FullName))
+        foreach ($testPolicyMarker in $testPolicyMarkers) {
+            if ($bytes.Contains($testPolicyMarker)) { Fail "Test-only behavior assembly cannot enter a release bundle: $($policyFile.FullName)" }
         }
     }
 }

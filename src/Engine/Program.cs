@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -15,6 +16,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Xml;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Runtime;
 using TiaMcpServer.Siemens;
 using McpProtocol = global::ModelContextProtocol.Protocol;
 
@@ -119,6 +121,8 @@ namespace TiaMcpServer
                     Environment.ExitCode = 64;
                     return;
                 }
+                if (!options.IsolateOpennessExplicit && !options.OpennessWorkerChild)
+                    options.IsolateOpenness = WorkerIsolationEnabledByDefault();
 
                 // Default logging to stderr (mode 1) when the user doesn't pass --logging,
                 // so errors are visible out of the box. Users can opt out with --logging 0
@@ -167,13 +171,24 @@ namespace TiaMcpServer
                     Environment.ExitCode = Cli.CliCommands.Run(args);
                     return;
                 }
-                TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(tiaMajorVersion);
+                bool mcpHostInvocation = args.Length == 0 || args[0].StartsWith("-", StringComparison.Ordinal);
+                bool versionSupported = true;
+                try { TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(tiaMajorVersion); }
+                catch (ArgumentException error)
+                {
+                    if (!mcpHostInvocation) throw;
+                    versionSupported = false;
+                    OpennessReadiness.MarkUnavailable("This engine cannot use detected TIA Portal V" + tiaMajorVersion + ".",
+                        "Use the matching TIA MCP engine or install TIA Portal V20/V21 with Openness.",
+                        "Use the matching TIA MCP engine or install TIA Portal V20/V21 with Openness.");
+                    LogDiag("TIA release is not supported by this engine: " + error.Message);
+                }
 
                 // Version-aware self-routing: this exe's IL is bound to one TIA major
                 // version; when the machine actually wants a different one, re-exec the sibling
                 // exe built for it instead of crashing at the first Siemens assembly load.
                 // stdio is inherited, so MCP hosts and CLI callers are unaffected.
-                if (tiaVersionReliable && tiaMajorVersion != EngineRouter.CompiledTiaMajorVersion)
+                if (versionSupported && tiaVersionReliable && tiaMajorVersion != EngineRouter.CompiledTiaMajorVersion)
                 {
                     if (EngineRouter.TryRedirect(tiaMajorVersion, args, LogDiag, out int routedExit))
                     {
@@ -181,9 +196,16 @@ namespace TiaMcpServer
                         return;
                     }
                     LogDiag($"ERROR: No usable V{tiaMajorVersion} sibling engine was found, or redirect was blocked.");
+                    if (mcpHostInvocation)
+                    {
+                        OpennessReadiness.MarkUnavailable($"This V{EngineRouter.CompiledTiaMajorVersion} engine does not match installed TIA Portal V{tiaMajorVersion}.",
+                            $"Start runtime\\v{tiaMajorVersion}\\TiaMcp.Engine.V{tiaMajorVersion}.exe, or install matching TIA Portal V{EngineRouter.CompiledTiaMajorVersion}.",
+                            $"Start runtime\\v{tiaMajorVersion}\\TiaMcp.Engine.V{tiaMajorVersion}.exe, or install matching TIA Portal V{EngineRouter.CompiledTiaMajorVersion}.");
+                    }
                 }
 
-                TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(tiaMajorVersion, EngineRouter.CompiledTiaMajorVersion);
+                if (versionSupported && tiaMajorVersion != EngineRouter.CompiledTiaMajorVersion && !mcpHostInvocation)
+                    TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(tiaMajorVersion, EngineRouter.CompiledTiaMajorVersion);
 
                 // 静态自检也会枚举 MCP 工具特性，方法签名里引用的 Siemens 程序集需要先能被解析。
                 // 这里只注册程序集解析器，不初始化 Openness，也不连接或打开 TIA 项目。
@@ -389,39 +411,69 @@ namespace TiaMcpServer
                 }
                 if (options.OpennessWorkerChild) Isolation.IsolatedWorkerHost.BeginChild(options);
 
-                if (Engineering.TiaMajorVersion >= 20)
+                bool opennessInitialized = false;
+                if (OpennessReadiness.Ready && Engineering.TiaMajorVersion >= 20)
                 {
                     try
                     {
                         LogDiag($"Initializing TIA Openness API for V{Engineering.TiaMajorVersion}");
                         Openness.Initialize(Engineering.TiaMajorVersion);
                         LogDiag("TIA Openness API initialized");
+                        opennessInitialized = true;
                     }
                     catch (FileNotFoundException ex)
                     {
                         LogDiag("Openness.Initialize failed: FileNotFoundException");
-                        LogDiag($"FIX: TIA Portal V{Engineering.TiaMajorVersion} (with the Openness option) was not found on this machine. Install it, or pass --tia-major-version <n> matching the installed version, or set the TiaPortalLocation environment variable to the install path. Run `tia.cmd doctor` for a full check.");
-                        LogDiag($"Repair: TIA Portal V{Engineering.TiaMajorVersion} (including Openness) was not found on this machine. Install the matching version, select an installed version with --tia-major-version, or set TiaPortalLocation to its installation directory. Run tia.cmd doctor to check the setup.");
+                        var cause = $"TIA Portal V{Engineering.TiaMajorVersion} or its Openness API files were not found.";
+                        var fix = $"Install TIA Portal V{Engineering.TiaMajorVersion} with the Openness option, or set TiaPortalLocation to its installation folder; run `tia doctor` for details.";
+                        OpennessReadiness.MarkUnavailable(cause, fix,
+                            fix);
+                        LogDiag("FIX: " + fix);
+                        LogDiag("Repair: " + fix);
                         LogDiag($"FileName: {ex.FileName}");
                         if (!string.IsNullOrWhiteSpace(ex.FusionLog))
                         {
                             LogDiag("FusionLog:");
                             LogDiag(ex.FusionLog);
                         }
-                        throw;
                     }
                     catch (BadImageFormatException ex)
                     {
                         LogDiag("Openness.Initialize failed: BadImageFormatException (x86/x64 mismatch or corrupt dll)");
                         LogDiag(ex.ToString());
-                        throw;
+                        OpennessReadiness.MarkUnavailable("The installed Openness assemblies are corrupt or have the wrong architecture.",
+                            "Repair the matching TIA Portal Openness installation and verify its PublicAPI DLLs.",
+                            "Repair the matching TIA Portal Openness installation and verify its PublicAPI DLLs.");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogDiag("Openness.Initialize failed: " + DescribeSafely(ex));
+                        OpennessReadiness.MarkUnavailable("TIA Openness initialization failed: " + (ex.Message ?? ex.GetType().Name),
+                            "Check the selected TIA version, Openness installation, and `tia doctor` output.",
+                            "Check the selected TIA version, Openness installation, and `tia doctor` output.");
                     }
                 }
 
                 // Check only; permission repair is an explicit doctor --fix or tool action.
-                LogDiag("Checking Windows group membership: Siemens TIA Openness");
-                var opennessUserOk = Openness.IsUserInGroupNoFix();
-                LogDiag($"Siemens TIA Openness group membership: {opennessUserOk}");
+                bool opennessUserOk = false;
+                if (opennessInitialized)
+                {
+                    try
+                    {
+                        LogDiag("Checking Windows group membership: Siemens TIA Openness");
+                        opennessUserOk = Openness.IsUserInGroupNoFix();
+                        LogDiag($"Siemens TIA Openness group membership: {opennessUserOk}");
+                        OpennessReadiness.MarkReady(opennessUserOk);
+                    }
+                    catch (Exception ex)
+                    {
+                        OpennessReadiness.MarkUnavailable("The current user's Siemens TIA Openness group membership could not be verified.",
+                            "Check the local Siemens TIA Openness group and run `tia doctor`.",
+                            "Check the local Siemens TIA Openness group and run `tia doctor`.");
+                        LogDiag("Openness group check failed: " + DescribeSafely(ex));
+                    }
+                }
+                else if (!OpennessReadiness.Ready) LogDiag("TIA environment not ready: " + OpennessReadiness.Guidance(false));
                 if (opennessUserOk)
                 {
                     if (options.RunFlowLightTest)
@@ -621,10 +673,19 @@ namespace TiaMcpServer
                 }
                 else
                 {
-                    LogDiag("User is not in the required group 'Siemens TIA Openness'. Exiting.");
-                    LogDiag("FIX: run this exe with `doctor` (e.g. tia.cmd doctor --fix) or add your Windows user to the local group 'Siemens TIA Openness' (lusrmgr.msc), then sign out/in and restart the AI client.");
-                    LogDiag("Repair: run tia.cmd doctor --fix, or manually add the current Windows user to the local 'Siemens TIA Openness' group (lusrmgr.msc), sign out and back in, then restart the AI client.");
-                    Environment.ExitCode = 2;
+                    if (mcpHostInvocation)
+                    {
+                        LogDiag("Starting MCP host in environment-not-ready mode.");
+                        if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase)) await RunHttpHost(options);
+                        else await RunStdioHost(options);
+                    }
+                    else
+                    {
+                        LogDiag("User is not in the required group 'Siemens TIA Openness'. Exiting.");
+                        LogDiag("FIX: " + OpennessReadiness.Guidance(false));
+                        LogDiag("Repair: " + OpennessReadiness.Guidance(false));
+                        Environment.ExitCode = 2;
+                    }
                 }
             }
             catch (Exception ex)
@@ -848,17 +909,24 @@ namespace TiaMcpServer
                 }
             });
 
+            Exception? transportFailure = null;
             try
             {
                 await HttpMcpServer.Run(options, httpToMcp, mcpToHttp, LogDiag, transportLifetime.Token).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                transportFailure = ex;
             }
             finally
             {
                 transportLifetime.Cancel();
                 httpToMcp.CompleteWriting();
                 mcpToHttp.CompleteWriting();
-                await mcpTask.ConfigureAwait(false);
+                try { await mcpTask.ConfigureAwait(false); }
+                catch (OperationCanceledException) when (transportLifetime.IsCancellationRequested) /* swallow(teardown): HTTP shutdown cancels the sibling MCP host */ { }
             }
+            if (transportFailure != null) ExceptionDispatchInfo.Capture(transportFailure).Throw();
         }
 
         private static Assembly? ResolveFromBaseDir(object? sender, ResolveEventArgs args)
@@ -882,6 +950,13 @@ namespace TiaMcpServer
             {
                 return null;
             }
+        }
+
+        internal static bool WorkerIsolationEnabledByDefault(Assembly? assembly = null)
+        {
+            var marker = (assembly ?? Assembly.GetExecutingAssembly()).GetCustomAttributes<AssemblyMetadataAttribute>()
+                .FirstOrDefault(attribute => attribute.Key == "TiaMcpWorkerIsolationDefault")?.Value;
+            return string.Equals(marker, "true", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string DescribeSafely(object? exception)

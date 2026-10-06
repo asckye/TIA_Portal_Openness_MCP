@@ -7,7 +7,21 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>HttpTests</AssemblyName>
     <RootNamespace>HttpTests</RootNamespace>
+    <TiaMcpTestWorkerDouble Condition="'$(TiaMcpTestWorkerDouble)' == ''">true</TiaMcpTestWorkerDouble>
+    <TiaMcpTestWorkerIsolationDefault Condition="'$(TiaMcpTestWorkerIsolationDefault)' == ''">true</TiaMcpTestWorkerIsolationDefault>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TiaMcpTestWorkerDouble)' == 'true'">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TiaMcpTestWorkerDouble</_Parameter1>
+      <_Parameter2>enabled</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaMcpTestWorkerIsolationDefault)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TiaMcpWorkerIsolationDefault</_Parameter1>
+      <_Parameter2>$(TiaMcpTestWorkerIsolationDefault)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
   <!-- Compile-only SDK/JSON types; runtime dependencies resolve beside the loaded EXE.
        Keep transitive build targets so net48 uses its inbox System.ValueTuple. -->

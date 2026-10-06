@@ -1,12 +1,18 @@
 # Optional Openness worker isolation
 
-V20/V21 full engines can run engineering tools in a supervised child process. Enable this mode by adding the following arguments to the existing HTTP or STDIO MCP command:
+V20/V21 full engines can run engineering tools in a supervised child process. Release builds currently default to isolation off until real-machine acceptance passes. Enable it by adding the following argument to the existing HTTP or STDIO MCP command:
 
 ```text
 --isolate-openness --worker-timeout-seconds 120
 ```
 
-It is off by default. The configurator has no isolation checkbox, so edit the server command or client entry. These flags do not apply to `gen`, `patch` or other CLI subcommands. Foundation engines use their own worker architecture and should not be configured by copying these full-engine flags.
+Use `--no-isolate-openness` to explicitly force isolation off. The build default is centralized in `TiaMcpWorkerIsolationDefault` and appears in the release record as `workerIsolation.enabledByDefault`. The configurator has no isolation checkbox, and generated client commands include neither switch unless the user chooses one. Edit the server command or client entry to override the default. These flags apply to MCP host startup, not `gen`, `patch` or other explicit CLI subcommands. Foundation engines use their own worker architecture and should not be configured by copying these full-engine flags.
+
+## Startup without a ready TIA installation
+
+The MCP host can remain available when the TIA installation is missing, its major version does not match the engine, Openness API initialization fails, or the user is not in the Siemens Openness group. `InitializeEnvironment` and `GetEnvironmentDiagnostics` report the cause and repair steps. TIA-dependent tools return `RESOURCE_UNAVAILABLE` for `tia-openness-environment` with V4 metadata `rejected-before-operation` / `not-started`. Read-only diagnostics remain available. The Workbench environment page reports a running engine with an unavailable Openness environment, while the call panel labels worker-dispatched calls as **Engine worker**.
+
+TIA-dependent tools return `RESOURCE_UNAVAILABLE` when Openness is not ready (`tia-openness-environment`, `rejected-before-operation` / `not-started`). Bootstrap and the environment doctor provide the repair steps. `GetOpennessWorkerStatus` reports `enabledByDefault`, the effective isolation mode, and environment readiness.
 
 ## What it changes
 

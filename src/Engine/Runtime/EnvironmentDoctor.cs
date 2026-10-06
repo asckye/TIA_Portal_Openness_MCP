@@ -5,9 +5,44 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 
 namespace TiaMcpServer.Runtime
 {
+    /// <summary>Startup state shared by the MCP admission guard and environment diagnostics.</summary>
+    public static class OpennessReadiness
+    {
+        private static readonly object Sync = new object();
+        private static bool ready = true;
+        private static string? cause;
+        private static string? fixEn;
+        private static string? fixZh;
+        private static bool? groupOk;
+        public static bool Ready { get { lock (Sync) return ready; } }
+        public static string? Cause { get { lock (Sync) return cause; } }
+        public static string? FixEn { get { lock (Sync) return fixEn; } }
+        public static string? FixZh { get { lock (Sync) return fixZh; } }
+        public static bool? GroupOk { get { lock (Sync) return groupOk; } }
+
+        public static void MarkReady(bool membership)
+        {
+            lock (Sync) { ready = membership; groupOk = membership; cause = membership ? null : "Current user is not in the required Siemens TIA Openness group.";
+                fixEn = membership ? null : "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+                fixZh = fixEn; }
+        }
+
+        public static void MarkUnavailable(string reason, string repair, string repairZh, bool? membership = null)
+        {
+            lock (Sync) { ready = false; groupOk = membership; cause = reason; fixEn = repair; fixZh = repairZh; }
+        }
+
+        public static string Guidance(bool chinese)
+        {
+            lock (Sync) return (cause ?? "The TIA Openness environment is not ready.")
+                + " " + (chinese ? fixZh : fixEn);
+        }
+    }
+
     /// <summary>
     /// The environment checks behind both `tia doctor` (CLI) and the Doctor MCP tool.
     ///
@@ -39,6 +74,30 @@ namespace TiaMcpServer.Runtime
         public static bool PreferChinese =>
             CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("zh", StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>Read token membership without initializing or loading the Siemens Openness API.</summary>
+        public static bool CurrentUserInOpennessGroup()
+        {
+            try
+            {
+                using (var identity = WindowsIdentity.GetCurrent())
+                {
+                    if (identity.Groups == null) return false;
+                    foreach (var sid in identity.Groups)
+                    {
+                        try
+                        {
+                            var name = sid.Translate(typeof(NTAccount)).Value;
+                            if (string.Equals(name, "Siemens TIA Openness", StringComparison.OrdinalIgnoreCase)
+                                || name.EndsWith("\\Siemens TIA Openness", StringComparison.OrdinalIgnoreCase)) return true;
+                        }
+                        catch (IdentityNotMappedException) /* swallow(env-probe): an unmapped optional SID cannot establish Openness-group membership. */ { }
+                    }
+                }
+            }
+            catch (Exception) /* swallow(env-probe): unavailable Windows token groups leave Openness readiness unavailable. */ { }
+            return false;
+        }
+
         /// <summary>The supported TIA majors. Messages must not promise more than the product delivers.</summary>
         private const string SupportedVersions = "V20 / V21";
 
@@ -52,6 +111,16 @@ namespace TiaMcpServer.Runtime
                 DotNetFramework48(),
                 FilesNotBlocked(),
             };
+            if (!OpennessReadiness.Ready)
+            {
+                checks.Add(new Check
+                {
+                    Id = "openness-startup", Ok = false, NameEn = "TIA Openness startup", NameZh = "TIA Openness startup",
+                    DetailEn = OpennessReadiness.Cause ?? "TIA Openness did not initialize.",
+                    DetailZh = OpennessReadiness.Cause ?? "TIA Openness did not initialize.",
+                    FixEn = OpennessReadiness.FixEn, FixZh = OpennessReadiness.FixZh
+                });
+            }
             return checks;
         }
 

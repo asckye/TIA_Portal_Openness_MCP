@@ -1,7 +1,7 @@
 """Capture and compare offline responses and pre-invocation dispatch refusals.
 
 The executable/harness/PublicAPI options match Snapshot-ToolContracts.py. No TIA
-attachment, worker, external process or network tool is invoked. check_usage owns
+attachment, worker, or network service is invoked. check_usage owns
 the existing in-memory example allowlist; additional calls below are deliberately
 literal, never selected for execution by a tool description or a name prefix.
 V20/V21 use full STDIO plus a separate lite STDIO bridge session. Foundation
@@ -449,14 +449,14 @@ def v4_rejection(response, name):
                       name + ': missing V4 admission marker: ' + canonical(reply))
 
 
-def session_approval_refusal(reply, name):
+def session_readiness_refusal(reply, name):
     resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
-                      and reply['error']['code'] == 'CONFIRMATION_REQUIRED'
-                      and reply['error']['details']['reason'] == 'workbench-unavailable'
+                      and reply['error']['code'] == 'RESOURCE_UNAVAILABLE'
+                      and reply['error']['details']['resource'] == 'tia-openness-environment'
                       and reply['meta']['outcome'] == 'rejected-before-operation'
                       and reply['meta']['execution'] == 'not-started'
                       and reply['meta']['requiresSessionReset'] is False,
-                      name + ': expected the fresh-install Workbench approval refusal: ' + canonical(reply))
+                      name + ': expected the no-TIA readiness refusal before approval: ' + canonical(reply))
 
 
 def initialize(rpc):
@@ -535,8 +535,12 @@ def capture_release(args, release, exe, public_api):
         env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory),
                'TIA_MCP_MAX_RESPONSE_CHARS': '2000000',
                'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(scratch / 'diagnostics')}
-        with resources.server(exe, public_api, int(release), 'stdio', 'full',
-                              args.harness.resolve(), public_api, env_overrides=env
+        if args.harness is None and release in FULL_RELEASES:
+            env['TIA_MCP_BUNDLE_ROOT'] = str(args.repo_root.resolve())
+        portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
+                       if args.harness is None and release in FULL_RELEASES else public_api)
+        with resources.server(exe, portal_root, int(release), 'stdio', 'full',
+                              args.harness.resolve() if args.harness else None, public_api, env_overrides=env
                               ) as (rpc, _, logs):
             tools = initialize(rpc)
             entries = {}
@@ -549,14 +553,14 @@ def capture_release(args, release, exe, public_api):
             resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
             resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
                               'Journal is not writable; use --temp-root inside the writable worktree')
-            # Fresh-install defaults enable approval. With no Workbench session,
-            # save/close calls must be refused before their handlers run.
+            # On this no-TIA host, readiness precedes approval. Product defaults
+            # remain in effect, but save/close calls must stop at readiness first.
             for name, arguments in (
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {})):
                 result = decoded(name, arguments)
-                session_approval_refusal(result, name)
+                session_readiness_refusal(result, name)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
             decoded('ListToolCategories', {})
@@ -638,8 +642,8 @@ def capture_release(args, release, exe, public_api):
                     'l1Domains': domain_calls}}
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during capture')
-        with resources.server(exe, public_api, int(release), 'stdio', 'lite',
-                              args.harness.resolve(), public_api, env_overrides=env) as (rpc, _, logs):
+        with resources.server(exe, portal_root, int(release), 'stdio', 'lite',
+                              args.harness.resolve() if args.harness else None, public_api, env_overrides=env) as (rpc, _, logs):
             lite = initialize(rpc)
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
             bridge = recorder(rpc, entries, 'lite', release)
@@ -649,8 +653,8 @@ def capture_release(args, release, exe, public_api):
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {})):
-                session_approval_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
-                                         'CallTool -> ' + name)
+                session_readiness_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
+                                          'CallTool -> ' + name)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
@@ -1269,7 +1273,8 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
-    capture_parser.add_argument('--harness', required=True, type=Path)
+    capture_parser.add_argument('--harness', type=Path,
+                                help='Optional test host harness; by default V20/V21 run as the real EXE')
     capture_parser.add_argument('--public-api-root', type=Path)
     capture_parser.add_argument('--dotnet-root', type=Path,
                                 help='Private .NET/ASP.NET Core 10 root; sets DOTNET_ROOT and DOTNET_ROOT_X64 for Foundation only')

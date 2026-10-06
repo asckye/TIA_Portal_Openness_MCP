@@ -93,7 +93,7 @@ namespace TiaOpenness.Core.Environment
         public WorkbenchEnvironmentChecks(EnvironmentCheckContext context, EnvironmentProbeSources sources)
         { this.context = context; this.sources = sources; }
 
-        public static IReadOnlyList<string> Ids => new[] { "installations", "membership", "framework", "runtime" }
+        public static IReadOnlyList<string> Ids => new[] { "installations", "membership", "openness-readiness", "framework", "runtime" }
             .Concat(TiaVersionCatalog.All.Select(v => "engine-" + v.Key))
             .Concat(new[] { "data", "port", "url", "firewall", "confirmation" }).ToArray();
 
@@ -115,6 +115,22 @@ namespace TiaOpenness.Core.Environment
             try
             {
                 if (id == "confirmation") return Finding(EnvironmentFindingStatus.Guidance, "Guidance");
+                if (id == "openness-readiness")
+                {
+                    if (doctor == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", doctorError);
+                    if (string.IsNullOrEmpty(context.BundleRoot)) return Finding(EnvironmentFindingStatus.Unknown, "Unknown");
+                    var engines = new[] { "20", "21" }.Select(key => EnvironmentBundleFiles.Host(context.BundleRoot, key))
+                        .Where(sources.FileExists).ToArray();
+                    if (engines.Length == 0) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", "No bundled V20/V21 engine is present.");
+                    var problems = doctor.Checks.Where(check => check.Id is "TIA-INSTALL" or "TIA-LAYOUT" or "TIA-GROUP")
+                        .Where(check => check.Status == CheckStatus.Fail)
+                        .Select(check => check.Title + ": " + check.Detail + (string.IsNullOrWhiteSpace(check.Remedy) ? "" : "\n" + check.Remedy))
+                        .ToArray();
+                    return problems.Length == 0
+                        ? Finding(EnvironmentFindingStatus.Pass, "Pass", "Engine files are available and the environment doctor found no startup blocker.")
+                        : Finding(EnvironmentFindingStatus.Fail, "NotReady", "The MCP engine can start, but TIA Openness is not ready.\n"
+                            + string.Join("\n", problems) + "\nEngines: " + string.Join("; ", engines));
+                }
                 if (id == "installations" || id == "framework" || id == "membership")
                 {
                     if (doctor == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", doctorError);

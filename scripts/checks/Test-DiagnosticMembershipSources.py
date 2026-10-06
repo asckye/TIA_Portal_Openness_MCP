@@ -23,10 +23,13 @@ assert re.fullmatch(r"\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\
 print("PASS: both diagnostics use NoFix; failure handling and opt-in connection preserved; explicit repair retained.")
 
 startup = sources.member('Main')
-assert "var opennessUserOk = Openness.IsUserInGroupNoFix();" in startup
+assert "OpennessReadiness.Ready" in startup
+assert "OpennessReadiness.MarkUnavailable" in startup
 assert not re.search(r"Openness\.IsUserInGroup\s*\(", startup)
-assert "if (opennessUserOk)" in startup
+assert "if (mcpHostInvocation)" in startup
+assert 'Starting MCP host in environment-not-ready mode.' in startup
+assert "await RunHttpHost(options)" in startup and "await RunStdioHost(options)" in startup
 assert "User is not in the required group 'Siemens TIA Openness'. Exiting." in startup
 assert "Environment.ExitCode = 2;" in startup
-assert "tia.cmd doctor --fix" in startup
-print("PASS: startup uses NoFix and retains fail-closed nonmember exit and explicit repair guidance.")
+assert "OpennessReadiness.Guidance(false)" in startup
+print("PASS: startup uses readiness state, retains explicit non-MCP exit, and keeps MCP hosts available while the environment is not ready.")

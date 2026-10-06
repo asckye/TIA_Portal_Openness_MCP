@@ -1611,7 +1611,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs):60 | `if (xml.Length > MaxXmlCharacters) throw new ArgumentException("Generated XML exceeds one Mi character.");` |
 | [OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs):63 | `DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters` |
 | [OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs):120 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > MaxStringCharacters)` |
-| [CliOptions.cs](../../src/Logic/CliOptions.cs):188 | `if (++i >= args.Length \|\| !int.TryParse(args[i], out int workerTimeout) \|\| workerTimeout < 10 \|\| workerTimeout > 180)` |
+| [CliOptions.cs](../../src/Logic/CliOptions.cs):190 | `if (++i >= args.Length \|\| !int.TryParse(args[i], out int workerTimeout) \|\| workerTimeout < 10 \|\| workerTimeout > 180)` |
 | [ModelContextProtocol/BatchPlanStore.cs](../../src/Logic/ModelContextProtocol/BatchPlanStore.cs):24 | `if (_plans.Count >= 32) throw new InvalidOperationException("Too many pending previews; use or wait for expiry.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):24 | `if (rules.Count > 50) throw new ArgumentException("At most 50 XML rules.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):33 | `if (xpath.Length == 0 \|\| xpath.Length > 1024) throw new ArgumentException("Each rule needs an XPath selecting elements (max 1024 chars).");` |
@@ -1893,7 +1893,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs):67 `TIA_MCP_DATA_DIRECTORY` | 显式数据根或 bundle/data；不可写时按用途回退用户目录 | 沿用数据根政策；logs 按发布键/studio 分组 |
 | [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):70 `DiagnosticsDirectory` | P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流 | P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链 |
-| [Program.cs](../../src/Engine/Program.cs):899 `AppendLog` | P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log | 只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED |
+| [Program.cs](../../src/Engine/Program.cs):974 `AppendLog` | P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log | 只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):14 `.crash.log` | P6-39：Studio 崩溃日志在 logs/studio，PID/启动时间文件名 | Workbench 根政策；无可写位置报 IO_FAILED |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):87 `EcosystemPythonExecutable` | P6-39：LocalAppData/TiaMcp/ecosystem-python，显式 Python 优先 | 不执行或迁移旧私有环境；缺失/不可写报 IO_FAILED |
 | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):44 `GetWorkspaceRoot` | P6-39：显式 --workspace-root；无包根/cwd/私人目录探测 | 缺输入 INVALID_ARGUMENT；CLI 语法退出 64 |
@@ -1910,7 +1910,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 文件 | 类别:全部命中行 | 实施方式 |
 |---|---|---|
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 退役根变量:54 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
-| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:79 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:85 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 退役产品名:48 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 退役产品名:24,76 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [manifest/configurator-build.json](../../manifest/configurator-build.json) | 退役产品名:6 | 生成记录只由所属生成器重建；不手工改写扫描命中 |

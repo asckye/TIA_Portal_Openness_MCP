@@ -73,6 +73,19 @@ A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启
 | Studio 桥接协议 2（P4-F）及桥接 JSON 改用 System.Text.Json（P2-04a） | 发布前用 Studio 分别连接 V14 SP1、V16、V21 的真实 TIA：核对 hello 身份后连接、打开测试工程副本、读取块列表、导出一个块；再触发一次已处理的错误（如导出到不存在的目录），确认界面显示原错误文本且同一会话可继续操作；最后断开并关闭 Studio，确认桥接进程退出。离线桥接冒烟和 mock 测试不代替此验收；3.3.0 已验收，见上表。 |
 | PLC 名称严格解析（G9） | 3.3.0 已在 V20、V21 验收，见上表；歧义情形由离线测试覆盖。 |
 
+## V20/V21 host + worker acceptance (P6-54)
+
+The host + worker implementation keeps the existing V20/V21 engine and tool sets. These VM steps remain **NOT RUN** until performed on the exact release candidate with the corresponding TIA version and a disposable project copy. They are a release-default gate; offline startup tests do not satisfy it.
+
+| releaseKey | State | Required isolated-mode acceptance |
+|---|---|---|
+| 20 | **NOT RUN** | On the V20 VM, connect to the intended TIA process and explicitly bind a disposable project copy; verify project identity and read state. Import one fixture and export it back to a separate directory; read back both sides. Compile the selected PLC software and record full nested diagnostics. Induce the approved worker timeout/fault fixture, inspect actual project state, restart the idle worker, connect and explicitly bind the project again, then read back state. |
+| 21 | **NOT RUN** | Repeat the same sequence on the V21 VM using a V21 project copy and version-matched import/export fixtures. Connect and explicitly bind, verify project identity, import and export with read-back, compile and retain nested diagnostics, induce worker timeout/fault, inspect state, restart, explicitly rebind, and read back again. |
+
+For each row record Windows/TIA build and patch, engine/worker/adapter SHA-256, test project copy identity, worker mode and timeout, tool arguments with credentials removed, MCP request IDs, before/after project state, call ordering, thread apartment, restart and rebind evidence, import/export output hashes, compile errors/warnings and nested messages, logs, and whether the project was explicitly saved. A timeout/crash after worker dispatch is not a pre-operation refusal; never repeat an operation until project state is inspected. Do not use a production project or connect to a PLC for this gate.
+
+The current release property remains `workerIsolation.enabledByDefault=false` for both keys. Change it only after both rows pass and the acceptance evidence is reviewed. If either row fails, keep the default off and retain the findings.
+
 ## 4.0 安全策略验收计划（P6-R2）
 
 以下为[4.0 规范](../development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。

@@ -77,6 +77,12 @@ V20/V21 使用 `runtime/v20/TiaMcp.Engine.V20.exe` / `runtime/v21/TiaMcp.Engine.
 
 本机连接记录默认位于可写交付包的 `data\config`；可用绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定数据根。无法定位交付包或其 `data` 不可写时，沿用 `%LOCALAPPDATA%\TiaPortalMcp`。首次使用新目录只复制缺失的旧记录，保留旧文件且不覆盖已有文件；HTTP 服务配置按所选版本保存为 `http-v<版本>.json`，客户端记录为 `client.json`。这些本机记录使用当前 Windows 用户的加密保护；客户端自身配置文件按其格式保存密钥，不要公开配置或备份。
 
+### V20/V21 Openness worker
+
+V20/V21 的 MCP 服务在 TIA 缺失、版本不匹配或当前用户未加入 `Siemens TIA Openness` 组时仍启动，方便诊断。环境未就绪时，Bootstrap 和环境检查会报告原因与修复步骤；TIA 工具返回 `RESOURCE_UNAVAILABLE`，并说明原生操作未开始。4.0 发布版默认不隔离。客户端配置器不写入 `--isolate-openness` 或 `--no-isolate-openness`；如确需覆盖默认值，请编辑实际服务命令并使用前者开启、后者关闭。`GetOpennessWorkerStatus` 会报告默认值、当前开关和环境就绪状态。
+
+V20/V21 MCP startup also remains available when TIA is missing, mismatched, or the current user lacks Openness group membership. Diagnostics show the cause and repair steps; TIA-dependent calls return `RESOURCE_UNAVAILABLE` before native dispatch. Release builds default to isolation off. Generated client commands contain neither isolation switch unless the user chooses to edit them. Use `--isolate-openness` to force isolation on and `--no-isolate-openness` to force it off; inspect the result with `GetOpennessWorkerStatus`.
+
 ## 工具显示与示例
 
 V20/V21 默认 lite 显示 60 个常用工具，其余用 `FindTools` / `CallTool`；完整目录分别为 477 / 488 个。需要全量直接显示时给对应完整引擎传 `--profile full`。

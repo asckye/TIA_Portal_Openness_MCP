@@ -1,5 +1,13 @@
 # 调用失败时如何处理
 
+## V20/V21：Openness 环境未就绪
+
+V20/V21 MCP 服务可以在没有 TIA、TIA 版本与引擎不匹配、Openness API 初始化失败或用户组检查失败时启动，以保留诊断入口。运行 `InitializeEnvironment` 和 `GetEnvironmentDiagnostics` 查看原因及修复步骤。
+
+需要 TIA 的调用此时返回 V4 `RESOURCE_UNAVAILABLE`，`error.details.resource` 为 `tia-openness-environment`，`meta.outcome` 为 `rejected-before-operation`、`meta.execution` 为 `not-started`。这表示工具未将操作派发给 Siemens API。修复安装、版本或用户组后重启服务，再读取 `GetOpennessWorkerStatus` 确认环境就绪。
+
+For V20/V21, a missing TIA installation, version mismatch, Openness initialization failure, or failed group check leaves the MCP host available for diagnostics. TIA-dependent calls return `RESOURCE_UNAVAILABLE` for `tia-openness-environment`; the V4 metadata reports `rejected-before-operation` / `not-started`. Read `InitializeEnvironment` and `GetEnvironmentDiagnostics` for the cause and repair steps. After correcting the environment, restart the service and check `GetOpennessWorkerStatus`.
+
 先记录当前服务版本、工具名、返回错误及调用 ID，再按实际问题处理。同名工具在基础宿主和完整引擎上的返回结构可能不同，使用 `GetToolUsage` 核对正在连接的版本。
 
 | 现象 | 下一步 |

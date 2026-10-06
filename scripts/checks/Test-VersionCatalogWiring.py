@@ -18,7 +18,10 @@ def read(path):
 class VersionCatalogWiring(unittest.TestCase):
     def test_policy_wraps_direct_and_isolated_dispatch(self):
         wiring = sources.member('WrapTools')
-        self.assertIn('WrapWithVersionPolicy(Isolation.IsolatedWorkerHost.Current', wiring)
+        # Direct and isolated dispatch are chosen first; readiness and version policy then wrap whichever was chosen.
+        self.assertIn('Isolation.IsolatedWorkerHost.Wrap(tools)', wiring)
+        self.assertIn('WrapWithSerializedCalls(WrapWithResponseGuard(tools))', wiring)
+        self.assertIn('WrapWithVersionPolicy(Isolation.OpennessReadinessGuard.Wrap(guarded))', wiring)
         wrapper = sources.member('InvokeAsync', owner='VersionPolicyTool')
         self.assertLess(wrapper.index('V4Admission'), wrapper.index('return inner.InvokeAsync'))
         self.assertNotIn('VersionCallProblem', wrapper)

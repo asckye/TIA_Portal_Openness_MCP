@@ -490,14 +490,15 @@ if ($DocumentationOnly) {
     return
 }
 # Refuse candidate build artifacts before prerequisites, network, or release mutations.
-$testPolicyMarker = 'TiaMcpTestPolicy'
+$testPolicyMarkers = @('TiaMcpTestPolicy', 'TiaMcpTestWorkerDouble')
 $policyRoots = @('runtime', 'src/Engine/bin', 'src/Engine/bin-v20', 'src/FoundationHost/bin', 'src/Worker/bin')
 foreach ($policyRoot in $policyRoots) {
     $policyDirectory = Join-Path $repo $policyRoot
     if (-not (Test-Path -LiteralPath $policyDirectory)) { continue }
     foreach ($policyFile in Get-ChildItem -LiteralPath $policyDirectory -Recurse -File | Where-Object { $_.Extension -in '.dll','.exe' }) {
-        if ([Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($policyFile.FullName)).Contains($testPolicyMarker)) {
-            throw "Test-only behavior policy assembly cannot be released: $($policyFile.FullName)"
+        $bytes = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($policyFile.FullName))
+        foreach ($testPolicyMarker in $testPolicyMarkers) {
+            if ($bytes.Contains($testPolicyMarker)) { throw "Test-only behavior assembly cannot be released: $($policyFile.FullName)" }
         }
     }
 }

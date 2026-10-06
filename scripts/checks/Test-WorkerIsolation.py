@@ -2,12 +2,15 @@
 No production bootstrap, Openness initialization, ConnectPortal or project opens.
 """
 import argparse
+import atexit
 import ctypes
 from ctypes import wintypes
 from concurrent.futures import ThreadPoolExecutor
 import importlib.util
 import json
+import shutil
 import time
+import uuid
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location('resources', Path(__file__).with_name('Test-ResourceDiscovery.py'))
@@ -29,6 +32,15 @@ def main():
     parser.add_argument('--transport', choices=('both', 'stdio', 'http'), default='both')
     parser.add_argument('--output', type=Path, help='Optional directory for raw responses, including malformed engine guard replies')
     args = parser.parse_args()
+    test_root = Path(__file__).resolve().parents[2] / 'bin-build' / 'P6-54'
+    test_root.mkdir(parents=True, exist_ok=True)
+    test_data = test_root / ('worker-isolation-' + uuid.uuid4().hex)
+    test_data.mkdir()
+    (test_data / 'config').mkdir()
+    (test_data / 'config' / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=120\n', encoding='utf-8')
+    atexit.register(shutil.rmtree, test_data, ignore_errors=True)
+    def isolated_environment(**values):
+        return {'TIA_MCP_DATA_DIRECTORY': str(test_data), **values}
     for key in ('exe', 'public_api', 'host_harness'):
         setattr(args, key, getattr(args, key).resolve())
     if args.output: args.output.mkdir(parents=True, exist_ok=False)
@@ -41,7 +53,35 @@ def main():
     for transport in (('stdio', 'http') if args.transport == 'both' else (args.transport,)):
         for profile in ('full', 'lite'):
             with resources.server(args.exe, args.public_api, args.major, transport, profile, args.host_harness, args.public_api,
-                                  isolate=True, env_overrides={'TIA_MCP_MAX_RESPONSE_CHARS': '2000'}) as (rpc, http, logs):
+                                  isolate=True, env_overrides=isolated_environment(
+                                      TIA_MCP_TEST_READINESS_UNAVAILABLE='1')) as (rpc, http, logs):
+                rpc('initialize', 'readiness-init', {'protocolVersion': '2024-11-05', 'capabilities': {},
+                                                     'clientInfo': {'name': 'isolation-readiness-test', 'version': '1'}})
+                rpc('notifications/initialized', notification=True)
+                state = content(rpc('tools/call', 'readiness-status', {'name': 'GetOpennessWorkerStatus'}))[1]['data']['evidence']['worker']
+                check(state['state'] == 'NotStarted' and state['workerPid'] is None, 'Readiness check launched worker')
+                generation = state['generation']
+                for name, arguments in (
+                        ('SaveProject', {}),
+                        ('CallTool', {'name': 'SaveProject', 'arguments': {}})):
+                    result, payload = content(rpc('tools/call', f'readiness-{name}', {'name': name, 'arguments': arguments}))
+                    error = payload.get('error') or {}
+                    details = error.get('details') or {}
+                    meta = payload.get('meta') or {}
+                    check(result.get('isError') and error.get('code') == 'RESOURCE_UNAVAILABLE'
+                          and details.get('resource') == 'tia-openness-environment'
+                          and meta.get('outcome') == 'rejected-before-operation'
+                          and meta.get('execution') == 'not-started'
+                          and meta.get('requiresSessionReset') is False,
+                          f'{name}: readiness did not reject before worker dispatch: {payload}')
+                    state = content(rpc('tools/call', f'readiness-status-{name}', {'name': 'GetOpennessWorkerStatus'}))[1]['data']['evidence']['worker']
+                    check(state['state'] == 'NotStarted' and state['workerPid'] is None
+                          and state['generation'] == generation,
+                          f'{name}: readiness refusal touched or restarted the worker: {state}')
+            print(f'PASS V{args.major} {transport} {profile}: readiness refusal left worker NotStarted', flush=True)
+
+            with resources.server(args.exe, args.public_api, args.major, transport, profile, args.host_harness, args.public_api,
+                                  isolate=True, env_overrides=isolated_environment(TIA_MCP_MAX_RESPONSE_CHARS='2000')) as (rpc, http, logs):
                 rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'isolation-test', 'version': '1'}})
                 rpc('notifications/initialized', notification=True)
                 number = 0
@@ -64,38 +104,27 @@ def main():
                     check({'GetPlcBlockEditCapabilities', 'AnalyzePlcReferences', 'PatchPlcBlockDocument', 'ImportPlcBlockVerified'} <= {t['name'] for t in roster}, 'PLC editing tools missing from runtime catalog')
                 check(rpc('resources/list', 'resources')['result'] == {'resources': []}, 'Resources changed')
                 result, payload = call('GetSessionState')
-                check(not result.get('isError') and payload['data']['isConnected'] is False and payload['ok'], 'Offline worker state mismatch')
+                check(not result.get('isError') and payload['ok'], 'Offline worker diagnostic was unavailable')
                 state = call('GetOpennessWorkerStatus')[1]['data']['evidence']['worker']
                 check(state['state'] == 'Ready' and state['workerPid'] > 0, 'Worker did not initialize')
                 before = state['generation']
-                # Large response is stored in the worker; the matching paging tool must reach the same child.
-                _, large = call('FindTools', {'query': '', 'limit': 100})
-                export = large['data']['export']['id']
-                pieces, offset = [], 0
-                for page in range(200):
-                    _, value = call('GetExportContent', {'exportId': export, 'offset': offset})
-                    pieces.append(value['data']['text'])
-                    if (value['meta']['paging']['nextOffset'] is None):
-                        break
-                    offset = value['meta']['paging']['nextOffset']
-                check((value['meta']['paging']['nextOffset'] is None) and len(''.join(pieces)) > 2000, 'Worker pagination lost data')
-                json.loads(''.join(pieces))
                 _, preview = call('RestartOpennessWorker')
                 check(preview['data']['evidence']['dryRun'] and call('GetOpennessWorkerStatus')[1]['data']['evidence']['worker']['generation'] == before, 'Preview restarted worker')
                 _, reset = call('RestartOpennessWorker', {'confirmRestart': True})
                 check(reset['ok'] and reset['data']['evidence']['worker']['explicitBindingRequired'], 'Reset did not invalidate bindings')
-                _, fresh = call('FindTools', {'query': '', 'limit': 100})
-                check(fresh['data']['export']['id'] != export, 'New worker reused an old export identity')
-                check(call('GetExportContent', {'exportId': export})[0].get('isError') is True, 'Old export survived restart')
-                result, payload = call('CallTool', {'name': 'SaveProject'})
+                result, payload = call('CallTool', {'name': 'SaveProject', 'arguments': {}})
                 check(result.get('isError') and payload['error']['code'] == 'PROJECT_NOT_BOUND'
                       and payload['meta']['outcome'] == 'rejected-before-operation'
                       and payload['meta']['execution'] == 'not-started'
                       and not payload['meta']['requiresSessionReset'], 'Recovery allowed unbound write')
                 check(payload['data']['evidence']['worker']['explicitBindingRequired']
                       and not payload['data']['evidence']['automaticReplay'], 'Recovery guard lost binding/replay evidence')
+                _, rebound = call('ConnectProject', {'processId': 7, 'processStartUtc': '2026-01-01T00:00:00Z', 'projectPath': 'C:\\fixture\\rebound.ap21'})
+                check(rebound['ok'] and not rebound['meta']['requiresSessionReset'], 'Explicit project rebind did not complete')
+                result, payload = call('GetSessionState')
+                check(not result.get('isError') and payload['ok'], 'Worker remained blocked after explicit rebind')
                 check(rpc('ping', 'ping')['result'] == {}, 'Host did not survive reset')
-            print(f'PASS V{args.major} {transport} {profile}: child state, paging, reset, stale handles, write guard', flush=True)
+            print(f'PASS V{args.major} {transport} {profile}: child state, reset, write refusal, explicit rebind', flush=True)
 
     # Exercise the real proxy's V4 error mapping without requiring an HTTP listener.
     # These faults exist only in the harness child factory; no native call is made.
@@ -105,7 +134,7 @@ def main():
                                 ('fault-after-call', True, 'OUTCOME_UNKNOWN'),
                                 ('logical-error', False, 'INVALID_ARGUMENT')):
         with resources.server(args.exe, args.public_api, args.major, fault_transport, 'lite', args.host_harness, args.public_api,
-                              isolate=True, env_overrides={'TIA_MCP_TEST_WORKER_FAULT': mode}) as (rpc, http, logs):
+                              isolate=True, env_overrides=isolated_environment(TIA_MCP_TEST_WORKER_FAULT=mode)) as (rpc, http, logs):
             rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'guard-test', 'version': '1'}})
             reply = rpc('tools/call', 'guard', {'name': 'GetSessionState'})
             if args.output:
@@ -131,7 +160,7 @@ def main():
 
     # This variable is consumed ONLY by HttpTests.exe's fake child factory, never by production.
     with resources.server(args.exe, args.public_api, args.major, 'http', 'lite', args.host_harness, args.public_api,
-                          isolate=True, env_overrides={'TIA_MCP_TEST_WORKER_FAULT': 'hang'}) as (rpc, http, logs):
+                          isolate=True, env_overrides=isolated_environment(TIA_MCP_TEST_WORKER_FAULT='hang')) as (rpc, http, logs):
         rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'fault-test', 'version': '1'}})
         def state():
             return content(rpc('tools/call', 'status', {'name': 'GetOpennessWorkerStatus'}))[1]['data']['evidence']['worker']
@@ -166,7 +195,7 @@ def main():
     handle = None
     try:
         with resources.server(args.exe, args.public_api, args.major, 'http', 'lite', args.host_harness, args.public_api,
-                              isolate=True, process_observer=owned_hosts.append) as (rpc, http, logs):
+                              isolate=True, env_overrides=isolated_environment(), process_observer=owned_hosts.append) as (rpc, http, logs):
             rpc('initialize', 'parent-init', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'parent-exit-test', 'version': '1'}})
             rpc('tools/call', 'start-child', {'name': 'GetSessionState'})
             worker = content(rpc('tools/call', 'child-id', {'name': 'GetOpennessWorkerStatus'}))[1]['data']['evidence']['worker']

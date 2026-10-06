@@ -47,6 +47,17 @@ function Assert-MatchedCheckCount([string]$Key,[System.Text.RegularExpressions.M
     $actual=if($Match.Success){[int]$Match.Groups[1].Value}else{$null}
     Assert-CheckCount $Key $actual $Message
 }
+function Get-WorkerIsolationDefault([string]$Path) {
+    $assembly=[Reflection.Assembly]::ReflectionOnlyLoadFrom([IO.Path]::GetFullPath($Path))
+    $rows=@($assembly.GetCustomAttributesData() | Where-Object {
+        $_.AttributeType.FullName -eq 'System.Reflection.AssemblyMetadataAttribute' -and
+        $_.ConstructorArguments.Count -eq 2 -and $_.ConstructorArguments[0].Value -eq 'TiaMcpWorkerIsolationDefault'
+    })
+    if($rows.Count -ne 1){throw "Worker isolation default metadata missing or duplicated: $Path"}
+    $value=[string]$rows[0].ConstructorArguments[1].Value
+    if($value -notin 'true','false'){throw "Invalid worker isolation default metadata '$value': $Path"}
+    return ($value -eq 'true')
+}
 function Wait-VersionPipelines($Jobs,[string]$Output) {
     $null=$Jobs | Wait-Job
     $failed=@()
@@ -403,7 +414,8 @@ foreach($major in @($PipelineMajor)) {
     $categories=[ordered]@{}
     $coverage.sites | Group-Object category | ForEach-Object {$categories[$_.Name]=$_.Count}
     $checks["V$major"]['nativeDiagnostics']=[ordered]@{status='passed';sites=$coverage.count;categories=$categories;uncoveredSupportedBoundaries=0;coverageSha256=(Get-FileHash $coveragePath).Hash.ToLowerInvariant();instrumenterSha256=$coverage.instrumenterSha256;jitPrepared=[int]$nativeJit.Groups[1].Value;openGenericWrappers=[int]$nativeJit.Groups[2].Value;fixture=$diagnosticTests;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py')).Hash.ToLowerInvariant();liveTiaExecuted=$false;scope='Engine-owned Openness call sites; not SDK/server internals or a native stability claim'}
-    $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$false;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
+    $workerIsolationDefault=Get-WorkerIsolationDefault $exe
+    $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$workerIsolationDefault;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['approvalSafety']=[ordered]@{status='passed';checksPassed=[int]$approvalResult.checksPassed;defaultEnabled=$true;directWriteRefusedBeforeDispatch=$true;callToolWriteRefusedBeforeDispatch=$true;readSucceeded=$true;workbenchConnected=$false;tiaConnected=$false;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
@@ -484,6 +496,9 @@ $validationArtifacts=@(foreach($major in @(20,21)) {
         [ordered]@{path=$path.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $path).Hash.ToLowerInvariant()}
     }
 })
-WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;updaterPassed=$updaterPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs;validationArtifacts=$validationArtifacts})
+$isolationDefault20=Get-WorkerIsolationDefault (Join-Path $repo 'runtime/v20/TiaMcp.Engine.V20.exe')
+$isolationDefault21=Get-WorkerIsolationDefault (Join-Path $repo 'runtime/v21/TiaMcp.Engine.V21.exe')
+if($isolationDefault20 -ne $isolationDefault21){throw 'V20/V21 worker isolation defaults differ.'}
+WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');workerIsolation=[ordered]@{enabledByDefault=$isolationDefault21};validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;updaterPassed=$updaterPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs;validationArtifacts=$validationArtifacts})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate."

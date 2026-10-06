@@ -110,7 +110,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
     [
-        new(LocalizedText.Literal("TIA Portal"), rows.Where(r => r.Id is "installations" or "membership" or "confirmation").ToArray()),
+        new(LocalizedText.Literal("TIA Portal"), rows.Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation").ToArray()),
         new(LocalizedText.Key("Env.Runtime"), rows.Where(r => r.Id is "framework" or "runtime").ToArray()),
         new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id.StartsWith("engine-", StringComparison.Ordinal) || r.Id == "data").ToArray()),
         new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall").ToArray()),
@@ -156,7 +156,7 @@ public static class EnvironmentCheckCatalogue
         ? LocalizedText.Key("Env.ReleaseFiles", TiaMcp.Versioning.TiaVersionCatalog.Get(id[7..]).DisplayName)
         : LocalizedText.Key(id switch
         {
-            "installations" => "Env.Installations", "membership" => "Env.Membership", "framework" => "Env.Framework", "engines" => "Env.Engines",
+            "installations" => "Env.Installations", "membership" => "Env.Membership", "openness-readiness" => "Env.OpennessReadiness", "framework" => "Env.Framework", "engines" => "Env.Engines",
             "runtime" => "Env.BundledRuntime", "data" => "Env.Data", "port" => "Env.Port", "url" => "Env.Url",
             "firewall" => "Env.Firewall", _ => "Env.FirstConnection",
         });
@@ -165,6 +165,7 @@ public static class EnvironmentCheckCatalogue
     public static string FixKey(string id, bool newLogon = false) => id.StartsWith("engine-", StringComparison.Ordinal) ? "Env.FixFiles" : id switch
     {
         "installations" => "Env.FixInstall", "membership" => newLogon ? "Env.FixLogon" : "Env.FixMembership",
+        "openness-readiness" => "Env.FixOpennessReadiness",
         "framework" => "Env.FixFramework", "runtime" => "Env.FixRuntime", "data" => "Env.FixData",
         "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", _ => "Env.FirstConnectionHelp",
     };
@@ -184,6 +185,7 @@ public static class EnvironmentCheckCatalogue
     public static string ResultKey(EnvironmentFinding finding) => finding.Result switch
     {
         "Pass" => "Env.Passed", "Fail" => "Env.Failed", "Unknown" => "Env.Unknown", "NewLogon" => "Env.NewLogon",
+        "NotReady" => "Env.NotReady",
         "Fallback" => "Env.Fallback", "PortUsed" => "Env.PortUsed", "NoEndpoint" => "Env.NoEndpoint", _ => "Env.Guidance",
     };
 }

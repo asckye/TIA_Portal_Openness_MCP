@@ -12,6 +12,7 @@ namespace TiaMcpServer
         public string? HttpPrefix { get; set; } // e.g. "http://127.0.0.1:8765/"
         public string? HttpApiKey { get; set; } // optional X-API-Key header value
         public bool IsolateOpenness { get; set; }
+        internal bool IsolateOpennessExplicit { get; private set; }
         public int WorkerTimeoutSeconds { get; set; } = 120;
         internal bool OpennessWorkerChild { get; set; }
         internal int WorkerParentPid { get; set; }
@@ -182,7 +183,8 @@ namespace TiaMcpServer
                         options.WorkspaceRoot = args[i];
                         options.RequireWorkspaceRoot();
                         break;
-                    case "--isolate-openness": options.IsolateOpenness = true; break;
+                    case "--isolate-openness": options.IsolateOpenness = true; options.IsolateOpennessExplicit = true; break;
+                    case "--no-isolate-openness": options.IsolateOpenness = false; options.IsolateOpennessExplicit = true; break;
                     case "--openness-worker-child": options.OpennessWorkerChild = true; break;
                     case "--worker-timeout-seconds":
                         if (++i >= args.Length || !int.TryParse(args[i], out int workerTimeout) || workerTimeout < 10 || workerTimeout > 180)

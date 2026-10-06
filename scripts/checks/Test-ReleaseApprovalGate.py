@@ -69,6 +69,19 @@ def assert_refused(reply: dict, label: str) -> None:
     require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
 
 
+def assert_readiness_refused(reply: dict, label: str) -> None:
+    body, is_error = parse_envelope(reply)
+    error = body.get("error") or {}
+    details = error.get("details") or {}
+    meta = body.get("meta") or {}
+    require(is_error and body.get("ok") is False, f"{label}: refusal was not an MCP error: {body}")
+    require(error.get("code") == "RESOURCE_UNAVAILABLE" and details.get("resource") == "tia-openness-environment",
+            f"{label}: readiness did not take precedence: {body}")
+    require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
+            f"{label}: readiness was not proven to stop before dispatch: {body}")
+    require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+
+
 def assert_foundation_write_stopped(reply: dict, label: str) -> str:
     """Foundation admits a write only with a live worker before it asks for approval (P6-44: approval follows admission).
     A release build has no TIA, so the write stops at worker admission; with a worker, the default-on approval refuses it.
@@ -92,14 +105,15 @@ def assert_engine_read(reply: dict, label: str) -> None:
             f"{label}: read call failed while approval was enabled: {body}")
 
 
-def fresh_data_root(temp_root: Path, label: str) -> tuple[Path, dict[str, str]]:
+def fresh_data_root(temp_root: Path, label: str, approval_enabled: bool | None = True) -> tuple[Path, dict[str, str]]:
     root = temp_root / "approval-host-data" / f"{label}-{uuid.uuid4().hex}"
     (root / "config").mkdir(parents=True)
     (root / "temp").mkdir()
     (root / "local-app-data").mkdir()
     (root / "app-data").mkdir()
-    settings = root / "config" / "approval.settings"
-    settings.write_text("enabled=true\ntimeoutSeconds=120\n", encoding="utf-8")
+    if approval_enabled is not None:
+        settings = root / "config" / "approval.settings"
+        settings.write_text(f"enabled={'true' if approval_enabled else 'false'}\ntimeoutSeconds=120\n", encoding="utf-8")
     env = os.environ.copy()
     env.update({
         "TIA_MCP_DATA_DIRECTORY": str(root),
@@ -201,8 +215,10 @@ def rpc_call(rpc, name: str, arguments: dict, request_id: str) -> dict:
 
 def run_engine(args) -> dict:
     require(os.name == "nt", "Release host checks require Windows")
-    exe, portal, harness, api = (args.exe.resolve(), args.portal_root.resolve(), args.host_harness.resolve(), args.public_api.resolve())
-    require(exe.is_file() and portal.is_dir() and harness.is_file() and api.is_dir(), "Engine check input is missing")
+    exe, portal, api = args.exe.resolve(), args.portal_root.resolve(), args.public_api.resolve()
+    harness = args.host_harness.resolve() if args.host_harness else None
+    require(exe.is_file() and portal.is_dir() and (harness is None or harness.is_file()) and api.is_dir(), "Engine check input is missing")
+    require(harness is not None, "The default-on approval proof must run through the HttpTests harness")
     count = 0
     results = {}
 
@@ -237,7 +253,27 @@ def run_engine(args) -> dict:
             count += 1
         results["CallTool"] = "refused-before-dispatch"
 
-    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 3, "results": results}
+    readiness_root, readiness_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-readiness", approval_enabled=None)
+    with retained_on_failure(readiness_root):
+        readiness_install = readiness_root / "sdk-only-tia-install"
+        readiness_install.mkdir()
+        readiness_api = readiness_install / "PublicAPI" / f"V{args.major}"
+        readiness_api.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(api, readiness_api)
+        with resources.server(exe, readiness_install, args.major, "stdio", "full", None, api,
+                              env_overrides=readiness_env) as (rpc, _, logs):
+            initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
+                                                       "clientInfo": {"name": "release-readiness-gate", "version": "1"}})
+            require("result" in initialized, f"V{args.major}: real EXE host initialize failed: {logs[-10:]}")
+            rpc("notifications/initialized", notification=True)
+            names = {row["name"] for row in rpc("tools/list", "list")["result"]["tools"]}
+            require(ENGINE_WRITE[0] in names, f"V{args.major}: {ENGINE_WRITE[0]} is missing from the real EXE roster")
+            assert_readiness_refused(rpc_call(rpc, ENGINE_WRITE[0], ENGINE_WRITE[1], "readiness-write"),
+                                     f"V{args.major} real EXE readiness-before-approval")
+            count += 1
+        results["realExeReadiness"] = "readiness refused before approval; default approval.settings absent"
+
+    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 4, "results": results}
 
 
 def run_foundation(args) -> dict:
@@ -278,6 +314,10 @@ def self_test() -> int:
         "error": {"code": "CONFIRMATION_REQUIRED", "details": {"reason": "workbench-unavailable"}},
         "meta": {"outcome": "rejected-before-operation", "execution": "not-started", "requiresSessionReset": False}}}}
     assert_refused(refused, "synthetic refusal")
+    readiness = json.loads(json.dumps(refused))
+    readiness["result"]["structuredContent"]["error"] = {
+        "code": "RESOURCE_UNAVAILABLE", "details": {"resource": "tia-openness-environment"}}
+    assert_readiness_refused(readiness, "synthetic readiness refusal")
     bad = json.loads(json.dumps(refused))
     bad["result"]["structuredContent"]["meta"]["execution"] = "completed"
     try:
@@ -294,7 +334,15 @@ def self_test() -> int:
         pass
     else:
         raise AssertionError("Wrong refusal reason was accepted")
-    return 3
+    bad = json.loads(json.dumps(readiness))
+    bad["result"]["structuredContent"]["meta"]["execution"] = "completed"
+    try:
+        assert_readiness_refused(bad, "synthetic dispatched readiness failure")
+    except CheckFailure:
+        pass
+    else:
+        raise AssertionError("A dispatched readiness failure was accepted")
+    return 5
 
 
 def main() -> int:
@@ -325,13 +373,14 @@ def main() -> int:
     if report["checksPassed"] != report["checksExpected"]:
         raise CheckFailure(f"Check count mismatch: {report}")
     report["status"] = "passed"
-    report["approvalSettings"] = "explicit enabled=true; timeoutSeconds=120"
+    report["approvalSettings"] = ("explicit enabled=true; timeoutSeconds=120 for harness approval proof; absent for real-EXE readiness proof"
+                                   if args.product == "engine" else "explicit enabled=true; timeoutSeconds=120")
     report["workbenchConnected"] = False
     report["tiaConnected"] = False
     report["resultPath"] = str(args.output / "result.json")
     (args.output / "result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if args.product == "engine":
-        print(f"COMPLETE: {report['checksPassed']} default-approval checks passed for V{args.major}; no TIA connection attempted")
+        print(f"COMPLETE: {report['checksPassed']} approval/readiness checks passed for V{args.major}; harness proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted")
     else:
         print(f"COMPLETE: {report['checksPassed']} default-approval checks passed across six Foundation releases; CallTool is not advertised by the Foundation V4 contract; no TIA connection attempted")
     return 0

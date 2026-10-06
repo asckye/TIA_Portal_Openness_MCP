@@ -219,7 +219,8 @@ try {
         }
         $backedUp+=$relative
     }
-    $snapshots=@('--repo-root',$repo,'--harness',$harness,'--public-api-root',$api,'--releases','20','21',
+    # V4 snapshots run the real engine EXEs (P6-54): the readiness gate answers on a machine without TIA.
+    $snapshots=@('--repo-root',$repo,'--public-api-root',$api,'--releases','20','21',
         '--exe',"20=$repo/runtime/v20/TiaMcp.Engine.V20.exe",'--exe',"21=$repo/runtime/v21/TiaMcp.Engine.V21.exe")
     foreach($step in $steps){Run-Step $step.label $step.action}
     $package=Get-Content -LiteralPath (Join-Path $output 'package-result.json') -Raw | ConvertFrom-Json

@@ -1,5 +1,13 @@
 # Openness 与运行时通道的边界
 
+## V20/V21 host 与 worker 的就绪状态
+
+V20/V21 MCP host 在 TIA 未安装、检测到的 TIA 版本不匹配、Openness DLL 无法初始化或用户不在 `Siemens TIA Openness` 组时仍可提供 MCP 诊断。`InitializeEnvironment`、`GetEnvironmentDiagnostics` 和 `GetOpennessWorkerStatus` 显示失败原因与修复建议。需要原生 TIA 的工具在 dispatch 前返回 `RESOURCE_UNAVAILABLE`；环境门禁拒绝时，V4 元数据为 `rejected-before-operation` / `not-started`。读取、离线分类和诊断工具可继续使用。
+
+隔离运行时，MCP transport、身份验证和诊断由 host 提供，Openness 调用由同一 V20/V21 EXE 的 worker 进程承担。worker 已接收调用后发生超时或崩溃时，不得报告为“操作前拒绝”；需要先检查工程实际状态。重启 worker 后必须重新连接并显式绑定目标工程。4.0 发布版保持默认隔离关闭，直到本页之外的 VM 验收完成；运行手册见[worker 隔离指南](../guides/openness-worker-isolation.md)。
+
+For an isolated call, a timeout or crash after dispatch may leave the native outcome unknown. Inspect the project before retrying, restart only an idle/faulted worker, then explicitly connect and bind again. Isolation does not make a dispatched TIA operation transactional or cancellable.
+
 本页描述 v3.2.0 当前实现和已知现场问题。八版入口并不具有同一套能力，先核对[版本矩阵](../reference/version-tools.md)与当前服务 `GetToolUsage`。官方 API 存在、工具可列出、离线测试通过、真实工程执行成功是不同证据。
 
 ## 已知未解决的现场问题

@@ -6,6 +6,12 @@
 `src/Engine/`，`L/` = `src/Logic/`，`S/` = `src/Studio/`。
 P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
+## V20/V21 服务在 Openness 未就绪时启动（P6-54）
+
+V20/V21 MCP host startup no longer exits solely because TIA is absent, the detected major version differs, or Openness initialization/user-group checks fail. It records a shared readiness state for Bootstrap, the environment doctor, and tool admission. `RESOURCE_UNAVAILABLE` with resource `tia-openness-environment` is returned before a TIA-dependent native call; the V4 outcome is `rejected-before-operation` and execution is `not-started`. Diagnostic and offline-classified tools remain available. Explicit CLI verbs, `doctor`, and syntax/runtime exit codes keep their command behavior.
+
+Isolation uses one build property, `TiaMcpWorkerIsolationDefault`, recorded as `workerIsolation.enabledByDefault` in the release build record. Release builds set it to `false` until the V20/V21 real-machine acceptance in `docs/reference/real-machine-ledger.md` passes. `--isolate-openness` and `--no-isolate-openness` override that default for MCP host invocations. Client config generation does not add either switch. The Workbench environment page distinguishes a running engine from a ready Openness environment, and the call panel identifies calls dispatched to `engine-worker`.
+
 ## G7：运行时资源定位
 
 ### MCP 写操作审批（P6-44）

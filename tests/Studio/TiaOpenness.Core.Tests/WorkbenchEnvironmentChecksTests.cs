@@ -37,7 +37,7 @@ public sealed class WorkbenchEnvironmentChecksTests
     {
         var fixture = new ProbeFixture();
         if (id == "installations") fixture.Report.Installations.Clear();
-        else if (id is "membership" or "framework") fixture.Report.Checks.Single(c => c.Id == (id == "membership" ? "TIA-GROUP" : "ENV-NETFX")).Status = CheckStatus.Fail;
+        else if (id is "membership" or "framework" or "openness-readiness") fixture.Report.Checks.Single(c => c.Id == (id == "membership" ? "TIA-GROUP" : id == "framework" ? "ENV-NETFX" : "TIA-INSTALL")).Status = CheckStatus.Fail;
         else if (id == "runtime" || id.StartsWith("engine-")) fixture.Sources.FileExists = _ => false;
         else if (id == "data") fixture.Sources.Writable = _ => false;
         else if (id == "port") fixture.Sources.PortOwners = _ => ["127.0.0.1:8765 PID=12 expected-host"];
@@ -51,7 +51,7 @@ public sealed class WorkbenchEnvironmentChecksTests
     public void Every_check_preserves_unknown_when_inspection_is_denied(string id)
     {
         var fixture = new ProbeFixture();
-        if (id is "installations" or "membership" or "framework") fixture.Sources.Doctor = () => throw new UnauthorizedAccessException("denied");
+        if (id is "installations" or "membership" or "openness-readiness" or "framework") fixture.Sources.Doctor = () => throw new UnauthorizedAccessException("denied");
         else if (id == "runtime" || id.StartsWith("engine-")) fixture.Sources.FileExists = _ => throw new UnauthorizedAccessException("denied");
         else if (id == "data") fixture.Sources.Writable = _ => throw new UnauthorizedAccessException("denied");
         else if (id == "port") fixture.Sources.PortOwners = _ => throw new UnauthorizedAccessException("denied");
@@ -82,6 +82,20 @@ public sealed class WorkbenchEnvironmentChecksTests
         var data = fixture.Check("data");
         Assert.Equal("Fallback", data.Result); Assert.Contains(fixture.Context.DataRoot, data.Evidence);
         Assert.Contains(fixture.Context.ConfigDirectory, data.Evidence); Assert.Contains(fixture.Context.LogsDirectory, data.Evidence);
+    }
+
+    [Fact]
+    public void Engine_can_start_for_diagnostics_when_TIA_readiness_fails()
+    {
+        var fixture = new ProbeFixture();
+        fixture.Report.Checks.Single(c => c.Id == "TIA-INSTALL").Status = CheckStatus.Fail;
+        fixture.Report.Checks.Single(c => c.Id == "TIA-INSTALL").Detail = "no installation found";
+        fixture.Report.Checks.Single(c => c.Id == "TIA-INSTALL").Remedy = "Install TIA Portal with Openness.";
+        var finding = fixture.Check("openness-readiness");
+        Assert.Equal(EnvironmentFindingStatus.Fail, finding.Status);
+        Assert.Equal("NotReady", finding.Result);
+        Assert.Contains("MCP engine can start", finding.Evidence);
+        Assert.Contains("Install TIA Portal with Openness", finding.Evidence);
     }
 
     [Theory]
@@ -141,7 +155,8 @@ public sealed class WorkbenchEnvironmentChecksTests
         public DoctorReport Report { get; } = new()
         {
             Installations = [new() { Version = "21.0.0.0", EngineeringDllPath = "fake/PublicAPI/net48/Siemens.Engineering.Base.dll" }],
-            Checks = [new() { Id = "ENV-NETFX", Status = CheckStatus.Pass, Detail = "Release 528040" }, new() { Id = "TIA-GROUP", Status = CheckStatus.Pass, Detail = "token" }],
+            Checks = [new() { Id = "ENV-NETFX", Status = CheckStatus.Pass, Detail = "Release 528040" }, new() { Id = "TIA-GROUP", Status = CheckStatus.Pass, Detail = "token" },
+                new() { Id = "TIA-INSTALL", Status = CheckStatus.Pass, Detail = "V21 installed" }],
         };
         public EnvironmentCheckContext Context { get; } = new()
         {

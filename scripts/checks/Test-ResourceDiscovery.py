@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import queue
 import secrets
+import shutil
 import socket
 import subprocess
 import threading
@@ -21,6 +22,18 @@ from tool_usage_checks import check_usage, unwrap_usage
 def require(condition, message):
     if not condition:
         raise AssertionError(message)
+
+
+def sdk_only_installation(public_api: Path, major: int, temp_root: Path) -> Path:
+    """Create a TIA-free installation layout so the real EXE can resolve SDK assemblies."""
+    installation = temp_root / "sdk-only-fixtures" / f"Portal V{major}"
+    destination = installation / "PublicAPI" / f"V{major}"
+    if major == 21:
+        destination /= "net48"
+    require(public_api.is_dir(), f"V{major} PublicAPI directory is missing: {public_api}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(public_api, destination)
+    return installation
 
 
 @contextmanager

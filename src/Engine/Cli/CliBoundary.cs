@@ -42,7 +42,7 @@ namespace TiaMcpServer.Cli
                 return;
             }
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            allowed.UnionWith(new[] { "--with-ui", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--full", "--lite", "--isolate-openness", "--worker-timeout-seconds" });
+            allowed.UnionWith(new[] { "--with-ui", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--full", "--lite", "--isolate-openness", "--no-isolate-openness", "--worker-timeout-seconds" });
             switch (verb)
             {
                 case "gen": allowed.UnionWith(new[] { "--dry-run", "--json" }); break;

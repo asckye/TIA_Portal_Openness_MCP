@@ -133,7 +133,7 @@ namespace TiaMcpServer.Isolation
                 bool controlBridge = tool.Name == "CallTool" && request.Params?.Arguments != null &&
                     request.Params.Arguments.TryGetValue("name", out var target) && target.ValueKind == JsonValueKind.String && IsControl(target.GetString());
                 if (IsControl(tool.Name) || controlBridge) return await local.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-                using var journal = InvocationJournal.Observe(Guid.NewGuid().ToString("N"), tool.Name, "engine", McpServer.ReleaseKey,
+                using var journal = InvocationJournal.Observe(Guid.NewGuid().ToString("N"), tool.Name, "engine-worker", McpServer.ReleaseKey,
                     McpServer.IsWriteTool(tool.Name), () => JsonSerializer.Serialize(request.Params?.Arguments, McpJsonUtilities.DefaultOptions));
                 CallToolResult Recorded(CallToolResult result)
                 {
@@ -163,13 +163,28 @@ namespace TiaMcpServer.Isolation
                             envelope["error"]?["code"]?.GetValue<int>() == -32601
                                 ? (ErrorDetails)new ToolNotFoundDetails(request.Params?.Name)
                                 : new InvalidArgumentDetails("arguments", Array.Empty<string>())), supervisor));
-                    return Recorded(JsonSerializer.Deserialize<CallToolResult>(envelope["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
-                        ?? throw new InvalidDataException("Worker returned no tool result."));
+                    var result = JsonSerializer.Deserialize<CallToolResult>(envelope["result"]!.ToJsonString(), McpJsonUtilities.DefaultOptions)
+                        ?? throw new InvalidDataException("Worker returned no tool result.");
+                    CaptureEnvironmentUnavailable(result);
+                    return Recorded(result);
                 }
                 catch (WorkerCallException ex) { return Recorded(Error(tool.Name, ex, supervisor)); }
                 catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
                 { return Recorded(McpServer.V4Reject(tool.Name, McpServer.InvalidInput("arguments"))); }
             }
+        }
+
+        private static void CaptureEnvironmentUnavailable(CallToolResult result)
+        {
+            var body = result.StructuredContent;
+            if (body is not JsonObject payload || (string?)payload["error"]?["code"] != "RESOURCE_UNAVAILABLE"
+                || (string?)payload["error"]?["details"]?["resource"] != "tia-openness-environment") return;
+            var environment = payload["data"]?["environment"];
+            string? cause = (string?)environment?["cause"];
+            string? fix = (string?)environment?["recommendedFix"];
+            string? fixZh = (string?)environment?["recommendedFixZh"];
+            if (!string.IsNullOrWhiteSpace(cause) && !string.IsNullOrWhiteSpace(fix))
+                Runtime.OpennessReadiness.MarkUnavailable(cause!, fix!, fixZh ?? fix!);
         }
     }
 }

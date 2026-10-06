@@ -12,6 +12,7 @@ import importlib.util
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -99,6 +100,10 @@ def capture(args):
         if release in executables:
             raise ValueError('Duplicate executable override for V' + release)
         executables[release] = Path(path).resolve()
+    fixture_root = args.output.parent / ('.' + args.output.name + '-sdk-only-fixtures')
+    if args.harness is None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        fixture_root.mkdir()
     for release in args.releases:
         exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         snapshot = {'formatVersion': FORMAT_VERSION, 'release': release}
@@ -106,10 +111,12 @@ def capture(args):
             public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':
                 public_api /= 'net48'
+            portal_root = (resources.sdk_only_installation(public_api, int(release), fixture_root)
+                           if args.harness is None else public_api)
             rosters = {}
             for profile in ('full', 'lite'):
-                with resources.server(exe, public_api, int(release), 'stdio', profile,
-                                      args.harness.resolve(), public_api,
+                with resources.server(exe, portal_root, int(release), 'stdio', profile,
+                                      args.harness.resolve() if args.harness else None, public_api,
                                       env_overrides={"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"}) as (rpc, _, logs):
                     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
                         'capabilities': {}, 'clientInfo': {'name': 'contract-snapshot', 'version': '1'}})
@@ -164,6 +171,8 @@ def capture(args):
                         raise ValueError('Missing Foundation D1 disclosure: ' + entry)
         snapshots[release] = snapshot
         print(f'Captured V{release}: {len(snapshot["tools"])} tools', flush=True)
+    if args.harness is None:
+        shutil.rmtree(fixture_root)
     # Do not leave a partially captured baseline when a host fails.
     args.output.mkdir(parents=True, exist_ok=True)
     for release, snapshot in snapshots.items():
@@ -391,7 +400,8 @@ def main():
     commands.add_parser('self-test', help='Exercise capability/output/schema negative cases').set_defaults(run=self_test)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', type=Path, required=True)
-    capture_parser.add_argument('--harness', type=Path, required=True)
+    capture_parser.add_argument('--harness', type=Path,
+                                help='Optional test host harness; by default V20/V21 run as the real EXE')
     capture_parser.add_argument('--output', type=Path, required=True)
     capture_parser.add_argument('--releases', nargs='+', choices=RELEASES, default=RELEASES)
     capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH',

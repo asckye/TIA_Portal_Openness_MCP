@@ -230,12 +230,39 @@ namespace TiaMcpServer.ModelContextProtocol
                     Transport = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
                 };
 
-                try { env.OpennessGroupOk = Siemens.Openness.IsUserInGroupNoFix(); }
-                catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
+                bool isolatedParent = TiaMcpServer.Isolation.IsolatedWorkerHost.Current != null
+                    && !TiaMcpServer.Isolation.IsolatedWorkerHost.IsChild;
+                if (Runtime.OpennessReadiness.GroupOk.HasValue) env.OpennessGroupOk = Runtime.OpennessReadiness.GroupOk.Value;
+                else if (isolatedParent) env.OpennessGroupOk = Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup();
+                else if (Runtime.OpennessReadiness.Ready)
+                {
+                    try { env.OpennessGroupOk = Siemens.Openness.IsUserInGroupNoFix(); }
+                    catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
+                }
+
+                if (isolatedParent && Runtime.OpennessReadiness.Ready)
+                {
+                    if (env.OpennessGroupOk != true)
+                    {
+                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
+                        const string fix = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+                        Runtime.OpennessReadiness.MarkUnavailable(cause, fix, fix, false);
+                    }
+                    else
+                    {
+                        var check = Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, env.TiaVersionDetected)
+                            .FirstOrDefault(item => item.Gating && !item.Ok);
+                        if (check != null)
+                            Runtime.OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? "Run `tia doctor` for repair steps.",
+                                check.FixZh ?? check.FixEn ?? "Run `tia doctor` for repair steps.", true);
+                        else Runtime.OpennessReadiness.MarkReady(true);
+                    }
+                }
 
                 var portalDto = new BootstrapPortal();
                 try
                 {
+                    if (!Runtime.OpennessReadiness.Ready) throw new InvalidOperationException("TIA Openness is not ready.");
                     var st = _session.GetState();
                     portalDto.Connected = st?.IsConnected;
                     portalDto.ProjectName = st?.Project;
@@ -246,10 +273,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 string nextTool;
                 string reason;
-                if (env.OpennessGroupOk != true)
+                if (!Runtime.OpennessReadiness.Ready)
+                {
+                    if (env.OpennessGroupOk == false)
+                    {
+                        nextTool = "EnsureOpennessUserGroup";
+                    }
+                    else if (env.TiaVersionDetected == null)
+                    {
+                        nextTool = "(install TIA Portal)";
+                    }
+                    else
+                    {
+                        nextTool = "(repair TIA Openness environment)";
+                    }
+                    reason = Runtime.OpennessReadiness.Guidance(Runtime.EnvironmentDoctor.PreferChinese);
+                }
+                else if (env.OpennessGroupOk != true)
                 {
                     nextTool = "EnsureOpennessUserGroup";
-                    reason = "Current user is not in 'Siemens TIA Openness' Windows group; cannot use Openness API.";
+                    reason = "Current user is not in 'Siemens TIA Openness' Windows group; add the user to this local group, sign out and back in, then restart the MCP client.";
                 }
                 else if (env.TiaVersionInUse == null && env.TiaVersionDetected == null)
                 {
@@ -288,7 +331,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     IsLiteProfile() ? "FindTools searches all tools in this release; CallTool invokes a discovered tool." : "All tools in this release are listed." };
                 var limits = new[] { "Availability depends on the selected release, target object and installed options; read the selected tool's contract and example evidence." };
 
-                bool ready = env.OpennessGroupOk == true && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
+                bool ready = Runtime.OpennessReadiness.Ready && env.OpennessGroupOk == true
+                    && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
 
                 return new ResponseBootstrap
                 {

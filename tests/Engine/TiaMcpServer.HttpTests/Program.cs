@@ -24,6 +24,24 @@ internal static partial class Program
     private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
     private static string Reply(object id, object value) => Json.Serialize(new { jsonrpc = "2.0", id, result = value });
     private static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
+    private static void WorkerIsolationDefaultTests()
+    {
+        var program = Server.GetType("TiaMcpServer.Program", true)!;
+        var resolveDefault = program.GetMethod("WorkerIsolationEnabledByDefault", All)!;
+        bool releaseDefault = (bool)resolveDefault.Invoke(null, new object[] { Server })!;
+        bool testDefault = (bool)resolveDefault.Invoke(null, new object[] { Assembly.GetExecutingAssembly() })!;
+        Check(!releaseDefault && testDefault, "Worker isolation build metadata did not resolve false/true defaults.");
+        var cli = FindServerType(Server, "TiaMcpServer.CliOptions");
+        object ParseOptions(string[] values) => cli.GetMethod("ParseArgs", All)!.Invoke(null, new object[] { values })!;
+        bool Isolated(object options) => (bool)cli.GetProperty("IsolateOpenness", All)!.GetValue(options)!;
+        bool Explicit(object options) => (bool)cli.GetProperty("IsolateOpennessExplicit", All)!.GetValue(options)!;
+        var forceOn = ParseOptions(new[] { "--isolate-openness" });
+        var forceOff = ParseOptions(new[] { "--no-isolate-openness" });
+        Check(Isolated(forceOn) && Explicit(forceOn) && !Isolated(forceOff) && Explicit(forceOff),
+            "Isolation force-on/off switches did not override the build default.");
+        Passed += 2;
+        Console.WriteLine("PASS worker isolation build defaults false/true and explicit force-on/off switches");
+    }
     private static Dictionary<string, object> GetToolUsage(string toolName = "", string query = "", string language = "",
         string exampleId = "", string exampleKind = "all")
     {
@@ -341,7 +359,12 @@ internal static partial class Program
         // which emits a UTF-8 BOM when the console code page is 65001 and the engine has not replaced it.
         try { Console.InputEncoding = new System.Text.UTF8Encoding(false); } catch (IOException) { }
         try {
-            if(args.Length > 0 && args[0] == "worker-fixture") return RunWorkerFixture(args);
+            if(args.Length > 0 && args[0] == "worker-fixture") {
+                if(!Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>()
+                    .Any(attribute => attribute.Key == "TiaMcpTestWorkerDouble" && attribute.Value == "enabled"))
+                    throw new InvalidOperationException("The worker fixture requires a TiaMcpTestWorkerDouble test build.");
+                return RunWorkerFixture(args);
+            }
             if(args.Length > 0 && args[0] == "stdin-hex-fixture") {
                 using var input = Console.OpenStandardInput();
                 using var bytes = new MemoryStream();
@@ -687,6 +710,10 @@ internal static partial class Program
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;
                 var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;
+                if(args[1] == "protocol-host" && Environment.GetEnvironmentVariable("TIA_MCP_TEST_READINESS_UNAVAILABLE") == "1") {
+                    FindServerType(Server, "TiaMcpServer.Runtime.OpennessReadiness").GetMethod("MarkUnavailable",All)!
+                        .Invoke(null,new object[]{"Test-only Openness readiness refusal.","Test-only repair guidance.","Test-only repair guidance.",null!});
+                }
                 if(args[1] == "isolated-worker-host") {
                     isolated.GetMethod("BeginChild",All)!.Invoke(null,new[]{options});
                 } else if((bool)cli.GetProperty("IsolateOpenness")!.GetValue(options)!) {
@@ -709,13 +736,20 @@ internal static partial class Program
                 Console.WriteLine("PASS actual V" + major + " EXE " + args[3] + ": 18 HMI traversal assertions, 0 failed");
                 return 0;
             }
+            // Single-purpose modes (lease holders, hmi-only, ...) keep their own output and counts; the isolation
+            // default checks run in the full mode and on their own.
+            if(args.Skip(1).Contains("worker-isolation-defaults-only")) {
+                WorkerIsolationDefaultTests();
+                Console.WriteLine("COMPLETE: "+Passed+" worker isolation default checks passed");
+                return 0;
+            }
             bool baseline=args.Skip(1).Contains("baseline");
             if(args.Skip(1).Contains("router-only")) {
                 await RouterTests();
                 Console.WriteLine("COMPLETE: "+Passed+" router checks passed; no network listener started");
                 return 0;
             }
-            if(!baseline) await RouterTests();
+            if(!baseline) { WorkerIsolationDefaultTests(); await RouterTests(); }
             await HttpTest(baseline);
             Console.WriteLine("COMPLETE: "+Passed+" passed; tested actual EXE "+System.Diagnostics.FileVersionInfo.GetVersionInfo(exe).FileVersion);
             return 0;

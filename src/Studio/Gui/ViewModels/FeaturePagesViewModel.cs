@@ -194,7 +194,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 public sealed record CallRow(CallRecord Record)
 {
     public string Time => Record.Time.ToLocalTime().ToString("HH:mm:ss");
-    public string Host => Record.Host + (Record.Release.Length == 0 ? "" : " · " + Record.Release);
+    public string Host => (Record.Host == "engine-worker" ? Loc.Current["Calls.WorkerDispatched"] : Record.Host)
+        + (Record.Release.Length == 0 ? "" : " · " + Record.Release);
     public string Tool => Record.Tool;
     public string ReadWrite => Loc.Current[Record.IsWrite ? "Calls.Write" : "Calls.Read"];
     public FeatureTone WriteTone => Record.IsWrite ? FeatureTone.Warning : FeatureTone.Muted;

@@ -47,10 +47,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 bool envOk = checks.All(c => c.Ok);
                 string? firstEnvProblem = checks.FirstOrDefault(c => !c.Ok)?.Name;
+                bool isolatedParent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
 
                 // 2) Openness group membership (+ optional auto-fix)
                 bool groupOk;
-                if (fix)
+                if (!Runtime.OpennessReadiness.Ready)
+                {
+                    groupOk = Runtime.OpennessReadiness.GroupOk == true;
+                    checks.Add(new DoctorCheck
+                    {
+                        Name = "TIA Openness startup",
+                        Ok = false,
+                        Detail = Runtime.OpennessReadiness.Cause,
+                        Fix = Runtime.OpennessReadiness.FixEn
+                    });
+                }
+                else if (isolatedParent)
+                {
+                    groupOk = Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup();
+                }
+                else if (fix)
                 {
                     try { groupOk = await Siemens.Openness.IsUserInGroup(); }
                     catch /* swallow(env-probe): a failed membership check or repair is reported as groupOk=false */ { groupOk = false; }
@@ -68,9 +84,31 @@ namespace TiaMcpServer.ModelContextProtocol
                     Fix = groupOk ? null : "Run GetEnvironmentDiagnostics with fix=true (prompts UAC to add you), or manually add your Windows user to the 'Siemens TIA Openness' local group and sign out/in. Admin rights required."
                 });
 
+                if (isolatedParent && Runtime.OpennessReadiness.Ready)
+                {
+                    var failedPrerequisite = checks.FirstOrDefault(check => !check.Ok && check.Name != "Openness user group"
+                        && check.Name != "TIA connection / project");
+                    if (failedPrerequisite != null)
+                    {
+                        var source = Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, inUse ?? detected)
+                            .FirstOrDefault(check => !check.Ok);
+                        var cause = source?.DetailEn ?? failedPrerequisite.Detail ?? "TIA Openness environment is not ready.";
+                        var repair = source?.FixEn ?? failedPrerequisite.Fix ?? "Run `tia doctor` for repair steps.";
+                        Runtime.OpennessReadiness.MarkUnavailable(cause, repair,
+                            source?.FixZh ?? source?.FixEn ?? repair, groupOk);
+                    }
+                    else if (!groupOk)
+                    {
+                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
+                        const string repair = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+                        Runtime.OpennessReadiness.MarkUnavailable(cause, repair, repair, false);
+                    }
+                    else Runtime.OpennessReadiness.MarkReady(true);
+                }
+
                 // 3) Connection + project state
                 bool connected = false; string? projectName = null;
-                try { var st = EngineServices.Get<Siemens.Portal>().GetState(); connected = st?.IsConnected ?? false; projectName = st?.Project; }
+                try { if (Runtime.OpennessReadiness.Ready) { var st = EngineServices.Get<Siemens.Portal>().GetState(); connected = st?.IsConnected ?? false; projectName = st?.Project; } }
                 catch { /* swallow(probe-optional): unavailable session state keeps the disconnected diagnostic */ }
                 bool hasProject = !string.IsNullOrWhiteSpace(projectName) && projectName != "-";
                 checks.Add(new DoctorCheck

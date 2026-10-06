@@ -2,12 +2,12 @@
 
 Run from the source checkout with --bundle-root pointing at an extracted package.
 The checker copies it to a path containing spaces and Chinese characters, applies
-a temporary read-only ACL, and enumerates every packaged engine through MCP STDIO.
-Foundation hosts are explicitly started with --offline. No tool which reaches TIA
-is called. The write probe is CreateDevice on the V21 engine (a catalog WRITE tool whose
-example arguments pass admission); the default-on approval guard must reject it as
-workbench-unavailable before dispatch. Foundation hosts stop writes at worker admission
-without TIA, so they cannot show the approval decision here.
+a temporary read-only ACL, and enumerates every packaged product through MCP.
+Foundation hosts are explicitly started with --offline. V20/V21 run as real EXEs over
+STDIO and local HTTP with isolation off and on. A copied PublicAPI SDK-only fixture
+resolves API assemblies; it contains no TIA executable and never connects to TIA or a
+PLC. The approval probe uses RestartOpennessWorker, a local diagnostic write that does
+not reach Openness.
 
 The check also probes the root launcher with a temporary target executable, verifies
 that an invalid explicit bundle root does not fall back to the environment, checks
@@ -16,6 +16,8 @@ It requires Windows, .NET 10 SDK, the .NET Framework 4.8 launcher prerequisite,
 and an extracted release bundle. The read-only ACL and temporary copy are removed
 when the run ends. Hosts run with LOCALAPPDATA/APPDATA/TEMP inside the run's temp root,
 so the user-directory fallbacks are exercised without touching the real profile.
+The current user must not belong to the Siemens TIA Openness group. Pass the local SDK
+root with --public-api-root or set TIA_MCP_TEST_PUBLIC_API_ROOT.
 
 Examples:
   python scripts/checks/Test-RelocatedBundle.py --self-test
@@ -26,6 +28,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -38,6 +41,7 @@ import threading
 import time
 import unittest
 import uuid
+from contextlib import contextmanager
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,8 +51,9 @@ PROTOCOL_VERSION = "2024-11-05"
 OPENNESS_GROUP = "Siemens TIA Openness"
 # PublicAPI folders below --public-api-root, as Run-ReleaseBuild passes them to the engine builds.
 ENGINE_PUBLIC_API = {"20": ("TIA_V20_PublicAPI", "V20"), "21": ("TIA_V21_PublicAPI", "V21", "net48")}
-# (HttpTests.exe, PublicAPI root) when this machine cannot start the real V20/V21 engines (no Openness group).
-ENGINE_HOST: tuple[Path, Path] | None = None
+resource_spec = importlib.util.spec_from_file_location("resource_discovery", Path(__file__).with_name("Test-ResourceDiscovery.py"))
+resource_discovery = importlib.util.module_from_spec(resource_spec)
+resource_spec.loader.exec_module(resource_discovery)
 
 
 class CheckFailure(RuntimeError):
@@ -190,22 +195,25 @@ class StdioSession:
         self.close()
 
 
-def stdio_command(root: Path, key: str) -> list[str]:
+def foundation_stdio_command(root: Path, key: str) -> list[str]:
     exe = product_executable(root, key)
-    command = [str(exe), "--bundle-root", str(root)]
-    if key in FOUNDATION_KEYS:
-        command += ["--release-key", key, "--offline"]
-    else:
-        # The baseline rosters are the full profile; the engines default to lite.
-        command += ["--profile", "full"]
-    if key not in FOUNDATION_KEYS and ENGINE_HOST is not None:
-        # The harness loads the relocated engine's own host methods without the group check or Openness.Initialize.
-        harness, api_root = ENGINE_HOST
-        api = api_root.joinpath(*ENGINE_PUBLIC_API[key])
-        command = [str(harness), str(exe), "protocol-host", str(api), "--tia-major-version", key,
-                   "--tia-portal-location", str(api), "--bundle-root", str(root), "--transport", "stdio",
-                   "--profile", "full"]
-    return command
+    return [str(exe), "--bundle-root", str(root), "--release-key", key, "--offline"]
+
+
+def fake_engine_installations(public_api_root: Path, temp_root: Path) -> dict[str, Path]:
+    if not public_api_root.is_dir():
+        raise CheckFailure(f"PublicAPI SDK root does not exist: {public_api_root}")
+    fixtures: dict[str, Path] = {}
+    for key, api_parts in ENGINE_PUBLIC_API.items():
+        source = public_api_root.joinpath(*api_parts)
+        if not source.is_dir():
+            raise CheckFailure(f"V{key} PublicAPI SDK directory is missing: {source}")
+        install = temp_root / "sdk-only-fixtures" / f"Portal V{key}"
+        public_api = install / "PublicAPI" / f"V{key}"
+        public_api.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, public_api)
+        fixtures[key] = install
+    return fixtures
 
 
 def in_openness_group() -> bool:
@@ -215,15 +223,27 @@ def in_openness_group() -> bool:
                for row in csv.reader(result.stdout.splitlines()))
 
 
-def engine_group_refusal(root: Path, key: str, temp_root: Path) -> None:
-    """Without the Openness group the real engine must start from the relocated copy and stop at the group check."""
-    exe = product_executable(root, key)
-    result = subprocess.run([str(exe), "--bundle-root", str(root)], cwd=root, env=stdio_environment(temp_root),
-                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=90,
-                            text=True, encoding="utf-8", errors="replace")
-    if result.returncode != 2 or f"required group '{OPENNESS_GROUP}'" not in result.stdout:
-        raise CheckFailure(f"{key}: relocated engine did not stop at the Openness group check: exit={result.returncode}, "
-                           f"output={result.stdout[-1500:]}")
+@contextmanager
+def direct_engine_server(root: Path, key: str, installation: Path, temp_root: Path,
+                         transport: str, isolate: bool):
+    # Use only the locally copied SDK assemblies to resolve Openness types. These fixture folders
+    # contain no TIA executable, never connect to a Portal/PLC, and live outside the read-only bundle.
+    removed_names = ("TIA_MCP_DATA_DIRECTORY", "TIA_MCP_DIAGNOSTICS_DIRECTORY", "TIA_MCP_BUNDLE_ROOT")
+    saved = {name: os.environ.pop(name, None) for name in removed_names}
+    try:
+        with resource_discovery.server(product_executable(root, key), installation, int(key), transport, "full",
+                isolate=isolate, env_overrides={
+                    "TIA_MCP_BUNDLE_ROOT": str(root), "TEMP": str(temp_root), "TMP": str(temp_root),
+                    "LOCALAPPDATA": str(temp_root / "profile" / "local"),
+                    "APPDATA": str(temp_root / "profile" / "roaming"),
+                }) as session:
+            yield session
+    finally:
+        for name, value in saved.items():
+            if value is not None:
+                os.environ[name] = value
+            else:
+                os.environ.pop(name, None)
 
 
 def stdio_environment(temp_root: Path, bundle_root: Path | None = None) -> dict[str, str]:
@@ -241,7 +261,7 @@ def stdio_environment(temp_root: Path, bundle_root: Path | None = None) -> dict[
 
 
 def enumerate_tools(root: Path, key: str, expected: int, temp_root: Path) -> int:
-    with StdioSession(stdio_command(root, key), stdio_environment(temp_root), root) as session:
+    with StdioSession(foundation_stdio_command(root, key), stdio_environment(temp_root), root) as session:
         initialized = session.request("initialize", {
             "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {},
@@ -275,6 +295,76 @@ def enumerate_tools(root: Path, key: str, expected: int, temp_root: Path) -> int
         return len(tools)
 
 
+def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
+                         installation: Path, transport: str, isolate: bool) -> int:
+    mode = "isolation-on" if isolate else "build-default-off"
+    with direct_engine_server(root, key, installation, temp_root, transport, isolate) as (rpc, _http, logs):
+        initialized = rpc("initialize", "initialize", {
+            "protocolVersion": PROTOCOL_VERSION, "capabilities": {},
+            "clientInfo": {"name": "p6-54-relocation-check", "version": "1"},
+        })
+        if not initialized or not isinstance(initialized.get("result"), dict):
+            raise CheckFailure(f"V{key} {transport} {mode}: MCP initialize failed: {logs[-10:]}")
+        rpc("notifications/initialized", notification=True)
+        roster: list[dict] = []
+        cursor = None
+        seen: set[str] = set()
+        while True:
+            reply = rpc("tools/list", "list" if cursor is None else "list-" + cursor,
+                        {} if cursor is None else {"cursor": cursor})
+            page = reply.get("result", {}).get("tools")
+            if not isinstance(page, list):
+                raise CheckFailure(f"V{key}: tools/list returned no array")
+            roster.extend(page)
+            cursor = reply.get("result", {}).get("nextCursor")
+            if cursor is None:
+                break
+            if cursor in seen:
+                raise CheckFailure(f"V{key}: tools/list repeated a cursor")
+            seen.add(cursor)
+        names = [tool.get("name") for tool in roster]
+        if len(names) != len(set(names)) or len(names) != expected:
+            raise CheckFailure(f"V{key} {transport} {mode}: tool roster {len(names)} != {expected}")
+
+        next_id = 0
+        def call(name: str, arguments: dict | None = None) -> dict:
+            nonlocal next_id
+            next_id += 1
+            reply = rpc("tools/call", f"call-{next_id}", {"name": name, "arguments": arguments or {}})
+            return extract_v4_body(reply)
+
+        status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
+        if status.get("enabled") is not isolate or status.get("enabledByDefault") is not False:
+            raise CheckFailure(f"V{key} {transport} {mode}: unexpected worker default/state: {status}")
+        bootstrap = call("InitializeEnvironment")
+        reason = bootstrap.get("data", {}).get("recommendedReason") or ""
+        if bootstrap.get("data", {}).get("ready") is not False or not reason:
+            raise CheckFailure(f"V{key} {transport} {mode}: Bootstrap omitted cause/fix: {bootstrap}")
+        doctor = call("GetEnvironmentDiagnostics", {"fix": False})
+        doctor_checks = doctor.get("data", {}).get("checks", [])
+        if not any(OPENNESS_GROUP in json.dumps(check, ensure_ascii=False) for check in doctor_checks):
+            raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted the Openness cause/fix: {doctor}")
+        if not any(check.get("fix") for check in doctor_checks if isinstance(check, dict)):
+            raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted repair steps: {doctor}")
+        diagnostic = call("GetSessionState")
+        if diagnostic.get("ok") is not True:
+            raise CheckFailure(f"V{key} {transport} {mode}: read-only session diagnostic stopped: {diagnostic}")
+
+        refusal = call("SaveProject")
+        if (refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
+                or refusal.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
+                or refusal.get("meta", {}).get("outcome") != "rejected-before-operation"
+                or refusal.get("meta", {}).get("execution") != "not-started"):
+            raise CheckFailure(f"V{key} {transport} {mode}: TIA write was not refused before dispatch: {refusal}")
+        evidence = refusal.get("data", {}).get("environment", {})
+        if not evidence.get("cause") or not evidence.get("recommendedFix"):
+            raise CheckFailure(f"V{key} {transport} {mode}: refusal omitted cause/fix: {refusal}")
+        status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
+        if status.get("environmentReady") is not False or not status.get("environmentCause"):
+            raise CheckFailure(f"V{key} {transport} {mode}: status did not retain environment-not-ready state: {status}")
+        return len(roster)
+
+
 def find_user_paths(temp_root: Path) -> dict[str, Path]:
     local_app_data = temp_root / "profile" / "local"
     return {
@@ -299,40 +389,33 @@ def approval_settings_state(config_path: Path) -> str:
     return "invalid-default"
 
 
-def write_approval_probe(root: Path, temp_root: Path, expected_enabled: bool) -> str:
+def write_approval_probe(root: Path, temp_root: Path, installation: Path, expected_enabled: bool) -> str:
     if not expected_enabled:
         raise CheckFailure("Approval probe was requested while user settings explicitly disable approvals")
     key = "21"
-    command = stdio_command(root, key)
-    env = stdio_environment(temp_root)
     before_files = {}
     paths = find_user_paths(temp_root)
     audit = paths["audit"]
     if audit.exists():
         before_files = {p.name: (p.stat().st_size, p.stat().st_mtime_ns) for p in audit.glob("audit-*.jsonl")}
-    with StdioSession(command, env, root) as session:
-        session.request("initialize", {
-            "protocolVersion": PROTOCOL_VERSION,
-            "capabilities": {},
-            "clientInfo": {"name": "p6-42-approval-check", "version": "1"},
+    with direct_engine_server(root, key, installation, temp_root, "stdio", False) as (rpc, _http, logs):
+        rpc("initialize", "initialize", {
+            "protocolVersion": PROTOCOL_VERSION, "capabilities": {},
+            "clientInfo": {"name": "p6-54-approval-check", "version": "1"},
         })
-        session.request("notifications/initialized", {})
-        result = session.request("tools/call", {
+        rpc("notifications/initialized", notification=True)
+        # The readiness admission guard must stop this TIA write before dispatch on this
+        # no-TIA machine. It still exercises the production engine's user config/audit bootstrap.
+        result = rpc("tools/call", "approval-probe", {
             "name": "CreateDevice",
             "arguments": {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2"},
         })
-        assert result is not None
         body = extract_v4_body(result)
-        details = (body.get("error") or {}).get("details") or {}
-        if (body.get("error", {}).get("code") != "CONFIRMATION_REQUIRED"
-                or details.get("reason") != "workbench-unavailable"
+        if (body.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
+                or body.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
                 or (body.get("meta") or {}).get("outcome") != "rejected-before-operation"
                 or (body.get("meta") or {}).get("execution") != "not-started"):
-            raise CheckFailure(f"Default-on approval probe did not reject before operation: {body}")
-    if ENGINE_HOST is not None:
-        # The protocol-host harness skips the production bootstrap that opens the audit journal; the user-fallback
-        # audit and settings files are checked only when the real engine can start (a machine with TIA).
-        return "default-on (rejected before dispatch; audit/config fallback needs the real engine)"
+            raise CheckFailure(f"No-TIA approval probe did not refuse before native dispatch: {body}; logs={logs[-10:]}")
     if not audit.is_dir():
         raise CheckFailure(f"Approval probe did not create the user audit fallback: {audit}")
     changed = []
@@ -353,7 +436,7 @@ def write_approval_probe(root: Path, temp_root: Path, expected_enabled: bool) ->
                 matching = True
                 break
     if not matching:
-        raise CheckFailure("Audit fallback has no CreateDevice/V21 approval evidence")
+            raise CheckFailure("Audit fallback has no CreateDevice/V21 admission evidence")
     config_lock = paths["config"] / "approval.settings.lock"
     if not config_lock.is_file():
         raise CheckFailure(f"Approval settings did not resolve to the user config fallback: {config_lock}")
@@ -693,21 +776,24 @@ def run_bundle_check(args: argparse.Namespace) -> int:
             raise CheckFailure("Unexpected read-only probe file exists")
         print("PASS bundle root denies writes for the current user")
 
-        global ENGINE_HOST
-        if not in_openness_group():
-            for key in ("20", "21"):
-                engine_group_refusal(destination, key, user_temp)
-                print(f"PASS {key}: relocated engine stops at the '{OPENNESS_GROUP}' group check (no TIA on this machine)")
-            if args.host_harness is None or args.public_api_root is None:
-                raise CheckFailure("This user is not in the Openness group: pass --host-harness and --public-api-root "
-                                   "to run the V20/V21 MCP checks through the protocol-host harness")
-            ENGINE_HOST = (args.host_harness.resolve(), args.public_api_root.resolve())
-            print("NOTE V20/V21 MCP checks run the relocated engines through the protocol-host harness")
+        if in_openness_group():
+            raise CheckFailure("This check requires a user outside the Siemens TIA Openness group")
+        public_api_root = args.public_api_root.resolve()
+        installations = fake_engine_installations(public_api_root, user_temp)
         results = {}
         for key in RELEASE_KEYS:
             count = enumerate_tools(destination, key, counts[key], user_temp)
             results[key] = count
             print(f"PASS {key}: STDIO tools/list {count}/{counts[key]}")
+        engine_modes = {}
+        for key in ("20", "21"):
+            engine_modes[key] = []
+            for transport in ("stdio", "http"):
+                for isolate in (False, True):
+                    count = check_engine_startup(destination, key, counts[key], user_temp,
+                                                 installations[key], transport, isolate)
+                    engine_modes[key].append(f"{transport}/{'isolation-on' if isolate else 'default-off'}={count}")
+                    print(f"PASS V{key}: real EXE {transport}, isolation={'on' if isolate else 'default-off'}, tools/list {count}")
         invalid_count = invalid_root_checks(destination, user_temp)
         print(f"PASS invalid explicit --bundle-root refused without fallback: {invalid_count}/{len(RELEASE_KEYS)} release keys")
 
@@ -716,7 +802,7 @@ def run_bundle_check(args: argparse.Namespace) -> int:
         if settings == "explicit-disabled":
             approval = "SKIP (existing approval.settings disables approvals; left user preference intact)"
         else:
-            approval = write_approval_probe(destination, user_temp, True)
+            approval = write_approval_probe(destination, user_temp, installations["21"], True)
             print(f"PASS default-on write rejection and audit/config fallback: {approval}")
         verify_fallback_logs(destination, RELEASE_KEYS, user_temp)
         print("PASS logs resolved under the per-release user temp fallback")
@@ -730,6 +816,7 @@ def run_bundle_check(args: argparse.Namespace) -> int:
         print("\nRESULT: relocation/install checks passed")
         print(f"bundle={destination}")
         print(f"tools={json.dumps(results, sort_keys=True)}")
+        print(f"engineModes={json.dumps(engine_modes, sort_keys=True)}")
         print(f"invalidRoots={invalid_count}/{len(RELEASE_KEYS)} approval={approval}")
         return 0
     finally:
@@ -789,16 +876,17 @@ def main() -> int:
     parser.add_argument("--relocation-parent", type=Path)
     parser.add_argument("--dotnet", default="dotnet")
     parser.add_argument("--keep-relocation", action="store_true")
-    parser.add_argument("--host-harness", type=Path,
-                        help="HttpTests.exe for V20/V21 MCP checks when the user is not in the Openness group")
     parser.add_argument("--public-api-root", type=Path,
-                        help="folder holding TIA_V20_PublicAPI and TIA_V21_PublicAPI (with --host-harness)")
+                        default=Path(os.environ.get("TIA_MCP_TEST_PUBLIC_API_ROOT", "")) if os.environ.get("TIA_MCP_TEST_PUBLIC_API_ROOT") else None,
+                        help="SDK root holding TIA_V20_PublicAPI and TIA_V21_PublicAPI (or TIA_MCP_TEST_PUBLIC_API_ROOT)")
     args = parser.parse_args()
     if args.self_test:
         result = unittest.main(argv=[sys.argv[0]], exit=False, verbosity=2)
         return 0 if result.result.wasSuccessful() else 1
     if args.bundle_root is None:
         parser.error("--bundle-root is required unless --self-test is used")
+    if args.public_api_root is None:
+        parser.error("--public-api-root or TIA_MCP_TEST_PUBLIC_API_ROOT is required")
     try:
         return run_bundle_check(args)
     except (CheckFailure, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
