@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants Condition="'$(TestCompileSafety)' != 'false'">$(DefineConstants);PLC_SAFETY</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../../../src/Adapters/Native/Plc/CompileAdapter.cs" Link="CompileAdapter.cs" />
+  </ItemGroup>
+</Project>

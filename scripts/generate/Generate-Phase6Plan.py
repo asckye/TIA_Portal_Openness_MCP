@@ -444,6 +444,12 @@ for k in keys[-2:]:
 candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
     '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
 def candidate_example(entry, family, release):
+    if family == 'P6-COMPILE':
+        example = {"mode": "preview", "confirm": False, "offlinePolicy": "require"}
+        if entry == "CompileDevice": example.update(devicePath=["Device_1"], itemPath=[])
+        else: example["softwarePath"] = "HMI_RT_1" if entry == "CompileHmiDiagnostics" else "PLC_1"
+        if entry in ("CompilePlcSoftware", "CompilePlcDiagnostics"): example["password"] = ""
+        return example
     if family == 'P6-SOURCE':
         example = {'softwarePath': '', 'groupPath': ''}
         if entry != 'ListPlcExternalSources':

@@ -53,6 +53,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly bool sessionCandidate;
     private readonly bool saveCloseCandidate;
     private readonly bool sourceCandidate;
+    private readonly bool compileCandidate;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -74,6 +75,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             && (policyForTest?.Invoke("P6-CLOSE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-CLOSE")) == BehaviorPolicy.SafeV4;
         sourceCandidate = SourceContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-SOURCE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE")) == BehaviorPolicy.SafeV4;
+        compileCandidate = CompileContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+            && (policyForTest?.Invoke("P6-COMPILE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-COMPILE")) == BehaviorPolicy.SafeV4;
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
         var properties = schema["properties"]!.AsObject();
         JsonElement? typedSchema = null;
@@ -141,9 +144,10 @@ internal sealed class FoundationV4Tool : McpServerTool
             schema = JsonNode.Parse(SaveCloseContract.Schema(Name(source.Name)).GetRawText())!.AsObject();
             description = SaveCloseContract.Description;
         }
+        if (compileCandidate) { schema = JsonNode.Parse(CompileContract.Schema(Name(source.Name)).GetRawText())!.AsObject(); description = CompileContract.Description; }
         if (sourceCandidate) { schema = JsonNode.Parse(SourceContract.Schema(Name(source.Name)).GetRawText())!.AsObject(); description = SourceContract.Description; }
         tool = new Tool { Name = Name(source.Name), Description = description
-            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate && !sessionCandidate && !saveCloseCandidate && !sourceCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
+            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate && !sessionCandidate && !saveCloseCandidate && !sourceCandidate && !compileCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
@@ -171,6 +175,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
+            if (validation.Error != null && compileCandidate) return Recorded(FoundationV4Result.ImportCandidate(CompileSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && sourceCandidate) return Recorded(FoundationV4Result.ImportCandidate(SourceSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && saveCloseCandidate) return Recorded(FoundationV4Result.ImportCandidate(SaveCloseSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && sessionCandidate) return Recorded(FoundationV4Result.ImportCandidate(SessionCandidateSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
@@ -179,6 +184,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (compileCandidate) return Recorded(await ((FoundationTool)inner).InvokeCompileCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (sourceCandidate) return Recorded(await ((FoundationTool)inner).InvokeSourceCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (saveCloseCandidate) return Recorded(await ((FoundationTool)inner).InvokeSaveCloseCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (sessionCandidate) return Recorded(await ((FoundationTool)inner).InvokeSessionCandidateAsync(args, release, tool.Name, id, cancellationToken));

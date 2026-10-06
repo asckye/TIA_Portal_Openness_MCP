@@ -49,6 +49,7 @@ internal static class Program
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-DEVICE");
+            bool compileCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-COMPILE");
             bool sourceCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-SOURCE");
             bool saveCloseCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-CLOSE");
             bool sessionCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-SESSION");
@@ -59,8 +60,8 @@ internal static class Program
                     || importCandidateEnabled && m.Name == WorkerOperations.PlcImportCandidate
                     || exportCandidateEnabled && m.Name == WorkerOperations.PlcExportCandidate
                     || sessionCandidateEnabled && m.Name == WorkerOperations.SessionCandidate
-                    || saveCloseCandidateEnabled && m.Name == WorkerOperations.SaveCloseCandidate || sourceCandidateEnabled && m.Name == WorkerOperations.SourceCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
-            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0) + (exportCandidateEnabled ? 1 : 0) + (sessionCandidateEnabled ? 1 : 0) + (saveCloseCandidateEnabled ? 1 : 0) + (sourceCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
+                    || saveCloseCandidateEnabled && m.Name == WorkerOperations.SaveCloseCandidate || sourceCandidateEnabled && m.Name == WorkerOperations.SourceCandidate || compileCandidateEnabled && m.Name == WorkerOperations.CompileCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
+            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0) + (exportCandidateEnabled ? 1 : 0) + (sessionCandidateEnabled ? 1 : 0) + (saveCloseCandidateEnabled ? 1 : 0) + (sourceCandidateEnabled ? 1 : 0) + (compileCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
             var sessionOutcome=new WorkerSessionOutcomeState();
             bool disconnectAttempted=false;
             bool disconnected=false;
@@ -95,13 +96,13 @@ internal static class Program
                     readOnly=WorkerOperations.IsReadOnly(name);
                     if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                     var values = WorkerJson.ParseArguments(request.ArgumentsJson);
-                    if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate || name == WorkerOperations.SaveCloseCandidate || name == WorkerOperations.SourceCandidate)
+                    if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate || name == WorkerOperations.SaveCloseCandidate || name == WorkerOperations.SourceCandidate || name == WorkerOperations.CompileCandidate)
                     {
                         if (values.ContainsKey("bindingEpoch")) throw new ArgumentException("The worker owns the binding epoch.");
                         values["bindingEpoch"] = System.Text.Json.JsonSerializer.SerializeToElement(bindingEpoch);
                         var candidateMode = WorkerJson.Get(values, "mode");
                         string? mode = candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString();
-                        readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode) || WorkerOperations.IsSaveClosePreview(name, mode) || WorkerOperations.IsSourcePreview(name, mode);
+                        readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode) || WorkerOperations.IsSaveClosePreview(name, mode) || WorkerOperations.IsSourcePreview(name, mode) || WorkerOperations.IsCompilePreview(name, mode);
                     }
                     if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                     if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
@@ -129,7 +130,7 @@ internal static class Program
                         || result is TiaMcp.Adapters.Contracts.Candidates.ImportCandidateReply importCandidate && importCandidate.RequiresSessionReset
                         || result is TiaMcp.Adapters.Contracts.Candidates.ExportCandidateReply exportCandidate && exportCandidate.RequiresSessionReset
                         || result is TiaMcp.Adapters.Contracts.Candidates.SessionCandidateReply sessionCandidate && sessionCandidate.RequiresSessionReset
-                        || result is TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply saveCloseCandidate && saveCloseCandidate.RequiresSessionReset || result is TiaMcp.Adapters.Contracts.Candidates.SourceReply sourceCandidate && sourceCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
+                        || result is TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply saveCloseCandidate && saveCloseCandidate.RequiresSessionReset || result is TiaMcp.Adapters.Contracts.Candidates.SourceReply sourceCandidate && sourceCandidate.RequiresSessionReset || result is TiaMcp.Adapters.Contracts.Candidates.CompileReply compileCandidate && compileCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
                     if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) sessionOutcome.MarkUncertain();

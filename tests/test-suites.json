@@ -105,5 +105,17 @@
     "minimumPassed": 253,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "compile-candidate": {
+    "project": "tests/Engine/TiaMcpServer.CompileCandidateTests/CompileCandidate.Tests.csproj",
+    "minimumPassed": 17,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "compile-candidate-no-safety": {
+    "project": "tests/Engine/TiaMcpServer.CompileCandidateTests/CompileCandidate.Tests.csproj",
+    "minimumPassed": 17,
+    "maximumSkipped": 0,
+    "arguments": ["-p:TestCompileSafety=false"]
   }
 }

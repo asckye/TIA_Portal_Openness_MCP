@@ -433,6 +433,30 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -734,6 +758,30 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -1035,6 +1083,30 @@
     },
     {
       "releaseKey": "16",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -1336,6 +1408,30 @@
     },
     {
       "releaseKey": "17",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -1637,6 +1733,30 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -1934,6 +2054,30 @@
         "saveChanges": false,
         "discardChanges": false,
         "confirmDiscard": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
       }
     },
     {
@@ -2247,6 +2391,55 @@
         "saveChanges": false,
         "discardChanges": false,
         "confirmDiscard": false
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
       }
     },
     {
@@ -2717,6 +2910,55 @@
         "saveChanges": false,
         "discardChanges": false,
         "confirmDiscard": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CompilePlcDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "CompilePlcSoftware",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "PLC_1",
+        "password": ""
       }
     },
     {
