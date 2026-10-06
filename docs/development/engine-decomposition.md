@@ -86,8 +86,8 @@ P3-04 的接口沿用 `RunHmiStepTool` / `AcquireHmiEditAccess`，对应上文�
 J 表示需要设计判断，M 表示可按说明机械执行。
 
 1. P0-06 离线返回结构快照（FindTools、ListToolCategories、PreviewToolCall、断开时的 GetSessionState、离线构造器等）。
-2. **J** `ToolCatalog`、`EngineServices`、`EngineRegistration`，不迁移工具；同步 `Generate-ToolsListFromAssembly.ps1`、
-   `Test-MigrationReadAssembly.ps1`、`Test-VersionCatalogWiring.py` 与 `ToolBridgeFixtures`。
+2. **J** `ToolCatalog`、`EngineServices`、`EngineRegistration`，不迁移工具；同步 `HttpTests.exe generate-tools-list`、
+   `HttpTests.exe test-migration-read-assembly`、`Test-VersionCatalogWiring.py` 与 `ToolBridgeFixtures`。
 3. **M** HttpTests `EngineSurface` 辅助。
 4. **J** 内核接口：提取静态辅助，把 `ExactPlcForEngineering`、`ExactEngineeringHardware`、
    `ExactOpenEngineeringLibrary`、`ResolveHmiSoftwareOrThrow` 收入内核，加入 `AdoptProject`/`ReleaseProject`。

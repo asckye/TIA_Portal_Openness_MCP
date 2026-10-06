@@ -179,7 +179,7 @@ references and non-contract facet parameter/return types.
 
 The fifth fake-SDK project is `TiaMcpServer.DiagnosticMembershipTests`; it links the full
 engine's `Siemens/Openness.cs`, so it has no Foundation path to update. Worker isolation lives
-at `TiaMcp.Adapters/build/Test-WorkerIsolation.ps1` (there is no checks-directory copy) and has
+at `src/Adapters/build/Test-WorkerIsolation.cs` (there is no checks-directory copy) and has
 no old Foundation source path. Its selection checks now require exactly the selected adapter
 plus Contracts, correcting the obsolete single-reference assumption from before step B.
 The three required-file lists and solution files likewise have

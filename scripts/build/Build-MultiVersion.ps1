@@ -87,6 +87,14 @@ if($CompleteOnly) {
 } else {
     # Nothing in this stage reads full-engine outputs or previous release records.
     if(Test-Path -LiteralPath $pendingPath){Remove-Item -LiteralPath $pendingPath -Force}
+    $adapterInputEvidence=Join-Path $logs 'adapter-inputs'
+    Push-Location $repo
+    try {
+        $adapterInputArgs=@('run',(Join-Path $repo 'src/Adapters/build/Test-AdapterInputs.cs'),'--',
+            '--source-root',(Join-Path $repo 'src'),'--public-api-root',$api,'--evidence-directory',$adapterInputEvidence)
+        & $Dotnet @adapterInputArgs
+        if($LASTEXITCODE){throw 'Adapter input contract checks failed'}
+    } finally { Pop-Location }
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
 $weaver=Join-Path $repo 'build-tools/native-call-weaver/NativeCallWeaver.csproj'
 & $Dotnet build $weaver -c Release -v:q *> (Join-Path $logs 'weaver.log')
@@ -94,6 +102,14 @@ if($LASTEXITCODE){throw 'Native weaver build failed'}
 & (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') -Offline:$Offline *> (Join-Path $logs 'bundled-dotnet.log')
 if(!$?){throw 'Bundled .NET runtime layout failed'}
 & (Join-Path $PSScriptRoot 'Build-PlcAdapterWorkers.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -UseReferenceAssemblyPackage -EvidenceDirectory (Join-Path $logs 'adapters')
+$workerIsolationEvidence=Join-Path $logs 'worker-isolation'
+Push-Location $repo
+try {
+    $workerIsolationArgs=@('run',(Join-Path $repo 'src/Adapters/build/Test-WorkerIsolation.cs'),'--',
+        '--evidence-directory',$workerIsolationEvidence,'--native-call-weaver',(Join-Path $repo 'build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'))
+    & $Dotnet @workerIsolationArgs
+    if($LASTEXITCODE){throw 'Worker isolation checks failed'}
+} finally { Pop-Location }
 Invoke-IsolatedHostCheck 'studio-build-and-tests' $false {
     & (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
 }
@@ -200,6 +216,9 @@ if(-not $CompleteOnly) {
 $preparedFiles=@(Read-RuntimeFiles -Prepared)
 $evidence=@(Get-ChildItem -LiteralPath (Join-Path $logs 'adapters') -Filter 'coverage-*.json' -File)
 $evidence+=@(Get-ChildItem -LiteralPath $logs -Filter 'tools-*.json' -File)
+$evidence+=Get-Item -LiteralPath (Join-Path (Join-Path $logs 'adapter-inputs') 'input-results.json')
+$evidence+=Get-Item -LiteralPath (Join-Path (Join-Path $logs 'worker-isolation') 'worker-isolation-results.json')
+$evidence+=@(Get-ChildItem -LiteralPath (Join-Path $logs 'worker-isolation') -Filter 'coverage-*.json' -File)
 if($Test){$evidence+=Get-Item -LiteralPath (Join-Path $logs 'transport/tool-usage.json')}
 if($validation.approvalSafetyExecuted){$evidence+=Get-Item -LiteralPath (Join-Path (Join-Path $repo ([string]$validation.foundationApprovalResultPath)) 'result.json')}
 $evidenceRows=@($evidence | Sort-Object FullName | ForEach-Object {

@@ -14,6 +14,10 @@ import xml.etree.ElementTree as ET
 
 
 FORBIDDEN = re.compile(r"(?:TiaMcp\.Logic|Newtonsoft(?:\.Json)?|System\.Text\.Json|System\.Json|System\.Web\.Extensions|Utf8Json|Jil)(?:\b|/)", re.I)
+DEVELOPER_HELPERS = {
+    'src/Adapters/build/Test-AdapterInputs.cs',
+    'src/Adapters/build/Test-WorkerIsolation.cs',
+}
 
 
 def check(root):
@@ -53,7 +57,8 @@ def check(root):
                 continue
             if path.suffix in ('.csproj', '.props', '.targets'):
                 inspect(path)
-            elif path.suffix == '.cs' and FORBIDDEN.search(path.read_text(encoding='utf-8-sig')):
+            elif (path.suffix == '.cs' and path.relative_to(root).as_posix() not in DEVELOPER_HELPERS
+                  and FORBIDDEN.search(path.read_text(encoding='utf-8-sig'))):
                 errors.append(f'{path.relative_to(root)}: forbidden host/JSON source dependency')
     return errors
 

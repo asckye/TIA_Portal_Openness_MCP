@@ -182,7 +182,7 @@ foundation / foundation-api 的最低数量各减少上述 **10** 项；offline 
 | A | 删除 WorkerProtocol 项目、夹具和测试；删除 `offline-checks.yml` 中对应两行；更新 slnx、文档和必需文件清单 | 无 | 是 | 在第 E 步移植规则和测试之后（D7） |
 | B | 新建 `TiaMcp.Adapters.Contracts`：原样移动 DTO，增加错误类型和黄金 JSON 测试；适配器源码链接的公开 `TiaMcp.Versioning.TiaVersionCatalog` 改为 internal | 无（各版本织入清单不变） | 是 | 独立 |
 | C | `build/TiaFeatures.props`，并用评估测试证明各项目 DefineConstants 不变 | 无（IL 相同） | 是 | 只动引擎 props |
-| D（P4-02） | F 移到 `Native/` 与 `Policy/`，扩展面以委托实现；更新 `Adapter.Sources.props`、`AdapterSourceClosureTests`、5 个假 SDK 测试项目和 `Test-WorkerIsolation.ps1` | 无 | 是 | 独立 |
+| D（P4-02） | F 移到 `Native/` 与 `Policy/`，扩展面以委托实现；更新 `Adapter.Sources.props`、`AdapterSourceClosureTests`、5 个假 SDK 测试项目和 `Test-WorkerIsolation.cs` | 无 | 是 | 独立 |
 | E（P4-02） | PlcWorker、LegacyHost、TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 八版 PublicAPI 构建和离线冒烟后仍须按真机台账逐 Foundation 版本验收 | P4-E1 已统一 net48；P4-E2 信封先用 STJ，DTO codec 留给 P2-04 |
 | F（P4-03） | Studio 桥接进程和客户端改用通道；方法名不变 | 无 | 是 | 独立 |
 | G（P4-03） | Studio `ITiaSession` 在 `TiaOpenness.Core` 中基于扩展面重新实现；桥接进程加载织入的 `TiaMcp.Adapter.<key>`；删除 `StudioOpenness.V*` | 高（替换连接和遍历代码，新增织入） | 否（构建开关） | 独立 |
@@ -277,7 +277,7 @@ Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省�
 
 **领域扩展（P4-I0）**：证明工具统一为 [Compare-SharedNativePaths.py](../../scripts/checks/Compare-SharedNativePaths.py)、
 [SharedNativeIlReader.cs](../../scripts/checks/SharedNativeIlReader.cs) 和
-[Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1)。每个领域只新增
+[Test-SharedNativeMigration.cs](../../scripts/checks/Test-SharedNativeMigration.cs)。每个领域只新增
 `scripts/checks/shared-native/<domain>.json`，VCI 配置见 [vci.json](../../scripts/checks/shared-native/vci.json)。
 配置中的 `engine.types/releases` 声明引擎服务与编译版本，`adapter.releases` 列出需验证的适配器版本，
 `hosts` 按名称声明 Studio 和/或 Foundation 的类型与编译版本；每个类型的原有方法均须保持展开调用图。
@@ -348,7 +348,7 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 ```powershell
 python scripts/checks/Compare-SharedNativePaths.py --self-test
 python scripts/checks/Test-SharedNativeIlReader.py
-pwsh -File scripts/checks/Test-SharedNativeMigration.ps1 -Config scripts/checks/shared-native/vci.json -PublicApiRoot <本机SDK父目录> -BaselineDirectory bin-build/vci-baseline -BaselineRef '89401efa^' -OutputDirectory bin-build/vci-proof
+dotnet run scripts/checks/Test-SharedNativeMigration.cs -- --config scripts/checks/shared-native/vci.json --public-api-root <本机SDK父目录> --baseline-directory bin-build/vci-baseline --baseline-ref '89401efa^' --output-directory bin-build/vci-proof
 python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/shared-native/vci.json --evidence-from bin-build/vci-proof
 ```
 

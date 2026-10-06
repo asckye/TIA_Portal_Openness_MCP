@@ -9,7 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
     // One worked call per frequently used tool, placed next to its signature so callers can correct a refused call
     // without guessing parameters against TIA. The table is appended to protocol descriptions (McpServer.Profile.cs)
     // and used by FindTools / PreviewToolCall / CallTool refusals. The tools-list build gate checks every example
-    // against the real signatures (Generate-ToolsListFromAssembly.ps1 calls ValidateAgainst) to prevent drift.
+    // against the real signatures (the HttpTests generate-tools-list mode calls ValidateAgainst) to prevent drift.
     // Zero dependencies: linked into the offline suite.
     public static class ToolExamples
     {

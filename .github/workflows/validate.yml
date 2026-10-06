@@ -57,7 +57,7 @@ jobs:
           if ($LASTEXITCODE) { throw 'Crash evidence suite failed' }
           python scripts/checks/Test-DotnetSuites.py --suite write-guard
           if ($LASTEXITCODE) { throw 'Write guard suite failed' }
-          & ./scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
+          dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
           if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Script calls must use registered V4 tools
         shell: pwsh

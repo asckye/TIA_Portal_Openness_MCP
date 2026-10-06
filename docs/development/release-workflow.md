@@ -59,9 +59,12 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 2. 更新 `Version.props`、插件版本、文档当前发布链接及路线图标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/路线图断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
 3. 分别判断两份记录能否复用。先复用多版本准备产物，或运行 `Build-MultiVersion.ps1 -PrepareOnly -Test`，生成 Foundation、worker、Studio 和 bundled .NET；版本从 `Version.props` 读取。完整引擎不能复用时，`Build-Release.ps1` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。随后用 `Build-MultiVersion.ps1 -CompleteOnly -Test` 核对准备阶段的输入、运行文件和审计证据，执行依赖完整引擎的八版本 API/示例审计，生成最终记录并绑定交付。完整引擎重建时，多版本记录也重新验证；两份记录都可复用时保持原记录不变。
 4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
+
 5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
 6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
+
+Build-Release 的程序集反射检查和工具清单生成运行在 net48 HttpTests harness modes 中；独立生成器和输入检查使用 .NET 10 C# file-based apps。工具矩阵在重新生成后可用 `Generate-ToolCapabilityMatrix.cs --check` 验证稳定字节。它们沿用 `manifest/release-build.json` 的既有字段和最小/精确检查计数。
 8. Publish-Release.ps1 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest。
 9. 等待 Verify published release 下载并校验公开资产，再记录发布 URL、提交和验收状态。
 

@@ -381,7 +381,7 @@ foreach($major in @($PipelineMajor)) {
     Run $harness @($exe,'runtime-settings-only',$api) "runtime-settings-v$major.log"
     $runtimeSettings=[regex]::Match((Get-Content (Join-Path $out "runtime-settings-v$major.log") -Raw),'COMPLETE: (\d+) runtime settings checks passed')
     Assert-MatchedCheckCount "runtimeSettingsV$major" $runtimeSettings 'Runtime settings validation did not report complete success'
-    Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
+    Run $harness @($exe,'test-migration-read-assembly',$api) "assembly-v$major.log"
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
     $checks["V$major"]['softwareLookupPassed']=[int]$softwareLookup.Groups[1].Value
@@ -401,7 +401,7 @@ foreach($major in @($PipelineMajor)) {
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
     $checks["V$major"]['graphicSelectionPassed']=[int]$graphicSelection.Groups[1].Value
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
-    Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-EcosystemAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "ecosystem-v$major.log"
+    Run $harness @($exe,'test-ecosystem-assembly',$api) "ecosystem-v$major.log"
     $ecosystem=[regex]::Match((Get-Content (Join-Path $out "ecosystem-v$major.log") -Raw),'COMPLETE: (\d+) ecosystem assembly checks passed')
     Assert-MatchedCheckCount 'ecosystem' $ecosystem 'Ecosystem runtime validation incomplete; install the companion Python environment first'
     $checks["V$major"]['ecosystemAssemblyPassed']=[int]$ecosystem.Groups[1].Value
@@ -432,11 +432,11 @@ try {
 }
 # Validate the shipped V21 assembly as well as the early production-source fixtures.
 $exe=Join-Path $repo 'runtime/v21/TiaMcp.Engine.V21.exe';$api=$V21ReferenceRoot
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api,'-Exe',$exe) 'route-selection-v21.log'
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1'),'-Exe',$exe) 'match-plc-name-v21.log'
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
+Run $harness @($exe,'test-download-route',$api) 'route-selection-v21.log'
+Run $harness @($exe,'test-match-plc-name') 'match-plc-name-v21.log'
+Run $harness @($exe,'generate-tools-list',$api,(Join-Path $repo 'manifest/tools-list.json'),$package) 'tools-list.log'
 # 工具矩阵与清单同源：清单刚生成就重建矩阵，docs/reference/tool-matrix.md 不再手工维护。
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.ps1'),'-ToolsList',(Join-Path $repo 'manifest/tools-list.json'),'-OutFile',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'
+Run $Dotnet @('run',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.cs'),'--','--tools-list',(Join-Path $repo 'manifest/tools-list.json'),'--out-file',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'
 function WriteJson($Path,$Value){[IO.File]::WriteAllText($Path,($Value|ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))}
 $roster=Get-Content (Join-Path $repo 'manifest/tools-list.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $manifestPath=Join-Path $repo 'manifest/package-manifest.json'

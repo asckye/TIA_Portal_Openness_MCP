@@ -2,6 +2,8 @@
 
 日常连接配置使用根目录 `TiaOpenness.exe`。下列脚本面向维护、诊断或 CLI 用户；示例从仓库根目录执行。
 
+独立开发者工具使用相邻的 .NET 10 C# file-based app：`dotnet run <path.cs> -- <args>`。需要反射 net48 引擎程序集的检查由 `tests/Engine/TiaMcpServer.HttpTests` 承载，调用形如 `HttpTests.exe <engine.exe> <mode> <args>`。
+
 | 分类 | 入口 | 用途 |
 |---|---|---|
 | 构建 | [Build-Configurator.ps1](build/Build-Configurator.ps1) | 以 Framework csc 编译兼容启动器；`-Test` 需要 .NET 10 SDK，执行工作台配置测试并更新记录 |
@@ -15,12 +17,14 @@
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
 | 检查 | [Test-WorkerIsolation.py](checks/Test-WorkerIsolation.py)、[Test-LocalStability.py](checks/Test-LocalStability.py) | 本地 worker 故障恢复、分页与宿主退出；普通/隔离模式压力及日志配对。使用测试宿主，不连接 TIA；双版本构建门自动执行 |
-| 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归，反射已发布的 V21 EXE；均由 Build-Release 调用（路由测试需 -PublicApiDirectory） |
+| 检查 | [Test-DownloadRouteSelection.cs](checks/Test-DownloadRouteSelection.cs)、[Test-MatchPlcName.cs](checks/Test-MatchPlcName.cs) | 路由与名称匹配回归；可用 `-SourceOnly` 编译生产成员，否则转到 net48 HttpTests 反射引擎 |
+| 检查 | `HttpTests.exe <engine.exe> test-migration-read-assembly <PublicAPI>`、`test-ecosystem-assembly <PublicAPI>` | 反射迁移程序集和生态工具行为；由 Build-Release 调用，离线缺依赖时可加 `--skip-pdf --skip-companion` |
+| 检查 | [Test-AdapterInputs.cs](../src/Adapters/build/Test-AdapterInputs.cs)、[Test-WorkerIsolation.cs](../src/Adapters/build/Test-WorkerIsolation.cs) | C# file-based app：适配器输入选择与八版 worker 隔离证据 |
 | 检查 | [TiaMcp.ShippedTools.Tests](../tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj) | Claude Code 写保护钩子的拒绝/放行/审计及真实 stdin/stdout 自检；由 Build-Release 调用 |
 | 生成 | [Generate-ToolUsage.py](generate/Generate-ToolUsage.py)、[Audit-ToolUsage.py](diagnostics/Audit-ToolUsage.py)、[Audit-VersionTools.py](diagnostics/Audit-VersionTools.py) | 统一示例、八版真实 MCP 检索与按版本 API 对照 |
-| 生成 | [Generate-ToolCapabilityMatrix.ps1](generate/Generate-ToolCapabilityMatrix.ps1) | 从 manifest/tools-list.json 按大类→域生成工具矩阵（由 Build-Release 调用） |
-| 生成 | [Generate-ToolsListFromAssembly.ps1](generate/Generate-ToolsListFromAssembly.ps1) | 从已编译程序集反射生成 `manifest/tools-list.json`（由 Build-Release 调用） |
-| 诊断 | [Audit-OpennessCoverage.ps1](diagnostics/Audit-OpennessCoverage.ps1) | 逐成员对照官方 PublicAPI XML 与引擎源码，保留的 V21 词法诊断；当前八版报告由 Audit-VersionTools.py 生成，不用旧词法计数覆盖当前报告 |
+| 生成 | [Generate-ToolCapabilityMatrix.cs](generate/Generate-ToolCapabilityMatrix.cs) | 从 manifest/tools-list.json 按大类→域生成工具矩阵，支持 `--check`（由 Build-Release 调用） |
+| 生成 | `HttpTests.exe <engine.exe> generate-tools-list <PublicAPI> <output> <package>` | 从已编译程序集反射生成 `manifest/tools-list.json`，验证 ToolExamples / ToolRecipes（由 Build-Release 调用） |
+| 诊断 | [Audit-OpennessCoverage.cs](diagnostics/Audit-OpennessCoverage.cs) | 逐成员对照官方 PublicAPI XML 与引擎源码，保留的 V21 词法诊断；当前八版报告由 Audit-VersionTools.py 生成，不用旧词法计数覆盖当前报告 |
 | 诊断 | [Sweep-WrongPathHonesty.py](diagnostics/Sweep-WrongPathHonesty.py) | 手动诊断：给只读工具喂不存在的路径，找出误报成功的工具；需真实工程与 TIA |
 | 诊断 | [Workbench 诊断包](../src/Studio/Gui/Services/TiaExitEvidenceCollector.cs) | 一键包含最近 24 小时的 TIA/Windows 退出事件、TIA 进程清单、dump 文件清单和原生导出日志；不会复制 dump 内容，诊断包需按隐私说明审阅后再分享 |
 | 诊断 | [LibraryRenameProbe](diagnostics/LibraryRenameProbe/README.md) | VM 双击 `LibraryRenameProbe.exe` 运行隔离测试；离线自检包含监督器场景；用 `dotnet run scripts/diagnostics/LibraryRenameProbe/BuildPackage.cs -- --sdk-directory <V21 net48 PublicAPI>` 构建单独 ZIP |

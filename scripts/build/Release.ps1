@@ -371,8 +371,8 @@ function Invoke-ReleaseEarlyGates {
     Run $Python @('scripts/checks/Test-NativeMcpSession.py','--self-test') 'native MCP safety (no live branch)'
     Run $Python @('scripts/checks/Test-DotnetSuites.py','--suite','crash-evidence') 'C# crash evidence suite'
     Run $Python @('scripts/checks/Test-DotnetSuites.py','--suite','write-guard') 'C# write guard suite'
-    Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Test-DownloadRouteSelection.ps1','-SourceOnly','-PublicApiDirectory',$V21ReferenceRoot,'-Python',$Python) 'download route production source fixture'
-    Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Test-MatchPlcName.ps1','-SourceOnly','-Python',$Python) 'PLC name production source fixture'
+    Run 'dotnet' @('run','scripts/checks/Test-DownloadRouteSelection.cs','--','-SourceOnly','-PublicApiDirectory',$V21ReferenceRoot,'-Python',$Python) 'download route production source fixture'
+    Run 'dotnet' @('run','scripts/checks/Test-MatchPlcName.cs','--','-SourceOnly','-Python',$Python) 'PLC name production source fixture'
     Say ('Early gates passed; {0:N2}s' -f $timer.Elapsed.TotalSeconds)
 }
 if ($FunctionsOnly) { return }

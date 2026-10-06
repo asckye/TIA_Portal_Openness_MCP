@@ -324,7 +324,7 @@ python scripts/checks/Check-McpText.py --root <scratch-copy> --baseline scripts/
 ### 适配器输入检查
 
 ```powershell
-pwsh -NoProfile -File src/Adapters/build/Test-AdapterInputs.ps1 -SourceRoot src -PublicApiRoot <SDK-root> -EvidenceDirectory bin-build/adapter-inputs
+dotnet run src/Adapters/build/Test-AdapterInputs.cs -- --source-root src --public-api-root <SDK-root> --evidence-directory bin-build/adapter-inputs
 ```
 
 需要八版 PublicAPI；预期 20 项通过、0 项失败（8 个有效 SDK 选择、12 个无效配置）。
@@ -366,9 +366,9 @@ pwsh -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -DryRun
 python scripts/build/Package-MultiVersion.py --self-test
 powershell -NoProfile -File scripts/checks/Validate-Bundle.ps1 -SelfTest
 pwsh -NoProfile -File scripts/build/Release.ps1 -DocumentationOnly
-powershell -NoProfile -File scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
+dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
 # 需要本机 V21 PublicAPI 和 .NET Framework 4.8 targeting pack；列入日常本机验证，不等待发布。
-powershell -NoProfile -File scripts/checks/Test-DownloadRouteSelection.ps1 -SourceOnly -PublicApiDirectory <V21-net48-SDK> -Python <python.exe>
+dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicApiDirectory <V21-net48-SDK> -Python <python.exe>
 ```
 
 两项 `-SourceOnly` 检查通过仓库词法提取器定位当前生产方法并用 .NET 10 的 C# 编译器生成 net48 小夹具，
@@ -481,7 +481,7 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 `McpResults.ps1` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 HttpTests 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
 python scripts/checks/Check-ScriptToolCalls.py --self-test
@@ -493,6 +493,6 @@ python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/
 
 最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 校验全部 campaign 输入，不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
-沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`Test-EcosystemAssembly.ps1 -SkipPdf -SkipCompanion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
+沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`HttpTests.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 
 原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。

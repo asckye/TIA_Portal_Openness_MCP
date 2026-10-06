@@ -355,6 +355,16 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length > 1 && args[1] == "test-download-route")
+                return DeveloperChecks.DownloadRoute(Server, args.Length > 2 ? args[2] : "");
+            if(args.Length > 1 && args[1] == "test-match-plc-name")
+                return DeveloperChecks.MatchPlcName(Server);
+            if(args.Length > 2 && args[1] == "test-migration-read-assembly")
+                return DeveloperChecks.MigrationReadAssembly(Server, args[2]);
+            if(args.Length > 2 && args[1] == "test-ecosystem-assembly")
+                return DeveloperChecks.EcosystemAssembly(Server, args[2], args.Skip(3).ToArray());
+            if(args.Length > 2 && args[1] == "generate-tools-list")
+                return DeveloperChecks.GenerateToolsList(Server, args[2], args.Length > 3 ? args[3] : "", args.Length > 4 ? args[4] : "");
             if(args.Length >= 5 && args[1] == "script-inputs-only") {
                 // Validate campaign fixtures with the engine's actual closed schema
                 // implementation. No tool is dispatched and no Portal is created.

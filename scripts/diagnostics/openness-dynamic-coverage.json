@@ -1,5 +1,5 @@
 {
-  "$comment": "Types the engine reaches through reflective/generic adapters (type names never appear literally in the source, so the lexical audit cannot see them). Each entry names the tool, how it reaches the type and the real-project evidence. Audit-OpennessCoverage.ps1 reports matching UNTOUCHED / TYPE_NAMED_NO_MEMBER types as DYNAMIC. Patterns match the full type name; * is a wildcard.",
+  "$comment": "Types the engine reaches through reflective/generic adapters (type names never appear literally in the source, so the lexical audit cannot see them). Each entry names the tool, how it reaches the type and the real-project evidence. Audit-OpennessCoverage.cs reports matching UNTOUCHED / TYPE_NAMED_NO_MEMBER types as DYNAMIC. Patterns match the full type name; * is a wildcard.",
   "entries": [
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Shapes.*",

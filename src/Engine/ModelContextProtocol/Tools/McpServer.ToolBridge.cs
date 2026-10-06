@@ -656,7 +656,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.
         static partial void ReadSessionState(ref bool? connected, ref string? project);
 
-        /// <summary>Build gate (Generate-ToolsListFromAssembly.ps1): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
+        /// <summary>Build gate (HttpTests generate-tools-list mode): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
         public static IReadOnlyList<string> ValidateToolExamples()
         {
             var all = AllToolMethods(includeUnavailable: true);

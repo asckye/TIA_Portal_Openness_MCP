@@ -126,8 +126,8 @@ Siemens import/export/compile roundtrips still require separate validation.
 
 ## Input regression checks
 
-`build/Test-AdapterInputs.ps1 -SourceRoot <repo>/src
--PublicApiRoot <eight-version-sdk-root> -EvidenceDirectory <writable-output>`
+`dotnet run src/Adapters/build/Test-AdapterInputs.cs -- --source-root src
+--public-api-root <eight-version-sdk-root> --evidence-directory <writable-output>`
 checks eight real API selections and twelve invalid configurations. It invokes
 only the metadata validation target, without restore, compilation or native
 execution. Compile each adapter separately to verify its actual source bindings.
@@ -136,8 +136,8 @@ directories; set DOTNET_GENERATE_ASPNET_CERTIFICATE=false and
 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1. Use `-p:UseSharedCompilation=false` if a shared
 compiler process has a different sandbox identity.
 
-After eight builds, `build/Test-WorkerIsolation.ps1 -EvidenceDirectory <output>
--NativeCallWeaverPath <weaver.dll>` checks project selection, copied PE coverage,
+After eight builds, `dotnet run src/Adapters/build/Test-WorkerIsolation.cs --
+--evidence-directory <output> --native-call-weaver <weaver.dll>` checks project selection, copied PE coverage,
 five deliberate coverage corruptions per release, invalid worker configurations,
 missing instrumentation tooling.
 
