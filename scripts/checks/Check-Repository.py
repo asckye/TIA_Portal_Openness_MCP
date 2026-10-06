@@ -144,6 +144,9 @@ def check(root, no_binaries=False, package_mode=False):
             errors.append(f'{label}: external path: {name}')
         elif no_binaries and (name.endswith('.exe') or name == 'runtime/tools/TiaMcp.Updater.exe.config' or (name.startswith('runtime/') and name != 'runtime/README.md')):
             return   # build outputs live outside Git since 2.8.1
+        elif (not package_mode and name in ('runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config')
+              and (root / 'bin-build' / 'updater' / Path(name).name).is_file()):
+            return   # outside a package the updater is staged in bin-build/updater; Package-Release copies it to runtime/tools
         elif not target.exists():
             errors.append(f'{label}: missing or external path: {name}')
     package = read('manifest/package-manifest.json')
