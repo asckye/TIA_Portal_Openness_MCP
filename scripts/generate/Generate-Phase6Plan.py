@@ -660,6 +660,11 @@ TASK_PATHS = {
     "P6-46": [SH+"InvocationJournal.cs", SH+"NativeCallDiagnostics.Journal.cs", SH+"DataLocations.cs", E+"ModelContextProtocol/InvocationJournal.cs", E+"Cli/CliCommands.cs", S+"Core", S+"Gui/Settings/UiSettings.cs", S+"Gui/ViewModels", TE+"TiaMcpServer.DiagnosticsTests", TS],
     "P6-47": [E+"Runtime/EnvironmentDoctor.cs", E+"ModelContextProtocol/Tools/McpServer.Doctor.cs", F+"LegacyHostPassiveDiagnostics.cs", S+"Core/Environment/OpennessDoctor.cs", SH+"OpennessEnvironment.cs", SH+"DataLocations.cs", S+"Gui/MainWindow.xaml", S+"Gui/ViewModels", S+"Gui/Configuration", S+"Gui/Localization", TS],
     "P6-48": [L+"ModelContextProtocol/Builders/PlcVisualComparison.cs", L+"ModelContextProtocol/Builders/LadTextRenderer.cs", E+"ModelContextProtocol/Tools/EcosystemTools.cs", E+"ModelContextProtocol/Tools/PlcBlocksTools.cs", F+"FoundationTools.cs", S+"Gui/MainWindow.xaml", S+"Gui/ViewModels", S+"Gui/Localization", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TS],
+    "P6-49": [E+"ModelContextProtocol/Tools/SessionToolContract.cs", "src/WorkerChannel/ChannelClient.cs", S+"Launcher/Launcher.cs", E+"Runtime/EnvironmentDoctor.cs", S+"Core/Environment/OpennessDoctor.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", "docs/development/roadmap.md"],
+    "P6-50": ["hooks", "scripts/operations", "scripts/ecosystem", "scripts/diagnostics", S+"Core/Environment", "docs/getting-started/cli.md", "scripts/README.md"],
+    "P6-51": [S+"Gui/Configuration/UpdateCheck.cs", L+"ModelContextProtocol/UpdateLogic.cs", SH+"BundleLayout.cs", E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "scripts/operations/delivery-files.json"],
+    "P6-52": ["scripts/checks", "scripts/generate", A+"build", TE+"TiaMcpServer.HttpTests", "tests/test-suites.json"],
+    "P6-53": ["scripts/build", "scripts/checks", ".github/workflows", "docs/development/release-workflow.md", "docs/development/validation.md", ".gitattributes"],
 }
 for task in MIGRATION_GROUPS:
     paths = sorted(p for p in owners if owners[p] == task)
@@ -670,7 +675,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 49)}
+    expected = {f"P6-{i:02}" for i in range(1, 54)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():
