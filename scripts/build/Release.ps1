@@ -323,7 +323,8 @@ function Get-ReleaseReuseReason([string]$Kind) {
         if (($record.studioReleaseKeys -join ',') -ne '14sp1,15.1,16,17,18,19,20,21') { return 'eight-version validation missing' }
         $property = 'files'
     }
-    $runtimeRoots = if ($Kind -eq 'engine') { @('runtime/v20','runtime/v21','runtime/verification') } else { @('runtime') }
+    # Build-Release records runtime/tools (the write guard it publishes) with the engines.
+    $runtimeRoots = if ($Kind -eq 'engine') { @('runtime/v20','runtime/v21','runtime/tools','runtime/verification') } else { @('runtime') }
     $onDisk = @(Get-ChildItem ($runtimeRoots | ForEach-Object { Join-Path $repo $_ }) -File -Recurse -ErrorAction SilentlyContinue | Where-Object {
         if ($Kind -eq 'engine') { $_.Extension -in '.exe','.dll','.config' -or $_.Name -in 'NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json' }
         else { ($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith((Join-Path $repo 'runtime/dotnet') + [IO.Path]::DirectorySeparatorChar)) -and $_.Name -ne 'README.md' }
