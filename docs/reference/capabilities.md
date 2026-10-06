@@ -13,6 +13,15 @@ v3.2.0 提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness �
 
 只支持精确版本键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`，不包含原始 V14 / V15。同名工具在基础宿主与完整引擎上可能有不同参数和结果结构，应读取实际连接版本的 schema。
 
+## V4 候选发布的行为能力
+
+`GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，
+每行包含 `family`、`state`、`l5` 和实际 `entries`。完整引擎的 `InitializeEnvironment` / `GetPortalInfo`
+与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。
+当前八版全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。
+D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。
+逐版入口清单见[生成的行为台账](real-machine-ledger.md)及[功能矩阵](../../reference/version-feature-matrix.json)。
+
 ## AI 如何取得正确示例
 
 所有版本统一使用 `GetToolUsage` 获取实际参数、输入来源、调用示例、结果解释和官方出处。语言代码、文件模板及多步顺序也从同一库读取；不再单独维护一套自然语言配方。完整引擎的兼容入口 `GetRecipe`、`GetAuthoringGuide` 读取同源记录。

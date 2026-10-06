@@ -13,6 +13,9 @@ namespace TiaMcp.PlcFoundation
 {
     public sealed partial class PlcFoundationEngine
     {
+        // The owning worker host selects the policy before accepting any request.
+        public bool SourceCandidateEnabled { get; set; }
+
         public string ReadProjectTree()
         {
             var project=Project(); var text=new System.Text.StringBuilder();
@@ -54,7 +57,7 @@ namespace TiaMcp.PlcFoundation
             var ungrouped=new List<PlcReadCandidate<PlcSoftware>>();
             foreach(var device in p.UngroupedDevicesGroup.Devices) ReadDeviceCandidates(device,new string[0],"ungrouped",ungrouped);
             foreach(var candidate in ungrouped) { candidate.AllowLegacyAlias=false; candidates.Add(candidate); }
-            if (TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(PlcFoundationEngine).Assembly, ReleaseKey, "P6-SOURCE"))
+            if (SourceCandidateEnabled)
             {
                 var exact = new List<TiaMcp.Adapters.Contracts.Candidates.PlcPathTarget<PlcReadCandidate<PlcSoftware>>>();
                 foreach (var c in candidates)

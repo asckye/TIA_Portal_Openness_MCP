@@ -504,6 +504,9 @@ def candidate_example(entry, family, release):
 behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
     "example": candidate_example(entry, family, k)}
     for k in keys for entry, family in candidate_entries if entry in {renames[n] for n in tools[k]} and (family != 'P6-FALLBACK' or k in ('20', '21'))]
+behavior_capabilities = {k: [{"family": r["family"], "state": r["state"], "l5": r["l5"],
+    "entries": sorted({e["entry"] for e in behavior_entries if e["releaseKey"] == k and e["family"] == r["family"]})}
+    for r in behavior_policies if r["releaseKey"] == k] for k in keys}
 runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
            "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}
 for k in keys[-2:]:
@@ -993,6 +996,26 @@ def main():
     package['capabilities']['mcpToolLayers'] = dict(collections.Counter(t['layer'] for t in roster['tools']))
     package['capabilities']['liteProfile']['toolCount'] = len(lite_proposal['releases']['21'])
     outputs[package_path] = json.dumps(package, ensure_ascii=False, indent=2) + '\n'
+    matrix_path = root / 'reference/version-feature-matrix.json'
+    matrix = json.loads(read('reference/version-feature-matrix.json'))
+    matrix['behaviorCapabilities'] = behavior_capabilities
+    outputs[matrix_path] = json.dumps(matrix, ensure_ascii=False, indent=2) + '\n'
+    ledger_path = root / 'docs/reference/real-machine-ledger.md'
+    ledger_begin, ledger_end = '<!-- behavior-capabilities:start -->', '<!-- behavior-capabilities:end -->'
+    ledger_lines = ['逐版行为能力由 `Generate-Phase6Plan.py` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。', '',
+        '| releaseKey | family | state | L5 | entries |', '|---|---|---|---|---|']
+    for release, rows in behavior_capabilities.items():
+        for row in rows:
+            ledger_lines.append('| ' + ' | '.join([release, row['family'], row['state'], row['l5'], ', '.join(row['entries']) or '—']) + ' |')
+    ledger_block = ledger_begin + '\n\n' + '\n'.join(ledger_lines) + '\n\n' + ledger_end
+    if ledger_begin in ledger:
+        start = ledger.index(ledger_begin); finish = ledger.index(ledger_end, start) + len(ledger_end)
+        ledger_output = ledger[:start] + ledger_block + ledger[finish:]
+    else:
+        marker = '| P6-PRODUCT '
+        finish = ledger.index('\n', ledger.index(marker))
+        ledger_output = ledger[:finish] + '\n\n' + ledger_block + ledger[finish:]
+    outputs[ledger_path] = ledger_output
     for path, value in outputs.items():
         expected = value.encode('utf-8')
         if args.check:

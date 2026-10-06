@@ -78,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "OpenProject"), Description("[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: ConnectPortal. Closes any currently open project first. After success, call GetProjectTree to explore its structure.")]
+        [McpServerTool(Name = "OpenProject"), Description("[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: ConnectPortal. Closes any currently open project first. After success, call GetProjectTree to explore its structure. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult OpenProjectV4(
             [Description("path: defines the path where to the project/session")] string path,
             [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false,
@@ -156,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "AttachOpenProject"), Description("[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles).")]
+        [McpServerTool(Name = "AttachOpenProject"), Description("[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles). Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult AttachOpenProjectV4(
             [Description("projectName: exact name shown in TIA (e.g. 'Project1')")] string projectName)
             => SessionToolContract.Run("AttachOpenProject", true, true, () => AttachToOpenProject(projectName));
@@ -374,7 +374,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return resp;
         }
 
-        [McpServerTool(Name = "SaveProject"), Description("[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency.")]
+        [McpServerTool(Name = "SaveProject"), Description("[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SaveProjectV4()
             => SessionToolContract.Run("SaveProject", true, true, () => SaveProject());
 
@@ -419,7 +419,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project]Save current TIA-Portal project/session with a new name")]
+        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project]Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SaveProjectCopyV4(
             [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
             => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath));
@@ -456,7 +456,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CloseProject"), Description("[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open.")]
+        [McpServerTool(Name = "CloseProject"), Description("[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CloseProjectV4()
             => SessionToolContract.Run("CloseProject", true, true, () => CloseProject());
 

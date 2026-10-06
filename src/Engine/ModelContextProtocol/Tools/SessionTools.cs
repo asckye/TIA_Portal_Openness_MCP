@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public SessionTools(IEngineeringSession session) => _session = session;
 
-        [McpServerTool(Name = "ConnectPortal"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.")]
+        [McpServerTool(Name = "ConnectPortal"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectPortalV4(
             [Description("projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectProject with full identity.")] string projectName = "",
             [Description("allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolatedPortal for an explicit new instance.")] bool allowStart = false)
@@ -68,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable "
             + "until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after "
             + "another connection leaves an orphaned portal process that later attaches steal. "
-            + "Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal.")]
+            + "Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectIsolatedPortalV4()
             => SessionToolContract.Run("ConnectIsolatedPortal", true, true, () => ConnectIsolated());
 
@@ -143,7 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "DisconnectPortal"), Description("[L1][Portal] DisconnectPortal from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed.")]
+        [McpServerTool(Name = "DisconnectPortal"), Description("[L1][Portal] DisconnectPortal from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult DisconnectPortalV4()
             => SessionToolContract.Run("DisconnectPortal", true, true, () => Disconnect());
 
@@ -313,7 +313,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ConnectProject"), Description("[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first.")]
+        [McpServerTool(Name = "ConnectProject"), Description("[L0][Portal][SESSION] Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectProjectV4(
             [Description("processId: exact running TIA PID from ListPortalProcessProjects.")] int processId,
             [Description("processStartUtc: exact ISO UTC start timestamp from the same process listing; prevents PID reuse.")] string processStartUtc,

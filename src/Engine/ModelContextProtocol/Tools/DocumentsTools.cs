@@ -582,7 +582,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static List<string> GetResMissingEnUsIds(string directory, string baseName)
             => S7ResScanner.GetMissingEnUsIds(directory, baseName);
 
-        [McpServerTool(Name = "ExportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ExportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportAsDocumentsV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: defines the path in the project structure to the block")] string blockPath,
@@ -592,7 +592,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("ExportPlcBlockDocuments", () => ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ExportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ExportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public async Task<CallToolResult> ExportBlocksAsDocumentsV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
@@ -604,7 +604,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return await PlcExchangeContract.RunAsync("ExportPlcBlocksDocuments", () => ExportBlocksAsDocuments(server, context, softwarePath, exportPath, regexName, preservePath), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ImportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ImportPlcBlockDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportFromDocumentsV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
@@ -615,7 +615,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("ImportPlcBlockDocuments", () => ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, importOption), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ImportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ImportPlcBlocksDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public async Task<CallToolResult> ImportBlocksFromDocumentsV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,

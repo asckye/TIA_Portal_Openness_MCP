@@ -170,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "ExportPlcBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: ConnectPortal + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportPlcBlockDocuments. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcBlock"), Description("[L2][PLC-Software] Export one block to an XML file. Requires: ConnectPortal + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportPlcBlocks; readable SCL/.s7dcl text → ExportPlcBlockDocuments. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
@@ -351,7 +351,7 @@ namespace TiaMcpServer.ModelContextProtocol
  /* swallow(probe-optional): Group suggestions are optional and must not replace the original import error. */                return string.Empty;
             }
         }
-        [McpServerTool(Name = "ImportPlcBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: ConnectPortal + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportPlcBlockDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → BuildAndImportPlcArtifact. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: ConnectPortal + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompilePlcDiagnostics for full consistency. Pick the right tool: SCL/.s7dcl text → ImportPlcBlockDocuments; multiple XML files → ImportPlcBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → BuildAndImportPlcArtifact. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportBlockV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
@@ -411,7 +411,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportBlocksFromDirectoryV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import blocks")] string groupPath,
@@ -444,7 +444,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcProgramFromDirectoryV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("sourceDir: root directory containing exported PLC XML files")] string sourceDir,
@@ -604,7 +604,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CompilePlcDiagnostics"), Description("[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: ConnectPortal + OpenProject. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "CompilePlcDiagnostics"), Description("[L1][PLC-Software] PREFERRED compile tool. Compiles PLC and returns structured errors/warnings by recursively walking CompilerResult.Messages (V20/V21 PublicAPI). Leaf diagnostics include Path + Description; Line/Column when exposed as public properties. Requires: ConnectPortal + OpenProject. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CompileAndDiagnosePlcV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("password: optional safety password")] string password = "")
@@ -695,7 +695,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public Task<CallToolResult> ExportBlocksV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,

@@ -22,7 +22,7 @@ def tool_records(tools):
     names = [tool['name'] for tool in tools]
     if not names or len(names) != len(set(names)):
         raise ValueError('Tool catalog must be nonempty with unique names')
-    return sorted(({'name': tool['name'], 'inputSchema': tool['inputSchema'],
+    return sorted(({'name': tool['name'], 'inputSchema': tool['inputSchema'], 'outputSchema': tool.get('outputSchema'),
                     'descriptionSha256': hashlib.sha256(
                         tool.get('description', '').encode('utf-8')).hexdigest()}
                    for tool in tools), key=lambda tool: tool['name'])
@@ -54,7 +54,8 @@ def capture(args):
             rosters = {}
             for profile in ('full', 'lite'):
                 with resources.server(exe, public_api, int(release), 'stdio', profile,
-                                      args.harness.resolve(), public_api) as (rpc, _, logs):
+                                      args.harness.resolve(), public_api,
+                                      env_overrides={"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"}) as (rpc, _, logs):
                     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
                         'capabilities': {}, 'clientInfo': {'name': 'contract-snapshot', 'version': '1'}})
                     resources.require('result' in reply, f'Initialize failed: {reply}')
@@ -72,6 +73,20 @@ def capture(args):
                         resources.require(cursor not in seen, 'Repeated tools/list cursor')
                         seen.add(cursor)
                     rosters[profile] = tool_records(tools)
+                    reply = rpc('tools/call', params={'name': 'GetToolUsage', 'arguments': {}})
+                    result = reply['result']
+                    body = result.get('structuredContent') or json.loads(result['content'][0]['text'])
+                    table = body['data']['behaviorCapabilities']
+                    if 'behaviorCapabilities' in snapshot and snapshot['behaviorCapabilities'] != table:
+                        raise ValueError('Full/lite behavior capabilities disagree')
+                    snapshot['behaviorCapabilities'] = table
+                    disclosures = {tool['name']: tool.get('description', '') for tool in tools}
+                    for row in table:
+                        for entry in row['entries']:
+                            if entry in disclosures and row['state'] == 'current':
+                                text = disclosures[entry]
+                                if 'behaviorPolicy=current' not in text or 'V4 native acceptance is pending' not in text:
+                                    raise ValueError('Missing D1 description disclosure: ' + entry)
             snapshot.update(profile='full-engine', tools=rosters['full'],
                             liteTools=[tool['name'] for tool in rosters['lite']])
             if not set(snapshot['liteTools']) <= {tool['name'] for tool in snapshot['tools']}:
@@ -83,7 +98,15 @@ def capture(args):
                 command.extend(['--release-key', release])
             result = subprocess.run(command, check=True, capture_output=True,
                                     text=True, encoding='utf-8', timeout=60)
-            snapshot.update(profile='plc-foundation', tools=tool_records(json.loads(result.stdout)['tools']))
+            catalog = json.loads(result.stdout)
+            snapshot.update(profile='plc-foundation', tools=tool_records(catalog['tools']),
+                            behaviorCapabilities=catalog['behaviorCapabilities'])
+            descriptions = {tool['name']: tool.get('description', '') for tool in catalog['tools']}
+            for row in snapshot['behaviorCapabilities']:
+                for entry in row['entries']:
+                    if row['state'] == 'current' and ('behaviorPolicy=current' not in descriptions[entry]
+                            or 'V4 native acceptance is pending' not in descriptions[entry]):
+                        raise ValueError('Missing Foundation D1 disclosure: ' + entry)
         snapshots[release] = snapshot
         print(f'Captured V{release}: {len(snapshot["tools"])} tools', flush=True)
     # Do not leave a partially captured baseline when a host fails.
@@ -187,6 +210,8 @@ def compare(args):
             old, new = baseline[release], current[release]
             if old['profile'] != new['profile']:
                 changes.append(('breaking', 'engine profile changed'))
+            if old.get('behaviorCapabilities') != new.get('behaviorCapabilities'):
+                changes.append(('info' if 'behaviorCapabilities' not in old else 'breaking', 'behavior capability table changed'))
             a = {tool['name']: tool for tool in old['tools']}
             b = {tool['name']: tool for tool in new['tools']}
             for name in sorted(a.keys() | b.keys()):
@@ -197,6 +222,10 @@ def compare(args):
                 else:
                     changes.extend((kind, name + ' ' + detail) for kind, detail in
                                    schema_changes(a[name]['inputSchema'], b[name]['inputSchema']))
+                    if 'outputSchema' not in a[name] and 'outputSchema' in b[name]:
+                        changes.append(('info', name + ': outputSchema recorded'))
+                    elif a[name].get('outputSchema') != b[name].get('outputSchema'):
+                        changes.append(('breaking', name + ': outputSchema changed'))
                     if a[name]['descriptionSha256'] != b[name]['descriptionSha256']:
                         changes.append(('info', name + ': description hash changed'))
             for name in sorted(set(old.get('liteTools', [])) - set(new.get('liteTools', []))):
@@ -304,6 +333,7 @@ def _p6_07_checks(b):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('self-test', help='Exercise capability/output/schema negative cases').set_defaults(run=self_test)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', type=Path, required=True)
     capture_parser.add_argument('--harness', type=Path, required=True)
@@ -370,11 +400,22 @@ def verified_contracts(directory, root):
     exact_release_files(directory)
     snapshots = load_snapshots(directory)
     rosters = catalog_rosters(root)
+    import xml.etree.ElementTree as ET
+    catalog = json.loads(ET.parse(root / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)
+    expected = {release: [{**{key: r[key] for key in ('family', 'state', 'l5')},
+        'entries': sorted({e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == release and e['family'] == r['family']})}
+        for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
+    contracts = current_parameters(root)
     for release, snapshot in snapshots.items():
         names = unique_names([tool['name'] for tool in snapshot['tools']], f'V{release} full roster')
         full, lite = rosters[release]
         if names != full:
             raise ValueError(f'V{release}: full roster differs from generated catalog: {sorted(names ^ full)}')
+        if snapshot.get('behaviorCapabilities') != expected[release]:
+            raise ValueError(f'V{release}: behavior table differs from ledger-derived catalog')
+        for tool in snapshot['tools']:
+            validate_output(tool)
+        check_current_schemas(snapshot, contracts, root)
         expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
         if snapshot['profile'] != expected_profile:
             raise ValueError(f'V{release}: invalid contract profile')
@@ -384,6 +425,120 @@ def verified_contracts(directory, root):
         elif 'liteTools' in snapshot:
             raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
     return snapshots
+
+
+def validate_output(tool):
+    if 'outputSchema' not in tool or tool['outputSchema'] is not None and not isinstance(tool['outputSchema'], dict):
+        raise ValueError(tool['name'] + ': missing or invalid actual outputSchema')
+
+
+def current_parameters(root):
+    from engine_sources import EngineSources, lexer
+    params = {}
+    sources = EngineSources(root)
+    for path, text in sources.sources.items():
+        tokens, pairs, masked, starts = sources._parse(path)
+        for match in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"\n]+)"', text):
+            declaration = re.search(r'\bpublic\s+[\w<>?,.\[\] ]+?\s+\w+\s*\(', masked[match.end():])
+            if not declaration: raise ValueError('Cannot find current method: ' + match[1])
+            opening = starts[match.end() + declaration.end() - 1]
+            closing = pairs[opening]
+            args = text[tokens[opening].end:tokens[closing].start]
+            args = re.sub(r'\[Description\((?:\s*"(?:\\.|[^"\\])*"\s*\+?)+\)\s*\]', '', args)
+            fields = re.findall(r'(?:^|,)\s*[\w<>?.\[\]]+\s+(\w+)(?:\s*=\s*("(?:\\.|[^"\\])*"|true|false|-?\d+|null))?', args)
+            params[('full-engine', match[1])] = {name: json.loads(default) if default else None for name, default in fields}
+    text = (root / 'src/FoundationHost/FoundationTools.cs').read_text(encoding='utf-8-sig')
+    wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
+    renames = dict(re.findall(r'\["([^"\n]+)"\] = "([^"\n]+)"', wrapper))
+    for line in text.splitlines():
+        match = re.match(r'\s*new\("([^"\n]+)"', line)
+        if not match: continue
+        fields = {name: None for name in re.findall(r'(?:S|new Argument)\("([^"\n]+)"', line)}
+        for name, default in re.findall(r'new Argument\("([^"\n]+)",\s*"[^"\n]+",\s*(?:true|false),\s*("(?:\\.|[^"\\])*"|true|false|-?\d+|null|Array.Empty<string>\(\))', line):
+            fields[name] = [] if default == 'Array.Empty<string>()' else json.loads(default)
+        if 'Dry()' in line:
+            fields.update(dryRun=True, confirm=False, expectedProjectFile='')
+        params[('plc-foundation', renames.get(match[1], match[1]))] = fields
+    return params
+
+
+def candidate_parameters(root):
+    fields = set()
+    for path in (root / 'src/Logic/V4').glob('*Contract.cs'):
+        text = path.read_text(encoding='utf-8-sig')
+        if 'IBehaviorCandidateContract' not in text and 'Contract :' not in text: continue
+        fields.update(re.findall(r'(?:(?:properties|p)\[|\{\s*\[|,\s*\[)"([^"\n]+)"\]\s*=\s*new JsonObject|(?:Text|Flag|String|Bool)\("([^"\n]+)"', text))
+    return {a or b for a, b in fields}
+
+
+def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().parents[2]):
+    candidate_fields = candidate_parameters(root)
+    by_name = {tool['name']: tool for tool in snapshot['tools']}
+    for row in snapshot['behaviorCapabilities']:
+        if row['state'] != 'current': continue
+        for entry in row['entries']:
+            properties = by_name[entry]['inputSchema']['properties']
+            allowed = contracts[(snapshot['profile'], entry)]
+            if set(properties) - set(allowed):
+                raise ValueError(entry + ': current schema advertises unimplemented parameters: ' + ', '.join(sorted(set(properties) - set(allowed))))
+            for name in candidate_fields & set(properties):
+                # Both products' defaults come from their current source declarations.
+                if 'default' in properties[name] and properties[name]['default'] != allowed[name]:
+                    raise ValueError(entry + ': current schema advertises a candidate default for ' + name)
+
+
+def self_test(args):
+    import copy
+    root = ROOT
+    snapshot = load_snapshots(root / 'manifest/contracts/v4/baseline')['21']
+    contracts = current_parameters(root)
+    # The inventory table itself must not be able to bless a candidate parameter.
+    if 'behaviorCapabilities' not in snapshot:
+        import xml.etree.ElementTree as ET
+        catalog = json.loads(ET.parse(root / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)
+        snapshot['behaviorCapabilities'] = [{'state': 'current', 'entries': [e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == '21']}]
+    check_current_schemas(snapshot, contracts)
+    count = 0
+    for parameter in sorted(candidate_parameters(root) - set(contracts[('full-engine', 'ImportPlcBlock')])):
+        mutated = copy.deepcopy(snapshot)
+        tool = next(t for t in mutated['tools'] if t['name'] == 'ImportPlcBlock')
+        tool['inputSchema']['properties'][parameter] = {'type': 'string', 'default': 'preview'}
+        try: check_current_schemas(mutated, contracts)
+        except ValueError: count += 1
+        else: raise AssertionError('Candidate schema negative case accepted: ' + parameter)
+    mutated = copy.deepcopy(snapshot)
+    tool = next(t for t in mutated['tools'] if t['name'] == 'CompilePlcSoftware')
+    tool['inputSchema']['properties']['password']['default'] = 'candidate-default'
+    try: check_current_schemas(mutated, contracts)
+    except ValueError: count += 1
+    else: raise AssertionError('Candidate default accepted')
+    import shutil, uuid
+    scratch = root / 'bin-build' / ('p6-35-contract-selftest-' + uuid.uuid4().hex)
+    scratch.mkdir(parents=True)
+    try:
+        for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'): shutil.copyfile(path, scratch / path.name)
+        for field in ('behaviorCapabilities', 'outputSchema'):
+            current = copy.deepcopy(load_snapshots(scratch)['21'])
+            if field == 'outputSchema': current['tools'][0].pop(field)
+            else: current[field][0]['state'] = 'safe-v4'
+            (scratch / '21.json').write_text(json.dumps(current), encoding='utf-8')
+            try: verified_contracts(scratch, root)
+            except ValueError: count += 1
+            else: raise AssertionError('Invalid capability/output snapshot accepted')
+            shutil.copyfile(root / 'manifest/contracts/v4/baseline/21.json', scratch / '21.json')
+    finally:
+        for path in scratch.iterdir(): path.unlink()
+        scratch.rmdir()
+    for tool in ({'name': 'sentinel'}, {'name': 'sentinel', 'outputSchema': []}):
+        try: validate_output(tool)
+        except ValueError: count += 1
+        else: raise AssertionError('Invalid outputSchema accepted')
+    validate_output({'name': 'sentinel', 'outputSchema': None})
+    print(f'Contract negative self-tests: {count} passed, 0 failed.')
+    return 0
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def verify(args):

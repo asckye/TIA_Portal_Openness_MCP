@@ -104,7 +104,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try { await Gate.WaitAsync(cancellationToken).ConfigureAwait(false); }
             catch (System.OperationCanceledException) /* swallow(privacy): report typed cancellation before dispatch without exposing exception text */
-            { return McpServer.V4Reject(ProtocolTool.Name, new TiaMcp.Logic.V4.Error("The request was cancelled before dispatch.", new TiaMcp.Logic.V4.CancelledDetails("tool-queue"))); }
+            { return McpServer.V4TargetReject(ProtocolTool.Name, new TiaMcp.Logic.V4.Error("The request was cancelled before dispatch.", new TiaMcp.Logic.V4.CancelledDetails("tool-queue")),
+                McpServer.CurrentBehaviorTargets(ProtocolTool.Name, System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()))); }
             string? correlation = null;
             if (Isolation.IsolatedWorkerHost.IsChild)
             {
@@ -124,7 +125,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
                 issued = true;
-                var result = McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false));
+                var result = McpServer.DiscloseTargets(McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)), ProtocolTool.Name,
+                    System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
                 ExitFaultedWorker(id);
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
@@ -135,7 +137,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 _ = PortalFailureClassifier.IsPortalProcessLost(ex);
                 InvocationJournal.Write(id, ProtocolTool.Name, "THREW");
                 ExitFaultedWorker(id);
-                var result = McpServer.TargetFailure(ProtocolTool.Name, ex, issued);
+                var result = McpServer.DiscloseTargets(McpServer.TargetFailure(ProtocolTool.Name, ex, issued), ProtocolTool.Name,
+                    System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 return result;
             }

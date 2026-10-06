@@ -3268,5 +3268,693 @@
       "release-only": 11
     },
     "nativeAcceptance": "NOT RUN; these are advertised runtime tool catalogs, not native acceptance."
+  },
+  "behaviorCapabilities": {
+    "14sp1": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "15.1": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "16": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "17": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "18": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "19": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateHardwareDevice"
+        ]
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectPortal",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "PlanPlcExternalSourceImport"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      }
+    ],
+    "20": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "CreateHardwareDevice"
+        ]
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcTagTablesFromDirectory",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocks",
+          "ExportPlcBlocksDocuments",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectIsolatedPortal",
+          "ConnectPortal",
+          "ConnectProject",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject",
+          "SaveProjectCopy"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompileDevice",
+          "CompileHmiDiagnostics",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "ExportPlcBlockDocuments",
+          "GetVersionControlStatus",
+          "ImportPlcBlockDocuments",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
+      }
+    ],
+    "21": [
+      {
+        "family": "P6-DEVICE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "CreateHardwareDevice"
+        ]
+      },
+      {
+        "family": "P6-IMPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ImportPlcBlock",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcTagTablesFromDirectory",
+          "ImportPlcType"
+        ]
+      },
+      {
+        "family": "P6-EXPORT",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlock",
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocks",
+          "ExportPlcBlocksDocuments",
+          "ExportPlcTagTable",
+          "ExportPlcType",
+          "ExportPlcTypes"
+        ]
+      },
+      {
+        "family": "P6-SESSION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachOpenProject",
+          "ConnectIsolatedPortal",
+          "ConnectPortal",
+          "ConnectProject",
+          "OpenProject"
+        ]
+      },
+      {
+        "family": "P6-CLOSE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CloseProject",
+          "DisconnectPortal",
+          "SaveProject",
+          "SaveProjectCopy"
+        ]
+      },
+      {
+        "family": "P6-SOURCE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeletePlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "ImportPlcExternalSource",
+          "ListPlcExternalSources",
+          "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "P6-COMPILE",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompileDevice",
+          "CompileHmiDiagnostics",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware"
+        ]
+      },
+      {
+        "family": "P6-FALLBACK",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "ExportPlcBlockDocuments",
+          "GetVersionControlStatus",
+          "ImportPlcBlockDocuments",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
+      }
+    ]
   }
 }

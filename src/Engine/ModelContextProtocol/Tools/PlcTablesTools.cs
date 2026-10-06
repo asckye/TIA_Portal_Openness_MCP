@@ -88,7 +88,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcTagTable"), Description("[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcTagTable"), Description("[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportPlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("tagTableName: PLC tag table name")] string tagTableName,
@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcTagTable"), Description("[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcTagTable"), Description("[L1][PLC-Software]Import one PLC tag table XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcTagTableV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
@@ -155,7 +155,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,

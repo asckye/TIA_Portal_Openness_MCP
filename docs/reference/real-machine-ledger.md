@@ -92,6 +92,79 @@ A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启
 | P6-FALLBACK 原生回退 | **NOT RUN**；20/21 在线下载及 VCI；其他版共享 VCI 路径按能力 | ApplyConfiguration 失败后不下载或换路线；自动下线分支改为前置条件拒绝；传输/通道每个中断点记录调用是否发出与真实结果；unknown 要求重建会话、不自动重放；VCI 仅显式允许且证明只读对象失效时重取一次，已写或未知时停止。 |
 | P6-PRODUCT 新产品启动/绑定 | **NOT RUN**；八版引擎/宿主与 Studio | 仓库外完整包从根 TiaOpenness.exe 打开 Studio；选择版本启动正确新 EXE/worker/adapter；逐版 hello 身份与绑定、读取、显式断开；新目录日志可关联，安装目录只读；不借用历史机器/PID 授权。 |
 
+<!-- behavior-capabilities:start -->
+
+逐版行为能力由 `Generate-Phase6Plan.py` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。
+
+| releaseKey | family | state | L5 | entries |
+|---|---|---|---|---|
+| 14sp1 | P6-DEVICE | current | NOT RUN | — |
+| 14sp1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 14sp1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 14sp1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 14sp1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 14sp1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 14sp1 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 14sp1 | P6-FALLBACK | current | NOT RUN | — |
+| 15.1 | P6-DEVICE | current | NOT RUN | — |
+| 15.1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 15.1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 15.1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 15.1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 15.1 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 15.1 | P6-FALLBACK | current | NOT RUN | — |
+| 16 | P6-DEVICE | current | NOT RUN | — |
+| 16 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 16 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 16 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 16 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 16 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 16 | P6-FALLBACK | current | NOT RUN | — |
+| 17 | P6-DEVICE | current | NOT RUN | — |
+| 17 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 17 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 17 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 17 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 17 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 17 | P6-FALLBACK | current | NOT RUN | — |
+| 18 | P6-DEVICE | current | NOT RUN | — |
+| 18 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 18 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 18 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 18 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 18 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 18 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 18 | P6-FALLBACK | current | NOT RUN | — |
+| 19 | P6-DEVICE | current | NOT RUN | CreateHardwareDevice |
+| 19 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
+| 19 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 19 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 19 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 19 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
+| 19 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
+| 19 | P6-FALLBACK | current | NOT RUN | — |
+| 20 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
+| 20 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlockDocuments, ImportPlcBlocksDocuments, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
+| 20 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 20 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, ConnectProject, OpenProject |
+| 20 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
+| 20 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources |
+| 20 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
+| 20 | P6-FALLBACK | current | NOT RUN | CompilePlcSoftware, ConnectProjectToWorkspace, CreateVersionControlWorkspace, DownloadPlc, DownloadPlcToFolder, ExportPlcBlockDocuments, GetVersionControlStatus, ImportPlcBlockDocuments, ListVersionControlWorkspaces, SynchronizeVersionControlWorkspace |
+| 21 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
+| 21 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlockDocuments, ImportPlcBlocksDocuments, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
+| 21 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 21 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, ConnectProject, OpenProject |
+| 21 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
+| 21 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources |
+| 21 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
+| 21 | P6-FALLBACK | current | NOT RUN | CompilePlcSoftware, ConnectProjectToWorkspace, CreateVersionControlWorkspace, DownloadPlc, DownloadPlcToFolder, ExportPlcBlockDocuments, GetVersionControlStatus, ImportPlcBlockDocuments, ListVersionControlWorkspaces, SynchronizeVersionControlWorkspace |
+
+<!-- behavior-capabilities:end -->
+
 ## v3.2.0 验收边界
 
 八版新增外部源导入、生成、编译路线与目标版本 UDT / DB XML，以及 Studio 新版本适配器的真实工程往返，当前均为 **NOT RUN**。后续应按明确的版本、测试工程副本及选定 PLC 执行，记录实际导入对象、编译诊断、读回与保存结果。选择测试目标不会由历史记录自动授权。

@@ -128,7 +128,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcType"), Description("[L2][PLC-Software]Export a type from the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcType"), Description("[L2][PLC-Software]Export a type from the plc software Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportTypeV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the directory where to export the type; output file will be '<type name>.xml'")] string exportPath,
@@ -212,7 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcType"), Description("[L1][PLC-Software]Import a type from file into the plc software Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportPlcType"), Description("[L1][PLC-Software]Import a type from file into the plc software Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportTypeV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
@@ -272,7 +272,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public Task<CallToolResult> ExportTypesV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,

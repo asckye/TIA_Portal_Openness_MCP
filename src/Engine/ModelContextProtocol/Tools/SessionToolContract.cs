@@ -47,6 +47,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
             var evidence = data["meta"] as JsonObject ?? new JsonObject();
             data.Remove("meta");
+            if (tool == "InitializeEnvironment" || tool == "GetPortalInfo")
+                data["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(SessionToolContract).Assembly, McpServer.ReleaseKey);
             evidence.Remove("timestamp");
             if (data.ContainsKey("summary")) data["operationSummary"] = data["message"]?.DeepClone();
             else data["summary"] = data["message"]?.DeepClone();
@@ -158,7 +160,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
                 outcome, execution, outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                 completeness, null, warnings);
-            var result = McpResult.From(Envelope.Create(data, error, meta));
+            var result = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
         }

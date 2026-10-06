@@ -233,7 +233,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 try { error = BindV4Call(name, new ToolArguments(arguments), out _, out _); }
                 catch (InputRejection rejection) { error = rejection.ToError("arguments"); }
             }
-            if (error != null) result = V4Reject(name, error);
+            if (error != null) result = V4TargetReject(name, error, current: CurrentBehaviorTargets(name, arguments));
         }
 
         /// <summary>Counts, for the build log: how many tools / properties carry enum hints (reflection over the roster).</summary>
@@ -275,7 +275,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
             var error = McpServer.ValidateV4Arguments(method, arguments, ProtocolTool.InputSchema);
-            return error != null ? new ValueTask<CallToolResult>(McpServer.V4Reject(ProtocolTool.Name, error)) : inner.InvokeAsync(request, cancellationToken);
+            return error != null ? new ValueTask<CallToolResult>(McpServer.V4TargetReject(ProtocolTool.Name, error, McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments))) : inner.InvokeAsync(request, cancellationToken);
         }
     }
 

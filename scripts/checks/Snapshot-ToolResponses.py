@@ -441,7 +441,22 @@ def initialize(rpc):
     return tools
 
 
-def recorder(rpc, entries, profile):
+def behavior_entries(release):
+    import xml.etree.ElementTree as ET
+    resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
+    catalog = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
+    current = {r['family'] for r in catalog['behaviorPolicies'] if r['releaseKey'] == release and r['state'] == 'current'}
+    return {r['entry'] for r in catalog['behaviorEntries'] if r['releaseKey'] == release and r['family'] in current}
+
+
+def require_behavior_disclosure(response, label):
+    meta = body(response)['meta']
+    resources.require(meta['behaviorPolicy'] == 'current' and any(w['code'] == 'UNVERIFIED_BEHAVIOR' for w in meta['warnings']),
+                      label + ': missing current D1 behavior disclosure')
+
+
+def recorder(rpc, entries, profile, release):
+    inventory = behavior_entries(release)
     def call(name, arguments):
         key = profile, name, canonical(arguments)
         if key not in entries:
@@ -451,6 +466,9 @@ def recorder(rpc, entries, profile):
                             for index, block in enumerate(reply.get('result', {}).get('content', []))
                             if block.get('type') == 'text']
             response = decode_reply(reply)
+            target = arguments.get('name') if name == 'CallTool' else name
+            if target in inventory:
+                require_behavior_disclosure(response, target)
             entries[key] = {'profile': profile, 'tool': name, 'arguments': arguments,
                             'response': response, 'rawTextBlocks': raw_blocks, 'rawTextEvidence': raw_evidence}
         return entries[key]['response']
@@ -481,7 +499,7 @@ def capture_release(args, release, exe, public_api):
                               ) as (rpc, _, logs):
             tools = initialize(rpc)
             entries = {}
-            call = recorder(rpc, entries, 'full')
+            call = recorder(rpc, entries, 'full', release)
 
             def decoded(name, arguments):
                 return body(call(name, arguments))
@@ -573,7 +591,7 @@ def capture_release(args, release, exe, public_api):
                               args.harness.resolve(), public_api, env_overrides=env) as (rpc, _, logs):
             lite = initialize(rpc)
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
-            bridge = recorder(rpc, entries, 'lite')
+            bridge = recorder(rpc, entries, 'lite', release)
             for name in sorted(registered):
                 v4_rejection(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), name)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
@@ -610,7 +628,7 @@ def capture_foundation(args, release, exe):
         with resources.server(exe, scratch, release, 'stdio', 'full', env_overrides=env) as (rpc, _, _):
             tools = initialize(rpc)
             entries, rejected, skipped = {}, [], {}
-            call = recorder(rpc, entries, 'plc-foundation')
+            call = recorder(rpc, entries, 'plc-foundation', release)
             for tool in sorted(tools, key=lambda t: t['name']):
                 name = tool['name']
                 marker = ('INVALID_ARGUMENT'
@@ -961,6 +979,16 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_current_behavior_disclosure_is_required(self):
+        response = {'result': {'content': [{'text': {'schemaVersion': 4, 'ok': False, 'meta': {
+            'behaviorPolicy': 'current', 'warnings': [{'code': 'UNVERIFIED_BEHAVIOR'}]}}}]}}
+        require_behavior_disclosure(response, 'fixture')
+        response['result']['content'][0]['text']['meta']['warnings'] = []
+        with self.assertRaises(Exception): require_behavior_disclosure(response, 'fixture')
+        response['result']['content'][0]['text']['meta']['warnings'] = [{'code': 'UNVERIFIED_BEHAVIOR'}]
+        response['result']['content'][0]['text']['meta']['behaviorPolicy'] = 'not-applicable'
+        with self.assertRaises(Exception): require_behavior_disclosure(response, 'fixture')
+
     def test_text_migration_rejects_schema_code_outcome_and_data_changes(self):
         from snapshot_text_migration import differences, response_text, contract_text
         allowed = lambda path: response_text('Probe', path)
@@ -983,7 +1011,7 @@ class RawResponseTests(unittest.TestCase):
 
     def test_text_evidence_must_match_digest_and_raw_hash(self):
         entries = {}
-        recorder(lambda *a, **kw: self.reply('{"error":{"code":"INVALID_ARGUMENT","message":"Explanation"}}'), entries, 'lite')('GetSessionState', {})
+        recorder(lambda *a, **kw: self.reply('{"error":{"code":"INVALID_ARGUMENT","message":"Explanation"}}'), entries, 'lite', '21')('GetSessionState', {})
         call = compact(next(iter(entries.values())), True)
         validated_evidence(call)
         call['textEvidence']['response']['result']['content'][0]['text']['error']['code'] = 'INTERNAL_ERROR'
@@ -1020,7 +1048,7 @@ class RawResponseTests(unittest.TestCase):
 
     def call(self, text, tool='GetSessionState', profile='full'):
         entries = {}
-        recorder(lambda *a, **kw: self.reply(text), entries, profile)(tool, {})
+        recorder(lambda *a, **kw: self.reply(text), entries, profile, '21')(tool, {})
         return compact(next(iter(entries.values())))
 
     def test_order_escaping_and_numbers(self):
@@ -1253,6 +1281,12 @@ def verify(args):
     rosters = contracts.catalog_rosters(root)
     for release, snapshot in snapshots.items():
         verify_coverage(release, baseline[release], snapshot, rosters[release][1])
+        inventory = {name for row in baseline[release]['behaviorCapabilities'] if row['state'] == 'current' for name in row['entries']}
+        for call in snapshot['calls']:
+            if call['tool'] in inventory and 'response' in call:
+                require_behavior_disclosure(call['response'], call['tool'])
+        # Digest-only bridge replies are asserted by recorder before hashing; the
+        # actual built-product inventory tests also exercise every bridge target.
     print(f'V4 responses verified: {len(snapshots)} releases, '
           f'{sum(len(snapshot["calls"]) for snapshot in snapshots.values())} calls; 0 issues.')
     return 0

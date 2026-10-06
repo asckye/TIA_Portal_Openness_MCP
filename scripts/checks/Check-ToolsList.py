@@ -129,12 +129,22 @@ def check(manifest_path):
     for old in MERGED:
         compare_operation(old, listed[mapping[old]]['operation'], baseline)
     assert seen | MERGED == set(baseline) | set(additions), ('Uncompared baseline tools', set(baseline) - seen - MERGED)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('contract_snapshot', Path(__file__).with_name('Snapshot-ToolContracts.py'))
+    snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
+    snapshot.verified_contracts(ROOT / 'manifest/contracts/v4/baseline', ROOT)
     print(f'Tool list: V20={len(rosters["20"])}, V21={len(rosters["21"])}, union={len(expected)}; names match.')
     print(f'Operation comparison: {len(baseline)} released tools, {len(seen)} runtime mappings, '
           f'{len(MERGED)} merged guides, {len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
 
 
 class Checks(unittest.TestCase):
+    def test_current_schema_rejects_candidate_only_parameters(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('contract_snapshot', Path(__file__).with_name('Snapshot-ToolContracts.py'))
+        snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
+        self.assertEqual(0, snapshot.self_test(None))
+
     def test_new_v4_operations_remain_offline_file_output(self):
         generator = runpy.run_path(str(ROOT / 'scripts/generate/Generate-ToolUsage.py'))
         additions = generator['new_v4_tools'](ROOT)

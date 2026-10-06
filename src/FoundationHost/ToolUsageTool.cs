@@ -82,6 +82,7 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     var names = all.Select(t => t.ProtocolTool.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
                     usage["tools"] = new JsonArray(names.Skip(offset).Take(limit).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
                     usage["toolCount"] = names.Length;
+                    usage["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(ToolUsageTool).Assembly, releaseKey);
                     usage["nextToolOffset"] = offset + limit < names.Length ? JsonValue.Create(offset + limit) : null;
                     usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", names);
                 }

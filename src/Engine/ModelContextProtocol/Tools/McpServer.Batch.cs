@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             const string tool = "RunReadOnlyToolBatch";
             var error = ValidateBatch(operations, false, out var validated);
-            if (error != null) return V4Reject(tool, error);
+            if (error != null) return V4TargetReject(tool, error, current: CurrentBehaviorTargets(tool, JsonSerializer.SerializeToElement(new { operations }, V4BindingJson)));
             var rows = new JsonArray();
             foreach (var call in validated!)
             {
@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             const string tool = "PreviewToolBatch";
             var error = ValidateBatch(operations, true, out var validated);
-            if (error != null) return V4Reject(tool, error);
+            if (error != null) return V4TargetReject(tool, error, current: CurrentBehaviorTargets(tool, JsonSerializer.SerializeToElement(new { operations }, V4BindingJson)));
             try
             {
                 var plan = new BatchPlanStore.Plan { Project = expectedProject, State = BatchState(expectedProject),
@@ -187,15 +187,17 @@ namespace TiaMcpServer.ModelContextProtocol
             int failed = rows.Count - succeeded - skipped;
             bool unknown = rows.Any(row => (bool?)row!["outcomeUnknown"] == true || (string?)row["result"]?["meta"]?["outcome"] == "unknown");
             bool partial = rows.Any(row => (string?)row!["result"]?["meta"]?["outcome"] == "partial");
+            bool current = write || rows.Any(row => (string?)row!["result"]?["meta"]?["behaviorPolicy"] == "current");
             var data = new JsonObject { ["items"] = rows, ["rollbackPerformed"] = false };
-            if (unknown) return V4Result(tool, data, new Error("A batch write outcome is unknown.", new OutcomeUnknownDetails("batch", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: write);
-            if (succeeded == rows.Count) return V4Result(tool, data, completed: write, current: write);
+            if (unknown) return V4Result(tool, data, new Error("A batch write outcome is unknown.", new OutcomeUnknownDetails("batch", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);
+            if (succeeded == rows.Count) return V4Result(tool, data, completed: write, current: current);
             if (partial || succeeded > 0) return V4Result(tool, data, new Error("The batch contains partial results.",
-                succeeded > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)), Outcome.Partial, Execution.Partial, Completeness.Partial, current: write);
+                succeeded > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)), Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
             if (rows.All(row => (string?)row!["result"]?["meta"]?["execution"] == "not-started"))
-                return V4Reject(tool, new Error("Every batch item was rejected before execution.", new PreconditionFailedDetails("batch-results", null)), data);
+                return V4Result(tool, data, new Error("Every batch item was rejected before execution.", new PreconditionFailedDetails("batch-results", null)),
+                    Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
             return V4Result(tool, data, new Error("No batch item succeeded; inspect the retained target results.", new PreconditionFailedDetails("batch-results", null)),
-                write ? Outcome.Failed : Outcome.ReadFailed, write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: write);
+                write ? Outcome.Failed : Outcome.ReadFailed, write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current);
         }
         private static string BatchState(string project)
         {

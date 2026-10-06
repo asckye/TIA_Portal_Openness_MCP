@@ -1931,8 +1931,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/history/contracts-v3/baseline/21.json](../../manifest/history/contracts-v3/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/history/contracts-v3/responses/20.json](../../manifest/history/contracts-v3/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/history/contracts-v3/responses/21.json](../../manifest/history/contracts-v3/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:30632 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
-| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31414 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/20.json](../../manifest/contracts/v4/baseline/20.json) | 写入/工作区:31161 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/v4/baseline/21.json](../../manifest/contracts/v4/baseline/21.json) | 写入/工作区:31954 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/20.json](../../manifest/contracts/v4/responses/20.json) | 产品:75 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/contracts/v4/responses/21.json](../../manifest/contracts/v4/responses/21.json) | 产品:64 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:2629; 根定位:4865,5309,5841,5909,8933,8965 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
@@ -1956,7 +1956,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:365 | 修改引用并回归 |
 | [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:83,84,242; 根定位:13,182,183,184,229 | 修改引用并回归 |
 | [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
-| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:658 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:676 | 修改引用并回归 |
 | [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22 | 修改引用并回归 |
 | [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:16 | 修改引用并回归 |
 | [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |

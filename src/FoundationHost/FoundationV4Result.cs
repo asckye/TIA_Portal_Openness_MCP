@@ -144,6 +144,8 @@ internal static class FoundationV4Result
             data.Remove("data");
         }
         if (data["usage"] is JsonObject usage) data = usage.DeepClone().AsObject();
+        if (name == "InitializeEnvironment" || name == "RunCapabilitySelfTest")
+            data["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(FoundationV4Result).Assembly, release);
         Paging? paging = null;
         if (name == "GetToolUsage" && (data["totalLines"] ?? data["totalMatches"]) is JsonValue totalValue)
         {
@@ -196,8 +198,8 @@ internal static class FoundationV4Result
         if (current && data?["warnings"] is JsonArray { Count: > 0 })
             warnings.Add(new Warning(WarningCode.NativeWarning, "Native diagnostics include warnings; see data.warnings.", Empty));
         if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
-        return Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,
-            current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings));
+        return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,
+            current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings)));
     }
     private static CallToolResult Wire(string release, string name, string id, JsonObject? data, Outcome outcome,
         Execution execution, Completeness completeness, Error? error, bool current, bool reset = false, bool candidate = false, Paging? paging = null)

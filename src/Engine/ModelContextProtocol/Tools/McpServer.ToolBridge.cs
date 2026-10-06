@@ -280,7 +280,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
             if (error != null)
             {
-                var rejected = V4Reject("CallTool", error);
+                var rejected = V4TargetReject("CallTool", error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
                 return AuditBridgeResult(audit, rejected);
             }
@@ -365,6 +365,35 @@ namespace TiaMcpServer.ModelContextProtocol
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
         internal static CallToolResult V4Reject(string tool, Error error, JsonObject? data = null)
             => V4Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None);
+        internal static CallToolResult V4TargetReject(string tool, Error error, bool current)
+            => V4Result(tool, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
+        internal static bool CurrentBehaviorTargets(string tool, JsonElement arguments)
+        {
+            var targets = new List<string>();
+            if (tool == "CallTool" || tool == "PreviewToolCall")
+            {
+                if (arguments.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String) targets.Add(name.GetString()!);
+            }
+            else if (tool == "RunReadOnlyToolBatch" || tool == "PreviewToolBatch")
+            {
+                if (arguments.TryGetProperty("operations", out var operations) && operations.ValueKind == JsonValueKind.Array)
+                    foreach (var operation in operations.EnumerateArray())
+                        if (operation.ValueKind == JsonValueKind.Object && operation.TryGetProperty("name", out var name)
+                            && name.ValueKind == JsonValueKind.String) targets.Add(name.GetString()!);
+            }
+            return targets.Any(target => BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey,
+                AllToolMethods(true).Keys.FirstOrDefault(n => string.Equals(n, target, StringComparison.OrdinalIgnoreCase)) ?? target,
+                BehaviorPolicy.NotApplicable) == BehaviorPolicy.Current);
+        }
+        internal static CallToolResult DiscloseTargets(CallToolResult result, string tool, JsonElement arguments)
+        {
+            var envelope = V4Json.Deserialize<Envelope>(((TextContentBlock)result.Content.Single()).Text);
+            var disclosed = BehaviorCapabilities.Disclose(envelope, CurrentBehaviorTargets(tool, arguments));
+            if (ReferenceEquals(envelope, disclosed)) return result;
+            var mapped = McpResult.From(disclosed);
+            return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+        }
         internal static CallToolResult V4Result(string tool, JsonObject? data, Paging? paging = null, bool current = false, bool completed = false)
             => V4Result(tool, data, null, Outcome.Succeeded, completed ? Execution.Completed : Execution.ReadOnly, Completeness.Complete, paging, current);
 
@@ -378,7 +407,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, policy, completeness, paging, warnings);
-            var mapped = McpResult.From(Envelope.Create(data, error, meta));
+            var mapped = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }

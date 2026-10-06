@@ -51,6 +51,7 @@ internal static class Program
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-DEVICE");
             bool compileCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-COMPILE");
             bool sourceCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-SOURCE");
+            engine.SourceCandidateEnabled = sourceCandidateEnabled;
             bool saveCloseCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-CLOSE");
             bool sessionCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-SESSION");
             bool importCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Program).Assembly, releaseKey, "P6-IMPORT");

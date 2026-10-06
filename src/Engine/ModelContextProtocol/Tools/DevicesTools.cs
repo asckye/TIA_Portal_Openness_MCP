@@ -315,7 +315,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateDeviceV4(
             [Description("orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'")] string orderNumber,
             [Description("version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults")] string version,
@@ -362,7 +362,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: 'add CPU 1211C AC/DC/RLY' → family='S7-1200'. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: 'add CPU 1211C AC/DC/RLY' → family='S7-1200'. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateHardwareDeviceV4(
             [Description("preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list")] string preferredMlfb,
             [Description("preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions")] string preferredVersion,
@@ -488,7 +488,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateGsdDevice"), Description("[L2][Hardware]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateGsdDevice"), Description("[L2][Hardware]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateGsdDeviceV4(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'")] string keyword,
             [Description("deviceName: name in project tree, e.g. 'ENC_AFM60A_1'")] string deviceName,
@@ -547,7 +547,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateHardwareCatalogDevice"), Description("[L2][Hardware]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "CreateHardwareCatalogDevice"), Description("[L2][Hardware]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateHardwareCatalogDeviceV4(
             [Description("keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'")] string keyword,
             [Description("deviceName: name in project tree, e.g. 'HMI_KTP700_1'")] string deviceName,

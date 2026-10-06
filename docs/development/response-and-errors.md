@@ -173,3 +173,26 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 - **D2–D7 采用建议值**：P0-06 增加原始文本哈希（D2）；P2-01 先做构造器、执行器与只减不增检查，内联调用点只在领域迁移前且能证明
   等价时转换（D3）；吞异常默认不输出，引擎仅 Debug 级别（D4）；L5 之前原生路径不改为上抛（D5）；预览协议原豁免随第 A 步删除（D6）；
   维持按族的抛/返规则（D7）。
+
+## V4 D1 行为能力披露（P6-35）
+
+发布行为与 V4 名称、输入类型和信封版本独立。`ToolProfiles.resx` 的 `behaviorPolicies` 从
+[真机台账](../reference/real-machine-ledger.md)的逐发布键 L5 记录生成；`BehaviorCapabilities.Select`
+与能力查询读取同一资源。八版的 DEVICE、IMPORT、EXPORT、SESSION、CLOSE、SOURCE、COMPILE、FALLBACK
+均为 `current / NOT RUN`，没有已启用的 safe-v4 族。空 entries 表示该宿主没有此族 MCP 入口。
+
+`GetToolUsage` 的空选择器索引返回 `data.behaviorCapabilities`，每行有 `family/state/l5/entries`。
+完整引擎的 `InitializeEnvironment`、`GetPortalInfo`，Foundation 的 `InitializeEnvironment`、
+`RunCapabilitySelfTest` 及离线 `--catalog` 同样报告连接发布键的表。目录中的每个 D1 入口描述披露
+`behaviorPolicy=current` 和 V4 原生验收待完成；成功、准入拒绝、失败、partial 和 unknown 的目标信封
+都保留 `meta.behaviorPolicy=current` 与 `UNVERIFIED_BEHAVIOR`。CallTool/批次派发前的拒绝保留桥接身份，
+同时披露已明确选定的 D1 目标族；不改变原来的错误码、执行状态或派发顺序。
+
+worker 宿主在接收请求前将 SOURCE 路径选择注入适配器。其余宿主/Portal 的程序集选择由全目录一致性
+测试核对。只有显式 `TiaMcpTestPolicy` 测试构建可选择候选 schema；Strict 验包与 Release 拒绝此标记。
+当前 schema 保留已实现的参数和真实缺省，包括 Foundation 原有 confirm/expectedProjectFile/计划哈希
+以及完整引擎 ConnectProject 的 processStartUtc，不能仅凭参数名把这些现行能力删除。
+
+`Snapshot-ToolContracts.py` 从实际工具目录记录每个 `outputSchema`（未广告时显式 null）及实际查询的
+行为能力表。verify 对照生成目录，拒绝候选专用参数、错误缺省、遗漏输出字段或不一致的族状态。
+[功能矩阵](../../reference/version-feature-matrix.json)与台账的能力表由同一次生成产生；原生验收条目仍为 NOT RUN。

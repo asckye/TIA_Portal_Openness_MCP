@@ -65,6 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         var names = methods.Keys.OrderBy(n => n, StringComparer.Ordinal).ToArray();
                         usage["tools"] = new JsonArray(names.Skip(offset).Take(limit).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
                         usage["toolCount"] = names.Length;
+                        usage["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(ToolUsageTools).Assembly, release);
                         total = Math.Max(names.Length, total);
                         usage["exampleLibrary"] = ToolUsageCatalog.Examples(release, "full-engine", methods.Keys);
                     }

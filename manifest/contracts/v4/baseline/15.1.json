@@ -1,4 +1,83 @@
 {
+  "behaviorCapabilities": [
+    {
+      "entries": [],
+      "family": "P6-DEVICE",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ImportPlcBlock",
+        "ImportPlcBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportPlcType"
+      ],
+      "family": "P6-IMPORT",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ExportPlcBlock",
+        "ExportPlcBlocks",
+        "ExportPlcTagTable",
+        "ExportPlcType",
+        "ExportPlcTypes"
+      ],
+      "family": "P6-EXPORT",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "AttachOpenProject",
+        "ConnectPortal",
+        "OpenProject"
+      ],
+      "family": "P6-SESSION",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "CloseProject",
+        "DisconnectPortal",
+        "SaveProject"
+      ],
+      "family": "P6-CLOSE",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "DeletePlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "ImportPlcExternalSource",
+        "ListPlcExternalSources",
+        "PlanPlcExternalSourceImport"
+      ],
+      "family": "P6-SOURCE",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "CompilePlcDiagnostics",
+        "CompilePlcSoftware"
+      ],
+      "family": "P6-COMPILE",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [],
+      "family": "P6-FALLBACK",
+      "l5": "NOT RUN",
+      "state": "current"
+    }
+  ],
   "profile": "plc-foundation",
   "release": "15.1",
   "tools": [
@@ -22,7 +101,122 @@
         ],
         "type": "object"
       },
-      "name": "AttachOpenProject"
+      "name": "AttachOpenProject",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "8f88b2bfb68befe9ce1e1d627ceb99acd5fa0128ae06e4e76b57ed1ff0c7e3d9",
@@ -163,7 +357,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildFlgNetCall"
+      "name": "BuildFlgNetCall",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "d70f6af1d5ab4097053c883e72cad655ed467b2591f341ec9ca9f190fa41b819",
@@ -927,7 +1236,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcFbBlock"
+      "name": "BuildPlcFbBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "ae81db676c343c1b163dbc422700ff80e3c242389e832567c1c1577cd85333f8",
@@ -1498,7 +1922,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcFcBlock"
+      "name": "BuildPlcFcBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "caf5f68bb7deb53db06da7f2b7f75d89c68145c3752a628a0ac34e4d96969bca",
@@ -1630,7 +2169,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcGlobalDb"
+      "name": "BuildPlcGlobalDb",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "2a578ce55391684d9d16548ef0c3a993303f9d529df03c76c9e6f1d53151ca34",
@@ -1959,7 +2613,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcLadFcBlock"
+      "name": "BuildPlcLadFcBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "c900081e140954363e6c2ca35c9a35de4dd5c856574a41d684bba38ff187b9ad",
@@ -1996,7 +2765,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcSymbolManifestFromPath"
+      "name": "BuildPlcSymbolManifestFromPath",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "4cd762edad8356bc153b4c37a736c03ae8a4ff27fced459a4659a35fbf3051c5",
@@ -2069,7 +2953,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcTagTable"
+      "name": "BuildPlcTagTable",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "b6f6ed14799b20734b24d0d2c74bc044fe9b8eb8c6d74a27de577edd40c9db63",
@@ -2183,7 +3182,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildPlcUdt"
+      "name": "BuildPlcUdt",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "7a78207538e77cca941010665df6c9a3b394fc803aebe14d64199d5c474c2df9",
@@ -2584,7 +3698,122 @@
         ],
         "type": "object"
       },
-      "name": "BuildStructuredText"
+      "name": "BuildStructuredText",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9729d6fc9085302435d3036caf8d3ad2bafe276f4a913e54195ea793f350fd8e",
@@ -2610,7 +3839,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "CloseProject"
+      "name": "CloseProject",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "5d8e1f45eae8d0efc8120e3d0e305e9e8076e87a655cb8a840ad8f8bc95fdb51",
@@ -2647,7 +3991,122 @@
         ],
         "type": "object"
       },
-      "name": "CompilePlcDiagnostics"
+      "name": "CompilePlcDiagnostics",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "d1874332c1d272f0d974e1ec088b7920d9faca6f5c3fcbe1bec78c87295944ab",
@@ -2684,7 +4143,122 @@
         ],
         "type": "object"
       },
-      "name": "CompilePlcSoftware"
+      "name": "CompilePlcSoftware",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "b532af353e204f185187a720eac0e9093de735db0a495ffdf21d9e58490fb16f",
@@ -2701,7 +4275,122 @@
         ],
         "type": "object"
       },
-      "name": "ConnectPortal"
+      "name": "ConnectPortal",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "a9880270f1f2159581fcf2b834859c40f7e8758d74333e5f6469df6f37cbf9c5",
@@ -2753,7 +4442,122 @@
         ],
         "type": "object"
       },
-      "name": "CreatePlcTag"
+      "name": "CreatePlcTag",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "fa9ebda5da626e0f9cfb5f10188ce4323794220bff98d708780e0c51c4da09f9",
@@ -2795,7 +4599,122 @@
         ],
         "type": "object"
       },
-      "name": "CreatePlcTagTable"
+      "name": "CreatePlcTagTable",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9a0e9a3af8b81d5e4faba053f3f8a729a373d01c46b74654a40f6296ac34c0da",
@@ -2847,7 +4766,122 @@
         ],
         "type": "object"
       },
-      "name": "CreatePlcUserConstant"
+      "name": "CreatePlcUserConstant",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9d2068ed49234d06f163be737d8f3a94abbe1e139208b9a8904a0fd69d2463a9",
@@ -2884,7 +4918,122 @@
         ],
         "type": "object"
       },
-      "name": "CreateProject"
+      "name": "CreateProject",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "5452edf554f742dd1fb78af2e6a05884d0fcbd238d57ab328d3610a6325007e2",
@@ -2931,7 +5080,122 @@
         ],
         "type": "object"
       },
-      "name": "DeletePlcExternalSource"
+      "name": "DeletePlcExternalSource",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "27cbd610137b12ad0cf00e6d8f7550f15feb0c9f4923317d29f22c4e3900f6b3",
@@ -2941,7 +5205,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "DisconnectPortal"
+      "name": "DisconnectPortal",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "859d7117295654294b387e7eda69439e8d7c10c546deb237b880e080fe51074a",
@@ -2988,7 +5367,122 @@
         ],
         "type": "object"
       },
-      "name": "ExportPlcBlock"
+      "name": "ExportPlcBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "31362c187557700579a972ad9455cb905ead55c69d43d8672279ec278a02c3b3",
@@ -3045,7 +5539,122 @@
         ],
         "type": "object"
       },
-      "name": "ExportPlcBlocks"
+      "name": "ExportPlcBlocks",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "86ba7802b603e27b7da200c0a434f9410bbc6aa1051848c78ba0b0dc480b3618",
@@ -3087,7 +5696,122 @@
         ],
         "type": "object"
       },
-      "name": "ExportPlcTagTable"
+      "name": "ExportPlcTagTable",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "fab351187e2e4ded380b259c8c4c57160dc60dd3d17928c849c5c29a76fceb0d",
@@ -3134,7 +5858,122 @@
         ],
         "type": "object"
       },
-      "name": "ExportPlcType"
+      "name": "ExportPlcType",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "cffb4e9d08e192df77dd6ce8bf704c0134bc50a76be4630211d1ee396cb72e6c",
@@ -3191,7 +6030,122 @@
         ],
         "type": "object"
       },
-      "name": "ExportPlcTypes"
+      "name": "ExportPlcTypes",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "012119a28814618d1f6d66df31ea4605cdea111d9f00426d99dce29feff66cb8",
@@ -3233,7 +6187,122 @@
         ],
         "type": "object"
       },
-      "name": "GenerateBlocksFromExternalSource"
+      "name": "GenerateBlocksFromExternalSource",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "8f2c141cd38f7a74da8869e92738874b8e5599cb84f533b7d6fe631ad279a34d",
@@ -3250,7 +6319,122 @@
         ],
         "type": "object"
       },
-      "name": "GetPlcBlockHierarchy"
+      "name": "GetPlcBlockHierarchy",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "5ab0ee9ec058c152675acad8ea9110737cf261d980b3f9519a12d9a73f66059a",
@@ -3272,7 +6456,122 @@
         ],
         "type": "object"
       },
-      "name": "GetPlcBlockInfo"
+      "name": "GetPlcBlockInfo",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "f309b68a5e1e5f614948409603993363182678b9d1dc18c3dccc79f0ea8178ad",
@@ -3294,7 +6593,122 @@
         ],
         "type": "object"
       },
-      "name": "GetPlcTypeInfo"
+      "name": "GetPlcTypeInfo",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9452c27a1a7dea252d46cf1d767e0a987b448834a6121ac5a017c8a30de363bb",
@@ -3311,7 +6725,122 @@
         ],
         "type": "object"
       },
-      "name": "GetPortalConnectionReadiness"
+      "name": "GetPortalConnectionReadiness",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "fdde66b749f68030ade532c9587db197e1f81ebe6bd1333c2f3b2fb76256dcbd",
@@ -3321,7 +6850,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "GetProjectInfo"
+      "name": "GetProjectInfo",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9b1fa05b840f7cd9783083485da854c7ade5480fe2e587ef498abcef36bc3f7d",
@@ -3331,7 +6975,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "GetProjectTree"
+      "name": "GetProjectTree",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "39d408b77645519f948e579f801779279b947774977126744c2199ddb9df4d87",
@@ -3341,7 +7100,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "GetSessionState"
+      "name": "GetSessionState",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "7b17fe6899d9446f794a85d3e8bf97523f0ee5e7cbe084789cb3644e83410390",
@@ -3358,7 +7232,122 @@
         ],
         "type": "object"
       },
-      "name": "GetSoftwareInfo"
+      "name": "GetSoftwareInfo",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "97d12daf8985b2f3962ea52f3b408963eeb0abfce98a4adb4139b219e848dd45",
@@ -3375,7 +7364,122 @@
         ],
         "type": "object"
       },
-      "name": "GetSoftwareTree"
+      "name": "GetSoftwareTree",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "a2476ec8bff2bef1e69d466153a51094b1f7bac9389adfa9348ac32e970f4743",
@@ -3435,7 +7539,122 @@
         },
         "type": "object"
       },
-      "name": "GetToolUsage"
+      "name": "GetToolUsage",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "cfda8b0c4547f1720d29f13581779aaa6b3ecc707e53d5a593bd42f51d8ffbab",
@@ -3482,7 +7701,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcBlock"
+      "name": "ImportPlcBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "ca0b59ef21b7c92988cbed248ed93b0a515519ff3e341fa1d812a41aec7b1ba0",
@@ -3552,7 +7886,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcBlocksFromDirectory"
+      "name": "ImportPlcBlocksFromDirectory",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "8c28f35f52df50f5ff3e48e8606e57f18d6e86ca5947c9ba7c453c1862aafa5b",
@@ -3599,7 +8048,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcExternalSource"
+      "name": "ImportPlcExternalSource",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "f4643075c55d7e6da6783f3259f135c7d999afd11e7414ec202d5bf0d7e577ac",
@@ -3694,7 +8258,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcProgramFromDirectory"
+      "name": "ImportPlcProgramFromDirectory",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "d18d0cb028807c66f302827444b79a861dd24cf1081570c73bbaf14fcdb444fd",
@@ -3741,7 +8420,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcTagTable"
+      "name": "ImportPlcTagTable",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "f7f558e0cefce5214ee3ea17eee9ae74b2aa5fe090c2eac566e867624eda76a3",
@@ -3788,7 +8582,122 @@
         ],
         "type": "object"
       },
-      "name": "ImportPlcType"
+      "name": "ImportPlcType",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "b9bff2fa4d1bb21f62380aa6f0fac1426a45f6a91e4d42a9490552d3c1d5d166",
@@ -3798,7 +8707,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "InitializeEnvironment"
+      "name": "InitializeEnvironment",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "1b8b9b262e11f058ddc4801dec94c57bb1328a794f69faa1a0251b063c9985e1",
@@ -3820,7 +8844,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcBlocks"
+      "name": "ListPlcBlocks",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "f68ae0f74c5e6f98b8e98fce73591ead7fb108427a5052d921e44dd871f750dd",
@@ -3837,7 +8976,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcExternalSources"
+      "name": "ListPlcExternalSources",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "7ebac435e6ad941eea66e599e7d60a281c19d6e0ef947475ceeba54692c678b5",
@@ -3859,7 +9113,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcSystemConstants"
+      "name": "ListPlcSystemConstants",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "967a8ab708d801007ab94cc489ae0e83c16f3fd69a4c072dcda0ceaf2330f8a8",
@@ -3876,7 +9245,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcTagTables"
+      "name": "ListPlcTagTables",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "589247ecde784f8b3bdd98487b88f270c26249fd1848c083a1b317c375d21fa2",
@@ -3898,7 +9382,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcTags"
+      "name": "ListPlcTags",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "56bc7e05220feb9a39459ebac7b51d636617762e20d8bdc2cf747f522248f832",
@@ -3920,7 +9519,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcTypes"
+      "name": "ListPlcTypes",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "af7b8332b829ecd6b57371797d915f59ea11b3bbe3e0dfba976aed88bd701ddd",
@@ -3942,7 +9656,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcUserConstants"
+      "name": "ListPlcUserConstants",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "d6b8c70938473049386b616b936e63a163ca7d1bbe141a45dfaee0bcec596b8a",
@@ -3959,7 +9788,122 @@
         ],
         "type": "object"
       },
-      "name": "ListPlcWatchTables"
+      "name": "ListPlcWatchTables",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "8ea291d187aa8c1e6848ae564e5a73a8c78fac16b2e641be088b2341590ce3e9",
@@ -3969,7 +9913,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "ListPortalProcessProjects"
+      "name": "ListPortalProcessProjects",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "7520f28f29e7d5e06edaa4b84326da5798491c4eccd5cf9bb026693e7c396a91",
@@ -3986,7 +10045,122 @@
         ],
         "type": "object"
       },
-      "name": "ListTechnologyObjects"
+      "name": "ListTechnologyObjects",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "fe0998f301d141758417803831f556e25dbb3c8f5282523775b1767ffa96cd01",
@@ -4018,7 +10192,122 @@
         ],
         "type": "object"
       },
-      "name": "OpenProject"
+      "name": "OpenProject",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "32ec3feb22dc510ee9911a9ffb68ddfeced06130b97fb5642f4a3e39776dc721",
@@ -4069,7 +10358,122 @@
         ],
         "type": "object"
       },
-      "name": "PlanArtifactImportOrder"
+      "name": "PlanArtifactImportOrder",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "380e67b48e44488bfa4b3d12551f330d343bf686e31e5f2676af861db5a0fa32",
@@ -4121,7 +10525,122 @@
         ],
         "type": "object"
       },
-      "name": "PlanPlcExternalSourceImport"
+      "name": "PlanPlcExternalSourceImport",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "b0ba091f1df06b96f130fd8421c854487a2ed7d9cc2b7b80828101fbe7bd4a1b",
@@ -4143,7 +10662,122 @@
         ],
         "type": "object"
       },
-      "name": "RenderPlcBlock"
+      "name": "RenderPlcBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "0b87dd20c3b1ffb0391ba161872c3bba6c3054dfa946a19cfd88cbfc6a01e2ac",
@@ -4165,7 +10799,122 @@
         ],
         "type": "object"
       },
-      "name": "RenderPlcProgramAtlas"
+      "name": "RenderPlcProgramAtlas",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
@@ -4200,7 +10949,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "RunCapabilitySelfTest"
+      "name": "RunCapabilitySelfTest",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "9303ff80e27042c2b0020bf1d65f41bf0780b30043bc9cae2e4097c32f0ea110",
@@ -4226,7 +11090,122 @@
         "required": [],
         "type": "object"
       },
-      "name": "SaveProject"
+      "name": "SaveProject",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     }
   ]
 }

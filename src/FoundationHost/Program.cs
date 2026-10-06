@@ -30,6 +30,7 @@ if (options.CatalogOnly)
 {
     using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false);
     Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "plc-foundation", nativeAcceptance = "NOT RUN",
+        behaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(FoundationV4Tool).Assembly, options.ReleaseKey),
         tools = LegacyHostToolRegistry.Create(catalogWorker, options.ReleaseKey, false).Select(t => t.ProtocolTool) }));
     return 0;
 }

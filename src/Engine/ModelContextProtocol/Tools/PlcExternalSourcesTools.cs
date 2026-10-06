@@ -265,7 +265,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("GetPlcCrossReferences", () => GetCrossReferences(softwarePath, objectPath, objectKind, filter, unitName, unitKind), write: false, current: true);
         }
 
-        [McpServerTool(Name = "ListPlcExternalSources"), Description("[L2][PLC-Software]List PLC external source names (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ListPlcExternalSources"), Description("[L2][PLC-Software]List PLC external source names (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GetPlcExternalSourcesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
         {
@@ -280,7 +280,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("WritePlcSclSourceFile", () => WritePlcSclSourceFile(sclContent, outputPath), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ImportPlcExternalSource"), Description("[L2][PLC-Software]Import one PLC external source file into a group (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ImportPlcExternalSource"), Description("[L2][PLC-Software]Import one PLC external source file into a group (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcExternalSourceV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("groupPath: external source group path (use empty for root)")] string groupPath,
@@ -289,7 +289,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("ImportPlcExternalSource", () => ImportPlcExternalSource(softwarePath, groupPath, filePath), write: true, current: true);
         }
 
-        [McpServerTool(Name = "DeletePlcExternalSource"), Description("[L2][PLC-Software]Delete a PLC external source by name so ImportPlcExternalSource can replace it (idempotent). Name may include or omit .scl." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "DeletePlcExternalSource"), Description("[L2][PLC-Software]Delete a PLC external source by name so ImportPlcExternalSource can replace it (idempotent). Name may include or omit .scl." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult DeletePlcExternalSourceV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("externalSourceName: name from ListPlcExternalSources (e.g. MCPVerify_FC_SCL_v3.scl)")] string externalSourceName)
@@ -297,7 +297,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("DeletePlcExternalSource", () => DeletePlcExternalSource(softwarePath, externalSourceName), write: true, current: true);
         }
 
-        [McpServerTool(Name = "GenerateBlocksFromExternalSource"), Description("[L2][PLC-Software]Generate blocks from a PLC external source by name (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "GenerateBlocksFromExternalSource"), Description("[L2][PLC-Software]Generate blocks from a PLC external source by name (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GenerateBlocksFromExternalSourceV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("externalSourceName: name from ListPlcExternalSources")] string externalSourceName)
@@ -305,7 +305,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("GenerateBlocksFromExternalSource", () => GenerateBlocksFromExternalSource(softwarePath, externalSourceName), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ManagePlcExternalSources"), Description("[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ManagePlcExternalSources"), Description("[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcExternalSourcesV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.")] string action,
