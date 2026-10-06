@@ -343,6 +343,9 @@ CHANGELOG 可以先提交下一版本条目，但必须同时提交对应发布�
 powershell -NoProfile -File scripts/build/Test-ReleasePrerequisites.ps1 -SelfTest
 powershell -NoProfile -File scripts/build/Release.ps1 -SelfTest
 powershell -NoProfile -File scripts/build/Build-Release.ps1 -SelfTest
+powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -SelfTest
+pwsh -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -DryRun
+python scripts/build/Package-MultiVersion.py --self-test
 powershell -NoProfile -File scripts/checks/Validate-Bundle.ps1 -SelfTest
 pwsh -NoProfile -File scripts/build/Release.ps1 -DocumentationOnly
 powershell -NoProfile -File scripts/checks/Test-MatchPlcName.ps1 -SourceOnly
@@ -362,7 +365,7 @@ powershell -NoProfile -File scripts/checks/Test-DownloadRouteSelection.ps1 -Sour
 伴随 Python 用 `TIA_MCP_PLC_TOOLS_PYTHON` 指定；构建中的 V21 生态夹具也使用该解释器，避免预检与执行环境不同。
 
 预检、复用、CHANGELOG 和并发自测均报告通过/失败数量；复用覆盖相同输入、改源码、增删源码、改/缺二进制、改 release/fileVersion，
-以及旧输出目录的保留移动。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
+以及旧输出目录的保留移动、准备→完整引擎→完成记录的顺序、准备阶段输入/产物变化拒绝和哈希绑定审计证据恢复。审查链自测覆盖错误顺序、尾点 bundle 路径，以及成功、PowerShell 异常和 native 非零退出时的记录恢复。上述自测均用 Windows PowerShell 5.1 和 PowerShell 7 运行。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
 沙箱内 Python 3.12 的 `TemporaryDirectory` 可能因私有 ACL 返回 `WinError 5`；原生监督器/MCP 的离线自测遇到该错误应记录为未通过，
 由维护者在普通本机环境复跑，不跳过门禁、不进入 live 分支。
 
@@ -372,8 +375,10 @@ powershell -NoProfile -File scripts/checks/Test-DownloadRouteSelection.ps1 -Sour
 pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-此命令先运行 V20/V21 `Build-Release.ps1`，再构建 Foundation worker、Studio 及全部适配器，
-执行功能和传输检查并生成证据。只有刚完成完整引擎构建，或 Release 已确认源码、版本、运行文件与完整验证记录完全一致时，才使用 `-SkipFullEngines`。
+此命令先构建 Foundation worker、Studio、全部适配器及 bundled .NET，执行功能和传输检查，再运行 V20/V21 `Build-Release.ps1`，最后完成八版本审计和记录。release/fileVersion 从 `Version.props` 读取，不依赖旧 `release-build.json`。
+`-PrepareOnly -Test` 只保存准备证据；完整引擎完成后用同参数的 `-CompleteOnly -Test` 验证输入与产物未变并完成记录。
+只有完整引擎源码、版本、二进制和哈希绑定审计输入均匹配时，才使用 `-SkipFullEngines`；缺失/过期证据明确失败。
+维护审查脚本及完整九步顺序见[发布流程](release-workflow.md#离线审查完整构建链)。
 PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。
 设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 可运行八版 UDT/GlobalDB 官方 interface XSD 检查；
 片段 XSD 通过不代表完整文档或目标 CPU 语义通过。

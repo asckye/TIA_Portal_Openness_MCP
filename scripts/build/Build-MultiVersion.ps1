@@ -5,10 +5,18 @@ param(
     [string]$Python='python',
     [string]$NuGetConfig='',
     [switch]$SkipFullEngines,
+    [switch]$PrepareOnly,
+    [switch]$CompleteOnly,
+    [switch]$Offline,
     [switch]$Test
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+if($PrepareOnly -and $CompleteOnly){throw '-PrepareOnly and -CompleteOnly cannot be combined'}
+[xml]$versionXml=Get-Content -LiteralPath (Join-Path $repo 'Version.props') -Raw
+$release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
+$version=$release+'.0'
+if($release -notmatch '^\d+\.\d+\.\d+$'){throw 'Public release version must be X.Y.Z without fork or feature suffixes'}
 function Read-MultiVersionInputs([switch]$Validation) {
     . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
     if ($Validation) { @(Get-ReleaseValidationInputs $repo 'multi') } else { @(Get-ReleaseSources $repo 'multi') }
@@ -19,27 +27,41 @@ $api=(Resolve-Path -LiteralPath $PublicApiRoot).Path
 $env:TIA_MCP_TEST_PUBLIC_API_ROOT=$api
 $logs=Join-Path $repo 'bin-build/multi-version'
 New-Item -ItemType Directory -Force $logs | Out-Null
+$pendingPath=Join-Path $logs 'prepared-build.json'
+function Read-RuntimeFiles([switch]$Prepared) {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    @(Get-ReleaseRuntimeFiles $repo -Prepared:$Prepared)
+}
+function Assert-PreparedBuild($Record) {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    Assert-MultiVersionPreparation $repo $Record $release @(Read-MultiVersionInputs) @(Read-MultiVersionInputs -Validation) @(Read-RuntimeFiles -Prepared) $api
+}
+function Read-EngineReuseReason {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    $Version=$release
+    Get-ReleaseReuseReason 'engine'
+}
+if($CompleteOnly) {
+    if(!(Test-Path -LiteralPath $pendingPath)){throw 'Multi-version preparation missing; run Build-MultiVersion.ps1 -PrepareOnly -Test before Build-Release.ps1'}
+    $prepared=Get-Content -LiteralPath $pendingPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    Assert-PreparedBuild $prepared
+    if([bool]$prepared.test -ne [bool]$Test){throw 'Preparation/completion -Test must match; rebuild the preparation'}
+    $records=@($prepared.releases)
+    $validation=$prepared.validation
+} else {
+    # Nothing in this stage reads full-engine outputs or previous release records.
+    if(Test-Path -LiteralPath $pendingPath){Remove-Item -LiteralPath $pendingPath -Force}
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
-if(!$SkipFullEngines) {
-    & (Join-Path $PSScriptRoot 'Build-Release.ps1') -V20ReferenceRoot (Join-Path $api 'TIA_V20_PublicAPI/V20') -V21ReferenceRoot (Join-Path $api 'TIA_V21_PublicAPI/V21/net48') -Dotnet $Dotnet -Python $Python -NuGetConfig $NuGetConfig
-    if($LASTEXITCODE){throw 'Full-engine build failed'}
-}
-foreach ($major in @(20,21)) {
-    if (!(Test-Path -LiteralPath (Join-Path $repo "runtime/v$major/TiaMcp.Runtime.dll"))) {
-        throw "V$major runtime channel assembly missing; rebuild the full engines"
-    }
-}
 $weaver=Join-Path $repo 'build-tools/native-call-weaver/NativeCallWeaver.csproj'
 & $Dotnet build $weaver -c Release -v:q *> (Join-Path $logs 'weaver.log')
 if($LASTEXITCODE){throw 'Native weaver build failed'}
-& (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') *> (Join-Path $logs 'bundled-dotnet.log')
+& (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') -Offline:$Offline *> (Join-Path $logs 'bundled-dotnet.log')
 if(!$?){throw 'Bundled .NET runtime layout failed'}
 & (Join-Path $PSScriptRoot 'Build-PlcAdapterWorkers.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -UseReferenceAssemblyPackage -EvidenceDirectory (Join-Path $logs 'adapters')
 & (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
 $hostProject=Join-Path $repo 'src/FoundationHost/TiaMcpServer.LegacyHost.csproj'
 $publish=Join-Path $logs 'foundation-host'
-$engineRecord=Get-Content -LiteralPath (Join-Path $repo 'manifest/release-build.json') -Raw | ConvertFrom-Json
-$publishArgs=@('publish',$hostProject,'-c','Release','-o',$publish,'-v:q',"-p:Version=$($engineRecord.release)","-p:FileVersion=$($engineRecord.fileVersion)")
+$publishArgs=@('publish',$hostProject,'-c','Release','-o',$publish,'-v:q',"-p:Version=$release","-p:FileVersion=$version")
 if($NuGetConfig){$publishArgs+=('-p:RestoreConfigFile='+(Resolve-Path -LiteralPath $NuGetConfig).Path)}
 & $Dotnet @publishArgs *> (Join-Path $logs 'host.log')
 if($LASTEXITCODE){throw 'Foundation host publication failed'}
@@ -81,7 +103,7 @@ Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcp.FoundationHost.exe
 # The elevated network helper path exits at once with a handled error, so it proves the GUI host without a window.
 Assert-BundledRuntime (Join-Path $studioOutput 'TiaOpenness.exe') @('--network','127.0.0.1','not-a-port','S-1-5-18') 'studio'
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
-$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
+$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false;toolUsageCoverageExecuted=$false}
 if($Test) {
     $suiteResults=Join-Path $logs 'dotnet-suites'
     $validation.dotnetSuites=@{}
@@ -101,6 +123,29 @@ if($Test) {
     if($LASTEXITCODE){throw 'Foundation transport test failed'}
     $validation.foundationTransportExecuted=$true
 }
+# Bind the preparation to inputs, binaries and the transport/adapter audit evidence.
+$preparedFiles=@(Read-RuntimeFiles -Prepared)
+$evidence=@(Get-ChildItem -LiteralPath (Join-Path $logs 'adapters') -Filter 'coverage-*.json' -File)
+$evidence+=@(Get-ChildItem -LiteralPath $logs -Filter 'tools-*.json' -File)
+if($Test){$evidence+=Get-Item -LiteralPath (Join-Path $logs 'transport/tool-usage.json')}
+$evidenceRows=@($evidence | Sort-Object FullName | ForEach-Object {
+    @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
+})
+$prepared=@{release=$release;fileVersion=$version;publicApiRoot=$api;test=[bool]$Test;releases=$records;validation=$validation;sourceFiles=$sources;validationInputs=$validationInputs;files=$preparedFiles;evidence=$evidenceRows}
+Assert-PreparedBuild $prepared
+[IO.File]::WriteAllText($pendingPath,($prepared | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
+if($PrepareOnly){Write-Output 'Multi-version preparation passed; build/reuse the full engines, then run -CompleteOnly with the same -Test setting.';return}
+if(!$SkipFullEngines) {
+    & (Join-Path $PSScriptRoot 'Build-Release.ps1') -V20ReferenceRoot (Join-Path $api 'TIA_V20_PublicAPI/V20') -V21ReferenceRoot (Join-Path $api 'TIA_V21_PublicAPI/V21/net48') -Dotnet $Dotnet -Python $Python -NuGetConfig $NuGetConfig
+    if($LASTEXITCODE){throw 'Full-engine build failed'}
+}
+}
+$engineReason=Read-EngineReuseReason
+if($engineReason){throw "Full-engine inputs, binaries or audit evidence do not match: $engineReason; run Build-Release.ps1 before multi-version completion"}
+$deliveryPath=Join-Path $repo 'manifest/delivery.json'
+if(!(Test-Path -LiteralPath $deliveryPath)){throw 'Delivery record missing; run Prepare-Delivery.ps1 before multi-version completion'}
+$delivery=Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json
+if($delivery.release -ne $release -or $delivery.fileVersion -ne $version -or $delivery.engineBuildSha256 -ne (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/release-build.json')).Hash){throw 'Delivery does not bind the current engine record; run Prepare-Delivery.ps1 before multi-version completion'}
 & $Python (Join-Path $repo 'scripts/diagnostics/Audit-VersionTools.py') --public-api-root $api *> (Join-Path $logs 'api-audit.log')
 if($LASTEXITCODE){throw 'Per-version tool/API audit failed; build full engines first'}
 if($Test) {
@@ -108,18 +153,17 @@ if($Test) {
     if($LASTEXITCODE){throw 'All-release usage coverage failed'}
     $validation.toolUsageCoverageExecuted=$true
 }
-$bundledDotnet=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet'))+[IO.Path]::DirectorySeparatorChar
-$files=@(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File | Where-Object {($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith($bundledDotnet,[StringComparison]::OrdinalIgnoreCase)) -and $_.Name -ne 'README.md'} | Sort-Object FullName | ForEach-Object {
-    @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
-})
+$files=@(Read-RuntimeFiles)
+Assert-PreparedBuild $prepared
 $currentValidation=@(Read-MultiVersionInputs -Validation)
 if(($validationInputs|ConvertTo-Json -Depth 4 -Compress) -cne ($currentValidation|ConvertTo-Json -Depth 4 -Compress)){throw 'Validation inputs changed during the build; refusing to record results'}
 $currentInputs=@(Read-MultiVersionInputs)
 if(($sources|ConvertTo-Json -Depth 4 -Compress) -cne ($currentInputs|ConvertTo-Json -Depth 4 -Compress)){throw 'Multi-version inputs changed during validation; refusing to record results'}
-$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$engineRecord.release;fileVersion=$engineRecord.fileVersion;releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources;validationInputs=$validationInputs}
+$engineReason=Read-EngineReuseReason
+if($engineReason){throw "Full-engine inputs or evidence changed during multi-version audits: $engineReason"}
+if(($files|ConvertTo-Json -Depth 4 -Compress) -cne (@(Read-RuntimeFiles)|ConvertTo-Json -Depth 4 -Compress)){throw 'Runtime files changed during multi-version audits; refusing to record results'}
+$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$release;fileVersion=$version;releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources;validationInputs=$validationInputs}
 [IO.File]::WriteAllText((Join-Path $repo 'manifest/multi-version-build.json'),($record | ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
-$deliveryPath=Join-Path $repo 'manifest/delivery.json'
-$delivery=Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json
 $delivery | Add-Member -Force NoteProperty configuratorBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/configurator-build.json')).Hash.ToLowerInvariant()
 $delivery | Add-Member -Force NoteProperty multiVersionBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/multi-version-build.json')).Hash.ToLowerInvariant()
 $delivery | Add-Member -Force NoteProperty releaseKeys $record.studioReleaseKeys

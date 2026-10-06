@@ -109,6 +109,13 @@ $source=Join-Path $repo 'src/Engine'
 $release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
 $version=$release + '.0'
 if($release -notmatch '^\d+\.\d+\.\d+$'){throw 'Public release version must be X.Y.Z without fork or feature suffixes'}
+if(-not $PipelineMajor) {
+    function Assert-DeliveryPreparation {
+        . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+        Assert-ReleaseRuntimePreparation $repo
+    }
+    Assert-DeliveryPreparation
+}
 $null=[DateTime]::ParseExact($ReleaseDate,'yyyyMMdd',[Globalization.CultureInfo]::InvariantCulture)
 $package="TIA_MCP_Delivery_v${release}_$ReleaseDate"
 $out=Join-Path $repo "bin-build/releases/v$release"
@@ -421,6 +428,12 @@ $currentValidation=@(Read-ReleaseInputs -Validation)
 if(($validationInputs|ConvertTo-Json -Depth 4 -Compress) -cne ($currentValidation|ConvertTo-Json -Depth 4 -Compress)){throw 'Validation inputs changed during the build; refusing to record results'}
 $currentInputs=@(Read-ReleaseInputs)
 if(($sourceFiles|ConvertTo-Json -Depth 4 -Compress) -cne ($currentInputs|ConvertTo-Json -Depth 4 -Compress)){throw 'Build inputs changed while validation was running; refusing to record results'}
-WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs})
+$validationArtifacts=@(foreach($major in @(20,21)) {
+    foreach($name in @("native-call-coverage-v$major.json","tool-usage-v$major.json")) {
+        $path=Join-Path $out "v$major/$name"
+        [ordered]@{path=$path.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $path).Hash.ToLowerInvariant()}
+    }
+})
+WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=$offlineV20Passed;versionPolicySdkPassed=$versionPolicySdkPassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles;validationInputs=$validationInputs;validationArtifacts=$validationArtifacts})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate."

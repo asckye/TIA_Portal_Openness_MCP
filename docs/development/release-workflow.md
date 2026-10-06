@@ -57,7 +57,7 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 
 1. 首先运行 `Test-ReleasePrerequisites.ps1`：汇总检查 .NET 10 SDK、PowerShell 7、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
 2. 更新 `Version.props`、插件版本、文档当前发布链接及路线图标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/路线图断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
-3. 分别判断两份记录能否复用。完整引擎不能复用时，`Build-Release.ps1` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。`Build-MultiVersion.ps1 -SkipFullEngines -Test` 也独立判定是否需要重建和重测八版适配器、基础引擎与 Studio。
+3. 分别判断两份记录能否复用。先复用多版本准备产物，或运行 `Build-MultiVersion.ps1 -PrepareOnly -Test`，生成 Foundation、worker、Studio 和 bundled .NET；版本从 `Version.props` 读取。完整引擎不能复用时，`Build-Release.ps1` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。随后用 `Build-MultiVersion.ps1 -CompleteOnly -Test` 核对准备阶段的输入、运行文件和审计证据，执行依赖完整引擎的八版本 API/示例审计，生成最终记录并绑定交付。完整引擎重建时，多版本记录也重新验证；两份记录都可复用时保持原记录不变。
 4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
 5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
 6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
@@ -73,11 +73,11 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 
 默认自动复用：release/fileVersion、完整源码文件集合（含新增/删除）、源码哈希、补充验证输入和运行文件集合/哈希均一致，且原有验证完整时，才跳过对应引擎或多版本构建及测试。日志写明复用或重建原因。`-NoReuse` 强制两部分都重建；`-SkipBuild` 保留为严格断言，任何不匹配立即失败，不能与 `-NoReuse` 同用。
 
-原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。复用不改写两份构建记录的日期、版本、哈希或测试结果；配置器/交付元数据单独刷新，随后重新绑定原多版本记录。`Prepare-Delivery.ps1` 单独运行只准备完整引擎与配置器；正式发布仍需经过多版本判定和最终严格验证。
+原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。复用不改写两份构建记录的日期、版本、哈希或测试结果；配置器/交付元数据单独刷新，随后重新绑定原多版本记录。`Prepare-Delivery.ps1` 要求多版本运行产物和匹配的完整引擎记录已存在，缺项在重建配置器前明确失败；它刷新引擎/配置器交付绑定并执行严格验证。正式发布仍需多版本完成记录及最终严格验证。准备阶段的 `bin-build/multi-version/prepared-build.json` 不是发布记录，不能通过最终八版本发布门禁。
 
 长路径环境可用 `Package-Release.py --output-directory <较短的新目录>`，保留生成的 package-result.json 所记录的实际 ZIP 路径；恢复 Release 流程时将该结果记录及同名 ZIP/SHA-256 放到默认版本目录。
 
-每次新运行或 `-Resume` 都将已有 `bin-build/releases/v<版本>` 完整移动到同级 `v<版本>.previous-<时间戳>-<唯一后缀>`，保留原归档和日志，再从当前 HEAD 生成并验证候选；移动前检查绝对父目录和重解析点，不覆盖历史目录。无需手动归档。
+每次新运行或 `-Resume` 都将已有 `bin-build/releases/v<版本>` 完整移动到同级 `v<版本>.previous-<时间戳>-<唯一后缀>`，保留原归档和日志，再从当前 HEAD 生成并验证候选；完整引擎记录新增 `validationArtifacts`，绑定 API 织入清单和实际 GetToolUsage 证据的哈希。归档后只恢复哈希匹配的这四个审计输入，缺失或改写则重建完整引擎；移动前检查绝对父目录和重解析点，不覆盖历史目录。无需手动归档。
 
 已公开的 Release、tag 和资产不改写；发现问题应修正并发布新补丁版本。发布不自动更新运行中的服务或虚拟机。
 
@@ -107,12 +107,34 @@ powershell -NoProfile -File scripts/build/Release.ps1 -Version X.Y.Z -EarlyGates
 
 真实 TIA 工程导入、生成、编译、读回与设备操作须在明确指定的版本和工程上单独验收。构建、XSD、离线功能与公开资产验证不能代替原生验收。
 
-## P6-24b 审查复跑
+## 离线审查完整构建链
 
-`bin-build/P6-24b/run-release-build.ps1` 在具备全部 SDK、伴随 Python 依赖及本地 HTTP 能力的审查环境执行完整 Build-Release、Build-MultiVersion -Test、本地打包和含二进制的严格交付验证。每步保存独立日志，并在 `finally` 中逐字节恢复全部已跟踪的 manifest 与版本工具文档。后续步骤只在执行期间使用上一构建步骤保存的记录；失败时也恢复 worktree 原记录。
+维护脚本 [`Run-ReleaseBuild.ps1`](../../scripts/build/Run-ReleaseBuild.ps1) 可从没有运行产物的 checkout 开始。
+它不修改版本、不提交、不发布，每步独立记录日志，在 `finally` 中逐字节恢复全部已跟踪的 manifest 和生成的版本工具文档；
+后续步骤在执行期间使用上一步保存的构建记录。日志及执行中的记录副本保存在 `bin-build/release-review/<时间戳>-<GUID>/`。
 
 ```powershell
-powershell -NoProfile -File bin-build/P6-24b/run-release-build.ps1 -PublicApiRoot <SDK-root> -OutputDirectory <outside-repository-new-output> -CompanionPython <prepared-python.exe>
+# 只展示顺序，不要求本地 SDK/cache，也不构建。
+pwsh -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -DryRun
+powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -SelfTest
+# 审查者预先准备好离线依赖后，实际执行；输出必须是新目录，仓库内仅允许 bin-build 下。
+powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -PublicApiRoot <SDK-root> -OutputDirectory <new-output-directory> -CompanionPython <prepared-python.exe> -NuGetConfig <offline-nuget.config>
 ```
 
-`-NuGetConfig`、`-Dotnet` 和 `-Python` 可指定已准备的离线环境。默认生成清空 package feeds 的 NuGet 配置；显式配置也必须清除继承的 feeds，且不得指定网络源。运行前须准备 NuGet 包缓存，以及 `bundled-dotnet.json` 对应的 `bin-build/cache/dotnet-<version>` 归档；缺失时停止，不下载。本命令不提交或发布资产，不请求 live 测试。交付目录使用 `Validate-Bundle.ps1 -Strict -PackageMode`，保留二进制检查；`-PackageMode` 对应交付集合不包含源码和本机构建记录的布局。
+九步顺序为：
+
+1. `Build-MultiVersion -PrepareOnly -Offline -Test`：八版 worker/Studio、六版 Foundation、bundled .NET 和功能/传输检查。
+2. `Build-Release`：V20/V21 完整门禁、配置器及严格交付验证；随后 `Build-MultiVersion -CompleteOnly -Offline -Test`，验证准备证据并完成八版本记录与交付绑定。
+3. `Package-Release.py --local`，生成 ZIP、sidecar 和 `package-result.json`。
+4. 从 package-result 的 ZIP 父目录与无扩展名文件名计算实际 bundle 路径，执行 `Validate-Bundle -Strict -PackageMode`，保留二进制检查。不能使用 `ChangeExtension(path,$null)`：PowerShell 将字符串参数中的 `$null` 传为 `''`，会留下尾点。
+5. prompt-registration TRX 门禁。
+6. 普通 V4 tool contracts capture（V20/V21）。
+7. 与 `manifest/contracts/v4/baseline` 普通 compare。
+8. 普通 V4 response capture（V20/V21）。
+9. 与 `manifest/contracts/v4/responses` 普通 compare；差异直接失败，不刷新基线。
+
+`-Dotnet`、`-Python` 和 `-CompanionPython` 指定本地解释器。默认生成清空 package feeds 的 NuGet 配置；
+显式配置也必须清除继承的 feeds，拒绝 URL/UNC 网络源，并关闭 NuGetAudit。运行前检查全部 pinned runtime archives 已缓存且 SHA-512 匹配，
+缺失时停止；多版本构建还显式传 `-Offline`，不下载。每步成功或失败后都恢复原记录并验证哈希。
+`Package-MultiVersion.py` 的开发包也接受 bundled .NET 清单中的 `.version` 文件，框架目录以外仍保留扩展名限制；字体 `.ttf`/`.otf` 继续按原始字节哈希。
+完整链仍需要非受限的本地 HTTP 与原子文件操作能力；此命令不进入 TIA/PLC/VM 或 live 分支。

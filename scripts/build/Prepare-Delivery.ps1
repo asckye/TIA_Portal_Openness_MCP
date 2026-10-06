@@ -6,10 +6,20 @@ param(
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $null=[DateTime]::ParseExact($ReleaseDate,'yyyyMMdd',[Globalization.CultureInfo]::InvariantCulture)
+function Assert-DeliveryInputs {
+    . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
+    Assert-ReleaseRuntimePreparation $root
+}
+Assert-DeliveryInputs
+$buildPath=Join-Path $root 'manifest/release-build.json'
+if(!(Test-Path -LiteralPath $buildPath)){throw 'Engine build record missing; run Build-Release.ps1 after multi-version preparation'}
+$build=Get-Content $buildPath -Raw -Encoding UTF8 | ConvertFrom-Json
+if($build.release -ne $Release -or $build.fileVersion -ne "$Release.0"){throw 'Engine build record differs from the requested release; run Build-Release.ps1 first'}
+foreach($major in @(20,21)) {
+    if(!(Test-Path -LiteralPath (Join-Path $root "runtime/v$major/TiaMcp.Engine.V$major.exe"))){throw "V$major engine output missing; run Build-Release.ps1 first"}
+}
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Build-Configurator.ps1') -Test
 if($LASTEXITCODE){throw 'Configurator validation failed'}
-$buildPath=Join-Path $root 'manifest/release-build.json'
-$build=Get-Content $buildPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $package="TIA_MCP_Delivery_v${Release}_${ReleaseDate}"
 function WriteJson($Path,$Value){[IO.File]::WriteAllText($Path,($Value|ConvertTo-Json -Depth 12).Replace("`r`n", "`n"),[Text.UTF8Encoding]::new($false))}
 # Preserve the original engine build record, including its date and test results.

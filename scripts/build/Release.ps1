@@ -167,6 +167,74 @@ function Get-ReleaseSourceHash([string]$Path) {
     try { return [BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('-','').ToLowerInvariant() }
     finally { $sha.Dispose() }
 }
+function Get-ReleaseRuntimeFiles([string]$Root, [switch]$Prepared) {
+    $bundled=Join-Path $Root 'runtime/dotnet'
+    Get-ChildItem -LiteralPath (Join-Path $Root 'runtime') -Recurse -File | Where-Object {
+        ($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith($bundled+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) -and
+        $_.Name -ne 'README.md' -and (-not $Prepared -or $_.FullName -notmatch '[\\/]runtime[\\/](v20|v21|verification)[\\/]')
+    } | Sort-Object FullName | ForEach-Object {
+        [pscustomobject]@{path=$_.FullName.Substring($Root.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
+    }
+}
+function Assert-ReleaseRuntimePreparation([string]$Root) {
+    $dependencies=@('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')
+    $required=@('runtime/studio/TiaOpenness.exe','runtime/studio/TiaMcp.WorkerChannel.dll')
+    $required+=@($dependencies | ForEach-Object {"runtime/studio/bridge/$_"})
+    $required+=@('14sp1','15.1','16','17','18','19','20','21' | ForEach-Object {"runtime/studio/bridge/adapters/v$_/TiaOpenness.Openness.dll"})
+    foreach($key in @('14sp1','15.1','16','17','18','19')) {
+        $required+="runtime/v$key/TiaMcp.FoundationHost.exe"
+        $required+=@($dependencies | ForEach-Object {"runtime/v$key/worker/$_"})
+        $required+="runtime/v$key/TiaMcp.WorkerChannel.dll"
+    }
+    $missing=@($required | Where-Object {!(Test-Path -LiteralPath (Join-Path $Root $_) -PathType Leaf)})
+    # Foundation loads these from the bundled framework, not the host directory.
+    foreach($name in @('System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll')) {
+        $path="runtime/dotnet/shared/Microsoft.NETCore.App/*/$name"
+        if(!(Test-Path -Path (Join-Path $Root $path) -PathType Leaf)){$missing+=$path}
+    }
+    if($missing.Count){throw ('Delivery prerequisites missing; run Build-MultiVersion.ps1 -PrepareOnly -Test first: '+($missing -join ', '))}
+}
+function Assert-MultiVersionPreparation([string]$Root, $Record, [string]$Release, $Sources, $Inputs, $Files, [string]$Api) {
+    $reason=Test-ReleaseReuse $Root $Record $Release $Sources 'files'
+    if($reason){throw "Multi-version preparation cannot be completed: $reason"}
+    if($Record.publicApiRoot -ne $Api){throw 'Preparation PublicApiRoot changed'}
+    if((($Record.files.path | Sort-Object) -join "`n") -cne (($Files.path | Sort-Object) -join "`n")){throw 'Prepared binary inventory changed'}
+    $proof=[pscustomobject]@{release=$Record.release;fileVersion=$Record.fileVersion;sourceFiles=$Record.validationInputs;files=$Record.evidence}
+    $reason=Test-ReleaseReuse $Root $proof $Release $Inputs 'files'
+    if($reason){throw "Prepared validation inputs/evidence changed: $reason"}
+}
+function Invoke-ReleaseBuildStages([scriptblock]$Prepare, [scriptblock]$Engine, [scriptblock]$Complete) {
+    & $Prepare
+    & $Engine
+    & $Complete
+}
+function Test-ReleaseAuditEvidence([string]$Root, $Record) {
+    if(@($Record.validationArtifacts).Count -ne 4){return 'full-engine audit evidence record missing; rebuild once'}
+    $prefix="bin-build/releases/v$($Record.release)/"
+    $expected=@(foreach($major in @(20,21)){"${prefix}v$major/native-call-coverage-v$major.json";"${prefix}v$major/tool-usage-v$major.json"})
+    if((($Record.validationArtifacts.path | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")){return 'full-engine audit evidence inventory changed'}
+    foreach($row in $Record.validationArtifacts) {
+        $path=Join-Path $Root $row.path
+        if(!(Test-Path -LiteralPath $path -PathType Leaf)){return "audit evidence missing: $($row.path)"}
+        if((Get-FileHash -LiteralPath $path).Hash -ne $row.sha256){return "audit evidence changed: $($row.path)"}
+    }
+    return ''
+}
+function Restore-ArchivedAuditEvidence([string]$Root, [string]$Archive, $Record) {
+    $parent=[IO.Path]::GetFullPath((Join-Path $Root 'bin-build/releases'))
+    if((Split-Path ([IO.Path]::GetFullPath($Archive)) -Parent) -ne $parent){throw 'Audit archive escaped releases directory'}
+    foreach($row in $Record.validationArtifacts) {
+        $prefix="bin-build/releases/v$($Record.release)/"
+        if(!$row.path.StartsWith($prefix,[StringComparison]::Ordinal)){throw 'Audit evidence path escaped release output'}
+        $suffix=$row.path.Substring($prefix.Length)
+        $sourcePath=[IO.Path]::GetFullPath((Join-Path $Archive $suffix))
+        if(!$sourcePath.StartsWith($Archive+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Audit evidence path escaped archive'}
+        if(!(Test-Path -LiteralPath $sourcePath) -or (Get-FileHash -LiteralPath $sourcePath).Hash -ne $row.sha256){throw "Archived audit evidence changed: $($row.path)"}
+        $target=Join-Path $Root $row.path
+        New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
+        Copy-Item -LiteralPath $sourcePath -Destination $target
+    }
+}
 function Test-ReleaseReuse([string]$Root, $Record, [string]$Release, $Sources, [string]$FilesProperty) {
     # A missing or malformed record is always a cache miss, never permission to skip validation.
     try {
@@ -196,6 +264,8 @@ function Get-ReleaseReuseReason([string]$Kind) {
     try { $record = Get-Content -LiteralPath (Join-Path $repo "manifest/$name") -Raw -Encoding UTF8 | ConvertFrom-Json }
     catch { return 'build record missing or invalid' }
     if ($Kind -eq 'engine') {
+        $reason=Test-ReleaseAuditEvidence $repo $record
+        if($reason){return $reason}
         if ($record.validation.offlinePassed -le 0 -or $record.validation.offlineV20Passed -le 0 -or $record.validation.versionPolicySdkPassed -le 0) { return 'offline validation missing' }
         foreach ($major in @(20,21)) {
             $check = $record.validation.runtimes."V$major"
@@ -299,6 +369,69 @@ if ($SelfTest) {
         [IO.File]::WriteAllText((Join-Path $prior 'evidence.txt'), 'preserved')
         $archived = Move-PreviousReleaseOutput $scratch '4.0.0'
         if ((Test-Path -LiteralPath $prior) -or (ReadText (Join-Path $archived 'evidence.txt')) -ne 'preserved') { throw 'Archive did not preserve evidence' }; $passed++
+        $events=New-Object 'System.Collections.Generic.List[string]'
+        Invoke-ReleaseBuildStages {$events.Add('multi-prepare')} {$events.Add('engine')} {$events.Add('multi-complete')}
+        if(($events -join ',') -cne 'multi-prepare,engine,multi-complete'){throw 'Wrong release build order'};$passed++
+        $events.Clear()
+        try {Invoke-ReleaseBuildStages {$events.Add('prepare');throw 'synthetic preparation failure'} {$events.Add('engine')} {$events.Add('complete')}} catch {}
+        if(($events -join ',') -cne 'prepare'){throw 'Failed preparation did not stop the chain'};$passed++
+        foreach($extension in @('.ttf','.otf','.OTF')) {
+            $font=Join-Path $scratch ('font'+$extension)
+            [IO.File]::WriteAllBytes($font,[byte[]](255,0,13,10,128))
+            if((Get-ReleaseSourceHash $font) -ne (Get-FileHash $font).Hash.ToLowerInvariant()){throw 'Font must be hashed as raw bytes'};$passed++
+        }
+        $prepared=[pscustomobject]@{release='4.0.0';fileVersion='4.0.0.0';publicApiRoot='local-api';sourceFiles=$sourceRows;validationInputs=$sourceRows;files=$record.runtimeFiles;evidence=$record.runtimeFiles}
+        Assert-MultiVersionPreparation $scratch $prepared '4.0.0' $sourceRows $sourceRows $record.runtimeFiles 'local-api';$passed++
+        foreach($case in @('source','validation','binary','inventory','api')) {
+            $newSources=$sourceRows;$newInputs=$sourceRows;$newFiles=$record.runtimeFiles;$newApi='local-api'
+            switch($case) {
+                'source' {$newSources=@([pscustomobject]@{path='source.cs';sha256='changed'})}
+                'validation' {$newInputs=@([pscustomobject]@{path='source.cs';sha256='changed'})}
+                'binary' {[IO.File]::WriteAllText($binary,'changed')}
+                'inventory' {$newFiles+=@([pscustomobject]@{path='added.dll';sha256='changed'})}
+                'api' {$newApi='other-api'}
+            }
+            $rejected=$false
+            try {Assert-MultiVersionPreparation $scratch $prepared '4.0.0' $newSources $newInputs $newFiles $newApi} catch {$rejected=$true}
+            if(!$rejected){throw "Changed preparation accepted: $case"};$passed++
+            [IO.File]::WriteAllText($binary,'binary')
+        }
+        $artifactRows=@(foreach($major in @(20,21)){foreach($name in @("native-call-coverage-v$major.json","tool-usage-v$major.json")){
+            $relative="bin-build/releases/v4.0.0/v$major/$name";$path=Join-Path $scratch $relative
+            New-Item -ItemType Directory -Force (Split-Path $path -Parent) | Out-Null
+            [IO.File]::WriteAllText($path,'audit')
+            [pscustomobject]@{path=$relative;sha256=(Get-FileHash $path).Hash}
+        }})
+        $audit=[pscustomobject]@{release='4.0.0';validationArtifacts=$artifactRows}
+        if(Test-ReleaseAuditEvidence $scratch $audit){throw 'Matching audit evidence rejected'};$passed++
+        $archive=Move-PreviousReleaseOutput $scratch '4.0.0'
+        if(-not (Test-ReleaseAuditEvidence $scratch $audit)){throw 'Missing audit evidence accepted'};$passed++
+        Restore-ArchivedAuditEvidence $scratch $archive $audit
+        if(Test-ReleaseAuditEvidence $scratch $audit){throw 'Archived audit evidence was not restored'};$passed++
+        [IO.File]::WriteAllText((Join-Path $scratch $artifactRows[0].path),'changed')
+        if(-not (Test-ReleaseAuditEvidence $scratch $audit)){throw 'Changed audit evidence accepted'};$passed++
+        $rejected=$false;try{Assert-ReleaseRuntimePreparation $scratch}catch{$rejected=$_.Exception.Message -like '*-PrepareOnly -Test first*'}
+        if(!$rejected){throw 'Clean checkout did not report preparation prerequisite'};$passed++
+        $channelNames=@('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')
+        $fixturePaths=@('runtime/studio/TiaOpenness.exe','runtime/studio/TiaMcp.WorkerChannel.dll')
+        $fixturePaths+=@($channelNames | ForEach-Object {"runtime/studio/bridge/$_"})
+        foreach($key in @('14sp1','15.1','16','17','18','19','20','21')) {
+            $fixturePaths+="runtime/studio/bridge/adapters/v$key/TiaOpenness.Openness.dll"
+            if($key -notin '20','21') {
+                $fixturePaths+=@("runtime/v$key/TiaMcp.FoundationHost.exe","runtime/v$key/TiaMcp.WorkerChannel.dll")
+                $fixturePaths+=@($channelNames | ForEach-Object {"runtime/v$key/worker/$_"})
+            }
+        }
+        $fixturePaths+=@('System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll' | ForEach-Object {"runtime/dotnet/shared/Microsoft.NETCore.App/10.0.12/$_"})
+        foreach($relative in $fixturePaths) {
+            $path=Join-Path $scratch $relative
+            New-Item -ItemType Directory -Force (Split-Path $path -Parent) | Out-Null
+            [IO.File]::WriteAllText($path,'fixture')
+        }
+        Assert-ReleaseRuntimePreparation $scratch;$passed++
+        Remove-Item -LiteralPath (Join-Path $scratch 'runtime/dotnet/shared/Microsoft.NETCore.App/10.0.12/System.Text.Json.dll')
+        $rejected=$false;try{Assert-ReleaseRuntimePreparation $scratch}catch{$rejected=$_.Exception.Message -like '*Microsoft.NETCore.App*System.Text.Json.dll*'}
+        if(!$rejected){throw 'Missing bundled Foundation dependency accepted'};$passed++
         Write-Host "Release reuse/archive self-tests: $passed passed, 0 failed."
     } finally {
         if ((Split-Path ([IO.Path]::GetFullPath($scratch)) -Parent) -ne (Join-Path $repo 'bin-build')) { throw 'Unsafe fixture cleanup' }
@@ -398,8 +531,15 @@ if ($Resume) {
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Validate-Bundle.ps1','-Strict') 'strict validation of resumed binaries'
     }
 }
+# Keep only hash-bound audit inputs available after archiving old packages and logs.
+$auditRecord = $null
+try {
+    $candidate = Get-Content -LiteralPath (Join-Path $repo 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if(-not (Test-ReleaseAuditEvidence $repo $candidate)){$auditRecord=$candidate}
+} catch { Say 'Earlier full-engine audit evidence is unavailable; rebuild if needed' }
 $archivedOutput = Move-PreviousReleaseOutput $repo $Version
 if ($archivedOutput) { Say ('Preserved earlier release output: ' + $archivedOutput) }
+if($archivedOutput -and $auditRecord -and $auditRecord.release -eq $Version){Restore-ArchivedAuditEvidence $repo $archivedOutput $auditRecord}
 if (-not $resumed) {
 # ---------------------------------------------------------------- 2. version bump (mechanical places)
 $versionProps = Join-Path $repo 'Version.props'
@@ -430,6 +570,19 @@ $buildOutput = Join-Path $repo ('bin-build/releases/v' + $Version)
 New-Item -ItemType Directory -Force $buildOutput | Out-Null
 $buildLog = Join-Path $buildOutput 'build.log'
 $engineReason = Get-ReleaseReuseReason 'engine'
+$multiReason = Get-ReleaseReuseReason 'multi'
+if($SkipBuild -and ($engineReason -or $multiReason)){Fail ('-SkipBuild refused: engine='+$engineReason+'; multi='+$multiReason)}
+# A new full-engine build changes files included in the multi-version record.
+if($engineReason -and -not $multiReason){$multiReason='full engines will be rebuilt; revalidate the combined inventory'}
+Invoke-ReleaseBuildStages {
+    if($multiReason) {
+        Say ('Preparing Build-MultiVersion: ' + $multiReason)
+        Run $PowerShell7 @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/build/Build-MultiVersion.ps1',
+            '-PublicApiRoot',$PublicApiRoot,'-Python',$Python,'-PrepareOnly','-Test') 'Build-MultiVersion.ps1 preparation (eight releases and Studio)'
+    } else { Say 'Reused Build-MultiVersion preparation: recorded inputs, binaries and validation match' }
+} {
+# Preparation must not silently alter a reused engine's recorded binaries or inputs.
+$engineReason = Get-ReleaseReuseReason 'engine'
 if (-not $engineReason) {
     Say 'Reused Build-Release: release/fileVersion, complete source inventory and recorded binary hashes match; validation retained unchanged'
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/build/Prepare-Delivery.ps1','-Release',$Version,'-ReleaseDate',$ReleaseDate) 'refresh delivery/configurator from the unchanged engine record'
@@ -457,8 +610,13 @@ if (-not $engineReason) {
     }
     Say 'Build-Release OK'
  }
-$multiReason = Get-ReleaseReuseReason 'multi'
-if (-not $multiReason) {
+} {
+if ($multiReason) {
+    Run $PowerShell7 @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/build/Build-MultiVersion.ps1',
+        '-PublicApiRoot',$PublicApiRoot,'-Python',$Python,'-CompleteOnly','-Test') 'Build-MultiVersion.ps1 completion (current full-engine audits and record binding)'
+} else {
+    $reason=Get-ReleaseReuseReason 'multi'
+    if($reason){Fail ('Reused multi-version build changed during delivery preparation: '+$reason)}
     Say 'Reused Build-MultiVersion: release/fileVersion, complete source inventory and recorded binary hashes match; validation retained unchanged'
     # Prepare-Delivery may have refreshed only the engine/configurator binding. Bind the unchanged record, not new test results.
     $deliveryPath = Join-Path $repo 'manifest/delivery.json'
@@ -466,11 +624,7 @@ if (-not $multiReason) {
     $delivery | Add-Member -Force NoteProperty multiVersionBuildSha256 (Get-FileHash (Join-Path $repo 'manifest/multi-version-build.json')).Hash.ToLowerInvariant()
     $delivery | Add-Member -Force NoteProperty releaseKeys @('14sp1','15.1','16','17','18','19','20','21')
     [IO.File]::WriteAllText($deliveryPath, ($delivery | ConvertTo-Json -Depth 12), [Text.UTF8Encoding]::new($false))
-} else {
-    if ($SkipBuild) { Fail ('-SkipBuild refused: ' + $multiReason) }
-    Say ('Rebuilding Build-MultiVersion: ' + $multiReason)
-    Run $PowerShell7 @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts/build/Build-MultiVersion.ps1'),
-        '-PublicApiRoot', $PublicApiRoot, '-Python', $Python, '-SkipFullEngines', '-Test') 'Build-MultiVersion.ps1 (eight releases and Studio)'
+}
 }
 
 # ---------------------------------------------------------------- 4. local gates
