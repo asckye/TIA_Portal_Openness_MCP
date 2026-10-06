@@ -143,5 +143,19 @@
     "arguments": [
       "-p:TestVciFamily=classic"
     ]
+  },
+  "plc-exchange-v21": {
+    "project": "tests/Engine/TiaMcpServer.PlcExchangeTests/TiaMcpServer.PlcExchangeTests.csproj",
+    "minimumPassed": 84,
+    "maximumSkipped": 0,
+    "arguments": ["-p:EngineRelease=21"],
+    "publicApiRoot": true
+  },
+  "plc-exchange-v20": {
+    "project": "tests/Engine/TiaMcpServer.PlcExchangeTests/TiaMcpServer.PlcExchangeTests.csproj",
+    "minimumPassed": 84,
+    "maximumSkipped": 0,
+    "arguments": ["-p:EngineRelease=20"],
+    "publicApiRoot": true
   }
 }

@@ -12,7 +12,8 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
 {
     [Theory]
     [InlineData(400, "Regular")]
-    [InlineData(500, "Medium")]
+    // Only Regular and Bold ship (2026-10-06, package size); medium text uses the nearest embedded face.
+    [InlineData(500, "Regular")]
     [InlineData(700, "Bold")]
     public void Chinese_faces_resolve_to_the_embedded_font(int weight, string face)
     {

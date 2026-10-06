@@ -201,7 +201,7 @@ def check(root, no_binaries=False, package_mode=False):
                  'Fonts/Manrope-Regular.ttf', 'Fonts/Manrope-Medium.ttf',
                  'Fonts/Manrope-SemiBold.ttf', 'Fonts/Manrope-Bold.ttf', 'Fonts/Manrope-OFL.txt',
                  'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf',
-                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/NotoSansSC-Regular.otf', 'Fonts/NotoSansSC-Medium.otf',
+                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/NotoSansSC-Regular.otf',
                  'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt', 'Fonts/SOURCES.txt'):
         required(studio + 'Gui/' + name, 'GUI entry')
     roster = read('manifest/tools-list.json')

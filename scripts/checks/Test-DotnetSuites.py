@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 import json
 from pathlib import Path
 import re
+import os
 import subprocess
 import sys
 import unittest
@@ -127,8 +128,12 @@ def run_suite(name, suite, directory, dotnet='dotnet', arguments=()):
     # A previous successful run must never stand in for a failed build or a zero-test project.
     trx.unlink(missing_ok=True)
     report.unlink(missing_ok=True)
+    # Suites that compile a full engine need the PublicAPI copies; a worktree has no local sdk/ folder, so an explicit
+    # TIA_MCP_TEST_PUBLIC_API_ROOT becomes the MSBuild PublicAPI root (without it, src/Shared/TiaPublicApi.props decides).
+    api_root = os.environ.get('TIA_MCP_TEST_PUBLIC_API_ROOT')
+    api = [f'-p:TiaPublicApiRoot={api_root}'] if suite.get('publicApiRoot') and api_root else []
     command = [dotnet, 'test', str(ROOT / suite['project']), '-c', 'Release',
-               *suite['arguments'], *arguments,
+               *suite['arguments'], *api, *arguments,
                '--logger', f'trx;LogFileName={name}.trx', '--results-directory', str(directory)]
     print(f'RUN {name}: {subprocess.list2cmdline(command)}', flush=True)
     errors = []

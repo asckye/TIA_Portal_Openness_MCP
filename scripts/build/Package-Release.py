@@ -241,7 +241,6 @@ def main():
                 'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
                 'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
                 'src/Studio/Gui/Fonts/NotoSansSC-Regular.otf',
-                'src/Studio/Gui/Fonts/NotoSansSC-Medium.otf',
                 'src/Studio/Gui/Fonts/NotoSansSC-Bold.otf',
                 'src/Studio/Gui/Fonts/NotoSansSC-OFL.txt',
                 'src/Studio/Gui/Fonts/SOURCES.txt',
