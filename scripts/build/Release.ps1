@@ -208,7 +208,7 @@ function Get-ReleaseRuntimeFiles([string]$Root, [switch]$Prepared) {
     $bundled=Join-Path $Root 'runtime/dotnet'
     Get-ChildItem -LiteralPath (Join-Path $Root 'runtime') -Recurse -File | Where-Object {
         ($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith($bundled+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) -and
-        $_.Name -ne 'README.md' -and (-not $Prepared -or $_.FullName -notmatch '[\\/]runtime[\\/](v20|v21|verification)[\\/]')
+        $_.Name -ne 'README.md' -and (-not $Prepared -or $_.FullName -notmatch '[\\/]runtime[\\/](v20|v21|verification|tools)[\\/]')
     } | Sort-Object FullName | ForEach-Object {
         [pscustomobject]@{path=$_.FullName.Substring($Root.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
     }
