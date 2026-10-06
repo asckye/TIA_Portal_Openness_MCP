@@ -6,9 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using TiaMcp.Logic.V4;
 using TiaMcpServer.Siemens;
+using TiaMcpServer.Runtime;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -68,12 +71,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else if (fix)
                 {
-                    try { groupOk = await Siemens.Openness.IsUserInGroup(); }
+                    try { groupOk = await ReadOpennessGroup(fix: true); }
                     catch /* swallow(env-probe): a failed membership check or repair is reported as groupOk=false */ { groupOk = false; }
                 }
                 else
                 {
-                    try { groupOk = Siemens.Openness.IsUserInGroupNoFix(); }
+                    try { groupOk = await ReadOpennessGroup(fix: false); }
                     catch /* swallow(env-probe): unavailable membership information is reported as groupOk=false */ { groupOk = false; }
                 }
                 checks.Add(new DoctorCheck
@@ -108,7 +111,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 // 3) Connection + project state
                 bool connected = false; string? projectName = null;
-                try { if (Runtime.OpennessReadiness.Ready) { var st = EngineServices.Get<Siemens.Portal>().GetState(); connected = st?.IsConnected ?? false; projectName = st?.Project; } }
+                try
+                {
+                    if (Runtime.OpennessReadiness.Ready)
+                    {
+                        var state = ReadPortalState();
+                        connected = state.Connected;
+                        projectName = state.ProjectName;
+                    }
+                }
                 catch { /* swallow(probe-optional): unavailable session state keeps the disconnected diagnostic */ }
                 bool hasProject = !string.IsNullOrWhiteSpace(projectName) && projectName != "-";
                 checks.Add(new DoctorCheck
@@ -148,6 +159,22 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 throw new McpException($"GetEnvironmentDiagnostics unexpected error: {ex.Message}", ex, McpErrorCode.InternalError);
             }
+        }
+
+        // A no-inline boundary prevents the no-TIA diagnostic path from JIT-resolving Portal's
+        // Siemens.Engineering field types. This helper runs only after readiness is established.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (bool Connected, string? ProjectName) ReadPortalState()
+        {
+            var state = EngineServices.Get<Siemens.Portal>().GetState();
+            return (state?.IsConnected ?? false, state?.Project);
+        }
+
+        // Keep Siemens.Collaboration.Net references out of Doctor's no-TIA code path.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Task<bool> ReadOpennessGroup(bool fix)
+        {
+            return fix ? Siemens.Openness.IsUserInGroup() : Task.FromResult(Siemens.Openness.IsUserInGroupNoFix());
         }
     }
 }

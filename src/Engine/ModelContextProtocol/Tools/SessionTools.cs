@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TiaMcpServer.Siemens;
+using TiaMcpServer.Runtime;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -22,6 +24,142 @@ namespace TiaMcpServer.ModelContextProtocol
         private readonly IEngineeringSession _session;
 
         public SessionTools(IEngineeringSession session) => _session = session;
+
+        [McpServerTool(Name = "InitializeEnvironment"), Description("[L0][Bootstrap] FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call ConnectPortal afterwards based on RecommendedNextTool.")]
+        public Task<CallToolResult> InitializeEnvironmentV4()
+            => SessionToolContract.RunAsync("InitializeEnvironment", false, false, () => Bootstrap());
+
+        private static async Task<ResponseBootstrap> Bootstrap()
+        {
+            try
+            {
+                var env = new BootstrapEnvironment
+                {
+                    TiaVersionInUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion,
+                    TiaVersionDetected = Engineering.DetectTiaMajorVersion(),
+                    TiaInstallPath = Environment.GetEnvironmentVariable("TiaPortalLocation"),
+                    Transport = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
+                };
+
+                bool isolatedParent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
+                if (OpennessReadiness.GroupOk.HasValue) env.OpennessGroupOk = OpennessReadiness.GroupOk.Value;
+                else if (isolatedParent) env.OpennessGroupOk = EnvironmentDoctor.CurrentUserInOpennessGroup();
+                else if (OpennessReadiness.Ready)
+                {
+                    try { env.OpennessGroupOk = ReadBootstrapOpennessGroup(); }
+                    catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
+                }
+
+                if (isolatedParent && OpennessReadiness.Ready)
+                {
+                    if (env.OpennessGroupOk != true)
+                    {
+                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
+                        const string fix = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+                        OpennessReadiness.MarkUnavailable(cause, fix, fix, false);
+                    }
+                    else
+                    {
+                        var check = EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, env.TiaVersionDetected)
+                            .FirstOrDefault(item => item.Gating && !item.Ok);
+                        if (check != null)
+                            OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? "Run `tia doctor` for repair steps.",
+                                check.FixZh ?? check.FixEn ?? "Run `tia doctor` for repair steps.", true);
+                        else OpennessReadiness.MarkReady(true);
+                    }
+                }
+
+                var portalDto = OpennessReadiness.Ready ? ReadBootstrapPortal() : new BootstrapPortal { Connected = false };
+                string nextTool;
+                string reason;
+                if (!OpennessReadiness.Ready)
+                {
+                    if (env.OpennessGroupOk == false) nextTool = "EnsureOpennessUserGroup";
+                    else if (env.TiaVersionDetected == null) nextTool = "(install TIA Portal)";
+                    else nextTool = "(repair TIA Openness environment)";
+                    reason = OpennessReadiness.Guidance(EnvironmentDoctor.PreferChinese);
+                }
+                else if (env.OpennessGroupOk != true)
+                {
+                    nextTool = "EnsureOpennessUserGroup";
+                    reason = "Current user is not in 'Siemens TIA Openness' Windows group; add the user to this local group, sign out and back in, then restart the MCP client.";
+                }
+                else if (env.TiaVersionInUse == null && env.TiaVersionDetected == null)
+                {
+                    nextTool = "(install TIA Portal)";
+                    reason = "No TIA Portal installation detected. Install V18+ and set TiaPortalLocation env var.";
+                }
+                else if (portalDto.Connected != true)
+                {
+                    nextTool = "ConnectPortal";
+                    reason = "Not connected to TIA Portal yet. ConnectPortal first; if a project is already open in TIA UI, then call AttachOpenProject.";
+                }
+                else if (string.IsNullOrWhiteSpace(portalDto.ProjectName) || portalDto.ProjectName == "-")
+                {
+                    nextTool = "AttachOpenProject";
+                    reason = "Connected to portal but no project bound. Use AttachOpenProject if a project is already open in TIA UI, or OpenProject/CreateProject otherwise.";
+                }
+                else
+                {
+                    nextTool = "GetProjectTree";
+                    reason = "Project is open. Inspect the tree before any write operation.";
+                }
+
+                var layers = new BootstrapToolLayers
+                {
+                    L0 = new[] { "InitializeEnvironment", "GetSessionState", "RunCapabilitySelfTest" },
+                    L1 = new[] { "ConnectPortal", "DisconnectPortal", "AttachOpenProject", "OpenProject", "CreateProject",
+                        "SaveProject", "CloseProject", "GetProjectTree", "GetSoftwareTree", "BuildAndImportPlcArtifact",
+                        "CompilePlcSoftware", "DownloadPlc", "ConnectOnlinePlc", "DisconnectOnlinePlc" },
+                    L2Count = GetMcpToolNames().Count(),
+                };
+                var rules = new[] { TiaOpenness.Shared.ToolUsageCatalog.Instructions,
+                    IsLiteProfile() ? "FindTools searches all tools in this release; CallTool invokes a discovered tool." : "All tools in this release are listed." };
+                var limits = new[] { "Availability depends on the selected release, target object and installed options; read the selected tool's contract and example evidence." };
+                bool ready = OpennessReadiness.Ready && env.OpennessGroupOk == true
+                    && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
+
+                return new ResponseBootstrap
+                {
+                    Ready = ready, Environment = env, Portal = portalDto, RecommendedNextTool = nextTool,
+                    RecommendedReason = reason, OperatingRules = rules, KnownLimitations = limits, ToolLayers = layers,
+                    SkillFile = "plugin/skill/SKILL.md", ServerVersion = typeof(McpServer).Assembly.GetName().Version?.ToString(),
+                    Capabilities = Capability.Snapshot(), Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"InitializeEnvironment unexpected error: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        // Keep Siemens references out of Bootstrap so it remains JIT-safe without TIA assemblies.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static bool ReadBootstrapOpennessGroup()
+        {
+            return Siemens.Openness.IsUserInGroupNoFix();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static BootstrapPortal ReadBootstrapPortal()
+        {
+            var session = EngineServices.Get<IEngineeringSession>();
+            var portalDto = new BootstrapPortal();
+            try
+            {
+                var state = session.GetState();
+                portalDto.Connected = state?.IsConnected;
+                portalDto.ProjectName = state?.Project;
+                portalDto.SessionName = state?.Session;
+            }
+            catch /* swallow(probe-optional): Bootstrap remains available with a disconnected indication when the current Portal state cannot be read */
+            {
+                portalDto.Connected = false;
+            }
+            portalDto.LastConnectError = session.LastConnectError;
+            return portalDto;
+        }
 
         [McpServerTool(Name = "ConnectPortal"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolatedPortal to start a separate headless instance. Meta contains boundProcessId, startedNew and binding. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectPortalV4(
@@ -211,149 +349,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 var process = _session.GetPortalProcessHealth();
                 var dead = process["processAlive"] is JsonValue alive && alive.TryGetValue<bool>(out var running) && !running;
                 throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}{McpHints.Recovery(ex)}" + (dead ? $"  ▶ TIA Portal process {process["boundProcessId"]} is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachOpenProject." : ""), ex, McpErrorCode.InternalError);
-            }
-        }
-
-        [McpServerTool(Name = "InitializeEnvironment"), Description("[L0][Bootstrap] FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call ConnectPortal afterwards based on RecommendedNextTool.")]
-        public Task<CallToolResult> InitializeEnvironmentV4()
-            => SessionToolContract.RunAsync("InitializeEnvironment", false, false, () => Bootstrap());
-
-        public async Task<ResponseBootstrap> Bootstrap()
-        {
-            try
-            {
-                var env = new BootstrapEnvironment
-                {
-                    TiaVersionInUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion,
-                    TiaVersionDetected = Engineering.DetectTiaMajorVersion(),
-                    TiaInstallPath = Environment.GetEnvironmentVariable("TiaPortalLocation"),
-                    Transport = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
-                };
-
-                bool isolatedParent = TiaMcpServer.Isolation.IsolatedWorkerHost.Current != null
-                    && !TiaMcpServer.Isolation.IsolatedWorkerHost.IsChild;
-                if (Runtime.OpennessReadiness.GroupOk.HasValue) env.OpennessGroupOk = Runtime.OpennessReadiness.GroupOk.Value;
-                else if (isolatedParent) env.OpennessGroupOk = Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup();
-                else if (Runtime.OpennessReadiness.Ready)
-                {
-                    try { env.OpennessGroupOk = Siemens.Openness.IsUserInGroupNoFix(); }
-                    catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
-                }
-
-                if (isolatedParent && Runtime.OpennessReadiness.Ready)
-                {
-                    if (env.OpennessGroupOk != true)
-                    {
-                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
-                        const string fix = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
-                        Runtime.OpennessReadiness.MarkUnavailable(cause, fix, fix, false);
-                    }
-                    else
-                    {
-                        var check = Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, env.TiaVersionDetected)
-                            .FirstOrDefault(item => item.Gating && !item.Ok);
-                        if (check != null)
-                            Runtime.OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? "Run `tia doctor` for repair steps.",
-                                check.FixZh ?? check.FixEn ?? "Run `tia doctor` for repair steps.", true);
-                        else Runtime.OpennessReadiness.MarkReady(true);
-                    }
-                }
-
-                var portalDto = new BootstrapPortal();
-                try
-                {
-                    if (!Runtime.OpennessReadiness.Ready) throw new InvalidOperationException("TIA Openness is not ready.");
-                    var st = _session.GetState();
-                    portalDto.Connected = st?.IsConnected;
-                    portalDto.ProjectName = st?.Project;
-                    portalDto.SessionName = st?.Session;
-                }
-                catch /* swallow(probe-optional): Bootstrap remains available with a disconnected indication when the current Portal state cannot be read */ { portalDto.Connected = false; }
-                portalDto.LastConnectError = _session.LastConnectError;
-
-                string nextTool;
-                string reason;
-                if (!Runtime.OpennessReadiness.Ready)
-                {
-                    if (env.OpennessGroupOk == false)
-                    {
-                        nextTool = "EnsureOpennessUserGroup";
-                    }
-                    else if (env.TiaVersionDetected == null)
-                    {
-                        nextTool = "(install TIA Portal)";
-                    }
-                    else
-                    {
-                        nextTool = "(repair TIA Openness environment)";
-                    }
-                    reason = Runtime.OpennessReadiness.Guidance(Runtime.EnvironmentDoctor.PreferChinese);
-                }
-                else if (env.OpennessGroupOk != true)
-                {
-                    nextTool = "EnsureOpennessUserGroup";
-                    reason = "Current user is not in 'Siemens TIA Openness' Windows group; add the user to this local group, sign out and back in, then restart the MCP client.";
-                }
-                else if (env.TiaVersionInUse == null && env.TiaVersionDetected == null)
-                {
-                    nextTool = "(install TIA Portal)";
-                    reason = "No TIA Portal installation detected. Install V18+ and set TiaPortalLocation env var.";
-                }
-                else if (portalDto.Connected != true)
-                {
-                    nextTool = "ConnectPortal";
-                    reason = "Not connected to TIA Portal yet. ConnectPortal first; if a project is already open in TIA UI, then call AttachOpenProject.";
-                }
-                else if (string.IsNullOrWhiteSpace(portalDto.ProjectName) || portalDto.ProjectName == "-")
-                {
-                    nextTool = "AttachOpenProject";
-                    reason = "Connected to portal but no project bound. Use AttachOpenProject if a project is already open in TIA UI, or OpenProject/CreateProject otherwise.";
-                }
-                else
-                {
-                    nextTool = "GetProjectTree";
-                    reason = "Project is open. Inspect the tree before any write operation.";
-                }
-
-                var layers = new BootstrapToolLayers
-                {
-                    L0 = new[] { "InitializeEnvironment", "GetSessionState", "RunCapabilitySelfTest" },
-                    L1 = new[]
-                    {
-                        "ConnectPortal", "DisconnectPortal", "AttachOpenProject", "OpenProject", "CreateProject",
-                        "SaveProject", "CloseProject", "GetProjectTree", "GetSoftwareTree",
-                        "BuildAndImportPlcArtifact", "CompilePlcSoftware", "DownloadPlc", "ConnectOnlinePlc", "DisconnectOnlinePlc"
-                    },
-                    L2Count = McpServer.GetMcpToolNames().Count(),
-                };
-
-                var rules = new[] { TiaOpenness.Shared.ToolUsageCatalog.Instructions,
-                    IsLiteProfile() ? "FindTools searches all tools in this release; CallTool invokes a discovered tool." : "All tools in this release are listed." };
-                var limits = new[] { "Availability depends on the selected release, target object and installed options; read the selected tool's contract and example evidence." };
-
-                bool ready = Runtime.OpennessReadiness.Ready && env.OpennessGroupOk == true
-                    && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
-
-                return new ResponseBootstrap
-                {
-                    Ready = ready,
-                    Environment = env,
-                    Portal = portalDto,
-                    RecommendedNextTool = nextTool,
-                    RecommendedReason = reason,
-                    OperatingRules = rules,
-                    KnownLimitations = limits,
-                    ToolLayers = layers,
-                    SkillFile = "plugin/skill/SKILL.md",
-                    ServerVersion = typeof(McpServer).Assembly.GetName().Version?.ToString(),
-                    Capabilities = Capability.Snapshot(),
-                    Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
-                    Meta = ResponseMeta.Basic(DateTime.Now, true)
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"InitializeEnvironment unexpected error: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 

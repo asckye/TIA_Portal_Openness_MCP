@@ -15,8 +15,25 @@ internal static partial class Program
 {
     private static Assembly Server = null!;
     internal static Type FindServerType(Assembly server, string name)
-        => server.GetType(name, false)
-            ?? Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!, "TiaMcp.Logic.dll")).GetType(name, true)!;
+        => FindReferencedType(server, name);
+    internal static Type FindReferencedType(Assembly server, string name)
+    {
+        var direct = server.GetType(name, false);
+        if (direct != null) return direct;
+
+        foreach (var reference in server.GetReferencedAssemblies())
+        {
+            Assembly assembly;
+            try { assembly = Assembly.Load(reference); }
+            catch (Exception error) when (error is FileNotFoundException || error is FileLoadException
+                || error is BadImageFormatException || error is TypeLoadException) { continue; }
+
+            var type = assembly.GetType(name, false);
+            if (type != null) return type;
+        }
+
+        throw new TypeLoadException("Could not find type '" + name + "' in the engine or any of its referenced assemblies.");
+    }
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
@@ -384,6 +401,11 @@ internal static partial class Program
             if(args.Length >= 3 && args[1] == "host-build-no-tia") {
                 StartupNoTiaChecks.Run(Server, int.Parse(args[2]), label => { Passed++; Console.WriteLine("PASS " + label); });
                 Console.WriteLine("COMPLETE: " + Passed + " no-TIA host-build checks passed");
+                return 0;
+            }
+            if(args.Length >= 3 && args[1] == "packaged-start-no-tia") {
+                PackagedStdioStartupChecks.Run(Server, int.Parse(args[2]), label => { Passed++; Console.WriteLine("PASS " + label); });
+                Console.WriteLine("COMPLETE: " + Passed + " packaged no-TIA STDIO startup checks passed");
                 return 0;
             }
             if(args.Length >= 3 && args[1] == "http-start-no-tia") {

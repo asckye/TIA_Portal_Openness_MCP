@@ -132,7 +132,9 @@ namespace TiaMcpServer.Isolation
             {
                 bool controlBridge = tool.Name == "CallTool" && request.Params?.Arguments != null &&
                     request.Params.Arguments.TryGetValue("name", out var target) && target.ValueKind == JsonValueKind.String && IsControl(target.GetString());
-                if (IsControl(tool.Name) || controlBridge) return await local.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+                if (IsControl(tool.Name) || controlBridge
+                    || (!Runtime.OpennessReadiness.Ready && OpennessReadinessGuard.IsSafeWithoutTia(tool.Name)))
+                    return await local.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 using var journal = InvocationJournal.Observe(Guid.NewGuid().ToString("N"), tool.Name, "engine-worker", McpServer.ReleaseKey,
                     McpServer.IsWriteTool(tool.Name), () => JsonSerializer.Serialize(request.Params?.Arguments, McpJsonUtilities.DefaultOptions));
                 CallToolResult Recorded(CallToolResult result)

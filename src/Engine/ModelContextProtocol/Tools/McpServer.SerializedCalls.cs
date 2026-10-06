@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
@@ -66,7 +67,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static void ValidateRuntimeTool(string name, string? description, string? operation = null)
         {
-            // Never create a Portal for an offline request; inspection stays available after a fault.
+            if (!TiaMcpServer.Runtime.OpennessReadiness.Ready) return;
+            ValidateReadyRuntimeTool(name, operation);
+        }
+
+        // Keep Siemens-backed Portal type references out of the no-TIA invocation path.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ValidateReadyRuntimeTool(string name, string? operation)
+        {
             var portal = EngineServices.GetIfInitialized(typeof(Siemens.Portal)) as Siemens.Portal;
             if (portal != null && PreflightLogic.NeedsProject(operation ?? ToolTaxonomy.OperationOf(name, null).Operation, name))
                 portal.VerifyBinding(name);

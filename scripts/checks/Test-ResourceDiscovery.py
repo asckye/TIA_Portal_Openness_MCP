@@ -46,8 +46,10 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             port = sock.getsockname()[1]
     endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
-    args = [str(exe), '--tia-major-version', str(major), '--tia-portal-location',
-            str(portal_root), '--transport', transport, '--logging', '1']
+    args = [str(exe), '--tia-major-version', str(major)]
+    if portal_root is not None:
+        args += ['--tia-portal-location', str(portal_root)]
+    args += ['--transport', transport, '--logging', '1']
     if transport == 'http':
         args += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
     if isolate:

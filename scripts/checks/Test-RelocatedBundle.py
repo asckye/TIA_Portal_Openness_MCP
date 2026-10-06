@@ -9,6 +9,10 @@ resolves API assemblies; it contains no TIA executable and never connects to TIA
 PLC. The approval probe uses RestartOpennessWorker, a local diagnostic write that does
 not reach Openness.
 
+The packaged no-TIA matrix separately stages V20/V21 runtime directories without
+Siemens.Engineering*.dll and starts those EXEs over STDIO and HTTP, with isolation
+off and on. It runs only when no TIA installation path is detected.
+
 The check also probes the root launcher with a temporary target executable, verifies
 that an invalid explicit bundle root does not fall back to the environment, checks
 selected-engine refusal and calls UpdateCheck.Launch against this source checkout.
@@ -223,6 +227,45 @@ def in_openness_group() -> bool:
                for row in csv.reader(result.stdout.splitlines()))
 
 
+def tia_installation_detected() -> bool:
+    explicit = os.environ.get("TiaPortalLocation")
+    if explicit and Path(explicit).is_dir():
+        return True
+    if os.name != "nt":
+        return True
+    import winreg
+
+    base = r"SOFTWARE\Siemens\Automation\_InstalledSW"
+    access = winreg.KEY_READ
+    for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base, 0, access | view) as installed:
+                index = 0
+                while True:
+                    try:
+                        release = winreg.EnumKey(installed, index)
+                    except OSError as error:
+                        if getattr(error, "winerror", None) == 259:
+                            break
+                        raise CheckFailure("Cannot confirm that TIA is absent from the registry") from error
+                    index += 1
+                    if not release.upper().startswith("TIAP"):
+                        continue
+                    for section in ("TIA_Opns", "Global"):
+                        try:
+                            with winreg.OpenKey(installed, release + "\\" + section, 0, access) as entry:
+                                path, _ = winreg.QueryValueEx(entry, "Path")
+                            if path and Path(path).is_dir():
+                                return True
+                        except FileNotFoundError:
+                            pass
+        except FileNotFoundError:
+            continue
+        except PermissionError as error:
+            raise CheckFailure("Cannot confirm that TIA is absent from the registry") from error
+    return False
+
+
 @contextmanager
 def direct_engine_server(root: Path, key: str, installation: Path, temp_root: Path,
                          transport: str, isolate: bool):
@@ -362,6 +405,108 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
         if status.get("environmentReady") is not False or not status.get("environmentCause"):
             raise CheckFailure(f"V{key} {transport} {mode}: status did not retain environment-not-ready state: {status}")
+        return len(roster)
+
+
+def stage_packaged_engine_without_siemens(root: Path, key: str, temp_root: Path) -> Path:
+    source = product_executable(root, key).parent
+    runtime = temp_root / f"packaged-no-tia-v{key}" / "runtime" / f"v{key}"
+
+    def omit_siemens(_directory: str, names: list[str]) -> set[str]:
+        return {name for name in names
+                if name.lower().startswith("siemens.engineering") and name.lower().endswith(".dll")}
+
+    if not runtime.exists():
+        shutil.copytree(source, runtime, ignore=omit_siemens)
+    remaining = [path for path in runtime.rglob("*.dll")
+                 if path.name.lower().startswith("siemens.engineering")]
+    if remaining:
+        raise CheckFailure(f"Packaged test layout retained Siemens.Engineering assemblies: {remaining[:3]}")
+    exe = runtime / product_executable(root, key).name
+    if not exe.is_file():
+        raise CheckFailure(f"Staged V{key} packaged engine is missing: {exe}")
+    return exe
+
+
+def check_packaged_no_tia(root: Path, key: str, expected: int, temp_root: Path,
+                          transport: str, isolate: bool) -> int:
+    mode = "isolation-on" if isolate else "isolation-off"
+    exe = stage_packaged_engine_without_siemens(root, key, temp_root)
+    data = temp_root / f"packaged-no-tia-data-v{key}-{transport}-{mode}"
+    data.mkdir(parents=True, exist_ok=True)
+    local = temp_root / "profile" / "local"
+    roaming = temp_root / "profile" / "roaming"
+    local.mkdir(parents=True, exist_ok=True)
+    roaming.mkdir(parents=True, exist_ok=True)
+    overrides = {
+        "TiaPortalLocation": "",
+        "TIA_MCP_DATA_DIRECTORY": str(data),
+        "TIA_MCP_BUNDLE_ROOT": str(exe.parents[2]),
+        "TEMP": str(temp_root), "TMP": str(temp_root),
+        "LOCALAPPDATA": str(local), "APPDATA": str(roaming),
+    }
+    with resource_discovery.server(exe, None, int(key), transport, "full",
+            isolate=isolate, env_overrides=overrides) as (rpc, _http, logs):
+        initialized = rpc("initialize", "initialize", {
+            "protocolVersion": PROTOCOL_VERSION, "capabilities": {},
+            "clientInfo": {"name": "p6-54b-packaged-no-tia", "version": "1"},
+        })
+        if not initialized or not isinstance(initialized.get("result"), dict):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: initialize failed: {logs[-10:]}")
+        rpc("notifications/initialized", notification=True)
+        roster: list[dict] = []
+        cursor = None
+        while True:
+            reply = rpc("tools/list", "roster" if cursor is None else "roster-" + cursor,
+                        {} if cursor is None else {"cursor": cursor})
+            page = reply.get("result", {}).get("tools")
+            if not isinstance(page, list):
+                raise CheckFailure(f"V{key} packaged {transport} {mode}: tools/list returned no tools")
+            roster.extend(page)
+            cursor = reply.get("result", {}).get("nextCursor")
+            if cursor is None:
+                break
+        names = [tool.get("name") for tool in roster]
+        if len(names) != expected or len(names) != len(set(names)):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: tool roster {len(names)} != {expected}")
+
+        def call(name: str, arguments: dict | None = None) -> dict:
+            return extract_v4_body(rpc("tools/call", "call-" + name,
+                {"name": name, "arguments": arguments or {}}))
+
+        bootstrap = call("InitializeEnvironment")
+        if (bootstrap.get("data", {}).get("ready") is not False
+                or "no TIA Portal V" not in bootstrap.get("data", {}).get("recommendedReason", "")):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: InitializeEnvironment omitted no-TIA readiness: {bootstrap}")
+        doctor = call("GetEnvironmentDiagnostics", {"fix": False})
+        if (doctor.get("data", {}).get("ready") is not False
+                or "no TIA Portal V" not in json.dumps(doctor.get("data", {}), ensure_ascii=False)):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: diagnostics omitted no-TIA readiness: {doctor}")
+        refusal = call("GetSessionState")
+        if (refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
+                or refusal.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
+                or refusal.get("meta", {}).get("outcome") != "rejected-before-operation"
+                or refusal.get("meta", {}).get("execution") != "not-started"):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: GetSessionState was not refused before dispatch: {refusal}")
+        worker_refusal = call("RestartOpennessWorker")
+        if (worker_refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
+                or worker_refusal.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
+                or worker_refusal.get("meta", {}).get("execution") != "not-started"):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: worker control was not refused before dispatch: {worker_refusal}")
+        discovery = call("FindTools", {"query": "BuildPlcUdt", "limit": 1})
+        if not isinstance(discovery.get("data", {}).get("items"), list):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: local discovery failed: {discovery}")
+        usage = call("GetToolUsage", {"toolName": "BuildPlcUdt"})
+        build_arguments = usage.get("data", {}).get("example", {}).get("request", {}).get("params", {}).get("arguments")
+        if not isinstance(build_arguments, dict):
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: local usage example was unavailable: {usage}")
+        built = call("BuildPlcUdt", build_arguments)
+        if built.get("ok") is not True:
+            raise CheckFailure(f"V{key} packaged {transport} {mode}: offline builder failed: {built}")
+        if isolate:
+            worker = call("GetOpennessWorkerStatus").get("data", {}).get("evidence", {}).get("worker", {})
+            if worker.get("state") != "NotStarted":
+                raise CheckFailure(f"V{key} packaged {transport} {mode}: a safe local call started the worker: {worker}")
         return len(roster)
 
 
@@ -794,6 +939,18 @@ def run_bundle_check(args: argparse.Namespace) -> int:
                                                  installations[key], transport, isolate)
                     engine_modes[key].append(f"{transport}/{'isolation-on' if isolate else 'default-off'}={count}")
                     print(f"PASS V{key}: real EXE {transport}, isolation={'on' if isolate else 'default-off'}, tools/list {count}")
+        packaged_modes = {}
+        if tia_installation_detected():
+            print("SKIP packaged no-TIA matrix: a TIA installation path is present")
+        else:
+            for key in ("20", "21"):
+                packaged_modes[key] = []
+                for transport in ("stdio", "http"):
+                    for isolate in (False, True):
+                        count = check_packaged_no_tia(destination, key, counts[key], user_temp, transport, isolate)
+                        mode = f"{transport}/{'isolation-on' if isolate else 'isolation-off'}={count}"
+                        packaged_modes[key].append(mode)
+                        print(f"PASS V{key}: packaged no-TIA {transport}, isolation={'on' if isolate else 'off'}, tools/list {count}")
         invalid_count = invalid_root_checks(destination, user_temp)
         print(f"PASS invalid explicit --bundle-root refused without fallback: {invalid_count}/{len(RELEASE_KEYS)} release keys")
 
@@ -817,6 +974,7 @@ def run_bundle_check(args: argparse.Namespace) -> int:
         print(f"bundle={destination}")
         print(f"tools={json.dumps(results, sort_keys=True)}")
         print(f"engineModes={json.dumps(engine_modes, sort_keys=True)}")
+        print(f"packagedNoTiaModes={json.dumps(packaged_modes, sort_keys=True)}")
         print(f"invalidRoots={invalid_count}/{len(RELEASE_KEYS)} approval={approval}")
         return 0
     finally:

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -17,27 +16,32 @@ namespace TiaMcpServer.Isolation
 {
     internal static class OpennessReadinessGuard
     {
-        private static readonly HashSet<string> NoOpenness = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        // These are the only calls admitted before TIA is ready. They are local diagnostics,
+        // discovery/usage/catalog helpers, offline builders and export-handle storage. Keep this
+        // fixed: changing catalog metadata alone must never admit a new tool without review.
+        private static readonly HashSet<string> SafeWithoutTia = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus", "RestartOpennessWorker",
+            "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
             "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
-            "GetToolSchema", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckProductUpdate",
-            "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "GetSessionState", "EnsureOpennessUserGroup",
+            "ListToolCategories", "GetToolUsage", "PreviewToolCall",
             "GetOpennessGuidance", "GetV21EcosystemCatalog", "PlanArtifactImportOrder",
+            "BuildClassicHmiMinimalPackage",
+            "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildFlgNetCall",
+            "BuildPlcAliasAlarmLad", "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb",
+            "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath", "BuildPlcTagTable", "BuildPlcUdt",
+            "BuildReleaseDiagnosticReport", "BuildReleaseManifest", "BuildReleaseRunbook", "BuildStructuredText",
+            "DecodePlcSimaticMl", "ValidatePlcDocumentSchemas",
+            "RenderPlcBlock", "RenderPlcProgramAtlas", "RenderPlcVisualDiff",
+            "ScanPlcSourceAnnotations",
             "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
         };
 
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
             => tools.Select(tool => (McpServerTool)new GuardedTool(tool)).ToList();
 
-        private static bool RequiresOpenness(string name)
-        {
-            if (NoOpenness.Contains(name)) return false;
-            var classification = ToolMetadata.Find(name);
-            if (classification == null && McpServer.AllToolMethods(true).TryGetValue(name, out var method))
-                classification = method.GetCustomAttribute<ToolClassificationAttribute>()?.Value;
-            return classification?.Operation != "OFFLINE";
-        }
+        internal static bool IsSafeWithoutTia(string name) => SafeWithoutTia.Contains(name);
+
+        private static bool RequiresOpenness(string name) => !IsSafeWithoutTia(name);
 
         private static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments)
         {

@@ -89,6 +89,8 @@ RESPONSE_LIMIT = 16 * 1024
 RESPONSE_FORMAT_VERSION = 3
 FULL_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
                         'maxResponseChars', 'coverage', 'calls'}
+LEGACY_FULL_RESPONSE_FIELDS = FULL_RESPONSE_FIELDS.copy()
+FULL_RESPONSE_FIELDS.add('captureMode')
 FOUNDATION_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
                               'coverage', 'calls'}
 FULL_COVERAGE_FIELDS = {'registeredTools', 'calledTools', 'behaviorCallTools', 'directRejectedTools',
@@ -526,6 +528,23 @@ def scratch_directory(parent):
         shutil.rmtree(scratch)
 
 
+def stage_packaged_engine_without_siemens(exe, release, scratch):
+    runtime = scratch / 'runtime' / ('v' + release)
+
+    def omit_siemens(_directory, names):
+        return {name for name in names
+                if name.lower().startswith('siemens.engineering') and name.lower().endswith('.dll')}
+
+    shutil.copytree(exe.parent, runtime, ignore=omit_siemens)
+    remaining = [path for path in runtime.rglob('*.dll')
+                 if path.name.lower().startswith('siemens.engineering')]
+    resources.require(not remaining,
+                      'Packaged snapshot layout retained Siemens.Engineering DLLs: ' + str(remaining[:3]))
+    staged = runtime / exe.name
+    resources.require(staged.is_file(), 'Packaged snapshot engine was not staged: ' + str(staged))
+    return staged
+
+
 def capture_release(args, release, exe, public_api):
     with scratch_directory(args.temp_root) as scratch:
         data_directory = scratch / 'data'
@@ -535,11 +554,20 @@ def capture_release(args, release, exe, public_api):
         env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory),
                'TIA_MCP_MAX_RESPONSE_CHARS': '2000000',
                'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(scratch / 'diagnostics')}
-        if args.harness is None and release in FULL_RELEASES:
-            env['TIA_MCP_BUNDLE_ROOT'] = str(args.repo_root.resolve())
-        portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
-                       if args.harness is None and release in FULL_RELEASES else public_api)
-        with resources.server(exe, portal_root, int(release), 'stdio', 'full',
+        capture_mode = 'packaged-no-tia' if args.packaged_no_tia else 'sdk-only-fixture'
+        if args.packaged_no_tia:
+            resources.require(args.harness is None, 'Packaged no-TIA capture must launch the real EXE')
+            capture_exe = stage_packaged_engine_without_siemens(exe, release, scratch)
+            portal_root = None
+            env['TiaPortalLocation'] = ''
+            env['TIA_MCP_BUNDLE_ROOT'] = str(scratch)
+        else:
+            capture_exe = exe
+            if args.harness is None and release in FULL_RELEASES:
+                env['TIA_MCP_BUNDLE_ROOT'] = str(args.repo_root.resolve())
+            portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
+                           if args.harness is None and release in FULL_RELEASES else public_api)
+        with resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
                               args.harness.resolve() if args.harness else None, public_api, env_overrides=env
                               ) as (rpc, _, logs):
             tools = initialize(rpc)
@@ -549,10 +577,24 @@ def capture_release(args, release, exe, public_api):
             def decoded(name, arguments):
                 return body(call(name, arguments))
 
-            state = decoded('GetSessionState', {})
-            resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
-            resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
-                              'Journal is not writable; use --temp-root inside the writable worktree')
+            if args.packaged_no_tia:
+                bootstrap = decoded('InitializeEnvironment', {})
+                resources.require(bootstrap['data']['ready'] is False
+                                  and 'no TIA Portal V' in bootstrap['data']['recommendedReason'],
+                                  'Packaged no-TIA bootstrap omitted its readiness cause')
+                doctor = decoded('GetEnvironmentDiagnostics', {'fix': False})
+                resources.require(doctor['data']['ready'] is False
+                                  and 'no TIA Portal V' in canonical(doctor['data']),
+                                  'Packaged no-TIA diagnostics omitted their readiness cause')
+                state = decoded('GetSessionState', {})
+                session_readiness_refusal(state, 'GetSessionState')
+                resources.require('no TIA Portal V' in state['data']['environment']['cause'],
+                                  'GetSessionState readiness refusal omitted the no-TIA cause')
+            else:
+                state = decoded('GetSessionState', {})
+                resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
+                resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
+                                  'Journal is not writable; use --temp-root inside the writable worktree')
             # On this no-TIA host, readiness precedes approval. Product defaults
             # remain in effect, but save/close calls must stop at readiness first.
             for name, arguments in (
@@ -573,11 +615,14 @@ def capture_release(args, release, exe, public_api):
                 result = decoded(name, arguments)
                 meta = result['meta']
                 if name == 'CheckProductUpdate':
-                    meta = result['data']['evidence']
-                    resources.require(meta['installRoot'] is None and meta['updaterScript'] is None
-                                      and meta['success'] is False and 'releaseApiUrl' not in meta
-                                      and result['data']['summary'].startswith("repository must be 'owner/name'"),
-                                      'Expected bin-layout update refusal before HTTP: ' + reason)
+                    if args.packaged_no_tia:
+                        session_readiness_refusal(result, name)
+                    else:
+                        meta = result['data']['evidence']
+                        resources.require(meta['installRoot'] is None and meta['updaterScript'] is None
+                                          and meta['success'] is False and 'releaseApiUrl' not in meta
+                                          and result['data']['summary'].startswith("repository must be 'owner/name'"),
+                                          'Expected bin-layout update refusal before HTTP: ' + reason)
                 else:
                     resources.require(result['ok'] is True and result['data']['total'] > 0,
                                       'Expected successful offline resource read: ' + reason)
@@ -632,7 +677,7 @@ def capture_release(args, release, exe, public_api):
                 v4_rejection(reply, name)
             snapshot = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
                 'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
-                'maxResponseChars': 2000000,
+                'maxResponseChars': 2000000, 'captureMode': capture_mode,
                 'coverage': {'registeredTools': len(tools), 'calledTools': sorted(registered),
                     'behaviorCallTools': behavior_calls, 'directRejectedTools': sorted(registered),
                     'directSkipped': {},
@@ -642,7 +687,7 @@ def capture_release(args, release, exe, public_api):
                     'l1Domains': domain_calls}}
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during capture')
-        with resources.server(exe, portal_root, int(release), 'stdio', 'lite',
+        with resources.server(capture_exe, portal_root, int(release), 'stdio', 'lite',
                               args.harness.resolve() if args.harness else None, public_api, env_overrides=env) as (rpc, _, logs):
             lite = initialize(rpc)
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
@@ -740,8 +785,8 @@ def capture(args):
     for release in args.releases:
         exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         if release in FULL_RELEASES:
-            api = api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
-            if release == '21':
+            api = None if args.packaged_no_tia else api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
+            if api is not None and release == '21':
                 api /= 'net48'
             first = capture_release(args, release, exe, api)
             second = capture_release(args, release, exe, api)
@@ -1276,6 +1321,8 @@ def main():
     capture_parser.add_argument('--harness', type=Path,
                                 help='Optional test host harness; by default V20/V21 run as the real EXE')
     capture_parser.add_argument('--public-api-root', type=Path)
+    capture_parser.add_argument('--packaged-no-tia', action='store_true',
+                                help='Stage V20/V21 without Siemens.Engineering DLLs and require no-TIA readiness')
     capture_parser.add_argument('--dotnet-root', type=Path,
                                 help='Private .NET/ASP.NET Core 10 root; sets DOTNET_ROOT and DOTNET_ROOT_X64 for Foundation only')
     capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH')
@@ -1343,6 +1390,20 @@ def verify_coverage(release, baseline, snapshot, lite):
         if key not in calls:
             raise ValueError(f'V{release}: missing response coverage for {profile}/{tool}/{canonical(arguments)}')
 
+    def stored_v4_body(profile, tool, arguments):
+        call = calls[(profile, tool, canonical(arguments))]
+        response = call.get('response')
+        if not isinstance(response, dict):
+            raise ValueError(f'V{release}: packaged no-TIA response must be stored inline: {tool}')
+        protocol = response.get('result', {})
+        body = protocol.get('structuredContent')
+        if isinstance(body, dict):
+            return body
+        content = protocol.get('content', [])
+        if content and isinstance(content[0].get('text'), dict):
+            return content[0]['text']
+        raise ValueError(f'V{release}: packaged no-TIA response has no V4 body: {tool}')
+
     if release in FULL_RELEASES:
         if snapshot['profiles'] != ['full', 'lite']:
             raise ValueError(f'V{release}: invalid response profiles')
@@ -1354,6 +1415,22 @@ def verify_coverage(release, baseline, snapshot, lite):
         roster('liteAdvertisedTools', lite)
         for name in names:
             required_call('lite', 'CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS})
+        if snapshot.get('captureMode') == 'packaged-no-tia':
+            bootstrap = stored_v4_body('full', 'InitializeEnvironment', {})
+            doctor = stored_v4_body('full', 'GetEnvironmentDiagnostics', {'fix': False})
+            state = stored_v4_body('full', 'GetSessionState', {})
+            if (bootstrap.get('data', {}).get('ready') is not False
+                    or 'no TIA Portal V' not in bootstrap.get('data', {}).get('recommendedReason', '')):
+                raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA bootstrap readiness')
+            if (doctor.get('data', {}).get('ready') is not False
+                    or 'no TIA Portal V' not in canonical(doctor.get('data', {}))):
+                raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA diagnostics readiness')
+            if (state.get('error', {}).get('code') != 'RESOURCE_UNAVAILABLE'
+                    or state.get('error', {}).get('details', {}).get('resource') != 'tia-openness-environment'
+                    or state.get('meta', {}).get('outcome') != 'rejected-before-operation'
+                    or state.get('meta', {}).get('execution') != 'not-started'
+                    or 'no TIA Portal V' not in state.get('data', {}).get('environment', {}).get('cause', '')):
+                raise ValueError(f'V{release}: packaged snapshot does not prove GetSessionState readiness refusal')
     else:
         if snapshot['profiles'] != ['plc-foundation'] or 'liteAdvertisedTools' in coverage:
             raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
@@ -1401,9 +1478,12 @@ def validate_response_snapshot(snapshot, path):
     release = snapshot.get('release')
     full = release in FULL_RELEASES
     expected_fields = FULL_RESPONSE_FIELDS if full else FOUNDATION_RESPONSE_FIELDS
-    if set(snapshot) != expected_fields:
+    allowed_fields = (expected_fields, LEGACY_FULL_RESPONSE_FIELDS) if full else (expected_fields,)
+    if set(snapshot) not in allowed_fields:
         raise ValueError(f'{path}: response fields differ; missing={sorted(expected_fields - set(snapshot))}, '
                          f'unknown={sorted(set(snapshot) - expected_fields)}')
+    if full and 'captureMode' in snapshot and snapshot['captureMode'] not in ('sdk-only-fixture', 'packaged-no-tia'):
+        raise ValueError(f'{path}: unsupported full-engine captureMode')
     if type(snapshot['formatVersion']) is not int or snapshot['formatVersion'] != RESPONSE_FORMAT_VERSION:
         raise ValueError(f'{path}: expected response formatVersion {RESPONSE_FORMAT_VERSION}')
     if (snapshot['profiles'] != (['full', 'lite'] if full else ['plc-foundation'])

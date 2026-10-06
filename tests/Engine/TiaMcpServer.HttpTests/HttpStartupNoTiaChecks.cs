@@ -17,7 +17,7 @@ internal static class HttpStartupNoTiaChecks
 
     internal static void Run(Assembly server, int major, Action<string> pass)
     {
-        var engineering = server.GetType("TiaMcpServer.Siemens.Engineering", true)!;
+        var engineering = Program.FindReferencedType(server, "TiaMcpServer.Siemens.Engineering");
         string? previousLocation = Environment.GetEnvironmentVariable("TiaPortalLocation");
         try
         {
@@ -59,19 +59,25 @@ internal static class HttpStartupNoTiaChecks
             return;
         }
 
-        foreach (bool isolate in new[] { false, true }) RunHost(server, major, prefix, isolate, pass);
+        using (var layout = PackagedEngineLayout.Create(server, major))
+            foreach (bool isolate in new[] { false, true }) RunHost(layout, major, prefix, isolate, pass);
     }
 
-    private static void RunHost(Assembly server, int major, string prefix, bool isolate, Action<string> pass)
+    private static void RunHost(PackagedEngineLayout layout, int major, string prefix, bool isolate, Action<string> pass)
     {
         string key = Guid.NewGuid().ToString("N");
-        string data = Path.Combine(Path.GetTempPath(), "TiaMcp-http-no-tia-" + Guid.NewGuid().ToString("N"));
+        string data = Path.Combine(layout.Root, "data-http-" + Guid.NewGuid().ToString("N"));
+        string local = Path.Combine(layout.Root, "local-" + Guid.NewGuid().ToString("N"));
+        string roaming = Path.Combine(layout.Root, "roaming-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(data);
-        var start = new ProcessStartInfo(server.Location)
+        Directory.CreateDirectory(local);
+        Directory.CreateDirectory(roaming);
+        var start = new ProcessStartInfo(layout.EnginePath)
         {
             Arguments = String.Join(" ", new[] { "--transport", "http", "--http-prefix", prefix,
                 "--http-api-key", key, "--profile", "full", "--tia-major-version", major.ToString(),
                 "--logging", "1", isolate ? "--isolate-openness" : "--no-isolate-openness" }),
+            WorkingDirectory = layout.Root,
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
@@ -80,6 +86,10 @@ internal static class HttpStartupNoTiaChecks
         start.EnvironmentVariables.Remove("TiaPortalLocation");
         start.EnvironmentVariables.Remove("TIA_MCP_PROFILE");
         start.EnvironmentVariables["TIA_MCP_DATA_DIRECTORY"] = data;
+        start.EnvironmentVariables["TEMP"] = layout.Root;
+        start.EnvironmentVariables["TMP"] = layout.Root;
+        start.EnvironmentVariables["LOCALAPPDATA"] = local;
+        start.EnvironmentVariables["APPDATA"] = roaming;
         var output = new StringBuilder();
         var errors = new StringBuilder();
         try
@@ -116,21 +126,41 @@ internal static class HttpStartupNoTiaChecks
                     Check(count == expected, "V" + major + " HTTP " + (isolate ? "isolated" : "direct")
                         + " roster has " + count + " tools; expected " + expected + ".");
 
-                    var initializedEnvironment = Call(prefix, key, 20 + page, "InitializeEnvironment");
+                    int nextCallId = 20 + page;
+                    var initializedEnvironment = Call(prefix, key, nextCallId++, "InitializeEnvironment");
                     var environment = AsObject(initializedEnvironment["data"]);
                     Check(environment["ready"] is bool ready && !ready
-                        && !String.IsNullOrWhiteSpace(Convert.ToString(environment["recommendedReason"])),
+                        && Convert.ToString(environment["recommendedReason"])?.IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
                         "InitializeEnvironment omitted the no-TIA readiness cause: " + Json.Serialize(initializedEnvironment));
 
-                    var refusal = Call(prefix, key, 21 + page, "SaveProject");
-                    var error = AsObject(refusal["error"]);
-                    var details = AsObject(error["details"]);
-                    var meta = AsObject(refusal["meta"]);
-                    Check(Convert.ToString(error["code"]) == "RESOURCE_UNAVAILABLE"
-                        && Convert.ToString(details["resource"]) == "tia-openness-environment"
-                        && Convert.ToString(meta["outcome"]) == "rejected-before-operation"
-                        && Convert.ToString(meta["execution"]) == "not-started",
+                    var diagnostics = Call(prefix, key, nextCallId++, "GetEnvironmentDiagnostics", new { fix = false });
+                    var doctor = AsObject(diagnostics["data"]);
+                    var checks = AsArray(doctor["checks"]);
+                    Check(doctor["ready"] is bool diagnosticsReady && !diagnosticsReady
+                        && Json.Serialize(checks).IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
+                        "GetEnvironmentDiagnostics omitted the no-TIA readiness cause: " + Json.Serialize(diagnostics));
+
+                    var refusal = Call(prefix, key, nextCallId++, "SaveProject");
+                    Check(IsReadinessRefusal(refusal),
                         "No-TIA HTTP host did not refuse SaveProject before dispatch: " + Json.Serialize(refusal));
+                    var discovery = Call(prefix, key, nextCallId++, "FindTools", new { query = "BuildPlcUdt", limit = 1 });
+                    Check(AsObject(discovery["data"]).ContainsKey("items"), "Packaged HTTP discovery failed without TIA.");
+                    var usage = Call(prefix, key, nextCallId++, "GetToolUsage", new { toolName = "BuildPlcUdt" });
+                    var usageData = AsObject(usage["data"]);
+                    var buildArguments = AsObject(AsObject(AsObject(AsObject(usageData["example"])["request"])
+                        ["params"])["arguments"]);
+                    var offlineBuild = Call(prefix, key, nextCallId++, "BuildPlcUdt", buildArguments);
+                    Check(offlineBuild["ok"] is bool buildOk && buildOk,
+                        "Packaged HTTP offline builder failed without TIA: " + Json.Serialize(offlineBuild));
+                    if (isolate)
+                    {
+                        var workerRefusal = Call(prefix, key, nextCallId++, "RestartOpennessWorker");
+                        Check(IsReadinessRefusal(workerRefusal),
+                            "No-TIA HTTP host did not refuse worker control before dispatch: " + Json.Serialize(workerRefusal));
+                        var worker = AsObject(AsObject(Call(prefix, key, nextCallId++, "GetOpennessWorkerStatus")["data"])["evidence"])["worker"];
+                        Check(Convert.ToString(AsObject(worker)["state"]) == "NotStarted",
+                            "A refused no-TIA HTTP worker control started the worker.");
+                    }
                     Check(!process.HasExited, "HTTP host exited after an expected readiness refusal.");
                     pass("V" + major + " HTTP real EXE " + (isolate ? "with" : "without")
                         + " isolation: roster, readiness cause and pre-dispatch refusal");
@@ -178,10 +208,10 @@ internal static class HttpStartupNoTiaChecks
         throw new TimeoutException("Real HTTP engine did not become ready. stderr: " + errors);
     }
 
-    private static Dictionary<string, object> Call(string prefix, string key, int id, string name)
+    private static Dictionary<string, object> Call(string prefix, string key, int id, string name, object? arguments = null)
     {
         var reply = Post(prefix, key, new { jsonrpc = "2.0", id, method = "tools/call",
-            @params = new { name, arguments = new { } } });
+            @params = new { name, arguments = arguments ?? new { } } });
         var result = AsObject(reply["result"]);
         if (result.TryGetValue("structuredContent", out var structured) && structured is Dictionary<string, object> body)
             return body;
@@ -192,6 +222,17 @@ internal static class HttpStartupNoTiaChecks
                 return Json.Deserialize<Dictionary<string, object>>(text)!;
         }
         throw new InvalidOperationException(name + " returned no structured V4 result: " + Json.Serialize(reply));
+    }
+
+    private static bool IsReadinessRefusal(Dictionary<string, object> response)
+    {
+        var error = AsObject(response["error"]);
+        var details = AsObject(error["details"]);
+        var meta = AsObject(response["meta"]);
+        return Convert.ToString(error["code"]) == "RESOURCE_UNAVAILABLE"
+            && Convert.ToString(details["resource"]) == "tia-openness-environment"
+            && Convert.ToString(meta["outcome"]) == "rejected-before-operation"
+            && Convert.ToString(meta["execution"]) == "not-started";
     }
 
     private static Dictionary<string, object> Get(string url, string key)
