@@ -25,7 +25,7 @@ namespace TiaMcpServer.Siemens
         public static Assembly? Resolver(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
-            if (!assemblyName.Name.StartsWith("Siemens.Engineering"))
+            if (!(assemblyName.Name ?? string.Empty).StartsWith("Siemens.Engineering", StringComparison.Ordinal))
             {
                 return null;
             }
@@ -33,8 +33,21 @@ namespace TiaMcpServer.Siemens
             var tiaInstallPath = GetTiaPortalInstallPath();
             if (string.IsNullOrEmpty(tiaInstallPath))
             {
-                throw new InvalidOperationException($"Could not find TIA Portal installation path for version {TiaMajorVersion} in the registry.");
+                // AssemblyResolve is also reached while the engine reflects its tool roster.
+                // A missing optional installation is expected in offline hosts; returning null
+                // lets the caller handle an unresolved type without aborting host startup.
+                return null;
             }
+
+            return ResolveFromInstallPath(args, tiaInstallPath);
+        }
+
+        internal static Assembly? ResolveFromInstallPath(ResolveEventArgs args, string? tiaInstallPath)
+        {
+            var assemblyName = new AssemblyName(args.Name);
+            if (!(assemblyName.Name ?? string.Empty).StartsWith("Siemens.Engineering", StringComparison.Ordinal))
+                return null;
+            if (string.IsNullOrEmpty(tiaInstallPath)) return null;
 
             var tiaMajorVersionString = TiaMajorVersion.ToString();
             var searchDirectories = new[]

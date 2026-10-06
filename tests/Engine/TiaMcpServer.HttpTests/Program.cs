@@ -373,11 +373,24 @@ internal static partial class Program
                 return 0;
             }
             string exe=Path.GetFullPath(args[0]); string dir=Path.GetDirectoryName(exe)!;
+            bool hostBuildNoTia = args.Length > 1 && args[1] == "host-build-no-tia";
             AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
-                string dependency=Path.Combine(dir,new AssemblyName(e.Name).Name+".dll");
+                string name=new AssemblyName(e.Name).Name!;
+                if(hostBuildNoTia && name.StartsWith("Siemens.Engineering",StringComparison.Ordinal)) return null;
+                string dependency=Path.Combine(dir,name+".dll");
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length >= 3 && args[1] == "host-build-no-tia") {
+                StartupNoTiaChecks.Run(Server, int.Parse(args[2]), label => { Passed++; Console.WriteLine("PASS " + label); });
+                Console.WriteLine("COMPLETE: " + Passed + " no-TIA host-build checks passed");
+                return 0;
+            }
+            if(args.Length >= 3 && args[1] == "http-start-no-tia") {
+                HttpStartupNoTiaChecks.Run(Server, int.Parse(args[2]), label => { Passed++; Console.WriteLine("PASS " + label); });
+                Console.WriteLine("COMPLETE: " + Passed + " no-TIA real HTTP startup checks passed");
+                return 0;
+            }
             if(args.Length > 1 && args[1] == "test-download-route")
                 return DeveloperChecks.DownloadRoute(Server, args.Length > 2 ? args[2] : "");
             if(args.Length > 1 && args[1] == "test-match-plc-name")

@@ -14,9 +14,11 @@ $tests = 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe'
 $fileVersion = (Get-Content 'manifest/release-build.json' -Raw | ConvertFrom-Json).fileVersion
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' hmi-only 21 $fileVersion
+& $tests 'runtime/v21/TiaMcp.Engine.V21.exe' host-build-no-tia 21
+& $tests 'runtime/v21/TiaMcp.Engine.V21.exe' http-start-no-tia 21
 ```
 
-Use the V20 executable and `hmi-only 20 $fileVersion` to check a V20 build. These reflection checks target the V20/V21 full engines; foundation protocol checks are run by `Build-MultiVersion.ps1`.
+Use the V20 executable and `hmi-only 20 $fileVersion`, `host-build-no-tia 20`, and `http-start-no-tia 20` to check a V20 build. `host-build-no-tia` builds the real STDIO/HTTP service and protocol registrations, including the isolation parent, without opening a listener. `http-start-no-tia` starts the real EXE on localhost when the machine has no detected TIA installation and the platform allows a local listener; it reports a skip otherwise. These reflection checks target the V20/V21 full engines; foundation protocol checks are run by `Build-MultiVersion.ps1`.
 No TIA process is started and no engineering project is modified by these tests.
 Actual project connection and nested HMI screen reads require separate TIA validation.
 

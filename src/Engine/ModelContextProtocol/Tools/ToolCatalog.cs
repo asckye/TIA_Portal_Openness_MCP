@@ -16,19 +16,21 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class ToolCatalog
     {
         private static readonly Lazy<ToolCatalog> engine = new Lazy<ToolCatalog>(() =>
-            new ToolCatalog(LoadableTypes(typeof(ToolCatalog).Assembly)
+            new ToolCatalog(LoadableTypes(typeof(ToolCatalog).Assembly, "ToolCatalog")
                 .Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() != null)));
 
         // A type whose optional dependency is absent must not take every tool down: tool types only
         // reference the engine and its shipped libraries, so they are among the types that do load.
-        private static IEnumerable<Type> LoadableTypes(Assembly assembly)
+        internal static IEnumerable<Type> LoadableTypes(Assembly assembly, string context)
         {
             try { return assembly.GetTypes(); }
             catch (ReflectionTypeLoadException ex)
             {
-                foreach (var error in ex.LoaderExceptions.Where(error => error != null))
-                    Console.Error.WriteLine("ToolCatalog: skipped a type that could not load: " + error!.Message);
-                return ex.Types.Where(type => type != null)!;
+                var types = ex.Types.OfType<Type>().ToArray();
+                int missing = ex.Types.Length - types.Length;
+                Console.Error.WriteLine(context + ": continuing with " + types.Length
+                    + " loadable engine types; " + missing + " types have unresolved dependencies.");
+                return types;
             }
         }
 

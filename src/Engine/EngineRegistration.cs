@@ -22,7 +22,7 @@ namespace TiaMcpServer
                 services.TryAddSingleton<Portal>();
                 services.TryAddSingleton<IEngineeringSession>(provider => provider.GetRequiredService<Portal>());
                 services.TryAddSingleton<IHmiToolSession>(provider => provider.GetRequiredService<Portal>());
-                foreach (var type in typeof(Portal).Assembly.GetTypes())
+                foreach (var type in ToolCatalog.LoadableTypes(typeof(Portal).Assembly, "EngineRegistration"))
                 {
                     if (!type.IsClass || type.IsAbstract || type.Namespace != "TiaMcpServer.Siemens.Services"
                         || !type.Name.EndsWith("Service", StringComparison.Ordinal)) continue;
