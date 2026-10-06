@@ -84,19 +84,22 @@ def assert_readiness_refused(reply: dict, label: str) -> None:
 
 def assert_foundation_write_stopped(reply: dict, label: str) -> str:
     """Foundation admits a write only with a live worker before it asks for approval (P6-44: approval follows admission).
-    A release build has no TIA, so the write stops at worker admission; with a worker, the default-on approval refuses it.
-    Either way it must stop before dispatch. The approval decision itself is covered by ApprovalHostTests with a fake worker."""
+    Since P6-55 the bundled worker's readiness (TIA installation and Openness group) is checked first, so a release
+    build without TIA stops at readiness; otherwise at worker admission, and with a worker the default-on approval
+    refuses it. Every path must stop before dispatch. The approval decision itself is covered by ApprovalHostTests."""
     body, is_error = parse_envelope(reply)
     error = body.get("error") or {}
     details = error.get("details") or {}
     meta = body.get("meta") or {}
     require(is_error and body.get("ok") is False, f"{label}: refusal was not an MCP error: {body}")
+    readiness = error.get("code") == "RESOURCE_UNAVAILABLE" and details.get("resource") == "tia-openness-environment"
     admission = error.get("code") == "PRECONDITION_FAILED" and details.get("condition") == "worker-admission"
     approval = error.get("code") == "CONFIRMATION_REQUIRED" and details.get("reason") == "workbench-unavailable"
-    require(admission or approval, f"{label}: write was not stopped by worker admission or approval: {body}")
+    require(readiness or admission or approval,
+            f"{label}: write was not stopped by readiness, worker admission or approval: {body}")
     require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
             f"{label}: operation was not proven to stop before dispatch: {body}")
-    return "worker-admission" if admission else "approval"
+    return "readiness" if readiness else "worker-admission" if admission else "approval"
 
 
 def assert_engine_read(reply: dict, label: str) -> None:
