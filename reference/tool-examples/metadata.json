@@ -111,41 +111,45 @@
       "tools": [
         "ListExportHandles"
       ],
-      "meaning": "Copy the exportId returned by the original tool; GetExportContent pages use its nextOffset."
+      "meaning": "Copy data.export.id from a parked V4 response or data.items[].export.id from ListExportHandles; GetExportContent pages continue with meta.paging.nextOffset."
     }
   },
   "resultReading": {
     "ResponseMessage": [
-      "Read meta.success / meta.operationSuccess when present; message supplies operation detail.",
-      "Tool-specific result keys are documented in the tool description."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Use error.code/details for failure information, data for tool-specific results, and the matching resultContract for outcome meaning. A transport response alone does not prove a project operation succeeded."
     ],
     "ResponseStringList": [
-      "items contains the returned rows or strings; meta supplies status and paging when present."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Read returned rows from data.items; use meta.paging for continuation where supplied."
     ],
     "ResponseXmlBuild": [
-      "xml contains generated XML. data contains builder details; generating XML does not import it into TIA."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Generated XML is in data.xml with builder details in data; generation alone does not import it into TIA."
     ],
     "default": [
-      "Read the returned data fields and status using the resultContract below."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Interpret operation fields under data using the resultContract and tool-specific result cases below."
     ],
     "ResponseCompile": [
-      "Check state, errorCount, warningCount and messages. Native compiler diagnostics, including child messages, are flattened by this wrapper.",
-      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Read data.state, data.errorCount, data.warningCount and data.messages. When present, meta.nodes, meta.effectiveState and meta.incomplete retain nested diagnostic context; root and subtree counts overlap and must not be summed."
     ],
     "ResponseCompileDiagnose": [
-      "Check state and errorCount, then errors/warnings/info and rawMessages. These include nested native compiler diagnostics.",
-      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Read data.state, data.errorCount, data.warningCount, data.errors, data.warnings, data.info and data.rawMessages. When present, meta.nodes, meta.effectiveState and meta.incomplete retain nested diagnostic context; root and subtree counts overlap and must not be summed."
     ],
     "ResponsePlcProgramImport": [
-      "Compare importedBlocks/importedTypes/importedTagTables with requested objects, inspect failed entries and compile.errorCount when compile was requested. A dryRun result is a plan."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "Compare data.importedBlocks, data.importedTypes and data.importedTagTables with the requested objects; inspect data.failed and data.compile.errorCount when compilation was requested. A dryRun result is a plan."
     ],
     "Envelope": [
-      "Read ok and error.code together with meta.outcome, execution and completeness.",
-      "Paging is in meta.paging. Batch data.items retain each target result unchanged; inspect failures and NOT_EXECUTED items."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "CallTool returns the selected target result as its V4 envelope. A pre-dispatch bridge rejection reports meta.execution=not-started and identifies the rejected call in meta.tool."
     ],
     "TargetResult": [
-      "CallTool returns the target result unchanged. Read GetToolUsage for that target.",
-      "Bridge admission failures use a V4 envelope with meta.execution=not-started."
+      "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
+      "CallTool returns the target result unchanged. Read GetToolUsage for that target; bridge admission failures use meta.execution=not-started."
     ]
   },
   "toolNotes": {
@@ -154,35 +158,53 @@
       "resultCases": [
         {
           "example": {
-            "meta": {
-              "before": {
-                "value": {
-                  "bicoSource": "<source parameter name>",
-                  "parameterText": "<source description>"
+            "data": {
+              "evidence": {
+                "before": {
+                  "value": {
+                    "bicoSource": "<source parameter name>",
+                    "parameterText": "<source description>"
+                  }
                 }
               }
+            },
+            "meta": {
+              "outcome": "succeeded",
+              "execution": "read-only"
             }
           },
           "meaning": "DriveParameter reference: this is the configured connection source, not its live numeric value."
         },
         {
           "example": {
-            "meta": {
-              "before": {
-                "value": {
-                  "value": 12.5
+            "data": {
+              "evidence": {
+                "before": {
+                  "value": {
+                    "value": 12.5
+                  }
                 }
               }
+            },
+            "meta": {
+              "outcome": "succeeded",
+              "execution": "read-only"
             }
           },
           "meaning": "Scalar value of the selected offline engineering parameter, not a sampled live process value."
         },
         {
           "example": {
-            "meta": {
-              "before": {
-                "value": null
+            "data": {
+              "evidence": {
+                "before": {
+                  "value": null
+                }
               }
+            },
+            "meta": {
+              "outcome": "succeeded",
+              "execution": "read-only"
             }
           },
           "meaning": "No accessible value. The API can return null for an invalid connection or inaccessible source; null does not prove the connection is unwired."
@@ -197,20 +219,20 @@
     },
     "ImportFromDocuments": {
       "input": "For FC_Add_SD.s7dcl (+ FC_Add_SD.s7res), importPath is the containing directory and fileNameWithoutExtension is FC_Add_SD.",
-      "result": "This wrapper checks native State internally. Its public response reports meta.success, existsVerified and verifyDetail; contentVerified=null is not a content match. Native failures include imported-name/message details in the error. ManagePlcBlockDocuments exposes a structured native document result when that is required.",
+      "result": "Read the V4 envelope first, then inspect data.existsVerified and data.verifyDetail. contentVerified=null is not a content match. Native failures retain imported-name/message evidence in error.details; use ManagePlcBlockDocuments when its structured result is needed.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/importing-program-block-from-document"
       ],
       "profile": "full-engine"
     },
     "ManagePlcBlockDocuments": {
-      "result": "For import, inspect meta.result state, imported object names and native messages. Compare the requested object names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
+      "result": "Read the V4 envelope first, then inspect data.result state, imported object names and native messages. Compare the requested names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
       "profile": "full-engine",
       "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     },
     "ExchangeUnifiedScriptModules": {
       "input": "Global module exchange uses a directory package exported by the selected TIA release. Keep the .hmi.js, .hmi.yml and companion files together. moduleName is for export only.",
-      "result": "Import: inspect meta.nativeSuccess and reported post-import module names. A successful native import is not independent content/compilation verification.",
+      "result": "For import, inspect data.nativeSuccess and reported post-import module names. A successful native import is not independent content or compilation verification.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
       ],
@@ -218,7 +240,7 @@
     },
     "SetUnifiedHmiButtonEventScriptCode": {
       "input": "scriptCode is the handler body of the named button/event; globalDefinitionAreaScriptCode is that handler's global definition area, not a global module package.",
-      "result": "A missing syntaxErrorCount means the optional native syntax check was not run. Inspect the write response and a separate HMI compile result.",
+      "result": "A missing data.syntaxErrorCount means the optional native syntax check was not run. Inspect the V4 write result and a separate HMI compile result.",
       "profile": "full-engine"
     },
     "CompilePlcDiagnostics": {
@@ -250,7 +272,7 @@
           "meaning": "Compilation failed despite a returned tool response."
         }
       ],
-      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "result": "Read the V4 envelope first, then inspect data.effectiveState, data.rootCounts and data.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. data.incomplete, data.truncated and data.collectFailures explain partial diagnostics. Compilation does not imply save or download.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -279,7 +301,7 @@
           "meaning": "Compilation failed despite a returned tool response."
         }
       ],
-      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "result": "Read the V4 envelope first, then inspect data.effectiveState, data.rootCounts and data.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. data.incomplete, data.truncated and data.collectFailures explain partial diagnostics. Compilation does not imply save or download.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -348,7 +370,7 @@
           "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
         }
       ],
-      "result": "Compilation evidence is under data: effectiveState, rootCounts, errors, warnings and nodes, including nested diagnostics. The V4 outcome uses effectiveState, so a nested error remains failed even when root counts are zero. apiCallSuccess only means the API returned. incomplete, truncated and collectFailures describe partial diagnostics; root/subtree counts overlap and must not be added. behaviorPolicy remains current; no save/download is implied.",
+      "result": "Compilation evidence is under data: effectiveState, rootCounts, errors, warnings and nodes, including nested diagnostics. The V4 outcome reflects effectiveState, so a nested error remains failed when root counts are zero. apiCallSuccess only means the API returned. incomplete, truncated and collectFailures describe partial diagnostics; root/subtree counts overlap and must not be added. meta.behaviorPolicy remains current; no save/download is implied.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -383,7 +405,7 @@
           "meaning": "Compilation failed despite a returned tool response."
         }
       ],
-      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "result": "Read the V4 envelope first, then inspect data.effectiveState, data.rootCounts and data.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. data.incomplete, data.truncated and data.collectFailures explain partial diagnostics. Compilation does not imply save or download.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -484,6 +506,24 @@
         "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf"
       ],
       "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
+    },
+    "RunPlcCompanionTool": {
+      "profile": "full-engine",
+      "input": "workingDirectory is on the MCP host. The default Python executable is %LOCALAPPDATA%\\TiaMcp\\ecosystem-python\\Scripts\\python.exe; TIA_MCP_PLC_TOOLS_PYTHON selects an explicit interpreter. The selected external command may access configured devices or write files; bind its executable, command and target to the requested task.",
+      "result": "Read the V4 envelope first. Treat the companion process output as evidence for that command only; do not infer a PLC/TIA write succeeded without its returned status and readback.",
+      "sourceUrls": []
+    },
+    "RenderPlcBlock": {
+      "profile": "full-engine",
+      "input": "This is an offline renderer for an existing SimaticML XML export; it makes no TIA or PLC call. It writes a new self-contained HTML file and refuses to overwrite an existing output. FBD is shown as a labelled LAD-equivalent drawing; this is a static view, not an editable engineering canvas or online power-flow view. The program atlas counts callers only within the input atlas. If an export is needed, use the selected release's read-only export example first. Repository sample exports have no attributable native provenance; native acceptance remains NOT RUN.",
+      "result": "Read the V4 envelope first. Inspect data.outputPath, mediaType, byteLength, sha256 and rendered block/network counts. A partial file is retained and reported; an existing output is refused.",
+      "sourceUrls": []
+    },
+    "RenderPlcProgramAtlas": {
+      "profile": "full-engine",
+      "input": "This is an offline renderer for an existing SimaticML XML export; it makes no TIA or PLC call. It writes a new self-contained HTML file and refuses to overwrite an existing output. FBD is shown as a labelled LAD-equivalent drawing; this is a static view, not an editable engineering canvas or online power-flow view. The program atlas counts callers only within the input atlas. If an export is needed, use the selected release's read-only export example first. Repository sample exports have no attributable native provenance; native acceptance remains NOT RUN.",
+      "result": "Read the V4 envelope first. Inspect data.outputPath, mediaType, byteLength, sha256 and rendered block/network counts. A partial file is retained and reported; an existing output is refused.",
+      "sourceUrls": []
     }
   }
 }

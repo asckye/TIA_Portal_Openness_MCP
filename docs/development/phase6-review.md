@@ -1913,8 +1913,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [.github/SUPPORT.md](../../.github/SUPPORT.md) | 产品:10 | 修改引用并回归 |
 | [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:58 | 修改引用并回归 |
 | [.github/workflows/validate.yml](../../.github/workflows/validate.yml) | 产品:8 | 修改引用并回归 |
-| [README.md](../../README.md) | 产品:17,18,19 | 修改引用并回归 |
+| [README.md](../../README.md) | 产品:17,18,19,34 | 修改引用并回归 |
 | [README.zh-CN.md](../../README.zh-CN.md) | 产品:17,18,19 | 修改引用并回归 |
+| [docs/README.md](../../docs/README.md) | 产品:14 | 修改引用并回归 |
 | [docs/development/engine-decomposition.md](../../docs/development/engine-decomposition.md) | 产品:16; 根定位:312 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/handoff.md](../../docs/development/handoff.md) | 产品:10; 根定位:54 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/layout-proposal-4.0.md](../../docs/development/layout-proposal-4.0.md) | 根定位:36 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
@@ -1925,12 +1926,13 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:81,93; 根定位:41,76,77,80,88,178,188,190,191,192,211,275; 写入/工作区:78,97,144,150,172 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
 | [docs/development/validation.md](../../docs/development/validation.md) | 产品:418,419,440,469; 根定位:32,83,89,103,141,142,152,338 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
-| [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138 | 修改引用并回归 |
-| [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:21,24,25,26,27; 写入/工作区:9,16 | 修改引用并回归 |
+| [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,61,80,138; 写入/工作区:195 | 修改引用并回归 |
+| [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:23,26,27,28,29; 写入/工作区:9,16 | 修改引用并回归 |
 | [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5,17,18 | 修改引用并回归 |
 | [docs/getting-started/cursor.example.json](../../docs/getting-started/cursor.example.json) | 产品:4,5 | 修改引用并回归 |
 | [docs/licenses/THIRD-PARTY-NOTICES.md](../../docs/licenses/THIRD-PARTY-NOTICES.md) | 产品:39 | 修改引用并回归 |
-| [docs/reference/ecosystem-tools.md](../../docs/reference/ecosystem-tools.md) | 写入/工作区:21 | 修改引用并回归 |
+| [docs/reference/capabilities.md](../../docs/reference/capabilities.md) | 产品:3; 写入/工作区:49 | 修改引用并回归 |
+| [docs/reference/ecosystem-tools.md](../../docs/reference/ecosystem-tools.md) | 写入/工作区:23 | 修改引用并回归 |
 | [docs/reference/real-machine-ledger.md](../../docs/reference/real-machine-ledger.md) | 产品:36,93 | 修改引用并回归 |
 | [docs/reference/tool-matrix.md](../../docs/reference/tool-matrix.md) | 产品:87 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 产品:48 | 历史证据只读保留，不作为 V4 改写目标 |
@@ -1948,6 +1950,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,73,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/release-build.json](../../manifest/release-build.json) | 根定位:2508,5960,5992 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:7025 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [plugin/skill/SKILL.md](../../plugin/skill/SKILL.md) | 产品:12; 写入/工作区:64 | 修改引用并回归 |
+| [reference/tool-examples/metadata.json](../../reference/tool-examples/metadata.json) | 写入/工作区:512 | 修改引用并回归 |
 | [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
 | [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
 | [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,33,68; 根定位:11 | 修改引用并回归 |
@@ -2023,6 +2027,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/BundleLayout.cs](../../src/Shared/BundleLayout.cs) | 产品:221,265,266,267,268,269,270,271,272; 根定位:35,37,40,96 | 修改引用并回归 |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs) | 根定位:89,91; 写入/工作区:280,281 | 修改引用并回归 |
 | [src/Shared/README.md](../../src/Shared/README.md) | 根定位:10,26,40 | 修改引用并回归 |
+| [src/Shared/ToolUsageData.json](../../src/Shared/ToolUsageData.json) | 写入/工作区:28713 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
 | [src/Studio/Bridge/Program.cs](../../src/Studio/Bridge/Program.cs) | 根定位:24 | 修改引用并回归 |
 | [src/Studio/Bridge/TiaOpenness.Bridge.csproj](../../src/Studio/Bridge/TiaOpenness.Bridge.csproj) | 根定位:5 | 修改引用并回归 |
 | [src/Studio/Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs) | 根定位:76,77,78,161 | 修改引用并回归 |
@@ -2077,7 +2082,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs) | 产品:69 | 修改引用并回归 |
 | [tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs](../../tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs) | 产品:10 | 修改引用并回归 |
 
-共 167 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+共 172 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
 
 </details>
 

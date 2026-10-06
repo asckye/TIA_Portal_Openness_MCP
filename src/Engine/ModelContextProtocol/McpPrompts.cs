@@ -6,481 +6,188 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerPromptType]
     public static class McpPrompts
     {
-        // ──────────────────────────────────────────────────────────────────────
-        // Basic connection / navigation
-        // ──────────────────────────────────────────────────────────────────────
+        private static string WithV4Rules(string task)
+        {
+            return task + @"
 
-        [McpServerPrompt(Name = "Connect"), Description("Connect to TIA Portal")]
+V4 operating rules:
+- Use only tools registered by this release. Read GetToolUsage for the selected tool and copy its typed arguments; pass arrays, objects, numbers, booleans and enums as their schema types, never JSON-encode typed values into strings.
+- For a new or different TIA process, call ListPortalProcessProjects and choose the exact row with the user. On V20/V21 call ConnectProject with that row's processId, processStartUtc and projectPath; on Foundation call ConnectPortal with the selected row's processId. Do not launch or select a process implicitly.
+- Read every result as the schemaVersion 4 envelope: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then operation data and warnings. Follow meta.paging only within the same release/session/binding/query snapshot; meta.paging.complete=true describes that snapshot's pages, not full project observation.
+- On meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the target and reset the session when required. Never replay a write automatically.
+- D1 native behavior remains current for all applicable families and releases; L5 is NOT RUN. Treat UNVERIFIED_BEHAVIOR as a warning. Do not infer safe-v4 behavior or use candidate parameters.
+- Do not save or close a project unless the user explicitly requested that action. Perform save and close as separate, explicit calls.
+- MCP WRITE and ONLINE-WRITE calls require Workbench approval before dispatch. Approval is per request; a denial, timeout or unavailable Workbench rejects the operation before it starts. MCP clients cannot approve their own calls. Audit events are in data/logs/audit; verify them with the Workbench audit view or `""tia audit verify`"". A valid hash chain cannot prove that the complete log was retained.";
+        }
+
+        [McpServerPrompt(Name = "Connect"), Description("Select and connect to a specific TIA Portal project process")]
         public static string Connect()
         {
-            return @"Connect to TIA Portal.
-
-Steps:
-1. EnsureOpennessUserGroup — confirm the Windows user is in 'Siemens TIA Openness' group.
-2. ConnectPortal — attach to a running TIA Portal process or launch a new one.
-3. GetSessionState — confirm IsConnected=true.
-
-Use the ConnectPortal tool to initiate the connection.";
+            return WithV4Rules(@"Connect to the intended project. First call ListPortalProcessProjects and have the user select the exact process and project row. On V20/V21, call ConnectProject with that row's processId, processStartUtc and projectPath. On a Foundation host, call ConnectPortal with the selected row's processId. Call GetSessionState and confirm the connected process and project. Do not start TIA Portal or choose a process by name alone.");
         }
 
         [McpServerPrompt(Name = "OpenProject"), Description("Open a TIA Portal project")]
         public static string OpenProject(string projectPath)
         {
-            return $@"Open a TIA Portal project.
+            return WithV4Rules($@"Open the requested project at path: {projectPath}
 
-Common parameter values:
-- projectPath: full path to project file (.ap21) or multi-user session (.als21).
-
-Steps:
-1. ConnectPortal (if not already connected).
-2. OpenProject with projectPath.
-3. GetProjectTree — discover device/software paths for further operations.
-
-Use the OpenProject tool with:
-- projectPath: {projectPath}";
+If the intended process is not connected, use ListPortalProcessProjects and the release-specific connector from the V4 rules with the exact selected row first. Call OpenProject with the typed path string. Then call GetProjectTree and use the exact returned software and object paths. Opening a project does not imply saving or closing another project.");
         }
 
-        [McpServerPrompt(Name = "CloseProject"), Description("Close the currently open TIA Portal project")]
+        [McpServerPrompt(Name = "CloseProject"), Description("Close the currently open TIA Portal project when explicitly requested")]
         public static string CloseProject()
         {
-            return @"Close the currently open TIA Portal project.
-
-Steps:
-1. SaveProject — save any pending changes first.
-2. CloseProject — close the project.
-
-Use the CloseProject tool to close the current project.";
+            return WithV4Rules(@"The user explicitly requested project close. Inspect GetSessionState first and confirm the target project. Do not save implicitly. If the user separately requested saving, call SaveProject as a separate action and inspect its result. Then call CloseProject and verify with GetSessionState.");
         }
 
-        [McpServerPrompt(Name = "Disconnect"), Description("Disconnect from TIA Portal")]
+        [McpServerPrompt(Name = "Disconnect"), Description("Disconnect from the selected TIA Portal process when explicitly requested")]
         public static string Disconnect()
         {
-            return @"Disconnect from TIA Portal.
-
-Steps:
-1. SaveProject — save any unsaved changes.
-2. CloseProject (optional) — cleanly close the project.
-3. DisconnectPortal — release the Openness handle.
-
-Use the DisconnectPortal tool to remove the connection.";
+            return WithV4Rules(@"The user explicitly requested disconnect. Inspect GetSessionState and identify the bound project/process. Do not save or close implicitly. If separately requested, perform SaveProject and CloseProject as separate calls and inspect each result. Then call DisconnectPortal and verify the session state.");
         }
 
-        [McpServerPrompt(Name = "GetProjectTree"), Description("Get the full project structure tree")]
+        [McpServerPrompt(Name = "GetProjectTree"), Description("Get the current project structure")]
         public static string GetProjectTree()
         {
-            return @"Retrieve the complete project structure as an ASCII tree.
-
-The tree shows:
-- All devices (PLCs, HMI panels, drives)
-- Device items (CPU, communication modules)
-- PLC software paths (e.g. 'PLC_1')
-- HMI software paths (e.g. 'HMI_RT_1')
-
-Steps:
-1. ConnectPortal + OpenProject (if not already done).
-2. GetProjectTree — read the tree.
-3. Note the exact softwarePath values for PLC and HMI operations.
-
-IMPORTANT: always call GetProjectTree first when working with an unfamiliar project.";
+            return WithV4Rules(@"Read GetSessionState first. If the intended project is not bound, use ListPortalProcessProjects and ConnectProject with an explicitly selected row, then OpenProject if needed. Call GetProjectTree and retain exact device, PLC software and HMI software paths for later calls.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Hardware / network
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "CreateProjectWithDevices"), Description("Create a new project, add a PLC and HMI, connect them via PROFINET")]
-        public static string CreateProjectWithDevices(
-            string projectDirectory,
-            string projectName,
-            string plcFamily,
-            string plcDeviceName,
-            string hmiKeyword,
-            string hmiDeviceName)
+        [McpServerPrompt(Name = "CreateProjectWithDevices"), Description("Create a project with selected PLC and HMI devices")]
+        public static string CreateProjectWithDevices(string projectDirectory, string projectName, string plcFamily, string plcDeviceName, string hmiKeyword, string hmiDeviceName)
         {
-            return $@"Create a new TIA Portal project with PLC + HMI connected via PROFINET.
-
-Steps:
-1. ConnectPortal.
-2. CreateProject — directory='{projectDirectory}', name='{projectName}'.
-3. CreateHardwareDevice — family='{plcFamily}', deviceName='{plcDeviceName}'.
-4. CreateHardwareCatalogDevice — keyword='{hmiKeyword}', deviceName='{hmiDeviceName}'.
-5. GetProjectTree — note the exact device-item paths.
-6. ConnectDeviceNodesToProfinetSubnet — firstRootPath='{plcDeviceName}', secondRootPath=derived from tree.
-7. SaveProject.
-
-Use these tools in order with the parameters above.";
+            return WithV4Rules($@"Create project {projectName} in {projectDirectory} with the requested PLC family {plcFamily} ({plcDeviceName}) and HMI {hmiKeyword} ({hmiDeviceName}). First bind the explicitly selected TIA process using ListPortalProcessProjects and the release-specific connector described in the V4 rules. Call CreateProject with object arguments directoryPath={projectDirectory} and projectName={projectName}. Use SearchHardwareCatalog to identify exact catalog choices, then GetToolUsage for CreateHardwareDevice or CreateHardwareCatalogDevice and supply their schema-typed arguments. Call GetProjectTree to obtain exact root paths, then ConnectDeviceNodesToProfinetSubnet with firstRootPath and secondRootPath strings. Report each result. Save only if separately requested.");
         }
 
-        [McpServerPrompt(Name = "AddProfinetDevice"), Description("Add a Siemens hardware device and connect it to an existing PROFINET subnet")]
+        [McpServerPrompt(Name = "AddProfinetDevice"), Description("Add a selected hardware device and connect it to PROFINET")]
         public static string AddProfinetDevice(string keyword, string deviceName, string existingPlcRoot)
         {
-            return $@"Add a Siemens hardware device and connect it to PROFINET.
-
-Steps:
-1. SearchHardwareCatalog — keyword='{keyword}' to confirm exact MLFB.
-2. CreateHardwareCatalogDevice — keyword='{keyword}', deviceName='{deviceName}'.
-3. GetProjectTree — discover device-item paths under '{deviceName}'.
-4. ConnectDeviceNodesToProfinetSubnet — firstRootPath='{existingPlcRoot}', secondRootPath=path from tree.
-5. SaveProject.
-
-Use these tools in order.";
+            return WithV4Rules($@"Find the requested catalog item for {keyword}. Call SearchHardwareCatalog and select the exact catalog result with the user. Retrieve GetToolUsage for CreateHardwareCatalogDevice and pass keyword and deviceName as strings; do not invent catalog versions. Call GetProjectTree, then ConnectDeviceNodesToProfinetSubnet with firstRootPath={existingPlcRoot} and the exact new-device root path. Saving is a separate user-requested action.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // PLC blocks — export / import
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "GetSoftwareTree"), Description("Get the structure/tree of a specific PLC software showing blocks and types")]
+        [McpServerPrompt(Name = "GetSoftwareTree"), Description("Get a PLC or HMI software tree")]
         public static string GetSoftwareTree(string softwarePath)
         {
-            return $@"Retrieve the complete PLC software structure.
-
-The tree shows:
-- OB / FC / FB / GlobalDB / InstanceDB blocks with group hierarchy
-- UDT types
-- External sources
-- Full qualified paths needed for ExportPlcBlock (e.g. 'Program blocks/FBs/FB_Motor')
-
-Steps:
-1. ConnectPortal + OpenProject.
-2. GetSoftwareTree — softwarePath='{softwarePath}'.
-3. Note the exact block paths for export/import operations.
-
-Use the GetSoftwareTree tool with:
-- softwarePath: {softwarePath}";
+            return WithV4Rules($@"Call GetSoftwareTree with softwarePath={softwarePath}. Use exact block, type, source, screen and group paths returned by this tree for subsequent operations. If the path is uncertain, call GetProjectTree first.");
         }
 
-        [McpServerPrompt(Name = "ExportBlocks"), Description("Export blocks from PLC software")]
+        [McpServerPrompt(Name = "ExportBlocks"), Description("Export PLC blocks")]
         public static string ExportBlocks(string softwarePath, string exportPath, string regexName, bool preservePath)
         {
-            return $@"Export blocks from PLC software.
-
-Common parameter values:
-- softwarePath: e.g. 'PLC_1'
-- exportPath: '${{workspacefolder}}/export/Program blocks'
-- regexName: empty string for all blocks, or 'FB_.*' for function blocks only
-- preservePath: false=flat export, true=maintain folder structure
-
-Steps:
-1. CompilePlcDiagnostics — ensure blocks are consistent before export.
-2. ExportPlcBlocks — export with the parameters below.
-
-Use the ExportPlcBlocks tool with:
-- softwarePath: {softwarePath}
-- exportPath: {exportPath}
-- regexName: {regexName}
-- preservePath: {preservePath.ToString().ToLower()}";
+            return WithV4Rules($@"Export from softwarePath={softwarePath} to exportPath={exportPath}, regexName={regexName}, preservePath={preservePath}. Retrieve GetToolUsage for ExportPlcBlocks and call it with those typed values. Compile only if requested. Review the V4 data and exported-file evidence; export does not modify or save the project.");
         }
 
-        [McpServerPrompt(Name = "ExportTypes"), Description("Export types from PLC software")]
+        [McpServerPrompt(Name = "ExportTypes"), Description("Export PLC types")]
         public static string ExportTypes(string softwarePath, string exportPath, string regexName, bool preservePath)
         {
-            return $@"Export user-defined types (UDTs) from PLC software.
-
-Steps:
-1. ExportPlcTypes — export with the parameters below.
-
-Use the ExportPlcTypes tool with:
-- softwarePath: {softwarePath}
-- exportPath: {exportPath}
-- regexName: {regexName}
-- preservePath: {preservePath.ToString().ToLower()}";
+            return WithV4Rules($@"Call ExportPlcTypes with softwarePath={softwarePath}, exportPath={exportPath}, regexName={regexName} and preservePath={preservePath}. Read GetToolUsage first and pass the boolean and strings in their declared types. Inspect returned data and file evidence.");
         }
 
-        [McpServerPrompt(Name = "ExportBlocksAsDocuments"), Description("Export blocks as documents (.s7dcl/.s7res format, V20+)")]
+        [McpServerPrompt(Name = "ExportBlocksAsDocuments"), Description("Export blocks as SIMATIC SD documents")]
         public static string ExportBlocksAsDocuments(string softwarePath, string exportPath, string regexName, bool preservePath)
         {
-            return $@"Export blocks as SIMATIC SD documents (.s7dcl/.s7res). Requires TIA Portal V20+.
-
-Note: importing LAD blocks requires the .s7res to contain en-US tags for all items.
-
-Use the ExportPlcBlocksDocuments tool with:
-- softwarePath: {softwarePath}
-- exportPath: {exportPath}
-- regexName: {regexName}
-- preservePath: {preservePath.ToString().ToLower()}";
+            return WithV4Rules($@"For a supported release, call ExportPlcBlocksDocuments with softwarePath={softwarePath}, exportPath={exportPath}, regexName={regexName}, preservePath={preservePath}. Read its V4 schema first. Preserve the exported .s7dcl/.s7res evidence and verify the release supports this operation.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Convenience export shorthands
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "ExportAllBlocksFlattened"), Description("Export all blocks from PLC software (flat)")]
+        [McpServerPrompt(Name = "ExportAllBlocksFlattened"), Description("Export blocks without preserving folders")]
         public static string ExportAllBlocksFlattened(string softwarePath, string exportPath)
             => ExportBlocks(softwarePath, exportPath, "", false);
 
-        [McpServerPrompt(Name = "ExportAllBlocksStructured"), Description("Export all blocks from PLC software (preserving folder structure)")]
+        [McpServerPrompt(Name = "ExportAllBlocksStructured"), Description("Export blocks preserving folder paths")]
         public static string ExportAllBlocksStructured(string softwarePath, string exportPath)
             => ExportBlocks(softwarePath, exportPath, "", true);
 
-        [McpServerPrompt(Name = "ExportAllTypesFlattened"), Description("Export all UDT types from PLC software (flat)")]
+        [McpServerPrompt(Name = "ExportAllTypesFlattened"), Description("Export all PLC types without preserving folders")]
         public static string ExportAllTypesFlattened(string softwarePath, string exportPath)
             => ExportTypes(softwarePath, exportPath, "", false);
 
-        [McpServerPrompt(Name = "ExportAllTypesStructured"), Description("Export all UDT types from PLC software (preserving folder structure)")]
+        [McpServerPrompt(Name = "ExportAllTypesStructured"), Description("Export PLC types preserving folder paths")]
         public static string ExportAllTypesStructured(string softwarePath, string exportPath)
             => ExportTypes(softwarePath, exportPath, "", true);
 
-        [McpServerPrompt(Name = "ExportAllBlocksAsDocumentsFlattened"), Description("Export all blocks as documents (flat)")]
+        [McpServerPrompt(Name = "ExportAllBlocksAsDocumentsFlattened"), Description("Export all blocks as documents without folders")]
         public static string ExportAllBlocksAsDocumentsFlattened(string softwarePath, string exportPath)
             => ExportBlocksAsDocuments(softwarePath, exportPath, "", false);
 
-        [McpServerPrompt(Name = "ExportAllBlocksAsDocumentsStructured"), Description("Export all blocks as documents (preserving folder structure)")]
+        [McpServerPrompt(Name = "ExportAllBlocksAsDocumentsStructured"), Description("Export all blocks as documents preserving folders")]
         public static string ExportAllBlocksAsDocumentsStructured(string softwarePath, string exportPath)
             => ExportBlocksAsDocuments(softwarePath, exportPath, "", true);
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Import from documents (V20+)
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "ImportFromDocuments"), Description("Import a single block from SIMATIC SD documents (.s7dcl/.s7res, V20+)")]
+        [McpServerPrompt(Name = "ImportFromDocuments"), Description("Import one block from SIMATIC SD documents")]
         public static string ImportFromDocuments(string softwarePath, string groupPath, string importPath, string fileNameWithoutExtension, string importOption)
         {
-            return $@"Import one program block from SIMATIC SD documents (requires TIA Portal V20+).
-
-Note: importing LAD blocks requires the .s7res to contain en-US tags.
-
-Use the ImportPlcBlockDocuments tool with:
-- softwarePath: {softwarePath}
-- groupPath: {groupPath}
-- importPath: {importPath}
-- fileNameWithoutExtension: {fileNameWithoutExtension}
-- importOption: {importOption}";
+            return WithV4Rules($@"Import the selected block into softwarePath={softwarePath}, groupPath={groupPath}. Use GetToolUsage for ImportPlcBlockDocuments and pass softwarePath, groupPath, importPath={importPath}, fileNameWithoutExtension={fileNameWithoutExtension} and importOption={importOption} in their declared types (importOption is an enum). Match the artifact to the target TIA release; the tool does not rewrite its engineering version or BOM. Inspect import evidence before any separately requested compile or save.");
         }
 
-        [McpServerPrompt(Name = "ImportBlocksFromDocuments"), Description("Import blocks from SIMATIC SD documents (.s7dcl/.s7res, V20+)")]
+        [McpServerPrompt(Name = "ImportBlocksFromDocuments"), Description("Import matching blocks from SIMATIC SD documents")]
         public static string ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, string importOption)
         {
-            return $@"Import multiple program blocks from SIMATIC SD documents (requires TIA Portal V20+).
-
-Note: importing LAD blocks requires the .s7res to contain en-US tags.
-
-Use the ImportPlcBlocksDocuments tool with:
-- softwarePath: {softwarePath}
-- groupPath: {groupPath}
-- importPath: {importPath}
-- regexName: {regexName}
-- importOption: {importOption}";
+            return WithV4Rules($@"Call ImportPlcBlocksDocuments with softwarePath={softwarePath}, groupPath={groupPath}, importPath={importPath}, regexName={regexName} and the schema enum importOption={importOption}. Check GetToolUsage for required/optional fields and match source documents to the target release. Inspect each V4 item result; compile or save only when separately requested.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // PLC block creation from natural language
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "CreatePlcFunctionBlock"), Description("Create a new PLC FB from a natural-language description")]
+        [McpServerPrompt(Name = "CreatePlcFunctionBlock"), Description("Create and import a PLC function block")]
         public static string CreatePlcFunctionBlock(string softwarePath, string fbName, int fbNumber, string description)
         {
-            return $@"Create a new PLC Function Block (FB) and import it into the project.
-
-Goal: {description}
-
-Steps:
-1. GetSoftwareTree — softwarePath='{softwarePath}' — find an appropriate group path.
-2. BuildPlcFbBlock — fbBlockJson with name='{fbName}', number={fbNumber}, inputs/outputs/statics matching the description.
-   - dryRun=true first to validate XML.
-3. BuildAndImportPlcArtifact — kind='fb', softwarePath='{softwarePath}', dryRun=false, compileAfter=true.
-4. CompilePlcDiagnostics — verify 0 errors.
-5. GetPlcBlockInfo — softwarePath='{softwarePath}', blockPath='Program blocks/{fbName}' — confirm import.
-
-If compile errors occur: export the failed block, inspect the XML, fix the interface, re-import.";
+            return WithV4Rules($@"Create an FB in softwarePath={softwarePath} named {fbName}, requested number {fbNumber}. Inspect GetSoftwareTree and GetToolUsage for BuildAndImportPlcArtifact. Construct its `spec` as a typed object matching the registered schema and the user's description: {description}. First call with dryRun=true and inspect generated data; after approval, call with dryRun=false and compileAfter=false. CompilePlcDiagnostics is a separate explicit step. Do not save implicitly.");
         }
 
-        [McpServerPrompt(Name = "CreatePlcFunctionBlockWithLogic"), Description("Create a PLC FB with SCL logic from natural language")]
+        [McpServerPrompt(Name = "CreatePlcFunctionBlockWithLogic"), Description("Create a PLC function block with SCL logic")]
         public static string CreatePlcFunctionBlockWithLogic(string softwarePath, string fbName, int fbNumber)
         {
-            return $@"Create a PLC Function Block with SCL structured-text logic.
-
-Steps:
-1. GetSoftwareTree — softwarePath='{softwarePath}'.
-2. BuildPlcFbBlock — provide fbBlockJson:
-   {{
-     ""blockName"": ""{fbName}"",
-     ""blockNumber"": {fbNumber},
-     ""inputs"":  [{{ ""name"": ""..."", ""datatype"": ""..."" }}],
-     ""outputs"": [{{ ""name"": ""..."", ""datatype"": ""..."" }}],
-     ""statics"": [{{ ""name"": ""..."", ""datatype"": ""..."" }}],
-     ""structuredText"": {{ ""operations"": [...] }}
-   }}
-3. BuildAndImportPlcArtifact — kind='fb', softwarePath='{softwarePath}', dryRun=true then dryRun=false.
-4. CompilePlcDiagnostics.
-5. GetPlcBlockInfo — readback confirmation.";
+            return WithV4Rules($@"Inspect GetSoftwareTree and GetToolUsage for BuildAndImportPlcArtifact. Build kind=""fb"" and a typed `spec` object for FB {fbName} (requested number {fbNumber}), including structuredText fields validated by the schema. Do not serialize spec as JSON text. Run dryRun=true, inspect the V4 result, then request approval before dryRun=false; set compileAfter=false and run CompilePlcDiagnostics separately if requested.");
         }
 
-        [McpServerPrompt(Name = "CreatePlcGlobalDb"), Description("Create a new PLC GlobalDB from a natural-language description")]
+        [McpServerPrompt(Name = "CreatePlcGlobalDb"), Description("Create a PLC global data block")]
         public static string CreatePlcGlobalDb(string softwarePath, string dbName, int dbNumber)
         {
-            return $@"Create a new PLC Global Data Block (GlobalDB).
-
-Steps:
-1. BuildPlcGlobalDb or BuildAndImportPlcArtifact — kind='globaldb':
-   {{
-     ""dbName"": ""{dbName}"",
-     ""dbNumber"": {dbNumber},
-     ""staticMembers"": [{{ ""name"": ""..."", ""datatype"": ""..."", ""startValue"": ""..."" }}]
-   }}
-2. BuildAndImportPlcArtifact — kind='globaldb', softwarePath='{softwarePath}', dryRun=false.
-3. CompilePlcDiagnostics.
-4. GetPlcBlockInfo — readback.";
+            return WithV4Rules($@"Use GetToolUsage for BuildAndImportPlcArtifact and create kind=""globaldb"" with a typed `spec` object for {dbName} (number {dbNumber}). Follow the exact schema for members and start values. Run dryRun=true and inspect its V4 result before the approved dryRun=false call; use compileAfter=false and compile separately only if requested.");
         }
 
-        [McpServerPrompt(Name = "CreatePlcTagTable"), Description("Create a new PLC tag table with I/O tags")]
+        [McpServerPrompt(Name = "CreatePlcTagTable"), Description("Create a PLC tag table")]
         public static string CreatePlcTagTable(string softwarePath, string tableName)
         {
-            return $@"Create a new PLC tag table with I/O address assignments.
-
-Steps:
-1. BuildPlcTagTable or BuildAndImportPlcArtifact — kind='tagtable':
-   {{
-     ""tableName"": ""{tableName}"",
-     ""tags"": [
-       {{ ""name"": ""..."", ""dataTypeName"": ""Bool"", ""logicalAddress"": ""%I0.0"" }},
-       {{ ""name"": ""..."", ""dataTypeName"": ""Bool"", ""logicalAddress"": ""%Q0.0"" }}
-     ]
-   }}
-2. BuildAndImportPlcArtifact — kind='tagtable', softwarePath='{softwarePath}', dryRun=false.
-3. CompilePlcDiagnostics.";
+            return WithV4Rules($@"Use GetToolUsage for BuildAndImportPlcArtifact. Build kind=""tagtable"" and a typed `spec` object for table {tableName}; pass addresses and tags in the schema-defined fields, not a JSON string. Run dryRun=true and inspect the plan before requesting approval for dryRun=false. Set compileAfter=false; compilation and saving remain separate explicit actions.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Compile and diagnostics
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "CompileAndDiagnose"), Description("Compile PLC software and diagnose errors/warnings")]
+        [McpServerPrompt(Name = "CompileAndDiagnose"), Description("Compile PLC software and inspect diagnostics")]
         public static string CompileAndDiagnose(string softwarePath)
         {
-            return $@"Compile PLC software and review structured diagnostics.
-
-Steps:
-1. CompilePlcDiagnostics — softwarePath='{softwarePath}'.
-2. Review output:
-   - errors=0 → success, continue.
-   - errors>0 → read each error message; the block name and line number are included.
-     - Export the failing block with ExportPlcBlock to a working directory.
-     - Inspect the XML, correct the interface/logic.
-     - ImportPlcBlock the corrected file.
-     - Repeat CompilePlcDiagnostics.
-
-Use the CompilePlcDiagnostics tool with:
-- softwarePath: {softwarePath}";
+            return WithV4Rules($@"Call CompilePlcDiagnostics with softwarePath={softwarePath}. Inspect the V4 result's data and meta diagnostics, effective state, incomplete flag, errors and warnings. Do not infer success from transport status; report nested messages and counts without summing overlapping subtree totals. Export or import a correction only if requested.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // HMI — Unified (WinCC Unified)
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "CreateUnifiedHmiPage"), Description("Create a complete WinCC Unified HMI screen with tags, controls, and PLC bindings")]
-        public static string CreateUnifiedHmiPage(
-            string hmiSoftwarePath,
-            string screenName,
-            string plcName,
-            string connectionName)
+        [McpServerPrompt(Name = "CreateUnifiedHmiPage"), Description("Create a Unified HMI screen and bindings")]
+        public static string CreateUnifiedHmiPage(string hmiSoftwarePath, string screenName, string plcName, string connectionName)
         {
-            return $@"Create a complete WinCC Unified HMI screen with PLC-bound tags and controls.
-
-Steps:
-1. EnsureUnifiedHmiConnection — hmiSoftwarePath='{hmiSoftwarePath}', connectionName='{connectionName}', plcName='{plcName}'.
-2. EnsureUnifiedHmiScreen — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
-3. EnsureUnifiedHmiTagTable — hmiSoftwarePath='{hmiSoftwarePath}', tagTableName='<exact existing tag table name>'.
-4. EnsureUnifiedHmiTag (repeat for each tag) — bind each tag to a PLC DB variable.
-5. ApplyUnifiedHmiScreenDesign — apply complete layout JSON (controls with positions, text, properties).
-6. EnsureUnifiedHmiDynamization (optional) — bind controls to HMI tags for live values.
-7. SaveProject.
-
-Typical design object:
-{{
-  ""items"": [
-    {{ ""name"": ""BTN_Start"", ""type"": ""Button"", ""left"": 50,  ""top"": 50, ""width"": 120, ""height"": 40, ""text"": ""Start"" }},
-    {{ ""name"": ""BTN_Stop"",  ""type"": ""Button"", ""left"": 200, ""top"": 50, ""width"": 120, ""height"": 40, ""text"": ""Stop""  }},
-    {{ ""name"": ""LMP_Run"",   ""type"": ""Rectangle"", ""left"": 350, ""top"": 50, ""width"": 60, ""height"": 40 }}
-  ]
-}}";
+            return WithV4Rules($@"For HMI software {hmiSoftwarePath}, use GetToolUsage to inspect schemas for EnsureUnifiedHmiConnection, EnsureUnifiedHmiScreen, EnsureUnifiedHmiTagTable, EnsureUnifiedHmiTag, EnsureUnifiedHmiScreenItem, ApplyUnifiedHmiScreenDesign and EnsureUnifiedHmiDynamization. Create connection {connectionName} to PLC {plcName} and screen {screenName}, using typed fields and a typed design object. Confirm exact PLC tag paths. Inspect each result before the next write; request Workbench approval when required. Compile or save only if separately requested.");
         }
 
-        [McpServerPrompt(Name = "CreateStartStopHmi"), Description("Create a motor start/stop HMI screen with minimal tags and buttons")]
+        [McpServerPrompt(Name = "CreateStartStopHmi"), Description("Create a motor start/stop Unified HMI screen")]
         public static string CreateStartStopHmi(string hmiSoftwarePath, string screenName)
         {
-            return $@"Create a motor start/stop HMI screen using the built-in shortcut.
-
-Steps:
-1. GetHmiProgramInfo — softwarePath='{hmiSoftwarePath}' — confirm it is Unified HMI.
-2. SetUnifiedHmiRuntimeState — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
-   This creates tags: StartPB / StopPB / EStop / RunOut (all Bool) and matching UI items.
-3. SaveProject.
-
-For custom layouts, use CreateUnifiedHmiPage instead.";
+            return WithV4Rules($@"Use GetToolUsage to inspect the schema for SetUnifiedHmiRuntimeState. Call it with hmiSoftwarePath={hmiSoftwarePath} and the typed fields needed to create or update screen {screenName}. Do not assume arguments from older shortcut tools. Inspect returned data; save only if separately requested.");
         }
 
-        [McpServerPrompt(Name = "ApplyHmiLayout"), Description("Apply a grid-based layout to an existing Unified HMI screen")]
+        [McpServerPrompt(Name = "ApplyHmiLayout"), Description("Build and apply a Unified HMI screen layout")]
         public static string ApplyHmiLayout(string hmiSoftwarePath, string screenName)
         {
-            return $@"Apply a grid layout to a Unified HMI screen.
-
-Steps:
-1. BuildUnifiedHmiLayoutDesign — provide a layout object:
-   {{
-     ""grid"": 8, ""columns"": 4, ""cellWidth"": 150, ""cellHeight"": 60, ""gap"": 10,
-     ""items"": [
-       {{ ""name"": ""LBL_Title"", ""type"": ""Text"", ""row"": 0, ""col"": 0, ""colSpan"": 4, ""text"": ""Motor Control"" }},
-       {{ ""name"": ""BTN_Start"", ""type"": ""Button"",    ""row"": 1, ""col"": 0, ""text"": ""Start"" }},
-       {{ ""name"": ""BTN_Stop"",  ""type"": ""Button"",    ""row"": 1, ""col"": 1, ""text"": ""Stop""  }}
-     ]
-   }}
-2. ApplyUnifiedHmiLayout — hmiSoftwarePath='{hmiSoftwarePath}', screenName='{screenName}'.
-3. SaveProject.";
+            return WithV4Rules($@"Use GetToolUsage for BuildUnifiedHmiLayoutDesign and ApplyUnifiedHmiLayout. Pass layout as an object to both tools, with schema-defined grid and item fields; never JSON-encode the object. Apply the resulting layout to hmiSoftwarePath={hmiSoftwarePath}, screenName={screenName} after inspecting the design result and obtaining approval. Save only if separately requested.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // HMI — Classic / Basic
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "CreateClassicHmiScreen"), Description("Create a Classic/Basic WinCC HMI screen from JSON definition")]
+        [McpServerPrompt(Name = "CreateClassicHmiScreen"), Description("Build and import a Classic HMI screen package")]
         public static string CreateClassicHmiScreen(string hmiSoftwarePath, string screenName)
         {
-            return $@"Create a Classic/Basic WinCC HMI screen.
-
-Steps:
-1. BuildClassicHmiScreen — designJson with Screen and Items (Text/Button/IOField/Lamp/Rectangle).
-2. WriteClassicHmiMinimalPackageFiles — write screen XML and tag table to disk.
-3. ValidateClassicHmiMinimalPackageFiles — verify package is well-formed.
-4. ImportHmiScreen — hmiSoftwarePath='{hmiSoftwarePath}', importPath=written XML file.
-5. ImportHmiTagTable — import matching tag table.
-6. SaveProject.";
+            return WithV4Rules($@"Use GetToolUsage for BuildClassicHmiScreen, WriteClassicHmiMinimalPackageFiles, ValidateClassicHmiMinimalPackageFiles, ImportHmiScreen and ImportHmiTagTable. Pass design, package and screen definitions as typed objects. Write the package to an explicit output directory, validate it, then import with schema-typed paths into {hmiSoftwarePath}. Inspect each result; saving is separate and only on request.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Online monitoring
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "MonitorPlcValues"), Description("Read current PLC variable values from a watch table (read-only)")]
+        [McpServerPrompt(Name = "MonitorPlcValues"), Description("Read online PLC values from a watch table")]
         public static string MonitorPlcValues(string softwarePath)
         {
-            return $@"Read current PLC variable values online (read-only, no writes).
-
-Steps:
-1. PlanOnlineReadOnlyMonitoring — validate the monitoring request offline first.
-2. ProbePlcMonitorOnlineCapabilities — softwarePath='{softwarePath}' — discover available monitoring APIs.
-3. ListPlcWatchTables — softwarePath='{softwarePath}' — list available watch tables.
-4. GetPlcWatchTableCurrentValuesReadOnly — read current values.
-
-IMPORTANT: this is read-only monitoring. Writing values to the PLC is not supported via MCP.";
+            return WithV4Rules($@"Read values only. Call PlanOnlineReadOnlyMonitoring with softwarePath={softwarePath} and a typed tagPaths array; inspect the plan. Then use ProbePlcMonitorOnlineCapabilities, ListPlcWatchTables and GetPlcWatchTableCurrentValuesReadOnly with schema-typed arguments. Do not write PLC values.");
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Validation / release
-        // ──────────────────────────────────────────────────────────────────────
-
-        [McpServerPrompt(Name = "RunPreRelease"), Description("Run offline validation suite before releasing a project")]
+        [McpServerPrompt(Name = "RunPreRelease"), Description("Run the offline release validation suite")]
         public static string RunPreRelease(string workspaceRoot, string reportDirectory)
         {
-            return $@"Run the offline pre-release validation suite.
-
-Steps:
-1. RunOfflineReleaseValidationSuite — workspaceRoot='{workspaceRoot}', reportDirectory='{reportDirectory}'.
-2. BuildReleaseDiagnosticReport — pass the generated JSON path.
-3. BuildReleaseRunbook — generate first-user instructions.
-4. Review findings; fix any failures before shipping.
-
-Use these tools in order.";
+            return WithV4Rules($@"Call RunOfflineReleaseValidationSuite with workspaceRoot={workspaceRoot} and reportDirectory={reportDirectory}. Inspect its V4 result and generated report path. Then call BuildReleaseDiagnosticReport and BuildReleaseRunbook with the typed offlineReleaseSuiteJsonPath from that result. Offline validation does not establish native TIA acceptance; retain NOT RUN status without a matching machine record.");
         }
     }
 }

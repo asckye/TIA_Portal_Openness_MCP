@@ -100,8 +100,8 @@ namespace TiaMcpServer.Tests
             foreach (var recipe in ToolRecipes.All)
                 foreach (var step in recipe.Steps)
                     check(JsonNode.Parse(step.ArgumentsJson) is JsonObject, "recipes: '" + recipe.Topic + "' step " + step.Tool + " is a JSON object");
-            var sentinel = ToolRecipes.ValidateAgainst(tool => tool == "InitializeEnvironment" ? new List<KeyValuePair<string, bool>>() : tool == "ConnectPortal" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("project", true) } : null);
-            check(sentinel.Any(p => p.Contains("connect-project step 2 (ConnectPortal): 'projectName' is not a parameter")) && sentinel.Any(p => p.Contains("required parameter 'project' missing")) && sentinel.Any(p => p.EndsWith("no tool of that name")), "recipes: validation flags wrong keys, missing required and unknown tools (sentinel)");
+            var sentinel = ToolRecipes.ValidateAgainst(tool => tool == "ListPortalProcessProjects" ? new List<KeyValuePair<string, bool>>() : tool == "ConnectProject" ? new List<KeyValuePair<string, bool>> { new KeyValuePair<string, bool>("project", true) } : null);
+            check(sentinel.Any(p => p.Contains("connect-project step 2 (ConnectProject): 'processId' is not a parameter")) && sentinel.Any(p => p.Contains("required parameter 'project' missing")) && sentinel.Any(p => p.EndsWith("no tool of that name")), "recipes: validation flags wrong keys, missing required and unknown tools (sentinel)");
             IReadOnlyList<KeyValuePair<string, bool>>? Linked(string tool)
             {
                 var method = ToolBridgeFixture.Catalog.Methods.FirstOrDefault(entry => string.Equals(entry.Key, tool, StringComparison.Ordinal)).Value;

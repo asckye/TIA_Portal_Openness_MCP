@@ -17,6 +17,8 @@
 
 随包许可、依赖与版权见[第三方清单](../licenses/THIRD-PARTY-NOTICES.md)。Siemens PublicAPI 和第三方测试工程不随交付包分发。
 
+MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；拒绝、超时或工作台不可用会在操作前返回 `CONFIRMATION_REQUIRED`。审计记录保存在数据根的 `data/logs/audit`，可通过 Workbench 审计页或 `tia audit verify` 检查。哈希链只能验证留存记录间的连续性，不能证明完整日志未被删除。引擎日志和诊断调用包位于 `data/logs` 与 `data/diagnostics`；只读安装时使用运行时布局文档列出的用户目录回退。
+
 伴随 Python 环境由 `scripts/ecosystem/Install-PlcTools.ps1` 准备，默认位于
 `%LOCALAPPDATA%\TiaMcp\ecosystem-python`；需要 Python 3.12+。引擎优先使用显式
 `TIA_MCP_PLC_TOOLS_PYTHON`，否则读取该环境的 `Scripts\python.exe`。LocalAppData 缺失、
@@ -31,6 +33,7 @@
 | `ReadOpennessGuidance` | 检索随包固定版本官方指南；对调用示例优先用 `GetToolUsage`。 |
 | `PlanArtifactImportOrder` | 根据输入依赖生成导入顺序，不执行导入。 |
 | `RenderPlcVisualDiff` | 单块 SimaticML 结构比较及 LAD 并排 SVG/HTML；不宣称支持全部语言图形差异。 |
+| `RenderPlcBlock` / `RenderPlcProgramAtlas` | 从精确版本导出证据生成静态单块梯形图或程序图册；不在线编辑或下载，且不覆盖已存在的输出文件。图册中的检查结论是证据说明，不代表原生验收。 |
 | `ManagePlcGitRepository` | 导出/VCI 目录的状态、历史、差异、暂存和提交；只提交指定文件。 |
 | `RunPlcCompanionTool` | 调用已登记的 PLC Tools CLI；具体命令由工具读取当前清单。命令可能读写文件或访问配置中的设备，需先明确目标。 |
 | `GenerateOpcUaModelledInterface` | 从选定 PLC/软件单元生成接口 XML；需另行导入并编译。 |

@@ -1,6 +1,6 @@
 # 工程能力与验收边界
 
-v3.2.0 提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness 的 Studio。第一次使用请从[新手指南](../getting-started/beginners.zh-CN.md)开始；完整工具与版本对应关系以[版本矩阵](version-tools.md)、[生成的工具目录](version-tool-catalog.md)为准。
+当前 4.0 源码提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness 的 Studio。入口分别为根 `TiaOpenness.exe`、V14 SP1–V19 的 `TiaMcp.FoundationHost.exe`，以及 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`。第一次使用请从[新手指南](../getting-started/beginners.zh-CN.md)开始；完整工具与版本对应关系以[版本矩阵](version-tools.md)、[生成的工具目录](version-tool-catalog.md)为准。
 
 ## 当前支持范围
 
@@ -18,8 +18,7 @@ v3.2.0 提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness �
 `GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，
 每行包含 `family`、`state`、`l5` 和实际 `entries`。完整引擎的 `InitializeEnvironment` / `GetPortalInfo`
 与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。
-当前八版全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。
-D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。
+当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。
 逐版入口清单见[生成的行为台账](real-machine-ledger.md)及[功能矩阵](../../reference/version-feature-matrix.json)。
 
 ## AI 如何取得正确示例
@@ -28,6 +27,7 @@ D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原�
 
 - 按工具查：提供 `toolName`，具有多个动作时再提供 `operation`。
 - 按语言或完整流程查：使用 `language` 或 `exampleId`。
+- 搜索官方文档或读取分页面：使用 `query` 或 `documentId`、`offset`、`limit`。
 - 文件应放在 MCP 服务所在电脑；虚拟机场景中，宿主机路径不会自动映射为虚拟机路径。
 - 先明确目标工程、PLC 和对象，再使用示例中的参数。导入、生成、编译、保存、下载分别对应不同操作。
 
@@ -44,6 +44,9 @@ D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原�
 | HMI / Unified | 完整引擎提供普通画面、控件、标签、报警、事件、全局脚本、列表及库等接口。事件代码与全局脚本模块使用不同 API；面板类型内部创作仍有未实现边界。 |
 | 硬件、库与选件 | 以实际版本 SDK、安装选件、许可证和对象提供的服务为准。工具名称存在不表示所有动作都能在所有版本执行。 |
 | 运行时数据 | 完整引擎另有 S7 Web API、Unified Open Pipe、PLCSIM Advanced 等通道；这些不属于 Openness 工程对象读取。 |
+| 写操作审批与审计 | MCP `WRITE` / `ONLINE-WRITE` 默认先由 Workbench 审批；拒绝、超时或 Workbench 不可用时在派发前返回 `CONFIRMATION_REQUIRED`。请求、决定及结果写入 `data/logs/audit` 哈希链。 |
+| 梯形图渲染 | `RenderPlcBlock` 与 `RenderPlcProgramAtlas` 生成静态视图/图册，不在线编辑或下载；原生导出仍受对应导出族的验收状态约束。 |
+| 数据目录 | 包根由 `--bundle-root` 或 `TIA_MCP_BUNDLE_ROOT` 选择。日志和审计位于 `data/logs`，调用诊断包位于 `data/diagnostics`；PLC Tools Python 默认是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`。 |
 | 第三方复用 | 已接入的源码、伴随进程及其用途见[生态集成](ecosystem-tools.md)。外部候选不计作已实现工具。 |
 
 ## 如何判断验证到了哪一步

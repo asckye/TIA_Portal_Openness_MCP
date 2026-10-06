@@ -1,6 +1,6 @@
 # Tools by TIA release
 
-v3.2.0 supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
+4.0 source supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
 `19`, `20`, `21`. Original V14/V15 are excluded. Each native process uses one exact
 PublicAPI identity; selecting another version does not translate or upgrade a project.
 
@@ -8,16 +8,16 @@ PublicAPI identity; selecting another version does not translate or upgrade a pr
 
 | Version | Advertised full catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 57 | PLC foundation host + V14 SP1 worker |
-| V15.1 | 58 | PLC foundation host + V15.1 worker |
-| V16 | 60 | PLC foundation host + V16 worker |
-| V17 | 60 | PLC foundation host + V17 worker |
-| V18 | 60 | PLC foundation host + V18 worker |
-| V19 | 62 | PLC foundation host + V19 worker |
+| V14 SP1 | 59 | PLC foundation host + V14 SP1 worker |
+| V15.1 | 60 | PLC foundation host + V15.1 worker |
+| V16 | 62 | PLC foundation host + V16 worker |
+| V17 | 62 | PLC foundation host + V17 worker |
+| V18 | 62 | PLC foundation host + V18 worker |
+| V19 | 64 | PLC foundation host + V19 worker |
 | V20 | 477 | Existing full engine |
 | V21 | 488 | Existing full engine |
 
-V20/V21 retain the 63-tool lite profile and FindTools/CallTool discovery. Foundation
+V20/V21 use the 60-tool lite profile and FindTools/CallTool discovery. Foundation
 hosts advertise their entire implemented subset and do not offer the full engine's
 CLI or dispatch bridge. Equal tool names across profiles can have different arguments,
 write-confirmation requirements and response envelopes. Read the selected host schema.

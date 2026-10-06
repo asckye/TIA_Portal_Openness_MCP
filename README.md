@@ -24,14 +24,14 @@ The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installat
 
 | TIA release | Registered tools | MCP profile |
 |---|---:|---|
-| V14 SP1 | 57 | PLC foundation |
-| V15.1 | 58 | PLC foundation |
-| V16 / V17 / V18 | 60 each | PLC foundation |
-| V19 | 62 | PLC foundation |
+| V14 SP1 | 59 | PLC foundation |
+| V15.1 | 60 | PLC foundation |
+| V16 / V17 / V18 | 62 each | PLC foundation |
+| V19 | 64 | PLC foundation |
 | V20 | 477 | Full engine |
 | V21 | 488 | Full engine |
 
-V20/V21 expose 63 tools in the default lite profile; use `FindTools` and `CallTool` for the rest, or configure `--profile full`. Foundation hosts expose their own complete subset and have different contracts. Read [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`. Original V14/V15 are not aliases for V14 SP1/V15.1.
+V20/V21 expose 60 tools in the default lite profile; use `FindTools` and `CallTool` for the rest, or configure `--profile full`. The bundle uses `TiaOpenness.exe` as its root launcher, `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe` for V20/V21, and `TiaMcp.FoundationHost.exe` for V14 SP1–V19. Foundation hosts expose their own complete subset and have different contracts. Read [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`. Original V14/V15 are not aliases for V14 SP1/V15.1. The V4 envelope uses `ok`, `data`, `error` and `meta`; unknown write outcomes require inspection before any retry. Workbench approval applies to MCP write calls by default, and audit records are kept in `data/logs/audit`.
 
 Before an unfamiliar operation, `GetToolUsage(toolName, operation)` supplies the current release's arguments, examples and result interpretation. Use `language` to list programming examples and `exampleId` to retrieve complete files or call sequences. Official API patterns and project-authored wrappers are identified separately.
 

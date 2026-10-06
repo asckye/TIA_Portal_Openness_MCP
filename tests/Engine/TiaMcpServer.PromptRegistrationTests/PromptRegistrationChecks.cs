@@ -18,6 +18,7 @@ public sealed class PromptRegistrationChecks
 
     private static void Run(Action<bool, string> Check)
     {
+        VerifyCurrentPromptText(Check);
         var fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "fixtures");
         var scratch = Path.Combine(Path.GetTempPath(), "tia-prompt-registration-" + Guid.NewGuid().ToString("N"));
         var contexts = new List<WeakReference>();
@@ -58,6 +59,35 @@ public sealed class PromptRegistrationChecks
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 { Check(false, "Fixture scratch cleanup failed after unload: " + ex); }
             }
+        }
+    }
+
+    private static void VerifyCurrentPromptText(Action<bool, string> Check)
+    {
+        var methods = typeof(TiaMcpServer.ModelContextProtocol.McpPrompts)
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(method => method.GetCustomAttributesData().Any(attribute =>
+                attribute.AttributeType.Name == "McpServerPromptAttribute"))
+            .ToArray();
+        Check(methods.Length == 30, $"Current MCP prompt inventory is 30; found {methods.Length}");
+        foreach (var method in methods)
+        {
+            var args = method.GetParameters().Select(parameter => parameter.ParameterType == typeof(string)
+                ? (object)"sample" : parameter.ParameterType == typeof(bool) ? true : 1).ToArray();
+            string prompt = (string)method.Invoke(null, args)!;
+            bool currentRules = new[]
+            {
+                "schemaVersion 4 envelope", "ListPortalProcessProjects", "meta.outcome", "OUTCOME_UNKNOWN",
+                "D1 native behavior remains current", "L5 is NOT RUN", "Do not save or close a project unless the user explicitly requested that action",
+                "Workbench approval before dispatch", "data/logs/audit", "tia audit verify"
+            }.All(prompt.Contains);
+            Check(currentRules, $"{method.Name} prompt carries V4, selection, D1, approval and audit rules");
+            bool stale = new[]
+            {
+                "EnsureOpennessUserGroup", "fbBlockJson", "designJson", "meta.success / meta.operationSuccess",
+                "SaveProject — save any pending changes first"
+            }.Any(prompt.Contains);
+            Check(!stale, $"{method.Name} prompt has no legacy or JSON-string instructions");
         }
     }
 

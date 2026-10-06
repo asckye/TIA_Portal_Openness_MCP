@@ -79,9 +79,15 @@ V20/V21 使用 `runtime/v20/TiaMcp.Engine.V20.exe` / `runtime/v21/TiaMcp.Engine.
 
 ## 工具显示与示例
 
-V20/V21 默认 lite 显示 63 个常用工具，其余用 `FindTools` / `CallTool`；完整目录分别为 477 / 488 个。需要全量直接显示时给对应完整引擎传 `--profile full`。
+V20/V21 默认 lite 显示 60 个常用工具，其余用 `FindTools` / `CallTool`；完整目录分别为 477 / 488 个。需要全量直接显示时给对应完整引擎传 `--profile full`。
 
-基础目录的工具数依次为 V14 SP1 57、V15.1 58、V16/V17/V18 各 60、V19 62，不使用完整引擎的 profile 和发现入口。所有版本都用 `GetToolUsage` 读取自己的工具参数、语言示例和调用序列。修改服务配置后重启服务与客户端，避免旧目录缓存。
+基础目录的工具数依次为 V14 SP1 59、V15.1 60、V16/V17/V18 各 62、V19 64，不使用完整引擎的 profile 和发现入口。所有版本都用 `GetToolUsage` 读取自己的工具参数、语言示例和调用序列。修改服务配置后重启服务与客户端，避免旧目录缓存。
+
+## V4 结果、审批与审计
+
+每个工具结果都是 V4 信封：检查 `ok`、`data`、`error` 和 `meta`，重点读取 `meta.outcome`、`meta.execution`、`meta.completeness` 与分页字段。遇到 `OUTCOME_UNKNOWN` 时先检查工程实际状态，按要求重置会话，不要自动重放写操作。D1 原生行为目前仍为 `current`、L5 为 `NOT RUN`；离线测试不会改变真机验收状态。
+
+MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。拒绝、默认 120 秒超时或 Workbench 不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过 Workbench 审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和 Studio 日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](../development/runtime-layout.md)。
 
 ## 更新
 

@@ -16,6 +16,44 @@ internal static class ToolUsageTests
             var guide = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");
             async Task<CallToolResult> Call(string args) => await guide.InvokeAsync(new RequestContext<CallToolRequestParams>(server) {
                 Params = new CallToolRequestParams { Name = "GetToolUsage", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args) } });
+            if (release is not ("20" or "21"))
+            {
+                var indexEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{}")).Content.Single()).Text)!;
+                var index = indexEnvelope["data"]!;
+                check((int?)indexEnvelope["schemaVersion"] == 4 && (string?)indexEnvelope["meta"]!["releaseKey"] == release
+                    && index["tools"]!.AsArray().Count > 0,
+                    "GetToolUsage index has the V4 envelope and exact Foundation release: " + release);
+
+                var languageEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{\"language\":\"scl\",\"exampleKind\":\"language\"}")).Content.Single()).Text)!;
+                check((string?)languageEnvelope["meta"]!["releaseKey"] == release
+                    && languageEnvelope["data"]!["examples"]!.AsArray().Any(row => (bool?)row!["releaseMatches"] == true
+                        && (bool?)row["profileMatches"] == true), "SCL examples match Foundation release: " + release);
+
+                foreach (var language in new[] { "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" })
+                {
+                    var languageLibrary = JsonNode.Parse(((TextContentBlock)(await Call(JsonSerializer.Serialize(new { language })).ConfigureAwait(false)).Content.Single()).Text)!;
+                    var languageData = languageLibrary["data"]!;
+                    check((string?)languageLibrary["meta"]!["releaseKey"] == release
+                        && (languageData["examples"]!.AsArray().Count > 0 || languageData["sourceDocuments"]!.AsArray().Count > 0),
+                        "Foundation language library loads " + language + " for " + release);
+                }
+
+                var sourceEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{\"exampleId\":\"scl-add\",\"exampleKind\":\"language\"}")).Content.Single()).Text)!;
+                var source = sourceEnvelope["data"]!["examples"]![0]!;
+                check((string?)sourceEnvelope["meta"]!["releaseKey"] == release && (bool?)source["releaseMatches"] == true
+                    && source["files"]!.AsArray().Count > 0, "Complete SCL source matches Foundation release: " + release);
+
+                var sequenceEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{\"exampleId\":\"sequence/plc-scl-block-foundation\",\"exampleKind\":\"sequence\"}")).Content.Single()).Text)!;
+                var sequence = sequenceEnvelope["data"]!["examples"]![0]!;
+                check((string?)sequenceEnvelope["meta"]!["releaseKey"] == release && (bool?)sequence["releaseMatches"] == true
+                    && (bool?)sequence["available"] == true && sequence["steps"]!.AsArray().Count > 0,
+                    "Foundation sequence is registered and matches release: " + release);
+
+                var searchEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{\"query\":\"openness-base\"}")).Content.Single()).Text)!;
+                check((string?)searchEnvelope["meta"]!["releaseKey"] == release
+                    && searchEnvelope["data"]!["matches"]!.AsArray().Any(row => (string?)row!["id"] == "guides/skills/openness-base/SKILL.md"),
+                    "Official document search returns the openness guide for release: " + release);
+            }
             foreach (var tool in roster)
             {
                 var response = await Call(JsonSerializer.Serialize(new { toolName = tool.ProtocolTool.Name }));

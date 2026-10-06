@@ -97,7 +97,7 @@ V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供完整引擎，包含更�
 
 成功标志是 AI 能报告实际工程和 PLC，并列出程序块。仅回答“服务连接成功”还没有完成这一步。
 
-V20/V21 默认只直接显示 63 个常用工具，AI 可用 `FindTools` 查找其余工具，再用 `CallTool` 调用。V14 SP1–V19 直接注册各自的基础目录，不使用这套发现入口。让 AI 读取当前服务的定义，可以避免把另一版本的参数套过来。
+V20/V21 默认只直接显示 60 个常用工具，AI 可用 `FindTools` 查找其余工具，再用 `CallTool` 调用。V14 SP1–V19 直接注册各自的基础目录，不使用这套发现入口。让 AI 读取当前服务的定义，可以避免把另一版本的参数套过来。V4 工具返回 `ok`、`data`、`error` 和 `meta`；先检查 `meta.outcome`。结果为 `OUTCOME_UNKNOWN` 时，先核对工程现状，不要自动重复写入。
 
 ## 4. 第一个 AI 练习：导入加法函数并编译
 
@@ -160,7 +160,7 @@ Studio 不需要配置 MCP，也不需要 AI 客户端。下面使用中文界�
 | `outcome-unknown` 或连接中断 | 先核对工程现状，避免把可能已执行的写入重复一遍 |
 | Studio“尚未保存” | 修改尚待保存；导入和编译本身不代表已保存 |
 
-v3.2.0 已进行八版构建、离线功能及协议测试；新增能力的真实 TIA 工程验收仍未完成。本文描述使用步骤，不把离线或演示结果当作真实工程验收。
+当前 4.0 的 D1 行为族仍标为 `current / NOT RUN`；真实 TIA 工程验收没有匹配记录时保持未运行。本文描述使用步骤，不把离线或演示结果当作真实工程验收。
 
 ## 7. 常见问题
 
@@ -192,4 +192,4 @@ v3.2.0 已进行八版构建、离线功能及协议测试；新增能力的真�
 - [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
-软件自己的本机连接记录、界面偏好和诊断日志默认保存在交付包的 `data\config`、`data\ui` 和 `data\diagnostics` 中，更新会保留 `data`。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。详见[配置说明](configuration.md)。
+软件自己的连接记录、界面偏好、普通日志、审计记录和调用诊断分别保存在交付包的 `data\config`、`data\ui`、`data\logs` 和 `data\diagnostics` 中，更新会保留 `data`。MCP 写操作默认在派发前等待 Workbench 审批；拒绝、超时或工作台未连接都不会开始操作。审计写入 `data\logs\audit`，可由 `tia audit verify` 校验保留链，但哈希链不能证明整段记录未被删除。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。伴随 PLC Tools 的 Python 默认解释器是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`，可用 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖。详见[配置说明](configuration.md)。

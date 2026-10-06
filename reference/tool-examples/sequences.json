@@ -4,7 +4,7 @@
     "topic": "startdrive-bico-read",
     "purpose": "Read one intended offline BICO connection using the official V20/V21 parameter path.",
     "preconditions": "Intended project and exact drive/control-unit paths are known; substitute placeholders and parameter. Do not automatically execute a known failing target such as p2051[0].",
-    "notes": "Offline values describe engineering configuration. Interpret the returned value shape using GetToolUsage(toolName=\"ManageStartdriveParameter\", operation=\"read\"). Native regression acceptance NOT RUN.",
+    "notes": "Offline values describe engineering configuration. Interpret the returned value shape using GetToolUsage(toolName=\"ManageStartdriveParameter\", operation=\"read\"). Native regression acceptance NOT RUN. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -49,8 +49,8 @@
     "id": "sequence/connect-project",
     "topic": "connect-project",
     "purpose": "Attach to the TIA process holding the project and read the real names before any other call.",
-    "preconditions": "TIA Portal is open with the project (the engine never starts an instance while one runs).",
-    "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else.",
+    "preconditions": "The intended project is already open in TIA Portal. Select its exact row from ListPortalProcessProjects; never infer a process from a project name or PID alone.",
+    "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else. The process identity values are copied from the same discovery row. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-SESSION is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance.",
     "releaseKeys": [
       "20",
       "21"
@@ -60,26 +60,28 @@
     "validation": "Contract checked; native acceptance of this revision NOT RUN.",
     "steps": [
       {
-        "tool": "InitializeEnvironment",
+        "tool": "ListPortalProcessProjects",
         "arguments": {},
-        "expect": "serverVersion, connected=false, recommendedNextTool Connect"
+        "expect": "Current process/project rows; select the operator-intended PID, processStartUtc and projectPath."
       },
       {
-        "tool": "ConnectPortal",
+        "tool": "ConnectProject",
         "arguments": {
-          "projectName": "<project name as shown in TIA>"
+          "processId": 1234,
+          "processStartUtc": "<exact UTC start time from the selected row>",
+          "projectPath": "C:\\Projects\\Example.ap21"
         },
-        "expect": "Meta.boundProcessId = the process holding the project, startedNew false"
+        "expect": "Bound to the exact selected process and project; no process starts automatically."
       },
       {
         "tool": "GetSessionState",
         "arguments": {},
-        "expect": "project = the wanted project"
+        "expect": "Confirm the bound PID, start time and project file match the selected row."
       },
       {
         "tool": "GetProjectTree",
         "arguments": {},
-        "expect": "the PLC / HMI software paths used below"
+        "expect": "Use the exact software and object paths returned for later calls."
       }
     ]
   },
@@ -88,7 +90,7 @@
     "topic": "plc-scl-block",
     "purpose": "Create a block from SCL text: source file -> external source -> generated block -> compile -> save.",
     "preconditions": "connect-project done; the PLC software path is known.",
-    "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block.",
+    "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -154,7 +156,7 @@
     "topic": "plc-s7dcl-import",
     "purpose": "Add LAD / FBD logic from S7DCL text documents (preferred over hand-written FlgNet XML).",
     "preconditions": "connect-project done; the .s7dcl (+ .s7res) files are on the TIA machine, UTF-8 WITH BOM.",
-    "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software.",
+    "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -193,7 +195,7 @@
     "topic": "plc-builder",
     "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
     "preconditions": "connect-project done.",
-    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example).",
+    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -299,7 +301,7 @@
     "topic": "watch-table",
     "purpose": "Add a row to a watch table and read it back.",
     "preconditions": "connect-project done.",
-    "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA).",
+    "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -343,7 +345,7 @@
     "topic": "cpu-protection",
     "purpose": "Make a new CPU downloadable: access level + confidential-configuration password + hardware compile.",
     "preconditions": "connect-project done; the station name is known (GetDevices).",
-    "notes": "TIA V21 creates CPUs with NoAccess and 'protect confidential data' without a password - the hardware compile refuses a download until both are set. The password is a test value for the scratch project only.",
+    "notes": "TIA V21 creates CPUs with NoAccess and 'protect confidential data' without a password - the hardware compile refuses a download until both are set. The password is a test value for the scratch project only. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -404,7 +406,7 @@
     "topic": "download-plcsim",
     "purpose": "Download a standard CPU to a PLCSIM Advanced instance and go online (the maintainer's only permitted online target).",
     "preconditions": "cpu-protection done for that CPU; PLCSIM Advanced 8.0 installed on the TIA machine; the CPU is a standard one (F-CPUs are refused by Openness).",
-    "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. Downloads to FW >= 2.9 CPUs need trustDeviceCertificate (default true).",
+    "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. Downloads to FW >= 2.9 CPUs need trustDeviceCertificate (default true). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -510,7 +512,7 @@
     "topic": "plcsim-test",
     "purpose": "Read / write PLCSIM Advanced tags and run a closed-loop scenario against the downloaded program.",
     "preconditions": "download-plcsim done; the instance is in Run.",
-    "notes": "Tags exist only after a download. Steps: write | waitMs | cycles (singleStep mode, one OB1 cycle each) | assert. Execution needs dryRun=false + confirmWrite / confirmRun.",
+    "notes": "Tags exist only after a download. Steps: write | waitMs | cycles (singleStep mode, one OB1 cycle each) | assert. Execution needs dryRun=false + confirmWrite / confirmRun. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -626,7 +628,7 @@
     "topic": "hardware-device",
     "purpose": "Add a device from the catalog, plug a module, and remove a temporary device again.",
     "preconditions": "connect-project done. The maintainer's rule: hardware tests only on temporary devices in the scratch project, never on existing ones.",
-    "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); CreateDevice needs the exact catalog version from SearchHardwareCatalog.",
+    "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); CreateDevice needs the exact catalog version from SearchHardwareCatalog. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-DEVICE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -703,7 +705,7 @@
     "topic": "hmi-unified-screen",
     "purpose": "Unified HMI: connection -> tag bound to a PLC tag -> screen -> button -> compile.",
     "preconditions": "connect-project done; the PLC side (tags / DB) exists; the HMI is WinCC Unified (classic panels cannot get connections via Openness).",
-    "notes": "PLC side first. Text labels use itemType Text; a Rectangle has no Text.",
+    "notes": "PLC side first. Text labels use itemType Text; a Rectangle has no Text. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -781,8 +783,8 @@
     "id": "sequence/export-import-block",
     "topic": "export-import-block",
     "purpose": "Round-trip one block through SimaticML (export, edit outside, import back).",
-    "preconditions": "connect-project done.",
-    "notes": "ExportPlcBlock reports the file written in Meta.exportedFile; ImportPlcBlock normalises the engineering version automatically.",
+    "preconditions": "connect-project done; use an export created for the same TIA release and inspect the exact PLC software and block path.",
+    "notes": "ExportPlcBlock returns the V4 envelope and exported file evidence. ImportPlcBlock does not rewrite the source version or BOM; select an artifact for the exact target release and inspect the result before a separate compile or explicit save. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-EXPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-IMPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -798,7 +800,7 @@
           "blockPath": "<Group/Block>",
           "exportPath": "C:\\Temp"
         },
-        "expect": "Meta.exportedFile"
+        "expect": "Inspect V4 data and exported-file evidence; keep the exact output path and target release."
       },
       {
         "tool": "ImportPlcBlock",
@@ -822,8 +824,8 @@
     "id": "sequence/large-response",
     "topic": "large-response",
     "purpose": "Read a response that was stored because it exceeded the size limit.",
-    "preconditions": "A response came back with meta.truncated=true and an exportId.",
-    "notes": "Pages are character slices: concatenate every page before parsing. SaveExportContent writes the whole payload to a file on the TIA machine.",
+    "preconditions": "A V4 response is paged or parked: inspect data.export.id and meta.paging.nextOffset.",
+    "notes": "Pages are character slices: concatenate every page before parsing. SaveExportContent writes the whole payload to a file on the TIA machine. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
     "releaseKeys": [
       "20",
       "21"
@@ -838,7 +840,7 @@
           "exportId": "<exportId>",
           "offset": 0
         },
-        "expect": "first page + nextOffset"
+        "expect": "Read data.text and data.export; continue at meta.paging.nextOffset."
       },
       {
         "tool": "GetExportContent",
@@ -846,7 +848,7 @@
           "exportId": "<exportId>",
           "offset": 20000
         },
-        "expect": "offset = the previous page's nextOffset; repeat until eof=true"
+        "expect": "Set offset to the previous meta.paging.nextOffset; concatenate page text until meta.paging.complete=true."
       },
       {
         "tool": "SaveExportContent",
@@ -854,7 +856,7 @@
           "exportId": "<exportId>",
           "outputPath": "C:\\Temp\\<name>.json"
         },
-        "expect": "path written"
+        "expect": "Save the parked response identified by the same data.export.id; inspect the V4 path result."
       }
     ]
   },
@@ -863,7 +865,7 @@
     "topic": "plc-scl-block",
     "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
     "preconditions": "Intended TIA/project already attached. An operator-reviewed ASCII FC_Add.scl is on the TIA host; generation may overwrite same-named PLC objects.",
-    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download.",
+    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "14sp1",
       "15.1",

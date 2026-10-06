@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,24 @@ internal static partial class Program
     private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
     private static string Reply(object id, object value) => Json.Serialize(new { jsonrpc = "2.0", id, result = value });
     private static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
+    private static Dictionary<string, object> GetToolUsage(string toolName = "", string query = "", string language = "",
+        string exampleId = "", string exampleKind = "all")
+    {
+        var type = FindServerType(Server, "TiaMcpServer.ModelContextProtocol.ToolUsageTools");
+        var method = type.GetMethod("GetToolUsage", All)!;
+        var target = Activator.CreateInstance(type, true);
+        var result = method.Invoke(target, new object[] { toolName, query, "", 0, 80, "", language, exampleId, exampleKind })!;
+        var content = (IEnumerable)result.GetType().GetProperty("Content")!.GetValue(result)!;
+        var block = content.Cast<object>().First();
+        var text = (string)block.GetType().GetProperty("Text")!.GetValue(block)!;
+        return Json.Deserialize<Dictionary<string, object>>(text)!;
+    }
+    private static Dictionary<string, object> AsObject(object value) => (Dictionary<string, object>)value;
+    // JavaScriptSerializer returns object[] or ArrayList depending on the target type.
+    private static object[] AsArray(object value) => value as object[] ?? ((System.Collections.IEnumerable)value).Cast<object>().ToArray();
+    private static bool IsV4ForRelease(Dictionary<string, object> envelope, string release)
+        => Convert.ToInt32(envelope["schemaVersion"]) == 4 && AsObject(envelope["meta"])["releaseKey"].ToString() == release
+            && envelope.ContainsKey("data");
     private static async Task<T> Bounded<T>(Task<T> task, int ms = 5000)
     { if (await Task.WhenAny(task, Task.Delay(ms)) != task) throw new Exception("Test operation hung"); return await task; }
     private static async Task Fault(Task task, Type type)
@@ -459,12 +478,53 @@ internal static partial class Program
             }
             if(args.Length > 1 && args[1] == "child-stdin-only") { await ChildStdinTests(); return 0; }
             if (args.Length > 1 && args[1] == "example-library-only") {
-                var catalog = FindServerType(Server, "TiaOpenness.Shared.ToolUsageCatalog");
-                foreach (var language in new[] { "", "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" }) {
-                    var result = catalog.GetMethod("Examples")!.Invoke(null, new object[] { "21", "full-engine", new[] { "GetProjectTree" }, language, "", "", "all" });
-                    Check(result != null && result.ToString()!.Contains("examples"), "Missing library output: " + language);
+                void Counted(bool ok, string message) { Check(ok, message); Passed++; }
+                string release = args.Length > 2 ? args[2] : FindServerType(Server, "TiaMcpServer.Siemens.EngineRouter")
+                    .GetField("CompiledTiaMajorVersion", All)!.GetValue(null)!.ToString()!;
+                var index = GetToolUsage();
+                Counted(IsV4ForRelease(index, release), "GetToolUsage index has the selected release V4 envelope");
+                var indexData = AsObject(index["data"]);
+                Counted(Convert.ToInt32(indexData["toolCount"]) > 0 && AsArray(indexData["tools"]).Length > 0,
+                    "GetToolUsage index returns registered tools");
+
+                foreach (var languageCode in new[] { "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" })
+                {
+                    var library = GetToolUsage(language: languageCode);
+                    var data = AsObject(library["data"]);
+                    Counted(IsV4ForRelease(library, release)
+                        && (AsArray(data["examples"]).Length > 0 || data.ContainsKey("sourceDocuments")),
+                        "GetToolUsage loads " + languageCode + " examples for the selected engine");
                 }
-                Console.WriteLine("PASS: 14 example library lookups on the actual .NET Framework host; no native calls");
+
+                var perTool = GetToolUsage(toolName: "CreateDevice"); // a registered tool whose example has arguments on both engines
+                Counted(IsV4ForRelease(perTool, release), "GetToolUsage per-tool result has the selected release");
+                var example = AsObject(AsObject(perTool["data"])["example"]);
+                var arguments = AsObject(AsObject(AsObject(example["request"])["params"])["arguments"]);
+                Counted(example["kind"].ToString() == "parameterized-call-example" && arguments.Count > 0,
+                    "GetToolUsage returns typed arguments for a registered tool");
+
+                var language = GetToolUsage(language: "scl", exampleKind: "language");
+                Counted(IsV4ForRelease(language, release) && AsArray(AsObject(language["data"])["examples"])
+                    .Select(AsObject).Any(row => Convert.ToBoolean(row["releaseMatches"]) && Convert.ToBoolean(row["profileMatches"])),
+                    "GetToolUsage lists an SCL example matching the selected release");
+                var source = GetToolUsage(exampleId: "scl-add", exampleKind: "language");
+                var sourceRow = AsObject(AsArray(AsObject(source["data"])["examples"]).First());
+                Counted(IsV4ForRelease(source, release) && Convert.ToBoolean(sourceRow["releaseMatches"])
+                    && Convert.ToBoolean(sourceRow["profileMatches"]) && AsArray(sourceRow["files"]).Length > 0,
+                    "GetToolUsage returns the complete release-matched language source");
+
+                var sequenceId = "sequence/plc-scl-block";
+                var sequence = GetToolUsage(exampleId: sequenceId, exampleKind: "sequence");
+                var sequenceRow = AsObject(AsArray(AsObject(sequence["data"])["examples"]).First());
+                Counted(IsV4ForRelease(sequence, release) && Convert.ToBoolean(sequenceRow["releaseMatches"])
+                    && Convert.ToBoolean(sequenceRow["available"]) && AsArray(sequenceRow["steps"]).Length > 0,
+                    "GetToolUsage returns a registered sequence for the selected engine release");
+
+                var search = GetToolUsage(query: "openness-base");
+                Counted(IsV4ForRelease(search, release) && AsArray(AsObject(search["data"])["matches"])
+                    .Select(AsObject).Any(row => row["id"].ToString() == "guides/skills/openness-base/SKILL.md"),
+                    "GetToolUsage official-document search is scoped to the selected release");
+                Console.WriteLine("COMPLETE: " + Passed + " GetToolUsage index/example/language/sequence/reference checks; no native calls");
                 return 0;
             }
             if (args.Length >= 3 && args[1] == "native-diagnostics-only") { NativeDiagnosticsJit(args[2]); return 0; }
