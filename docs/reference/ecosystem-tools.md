@@ -30,7 +30,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；
 
 | 工具 | 使用范围与结果判断 |
 |---|---|
-| `ReadOpennessGuidance` | 检索随包固定版本官方指南；对调用示例优先用 `GetToolUsage`。 |
+| `GetOpennessGuidance` | 检索随包固定版本官方指南；对调用示例优先用 `GetToolUsage`。 |
 | `PlanArtifactImportOrder` | 根据输入依赖生成导入顺序，不执行导入。 |
 | `RenderPlcVisualDiff` | 单块 SimaticML 结构比较及 LAD 并排 SVG/HTML；不宣称支持全部语言图形差异。 |
 | `RenderPlcBlock` / `RenderPlcProgramAtlas` | 从精确版本导出证据生成静态单块梯形图或程序图册；不在线编辑或下载，且不覆盖已存在的输出文件。图册中的检查结论是证据说明，不代表原生验收。 |
@@ -38,17 +38,17 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；
 | `RunPlcCompanionTool` | 调用已登记的 PLC Tools CLI；具体命令由工具读取当前清单。命令可能读写文件或访问配置中的设备，需先明确目标。 |
 | `GenerateOpcUaModelledInterface` | 从选定 PLC/软件单元生成接口 XML；需另行导入并编译。 |
 | `AuditEngineeringExports` | 输入导出的命名、元数据、结构及自定义规则审计。`qualityPassed` 才是规则结果，`success` 只代表检查运行完成。 |
-| `InstantiatePlcXmlTemplates` / `ComposePlcAliasAlarmLad` | 模板展开和限定的 V21 布尔 LAD 网络生成；不自动导入、保存或下载。 |
-| `ValidatePlcXmlSchemas` | 用本地匹配版本 XSD 检查识别出的 XML 片段。`fragmentSchemasPassed` 不等于整文档可导入。 |
+| `InstantiatePlcTemplates` / `BuildPlcAliasAlarmLad` | 模板展开和限定的 V21 布尔 LAD 网络生成；不自动导入、保存或下载。 |
+| `ValidatePlcDocumentSchemas` | 用本地匹配版本 XSD 检查识别出的 XML 片段。`fragmentSchemasPassed` 不等于整文档可导入。 |
 | `DecodePlcSimaticMl` | V21 FC/FB 的可读逻辑与元数据分析；V20、S7DCL 和未知语义有明确限制。 |
 | `ManageUnifiedCwcPackage` | 检查 CWC 文件夹并打包新 ZIP；不执行 JavaScript、不部署到 TIA、不认证运行行为。CWC 与面板库类型不同。 |
-| `ReadV21EcosystemCatalog` | V20/V21 完整引擎查询嵌入的 V21 生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
+| `GetV21EcosystemCatalog` | V20/V21 完整引擎查询嵌入的 V21 生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
 
-完整引擎的 `ReadToolBatch`、`PreviewToolBatch` / `ApplyToolBatch` 可组合支持的工具。批处理失败可能保留先前修改，不是原子事务；原生 `RunToolsInTransaction` 只支持自身声明的同步编辑白名单。不能把编译、保存、在线、文件或嵌套编排塞入事务。
+完整引擎的 `RunReadOnlyToolBatch`、`PreviewToolBatch` / `ApplyToolBatch` 可组合支持的工具。批处理失败可能保留先前修改，不是原子事务；原生 `RunToolTransaction` 只支持自身声明的同步编辑白名单。不能把编译、保存、在线、文件或嵌套编排塞入事务。
 
 ## PLC 编辑与离线引用
 
-`ReadPlcBlockEditCapabilities` 检查实际文档的语言、文本、标量初始值和库绑定。`PatchPlcBlockDocument` 只修改存在且匹配的目标并写入新文件。`ImportPlcBlockVerified` 按精确工程、对象和预览令牌导入后读回；库连接块、实例 DB、Safety 等有明确排除范围。
+`GetPlcBlockEditCapabilities` 检查实际文档的语言、文本、标量初始值和库绑定。`PatchPlcBlockDocument` 只修改存在且匹配的目标并写入新文件。`ImportPlcBlockVerified` 按精确工程、对象和预览令牌导入后读回；库连接块、实例 DB、Safety 等有明确排除范围。
 
 `AnalyzePlcReferences` 仅分析输入 SimaticML 的调用和全局符号，不能替代完整原生交叉引用。遗漏文件、未知调用和歧义需随结果一起报告。编辑工具不会自动保存工程，编译选项必须按实际 schema 指定；导入成功、内容核对成功、编译成功分别判断。完整示例统一见[调用示例库](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)。
 
@@ -68,7 +68,7 @@ V20/V21 完整引擎通过安装布局解析器定位包根，再读取 `referen
 [生态目录快照](../../reference/v21-ecosystem.json)保存当次检索证据。上游 README 声称支持 V21，不等于本项目验收；`not_confirmed`、`adaptation_required`、`unsupported_v21` 不能视为可用。目录数量与 GitHub 星数均不作为成熟度或覆盖率结论。
 
 这份 JSON 是目录的唯一可编辑源，构建时直接嵌入 V20/V21 引擎；随包副本缺失不影响
-`ReadV21EcosystemCatalog`，修改磁盘副本也不会覆盖编译进引擎的数据。目录更新需要重新构建。
+`GetV21EcosystemCatalog`，修改磁盘副本也不会覆盖编译进引擎的数据。目录更新需要重新构建。
 
 - 官方 Openness Explorer 可辅助检查对象模型；Project Check、Modular Application Creator 和 SiOME 仍需独立安装及各自环境，没有自动安装或整包嵌入。
 - TiaImportExport.VSExt 的已审阅公开树不足以复用完整扩展核心；TIAOpennessManager / AnyAutomation Studio 也未建立可直接并入的许可核心证据。

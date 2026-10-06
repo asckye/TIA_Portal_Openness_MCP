@@ -87,7 +87,7 @@ V20/V21 默认 lite 显示 60 个常用工具，其余用 `FindTools` / `CallToo
 
 每个工具结果都是 V4 信封：检查 `ok`、`data`、`error` 和 `meta`，重点读取 `meta.outcome`、`meta.execution`、`meta.completeness` 与分页字段。遇到 `OUTCOME_UNKNOWN` 时先检查工程实际状态，按要求重置会话，不要自动重放写操作。D1 原生行为目前仍为 `current`、L5 为 `NOT RUN`；离线测试不会改变真机验收状态。
 
-MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。拒绝、默认 120 秒超时或 Workbench 不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过 Workbench 审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和 Studio 日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](../development/runtime-layout.md)。
+MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。拒绝、默认 120 秒超时或 Workbench 不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过 Workbench 审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和 Studio 日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
 
 ## 更新
 

@@ -7,7 +7,7 @@
 1. 从工程树取得实际 PLC 软件路径。
 2. 通过 `GetToolUsage(toolName="ManagePlcSafety", operation="read")` 获取本版本示例。
 3. 检查实际 F 能力、登录状态、设置、运行组及支持的签名类型。
-4. 需要逐块签名时读取 `ReadSafetyBlockSignatures` 的示例；需要安全打印件时读取 `ExportSafetyPrintout` 的示例。
+4. 需要逐块签名时读取 `GetSafetyBlockSignatures` 的示例；需要安全打印件时读取 `ExportSafetyPrintout` 的示例。
 
 | 返回内容 | 用途 |
 |---|---|
@@ -17,7 +17,7 @@
 | `programSignatures` | 当前 API 提供的程序签名；V20/V21 字段能力不同 |
 | `cpu` | 实际 CPU F 能力和可用服务 |
 
-签名是离线工程数据。无有效签名或未编译状态不能当成验收通过；普通 `CompileSoftware` 的成功也不等于完成 F 编译和功能安全验收。
+签名是离线工程数据。无有效签名或未编译状态不能当成验收通过；普通 `CompilePlcSoftware` 的成功也不等于完成 F 编译和功能安全验收。
 
 ## 修改设置或运行组
 

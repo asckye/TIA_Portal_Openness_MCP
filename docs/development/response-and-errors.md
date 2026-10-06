@@ -7,6 +7,10 @@
 `src/Engine/Siemens/Portal/Portal.`，`L/` = `src/Logic/`。
 数字为 2026-10-03 的源码统计，带“约”的为启发式估算。
 
+> **当前调用约定：** P2-01 与 P2-03 已完成；本页后续的族计数、响应形状和 E1–E6 计划是当时的设计审计记录，不是当前 MCP 客户端契约。
+> 当前 MCP 工具使用 V4 信封（`schemaVersion`、`ok`、`data`、`error`、`meta`），参数按工具 schema 传入 JSON 对象，不把参数对象再编码成 JSON 字符串。
+> 当前注册名称与每个发布的参数/输出定义以 `manifest/contracts/v4/baseline/*.json` 为准，调用示例见[官方工具用法](official-tool-usage.md)。
+
 ## 前置事实
 
 1. **P0-06 返回快照不证明逐字节一致。** `Snapshot-ToolResponses.py` 的 `canonical()` 使用 `sort_keys=True`，并先解析内层文本再
@@ -21,7 +25,7 @@
    `T.BaseLeftovers.cs` 把 `ex.ToString()` 写进 `meta.error`，阶段 3 搬迁必然改变其中的方法帧（决策 D1）。
 5. **纯注释改动可逐字节证明**：引擎 Release 为 `DebugType none`，`IncludeSourceRevisionInInformationalVersion=false`，仓库中没有
    `CallerLineNumber`，只改注释时产物应完全相同。
-6. **stderr 与调用日志已有消费者**：`Test-LocalStability.py` 检查 stderr 中的特定文本并配对解析 `calls-*.jsonl`；GetState 的
+6. **stderr 与调用日志已有消费者**：`Test-LocalStability.py` 检查 stderr 中的特定文本并配对解析 `calls-*.jsonl`；GetSessionState 的
    `meta.journalHealth.failedWrites` 在 P0-06 中；Studio 桥接进程的 stderr 显示在 GUI 活动日志。
 
 ## P2-01 统一响应信封
@@ -31,7 +35,7 @@
 488 个工具都返回 `ResponseMessage` 派生的 POCO。全局计数：`["timestamp"]` 278、`["success"]` 329、`["ok"]` 247、
 `new JsonObject` 1,336、`new ResponseMessage` 191、`throw new McpException` 360、`throw new PortalException` 539。
 
-meta 的构造方式共 13 种：内联 `{timestamp, success}`（B1）；先取时间戳、原生调用后补键（B2，如 Connect）；success 位于中间或
+meta 的构造方式共 13 种：内联 `{timestamp, success}`（B1）；先取时间戳、原生调用后补键（B2，如 ConnectPortal）；success 位于中间或
 末尾（B3）；Portal 步骤执行器 `RunHmiStepTool` 等（B4，先占位 `success:false`，结束时原位覆盖）；离线分析、PLCSIM、批量、
 报告类执行器（B5a–d，其中批量为 success 在前、UTC 时间戳）；meta 工厂（B6）；只有 `ok`（B7）；失败且无 meta（B8）；data 内
 字符串时间戳（B9）；包装层生成（B10，不纳入构造器）。
@@ -137,7 +141,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 | C3 日志自身失败 | 记录会递归 | 必须保持为空，注释 |
 | C4 反射探测可选成员 | 失败是常态，循环中可能成百上千次 | 注释；L5 之前不改为上抛 |
 | C5 枚举可能不可用的原生集合 | `P.Software.cs` 的 PLC 查找遍历并入 G9 | 注释；L5 之前不改为上抛 |
-| C6 原生写入或动作失败被吞（风险最高） | `P.Download.cs` `ApplyConfiguration`、`T.PlcSoftware.Online.cs` `GoOfflineAll` 等 | 有证明时可改为只记录；上抛需 L5 或阶段 6 |
+| C6 原生写入或动作失败被吞（风险最高） | `P.Download.cs` `ApplyConfiguration`、`T.PlcSoftware.Online.cs` `DisconnectOnlinePlcs` 等 | 有证明时可改为只记录；上抛需 L5 或阶段 6 |
 | C7 JSON/文本解析兜底 | | 注释 |
 | C8 环境、注册表、安装探测 | | 注释 |
 | C9 UI | | 注释；可用 WPF 测试验证 |

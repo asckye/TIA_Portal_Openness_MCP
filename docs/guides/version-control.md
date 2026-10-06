@@ -17,8 +17,8 @@ VCI 将受支持的工程对象与本地文本文件对应，Git 再管理这些
 1. 在 TIA/MCP 所在电脑上创建一个用于文本导出的空目录，或使用已有 Git 工作目录。
 2. 读取 `GetToolUsage(toolName="CreateVersionControlWorkspace")`，使用明确工作区名和目录创建工作区。
 3. 读取 `ConnectProjectToWorkspace` 的示例，先预览映射范围，核对设备及不支持对象，再执行映射。
-4. 检查 `GetVersionControlWorkspaces` 和 `GetVersionControlStatus` 的实际结果。
-5. 按 `SyncVersionControlWorkspace` 的示例，以 `ProjectToWorkspace` 同步；检查成功、失败、跳过数量及输出文件。
+4. 检查 `ListVersionControlWorkspaces` 和 `GetVersionControlStatus` 的实际结果。
+5. 按 `SynchronizeVersionControlWorkspace` 的示例，以 `ProjectToWorkspace` 同步；检查成功、失败、跳过数量及输出文件。
 6. 在文件目录执行 `git status`、`git diff`，选择应纳入版本管理的文件后提交。
 
 这些工具在默认 lite 目录中不一定全部直接显示，可用 `FindTools` 和 `CallTool`。每个工具的参数、预览方式和结果字段以当前 `GetToolUsage` 为准。

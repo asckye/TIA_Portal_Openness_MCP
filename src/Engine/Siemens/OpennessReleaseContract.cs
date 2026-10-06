@@ -10,7 +10,7 @@ namespace TiaMcpServer.Siemens
 {
     // Documented foundation only. Does not mark a catalog release runnable.
     // Original-V14 branches are historical reference only; For rejects excluded releases.
-    // References and deliberately unknown fields: docs/reference/openness-release-matrix.md.
+    // References and deliberately unknown fields: docs/reference/openness-coverage.md.
     internal sealed class OpennessReleaseContract
     {
         internal string Key { get; }

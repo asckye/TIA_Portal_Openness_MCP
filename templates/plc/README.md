@@ -2,15 +2,15 @@
 
 本目录提供 TIA Portal 项目生成所需的通用 PLC 模板，覆盖变量表、UDT、全局 DB、SCL FC/FB、LAD 调用配方和外部 SCL 源示例。模板不包含现场项目程序段。
 
-先使用当前服务 `GetToolUsage` 读取工具与语言示例。`PlcBuildAndImport` 属于完整引擎入口；基础宿主使用自身公开工具和合同。两个声明构建器的 `outputReleaseKey` 支持八版 UDT / Global DB，其他模板和生成器不能因此视为八版通用。
+先使用当前服务 `GetToolUsage` 读取工具与语言示例。`BuildAndImportPlcArtifact` 属于完整引擎入口；基础宿主使用自身公开工具和合同。两个声明构建器的 `outputReleaseKey` 支持八版 UDT / Global DB，其他模板和生成器不能因此视为八版通用。
 
 ## 目录
 
 | 路径 | 用途 |
 |---|---|
 | `instruction-recipes/basic_plc_instruction_recipes.json` | 指令和语法配方 |
-| `plcbuild-json/*.json` | `PlcBuildAndImport` 入参模板（仅 tagtable/udt/globaldb） |
-| `lad-recipes/lad_call_recipes.json` | `BuildFlgNetCallXml` LAD 调用网络配方 |
+| `plcbuild-json/*.json` | `BuildAndImportPlcArtifact` 入参模板（仅 tagtable/udt/globaldb） |
+| `lad-recipes/lad_call_recipes.json` | `BuildFlgNetCall` LAD 调用网络配方 |
 | `scl-examples/*.scl` | 外部 SCL 源：FC/FB 功能块 + 指令示例 |
 
 ## PLC Build 模板（DSL：tagtable / udt / globaldb）
@@ -24,7 +24,7 @@
 
 ## FC/FB 功能块（外部 SCL，不走 DSL）
 
-含算术/比较/函数/CASE 的 FC/FB 超出 `PlcBuildAndImport` 单变量 DSL 能力，统一用原生
+含算术/比较/函数/CASE 的 FC/FB 超出 `BuildAndImportPlcArtifact` 单变量 DSL 能力，统一用原生
 `.scl` 经 `ImportPlcExternalSource` + `GenerateBlocksFromExternalSource` 导入。
 
 | 文件 | 类型 | 内容 |
@@ -48,6 +48,6 @@
 ## 注意
 
 - 所有 `softwarePath`、分组路径和设备路径必须来自 TIA 读回。
-- `PlcBuildAndImport` 的 `json` 参数是字符串，调用前需要把模板中的 `json` 字段序列化。
+- `BuildAndImportPlcArtifact` 的 `json` 参数是字符串，调用前需要把模板中的 `json` 字段序列化。
 - 外部源编码按 `GetToolUsage(language="scl")` 的对应示例处理；基础宿主当前仅验过根目录 ASCII 源。不要为修复编码问题改用不支持该程序逻辑的 DSL。
-- 复杂 LAD/FBD 网络应使用 TIA 导出的已验证 XML 或 `BuildFlgNetCallXml` 生成调用网络。
+- 复杂 LAD/FBD 网络应使用 TIA 导出的已验证 XML 或 `BuildFlgNetCall` 生成调用网络。

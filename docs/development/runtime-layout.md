@@ -194,7 +194,7 @@ Windows PowerShell 的路径长度限制仍由解压前检查守护。当前完�
 Foundation 的 [BundleRootTests.cs](../../tests/Engine/TiaMcpServer.LegacyHostTests/BundleRootTests.cs)
 覆盖六个 release-key、相邻版本文件、默认 worker 及显式 `--worker-exe`。
 
-G7-1 已将 `ReadOpennessGuidance`、`ReadV21EcosystemCatalog` 和 bin 布局的 `CheckForUpdate` 加入 P0-06。
+G7-1 已将 `GetOpennessGuidance`、`GetV21EcosystemCatalog` 和 bin 布局的 `CheckProductUpdate` 加入 P0-06。
 G7-3 的仓库外交付包比较保持原始响应一致（质量 PDF 因缺少 ReportLab 未验证）；G7-4 的九项重定位比较只存在时间字段差异。
 G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 项生态检查（含 HTTP），
 证明目录查询不再依赖磁盘 JSON。以上为各实现任务的离线证据，不代表原生验收；任务证据汇总见[重构计划](refactor-plan.md)。

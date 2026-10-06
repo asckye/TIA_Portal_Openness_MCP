@@ -38,4 +38,4 @@ V14 SP1 的生成 API 没有返回对象列表，因此需结合前后块清单�
 - 依赖：先导入被引用的 UDT、DB、FC/FB，再导入调用方。
 - 工程语义：编译通过只证明编译器接受程序；周期时间、范围和设备行为还需按实际工程验证。
 
-`BuildStructuredTextXml` 的小型 JSON 操作集合不是完整 SCL 编译器。复杂表达式和控制流直接使用外部源；Builder 的版本范围见 [PLC XML builders](builders.md)。
+`BuildStructuredText` 的小型 JSON 操作集合不是完整 SCL 编译器。复杂表达式和控制流直接使用外部源；Builder 的版本范围见 [PLC XML builders](builders.md)。

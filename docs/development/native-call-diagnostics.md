@@ -14,11 +14,11 @@ v3.2.0 的 V20/V21 **Release 构建**包含原生调用诊断覆盖。范围是�
 
 每个调用点使用嵌套于原调用者的独立生成类型，同时保持私有类型访问权限，避免本地租约、日志等纯托管操作提前加载无关的 Siemens 程序集。原生方法组改成显式 lambda；新出现的未处理原生函数指针、动态代码生成、代理实例字段访问等路径会使发布构建失败，不能静默跳过。CLR 本地字段/元数据访问不是工程 IPC 调用。诊断运行时本身独立于 Siemens 引用，避免日志递归进入工程接口。
 
-Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试方式，`GetState.journalHealth.nativeBoundaryCoverage` 会明确返回 `not-instrumented`；不能将该产物当作通过发布检查的候选包。
+Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试方式，`GetSessionState.journalHealth.nativeBoundaryCoverage` 会明确返回 `not-instrumented`；不能将该产物当作通过发布检查的候选包。
 
 ## 日志与读取
 
-使用已有 `ReadNativeInvocationLog(take=100)` 获取近期记录，或用 [证据收集脚本](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) 保存日志及 Windows 事件。目录默认是 `%LOCALAPPDATA%\TiaMcp\diagnostics`，可通过绝对路径环境变量 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 设置。
+使用已有 `GetNativeInvocationLog(take=100)` 获取近期记录，或用 [证据收集脚本](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) 保存日志及 Windows 事件。目录默认是 `%LOCALAPPDATA%\TiaMcp\diagnostics`，可通过绝对路径环境变量 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 设置。
 
 细粒度记录包含：
 
@@ -37,7 +37,7 @@ Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试�
 
 记录 `Find`/属性访问的选择名称可帮助定位对象；不记录密码、脚本正文、变量值、参数数组或返回内容。为写日志不会额外调用工程 getter、对象 `ToString` 或 `GetHashCode`。无法取得工程规范路径时使用访问链和对象 ID，不进行额外遍历。
 
-`BEFORE` 写入后刷盘；正常返回或抛错各有一个对应终止记录。异常使用原异常重新抛出，不重试、不更换线程、不改变 `ref/out` 或写入参数。日志 I/O 失败不阻止原操作，失败计数在 `GetState.journalHealth` 中可见。
+`BEFORE` 写入后刷盘；正常返回或抛错各有一个对应终止记录。异常使用原异常重新抛出，不重试、不更换线程、不改变 `ref/out` 或写入参数。日志 I/O 失败不阻止原操作，失败计数在 `GetSessionState.journalHealth` 中可见。
 
 按 `nativeCallId` 配对。如果 `BEFORE` 缺少终止记录，应结合进程退出时间、Windows 事件和前序调用定位中断。日志轮转、截取窗口、I/O 故障也可能导致记录缺失；不能单凭缺失证明某个 API 导致崩溃。日志仍采用约 10 MiB 当前文件加一个 `.previous` 文件的有界保留方式，需要及时收集。
 

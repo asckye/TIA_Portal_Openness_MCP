@@ -6,11 +6,11 @@ These V20/V21 full-engine tools calculate or apply the user's chosen theme and l
 
 | Tool | Operation |
 |---|---|
-| `BuildUnifiedHmiThemeDesignJson` | Build theme execution JSON offline |
-| `BuildUnifiedHmiLayoutDesignJson` | Calculate grid positions and sizes offline |
+| `BuildUnifiedHmiThemeDesign` | Build theme execution JSON offline |
+| `BuildUnifiedHmiLayoutDesign` | Calculate grid positions and sizes offline |
 | `ApplyUnifiedHmiTheme` | Apply theme properties to a real screen |
 | `ApplyUnifiedHmiLayout` | Apply calculated layout to a real screen |
-| `ApplyUnifiedHmiScreenDesignJson` | Execute the generated design JSON |
+| `ApplyUnifiedHmiScreenDesign` | Execute the generated design JSON |
 
 Read `GetToolUsage(toolName="...")` for current JSON shapes, defaults and examples. Build first and inspect the output; offline builders do not change the project. Resolve actual HMI and screen paths, apply the selected changes, then read back affected objects.
 

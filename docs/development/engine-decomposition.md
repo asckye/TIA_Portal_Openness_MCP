@@ -85,7 +85,7 @@ P3-04 的接口沿用 `RunHmiStepTool` / `AcquireHmiEditAccess`，对应上文�
 
 J 表示需要设计判断，M 表示可按说明机械执行。
 
-1. P0-06 离线返回结构快照（FindTools、ListToolCategories、PreflightToolCall、断开时的 GetState、离线构造器等）。
+1. P0-06 离线返回结构快照（FindTools、ListToolCategories、PreviewToolCall、断开时的 GetSessionState、离线构造器等）。
 2. **J** `ToolCatalog`、`EngineServices`、`EngineRegistration`，不迁移工具；同步 `Generate-ToolsListFromAssembly.ps1`、
    `Test-MigrationReadAssembly.ps1`、`Test-VersionCatalogWiring.py` 与 `ToolBridgeFixtures`。
 3. **M** HttpTests `EngineSurface` 辅助。
@@ -222,15 +222,15 @@ Portal 实现，包括批量块导出、删除、保护/快照/指纹、验证�
 `ResolvePlcTagTableGroup`、`CrossReferenceRefusal`、`EnumerateReflectedProperty`、`ReadReflectedString`；均显式转发原成员。
 变量表清单复用现有带 `out diagnostics` 的 `GetPlcTagTables`，丢弃诊断，保持原单参数重载的行为。
 
-步骤 16 后 CLI 直接解析 `PlcBlocksTools` 调用：`GetBlocks`、`ExportBlock`、`ImportBlocksFromDirectory`、
-`ImportPlcProgramFromDirectory`、`CompileAndDiagnosePlc` 和内部 `ExportBlocksToTemp`。
+步骤 16 后 CLI 直接解析 `PlcBlocksTools`；其注册工具使用 V4 名称 `ListPlcBlocks`、`ExportPlcBlock`、
+`ImportPlcBlocksFromDirectory` 和 `CompilePlcDiagnostics`。工具实现方法及内部的 `ExportBlocksToTemp` 保留其源码标识符。
 `CompileAndDiagnoseCore` 仍与 HMI 编译共享；`ClassifyPlcXml`、`BuildPlcProgramImportResponse` 仍与 XML 构造工具共享，
 通过同文件的 `PlcBlockToolSupport` 适配器复用。路径建议、离线分析和编译响应构造也复用原有共享实现。
 
 `EngineSurface` 加入服务名单，`PlcBlockServicesShapeChecks` 核对 27 个工具的实例归属、共享会话、服务单例和 CLI 实例解析。
-`Test-DomainTools.py --domain PlcBlocks` 覆盖全部工具的 full/lite、直接/隔离 STDIO 路径；`ExportBlocks` 的离线成功响应含
+`Test-DomainTools.py --domain PlcBlocks` 覆盖全部工具的 full/lite、直接/隔离 STDIO 路径；`ExportPlcBlocks` 的离线成功响应含
 实际耗时，故字节比对使用缺参拒绝用例，不扩大时间字段屏蔽范围。原生调用顺序、参数和线程调度保持不变，
-同名的工具/服务 `ExportBlocks` 调用序列分别核对；`PatchPlcBlockDocument` 无原生调用点，以源码方法体比较补证。
+工具 `ExportPlcBlocks` 与服务实现的调用序列分别核对；`PatchPlcBlockDocument` 无原生调用点，以源码方法体比较补证。
 ### PLC 软件、反射、审计与离线构造
 
 P3-13c 将 34 个工具迁入以下实例类；注册和单例生命周期沿用领域约定。
@@ -319,7 +319,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 | VCI | [VersionControlService](../../src/Engine/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
 | SiVArc | [SivarcService](../../src/Engine/Siemens/Services/SivarcService.cs) / [SivarcTools](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
 
-库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 包含混合文件中的 `GenerateSiVArc`。
+库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 的注册工具为 `GenerateSivarc`，其实现方法保留 `GenerateSiVArc` 标识符。
 VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例字段，保留原有获取、保活和失效清理顺序。
 三个领域按既有约定注册为非 `IDisposable` 单例，没有需要保留的 CLI 静态入口。
 
@@ -359,7 +359,7 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 `TypedMotionView`；显式实现转发原有内核成员，保持原日志类别、反射回退与原生调用顺序。
 `TechnologyMappingShapeChecks` 检查三组单例的会话共享、23 个工具的声明类型与服务调用，以及共享成员归属。
 `Test-DomainTools.py` 的三个领域覆盖所有工具和操作；保留各入口的断开错误语义，额外仅屏蔽
-`GetOpcUaConfig` 的 `data.timestamp` / 桥接 `Data.timestamp` 时钟字段。
+`GetPlcOpcUaConfiguration` 的 `data.timestamp` / 桥接 `Data.timestamp` 时钟字段。
 
 ### 首批可选包领域
 
@@ -466,9 +466,9 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 `ToJsonArray`。保留原日志类别，不新增会话写入。
 
 CLI 直接解析 [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)
-调用八个原有入口：`GetProjectTree`、`GetDeviceInfo`、`ValidateAutomationContext`、`AddDevice`、
-`AddDeviceWithFallback`、`SearchInstalledGsdDevices`、`SearchHardwareCatalog`、`AddHardwareCatalogDeviceWithProbe`。
-工具签名、描述、返回及错误首行不变。`Test-DomainTools.py` 覆盖全部 22 个工具，包含旧式抛异常、
+调用八个入口：`GetProjectTree`、`GetDeviceInfo`、`ValidateAutomationContext`、`CreateDevice`、
+`CreateHardwareDevice`、`SearchInstalledGsdDevices`、`SearchHardwareCatalog`、`CreateHardwareCatalogDevice`。
+名称按 V4 注册目录列出；其余签名、描述、返回及错误首行不变。`Test-DomainTools.py` 覆盖全部 22 个工具，包含旧式抛异常、
 失败 POCO、空设备列表与 AML 离线拒绝；关键词为空的 GSD 用例在扫描本机文件前拒绝。
 
 同名工具与服务的原生调用清单分别按声明类型交给 `Compare-NativeCallOrder.py`，避免名称匹配歧义；
@@ -483,10 +483,10 @@ CLI 直接解析 [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/Devi
 `TelecontrolRow`、`CertificateServiceRow` 和 `CertificateConfigurationRow`。17 个工具均无 `Program*.cs` /
 `Cli/` 静态调用点，因此没有 `McpServer` 转发；服务和工具依照约定注册为共享同一会话的非 IDisposable 单例。
 
-`ReadDeviceAddressing` 与 `UpdateDeviceAddress` 已并入 `AddressesService` / `AddressesTools`；
+`GetDeviceAddressing` 与 `SetDeviceAddress` 已并入 `AddressesService` / `AddressesTools`；
 `Portal.HardwareNetwork.cs` 仅保留共享辅助，原工具 partial 已删除；
 `ImportDeviceAml` 已由硬件设备任务迁入 `HardwareAmlService` / `HardwareAmlTools`。
-`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl` 及其专用辅助由 `OpcUaService` / `OpcUaTools` 承接，
+`GetOpcUaAccessControl`、`ManageOpcUaAccessControl` 及其专用辅助由 `OpcUaService` / `OpcUaTools` 承接，
 不在硬件服务领域重复注册；`GetOpcUaServerInterfaceGroup` 是 `OpcUaService` 的私有辅助，不经内核接口转发。
 设备及设备项解析器仍在内核，新服务通过已有 `IEngineeringSession.ExactEngineeringHardware` 访问。
 
@@ -505,7 +505,7 @@ HttpTests 保留全部既有断言，另检查两个领域的工具归属、共�
 ### 在线、下载与设备传输
 
 `OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
-包括迁入的 `ReadTransferRoutes`。
+包括迁入的 `ListTransferRoutes`。
 原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
 下载提示处理位于 [OnlineDownloadService](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)，
 工具位于 [OnlineDownloadTools](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
@@ -526,11 +526,11 @@ HttpTests 保留全部既有断言，另检查两个领域的工具归属、共�
 - `ReadReflectedString`、`EnumerateReflectedProperty` 留在 `Portal.Download.cs`，供 PLC 块服务与传输路由共用；
   使用它们的七个领域路由辅助方法改为实例方法，通过接口访问内核。
 
-迁移保持原生调用顺序、参数、条件分支与 lambda 位置。`GoOnline` 仍依次解析 PLC/服务、绑定认证事件、
-选择并应用路由、调用原版本对应的在线重载；`DownloadToPlc` 仍依次解析服务/配置、绑定事件和提示委托、
+迁移保持原生调用顺序、参数、条件分支与 lambda 位置。`ConnectOnlinePlc` 仍依次解析 PLC/服务、绑定认证事件、
+选择并应用路由、调用原版本对应的在线重载；`DownloadPlc` 仍依次解析服务/配置、绑定事件和提示委托、
 选择路由、进入创建地址/RH/普通下载分支、构造结果；上载仍在原写访问范围内绑定事件并调用原生方法。
-`Compare-NativeCallOrder.py` 分别对 Siemens 领域和工具领域清单进行比较，以区分两层同名的
-`GoOfflineAll`；两份清单覆盖完整调用点，V20/V21 各 38 个迁移方法族（含 lambda）顺序一致，
+`Compare-NativeCallOrder.py` 分别对 Siemens 领域和工具领域清单进行比较，以区分断线工具与服务实现的调用点；
+两份清单覆盖完整调用点，V20/V21 各 38 个迁移方法族（含 lambda）顺序一致，
 全局 Siemens 直接调用成员多重集合也一致。该静态证明不替代真机验收。
 
 ## G9：单 PLC 工程的模糊匹配
@@ -617,13 +617,15 @@ PLC 组解析、组路径、块清单、块和 HMI 批量导入，以及分析�
 `GetBlocks`、`GetPlcBlockGroupByPath`、`GetPlcBlockGroupPath`、`GetPlcTypeGroupPath`、`ImportBlocksFromDirectory`、
 `ImportHmiScreensFromDirectory`、`ImportHmiTagTablesFromDirectory`、带查询状态及单元参数的 `GetCrossReferences`、
 `ExportBlockDocumentForAnalysis`、`ManageProjectLanguage`、`RetrieveProjectArchive`、`ExportProjectTexts`、`ImportProjectTexts`。
-CLI 直接解析 `DocumentsTools` 调用 `ExportAsDocuments` / `ImportFromDocuments`，
+CLI 直接解析 `DocumentsTools` 调用 `ExportAsDocuments` / `ImportFromDocuments` 实现；对应的 V4 MCP 工具名为
+`ExportPlcBlockDocuments` / `ImportPlcBlockDocuments`，
 解析 `PlcExternalSourcesTools` 调用 `ImportPlcExternalSource` / `GenerateBlocksFromExternalSource`。
 
 `Test-DomainTools.py` 的五个对应领域覆盖所有 29 个工具的 full/lite、直接/隔离分派。
-`ExportTypes` 和 `ExportBlocksAsDocuments` 在断开时也返回可变耗时，故使用重复参数拒绝用例；文档导入使用
+`ExportPlcTypes` 和 `ExportPlcBlocksDocuments` 在断开时也返回可变耗时，故使用重复参数拒绝用例；文档导入使用
 无效选项拒绝用例。其方法体及原生调用顺序另由源码和织入清单核对，不增加耗时屏蔽规则。
-`ExportAsDocuments` 的旧式纯文本错误含堆栈，按 D1 仅屏蔽堆栈帧，保留首行、其他明细及 preflight 后缀。
+`ExportPlcBlockDocuments` 的旧式底层错误文本含堆栈，按 D1 仅屏蔽堆栈帧，保留首行、其他明细及 preflight 后缀；
+底层 Openness 成员 `ExportAsDocuments` / `ImportFromDocuments` 保持原调用。
 
 ### 硬件、Motion 与库的剩余工具
 
@@ -682,7 +684,7 @@ P3-14b 将 51 个工具迁入 `UnifiedHmi`（22）、`UnifiedObjectServices`（1
 
 CLI 直接解析 `UnifiedHmiTools` 调用以下 13 个入口：
 `EnsureUnifiedHmiScreen`、`EnsureUnifiedHmiTagTable`、`EnsureUnifiedHmiTag`、`EnsureUnifiedHmiConnection`、
-`EnsureUnifiedHmiScreenItem`、`ApplyUnifiedHmiScreenDesignJson`、`BindUnifiedHmiButtonPressedTag`、
+`EnsureUnifiedHmiScreenItem`、`ApplyUnifiedHmiScreenDesign`、`BindUnifiedHmiButtonPressedTag`、
 `EnsureUnifiedHmiButtonEventHandler`、`DescribeUnifiedHmiButtonEventScript`、`SetUnifiedHmiButtonEventScriptCode`、
 `BuildUnifiedHmiButtonActionScript`、`EnsureUnifiedHmiButtonAction`、`BindUnifiedHmiTagDynamization`。
 `UnifiedHmiDomainShapeChecks` 验证完整工具归属、单例、共享会话、调用关系及静态转发的移除；已有 HTTP 断言保留。
@@ -696,7 +698,7 @@ CLI 直接解析 `UnifiedHmiTools` 调用以下 13 个入口：
 工具仍在引擎内，按约定注册为非 IDisposable 单例，方法签名、描述、响应及拒绝顺序保持原样。
 这 20 个工具没有 CLI 静态调用点，因此没有保留 McpServer 转发。
 
-只有 RuntimeTools 注入 IEngineeringSession：ReadPlcLiveValuesS7 的可选 PUT/GET 预检继续调用
+只有 RuntimeTools 注入 IEngineeringSession：`GetPlcLiveValuesS7` 的可选 PUT/GET 预检继续调用
 GetPutGetAccess；TraceTagCause、TraceTagCauseLive 继续调用内核的同名方法。接口新增这三个原实现的显式转发；
 工程读取、块导出、S7 读取的顺序、参数和线程归属不变。其他两个工具类没有会话依赖。
 RuntimeMeta 由 RuntimeChannelTools 保留为内部静态辅助，供 PLCSIM 执行器复用。
@@ -751,18 +753,18 @@ Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite �
 - 诊断与事务：`ReadPortalInfo`、`ReadObjectIdentifier`、`ShowObjectInEditor`、`BeginTransaction`；后者返回已有
   `IEngineeringTransaction` 契约，具体事务及 ambient exclusive access 仍在内核。
 
-以下入口已由 CLI 或工具编排直接调用其所属工具实例：`Connect`、`ConnectIsolated`、
-`ListPortalProcessProjects`、`EnsureOpennessUserGroup`、`Disconnect`、`GetState`、`Bootstrap`、`ConnectToProject`、
-`ReadPortalInfo`、`GetProjects`（MCP 名称仍为 `GetProject`）、`OpenProject`、`AttachToOpenProject`、`CreateProject`、
-`ScaffoldProject`、`SaveProject`、`SaveAsProject`、`CloseProject`、`ReadObjectIdentifier`、`ShowObjectInEditor`、`RunToolsInTransaction`。
+以下入口已由 CLI 或工具编排直接调用其所属工具实例：`ConnectPortal`、`ConnectIsolatedPortal`、
+`ListPortalProcessProjects`、`EnsureOpennessUserGroup`、`DisconnectPortal`、`GetSessionState`、`InitializeEnvironment`、
+`ConnectProject`、`GetPortalInfo`、`GetProjectInfo`（会话服务方法仍为 `GetProjects`）、`OpenProject`、`AttachOpenProject`、`CreateProject`、
+`BuildProjectScaffold`、`SaveProject`、`SaveProjectCopy`、`CloseProject`、`GetObjectIdentifier`、`ShowObjectInEditor`、`RunToolTransaction`。
 `McpServer.ScaffoldOperations.cs` 的三个辅助方法同时供 `ApplyProjectPatch` 使用，保留在原处；
 `SessionToolSupport` 仅转发它们及工具名枚举，`PilotToolSupport` 继续提供共享工具目录访问。
 
 `EngineSurface` 已自动发现实例工具；本步没有新服务需要加入它的服务名单。
 `SessionToolChecks` 验证实例归属、共享内核、静态转发的移除、隔离代理分类、ToolBridge 和 batch 解析。
 `Test-DomainTools.py --domain Session --domain ProjectSession` 覆盖全部 20 个工具的 full/lite、普通/隔离路径。
-`Connect`、`ConnectIsolated`、进程枚举及用户组修复只验证工具体执行前的重复参数拒绝；其余使用断开状态、
-无效输入或离线预览，不连接 TIA。`ReadToolBatch` 无 dry-run 参数，验证其离线读取；`ApplyToolBatch` 仅接受预览令牌，
+`ConnectPortal`、`ConnectIsolatedPortal`、进程枚举及用户组修复只验证工具体执行前的重复参数拒绝；其余使用断开状态、
+无效输入或离线预览，不连接 TIA。`RunReadOnlyToolBatch` 无 dry-run 参数，验证其离线读取；`ApplyToolBatch` 仅接受预览令牌，
 验证无效令牌拒绝，并通过 `ValidateBatch` 验证迁移工具的写预览解析及强制 `dryRun=true`。未执行真实写批次。
 
 CLI 自检、报告命令和离线验证套件直接解析 `DiagnosticsTools` 调用上述四个诊断工具。
@@ -781,15 +783,19 @@ CLI 自检、报告命令和离线验证套件直接解析 `DiagnosticsTools` �
 ### 步骤 15 的静态工具边界
 
 会话、工程和诊断入口迁移后，`McpServer.cs` 不再声明 MCP 工具，仅保留共享辅助，不持有会话状态或 CLI 工具转发。
-其他领域迁移合并后的静态基础设施工具为以下 12 个：
+以下为静态基础设施工具的当前 V4 归属名：
 
 | 归属 | 工具 |
 |---|---|
-| ToolBridge | `ListToolCategories`、`FindTools`、`CallTool`、`PreflightToolCall`、`GetRecipe` |
-| Batch | `ReadToolBatch`、`PreviewToolBatch`、`ApplyToolBatch` |
-| Worker | `ReadOpennessWorkerStatus`、`RestartOpennessWorker` |
-| Doctor | `Doctor` |
-| Maintenance | `CheckForUpdate` |
+| ToolBridge | `ListToolCategories`、`FindTools`、`CallTool`、`PreviewToolCall`、`GetToolUsage` |
+| Batch | `RunReadOnlyToolBatch`、`PreviewToolBatch`、`ApplyToolBatch` |
+| Worker | `GetOpennessWorkerStatus`、`RestartOpennessWorker` |
+| Diagnostics | `GetEnvironmentDiagnostics` |
+| Maintenance | `CheckProductUpdate` |
+
+`GetToolUsage(exampleKind: "sequence")` lists the former recipe entries;
+`exampleId: "sequence/<topic>"` selects one. The former authoring-guide topics use
+the matching `language`, `query`, or `exampleId` selector.
 
 这个边界是领域迁移完成后的目标，不表示单独应用本步就删除尚未合并的其他领域实现。
 并行迁移中的硬件和 Unified HMI 工具仍由各自任务负责；`McpServer.Runtime.cs`、

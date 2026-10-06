@@ -34,7 +34,7 @@ The separate session profile preserves Studio's device-name and block-path looku
 results, overwrite behavior, exception text and callback order; these differ from
 Foundation's `IPortalSession`, `IPlcProgram` and `IPlcData`. Those three facets are
 null on `StudioAdapter`. Conversely, the Foundation `OpennessAdapter` still has
-null Studio/hardware/HMI/VCI facets and unchanged capabilities. `ExportBlocks`
+null Studio/hardware/HMI/VCI facets and unchanged capabilities. PLC block export
 with `ExportFormat.Source` keeps the original `GenerateSource` block/type overloads
 and `GenerateOptions.None`; `AdapterCapabilities.GenerateSource` advertises it.
 The host still owns error mapping, cancellation and timeouts.

@@ -14,6 +14,6 @@
 
 `success`、原生导入状态、内容核对、编译结果、工程保存结果需要分别判断。质量审计的 `qualityPassed` 和 XSD 的 `fragmentSchemasPassed` 才是对应检查结论。
 
-完整引擎可用 `ReadOpennessCompatibility` 查看加载程序集版本，用 `ReadNativeInvocationLog` 读取已记录的调用边界。日志中的 `BEFORE` / `RETURNED` / `THREW` 用于定位时间和调用；它们不替代业务结果，也不能单独确认 Siemens 崩溃根因。HMI 快照的独立日志及完整性说明见[快照诊断](hmi-snapshots.md)。
+完整引擎可用 `GetOpennessCompatibility` 查看加载程序集版本，用 `GetNativeInvocationLog` 读取已记录的调用边界。日志中的 `BEFORE` / `RETURNED` / `THREW` 用于定位时间和调用；它们不替代业务结果，也不能单独确认 Siemens 崩溃根因。HMI 快照的独立日志及完整性说明见[快照诊断](hmi-snapshots.md)。
 
 开发者应沿用现有错误类型和结果封装，不在本页维护第二套编码、异常装饰或日志规范。仓库行尾与编码以 `.gitattributes` 和现有构建检查为准。

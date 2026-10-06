@@ -1,184 +1,74 @@
 # Tools by TIA release
 
-4.0 source supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
-`19`, `20`, `21`. Original V14/V15 are excluded. Each native process uses one exact
-PublicAPI identity; selecting another version does not translate or upgrade a project.
+The current source supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
+`19`, `20`, and `21`. Original V14 and V15 are excluded. Selecting another release
+does not translate or upgrade a project.
 
 ## MCP profiles
 
-| Version | Advertised full catalog | Implementation |
+| Version | Advertised catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 59 | PLC foundation host + V14 SP1 worker |
-| V15.1 | 60 | PLC foundation host + V15.1 worker |
-| V16 | 62 | PLC foundation host + V16 worker |
-| V17 | 62 | PLC foundation host + V17 worker |
-| V18 | 62 | PLC foundation host + V18 worker |
-| V19 | 64 | PLC foundation host + V19 worker |
-| V20 | 477 | Existing full engine |
-| V21 | 488 | Existing full engine |
+| V14 SP1 | 59 | Foundation host and V14 SP1 worker |
+| V15.1 | 60 | Foundation host and V15.1 worker |
+| V16 | 62 | Foundation host and V16 worker |
+| V17 | 62 | Foundation host and V17 worker |
+| V18 | 62 | Foundation host and V18 worker |
+| V19 | 64 | Foundation host and V19 worker |
+| V20 | 477 | Full engine |
+| V21 | 488 | Full engine |
 
-V20/V21 use the 60-tool lite profile and FindTools/CallTool discovery. Foundation
-hosts advertise their entire implemented subset and do not offer the full engine's
-CLI or dispatch bridge. Equal tool names across profiles can have different arguments,
-write-confirmation requirements and response envelopes. Read the selected host schema.
+V14 SP1–V19 advertise their implemented Foundation subset. They do not offer the
+full engine's lite profile or dispatch bridge. V20/V21 use the 60-tool lite profile;
+`FindTools` and `CallTool` can reach the full registered catalog. The eight release
+catalogs contain 1,334 version/tool combinations and 496 distinct V4 names.
 
-Every tool has `GetToolUsage(toolName, operation)` with its actual schema, input
-origins, result interpretation and examples. `language` and `exampleId` retrieve
-programming files and call sequences from the same library. [Coverage and limits](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)
-distinguish source patterns, custom wrappers and native acceptance.
+The 4.0 contract uses typed argument objects matching the selected tool's
+`inputSchema`. Migrated calls return the V4 `schemaVersion` / `ok` / `data` / `error` / `meta`
+envelope. Direct calls, `CallTool`, and batch entries preserve that shape. Names in
+the 3.x catalog are not accepted as aliases. Same-named tools may still have
+release-specific parameters or behavior; inspect the connected host's schema.
 
-Shared algorithms belong in API-independent code. Version-specific native operations
-remain in the typed release adapters; feature filtering occurs before tools/list.
-The new `PlanArtifactImportOrder` shares one implementation across all eight releases.
-It returns a plan directly on foundation hosts and under `meta.plan` on full engines.
+Use [`GetToolUsage`](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md) for the selected
+release's schema, inputs, examples, results, programming files, and ordered call
+sequences. To list sequences, use `exampleKind: "sequence"`; to select one, use
+`exampleId: "sequence/<topic>"`. The former authoring-guide topics select the
+corresponding `language`, `query`, or `exampleId` record.
 
-## Complete grouping
+## Release differences
 
-The union contains 496 names: **49 across all eight releases**, **436 shared by a subset**,
-and **11 exclusive to V21**. The foundation profile has eight names absent from the full
-profile; several correspond to full-engine features with different naming/contracts.
-These counts describe advertised names, not the number of independent implementations.
-Across the eight catalogs there are **1,322 version/tool combinations**.
+- V14 SP1 has no ordinary watch-table listing; it is available from V15.1.
+- The Foundation catalog adds hardware search and exact device creation in V19.
+  The V18 signatures alone did not establish equivalent implementation behavior.
+- V20/V21 advertise the wider PLC, HMI, hardware, library, online, and optional
+  engineering families. The [Openness coverage review](openness-coverage.md)
+  tracks per-release implementation gaps and API evidence.
+- V21 adds eleven whole-tool routes beyond V20, including communication
+  connections, safety activation tests/functions, PLC block write protection,
+  drive safety acceptance tests, SiVArc screen layout, and Classic HMI graphics.
+  Shared tools can also have action-level version exclusions.
 
-See [every tool and its release keys](version-tool-catalog.md),
-[the JSON catalog](../../manifest/version-tools.json), and
-[the current official API audit](openness-coverage.md).
-
-The [functional gap matrix](openness-coverage.md#functional-review) separately checks
-whether an advertised tool can execute the intended engineering operation. Its
-[machine-readable evidence](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json) records
-29 reviewed workflows/families across eight releases, exact SDK identifiers and
-source routes. These 232 version/feature cells are an audit scope, not a missing-tool
-count or a claim that every Siemens feature has been reviewed.
-
-## Version differences
-
-- V14 SP1 has no advertised ordinary watch-table listing; V15.1 adds it.
-- V16–V19 advertise the validated-signature watch-table/technology-object XML export
-  wrappers; V14 SP1/V15.1 are excluded from those routes.
-- The foundation catalog exposes hardware search and exact device creation from V19.
-  V18 signatures alone do not establish equivalent semantics, so that route remains absent.
-- V20/V21 have the existing broader PLC/HMI/hardware/library/online/option APIs.
-- V21 adds eleven whole-tool routes absent from V20: communication connection read/manage;
-  safety activation-test read/manage/group; safety function/condition management;
-  PLC block write protection; drive safety acceptance tests; SiVArc screen layout;
-  classic HMI graphics. Some shared tools also have action-level version exclusions.
+The 496-name catalog includes 49 names available in all eight releases, 436 shared
+by a subset, and 11 exclusive to V21. Those counts describe registration, not native
+acceptance or independent implementations. See the [generated release catalog](version-tool-catalog.md)
+for the most recently built package's exact names.
 
 ## Studio
 
-Studio remains a direct Openness client with eight compiled adapters and a pre-connection
-release selector. Chinese and English labels are preserved. PLC browsing, import/export
-and compilation reuse one workflow over each selected API. V14 SP1/V15.1 have no VCI;
-V16–V19 use WorkspaceMapping/IndividualObjectSynchronizationStatus; V20/V21 use MappedObject.
-An installed older API under a newer product is identified by its DLL identity, not the
-product folder. V15.1 uses `Portal V15_1` and `PublicAPI/V15.1`.
+Studio is a direct Openness client with eight release-specific adapters and a
+pre-connection release selector. PLC browsing, import/export, and compilation share
+one workflow over the selected API. V14 SP1/V15.1 have no VCI; V16–V19 use the
+WorkspaceMapping APIs; V20/V21 use MappedObject APIs. The adapter identity follows
+the loaded PublicAPI assembly, not only the product folder.
 
-## Build, test and package
+## Build and package
 
-The formal GitHub Release ZIP contains all eight MCP runtimes, Studio and its eight
-adapters. Download that asset for installation; GitHub source archives contain no
-compiled runtimes. `Release.ps1` produces the public package after full and
-multi-version validation. `Package-MultiVersion.py` below produces a local development
-package and does not publish a Release. See [the release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md).
+The release package contains all eight MCP runtimes, Studio, and its eight adapters.
+`Release.ps1` builds the public package after multi-version validation;
+`Package-MultiVersion.py` creates a local development archive. SDK and PublicAPI
+directories are local build inputs and are not included in the repository or public
+package. See the [release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) and
+[validation guide](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md).
 
-```powershell
-./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
-python scripts/build/Package-MultiVersion.py --output <new-local-development.zip>
-```
-
-Install the existing PLC Tools companion environment before the full engine tests;
-`TIA_MCP_PLC_TOOLS_PYTHON` can point to that environment's Python executable.
-SDK directories follow `TIA_V14SP1_PublicAPI/V14 SP1`, `TIA_V15.1_PublicAPI/V15.1`,
-`TIA_V16_PublicAPI/V16` through V20, and `TIA_V21_PublicAPI/V21/net48`.
-
-The build exports version catalogs, groups all-release/shared-subset/release-only names,
-and compares official XML identifiers with compiled native-call inventories. These
-artifacts are generated by `scripts/diagnostics/Audit-VersionTools.py`. Direct API
-member-name references do not prove overload correctness, runtime reachability or native
-acceptance. Unreferenced members are review candidates, not one missing tool per member.
-
-## Remaining tools and acceptance
-
-This batch implements `ImportPlcExternalSource` and `GenerateBlocksFromExternalSource`
-on all six foundation profiles. Five names remain unimplemented from the historical
-62-tool migration ledger: EnsureOpennessUserGroup, PlcBuildAndImport,
-ImportTechnologyObject, ImportTechnologyObjectsFromDirectory and
-SeedProjectFromReference. The new source routes have the bounded contracts below;
-they do not claim every old profile behavior or native acceptance. The shared planner
-is an additional tool, not completion of the remaining migrations.
-
-The first implementation batch follows the actual PLC authoring chain:
-
-| Stage | Official API and current gap | Completion evidence |
-|---|---|---|
-| Add external source | `CreateFromFile(string, string)` exists in all eight SDKs. Foundation import now executes for root ASCII SCL/AWL/DB/UDT sources after preview and exact project/hash confirmation. | Read back the actual source name. Existing names are refused. Chinese/non-ASCII source encodings remain unverified for the foundation route. |
-| Generate PLC blocks | Foundation generation now uses the void overload in V14 SP1 and `GenerateBlockOption.None` in V15.1+. Existing block/type names may be overwritten. | V15.1+ returns native generated identities; V14 SP1 reports before/after inventory observations only. A successful import is not block generation, and generation is not full compilation. |
-| Compile and diagnose | `ICompilable.Compile()` exists in all eight SDKs. Foundation execution now checks the selected PLC and observable standard/RH states, and explicitly reports devices without exposed state. | Test valid/invalid sources and typed nested diagnostics. Independently confirm unobserved states; Siemens still requires all devices offline. Native acceptance remains NOT RUN. |
-| Read back | Existing block/type readers already cover the ordinary PLC root and user groups. | Compare expected identities and exported program content with what was generated. |
-| Import technology objects | The exact collection `Import(FileInfo, ImportOptions)` API exists from V16; V14 SP1/V15.1 lack that member. Foundation import is missing at the baseline. | V16-V18 root-only import; V19 adds user groups. Check the actual returned objects and compile diagnostics. |
-| Emit target-version XML | `BuildPlcUdtXml` and `BuildPlcGlobalDbXml` now build explicit output for all eight releases. The six other PLC builders remain V21-only candidates. | Sixteen UDT/DB interface-fragment checks passed against the supplied official XSDs. Whole documents, CPU/type semantics and native import remain unverified. |
-
-Compilation previously had a native call in source and appeared in `tools/list`, yet
-`RequireReviewedExecution` always refused actual execution. This is why advertisement,
-typed compilation and protocol tests are tracked separately from runtime reachability.
-The revised foundation path checks top-level, ungrouped and recursively grouped
-devices. Missing required PLC providers and observed unknown/online states prevent
-execution. HMI/passive devices without a provider do not cause blanket refusal;
-their names are reported in `meta.offlineStateNotExposedByDevices`. Those states
-are unobserved, not confirmed Offline. Siemens' all-devices-offline prerequisite
-still applies; no online state is changed automatically.
-
-For source generation, use the actual full `SourceName` returned by import. The
-preview binds the source identity and existing block/type metadata; it does not
-review the source contents. A V14 SP1 empty `GeneratedObjects` array reflects the
-native void return, not proof that nothing was generated. Check `ObjectsAfter` and
-`ObservedChanges`, then compile and read back expected blocks. Import/generation
-does not save or download. An ordinary native generation `EngineeringException`
-returns `failed` and retains the session; interruption or uncertain post-generation
-readback requires a reset. The old `PlanPlcExternalSourceImport` plan/hash cannot be
-used to execute the new import route.
-
-The two declaration builders construct the target format directly: Interface/v2 for
-V14 SP1, v3 for V15.1, v4 for V16/V17 and v5 for V18-V21, with the mandatory object
-`Namespace` from V18. They do not convert an existing document by changing its
-version marker. Foundation calls require `outputReleaseKey`; full-engine calls
-default to `21` for compatibility. Select the actual intended output release.
-
-The next migration batches can use already present API families: Classic HMI,
-libraries and CAx across all supplied SDKs; software units and VCI from V16; Safety
-offline login from V17; modern drive parameters and SiVArc from V15.1; DCC from V16;
-and CFC/Teamcenter from V18. These boundaries describe the inspected identifiers,
-not blanket support for every action or optional product. V19 Unified APIs are also
-available for review; equivalent earlier interfaces remain unverified. Existing
-Studio VCI implementations are reusable evidence for V16-V19, but are not MCP routes.
-
-That ledger excludes most of the full engine's newer feature families. Dedicated legacy
-wrappers remain incomplete for HMI, libraries/VCI, hardware/network configuration,
-software/safety units, online diagnostics, Safety/Startdrive/SiVArc and other licensed
-options. Their feasibility must be checked against each exact release API. Native-only
-and Studio-only features are not counted as MCP tools merely because an API exists.
-
-Functional tests cover the dependency planner, real MCP STDIO/HTTP, independent synthetic
-worker processes and Chinese data, plus Studio's mock lifecycle/import/export/compile/VCI
-and real WPF interaction. New native TIA/project acceptance is **NOT RUN**. The next live
-pass needs an explicitly selected version and test project for roundtrip verification.
-
-## GitHub reuse
-
-| Project | Current use / decision |
-|---|---|
-| [EidoTiaWorkbench](https://github.com/EidoAut/EidoTiaWorkbench) | MIT dependency planner integrated, pinned and tested; V21 domain heuristics removed from the shared algorithm |
-| [Siemens AI extensions](https://github.com/siemens/tia-portal-ai-extensions) | Existing official Openness guidance; references are not executable tools or proof of old-version support |
-| TiaGitAddIn.Core | Existing MIT XML parser, comparison and LAD layout; keep reusing the integrated code |
-| siemens-plc-tools | Existing pinned companion commands; keep using the established process boundary |
-| [TiaImportExport.VSExt](https://github.com/cmariusz/TiaImportExport.VSExt) | Reviewed public tree mainly contains documentation and small HMI Python scripts; the core extension source is not available there for wholesale integration |
-| [TIAOpennessManager](https://github.com/StaniB88/TIAOpennessManager) | Public entry redirects toward AnyAutomation Studio; no reusable licensed core source established in this review |
-
-Eido copyright, source commit, local changes and license are in
-[the provenance record](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md).
-Native SDKs and third-party source archives are not substitutes for functional integration.
-
-Official version-change references: [Siemens V15.1 changes](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-in-tia-portal-openness-v15.1)
-and [V16 Openness manual](https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf).
-The version audit's primary inputs are the locally supplied official XML files and
-the exact assemblies used to compile each adapter.
+`version-tool-catalog.md` is generated from built catalogs by the release audit. It
+records the last built package and is regenerated during release validation; it is
+not edited by hand or used as the current 4.0 source of names.

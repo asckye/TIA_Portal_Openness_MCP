@@ -6,13 +6,13 @@
 
 | 工具 | 用途 | 是否需要打开 TIA 工程 |
 |---|---|---|
-| `ReadPlcLiveValuesS7` | 按绝对地址和类型读值 | 地址已知时不需要 |
-| `ReadPlcLiveValuesOpcUa` | 按实际 OPC UA NodeId 读值 | NodeId 已知时不需要 |
-| `MonitorWatchTableLiveS7` | 从工程监控表取地址，再通过 S7 读值 | 需要 |
+| `GetPlcLiveValuesS7` | 按绝对地址和类型读值 | 地址已知时不需要 |
+| `GetPlcLiveValuesOpcUa` | 按实际 OPC UA NodeId 读值 | NodeId 已知时不需要 |
+| `MonitorPlcWatchTableS7` | 从工程监控表取地址，再通过 S7 读值 | 需要 |
 | `ProbeS7CpuIdentity` | 查询目标 CPU 身份 | 不需要 |
 | `TraceTagCause` | 从程序分析变量写入和条件 | 需要；分析本身不是实时测量 |
 
-`ReadPlcWatchTableCurrentValuesReadOnly` 获取的是 Openness 监控表条目定义，不能因为名称含 CurrentValues 就把它当作实时读值。
+`GetPlcWatchTableCurrentValuesReadOnly` 获取的是 Openness 监控表条目定义，不能因为名称含 CurrentValues 就把它当作实时读值。
 
 ## 第一次读取
 

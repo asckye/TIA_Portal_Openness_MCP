@@ -1,7 +1,7 @@
 # Current official API audit
 
 The eight local official PublicAPI XML sets are compared with compiled native-call inventories. No Siemens DLL or XML is redistributed.
-The current tool grouping is in [the version matrix](version-tools.md) and [the complete name catalog](version-tool-catalog.md).
+Current V4 registration is summarized in [the version matrix](version-tools.md). The [generated name catalog](version-tool-catalog.md) is a release-time record of the last built package; release validation regenerates it.
 
 | Release | Domain signatures | Unique member names | Compiled direct references | Names requiring further review |
 |---|---:|---:|---:|---:|
@@ -139,3 +139,53 @@ programming assets to the existing unified example library, and record functiona
 test evidence separately from native test-project import/compile/readback evidence.
 Original V14/V15, uninspected SDKs, missing optional services and untested project
 types do not inherit support from a nearby release number.
+
+## V20/V21 optional tools and scope
+
+These V4 tools are registered by the full engines. Exact parameters and examples
+come from `GetToolUsage`; registration does not prove that an optional product is
+installed or that a native operation has passed acceptance.
+
+| V4 tool | Release scope | Current boundary |
+|---|---|---|
+| `GetOpennessCompatibility` | V20/V21 | Reports loaded Siemens assembly identity, engine identity, cross-reference policy, and known issue links. Installed update/hotfix state remains unknown unless directly supplied. |
+| `InspectSimaticSdCompatibility` | V20/V21 | Offline checks `.s7dcl` for known language and format risks. It is not a complete parser; no warning does not establish import compatibility. |
+| `GetNativeInvocationLog` | V20/V21 | Reads bounded native-call diagnostics. It records call stages, not every native path, and omits credentials and engineering payloads. |
+| `GetPlcBlockScopes` | V20/V21 | Enumerates root, software-unit, and safety-unit PLC blocks. Partial enumeration is not reported as a complete empty result. |
+| `ManagePlcBlockDocuments` | V20/V21 | Lists, reads, exports, or imports documents in explicit user block groups. SIMATIC SD import requires an offline project; system groups are not import targets. |
+| `ManageSinumerikArchive` | V20 only | Uses the SINUMERIK archive provider for archive/retrieve/address-archive operations. Output checks do not validate every restored engineering property. |
+| `ImportSinumerikAlarmTexts` | V20 only | Imports the selected TS/CSV alarm text files through the NCU alarm text provider. Existing DB2 text can be replaced; returned success is not per-row content verification. |
+| `ManageSinumerikSafetyMode` | V20 only | Reads or sets NCU safety mode with an explicit dry-run/confirmation contract and readback. This does not replace safety engineering acceptance. |
+| `InitializeSimotionScripting` | V20 only | Calls the project SIMOTION initializer and returns its string; it does not execute that string or run an external SCOUT script. |
+| `ExportScadaData` | V20 only | Exports project or PLC configuration through the SCADA Export provider. It requires the optional component and does not deploy a WinCC runtime. |
+| `GetPlcCrossReferences` | V20/V21 | Native PLC cross-reference stays disabled by default. The gated route requires explicit process configuration and complete, true block/type consistency evidence. |
+| `CheckDownloadReadiness` | V20/V21 | Unknown device reachability, access, hardware consistency, or download prompts remain unknown; `Ready=null` is not permission to download. |
+
+The optional providers above have no matching V21 SDK types in the supplied
+baseline, so their 4.0 routes reject on V21. This says only that the supplied SDK
+does not expose the reviewed path; it does not establish that Siemens has no V21
+product capability. V21's modular optional-product assemblies and installed
+components require their own exact SDK and acceptance evidence.
+
+## Additional version-specific evidence boundaries
+
+- Classic HMI and Unified HMI use separate object models and dispatch paths. An
+  absent optional Unified service does not disable Classic HMI, or vice versa.
+- SIMATIC SD document export/import remains distinct from classic XML exchange.
+  An OB document round trip can change its event type and assigned block number;
+  do not describe it as lossless relocation.
+- Library document operations are limited to project libraries. V20 explicitly
+  rejects inactive-culture import flags; equivalent V21 behavior remains unverified.
+  Supported export formats must come from the selected object rather than a guessed
+  constant.
+- A locally observed Unified script rename failure remains quarantined. The
+  relationship to the API is not established by current evidence; no fallback write
+  path is claimed.
+- Exact API names and overloads remain release-specific. `ExportAsDocuments`,
+  `ImportFromDocuments`, and `GetCrossReferences` in the source audit are Siemens
+  members, while their MCP entry points use the V4 names in the current catalogs.
+
+These are bounded evidence summaries from the supplied API sets, source routes, and
+prior read-only reviews. They do not change the functional matrix or mark native
+acceptance complete; the actual release, action, project, and optional product must
+be recorded in the [real-machine ledger](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md).

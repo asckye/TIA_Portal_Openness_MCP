@@ -7,12 +7,12 @@
 | 工具 | 获取内容 |
 |---|---|
 | `ListUnifiedGlobalScripts` | 模块清单，清单不含完整正文 |
-| `ReadUnifiedGlobalScript` | 原生 JS/YAML、正文和引用信息 |
-| `ReadUnifiedTagDefinitions` | 变量定义、表/组、成员及来源信息 |
-| `ListUnifiedLibraryFolder` | 指定库文件夹的直接子项与版本 |
-| `ReadUnifiedLibraryType` | 明确类型和版本的原生导出 |
-| `ReadUnifiedFaceplateInstance` | 面板实例接口与有证据支持的库版本关系 |
-| `ReadUnifiedScreenBranch` | 指定页面/对象分支的属性和成员 |
+| `GetUnifiedGlobalScript` | 原生 JS/YAML、正文和引用信息 |
+| `ListUnifiedTagDefinitions` | 变量定义、表/组、成员及来源信息 |
+| `ListUnifiedLibraryFolderEntries` | 指定库文件夹的直接子项与版本 |
+| `GetUnifiedLibraryType` | 明确类型和版本的原生导出 |
+| `GetUnifiedFaceplateInstance` | 面板实例接口与有证据支持的库版本关系 |
+| `GetUnifiedScreenBranch` | 指定页面/对象分支的属性和成员 |
 | `ReleaseUnifiedReadCursor` | 释放本次采集缓存 |
 
 从 `GetToolUsage(toolName="...")` 读取当前参数与官方例子。通过实际工程名称、HMI 路径和对象范围定位；库类型选择准确版本，不把默认版本当成实例引用版本。
@@ -25,7 +25,7 @@
 4. 直到 `traversalComplete=true`，检查累计失败及最终完整性。
 5. 保存完整结果后，用返回的 `releaseCursor` 释放缓存。
 
-大型响应可能先通过 `GetExport` 分块返回：先取全该页 JSON，再从其中读取采集游标。分块偏移与采集游标不是同一个机制。工程切换或服务重启后重新采集，不能拼接不同会话的页。
+大型响应可能先通过 `GetExportContent` 分块返回：先取全该页 JSON，再从其中读取采集游标。分块偏移与采集游标不是同一个机制。工程切换或服务重启后重新采集，不能拼接不同会话的页。
 
 ## 结果如何解释
 

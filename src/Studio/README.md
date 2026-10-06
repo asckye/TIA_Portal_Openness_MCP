@@ -10,7 +10,7 @@ the selected release. Closing the main window still handles its owned MCP servic
 Engineering operations continue to call Siemens Openness through the .NET Framework 4.8
 bridge. The MCP engines retain their existing process boundaries. The unified desktop
 requires the complete bundle, whose `runtime/dotnet` supplies .NET 10, including on an AI-only host.
-This source change has not replaced the published v3.2.0 ZIP.
+The latest published package is v3.3.0; the 4.0 source is unreleased.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
 copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [file provenance](../../third_party/tia-openness-studio/upstream.json).
@@ -77,8 +77,66 @@ messages keep their original text when the interface language changes. The MCP p
 
 Set `TIA_GLASS_SCREENSHOTS` to a local output directory before running the WPF tests below to
 capture the English and Chinese fixtures in both themes. These are actual WPF renderings at
-1200 x 780 with synthetic data, without connecting to TIA. The reference package remains local
-to the design handoff; see [design QA](../../docs/development/design-qa.md) for comparison notes.
+1200 x 780 with synthetic data, without connecting to TIA.
+
+## Bridge channel
+
+The desktop and Framework bridge use `TiaMcp.WorkerChannel` protocol 2 with an
+explicit `Studio` profile. Studio selects the exact release before starting the
+bridge, then validates the bridge and deployed-adapter hashes and a fresh 32-byte
+nonce during hello. The bridge loads the adapter before hello but does not create an
+Openness session until a related request arrives. If no release is selected, the
+desktop chooses the newest installed version; a diagnostic or mock session without
+an installation uses release `21`.
+
+Requests, results, and progress use the shared Contracts `BridgeJson` codec and one
+`System.Text.Json` options factory. DTO properties remain PascalCase; wire method
+and progress property names retain their established lowercase spelling, and enums
+remain names. The RPC routes `session.state` and `doctor.run` continue to dispatch to
+the Studio methods `GetState` and `Doctor`; these are Studio RPC/API names, not MCP
+tool names. `RpcResponse` distinguishes a missing `result` from explicit
+`result:null`; errors omit `result`, and success omits `error`. The desktop preserves
+the prior date-token conversion behavior when decoding RPC DTOs.
+
+RPC errors keep `error.data.outcome`, `evidence`, and the original `rpc` code,
+message, and data. A rejection before backend entry is `RejectedBeforeNative`, a
+read failure is `ReadFailed`, and a failure after entering a potentially
+state-changing method is conservatively `Unknown`; this classification does not
+prove that a native call occurred. A handled RPC error is shown to the user while
+the Studio bridge session remains usable, including `Unknown`. Protocol faults,
+timeout, and cancellation after dispatch invalidate the session. The client does
+not retry, replay, or automatically restart a failed bridge. Undispatched
+cancellation does not consume an id. The default call budget is ten minutes, and
+disposal waits up to five seconds before ending an owned bridge process.
+
+Progress retains `{operation,current,total,message}` in `params.payload`, together
+with protocol 2 request id, sequence, and percentage. It is bound to the originating
+request, validated before notifying the UI, and does not extend the call budget.
+Binding epochs track managed `session.connect`, `session.disconnect`, `project.open`,
+and `project.close` commands only. They do not call `GetState`, read Siemens objects,
+or detect an external project rebind. Siemens calls remain sequential on the bridge
+STA thread.
+
+The UI displays handled errors through the existing message paths: Workbench activity
+uses `Exception.Message` in status and logs, version-control diffs use it as the
+caption, bridge stderr retains the original method/code/message, and the unhandled
+exception dialog and crash log keep their existing text. Result-level export,
+compile, inspection, VCI and progress messages remain in their DTOs.
+
+The Core golden tests cover all 29 Contracts DTOs, defaults, nulls, enum names and
+date/time cases; the RPC method tests compare requests, responses, backend arguments,
+call order and progress. Client tests also cover identity rejection, all Studio
+error cases, cancellation before and after dispatch, timeout, concurrent calls,
+child exit, handled errors followed by another call, late progress, and disposal.
+Run the offline bridge smoke after `Build-Studio.ps1` with local SDK files:
+
+```powershell
+python tests/Studio/Test-BridgeSmoke.py --bridge src/Studio/Gui/bin/Release/net10.0-windows/bridge/TiaOpenness.Bridge.exe --public-api-root <local-sdk-root>
+```
+
+It checks hello identity, `session.state`, `ping`, `doctor.run`, and clean EOF for
+V14 SP1, V16 and V21. These checks do not connect to TIA or replace native
+acceptance.
 
 ## Workflows and boundaries
 
@@ -120,5 +178,5 @@ progress and error recovery. It also runs Doctor through the ordinary bridge wit
 session. WPF tests render and inspect the actual controls. Native adapters compile against the
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Live TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; the v3.2.0 formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
+Live 4.0 TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; the formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
 [the shared version framework](../../docs/development/unified-version-framework.md).

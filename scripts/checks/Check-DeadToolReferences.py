@@ -36,6 +36,52 @@ spec.loader.exec_module(text_literals)
 # "Use" verb. These are comparison facts, never runtime aliases.
 HISTORICAL_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/history/contracts-v3/baseline').glob('*.json')
                     for tool in json.loads(path.read_text(encoding='utf-8'))['tools']}
+CURRENT_NAMES = {tool['name'] for path in (Path(ROOT).parents[1] / 'manifest/contracts/v4/baseline').glob('*.json')
+                 for tool in json.loads(path.read_text(encoding='utf-8'))['tools']}
+
+# These are intentionally excluded from the current-doc scan. Release notes,
+# CHANGELOG, phase6-review's generated name maps, and generated catalogs/matrices
+# are records of shipped contracts, not current guidance. The P6-40b report is a
+# task artifact, not product documentation.
+HISTORY_SKIP_FILES = {
+    'CHANGELOG.md',
+    'docs/development/phase6-review.md',
+    'docs/reference/version-tool-catalog.md',
+    'docs/reference/tool-matrix.md',
+    'bin-build/P6-40b/report.md',
+}
+HISTORY_SKIP_DIRS = ('docs/releases/', 'manifest/history/')
+# Keep dated 3.3 evidence verbatim. The 4.0 acceptance section after it remains
+# in the current scan, as do the undated current status rows above it.
+HISTORY_SKIP_SECTIONS = {
+    'docs/reference/real-machine-ledger.md': (
+        '## 3.3.0 发布前最小验收',
+        '## 4.0 安全策略验收计划',
+    ),
+}
+# These retained architecture records inventory C# members and historical
+# implementation identifiers inline. Their Markdown tables and tool-call
+# examples remain scanned; narrative code identifiers are not MCP names.
+ARCHITECTURE_MEMBER_RECORDS = {
+    'docs/development/engine-decomposition.md',
+    'docs/development/adapter-merge.md',
+}
+
+# Some retired MCP spellings are still real names in another API surface.
+# Keep these allowlists specific to the surface and explain every entry.
+STUDIO_RPC_NAMES = {
+    'GetState': 'Studio bridge dispatch target for the session.state RPC route; the MCP tool is GetSessionState',
+    'Doctor': 'Studio bridge dispatch target for the doctor.run RPC route; the MCP tool is GetEnvironmentDiagnostics',
+}
+CLI_COMMANDS = {
+    'doctor': 'CLI subcommand (`tia doctor`), not an MCP tool name',
+    'connect': 'CLI subcommand (`tia connect`), not an MCP tool name',
+    'project': 'CLI command group, not an MCP tool name',
+}
+OPENNESS_REFERENCE_NAMES = {
+    'Connect': 'Siemens Openness member name used only in upstream API reference documentation',
+    'Disconnect': 'Siemens Openness member name used only in upstream API reference documentation',
+}
 
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
@@ -170,6 +216,8 @@ ALLOWED = {
     'GetChartProtection': 'Openness CFC ChartProvider.GetChartProtection()，由 ManageCfcChartProtection read 封装',
     'ExportInstructionData': 'Openness CFC ChartProviderS7.ExportInstructionData()，由 ExchangeCfcCharts exportInstructionData 封装',
 }
+ALLOWED.update(STUDIO_RPC_NAMES)
+MARKDOWN_ALLOWED_NAMES = set(ALLOWED) | set(CLI_COMMANDS)
 
 VERB = re.compile(
     r'^(Get|Set|Add|Import|Export|Create|Delete|Compile|Download|Sync|Analyze'
@@ -271,6 +319,87 @@ def migration_names(root):
     return dict(re.findall(r'^\| `([^`]+)` \| `([^`]+)` \|', appendix, re.M))
 
 
+def retired_tool_names(root):
+    renames = migration_names(root)
+    return {old: new for old, new in renames.items()
+            if old in HISTORICAL_NAMES and old not in CURRENT_NAMES and new != old}
+
+
+def _skip_history_path(relative):
+    relative = relative.replace('\\', '/')
+    if relative in HISTORY_SKIP_FILES:
+        return True
+    return any(relative.startswith(prefix) for prefix in HISTORY_SKIP_DIRS)
+
+
+def _markdown_scan_lines(relative, source):
+    """Yield only named-code contexts; dated release evidence is intentionally frozen."""
+    start, end = HISTORY_SKIP_SECTIONS.get(relative, (None, None))
+    in_skipped_section = False
+    in_fence = False
+    for line_number, line in enumerate(source.splitlines(), 1):
+        if start and line.startswith(start):
+            in_skipped_section = True
+        if in_skipped_section and line.startswith(end):
+            in_skipped_section = False
+            continue
+        if in_skipped_section:
+            continue
+        if re.match(r'^\s*(```|~~~)', line):
+            in_fence = not in_fence
+            continue
+        if in_fence or line.lstrip().startswith('|'):
+            yield line_number, line
+            continue
+        if relative in ARCHITECTURE_MEMBER_RECORDS:
+            if re.search(r'\b[A-Z][A-Za-z0-9]+\s*\(|["\'](?:name|toolName)["\']\s*:', line):
+                yield line_number, line
+            continue
+        # Inline code is the normal way this repository names tools in prose.
+        for code in re.findall(r'`+([^`]+)`+', line):
+            yield line_number, code
+        # Also catch compact JSON or invocation examples outside fenced blocks.
+        if re.search(r'\b[A-Z][A-Za-z0-9]+\s*\(|["\'](?:name|toolName)["\']\s*:', line):
+            yield line_number, line
+
+
+def scan_markdown(root, extra_docs=None, include_tree=True):
+    """Return retired 3.x names used as names in current Markdown guidance."""
+    retired = retired_tool_names(root)
+    documents = {}
+    if include_tree:
+        for path in root.rglob('*.md'):
+            relative = path.relative_to(root).as_posix()
+            if _skip_history_path(relative):
+                continue
+            documents[relative] = path.read_text(encoding='utf-8-sig', errors='replace')
+    if extra_docs:
+        documents.update(extra_docs)
+
+    bad = collections.defaultdict(list)
+    names = sorted(retired, key=len, reverse=True)
+    if not names:
+        return bad
+    pattern = re.compile(r'(?<![.\w])(' + '|'.join(re.escape(name) for name in names) + r')(?!\w)')
+    allowed = MARKDOWN_ALLOWED_NAMES
+    seen = set()
+    for relative, source in documents.items():
+        if _skip_history_path(relative):
+            continue
+        for line_number, line in _markdown_scan_lines(relative, source):
+            for match in pattern.finditer(line):
+                name = match.group(1)
+                if name in allowed or (
+                    relative.startswith('reference/siemens-openness/') and name in OPENNESS_REFERENCE_NAMES
+                ):
+                    continue
+                location = f'{relative}:{line_number}'
+                if (name, location) not in seen:
+                    bad[name].append(location)
+                    seen.add((name, location))
+    return bad
+
+
 def rewrite_guidance(source, renames, registered):
     # ALLOWED names are reviewed API names that a historical tool shared; each occurrence is decided by hand.
     active = {old: new for old, new in renames.items()
@@ -364,6 +493,13 @@ def main(fix=False):
 
     names, bad = scan(src)
     print('引擎注册工具：%d 个；扫描文件：%d 个' % (len(names), len(src)))
+    root = Path(ROOT).parents[1]
+    doc_bad = scan_markdown(root)
+    doc_count = sum(1 for path in root.rglob('*.md')
+                    if not _skip_history_path(path.relative_to(root).as_posix()))
+    print('当前 Markdown：%d 个文件；%d 个退役名称引用' % (doc_count, sum(map(len, doc_bad.values()))))
+    for tool, locations in doc_bad.items():
+        bad[tool].extend(locations)
     if not bad:
         print('[PASS] 工具描述及源码引导文案无死引用或旧基础设施参数（哨兵已验证闸门有效）。')
         return 0
@@ -443,6 +579,47 @@ const string Hint = """See OldTool for details.""";
                                 ('PreviewToolBatch', 'operationsJson'), ('RunReadOnlyToolBatch', 'operationsJson')):
             source = f'[McpServerTool(Name="{tool}")] void Tool() {{}} return "Use {tool}({parameter}).";'
             self.assertIn(tool + '.' + parameter, scan({'hint.cs': source})[1])
+
+    def test_markdown_retired_tool_in_current_guide_fails(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'docs/guides/test-guide.md': 'Call `GetBlocks` with the selected PLC path.'
+        }, include_tree=False)
+        self.assertIn('GetBlocks', bad)
+
+    def test_markdown_history_and_task_report_are_skipped(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'CHANGELOG.md': 'Historical call: `GetBlocks`.',
+            'docs/releases/v3.3.0.md': 'Historical call: `GetBlocks`.',
+            'bin-build/P6-40b/report.md': 'Task report: `GetBlocks`.',
+        }, include_tree=False)
+        self.assertFalse(bad)
+
+    def test_markdown_allowlisted_openness_member_passes(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'docs/guides/openness.md': 'Native member: `GetCrossReferences`.'
+        }, include_tree=False)
+        self.assertFalse(bad)
+
+    def test_markdown_studio_rpc_name_passes(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'src/Studio/README.md': 'RPC methods `GetState` and `Doctor` are retained.'
+        }, include_tree=False)
+        self.assertFalse(bad)
+
+    def test_markdown_cli_commands_pass(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'docs/guides/cli.md': 'Use `tia doctor`, `tia connect`, or `tia project`.'
+        }, include_tree=False)
+        self.assertFalse(bad)
+
+    def test_markdown_old_name_in_dated_ledger_record_is_skipped(self):
+        bad = scan_markdown(Path(ROOT).parents[1], {
+            'docs/reference/real-machine-ledger.md': (
+                '## 3.3.0 发布前最小验收\n`GetBlocks`\n'
+                '## 4.0 安全策略验收计划\n`GetBlocks`\n'
+            )
+        }, include_tree=False)
+        self.assertEqual(bad['GetBlocks'], ['docs/reference/real-machine-ledger.md:4'])
 
 
 if __name__ == '__main__':

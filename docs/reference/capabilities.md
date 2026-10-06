@@ -19,11 +19,16 @@
 每行包含 `family`、`state`、`l5` 和实际 `entries`。完整引擎的 `InitializeEnvironment` / `GetPortalInfo`
 与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。
 当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。
-逐版入口清单见[生成的行为台账](real-machine-ledger.md)及[功能矩阵](../../reference/version-feature-matrix.json)。
+逐版入口清单见[生成的行为台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)及[功能矩阵](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)。
 
 ## AI 如何取得正确示例
 
-所有版本统一使用 `GetToolUsage` 获取实际参数、输入来源、调用示例、结果解释和官方出处。语言代码、文件模板及多步顺序也从同一库读取；不再单独维护一套自然语言配方。完整引擎的兼容入口 `GetRecipe`、`GetAuthoringGuide` 读取同源记录。
+所有版本统一使用 `GetToolUsage` 获取实际 schema、输入来源、调用示例、结果解释和官方出处。调用参数是匹配所选工具 `inputSchema` 的 JSON 对象，成功与失败结果使用 V4 `schemaVersion` / `ok` / `data` / `error` / `meta` 信封。语言代码、文件模板及多步顺序也从同一库读取，不再维护独立的指南或配方工具。
+
+原配方列表行为使用 `exampleKind: "sequence"`，指定配方使用
+`exampleId: "sequence/<topic>"`。原作者指南主题通过 `language`、`query` 或相应
+`exampleId` 选择；例如 `startdrive-bico` 映射到 `ManageStartdriveParameter`
+的 `read` 操作示例。
 
 - 按工具查：提供 `toolName`，具有多个动作时再提供 `operation`。
 - 按语言或完整流程查：使用 `language` 或 `exampleId`。

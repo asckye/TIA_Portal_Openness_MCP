@@ -2,122 +2,64 @@
 
 ## Current state
 
-Published [v3.3.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.3.0) from
-`889a2bd836c8f8f77506dcf885bdca20438bcd73` on 2026-10-05. Both pre-release CI workflows and the independent
-published-asset verification passed; see the [publication evidence](../../manifest/publication-v3.3.0.json),
-[release notes](../releases/v3.3.0.md) and [CHANGELOG](../../CHANGELOG.md). The release contains:
+The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source is
+unreleased. Phase 6 tasks P6-01 through P6-41 and P6-44 through P6-48 are merged;
+P6-42 release-candidate validation and P6-43 release documentation are in progress.
+Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
+and static call evidence do not establish native TIA behavior.
 
-- one WPF/.NET 10 workbench (configurator and Studio merged; root `TiaOpenness.exe` is the launcher) with menus
-  grouped by owner (Project, View, PLC, MCP, Tools, Help) and an MCP service state chip in the title bar;
-- V14 SP1–V19 foundation hosts on .NET 10 and Microsoft .NET 10.0.12 bundled in `runtime/dotnet`, so a target computer
-  needs only .NET Framework 4.8 for the Openness workers and engines;
-- strict PLC name resolution (G9) on V20/V21 and the V15.1 `.ap15_1` project-file fix found during acceptance.
+Workbench approval is enabled by default for MCP `WRITE` and `ONLINE-WRITE` calls.
+The V4 contract uses typed arguments and the `schemaVersion` / `ok` / `data` / `error` / `meta`
+envelope. Direct calls, `CallTool`, and batch results preserve the same envelope.
+There are no 3.x tool aliases in the 4.0 catalog. D1 behavior families remain
+`current / NOT RUN` until their release-specific evidence is accepted.
 
-The per-VM real-machine acceptance (Foundation MCP on V14 SP1–V19, Studio on V14 SP1/V16/V21, G9 and engine smoke on
-V20/V21) passed on 2026-10-04/05; results are in the
-[real-machine ledger](../reference/real-machine-ledger.md#330-验收结果2026-10-0405). The work behind the default-off
-`TiaSharedAdapterPaths` switch (engine VCI primitives, Studio shared adapter sessions) is not released and its native
-acceptance remains **NOT RUN**.
+The eight exact release keys are `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`,
+and `21`; original V14 and V15 are excluded. V14 SP1–V19 use the Foundation host
+and matching worker. V20/V21 use the full engine. The bundle entry is root
+`TiaOpenness.exe`; Studio calls Openness directly through its eight release
+adapters. Selecting a release does not upgrade a project.
 
-The v3.3.0 release also carries `TIA_MCP_Runtime_v3.3.0_20261003.zip`: the same 3.3.0 files without the source tree and
-development files (every file byte-identical to the full package, which stays the update channel; not separately
-re-accepted). There are no further 3.3.x releases: the 3.3.x improvements and the former 3.3.1 work go into 4.0 (see the
-[roadmap](roadmap.md)). The release pipeline rework is on master (cheap gates first, build reuse, parallel V20/V21
-pipelines, prerequisite check), and the frozen step-I domains (P4-I2, P4-I3, P4-I4a, P4-I4b) and P6-02 are merged with
-their native evidence regenerated on master. Next: the move-only [directory reorganization](layout-proposal-4.0.md),
-then phase 6. On master the software's own files already live in a
-writable `<bundle>\data` folder with per-user fallback, and packaging, published-asset verification, bundle checks and the
-updater follow the runtime-only delivery set in `scripts/operations/delivery-files.json`. All testing of these changes is
-deferred to the 4.0 final candidate.
+## Current references
 
-Only `master` is maintained. Exact release keys are `14sp1`, `15.1`, `16`, `17`,
-`18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC
-foundation host and a matching typed worker; V20/V21 retain their full engines.
-Studio connects directly through eight Openness adapters and has Chinese/English
-Glass views. Selecting a version does not convert an existing project.
+- [Version and tool scope](../reference/version-tools.md) and the [functional
+  Openness coverage review](../reference/openness-coverage.md) describe advertised
+  tools, release gaps, and the boundary between offline evidence and native acceptance.
+- [`GetToolUsage`](official-tool-usage.md) returns the selected release's typed
+  schema, examples, results, language files, and call sequences. It replaces both
+  old guide/recipe entries: use `exampleKind: "sequence"` to list sequences and
+  `exampleId: "sequence/<topic>"` for one sequence. Former authoring-guide topics
+  use `language`, `query`, or the matching `exampleId` selector.
+- [Runtime layout](runtime-layout.md) documents bundle roots, writable data,
+  logs, audit records, diagnostics, and Python environment selection.
+- [Validation](validation.md) lists the offline suites, SDK builds, and repository
+  checks. [The real-machine ledger](../reference/real-machine-ledger.md) records
+  accepted evidence by release and behavior family.
 
-Current evidence is maintained in the [version matrix](../reference/version-tools.md),
-[functional gap matrix](../../reference/version-feature-matrix.json),
-[full build record](../../manifest/release-build.json),
-[multi-version build record](../../manifest/multi-version-build.json), and
-[tool-example coverage](../../manifest/tool-usage-coverage.json). Compile, mock,
-transport and SDK-signature results do not establish engineering semantics.
+Keep the editable example source in `reference/tool-examples` and regenerate its
+embedded catalog after edits. Do not add separate issue-specific example systems.
+Foundation and full-engine schemas remain release-specific.
 
-## Architecture and examples
+## Known limits
 
-Use the [version framework](unified-version-framework.md) for profile differences,
-session contracts and remaining integration boundaries. Shared environment facts,
-version identity, diagnostics, example retrieval and dependency planning belong
-in API-independent code; native assemblies remain compiled per exact release.
-Equal tool names do not imply compatible schemas or response envelopes.
-
-G7 is complete: engines and Studio locate bundled resources through `BundleLayout`
-and known install/development outputs, using `manifest/package-manifest.json` as
-the root marker. Complete bundles work outside the repository; existing caller
-probes remain compatibility fallbacks until 4.0. The V21 ecosystem catalog is
-embedded directly in both full engines. See [runtime layout](runtime-layout.md)
-for resource-specific overrides, engine/bridge/adapter paths and validation limits.
-G7 no longer blocks directory reorganization, which still waits until after phase 4.
-
-`GetToolUsage` is the single [tool and programming example library](official-tool-usage.md).
-It supplies actual schemas, operation-specific calls, input origins, expected
-results, language files and call sequences. Edit `reference/tool-examples` and
-regenerate its embedded data together; do not create separate issue-specific
-guide systems. The existing `GetRecipe` and `GetAuthoringGuide` compatibility
-entries read the same library.
-
-GitHub integrations retain their pinned source and licenses. Current reusable
-components and provenance are documented in [the ecosystem reference](../reference/ecosystem-tools.md)
-and `NOTICE.md`. New upstream code needs an actual integration point, compatible
-licensing and evidence for the selected API; another project's version label
-does not supply compatibility evidence.
-
-## Remaining work
-
-Prioritize real-project import/generation/readback/compile/explicit-save acceptance
-for each release and both Studio VCI families. Foundation source import and
-block-generation routes now have implementations; five names remain from the
-historical 62-tool migration ledger. They are a subset of the broader API gaps,
-not a total missing-tool count. The [roadmap](roadmap.md) names the remaining work.
-
-Preserve these unresolved observations in [Openness limitations](../troubleshooting/openness-limitations.md):
-
-- The reported `p2051[0]` BICO read crash has not received native reacceptance;
-  the simplified read path does not establish its root cause.
-- The Unified library script rename crash remains an unresolved native incident.
-- Native PLC cross-reference remains restricted; neither offline evidence nor
-  process isolation establishes that the unsafe native path is fixed.
-
-Other shared XML builders still emit V21 candidates where their examples say so;
-only the current UDT/GlobalDB declaration builders select all eight formats.
-Foundation binding snapshots remain a separate, unwired lifecycle integration
-boundary. Do not describe PID-only attachment as verified process-start identity.
+- Native acceptance for the 4.0 candidate remains pending; consult the ledger before
+  claiming a release or behavior family has passed.
+- PLC native cross-reference remains restricted. The reported `p2051[0]` BICO read
+  crash and Unified library script rename crash remain unresolved native observations.
+- Other shared offline builders still emit V21 candidate XML where their examples
+  say so. Only UDT and GlobalDB declaration builders target all eight formats.
+- Foundation binding-snapshot lifecycle integration remains separate from its
+  current process/project identity checks.
 
 ## Build and release
 
-After engine or test changes, run the full build with the authorized V20/V21
-PublicAPI directories, then build/test every other target:
+After engine or test changes, use the authorized PublicAPI directories and run:
 
 ```powershell
 pwsh -NoProfile -File ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-The command runs the full build unless `-SkipFullEngines` follows a fresh full
-build. Set `TIA_MCP_TEST_PUBLIC_API_ROOT` to include the eight official interface
-XSD checks. Do not edit compiler inputs during a build. Use [validation](validation.md)
-for check scope and [the release workflow](release-workflow.md) for public delivery.
-The public pipeline verifies source/runtime hashes and ships all eight runtimes.
-
-Stage explicit paths; do not use `git add -A`. Preserve user handoff/design files,
-local SDKs and engineering projects. Keep binaries and private evidence out of Git.
-No AI attribution is added to commits. A build is not authorization for a live TIA
-or PLC operation; live testing needs an explicit current target and scope.
-
-## Documentation maintenance
-
-Keep current behavior here and in the linked reference pages. Old candidate notes,
-local checkpoints, machine addresses/PIDs and duplicate handoff histories have
-been removed; Git history preserves their original evidence. Machine-readable
-SDK audits and migration ledgers remain available, with historical labels kept
-separate from the current build manifests. Never reuse an old machine identity
-or earlier test authorization as a current target.
+Use [validation](validation.md) for the checks required by the changed paths and
+[the release workflow](release-workflow.md) for package creation. Do not edit
+generated manifest hashes by hand. A build does not authorize live TIA, PLC, VM,
+or network access.

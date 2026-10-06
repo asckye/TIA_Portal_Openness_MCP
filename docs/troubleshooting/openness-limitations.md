@@ -20,12 +20,12 @@ PLC 交叉引用的显式诊断开关为服务进程环境变量 `TIA_MCP_ENABLE
 | 通道 | 当前可以做什么 | 前提与限制 |
 |---|---|---|
 | TIA Openness | 工程对象读写、导入导出、编译；完整引擎还有上线/离线、下载、站上载和在线比较等指定接口。 | 取决于版本、对象、安装选件与原生 API。工程标签或 DB 初始值不是 CPU 实时值。 |
-| S7 Web server API | 完整引擎的 `ReadPlcWebVars` / `WritePlcWebVars`、`ReadPlcWebDiagnostics`、`SetPlcWebOperatingMode`。 | PLC 固件及 Web API 支持、账户权限和证书；独立于 Openness。诊断工具的设备信息和运行模式不等于完整故障缓冲区。 |
+| S7 Web server API | 完整引擎的 `GetPlcWebVars` / `WritePlcWebVars`、`GetPlcWebDiagnostics`、`SetPlcWebOperatingMode`。 | PLC 固件及 Web API 支持、账户权限和证书；独立于 Openness。诊断工具的设备信息和运行模式不等于完整故障缓冲区。 |
 | Unified Open Pipe | 完整引擎读取/写入 Runtime 标签、读取活动报警及限定的单次消息。 | MCP 运行在 Runtime 本机，用户具备对应组权限；不提供任意远程管道或持续订阅。 |
 | PLCSIM Advanced API | 完整引擎管理仿真实例、读写标签并运行限定场景。 | 本机安装匹配 API；仿真通过不等于真实 CPU 验收。 |
 | 其他运行时/伴随工具 | 按各工具声明的 OPC UA、S7 或独立程序接口执行。 | 分别检查连接目标和实际协议，不能因 Openness 已连接就视为这些通道已就绪。 |
 
-基础宿主只提供其公开的 PLC 子集，不因完整引擎存在某个运行时工具而自动具备该工具。完整引擎中部分选件入口仅在一个版本有实际调用路径，详情见[专用工具范围](../reference/v20-v21-audit-tools.md)。
+基础宿主只提供其公开的 PLC 子集，不因完整引擎存在某个运行时工具而自动具备该工具。完整引擎中部分选件入口仅在一个版本有实际调用路径，详情见[逐版 Openness 覆盖](../reference/openness-coverage.md#v20v21-optional-tools-and-scope)。
 
 ## 当前没有可承诺的 Openness 路线
 

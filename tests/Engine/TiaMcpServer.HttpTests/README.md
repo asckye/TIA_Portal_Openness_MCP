@@ -41,7 +41,7 @@ builder runs this mode for both V20 and V21. It does not connect to TIA.
 
 `global-script-only <PublicAPI-directory>` checks the actual EXE's directory/file
 argument conversion, write gates, exact indexed Scripts lookup and registration
-of `UpdateUnifiedGlobalScript` with preview defaults. The V21 build additionally
+of `SetUnifiedGlobalScript` with preview defaults. The V21 build additionally
 checks the real Siemens DLL's native Import/Export signatures. The V20 build's
 bridge checks do not establish native Unified script support. No native import
 or live TIA connection is performed by this harness.
@@ -133,28 +133,12 @@ deliberately fails with “Baseline unexpectedly passed” on a fixed engine.
 `stdin-hex-fixture` are child-process fixtures used by the corresponding tests,
 not standalone finite test suites.
 
-P6-07d also maps PLC preview/confirmation and singleton-ownership checks to the
-registered V4 names below. Native service-member checks keep their CLR names;
-no Siemens signature or call-path assertion is removed.
-
-| Previous tool name | Registered V4 name |
-| --- | --- |
-| `GetBlockInfo` | `GetPlcBlockInfo` |
-| `GetBlocks` | `ListPlcBlocks` |
-| `GetBlocksWithHierarchy` | `GetPlcBlockHierarchy` |
-| `ExportBlock` / `ImportBlock` | `ExportPlcBlock` / `ImportPlcBlock` |
-| `ImportBlocksFromDirectory` | `ImportPlcBlocksFromDirectory` |
-| `CompileAndDiagnosePlc` | `CompilePlcDiagnostics` |
-| `RepairAndReimportBlock` | `RepairAndReimportPlcBlock` |
-| `ExportBlocks` | `ExportPlcBlocks` |
-| `DescribeBlockLogic` | `DescribePlcBlockLogic` |
-| `UpdatePlcProgram` | `SetPlcProgram` |
-| `ReadPlcBlockFingerprints` | `GetPlcBlockFingerprints` |
-| `ReadPlcBlockEditCapabilities` | `GetPlcBlockEditCapabilities` |
-| `MoveBlockToGroup` | `MovePlcBlockToGroup` |
-| `ReadDeviceAddressing` / `UpdateDeviceAddress` | `GetDeviceAddressing` / `SetDeviceAddress` |
-| `DumpDeviceAttributes` | `GetDeviceAttributes` |
-
-The last three hardware mappings extend the existing service/tool ownership and
-IL-call checks. Typed-parameter checks already present in these modes remain
-unchanged; no remaining failure required a parameter conversion.
+P6-07d covers the registered V4 PLC routes for preview/confirmation,
+singleton ownership, and typed input validation. Native service-member checks keep
+their CLR names; no Siemens signature or call-path assertion is removed. The
+coverage includes `GetPlcBlockInfo`, `ListPlcBlocks`, `GetPlcBlockHierarchy`,
+`ExportPlcBlock`, `ImportPlcBlock`, `ImportPlcBlocksFromDirectory`,
+`CompilePlcDiagnostics`, `RepairAndReimportPlcBlock`, `ExportPlcBlocks`,
+`DescribePlcBlockLogic`, `SetPlcProgram`, `GetPlcBlockFingerprints`,
+`GetPlcBlockEditCapabilities`, `MovePlcBlockToGroup`, `GetDeviceAddressing`,
+`SetDeviceAddress`, and `GetDeviceAttributes`.

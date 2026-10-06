@@ -118,10 +118,20 @@ def check(root, no_binaries=False, package_mode=False):
         text = source.read_text(encoding='utf-8-sig')
         # Ignore code fences: examples can contain placeholder Markdown.
         text = re.sub(r'^```[^\n]*\n.*?^```\s*$', '', text, flags=re.M | re.S)
+        relative = source.relative_to(root).as_posix()
+        shipped = not package_mode and layout.delivered(relative, rules)
         for match in re.finditer(r'\]\((<[^>]+>|[^\s)]+)(?:\s+"[^"]*")?\)', text):
             error = local_target(root, source, match[1])
             if error:
-                errors.append(f'{source.relative_to(root).as_posix()}: {error}')
+                errors.append(f'{relative}: {error}')
+            elif shipped:
+                # A document in the runtime-only delivery may only link to files that ship with it; anything else
+                # needs an absolute GitHub link (the package check would otherwise fail only at release time).
+                target = unquote(match[1].strip('<>').split('#', 1)[0])
+                if target and not re.match(r'^[\w+.-]+:', target):
+                    linked = (source.parent / target).resolve().relative_to(root.resolve()).as_posix()
+                    if not layout.delivery_resource(linked, rules):
+                        errors.append(f'{relative}: shipped document links outside the delivery: {target}')
     def read(name):
         return json.loads((root / name).read_text(encoding='utf-8-sig'))
     def required(name, label):

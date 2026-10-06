@@ -1,88 +1,46 @@
 # 路线图与待办（v3.3.0）
 
-[当前交接](handoff.md) · [功能缺口](../reference/openness-coverage.md) · [版本工具矩阵](../reference/version-tools.md) · [重构计划](refactor-plan.md)
+[当前交接](handoff.md) · [Openness 覆盖](../reference/openness-coverage.md) ·
+[版本工具矩阵](../reference/version-tools.md) · [重构计划](refactor-plan.md)
 
-八个版本的 MCP、配置器与直接调用 Openness 的 Studio 已完成当前构建与离线功能检查。
-后续工作按实际工程流程和精确版本推进，不再用历史工具数量或 API 词法引用率表示完成度。
+最新已发布版本为 v3.3.0。4.0 的契约硬切换、工具迁移、工作台审批与审计功能以及产品布局调整已在当前源码实现：
+阶段 6 的 P6-01～P6-41、P6-44～P6-48 已合并，P6-42 发布候选验证和 P6-43 发布说明进行中。4.0 的真机验收尚未进行。
 
-## 优先完成真实工程验收
+## 发布候选工作
 
-| 工作 | 完成条件 |
+| 工作 | 当前状态 |
 |---|---|
-| V14 SP1、V15.1、V16–V21 的 PLC 导入/导出 | 在对应版本测试工程中核对实际对象、声明、内容、覆盖行为和错误后的工程状态 |
-| 外部源导入与生成 | 核对源名称、编码、生成对象、返回值差异及同名对象行为；随后编译和读回 |
-| 编译与保存 | 确认目标 PLC、全部可观察的工程离线状态、嵌套错误/警告；保存后重新打开核对 |
-| Studio 的八版本工作流 | 连接、打开、选择 PLC、导入/导出、编译、显式保存；中文/英文使用同一 ViewModel 与命令 |
-| VCI | V16–V19 旧接口与 V20/V21 新接口分别验证映射、状态、导入/导出和差异；V14 SP1/V15.1 不提供 VCI |
-| 原生会话与故障恢复 | 按独立生命周期及生产 MCP 会话流程验证；结果未知时检查实际工程，不自动重放写入 |
+| P6-42：八版构建、离线套件、重定位、交付包校验和台账复核 | 进行中；记录实际纳入与延期的行为族 |
+| P6-43：4.0 发布说明 | 进行中；给出旧→新工具名/参数与产品入口对照、V4 契约、安全政策、目录变化和已验收证据 |
+| 真机验收 | 待进行。逐版基线/候选结果记入真机台账，离线和静态检查不能代替 |
 
-以上新增原生验收均为 **NOT RUN**。编译、模拟对象、HTTP/STDIO 和示例检索通过，只证明各自所测层。
-已有 BICO、Unified 库脚本改名及交叉引用问题见[限制说明](../troubleshooting/openness-limitations.md)，
-修复判断需要对应调用的实际复测。
+MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认开启审批：写调用派发前须在工作台批准；拒绝、超时或工作台未连接都在原生调用前拒绝。
+审计记录保存在所配置的数据根目录。
 
-## 补齐功能与格式
+## 仍需处理的工程边界
 
-当前[功能矩阵](../../reference/version-feature-matrix.json)核对 29 个工作流/工具族和八个版本。
-它区分 implemented、partial、pending、unavailable 和 unverified；232 个单元格是审计范围，
-不是全部 Siemens API 的覆盖率。
+- 拟纳入发布的每个行为族，须完成对应版本的原生验收；没有验收证据的族保持 `current / NOT RUN`。
+- 保留已知 Openness 观察结论：`p2051[0]` BICO 读取崩溃和 Unified 库脚本改名崩溃尚未解决；PLC 原生交叉引用仍受限。
+  见 [Openness 限制](../troubleshooting/openness-limitations.md)。
+- 其他共享离线构建器在文档说明处仍输出 V21 候选 XML；改扩展名或版本标记不会转换格式。
+- Foundation 绑定快照仍是生命周期集成边界；不得把仅凭 PID 的附着描述为已验证的进程启动身份。
+- 八版能力复核保持在[功能矩阵](../reference/openness-coverage.md)与
+  [机器可读功能证据](../../reference/version-feature-matrix.json)中更新。
+- 未打开工程时调用 `SaveProject` 目前返回 `OUTCOME_UNKNOWN` 并要求重置会话，但原生保存并未执行；应改为操作前拒绝
+  （`PRECONDITION_FAILED` / `rejected-before-operation`）。
 
-1. 历史 62 工具迁移仍缺 `EnsureOpennessUserGroup`、`PlcBuildAndImport`、
-   `ImportTechnologyObject`、`ImportTechnologyObjectsFromDirectory`、`SeedProjectFromReference`。
-   先确认是否需要独立工具，再按版本 API、现有工具组合及实际使用范围补齐。
-2. 扩大监控表、工艺对象、软件单元等流程前，先补齐各版本的可执行路径与返回契约。
-   API 签名存在不等于当前工具已开放，也不等于目标设备支持。
-3. UDT/GlobalDB 声明已可选择八种输出版本；其余 XML 构造器仍有 V21 格式限制。
-   后续应逐格式加入官方 XSD、完整文件及实际导入验证，不能只改版本头。
-4. Foundation 的普通工程流程已实现；LocalSession、多用户锁/提交、受保护工程认证等
-   仍有独立范围限制。绑定快照的生命周期接线尚未完成，见[版本框架](unified-version-framework.md)。
-5. 所有新增工具、动作和编程语言示例进入同一 `GetToolUsage` 数据源，并检查实际检索结果。
-6. 两处仍按 Siemens 原生报错文字选择后续调用，需在真机上取得可区分的原生错误类型后替换：SiVArc 生成在报错含
-   `PLC device` 时改用所属设备名再生成一次（`SivarcService`）；PLCSIM Advanced 读取在报错含 not found / does not exist
-   时刷新变量表后重读一次（`PlcSimAdvancedChannel.ReadWithRefresh`），且可能误匹配本程序自己的 `Read returned null`
-   文本。自动下线（`WithAutoOffline`）按 D1 下载族在 P6-34 处理。
+## 3.3 时期遗留的改进
 
-## 发布流程改造（已完成）
+- 缺少 .NET Framework 4.8 时，启动前给出中文提示。
+- 桥接进程的 stderr 诊断按控制台代码页（GBK）写出却按 UTF-8 读取，工作台日志中的中文会乱码。
+- 新 worker 首次附着超时时，TIA 通常在等待 Openness 访问确认（“全部选是”）；超时消息与工作台日志应提示这一点，
+  而不只是“Worker timed out; native outcome is unknown.”。
 
-3.3.0 之后不再单独发布 3.3.x；以下改进与原 3.3.1 内容并入 4.0。发布流程改造已在 master 完成，冻结的阶段 4/6 分支已合并；接下来先整理目录，再进入阶段 6。
+## 维护
 
-| 工作 | 完成条件 |
-|---|---|
-| 只含运行文件的交付包 | ZIP 只含启动器、`runtime/`、运行时读取的资源、用户文档与许可证；发布校验按筛选后的标签树核对；更新器清理旧完整包遗留的开发文件，保留 `data\` |
-| 先跑廉价门禁 | 版本、文档链接、CHANGELOG、包结构等检查在任何构建之前完成，失败立即停止 |
-| 跳过未变部分 | 引擎源码与运行文件哈希和上次通过的记录一致时复用该结果，不重跑同一构建与测试 |
-| V20/V21 并行 | 两版流水线并行执行，先确认端口与临时目录不冲突；稳定性门禁轮数不减 |
-| 发布前 CI 不再变红 | CHANGELOG 先于发布提交写入下一版本时，常规校验不判失败；发布模式仍要求完全一致 |
-| 发布专用检查纳入日常 | 仅在发布时运行的检查进入常规验证或 CI，避免最后一步才暴露 |
-| 发布机前置条件检查 | 开始前核对 Python 环境、SDK、PublicAPI、令牌与工作区状态，并给出“发布预演”结果 |
+工具参数、语言示例、结果解读和调用顺序统一维护在 `reference/tool-examples`，由生成的 `GetToolUsage` 目录提供；
+提出调用前先读取所连接版本的 schema。原来的配方功能改用 `GetToolUsage` 的 `exampleKind: "sequence"` 或
+`exampleId: "sequence/<topic>"`；编写指南类主题使用其 language、query 和示例选择器。
 
-## 并入 4.0 的 3.3.x 改进
-
-- 软件自有文件位于可写的 `<bundle>\data`（日志、绑定记录、配置、界面设置、报告、临时文件），只读安装回退到原位置；已在 master。
-- 首次连接新构建时，若 TIA 等待 Openness 访问确认，超时提示应说明需要在 TIA 中确认。
-- 调用日志保留时长：插桩日志几分钟即超过 10 MB 且只保留一份 `.previous`，需加大上限或保留多份并说明时间窗口（P6-46）。
-- 缺少 .NET Framework 4.8 时，启动前给出中文提示；已在 master。
-- Studio 桥接进程标准错误输出的中文乱码（GBK 与 UTF-8）；已在 master。
-- 目录整理：按 [4.0 目录整理方案](layout-proposal-4.0.md) 在阶段 6 代码工作前单独完成（冻结分支已全部合并）。
-- 工作台与 MCP 深度融合：写操作在工作台审批、AI 调用面板（含复制连接信息）、哈希链审计日志、环境体检，见[阶段 6 规范第 8 节](phase6-review.md#8-工作台与-mcp-融合2026-10-05-增补)（P6-44～47）。
-- 梯形图出图与程序图册：不开博途，把导出的块画成梯形图网页并生成整机图册，八版可用（P6-48）。
-
-## 复用与去重原则
-
-MCP 与 Studio 共享不依赖 Siemens 版本的算法、路径/环境信息和诊断基础设施；
-Studio 保持直接 Openness 调用。各版本的原生入口、会话所有权、线程与数据契约不能仅因名称相同合并。
-
-已有上游代码和授权记录见[生态参考](../reference/ecosystem-tools.md)与第三方许可证。
-评估新项目时先对照现有实现，复用真正缺少且许可兼容的组件，避免再维护同功能的第二套工具。
-
-## 待修工具描述
-
-完整引擎 `CreateVersionControlWorkspace` 与 `GetVersionControlWorkspaces` 的编译
-Description 仍写 “Requires TIA V21+”，RequireVci 缺服务错误也写 V21 起步；但当前 V20/V21 工具目录和实现均有相应 VCI 路线。
-现行使用指南已按实际版本说明。后续应核对两版真实 SDK 的具体工作区操作后修正源代码 Description 和对应错误文本，
-重新完成完整构建并生成工具清单/能力矩阵；本次文档清理不手改生成文件或已发布二进制。
-此项是工具提示的版本文案问题，不代表已经完成 V20/V21 原生 VCI 往返验收。
-
-## 维护方式
-
-当前待办留在本页；已完成的版本历史写入 CHANGELOG 和发布说明。构建结果以生成的 manifest 为准，
-不再另建日期检查点、旧机器交接或重复的逐候选验收页。官方示例、来源证据和机器审计记录继续保留。
+发布历史记在 CHANGELOG 和各版本发布说明中；API 成员覆盖和逐版功能缺口记在 [Openness 覆盖](../reference/openness-coverage.md)。
+不要从 API 签名、工具名称、相邻版本、离线测试或构建结果推断支持情况。

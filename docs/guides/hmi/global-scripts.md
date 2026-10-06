@@ -5,9 +5,9 @@
 ## 读取与修改现有模块
 
 1. 用 `ListUnifiedGlobalScripts` 找到实际模块名称。
-2. 读取 `GetToolUsage(toolName="ReadUnifiedGlobalScript")`，取得完整 `.hmi.js`、`.hmi.yml` 及导出信息；有分页时续读到完成。
+2. 读取 `GetToolUsage(toolName="GetUnifiedGlobalScript")`，取得完整 `.hmi.js`、`.hmi.yml` 及导出信息；有分页时续读到完成。
 3. 读取 `GetToolUsage(exampleId="unified-update-existing-module")`。修改完整 JS 正文并保留仍需使用的定义和依赖。
-4. 用 `UpdateUnifiedGlobalScript` 提供实际 `softwarePath`、`expectedProject`、`moduleName` 和完整 `scriptCode`，先预览。
+4. 用 `SetUnifiedGlobalScript` 提供实际 `softwarePath`、`expectedProject`、`moduleName` 和完整 `scriptCode`，先预览。
 5. 检查前后正文，将预览返回的 `token` 作为执行调用的 `expectedToken`，其余目标及内容保持相同，设置 `dryRun=false`。
 6. 检查 `operationSuccess`、`verificationSuccess` 和最终状态。`Verified` 或 `Unchanged` 才能说明目标正文与请求一致。
 

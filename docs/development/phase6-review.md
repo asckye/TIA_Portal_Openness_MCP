@@ -1909,7 +1909,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 文件 | 类别:全部命中行 | 实施方式 |
 |---|---|---|
-| [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 退役根变量:52 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
+| [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 退役根变量:54 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
 | [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:77 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 退役产品名:48 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 退役产品名:24,76 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |

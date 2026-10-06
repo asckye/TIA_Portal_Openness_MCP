@@ -2,7 +2,10 @@
 
 `GetToolUsage` is the single example library for every registered tool in all eight
 release profiles. It returns the actual schema, operations, input origins, return
-contract and examples. Foundation and full-engine contracts remain independent.
+contract and examples. Supply arguments as a typed JSON object matching the selected
+tool's `inputSchema`; do not wrap it in a JSON string. Migrated calls return the V4
+`schemaVersion` / `ok` / `data` / `error` / `meta` envelope. Foundation and full-engine business data
+remain release-specific.
 
 ```json
 {"name":"GetToolUsage","arguments":{"toolName":"ManagePlcDocuments","operation":"import"}}
@@ -14,7 +17,7 @@ contract and examples. Foundation and full-engine contracts remain independent.
 An empty call lists tools, languages, examples and reference documents. `query`
 searches official text; `documentId`, `offset` and `limit` read complete source in
 pages. Tool and document indexes have separate continuation offsets. When a large
-response returns an export ID, assemble its `GetExport` pages before parsing JSON.
+response returns an export ID, assemble its `GetExportContent` pages before parsing JSON.
 
 ## Contents
 
@@ -25,19 +28,18 @@ response returns an export ID, assemble its `GetExport` pages before parsing JSO
   sample names and paths must also be resolved against the intended project.
   Optional input examples remain visible in `parameterSources`. The inline examples
   in discovery and errors now read the same data.
-- Full-engine return fields come from its actual return type. Result interpretation
-  and expected outcomes use the same library. Foundation envelopes have separate
-  field/interpretation records, including PascalCase raw results and preview versus
-  executed compilation. Existing version policy supplies operation variants
-  for different service families or object kinds; the selected target, license,
-  firmware and installed update still determine native support.
+- All migrated direct calls, `CallTool` calls and batch entries use the same V4
+  envelope shape. `GetToolUsage` records the profile-specific business fields inside
+  `data`; operation variants still depend on the selected target, license, firmware
+  and installed update.
 - Programming examples include source files, encoding, release/update requirements,
   references and corrections. Complete sources, fragments and exported-module edits
   are distinguished. Existing templates are referenced instead of copied.
-- Call sequences include ordered requests and expected results. `GetRecipe` reads
-  these same records. `GetAuthoringGuide` resolves to this library, preserving its
-  legacy topics. Initialization and Bootstrap point to examples without repeating
-  mandatory guide/preflight workflows. Actual tool validation remains unchanged.
+- Call sequences include ordered requests and expected results. The former recipe
+  listing behavior is `GetToolUsage` with `exampleKind: "sequence"`; selecting one
+  uses `exampleId: "sequence/<topic>"`. Former authoring-guide topics use the
+  matching `language`, `query`, or `exampleId` selector. `InitializeEnvironment`
+  points to examples without requiring a separate guide or preflight call.
 
 Languages/formats: external SCL, SIMATIC SD SCL, LAD, FBD, mixed networks, DB, UDT,
 multilingual S7RES, STL, GRAPH text fragments, Unified JavaScript and Classic VBS.

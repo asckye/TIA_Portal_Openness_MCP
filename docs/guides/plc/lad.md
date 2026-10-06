@@ -6,9 +6,9 @@
 
 | 场景 | 路径 |
 |---|---|
-| 导入同版本 TIA 导出的程序块 | 使用该引擎的 `ImportBlock` 示例导入 SimaticML XML |
-| 编写通用触点、线圈、沿和混合网络 | V21 的 SIMATIC SD 文档例子；按 `ImportFromDocuments` 示例导入 |
-| 用 XML 组装一个或多个 FC 调用网络 | `BuildFlgNetCallXml` / `ComposePlcLadFcBlockXml`；输出为 V21 候选 XML |
+| 导入同版本 TIA 导出的程序块 | 使用该引擎的 `ImportPlcBlock` 示例导入 SimaticML XML |
+| 编写通用触点、线圈、沿和混合网络 | V21 的 SIMATIC SD 文档例子；按 `ImportPlcBlockDocuments` 示例导入 |
+| 用 XML 组装一个或多个 FC 调用网络 | `BuildFlgNetCall` / `BuildPlcLadFcBlock`；输出为 V21 候选 XML |
 
 LAD XML builder 只生成 FC 调用网络，不生成任意触点、线圈、比较或算术网络。V20 的 SIMATIC SD 使用还取决于对应安装/更新；本包这些完整文档示例限定 V21。V14 SP1–V19 基础目录没有完整引擎的文档导入入口。
 

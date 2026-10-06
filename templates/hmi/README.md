@@ -1,8 +1,8 @@
 # WinCC Unified 画面模板库
 
-本目录提供可直接交给 `ApplyUnifiedHmiScreenDesignJson` 的 WinCC Unified `designJson` 模板。模板采用通用工业界面结构：顶栏、导航、卡片、状态灯、参数输入、趋势占位、事件列表和诊断表。
+本目录提供可直接交给 `ApplyUnifiedHmiScreenDesign` 的 WinCC Unified `designJson` 模板。模板采用通用工业界面结构：顶栏、导航、卡片、状态灯、参数输入、趋势占位、事件列表和诊断表。
 
-先用当前版本的 `GetToolUsage` 核对 `ApplyUnifiedHmiScreenDesignJson` 及相关动作。此工作流属于完整引擎；基础宿主没有这些 HMI 工具。模板尺寸、控件类型、事件和绑定必须与目标 Unified 设备及版本相符，八版选择器不代表模板已在八版验收。
+先用当前版本的 `GetToolUsage` 核对 `ApplyUnifiedHmiScreenDesign` 及相关动作。此工作流属于完整引擎；基础宿主没有这些 HMI 工具。模板尺寸、控件类型、事件和绑定必须与目标 Unified 设备及版本相符，八版选择器不代表模板已在八版验收。
 
 ## 视觉与参考素材
 
@@ -26,7 +26,7 @@
 2. `EnsureUnifiedHmiTagTable`
 3. `EnsureUnifiedHmiTag`
 4. `EnsureUnifiedHmiScreen`
-5. `ApplyUnifiedHmiScreenDesignJson`
+5. `ApplyUnifiedHmiScreenDesign`
 6. `BindUnifiedHmiTagDynamization`
 7. `EnsureUnifiedHmiButtonAction`
 8. 检查实际创建对象、绑定和编译诊断，再按需单独保存

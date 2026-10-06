@@ -16,12 +16,12 @@ Terminating the client worker does not cancel or roll back an operation already 
 
 ## Status and recovery
 
-Read the current examples with `GetToolUsage(toolName="ReadOpennessWorkerStatus")` and `GetToolUsage(toolName="RestartOpennessWorker")`.
+Read the current examples with `GetToolUsage(toolName="GetOpennessWorkerStatus")` and `GetToolUsage(toolName="RestartOpennessWorker")`.
 
 | Tool | Use |
 |---|---|
-| `ReadOpennessWorkerStatus` | Read worker state, PID, active calls and last fault without starting it |
-| `ReadNativeInvocationLog` | Read bounded invocation diagnostics from the host |
+| `GetOpennessWorkerStatus` | Read worker state, PID, active calls and last fault without starting it |
+| `GetNativeInvocationLog` | Read bounded invocation diagnostics from the host |
 | `RestartOpennessWorker` | Preview or explicitly reset an idle/faulted worker |
 
 Call host controls directly or via `CallTool`, not inside an engineering batch. After a fault:
@@ -32,7 +32,7 @@ Call host controls directly or via `CallTool`, not inside an engineering batch. 
 4. If an instance lease is marked uncertain after an unclean exit, inspect and save the project as needed, then restart that TIA instance before reconnecting. Do not remove the lease to bypass the state check.
 5. List actual TIA processes and bind the intended PID, start time and full project path using the current connection example. Read back state before continuing.
 
-If isolation is disabled, there is no child to reset. Clear the failed binding through `Disconnect`, or restart the MCP host when that cannot complete, then explicitly bind the correct project. Reopening TIA alone does not clear an old MCP binding.
+If isolation is disabled, there is no child to reset. Clear the failed binding through `DisconnectPortal`, or restart the MCP host when that cannot complete, then explicitly bind the correct project. Reopening TIA alone does not clear an old MCP binding.
 
 Separate MCP processes under the same Windows user reserve an instance for a connection. Use different TIA instances for concurrent engineering sessions. This does not coordinate arbitrary third-party Openness applications or GUI edits.
 

@@ -2,6 +2,8 @@
 
 [文档目录](../README.md) · [当前交接](handoff.md)
 
+仅维护 `master`；旧版本分支记录由 Git 历史保留。
+
 | 路径 | 用途 |
 |---|---|
 | `TiaPortalOpenness.slnx` | 51 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
@@ -81,7 +83,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 | `docs/guides` | PLC/HMI、硬件网络、版本控制与具体工作流 |
 | `docs/reference` | 版本工具矩阵、能力、API 缺口及生态参考 |
 | `docs/troubleshooting` | 错误定位、Openness 限制与诊断 |
-| `docs/development` | 当前架构、交接、验证、发布与路线图；[design-qa.md](design-qa.md) 记录界面设计验收 |
+| `docs/development` | 当前架构、交接、验证、发布与路线图；Studio 工作台行为见 [`src/Studio/README.md`](../../src/Studio/README.md) |
 | `docs/releases`、`docs/archive` | 发布记录及历史资料 |
 | `docs/licenses` | 再分发组件的许可证清单和原文 |
 

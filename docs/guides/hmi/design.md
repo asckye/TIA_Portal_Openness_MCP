@@ -13,7 +13,7 @@
 | 需求 | 工具 |
 |---|---|
 | 创建画面 | `EnsureUnifiedHmiScreen` |
-| 使用简单 JSON 批量创建基础对象 | `ApplyUnifiedHmiScreenDesignJson` |
+| 使用简单 JSON 批量创建基础对象 | `ApplyUnifiedHmiScreenDesign` |
 | 查询其他对象类型和属性 | `DescribeUnifiedScreenItemType` |
 | 创建、读取或修改具体控件 | `ManageUnifiedScreenItem` |
 | 集合或部件 | `ManageUnifiedObjectParts` |

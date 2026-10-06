@@ -1,6 +1,6 @@
 # 重构计划
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [运行时布局与清理](runtime-layout.md) · [工具开发](tool-development.md)
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [运行时布局与清理](runtime-layout.md) · [工具开发](tool-development.md)
 
 本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
 worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
@@ -79,9 +79,9 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
-| P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
+| P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。迁移设计已随 P1-05/P1-06 完成归档；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
 | P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；当时两个 TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
-| P1-07 | 目录整理第一批：设计验收页归入 `docs/development/design-qa.md`；启动器归入 `src/Studio/Launcher`；Glass 资源归入 `src/Studio/Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。G7 解耦已完成，目录重组的 G7 阻塞已解除；整体目录重组仍在阶段 4 完成后进行 | done |
+| P1-07 | 目录整理第一批：设计验收记录曾单独维护，后由 4.0 工作台实现取代；启动器归入 `src/Studio/Launcher`；Glass 资源归入 `src/Studio/Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。G7 解耦及源码目录整理已完成 | done |
 
 ### 阶段 2：公共层（兼容）
 
@@ -111,7 +111,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-11 | 步骤 11 硬件：P3-11a 设备、模块、地址、AML（22 个工具，保留 8 个 CLI 转发）；P3-11b 网络与硬件服务（17 个工具；叠加时发现与 P3-09b 重复迁移的两个 OPC UA 访问控制工具，已从 P3-11b 删除）。步骤 12：P3-12 在线、下载与设备传输（12 个工具）。三者叠加验证：逐方法西门子调用顺序 V21 401、V20 375 一致，同名歧义 11 族另行核对；领域工具 504 项逐字节一致；device-add 124、hardware-catalog 56、foundation 6610、foundation-api 7671；契约与返回快照 0 差异。P3-11c 完成：按文件拆分遗漏的 25 个工具并入已有的 6 个领域服务（领域工具 912 项一致） | done |
 | P3-13 | 步骤 13 PLC 程序：P3-13a 块与组（27 个工具）、P3-13b 类型/文档/外部源/原生交换（29 个）、P3-13c 软件信息/反射/审计/导出缓存/XML 构建（34 个）。叠加验证：逐方法西门子调用顺序 V21 221、V20 220 一致，同名歧义 12 族另行核对；领域工具 464 项逐字节一致；foundation 6610、foundation-api 7671；契约与返回快照 0 差异 | done |
 | P3-14 | 步骤 14 Unified HMI：P3-14a 离线测试覆盖的 21 个 HMI 工具（服务依赖不含西门子类型的窄接口 `IHmiToolSession`，测试替身取代 partial `Portal`）；P3-14b Unified HMI 核心 51 个；P3-14c HMI 交换、描述与变量删除 21 个。叠加验证：逐方法西门子调用顺序 248 个一致，同名歧义 21 族另行核对；领域工具 292 项逐字节一致；契约与返回快照 0 差异 | done |
-| P3-15 | 步骤 15：P3-15a 会话、工程与诊断工具 24 个迁入 `SessionTools`、`ProjectSessionTools`、`DiagnosticsTools`（经 `IEngineeringSession` 访问内核，CLI 保留无属性转发）；`McpServer` 只剩基础设施工具（ToolBridge、Batch、Worker、Doctor、CheckForUpdate）与转发 | done |
+| P3-15 | 步骤 15：P3-15a 会话、工程与诊断工具 24 个迁入 `SessionTools`、`ProjectSessionTools`、`DiagnosticsTools`（经 `IEngineeringSession` 访问内核，CLI 保留无属性转发）；`McpServer` 只剩基础设施工具（ToolBridge、Batch、Worker、GetEnvironmentDiagnostics、CheckProductUpdate）与转发 | done |
 | P3-16 | 步骤 16：P3-16a 运行时通道（S7、OPC UA、Web API、Unified Open Pipe）迁入 `TiaMcp.Runtime`，PLCSIM Advanced 与环境诊断因可反射西门子对象留在织入的引擎，20 个运行时工具迁入实例工具类；P3-16b `Program` 只保留入口，报告、探针、HMI 模板与 PLC/HMI 同步 XML 拆为 `Cli/` 下的具名类（CLI 输出 78 项、生成文件 340 项逐字节一致；未处理异常的堆栈类名变化按 D1 接受）；P3-16c 删除静态会话入口 `McpServer.Portal`、83 个 CLI 转发与 9 个空 partial，CLI 与基础设施改从 `EngineServices` 取实例，内核到服务的定位器转发改为服务注入（领域工具 424 项、CLI 78 项与生成文件 340 项一致）。阶段 3 完成 | done |
 | P3-17 | 源码契约检查改为按成员名定位（`scripts/checks/engine_sources.py`），随迁移失效的检查已修复，纯源码检查接入 CI `source-contracts` 任务 | done |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |

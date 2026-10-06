@@ -37,7 +37,7 @@ The foundation sequence applies to V14 SP1–V19. Full V20/V21 engines use `sequ
 
 ## Apply the example to the user's project
 
-Resolve the intended project and software path with the selected release's connection/state/tree tools. Full engines offer `Bootstrap`; use the foundation host's own schema and examples instead of assuming the same startup sequence.
+Resolve the intended project and software path with the selected release's connection/state/tree tools. Full engines offer `InitializeEnvironment`; use the foundation host's own schema and examples instead of assuming the same startup sequence.
 
 Replace example placeholders with values read from the actual project or supplied by the user. A file path refers to the computer running TIA/MCP; in VM mode this is the VM, not the AI client's host. Engineering object paths are a different kind of value from filesystem paths.
 
@@ -47,7 +47,7 @@ Keep project save, close, compilation and PLC download distinct. Never save or c
 
 ## Programming and output versions
 
-Use complete source examples when a complete file is required; fragments need the declarations/context described by their example. Foundation external-source import currently accepts ASCII. Retrieve the current `BuildPlcUdtXml` or `BuildPlcGlobalDbXml` example to choose `outputReleaseKey` for any of the eight releases; other shared builders still emit V21 candidate XML. An XML version marker alone does not convert a document.
+Use complete source examples when a complete file is required; fragments need the declarations/context described by their example. Foundation external-source import currently accepts ASCII. Retrieve the current `BuildPlcUdt` or `BuildPlcGlobalDb` example to choose `outputReleaseKey` for any of the eight releases; other shared builders still emit V21 candidate XML. An XML version marker alone does not convert a document.
 
 Unified button events and global modules use different operations. Document import, drive parameters, compilation and other families are explained by their own entries in the same example library. Use result interpretation from the selected operation rather than treating every returned object as a scalar or every import as a compile pass.
 

@@ -13,8 +13,8 @@ python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\Tia
 固定流程如下，不能通过参数改为附加用户工程：
 
 1. 启动自有 MCP host/worker，完成 MCP 握手。
-2. `ConnectIsolated` 新建自有无界面 TIA；`CreateProject` 在本次新目录创建随机名称工程。
-3. `GetState` 核对 PID、启动时间、完整工程路径、版本与绑定代次；工程路径必须属于自有目录。
+2. `ConnectIsolatedPortal` 新建自有无界面 TIA；`CreateProject` 在本次新目录创建随机名称工程。
+3. `GetSessionState` 核对 PID、启动时间、完整工程路径、版本与绑定代次；工程路径必须属于自有目录。
 4. 保存、关闭、重新打开该工程，核对工程路径和 PID 不变、绑定代次已更新。
 5. 关闭工程、断开连接，确认不再连接。保留工程及日志供审查。
 

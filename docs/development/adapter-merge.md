@@ -26,7 +26,7 @@
 | 外部源 | 名称宽松匹配（去扩展名）；删除幂等 | 全部 8 版；V14 SP1 生成返回 void | 用 `GenerateSource` 导出；导入时建临时源、生成、删除 | 幂等删除与核实删除 |
 | 编译 | Safety 登录不登出；Unified HMI 向上查找 | 离线检查；Safety 登录并登出 | 软件或其所在设备；无 Safety 处理 | 登出与离线前提不同 |
 | VCI | `VersionControlService.cs` 直接调用新版 API | — | `OpennessVersionControl.cs`：16/17 初版、18/19 旧版、20/21 新版 | V20/V21 新版 API 有两份实现 |
-| 硬件目录/添加设备 | `Portal.Devices.cs`：反射加评分；`AddDeviceWithFallback` 遍历 MLFB×版本列表，多次原生创建 | 仅 19–21：类型化 `Find`，恰好一次 `CreateWithItem`，计划哈希 | — | 同名工具，回退语义相反 |
+| 硬件目录/添加设备 | `Portal.Devices.cs`：反射加评分；旧实现遍历 MLFB×版本列表，多次原生创建 | 仅 19–21：类型化 `Find`，恰好一次 `CreateWithItem`，计划哈希；当前 MCP 工具为 `CreateHardwareDevice` | — | 创建策略和回退语义不同 |
 | 监控表、工艺对象 | 导出、目录导出、按 `Override` 导入更新；监视与映射 | 名称 15.1–21，导出 16–21；读取 8 版（V18 及以前只有根组） | — | |
 
 ### 横向差异
@@ -106,7 +106,7 @@ Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）�
 - 请求上限 1 MiB、worker 输出行上限 16 MiB，均按 UTF-8 字节计（不含 LF）；读取时先限长，再验证 UTF-8 和解析 JSON。缺少换行的末尾、空行、BOM、重复/未知信封字段都拒绝。发送也检查相同上限。
 - 取消发生在分派前时不发送、不消耗 id、不使会话失效。分派后的写入/读取错误、超时、取消或会话错误一律为 Unknown，不重试、不自动重启；进度不延长调用预算。通道释放只关闭自己的管道，不结束 worker 或 TIA 进程。
 
-绑定纪元来自 worker 在每次分派前后读取的 `PlcFoundationEngine.ReadState()` **纯托管缓存**（PID、项目路径、项目所有权、LocalSession 标志）。这些字段改变时纪元加一；成功 Disconnect 后使用终止状态，避免再次调用已终止的适配器。宿主按 Attach/BindProject、非 dryRun 的 Open/Create/Close 预期加一，Disconnect 允许零或一次递增，其余成功调用及已知失败要求不变。每个回复的 before 必须等于宿主保存的纪元，异常变更使会话失效。这不提供外部 TIA 进程启动时间或其他客户端改绑的验证；原有 BindingSnapshot 生命周期接线仍属于后续任务。
+绑定纪元来自 worker 在每次分派前后读取的 `PlcFoundationEngine.ReadState()` **纯托管缓存**（PID、项目路径、项目所有权、LocalSession 标志）。这些字段改变时纪元加一；`DisconnectPortal` 成功后使用终止状态，避免再次调用已终止的适配器。宿主按 Attach/BindProject、非 dryRun 的 Open/Create/Close 预期加一，断开 Portal 会话允许零或一次递增，其余成功调用及已知失败要求不变。每个回复的 before 必须等于宿主保存的纪元，异常变更使会话失效。这不提供外部 TIA 进程启动时间或其他客户端改绑的验证；原有 BindingSnapshot 生命周期接线仍属于后续任务。
 
 信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
 
@@ -197,8 +197,8 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 
 ## 待维护者决定
 
-- **D1 阶段 4 中 G2 的含义**：每个版本一个原生程序集、一套契约和协议，而不是一种行为。同名工具目前行为相反
-  （`AddDeviceWithFallback`、`ImportBlock`/`ExportBlock` 覆盖、打开时升级），统一它们是破坏性变更，放到阶段 6。
+- **D1 阶段 4 中 G2 的含义（由阶段 6 完成）**：每个版本共用原生适配器边界、V4 类型与协议，不把名称相同误当作行为相同。
+  例如 `CreateHardwareDevice`、`ImportPlcBlock` 和 `ExportPlcBlock` 仍按发布键保留其已验证的创建、覆盖与格式差异；未通过原生验收的族保持 `current`。
 - **D2 只维护 master 与 L5 暂缓**：使用构建开关（建议），或阶段 4 期间冻结发布。
 - **D3 线程**：引擎保持 MTA、worker 保持 STA；有 L5 证据后再考虑统一。
 - **D4 worker 框架**：所有 worker 和适配器是否改为 net48？Studio 已对所有版本要求 4.8。改后只需一个 JSON 库（STJ）。

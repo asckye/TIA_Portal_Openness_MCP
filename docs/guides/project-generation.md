@@ -23,7 +23,7 @@
 
 以上 `sequence/...` 均通过 `GetToolUsage(exampleId="...")` 获取。每步使用上一步返回的实际路径，不直接复制示例设备名。
 
-使用 `PlcBuildAndImport` 时，先检查预览生成的文件、分类和目标，再按其执行示例导入；导入结果与编译结果分别检查。外部 SCL 导入、生成块和编译同样是三个阶段。
+使用 `BuildAndImportPlcArtifact` 时，先检查预览生成的文件、分类和目标，再按其执行示例导入；导入结果与编译结果分别检查。外部 SCL 导入、生成块和编译同样是三个阶段。
 
 HMI 外部变量的符号引用和实际地址在 `EnsureUnifiedHmiTag` 的同一次调用中传入。固定 DB200 地址仅适用于对应模板布局。详见[变量绑定](hmi/tag-binding.md)、[连接](hmi/connections.md)和[画面生成](hmi/design.md)。
 

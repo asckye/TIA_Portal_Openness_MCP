@@ -1,10 +1,10 @@
 # 读取和比较图形对象坐标
 
-V20/V21 完整引擎提供 `ReadUnifiedGraphicSelection` 和离线工具 `CompareUnifiedGraphicSelections`。它们读取用户明确选择的对象、比较前后坐标，不移动对象。
+V20/V21 完整引擎提供 `GetUnifiedGraphicSelection` 和离线工具 `CompareUnifiedGraphicSelections`。它们读取用户明确选择的对象、比较前后坐标，不移动对象。
 
 ## 操作步骤
 
-1. 从真实画面获得准确对象名，读取 `GetToolUsage(toolName="ReadUnifiedGraphicSelection")`。
+1. 从真实画面获得准确对象名，读取 `GetToolUsage(toolName="GetUnifiedGraphicSelection")`。
 2. 提供实际工程、HMI、画面路径和 `itemNamesJson`，采集所选对象。
 3. 保持选择范围相同，按 `nextCursor` 续读到 `traversalComplete=true`，保存每页 `Meta`。
 4. 需要比较时，在工程修改后对相同选择范围重新完整采集。

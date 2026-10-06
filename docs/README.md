@@ -13,11 +13,11 @@
 
 当前 4.0 产品入口为根 `TiaOpenness.exe`、V14 SP1–V19 的 `TiaMcp.FoundationHost.exe`，以及 V20/V21 的 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
 
-- [版本范围](reference/version-tools.md) · [全部工具按版本分组](reference/version-tool-catalog.md) · [完整引擎工具矩阵](reference/tool-matrix.md)
-- [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](development/runtime-layout.md)
+- [4.0 源码版本范围](reference/version-tools.md) · [上一版生成的工具目录](reference/version-tool-catalog.md) · [上一版生成的完整引擎矩阵](reference/tool-matrix.md)
+- [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)
 - [统一工具和语言示例](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：`GetToolUsage` 的参数、完整编程文件、调用序列和官方来源。
-- [能力边界](reference/capabilities.md) · [官方 API 审计和功能缺口](reference/openness-coverage.md) · [真实工程验收记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)
-- [已接入生态工具](reference/ecosystem-tools.md) · [V20/V21 补充工具](reference/v20-v21-audit-tools.md)
+- [能力边界](reference/capabilities.md) · [官方 API 覆盖与逐版功能缺口](reference/openness-coverage.md) · [真实工程验收记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)
+- [已接入生态工具](reference/ecosystem-tools.md)
 
 ## 操作专题
 

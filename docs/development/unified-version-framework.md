@@ -93,9 +93,9 @@ unavailable selectors. Known unavailable names remain distinguishable from unkno
 names. Product options, licenses and object-specific support are separate checks.
 
 Foundation filters its registered catalog to its own implemented release routes.
-Its passive `Bootstrap`/`RunCapabilitySelfTest` inspect configuration, registry
+Its passive `InitializeEnvironment`/`RunCapabilitySelfTest` inspect configuration, registry
 shape and operation mappings; they do not probe native readiness or call a worker.
-Cached `GetState` is not proof of a live native connection.
+Cached `GetSessionState` is not proof of a live native connection.
 
 VCI is unavailable in V14 SP1/V15.1; V16–V19 use the legacy workspace mapping API,
 and V20/V21 use the modern mapped-object API. SDK signatures alone do not certify

@@ -1,6 +1,6 @@
 # HMI 快照稳定性诊断
 
-本页说明完整引擎中只读 `ReadHmiScreenSnapshot` 的当前行为。离线与宿主机测试不能证明真实 TIA 工程稳定，也不能把成功返回的有界快照视为完整项目。
+本页说明完整引擎中只读 `GetHmiScreenSnapshot` 的当前行为。离线与宿主机测试不能证明真实 TIA 工程稳定，也不能把成功返回的有界快照视为完整项目。
 
 ## 当前读取行为
 
@@ -12,7 +12,7 @@
 
 两份真实 V21 响应都在 `HmiSystemDiagnosisControl.ScriptDiagnosisOverviewText` 属性处出现没有详细消息的异常，紧随其后的是该控件的已释放句柄错误。这个顺序是排查线索，不是 Portal 退出根因的证明。
 
-现在对该属性返回 `Quarantined`、`readAttempted=false`，不调用 getter，明确保留数据缺口。`ReadUnifiedScreenBranch` 的属性/属性值读取也不能绕过这一限制。其他诊断控件属性和已读脚本仍可作为部分证据。
+现在对该属性返回 `Quarantined`、`readAttempted=false`，不调用 getter，明确保留数据缺口。`GetUnifiedScreenBranch` 的属性/属性值读取也不能绕过这一限制。其他诊断控件属性和已读脚本仍可作为部分证据。
 
 [V21 官方系统诊断控件属性说明](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/controls/accessing-system-diagnosis-control-properties)
 
@@ -23,8 +23,8 @@
 - `apiCallSuccess`：本次快照调用是否在连接仍可用的情况下返回。普通单字段失败仍需查看 `readFailureCount`。
 - `dataComplete`：声明的公共属性范围是否读全。深度、节点、时间、字符串限制，字段读取失败或暂缓读取均会使其为 false。不承诺库类型内部内容。
 - `connectionUnavailable`：观察到连接或句柄故障，不等同于已经确认 TIA 进程退出。
-- 故障后 HMI step 工具会返回 `HmiReadSessionBlocked`，不会自行重试、绑定、关闭或释放 Portal。必须先检查日志，再由调用方显式成功执行 `AttachToOpenProject` 才解除阻断。此阻断不是所有 MCP 工具的全局锁。
-- `GetState.Meta.hmiReadHealth` 区分附着状态与 HMI 读取故障。`isConnected=true` 仍只代表持有 Portal 对象，不能作为所有软件句柄有效的证据。
+- 故障后 HMI step 工具会返回 `HmiReadSessionBlocked`，不会自行重试、绑定、关闭或释放 Portal。必须先检查日志，再由调用方显式成功执行 `AttachOpenProject` 才解除阻断。此阻断不是所有 MCP 工具的全局锁。
+- `GetSessionState.Meta.hmiReadHealth` 区分附着状态与 HMI 读取故障。`isConnected=true` 仍只代表持有 Portal 对象，不能作为所有软件句柄有效的证据。
 - 快照本身没有续采游标；`nextCursor=null` 不代表内容完整。正常连接下可根据已报告路径使用只读分支接口补读。故障时停止采集，不能自动换接口继续探测。
 
 ## 本地日志

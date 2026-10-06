@@ -17,7 +17,7 @@ Support requests may be written in English or Chinese.
    - Errors and Openness limits: [docs/troubleshooting/errors.md](../docs/troubleshooting/errors.md), [docs/troubleshooting/openness-limitations.md](../docs/troubleshooting/openness-limitations.md)
    - What is verified on a real machine and what is not: [docs/reference/capabilities.md](../docs/reference/capabilities.md), [docs/reference/real-machine-ledger.md](../docs/reference/real-machine-ledger.md)
 
-3. Inside an AI session, retrieve `GetToolUsage` for the current release, tool and operation. Full engines also offer `Bootstrap`, `Doctor` and `FindTools`; foundation hosts use their own catalog.
+3. Inside an AI session, retrieve `GetToolUsage` for the current release, tool and operation. Full engines also offer `InitializeEnvironment`, `GetEnvironmentDiagnostics` and `FindTools`; foundation hosts use their own catalog.
 
 ## Where to ask
 
