@@ -433,6 +433,10 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。先在当前 worktree 依次构建 Release 的 V20、V21
 （指定对应 `SiemensEngineeringDirectory`），再构建 HttpTests 和 LegacyHost；`--exe` 指向这些新产物：
 
+V20/V21 的 `sdk-only-fixture` response capture 应提供 `--harness`。HttpTests 仅在 `protocol-host` 模式处理测试用 readiness 标记，
+把该 capture 进程设为已就绪；脚本仍创建临时 SDK 安装布局并执行与真实 EXE 相同的工具调用清单。产品默认审批保持开启，
+写操作会在派发前被拒绝。该标记只由测试 harness 读取，不会放宽真实 EXE 的安装或用户组要求；`--packaged-no-tia` 仍验证真实 EXE 的拒绝路径。
+
 ```powershell
 $engine = 'src/Engine'
 $harness = 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'

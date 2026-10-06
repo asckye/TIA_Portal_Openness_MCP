@@ -132,6 +132,8 @@ internal static class HttpStartupNoTiaChecks
                     Check(environment["ready"] is bool ready && !ready
                         && Convert.ToString(environment["recommendedReason"])?.IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
                         "InitializeEnvironment omitted the no-TIA readiness cause: " + Json.Serialize(initializedEnvironment));
+                    Check(Program.HasChinese(Convert.ToString(environment["recommendedFixZh"])),
+                        "InitializeEnvironment omitted its Chinese recommendedFixZh: " + Json.Serialize(initializedEnvironment));
 
                     var diagnostics = Call(prefix, key, nextCallId++, "GetEnvironmentDiagnostics", new { fix = false });
                     var doctor = AsObject(diagnostics["data"]);
@@ -139,10 +141,15 @@ internal static class HttpStartupNoTiaChecks
                     Check(doctor["ready"] is bool diagnosticsReady && !diagnosticsReady
                         && Json.Serialize(checks).IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
                         "GetEnvironmentDiagnostics omitted the no-TIA readiness cause: " + Json.Serialize(diagnostics));
+                    Check(Program.HasChinese(Convert.ToString(doctor["recommendedFixZh"])),
+                        "GetEnvironmentDiagnostics omitted its Chinese recommendedFixZh: " + Json.Serialize(diagnostics));
 
                     var refusal = Call(prefix, key, nextCallId++, "SaveProject");
                     Check(IsReadinessRefusal(refusal),
                         "No-TIA HTTP host did not refuse SaveProject before dispatch: " + Json.Serialize(refusal));
+                    var refusalEnvironment = AsObject(AsObject(refusal["data"])["environment"]);
+                    Check(Program.HasChinese(Convert.ToString(refusalEnvironment["recommendedFixZh"])),
+                        "Readiness refusal omitted its Chinese recommendedFixZh: " + Json.Serialize(refusal));
                     var discovery = Call(prefix, key, nextCallId++, "FindTools", new { query = "BuildPlcUdt", limit = 1 });
                     Check(AsObject(discovery["data"]).ContainsKey("items"), "Packaged HTTP discovery failed without TIA.");
                     var usage = Call(prefix, key, nextCallId++, "GetToolUsage", new { toolName = "BuildPlcUdt" });

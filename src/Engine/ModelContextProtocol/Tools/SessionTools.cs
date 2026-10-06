@@ -21,6 +21,11 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class SessionTools
     {
+        private sealed class BootstrapResponseWithFixZh : ResponseBootstrap
+        {
+            public string? RecommendedFixZh { get; set; }
+        }
+
         private readonly IEngineeringSession _session;
 
         public SessionTools(IEngineeringSession session) => _session = session;
@@ -55,16 +60,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (env.OpennessGroupOk != true)
                     {
                         const string cause = "Current user is not in the required Siemens TIA Openness group.";
-                        const string fix = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
-                        OpennessReadiness.MarkUnavailable(cause, fix, fix, false);
+                        OpennessReadiness.MarkUnavailable(cause, EnvironmentDoctor.OpennessGroupFixEn,
+                            EnvironmentDoctor.OpennessGroupFixZh, false);
                     }
                     else
                     {
                         var check = EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, env.TiaVersionDetected)
                             .FirstOrDefault(item => item.Gating && !item.Ok);
                         if (check != null)
-                            OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? "Run `tia doctor` for repair steps.",
-                                check.FixZh ?? check.FixEn ?? "Run `tia doctor` for repair steps.", true);
+                            OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? EnvironmentDoctor.DefaultFixEn,
+                                check.FixZh ?? EnvironmentDoctor.DefaultFixZh, true);
                         else OpennessReadiness.MarkReady(true);
                     }
                 }
@@ -82,12 +87,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 else if (env.OpennessGroupOk != true)
                 {
                     nextTool = "EnsureOpennessUserGroup";
-                    reason = "Current user is not in 'Siemens TIA Openness' Windows group; add the user to this local group, sign out and back in, then restart the MCP client.";
+                    reason = EnvironmentDoctor.PreferChinese
+                        ? "当前用户尚未加入本机“Siemens TIA Openness”组。请添加该用户，注销并重新登录，然后重启 MCP 客户端。"
+                        : "Current user is not in 'Siemens TIA Openness' Windows group; add the user to this local group, sign out and back in, then restart the MCP client.";
                 }
                 else if (env.TiaVersionInUse == null && env.TiaVersionDetected == null)
                 {
                     nextTool = "(install TIA Portal)";
-                    reason = "No TIA Portal installation detected. Install V18+ and set TiaPortalLocation env var.";
+                    reason = EnvironmentDoctor.PreferChinese
+                        ? "未检测到 TIA Portal。请安装受支持的版本，并设置 TiaPortalLocation 环境变量。"
+                        : "No TIA Portal installation detected. Install V18+ and set TiaPortalLocation env var.";
                 }
                 else if (portalDto.Connected != true)
                 {
@@ -118,11 +127,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 var limits = new[] { "Availability depends on the selected release, target object and installed options; read the selected tool's contract and example evidence." };
                 bool ready = OpennessReadiness.Ready && env.OpennessGroupOk == true
                     && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
+                string? recommendedFixZh = ready ? null
+                    : !OpennessReadiness.Ready ? OpennessReadiness.FixZh ?? EnvironmentDoctor.DefaultFixZh
+                    : env.OpennessGroupOk != true ? EnvironmentDoctor.OpennessGroupFixZh
+                    : "请安装 TIA Portal 和 Openness 组件，并确认 TiaPortalLocation 指向安装目录。";
 
-                return new ResponseBootstrap
+                return new BootstrapResponseWithFixZh
                 {
                     Ready = ready, Environment = env, Portal = portalDto, RecommendedNextTool = nextTool,
-                    RecommendedReason = reason, OperatingRules = rules, KnownLimitations = limits, ToolLayers = layers,
+                    RecommendedReason = reason, RecommendedFixZh = recommendedFixZh,
+                    OperatingRules = rules, KnownLimitations = limits, ToolLayers = layers,
                     SkillFile = "plugin/skill/SKILL.md", ServerVersion = typeof(McpServer).Assembly.GetName().Version?.ToString(),
                     Capabilities = Capability.Snapshot(), Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
                     Meta = ResponseMeta.Basic(DateTime.Now, true)

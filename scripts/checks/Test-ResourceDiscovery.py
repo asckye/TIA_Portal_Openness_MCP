@@ -16,6 +16,7 @@ import urllib.request
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mcp_results import envelope, successful
+from offline_fixtures import fixture_directory
 from tool_usage_checks import check_usage, unwrap_usage
 
 
@@ -34,6 +35,24 @@ def sdk_only_installation(public_api: Path, major: int, temp_root: Path) -> Path
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(public_api, destination)
     return installation
+
+
+def self_test():
+    with fixture_directory("sdk-only-installation-test-") as scratch:
+        root = Path(scratch)
+        public_api = root / "public-api"
+        public_api.mkdir()
+        (public_api / "Siemens.Engineering.dll").write_bytes(b"test assembly")
+        for major in (20, 21):
+            installation = sdk_only_installation(public_api, major, root / f"v{major}")
+            api = installation / "PublicAPI" / f"V{major}"
+            if major == 21:
+                api /= "net48"
+            require((api / "Siemens.Engineering.dll").read_bytes() == b"test assembly",
+                    f"V{major} SDK-only fixture did not copy the public API")
+            require(not list(installation.rglob("*.exe")),
+                    f"V{major} SDK-only fixture unexpectedly contains an executable")
+    print("PASS SDK-only fixture layouts for V20/V21 contain copied API assemblies and no TIA executable")
 
 
 @contextmanager
@@ -257,4 +276,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if sys.argv[1:] == ['--self-test']:
+        self_test()
+    else:
+        main()

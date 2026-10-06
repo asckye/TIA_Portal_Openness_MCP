@@ -42,6 +42,9 @@ internal static class LegacyHostPassiveDiagnostics
         string fix = !installed
             ? $"Install TIA Portal {release.DisplayName} with the Openness option, or set TiaPortalLocation to its installation folder; run `tia doctor` for details."
             : groupOk ? "" : "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+        string fixZh = !installed
+            ? $"请安装 TIA Portal {release.DisplayName} 并选择 Openness 选项，或将 TiaPortalLocation 设置为安装目录；运行 `tia doctor` 查看详情。"
+            : groupOk ? "" : "请将当前 Windows 用户添加到本机“Siemens TIA Openness”组，注销并重新登录，然后重启 MCP 客户端。";
         string next = !installed ? "(install TIA Portal)" : !groupOk ? "EnsureOpennessUserGroup" : "ConnectPortal";
         string reason = ready ? "TIA Portal and Openness group are ready. Call ConnectPortal to connect to a TIA Portal process." : cause + " " + fix;
         var environment = new JsonObject
@@ -51,14 +54,14 @@ internal static class LegacyHostPassiveDiagnostics
             ["installSource"] = installation.Source,
             ["transport"] = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
             ["ready"] = ready, ["cause"] = ready ? null : cause,
-            ["recommendedFix"] = ready ? null : fix, ["recommendedFixZh"] = ready ? null : fix
+            ["recommendedFix"] = ready ? null : fix, ["recommendedFixZh"] = ready ? null : fixZh
         };
         return new JsonObject
         {
             ["ready"] = ready, ["environment"] = environment,
             ["recommendedNextTool"] = next, ["recommendedReason"] = reason,
             ["cause"] = ready ? null : cause, ["recommendedFix"] = ready ? null : fix,
-            ["recommendedFixZh"] = ready ? null : fix
+            ["recommendedFixZh"] = ready ? null : fixZh
         };
     }
 

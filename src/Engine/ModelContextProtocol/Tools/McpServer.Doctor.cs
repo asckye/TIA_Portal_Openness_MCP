@@ -20,6 +20,11 @@ namespace TiaMcpServer.ModelContextProtocol
     // SKILL.md documents it, so the tool must exist in every released build.
     public static partial class McpServer
     {
+        private sealed class DoctorResponseWithFixZh : ResponseDoctor
+        {
+            public string? RecommendedFixZh { get; set; }
+        }
+
         [McpServerTool(Name = "GetEnvironmentDiagnostics"), Description("[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready.")]
         public static Task<CallToolResult> GetEnvironmentDiagnosticsV4(
             [Description("fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.")] bool fix = true)
@@ -38,8 +43,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 //    engine/TIA version match, .NET Framework 4.8, and Windows MOTW blocking.
                 int? inUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion;
                 int? detected = Engineering.DetectTiaMajorVersion();
+                string? firstEnvFixZh = null;
                 foreach (var c in Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, inUse ?? detected))
                 {
+                    if (!c.Ok && firstEnvFixZh == null) firstEnvFixZh = c.FixZh;
                     checks.Add(new DoctorCheck
                     {
                         Name = c.NameEn,
@@ -96,15 +103,15 @@ namespace TiaMcpServer.ModelContextProtocol
                         var source = Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, inUse ?? detected)
                             .FirstOrDefault(check => !check.Ok);
                         var cause = source?.DetailEn ?? failedPrerequisite.Detail ?? "TIA Openness environment is not ready.";
-                        var repair = source?.FixEn ?? failedPrerequisite.Fix ?? "Run `tia doctor` for repair steps.";
+                        var repair = source?.FixEn ?? failedPrerequisite.Fix ?? Runtime.EnvironmentDoctor.DefaultFixEn;
                         Runtime.OpennessReadiness.MarkUnavailable(cause, repair,
-                            source?.FixZh ?? source?.FixEn ?? repair, groupOk);
+                            source?.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh, groupOk);
                     }
                     else if (!groupOk)
                     {
                         const string cause = "Current user is not in the required Siemens TIA Openness group.";
-                        const string repair = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
-                        Runtime.OpennessReadiness.MarkUnavailable(cause, repair, repair, false);
+                        Runtime.OpennessReadiness.MarkUnavailable(cause, Runtime.EnvironmentDoctor.OpennessGroupFixEn,
+                            Runtime.EnvironmentDoctor.OpennessGroupFixZh, false);
                     }
                     else Runtime.OpennessReadiness.MarkReady(true);
                 }
@@ -144,12 +151,18 @@ namespace TiaMcpServer.ModelContextProtocol
                     : ready
                         ? "Environment OK — connect/open a project next."
                         : $"Not ready. Fix: {string.Join("; ", failed)}.";
+                string? recommendedFixZh = ready ? null
+                    : !Runtime.OpennessReadiness.Ready ? Runtime.OpennessReadiness.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh
+                    : !envOk ? firstEnvFixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh
+                    : !groupOk ? Runtime.EnvironmentDoctor.OpennessGroupFixZh
+                    : Runtime.EnvironmentDoctor.DefaultFixZh;
 
-                return new ResponseDoctor
+                return new DoctorResponseWithFixZh
                 {
                     Ready = ready,
                     Checks = checks,
                     RecommendedNextTool = next,
+                    RecommendedFixZh = recommendedFixZh,
                     Summary = summary,
                     Message = summary,
                     Meta = ResponseMeta.Basic(DateTime.Now, true)

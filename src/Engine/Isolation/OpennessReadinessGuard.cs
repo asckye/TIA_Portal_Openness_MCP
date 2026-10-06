@@ -84,7 +84,7 @@ namespace TiaMcpServer.Isolation
                         McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments)));
                 var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
                 var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";
-                var fixZh = OpennessReadiness.FixZh ?? fix;
+                var fixZh = OpennessReadiness.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh;
                 var data = new JsonObject { ["environment"] = new JsonObject {
                     ["ready"] = false, ["cause"] = cause, ["recommendedFix"] = fix, ["recommendedFixZh"] = fixZh } };
                 var error = new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment"));

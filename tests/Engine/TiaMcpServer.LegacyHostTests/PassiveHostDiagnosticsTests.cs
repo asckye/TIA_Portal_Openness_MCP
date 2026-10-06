@@ -49,9 +49,15 @@ internal static class PassiveHostDiagnosticsTests
         var missingInstall = LegacyHostPassiveDiagnostics.Readiness("14sp1", _ => null, () => true);
         check(!missingInstall["ready"]!.GetValue<bool>() && missingInstall["environment"]!["tiaVersionDetected"] == null
             && ((string)missingInstall["recommendedReason"]!).Contains("V14 SP1", StringComparison.Ordinal), "readiness is bound to the exact selected installation release");
+        check(((string)missingInstall["recommendedFixZh"]!).Contains("请", StringComparison.Ordinal)
+            && (string?)missingInstall["environment"]!["recommendedFixZh"] == (string?)missingInstall["recommendedFixZh"],
+            "Foundation missing-install readiness carries Chinese guidance at both levels");
         var missingGroup = LegacyHostPassiveDiagnostics.Readiness("19", _ => @"C:\TIA\Portal V19", () => false);
         check(!missingGroup["ready"]!.GetValue<bool>() && missingGroup["environment"]!["opennessGroupOk"]!.GetValue<bool>() == false
             && ((string)missingGroup["recommendedFix"]!).Contains("Siemens TIA Openness", StringComparison.Ordinal), "readiness reports group-membership fix");
+        check(((string)missingGroup["recommendedFixZh"]!).Contains("请", StringComparison.Ordinal)
+            && ((string)missingGroup["recommendedFixZh"]!) != (string)missingGroup["recommendedFix"]!,
+            "Foundation missing-group readiness keeps Chinese guidance");
         var apiFixtureRoot = Path.Combine(Path.GetTempPath(), "foundation-api-readiness-" + Guid.NewGuid().ToString("N"));
         string api19 = Path.Combine(apiFixtureRoot, "TIA_V19_PublicAPI", "V19");
         string api20 = Path.Combine(apiFixtureRoot, "TIA_V20_PublicAPI", "V20");

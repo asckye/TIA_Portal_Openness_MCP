@@ -225,6 +225,20 @@ namespace TiaMcpServer.Tests
             check(Runtime.EnvironmentDoctor.EngineVersionMatch(20, 20, _ => throw new Exception("must not look up matching engine")).Ok, "doctor accepts matching existing engine");
             check(!Runtime.EnvironmentDoctor.EngineVersionMatch(21, 20, _ => null).Ok, "doctor reports missing V20 sibling");
             check(Runtime.EnvironmentDoctor.EngineVersionMatch(21, 20, _ => "sibling.exe").Ok, "doctor preserves existing V20 sibling discovery");
+            Runtime.OpennessReadiness.MarkUnavailable(
+                "TIA Portal V20 or its Openness API files were not found.",
+                "Install TIA Portal V20 with the Openness option, or set TiaPortalLocation to its installation folder; run `tia doctor` for details.",
+                "Install TIA Portal V20 with the Openness option, or set TiaPortalLocation to its installation folder; run `tia doctor` for details.");
+            check(Runtime.OpennessReadiness.FixZh?.Contains("请安装") == true
+                && Runtime.OpennessReadiness.FixZh?.Contains("Install TIA Portal") == false,
+                "startup readiness normalizes English duplicate repair text to Chinese");
+            Runtime.OpennessReadiness.MarkReady(false);
+            check(Runtime.OpennessReadiness.FixZh?.Contains("请") == true
+                && Runtime.OpennessReadiness.FixZh != Runtime.OpennessReadiness.FixEn,
+                "V20/V21 Openness readiness keeps Chinese group repair guidance");
+            check(Runtime.OpennessReadiness.Guidance(true).Contains(Runtime.OpennessReadiness.FixZh!),
+                "Chinese readiness guidance uses the Chinese repair text");
+            Runtime.OpennessReadiness.MarkReady(true);
         }
     }
 }

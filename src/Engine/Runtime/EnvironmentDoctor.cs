@@ -26,20 +26,32 @@ namespace TiaMcpServer.Runtime
 
         public static void MarkReady(bool membership)
         {
-            lock (Sync) { ready = membership; groupOk = membership; cause = membership ? null : "Current user is not in the required Siemens TIA Openness group.";
-                fixEn = membership ? null : "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
-                fixZh = fixEn; }
+            lock (Sync)
+            {
+                ready = membership;
+                groupOk = membership;
+                cause = membership ? null : "Current user is not in the required Siemens TIA Openness group.";
+                fixEn = membership ? null : EnvironmentDoctor.OpennessGroupFixEn;
+                fixZh = membership ? null : EnvironmentDoctor.OpennessGroupFixZh;
+            }
         }
 
         public static void MarkUnavailable(string reason, string repair, string repairZh, bool? membership = null)
         {
-            lock (Sync) { ready = false; groupOk = membership; cause = reason; fixEn = repair; fixZh = repairZh; }
+            lock (Sync)
+            {
+                ready = false;
+                groupOk = membership;
+                cause = reason;
+                fixEn = repair;
+                fixZh = EnvironmentDoctor.ChineseRepair(reason, repair, repairZh);
+            }
         }
 
         public static string Guidance(bool chinese)
         {
             lock (Sync) return (cause ?? "The TIA Openness environment is not ready.")
-                + " " + (chinese ? fixZh : fixEn);
+                + " " + (chinese ? fixZh ?? EnvironmentDoctor.DefaultFixZh : fixEn ?? EnvironmentDoctor.DefaultFixEn);
         }
     }
 
@@ -56,6 +68,32 @@ namespace TiaMcpServer.Runtime
     /// </summary>
     public static class EnvironmentDoctor
     {
+        public const string OpennessGroupFixEn = "Add the current Windows user to the local 'Siemens TIA Openness' group, sign out and back in, then restart the MCP client.";
+        public const string OpennessGroupFixZh = "请将当前 Windows 用户添加到本机“Siemens TIA Openness”组，注销并重新登录，然后重启 MCP 客户端。";
+        public const string DefaultFixEn = "Run `tia doctor` to inspect the TIA Openness installation and repair steps.";
+        public const string DefaultFixZh = "请运行 `tia doctor` 检查 TIA Openness 安装并查看修复步骤。";
+
+        internal static string ChineseRepair(string reason, string repair, string? repairZh)
+        {
+            if (ContainsChinese(repairZh)) return repairZh!;
+            if (Contains(reason, "Siemens TIA Openness group") || Contains(repair, "Siemens TIA Openness group")
+                || Contains(reason, "group membership"))
+                return OpennessGroupFixZh;
+            if (Contains(repair, "install TIA Portal") || Contains(reason, "TIA Portal") && Contains(reason, "not found"))
+                return "请安装受支持的 TIA Portal 版本并选择 Openness 组件，或将 TiaPortalLocation 设置为安装目录；运行 `tia doctor` 查看详情。";
+            if (Contains(repair, "PublicAPI") || Contains(reason, "assemblies") || Contains(repair, "architecture"))
+                return "请修复与 TIA Portal 版本匹配的 Openness 安装，并确认相应 PublicAPI 文件完整。";
+            if (Contains(repair, "engine") || Contains(repair, "runtime") || Contains(reason, "engine"))
+                return "请使用与已安装 TIA Portal 版本匹配的 TIA MCP 引擎和 Openness API。";
+            return DefaultFixZh;
+        }
+
+        private static bool Contains(string value, string phrase)
+            => value.IndexOf(phrase, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        private static bool ContainsChinese(string? value)
+            => !string.IsNullOrEmpty(value) && value.Any(character => character >= '\u4e00' && character <= '\u9fff');
+
         public sealed class Check
         {
             public string Id = "";

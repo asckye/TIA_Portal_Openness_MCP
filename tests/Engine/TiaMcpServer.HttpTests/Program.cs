@@ -37,6 +37,8 @@ internal static partial class Program
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+    internal static bool HasChinese(string? value) => !String.IsNullOrEmpty(value)
+        && value.Any(character => character >= '\u4e00' && character <= '\u9fff');
     private static Dictionary<string, object> Parse(string value) => Json.Deserialize<Dictionary<string, object>>(value);
     private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
     private static string Reply(object id, object value) => Json.Serialize(new { jsonrpc = "2.0", id, result = value });
@@ -316,7 +318,7 @@ internal static partial class Program
         using(var unauthorized=new TcpClient()) {
             await unauthorized.ConnectAsync("localhost",port);
             var socket=unauthorized.GetStream();
-            var unauthorizedBytes=Encoding.ASCII.GetBytes("GET /mcp HTTP/1.1\r\nHost: localhost:"+port+"\r\nX-API-Key: wrong\r\nConnection: close\r\n\r\n");
+            var unauthorizedBytes=Encoding.ASCII.GetBytes("GET /mcp HTTP/1.1\nHost: localhost:"+port+"\nX-API-Key: wrong\nConnection: close\n\n");
             await socket.WriteAsync(unauthorizedBytes,0,unauthorizedBytes.Length);
             using var unauthorizedReader=new StreamReader(socket);
             var status=await Bounded(unauthorizedReader.ReadLineAsync());
@@ -361,7 +363,7 @@ internal static partial class Program
         await Bounded(read());
         using var incompleteUpload = new TcpClient();
         await incompleteUpload.ConnectAsync("localhost", port);
-        var partialBody = Encoding.ASCII.GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost:"+port+"\r\nX-API-Key: local-test-secret\r\nContent-Length: 100\r\n\r\n{");
+        var partialBody = Encoding.ASCII.GetBytes("POST /mcp HTTP/1.1\nHost: localhost:"+port+"\nX-API-Key: local-test-secret\nContent-Length: 100\n\n{");
         await incompleteUpload.GetStream().WriteAsync(partialBody, 0, partialBody.Length);
         await Task.Delay(50);
         stop.Cancel();
@@ -745,9 +747,14 @@ internal static partial class Program
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;
                 var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;
-                if(args[1] == "protocol-host" && Environment.GetEnvironmentVariable("TIA_MCP_TEST_READINESS_UNAVAILABLE") == "1") {
-                    FindServerType(Server, "TiaMcpServer.Runtime.OpennessReadiness").GetMethod("MarkUnavailable",All)!
-                        .Invoke(null,new object[]{"Test-only Openness readiness refusal.","Test-only repair guidance.","Test-only repair guidance.",null!});
+                if(args[1] == "protocol-host") {
+                    var readiness=FindServerType(Server, "TiaMcpServer.Runtime.OpennessReadiness");
+                    if(Environment.GetEnvironmentVariable("TIA_MCP_TEST_READINESS_UNAVAILABLE") == "1") {
+                        readiness.GetMethod("MarkUnavailable",All)!
+                            .Invoke(null,new object[]{"Test-only Openness readiness refusal.","Test-only repair guidance.","测试专用 Openness 修复建议。",null!});
+                    } else if(Environment.GetEnvironmentVariable("TIA_MCP_TEST_READINESS_READY") == "1") {
+                        readiness.GetMethod("MarkReady",All)!.Invoke(null,new object[]{true});
+                    }
                 }
                 if(args[1] == "isolated-worker-host") {
                     isolated.GetMethod("BeginChild",All)!.Invoke(null,new[]{options});

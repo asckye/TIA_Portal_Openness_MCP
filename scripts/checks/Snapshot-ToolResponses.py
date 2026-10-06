@@ -69,6 +69,7 @@ import uuid
 import unittest
 from contextlib import redirect_stdout
 
+from offline_fixtures import fixture_directory
 from tool_usage_checks import check_usage, unwrap_usage
 
 
@@ -461,6 +462,39 @@ def session_readiness_refusal(reply, name):
                       name + ': expected the no-TIA readiness refusal before approval: ' + canonical(reply))
 
 
+def session_approval_refusal(reply, name):
+    resources.require(reply.get('schemaVersion') == 4 and reply.get('ok') is False
+                      and reply.get('error', {}).get('code') == 'CONFIRMATION_REQUIRED'
+                      and reply.get('meta', {}).get('outcome') == 'rejected-before-operation'
+                      and reply.get('meta', {}).get('execution') == 'not-started'
+                      and reply.get('meta', {}).get('requiresSessionReset') is False,
+                      name + ': expected product-default approval refusal before operation: ' + canonical(reply))
+
+
+def session_write_refusal(reply, name, packaged_no_tia):
+    if packaged_no_tia:
+        session_readiness_refusal(reply, name)
+    else:
+        session_approval_refusal(reply, name)
+
+
+def capture_readiness_overrides(harness, packaged_no_tia):
+    if harness is not None and not packaged_no_tia:
+        return {'TIA_MCP_TEST_READINESS_READY': '1'}
+    return {}
+
+
+def sdk_only_harness(args, release):
+    if args.packaged_no_tia or release not in FULL_RELEASES:
+        return args.harness.resolve() if args.harness else None
+    if args.harness:
+        return args.harness.resolve()
+    harness = args.repo_root / 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+    resources.require(harness.is_file(),
+                      'Build HttpTests or pass --harness for V20/V21 sdk-only capture; the real EXE requires TIA readiness')
+    return harness.resolve()
+
+
 def initialize(rpc):
     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
         'capabilities': {}, 'clientInfo': {'name': 'response-snapshot', 'version': '2'}})
@@ -546,6 +580,7 @@ def stage_packaged_engine_without_siemens(exe, release, scratch):
 
 
 def capture_release(args, release, exe, public_api):
+    harness = sdk_only_harness(args, release)
     with scratch_directory(args.temp_root) as scratch:
         data_directory = scratch / 'data'
         data_directory.mkdir()
@@ -563,12 +598,13 @@ def capture_release(args, release, exe, public_api):
             env['TIA_MCP_BUNDLE_ROOT'] = str(scratch)
         else:
             capture_exe = exe
-            if args.harness is None and release in FULL_RELEASES:
+            if release in FULL_RELEASES:
                 env['TIA_MCP_BUNDLE_ROOT'] = str(args.repo_root.resolve())
+                env.update(capture_readiness_overrides(harness, args.packaged_no_tia))
             portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
-                           if args.harness is None and release in FULL_RELEASES else public_api)
+                           if release in FULL_RELEASES else public_api)
         with resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
-                              args.harness.resolve() if args.harness else None, public_api, env_overrides=env
+                              harness, public_api, env_overrides=env
                               ) as (rpc, _, logs):
             tools = initialize(rpc)
             entries = {}
@@ -595,14 +631,15 @@ def capture_release(args, release, exe, public_api):
                 resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
                 resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
                                   'Journal is not writable; use --temp-root inside the writable worktree')
-            # On this no-TIA host, readiness precedes approval. Product defaults
-            # remain in effect, but save/close calls must stop at readiness first.
+            # Packaged no-TIA runs the product readiness gate. The SDK fixture
+            # uses HttpTests-only readiness and must reach the product-default
+            # approval gate without dispatching the native write.
             for name, arguments in (
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {})):
                 result = decoded(name, arguments)
-                session_readiness_refusal(result, name)
+                session_write_refusal(result, name, args.packaged_no_tia)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
             decoded('ListToolCategories', {})
@@ -698,8 +735,8 @@ def capture_release(args, release, exe, public_api):
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {})):
-                session_readiness_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
-                                          'CallTool -> ' + name)
+                session_write_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
+                                      'CallTool -> ' + name, args.packaged_no_tia)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
@@ -1089,6 +1126,39 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_write_refusal_matches_capture_readiness_mode(self):
+        readiness = {'schemaVersion': 4, 'ok': False,
+            'error': {'code': 'RESOURCE_UNAVAILABLE', 'details': {'resource': 'tia-openness-environment'}},
+            'meta': {'outcome': 'rejected-before-operation', 'execution': 'not-started', 'requiresSessionReset': False}}
+        approval = {'schemaVersion': 4, 'ok': False,
+            'error': {'code': 'CONFIRMATION_REQUIRED'},
+            'meta': {'outcome': 'rejected-before-operation', 'execution': 'not-started', 'requiresSessionReset': False}}
+        session_write_refusal(readiness, 'SaveProject', True)
+        session_write_refusal(approval, 'SaveProject', False)
+        with self.assertRaises(Exception):
+            session_write_refusal(readiness, 'SaveProject', False)
+        with self.assertRaises(Exception):
+            session_write_refusal(approval, 'SaveProject', True)
+
+    def test_fixture_capture_marks_readiness_only_in_the_http_tests_harness(self):
+        self.assertEqual(capture_readiness_overrides(Path('HttpTests.exe'), False),
+                         {'TIA_MCP_TEST_READINESS_READY': '1'})
+        self.assertEqual(capture_readiness_overrides(None, False), {})
+        self.assertEqual(capture_readiness_overrides(Path('HttpTests.exe'), True), {})
+
+    def test_sdk_capture_defaults_to_a_built_http_tests_harness(self):
+        with fixture_directory('response-capture-harness-test-') as temporary:
+            repo = Path(temporary)
+            harness = repo / 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+            harness.parent.mkdir(parents=True)
+            harness.write_bytes(b'test harness')
+            args = argparse.Namespace(packaged_no_tia=False, harness=None, repo_root=repo)
+            self.assertEqual(sdk_only_harness(args, '20'), harness.resolve())
+            args.packaged_no_tia = True
+            self.assertIsNone(sdk_only_harness(args, '20'))
+            args.packaged_no_tia = False
+            self.assertIsNone(sdk_only_harness(args, '19'))
+
     def test_frozen_snapshot_fields(self):
         root = Path(__file__).resolve().parents[2]
         snapshot = json.loads((root / 'manifest/contracts/v4/responses/21.json').read_text(encoding='utf-8'))
@@ -1319,7 +1389,7 @@ def main():
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
     capture_parser.add_argument('--harness', type=Path,
-                                help='Optional test host harness; by default V20/V21 run as the real EXE')
+                                help='HttpTests host harness for V20/V21 sdk-only captures (defaults to the built harness)')
     capture_parser.add_argument('--public-api-root', type=Path)
     capture_parser.add_argument('--packaged-no-tia', action='store_true',
                                 help='Stage V20/V21 without Siemens.Engineering DLLs and require no-TIA readiness')

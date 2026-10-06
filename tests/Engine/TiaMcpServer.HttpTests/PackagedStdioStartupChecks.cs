@@ -102,15 +102,22 @@ internal static class PackagedStdioStartupChecks
                         && Convert.ToString(bootstrapData["recommendedReason"])?.IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
                         "Packaged InitializeEnvironment omitted the no-TIA cause: " + Json.Serialize(bootstrap)
                         + "\nEngine stderr: " + errors);
+                    Check(Program.HasChinese(Convert.ToString(bootstrapData["recommendedFixZh"])),
+                        "Packaged InitializeEnvironment omitted its Chinese recommendedFixZh: " + Json.Serialize(bootstrap));
 
                     var diagnostics = Call(process, id++, "GetEnvironmentDiagnostics", new { fix = false }, errors);
                     var doctor = AsObject(diagnostics["data"]);
                     Check(doctor["ready"] is bool doctorReady && !doctorReady
                         && Json.Serialize(doctor).IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
                         "Packaged GetEnvironmentDiagnostics omitted the no-TIA cause: " + Json.Serialize(diagnostics));
+                    Check(Program.HasChinese(Convert.ToString(doctor["recommendedFixZh"])),
+                        "Packaged GetEnvironmentDiagnostics omitted its Chinese recommendedFixZh: " + Json.Serialize(diagnostics));
 
                     var refusal = Call(process, id++, "GetSessionState", null, errors);
                     Check(IsReadinessRefusal(refusal), "Packaged GetSessionState was not refused before dispatch: " + Json.Serialize(refusal));
+                    var refusalEnvironment = AsObject(AsObject(refusal["data"])["environment"]);
+                    Check(Program.HasChinese(Convert.ToString(refusalEnvironment["recommendedFixZh"])),
+                        "Packaged readiness refusal omitted its Chinese recommendedFixZh: " + Json.Serialize(refusal));
                     var workerRefusal = Call(process, id++, "RestartOpennessWorker", null, errors);
                     Check(IsReadinessRefusal(workerRefusal), "Packaged worker control was not refused before dispatch: " + Json.Serialize(workerRefusal));
                     var safeLookup = Call(process, id++, "FindTools", new { query = "BuildPlcUdt", limit = 1 }, errors);

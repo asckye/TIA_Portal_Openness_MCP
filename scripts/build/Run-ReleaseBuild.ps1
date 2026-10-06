@@ -118,7 +118,7 @@ $steps=@(
     @{label='05-prompt-registration';action={Run-Command $Python @('scripts/checks/Test-DotnetSuites.py','--suite','prompt-registration','--dotnet',$Dotnet,'--results-directory',(Join-Path $logs 'dotnet-suites'))}},
     @{label='06-v4-contracts-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolContracts.py','capture')+$snapshots+@('--output',(Join-Path $logs 'contracts'))) -ProductDefaults}},
     @{label='07-v4-contracts-compare';action={Run-Command $Python @('scripts/checks/Snapshot-ToolContracts.py','compare','--baseline','manifest/contracts/v4/baseline','--current',(Join-Path $logs 'contracts'),'--releases','20','21')}},
-    @{label='08-v4-responses-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolResponses.py','capture')+$snapshots+@('--output',(Join-Path $logs 'responses'),'--temp-root',(Join-Path $releaseTempRoot 'sn'))) -ProductDefaults}},
+    @{label='08-v4-responses-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolResponses.py','capture')+$snapshots+@('--harness',$harness,'--output',(Join-Path $logs 'responses'),'--temp-root',(Join-Path $releaseTempRoot 'sn'))) -ProductDefaults}},
     @{label='09-v4-responses-compare';action={Run-Command $Python @('scripts/checks/Snapshot-ToolResponses.py','compare','--baseline','manifest/contracts/v4/responses','--current',(Join-Path $logs 'responses'),'--releases','20','21')}
     }
 )
