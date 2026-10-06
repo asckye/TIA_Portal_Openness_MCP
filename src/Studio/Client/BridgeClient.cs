@@ -39,6 +39,7 @@ namespace TiaOpenness.Client
         private volatile bool _faulted;
         private readonly string[] _args;
         private bool _nativeMock;
+        private bool _attachAttempted;
         public bool IsMock => _nativeMock;
         public BridgeClient() : this(System.Environment.GetCommandLineArgs()) { }
         public BridgeClient(string[] args) { _args = args ?? Array.Empty<string>(); }
@@ -133,6 +134,7 @@ namespace TiaOpenness.Client
             try
             {
                 _process.Start();
+                _attachAttempted = false;
                 _process.BeginErrorReadLine();
                 _channel = new ChannelClient(_process.StandardOutput.BaseStream, _process.StandardInput.BaseStream,
                     new ChannelIdentity(release.Key, bridgeHash, adapterHash, _process.Id, nonce), ChannelProfile.Studio,
@@ -193,10 +195,13 @@ namespace TiaOpenness.Client
 
             var payload = BridgeJson.ToElement(parameters ?? new { });
             var id = checked(_channel.LastRequestId + 1).ToString(CultureInfo.InvariantCulture);
+            bool firstAttach = method == "session.connect" && !_attachAttempted;
+            if (method == "session.connect") _attachAttempted = true;
             try
             {
                 var json = await _channel.CallAsync(method, payload.GetRawText(),
-                    BridgeChannel.BindingChangeFor(method), BridgeChannel.IsReadOnly(method), DefaultTimeout, cancellation).ConfigureAwait(false);
+                    BridgeChannel.BindingChangeFor(method), BridgeChannel.IsReadOnly(method), DefaultTimeout, cancellation,
+                    firstAttach: firstAttach).ConfigureAwait(false);
                 return RpcResponse.Ok(id,
                     BridgeJson.Deserialize<JsonElement>(json));
             }
@@ -212,7 +217,13 @@ namespace TiaOpenness.Client
             {
                 _faulted = true;
                 if (ex.InnerException is TimeoutException)
-                    throw new TimeoutException("The bridge did not answer '" + method + "' within " + DefaultTimeout + ".");
+                {
+                    string message = "The bridge did not answer '" + method + "' within " + DefaultTimeout + ".";
+                    if (firstAttach)
+                        message += "\n首次附着超时：TIA 可能正在等待确认 Openness 访问。请在博途机器上核对应用程序，并选择“是”或“全部是”。" +
+                            "\nFirst attach timed out: TIA may be waiting for Openness access confirmation. Check the application on the TIA machine and choose ‘Yes’ or ‘Yes to all’.";
+                    throw new TimeoutException(message, ex);
+                }
                 if (ex.InnerException is OperationCanceledException && cancellation.IsCancellationRequested)
                     throw new OperationCanceledException(cancellation);
                 if (_process?.HasExited == true)

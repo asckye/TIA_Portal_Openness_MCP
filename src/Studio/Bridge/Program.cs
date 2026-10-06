@@ -19,6 +19,7 @@ namespace TiaOpenness.Bridge
             // Redirected diagnostics must match BridgeClient's UTF-8 readers even
             // when the Windows console code page is GBK. Never emit a BOM on stdout.
             Console.OutputEncoding = new UTF8Encoding(false);
+            Console.SetError(new System.IO.StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
             if (System.Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
                 TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
             try { TiaOpenness.Shared.BundleLayout.InitializeWorkbench(AppDomain.CurrentDomain.BaseDirectory, args, out args); }

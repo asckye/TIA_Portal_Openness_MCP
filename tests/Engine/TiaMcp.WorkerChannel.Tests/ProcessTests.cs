@@ -42,6 +42,29 @@ public sealed class ProcessTests
         await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call()); Assert.Equal(1,fixture.Calls);
     }
 
+    [Fact]
+    public async Task First_attach_timeout_explains_the_TIA_access_confirmation()
+    {
+        using var fixture=new Fixture("timeout"); await fixture.Client.ConnectAsync(Budget);
+        var fault=await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Client.CallAsync("adapter.Attach","{}",BindingChange.Advance,false,
+            TimeSpan.FromMilliseconds(700),firstAttach:true));
+        Assert.True(fixture.Client.OutcomeUnknown);
+        Assert.Contains("native outcome is unknown",fault.Message,StringComparison.Ordinal);
+        Assert.Contains("Yes to all",fault.Message,StringComparison.Ordinal);
+        Assert.Contains("Openness access confirmation",fault.Message,StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task First_attach_timeout_is_identified_after_an_earlier_read()
+    {
+        using var fixture=new Fixture("timeout-attach"); await fixture.Client.ConnectAsync(Budget);
+        await fixture.Call();
+        var fault=await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Client.CallAsync("adapter.Attach",
+            "{\"processId\":42}",BindingChange.Advance,false,TimeSpan.FromMilliseconds(700),firstAttach:true));
+        Assert.True(fixture.Client.OutcomeUnknown);
+        Assert.Contains("Yes to all",fault.Message,StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("second-reply")] [InlineData("late-progress")]
     public async Task TrailingFramesPoisonIdlePeer(string mode)

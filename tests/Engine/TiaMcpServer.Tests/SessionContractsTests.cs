@@ -138,6 +138,99 @@ namespace TiaMcpServer.Tests
             Assert.Equal("not-started", (string?)body["data"]!["items"]![1]!["result"]!["meta"]!["execution"]);
         }
 
+        [Theory]
+        [InlineData("ConnectPortal")]
+        [InlineData("ConnectIsolatedPortal")]
+        [InlineData("ConnectProject")]
+        [InlineData("AttachOpenProject")]
+        [InlineData("DisconnectPortal")]
+        [InlineData("OpenProject")]
+        [InlineData("CreateProject")]
+        [InlineData("SaveProject")]
+        [InlineData("SaveProjectCopy")]
+        [InlineData("CloseProject")]
+        public void Session_precondition_before_native_call_is_rejected(string tool)
+        {
+            var body = Body(SessionToolContract.Run(tool, true, true, () =>
+                throw new TiaMcpServer.Siemens.PortalException(TiaMcpServer.Siemens.PortalErrorCode.InvalidState, "sensitive native detail")));
+
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]!["code"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        }
+
+        [Theory]
+        [InlineData("SaveProject")]
+        [InlineData("SaveProjectCopy")]
+        [InlineData("CloseProject")]
+        public void Project_session_tools_reject_an_unbound_project_before_dispatch(string tool)
+        {
+            bool entered = false;
+            var body = Body(SessionToolContract.Run(tool, true, true, () =>
+            {
+                entered = true;
+                return new object();
+            }, () => false));
+
+            Assert.False(entered);
+            Assert.Equal("PROJECT_NOT_BOUND", (string?)body["error"]!["code"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        }
+
+        [Fact]
+        public void Session_failure_after_native_call_remains_unknown()
+        {
+            var body = Body(SessionToolContract.Run("SaveProject", true, true, () =>
+            {
+                InvocationJournal.NativeCallStarted();
+                throw new InvalidOperationException("fault after dispatch");
+            }));
+
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
+            Assert.Equal("unknown", (string?)body["meta"]!["outcome"]);
+            Assert.Equal("unknown", (string?)body["meta"]!["execution"]);
+            Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+        }
+
+        [Theory]
+        [InlineData("SaveProject", true, "unknown", "unknown")]
+        [InlineData("CloseProject", true, "unknown", "unknown")]
+        [InlineData("SaveProject", false, "rejected-before-operation", "not-started")]
+        [InlineData("CloseProject", false, "rejected-before-operation", "not-started")]
+        public void Isolated_worker_dispatch_is_recorded_in_the_host_scope(string tool, bool dispatched, string outcome, string execution)
+        {
+            var body = Body(SessionToolContract.Run(tool, true, true, () =>
+            {
+                if (dispatched) InvocationJournal.NativeCallStarted();
+                throw new InvalidOperationException("isolated worker fixture failure");
+            }));
+
+            Assert.Equal(outcome, (string?)body["meta"]!["outcome"]);
+            Assert.Equal(execution, (string?)body["meta"]!["execution"]);
+            Assert.Equal(dispatched, (bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal(dispatched ? "OUTCOME_UNKNOWN" : "PRECONDITION_FAILED", (string?)body["error"]!["code"]);
+        }
+
+        [Theory]
+        [InlineData("SaveProject", true, "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("CloseProject", true, "unknown", "OUTCOME_UNKNOWN")]
+        [InlineData("SaveProject", false, "rejected-before-operation", "PRECONDITION_FAILED")]
+        [InlineData("CloseProject", false, "rejected-before-operation", "PRECONDITION_FAILED")]
+        public void Worker_exception_dispatch_fact_overrides_a_missing_host_journal_record(string tool, bool dispatched,
+            string outcome, string errorCode)
+        {
+            var exception = new InvalidOperationException("isolated worker fixture");
+            exception.Data[SessionToolContract.WorkerDispatchedExceptionDataKey] = dispatched;
+            var body = Body(SessionToolContract.Failure(tool, exception, writes: true, current: true, nativeCallIssued: false));
+
+            Assert.Equal(outcome, (string?)body["meta"]!["outcome"]);
+            Assert.Equal(dispatched, (bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal(errorCode, (string?)body["error"]!["code"]);
+        }
+
         [Fact]
         public void ReportFailureRetainsCompletedFilesAndTheDomainSummary()
         {

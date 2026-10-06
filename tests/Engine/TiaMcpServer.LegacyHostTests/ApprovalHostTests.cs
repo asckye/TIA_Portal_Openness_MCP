@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts.Candidates;
+using TiaMcp.Logic.V4;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.LegacyHost;
@@ -24,6 +26,63 @@ public sealed class ApprovalHostTests
         Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("workbench-unavailable", (string?)result.StructuredContent?["error"]?["details"]?["reason"]);
         Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("SaveProject")]
+    [InlineData("CloseProject")]
+    public async Task Current_session_save_and_close_are_approved_without_changing_catalog_policy(string source)
+    {
+        var before = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+        try
+        {
+            var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
+            var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
+            var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false}"));
+            Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+            Assert.Equal(0, worker.Calls);
+
+            tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(false, 1));
+            result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false}"));
+            Assert.Single(result.StructuredContent!["meta"]!["warnings"]!.AsArray(), row => (string?)row?["code"] == "APPROVAL_DISABLED");
+        }
+        finally { before.Save(ApprovalSettings.SettingsPath); }
+    }
+
+    [Theory]
+    [InlineData("Connect", "{\"processId\":123}")]
+    [InlineData("Disconnect", "{}")]
+    public async Task Foundation_connect_and_disconnect_remain_ungated(string source, string arguments)
+    {
+        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
+        var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
+        var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, arguments));
+        Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.True(worker.Calls > 0);
+    }
+
+    [Theory]
+    [InlineData("SaveProject")]
+    [InlineData("CloseProject")]
+    public async Task Approved_foundation_session_candidate_passes_the_fake_workbench_gate(string source)
+    {
+        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
+        bool approved = false;
+        var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", _ => BehaviorPolicy.SafeV4,
+            () => new ApprovalSettings(true, 2), (pending, _, _) =>
+            {
+                Assert.Equal(source, pending.Tool);
+                approved = true;
+                return Task.FromResult(new ApprovalOutcome(pending, false, null));
+            });
+        var args = new JsonObject { ["mode"] = "apply", ["confirm"] = true,
+            ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = @"C:\fixture.ap19" };
+        var invocation = await tool.InvokeAsync(Request(source, args.ToJsonString()));
+        Assert.True(approved);
+        Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)invocation.StructuredContent?["error"]?["code"]);
+        Assert.True(worker.Calls > 0);
     }
     private sealed class Worker : IFoundationWorker
     {

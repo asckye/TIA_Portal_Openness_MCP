@@ -17,6 +17,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private readonly SemaphoreSlim serial = new(1, 1);
     private Process? process;
     private ChannelClient? channel;
+    private bool attachAttempted;
     private int? attachedProcessId;
     private JsonObject? disconnectAcknowledgement;
     private readonly WorkerOutcomeState outcome=new();
@@ -59,6 +60,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
                 start.ArgumentList.Add(nonce);
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start.");
+                attachAttempted = false;
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                 process.BeginErrorReadLine();
                 channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
@@ -70,8 +72,13 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             string response;
             try
             {
+                bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
+                    && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
+                bool firstAttach = attach && !attachAttempted;
+                if (attach) attachAttempted = true;
                 response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token);
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token,
+                    firstAttach: firstAttach);
                 sent=true;
             }
             catch(ChannelFailure failure)

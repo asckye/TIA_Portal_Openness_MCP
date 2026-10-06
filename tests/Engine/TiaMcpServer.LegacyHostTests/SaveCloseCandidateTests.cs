@@ -213,12 +213,19 @@ public sealed class SaveCloseCandidateTests
     private sealed class Worker(Adapter adapter) : IFoundationWorker
     {
         internal bool Malformed, Forge;
+        internal bool ThrowOnExecute, Dispatched;
         internal readonly List<string> Actions = new();
         public void Dispose() { }
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
             Assert.Equal("SaveCloseCandidate", operation); token.ThrowIfCancellationRequested();
             var call = args["candidate"]!.Deserialize<SaveCloseCall>()!; Actions.Add(call.Action);
+            if (call.Action == "execute" && ThrowOnExecute)
+            {
+                var failure = new WorkerOperationException("fixture", -32603, "unknown");
+                failure.Data["foundationRequestSent"] = Dispatched;
+                throw failure;
+            }
             SaveCloseReply reply;
             if (call.Action == "observe") reply = new() { Observation = adapter.Observe() };
             else { var attempt = CandidateExecution.SaveClose(adapter, call.Check!); reply = new() { Attempt = attempt, RequiresSessionReset = attempt.RequiresSessionReset }; if (Malformed) reply.Attempt = null; if (Forge) reply.Attempt!.After!.Dirty = true; }
@@ -241,6 +248,30 @@ public sealed class SaveCloseCandidateTests
             Assert.Equal(ErrorCode.SessionResetRequired, s.Session("21", "ConnectPortal", "test", new(), "preview", false, "", "", false, default).Error!.Code);
             Assert.Equal(ErrorCode.SessionResetRequired, s.Import("21", "ImportPlcBlock", "test", new(), "preview", false, "", "", default).Error!.Code);
             Assert.Equal(ErrorCode.SessionResetRequired, s.Export("21", "ExportPlcBlock", "test", new(), "preview", false, "", "", default).Error!.Code);
+        }
+    }
+    [Theory]
+    [InlineData("save", "SaveProject")]
+    [InlineData("close", "CloseProject")]
+    public void Foundation_worker_failures_preserve_the_dispatch_boundary(string action, string tool)
+    {
+        foreach (bool dispatched in new[] { false, true })
+        {
+            var adapter = new Adapter();
+            adapter.Value.Dirty = false;
+            var worker = new Worker(adapter) { ThrowOnExecute = true, Dispatched = dispatched };
+            var session = FoundationCandidateSession.For(worker);
+            var request = Request(action);
+            Envelope Call(string mode, string hash = "") => session.SaveClose("21", tool, "foundation-worker-failure", request,
+                mode, true, hash, Project, false, default);
+
+            var preview = Call("preview");
+            Assert.True(preview.Ok, V4Json.Serialize(preview));
+            var result = Call("apply", Hash(preview));
+
+            Assert.Equal(dispatched ? Outcome.Unknown : Outcome.RejectedBeforeOperation, result.Meta.Outcome);
+            Assert.Equal(dispatched, result.Meta.RequiresSessionReset);
+            Assert.Equal(0, adapter.Calls);
         }
     }
     [Theory]

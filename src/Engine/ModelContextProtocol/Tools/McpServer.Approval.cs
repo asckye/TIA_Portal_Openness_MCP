@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
@@ -13,6 +14,14 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly AsyncLocal<bool> McpApprovalContext = new AsyncLocal<bool>();
         private static readonly AsyncLocal<int> ApprovalPreviewDepth = new AsyncLocal<int>();
+        private static readonly AsyncLocal<Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>?> ApprovalWaitOverride =
+            new AsyncLocal<Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>?>();
+        // P6-49 round 2 decision (2026-10-06): project save, save-as and close
+        // rewrite or discard project files, so gate them even though the catalog marks them SESSION.
+        private static readonly HashSet<string> SessionApprovalEntries = new HashSet<string>(StringComparer.Ordinal)
+            { "SaveProject", "SaveProjectCopy", "CloseProject" };
+        internal static Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>? ApprovalWaitOverrideForTests
+        { get => ApprovalWaitOverride.Value; set => ApprovalWaitOverride.Value = value; }
         private sealed class InternalPreviewScope : IDisposable
         {
             private readonly int previous = ApprovalPreviewDepth.Value;
@@ -22,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static IDisposable BeginReadOnlyApprovalPreview() => new InternalPreviewScope();
         internal static bool ApprovalWrite(string tool, string arguments)
         {
-            if (ToolCatalog.IsWrite(tool)) return true;
+            if (ToolCatalog.IsWrite(tool) || SessionApprovalEntries.Contains(tool)) return true;
             var args = JsonNode.Parse(arguments)!.AsObject();
             return BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
                 && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var value) && value == "apply";
@@ -49,6 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string? identity = null;
             ApprovalBindingIdentity(ref identity);
             var pending = PendingApproval.Create("engine", ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds);
+            if (ApprovalWaitOverride.Value is { } overrideWait) return await overrideWait(pending, settings, token).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
             try { return await ApprovalClient.Wait(pending, settings, token).ConfigureAwait(false); }
             finally { if (settings.Enabled) ApprovalWaitSignal("end", settings.TimeoutSeconds); }

@@ -13,23 +13,43 @@ namespace TiaMcpServer.ModelContextProtocol
     // entries use this boundary; readiness and diagnostic evidence stay in data.
     internal static class SessionToolContract
     {
-        internal static CallToolResult Run(string tool, bool writes, bool current, Func<object> operation)
+        internal const string WorkerDispatchedExceptionDataKey = "nativeCallDispatched";
+
+        internal static CallToolResult Run(string tool, bool writes, bool current, Func<object> operation, Func<bool>? projectBound = null)
         {
-            try { return Map(tool, operation(), writes, current); }
-            catch (Exception error) { return Failure(tool, error, writes, current); }
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
+            try
+            {
+                if (projectBound != null && !projectBound())
+                    return Result(tool, new JsonObject(), new Error("No project is bound.", new ProjectNotBoundDetails()),
+                        Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+                return Map(tool, operation(), writes, current);
+            }
+            catch (Exception error) { return Failure(tool, error, writes, current, nativeCalls.NativeCallIssued); }
         }
 
         internal static async Task<CallToolResult> RunAsync<T>(string tool, bool writes, bool current, Func<Task<T>> operation)
         {
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             try { return Map(tool, (await operation())!, writes, current); }
-            catch (Exception error) { return Failure(tool, error, writes, current); }
+            catch (Exception error) { return Failure(tool, error, writes, current, nativeCalls.NativeCallIssued); }
         }
 
-        internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
+        internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current, bool nativeCallIssued = true)
         {
+            if (exception.Data[WorkerDispatchedExceptionDataKey] is true)
+                nativeCallIssued = true;
             if (exception is TiaOpenness.Shared.BundleResourceUnavailableException resource)
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+            if (writes && !nativeCallIssued)
+            {
+                var portalStateFailure = ContainsInvalidPortalState(exception);
+                var details = new PreconditionFailedDetails(portalStateFailure ? "engine-state" : "native-call-not-issued", null);
+                return Result(tool, new JsonObject { ["evidence"] = new JsonObject { ["exceptionType"] = exception.GetType().Name } },
+                    new Error("The session precondition was not satisfied; no native operation was started.", details),
+                    Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+            }
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
             var evidence = new JsonObject { ["exceptionType"] = exception.GetType().Name };
@@ -40,6 +60,14 @@ namespace TiaMcpServer.ModelContextProtocol
             return Result(tool, new JsonObject { ["evidence"] = evidence },
                 writes ? unknown : new Error("The diagnostic read could not be completed.", new InternalErrorDetails(null)),
                 writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
+        }
+
+        private static bool ContainsInvalidPortalState(Exception exception)
+        {
+            for (var current = exception; current != null; current = current.InnerException)
+                if (current is TiaMcpServer.Siemens.PortalException portal && portal.Code == TiaMcpServer.Siemens.PortalErrorCode.InvalidState)
+                    return true;
+            return false;
         }
 
         internal static CallToolResult Map(string tool, object response, bool writes, bool current)

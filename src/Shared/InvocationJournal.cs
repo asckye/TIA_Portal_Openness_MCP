@@ -15,11 +15,37 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly int ProcessId = Process.GetCurrentProcess().Id;
         private static readonly string ProcessKey = TiaOpenness.Shared.DataLocations.ProcessKey;
         private static readonly AsyncLocal<string?> Current = new AsyncLocal<string?>();
+        private static readonly AsyncLocal<NativeCallScope?> ActiveNativeCallScope = new AsyncLocal<NativeCallScope?>();
         private static IJournalSink sink = new FileJournalSink();
         private static Func<string>? correlationSource;
         private static long failedWrites;
         private static string? lastWriteFailure;
         internal static string CorrelationId => correlationSource?.Invoke() ?? Current.Value ?? (Current.Value = Guid.NewGuid().ToString("N"));
+
+        internal sealed class NativeCallScope : IDisposable
+        {
+            internal readonly NativeCallScope? Parent;
+            private int calls;
+            internal bool NativeCallIssued => Volatile.Read(ref calls) != 0;
+            internal NativeCallScope(NativeCallScope? parent) { Parent = parent; }
+            internal void Record() => Interlocked.Increment(ref calls);
+            public void Dispose()
+            {
+                if (ReferenceEquals(ActiveNativeCallScope.Value, this)) ActiveNativeCallScope.Value = Parent;
+            }
+        }
+
+        internal static NativeCallScope BeginNativeCallScope()
+        {
+            var scope = new NativeCallScope(ActiveNativeCallScope.Value);
+            ActiveNativeCallScope.Value = scope;
+            return scope;
+        }
+
+        internal static void NativeCallStarted()
+        {
+            for (var scope = ActiveNativeCallScope.Value; scope != null; scope = scope.Parent) scope.Record();
+        }
 
         // The callback must synchronously flush before returning. Delegates can cross the
         // separately compiled adapter assemblies; step H will supply the engine's sink and id.
@@ -70,6 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static T Native<T>(string stage, Func<T> call, string? objectType = null, string? objectPath = null)
         {
             string id = correlationSource?.Invoke() ?? Current.Value ?? Guid.NewGuid().ToString("N");
+            NativeCallStarted();
             WriteRow(id, "native:" + stage, "BEFORE", objectType, objectPath);
             try { T result = call(); WriteRow(id, "native:" + stage, "RETURNED", objectType, objectPath); return result; }
             catch (Exception ex) { _ = PortalFailureClassifier.IsPortalProcessLost(ex); WriteRow(id, "native:" + stage, "THREW", objectType, objectPath); throw; }

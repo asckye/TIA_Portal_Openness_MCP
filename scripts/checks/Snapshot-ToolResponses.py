@@ -46,8 +46,8 @@ Format 3 additionally hashes every original MCP text block's UTF-8 bytes BEFORE
 decode_reply or canonicalization. The transport JSON string has already been
 read by the RPC client; its inner text is not decoded/re-serialized for this hash.
 RAW_MASK_RULES is the complete reviewed allowlist, including reasons. A lexical
-JSON walk locates literal paths; regex substitutes only the timestamp's contents,
-preserving quotes, whitespace, key order, escapes and all surrounding text. No
+JSON walk locates literal paths; regex substitutes only reviewed timestamp or
+request-ID contents, preserving quotes, whitespace, key order, escapes and all surrounding text. No
 elapsed-time, PID, arbitrary GUID or temp-path mask is used by the capture set.
 Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
@@ -84,6 +84,7 @@ resources = helper('Test-ResourceDiscovery')
 contracts = helper('Snapshot-ToolContracts')
 RELEASES = contracts.RELEASES
 FULL_RELEASES = ('20', '21')
+SESSION_APPROVAL_TOOLS = {'SaveProject', 'SaveProjectCopy', 'CloseProject'}
 RESPONSE_LIMIT = 16 * 1024
 RESPONSE_FORMAT_VERSION = 3
 FULL_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
@@ -227,6 +228,11 @@ def identity(call):
 RAW_MASK_RULES = [
     {'tool': 'V4 infrastructure only', 'kind': 'requestId', 'path': ['meta', 'requestId'],
      'reason': 'V4 invocation journal correlation ID (32 lowercase hex). Also masks actual batch result envelopes, never examples.'},
+    *[{'tool': tool, 'path': ['error', 'details', 'requestId'],
+       'reason': 'Workbench approval request correlation ID on save/close refusal.'}
+      for tool in ('SaveProject', 'SaveProjectCopy', 'CloseProject')],
+    {'tool': 'CallTool', 'path': ['error', 'details', 'requestId'],
+     'reason': 'Workbench approval request correlation ID on a lite save/close target refusal.'},
     {'tool': '*', 'path': ['meta', 'timestamp'],
      'reason': 'Response envelope wall clock (DateTime.Now).'},
     *[{'tool': tool, 'path': ['data', 'timestamp'],
@@ -297,6 +303,8 @@ def mask_raw_text(text, tool):
             raise ValueError('Expected value')
         elif (tool in V4_TOOLS and raw.startswith('"')
               and (path in (('"meta"', '"requestId"'), ('"meta"', '"timestamp"'))
+                   or (tool in SESSION_APPROVAL_TOOLS or tool == 'CallTool')
+                   and path == ('"error"', '"details"', '"requestId"')
                    or len(path) == 6 and path[:2] == ('"data"', '"items"') and isinstance(path[2], int)
                    and path[3:5] == ('"result"', '"meta"') and path[5] in ('"requestId"', '"timestamp"'))):
             masked = re.sub(r'(?<=")[0-9a-f]{32}(?=")', '<string:requestId>', raw) if path[-1] == '"requestId"' else RAW_TIMESTAMP.sub('<string:timestamp>', raw)
@@ -354,6 +362,13 @@ def normalize(call):
         meta = envelope['meta']
         meta['timestamp'] = '<string:timestamp>'
         if re.fullmatch('[0-9a-f]{32}', meta['requestId']): meta['requestId'] = '<string:requestId>'
+        approval_target = (call['tool'] in SESSION_APPROVAL_TOOLS
+                           or call['tool'] == 'CallTool'
+                           and call['arguments'].get('name') in SESSION_APPROVAL_TOOLS)
+        if approval_target:
+            details = (envelope.get('error') or {}).get('details')
+            if isinstance(details, dict) and re.fullmatch('[0-9a-f]{32}', str(details.get('requestId', ''))):
+                details['requestId'] = '<string:requestId>'
         for item in (envelope.get('data') or {}).get('items', []):
             if isinstance(item, dict): v4_envelope(item.get('result'))
     if call['tool'] in V4_TOOLS:
@@ -434,6 +449,16 @@ def v4_rejection(response, name):
                       name + ': missing V4 admission marker: ' + canonical(reply))
 
 
+def session_approval_refusal(reply, name):
+    resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
+                      and reply['error']['code'] == 'CONFIRMATION_REQUIRED'
+                      and reply['error']['details']['reason'] == 'workbench-unavailable'
+                      and reply['meta']['outcome'] == 'rejected-before-operation'
+                      and reply['meta']['execution'] == 'not-started'
+                      and reply['meta']['requiresSessionReset'] is False,
+                      name + ': expected the fresh-install Workbench approval refusal: ' + canonical(reply))
+
+
 def initialize(rpc):
     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
         'capabilities': {}, 'clientInfo': {'name': 'response-snapshot', 'version': '2'}})
@@ -503,7 +528,12 @@ def scratch_directory(parent):
 
 def capture_release(args, release, exe, public_api):
     with scratch_directory(args.temp_root) as scratch:
-        env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_MAX_RESPONSE_CHARS': '2000000',
+        data_directory = scratch / 'data'
+        data_directory.mkdir()
+        resources.require(not (data_directory / 'config' / 'approval.settings').exists(),
+                          'Capture data directory must use product-default approval settings')
+        env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory),
+               'TIA_MCP_MAX_RESPONSE_CHARS': '2000000',
                'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(scratch / 'diagnostics')}
         with resources.server(exe, public_api, int(release), 'stdio', 'full',
                               args.harness.resolve(), public_api, env_overrides=env
@@ -519,6 +549,14 @@ def capture_release(args, release, exe, public_api):
             resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
             resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
                               'Journal is not writable; use --temp-root inside the writable worktree')
+            # Fresh-install defaults enable approval. With no Workbench session,
+            # save/close calls must be refused before their handlers run.
+            for name, arguments in (
+                    ('SaveProject', {}),
+                    ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
+                    ('CloseProject', {})):
+                result = decoded(name, arguments)
+                session_approval_refusal(result, name)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
             decoded('ListToolCategories', {})
@@ -585,6 +623,8 @@ def capture_release(args, release, exe, public_api):
             resources.require(registered == v4_tools(release), 'Every full-engine entry must have a generated V4 contract')
             for name in sorted(registered):
                 reply = call(name, REJECT_ARGUMENTS)
+                # Invalid-argument probes keep their ordinary V4 rejection;
+                # valid save/close calls are asserted separately at the gate.
                 v4_rejection(reply, name)
             snapshot = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
                 'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
@@ -605,6 +645,12 @@ def capture_release(args, release, exe, public_api):
             bridge = recorder(rpc, entries, 'lite', release)
             for name in sorted(registered):
                 v4_rejection(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), name)
+            for name, arguments in (
+                    ('SaveProject', {}),
+                    ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
+                    ('CloseProject', {})):
+                session_approval_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
+                                         'CallTool -> ' + name)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
@@ -632,7 +678,11 @@ def capture_foundation(args, release, exe):
         # Shared server launcher accepts release keys verbatim. LegacyHost
         # HostOptions.Parse accepts --tia-major-version/--tia-portal-location;
         # no harness, --catalog, worker executable or native-session flag is used.
-        env = {'TEMP': str(scratch), 'TMP': str(scratch)}
+        data_directory = scratch / 'data'
+        data_directory.mkdir()
+        resources.require(not (data_directory / 'config' / 'approval.settings').exists(),
+                          'Capture data directory must use product-default approval settings')
+        env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory)}
         if args.dotnet_root:
             env.update(DOTNET_ROOT=str(args.dotnet_root.resolve()),
                        DOTNET_ROOT_X64=str(args.dotnet_root.resolve()))
@@ -1074,13 +1124,25 @@ class RawResponseTests(unittest.TestCase):
         self.assertIn('"example":{"requestId":"' + first + '"}', masked)
         self.assertEqual(self.call(sample, 'CallTool'), self.call(sample.replace('"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + first, '"meta":{"timestamp":"2026-10-03T00:00:00Z","requestId":"' + second), 'CallTool'))
         self.assertIn('"requestId":"' + first + '"', mask_raw_text(sample, 'GetSessionState'))
+        for tool in ('SaveProject', 'SaveProjectCopy', 'CloseProject'):
+            refusal = ('{"schemaVersion":4,"ok":false,"meta":{"timestamp":"2026-10-03T00:00:00Z",'
+                       '"requestId":"' + first + '","behaviorPolicy":"current",'
+                       '"warnings":[{"code":"UNVERIFIED_BEHAVIOR"}]},"error":{"code":"CONFIRMATION_REQUIRED",'
+                       '"details":{"requestId":"' + first + '"}}}')
+            changed = refusal.replace(first, second)
+            self.assertIn('"requestId":"<string:requestId>"', mask_raw_text(refusal, tool))
+            self.assertEqual(self.call(refusal, tool), self.call(changed, tool))
+            self.assertEqual(self.call(refusal, 'CallTool', 'lite',
+                                       {'name': tool, 'arguments': {}}),
+                             self.call(changed, 'CallTool', 'lite',
+                                       {'name': tool, 'arguments': {}}))
 
     def reply(self, text):
         return {'id': 1, 'jsonrpc': '2.0', 'result': {'content': [{'type': 'text', 'text': text}]}}
 
-    def call(self, text, tool='GetSessionState', profile='full'):
+    def call(self, text, tool='GetSessionState', profile='full', arguments=None):
         entries = {}
-        recorder(lambda *a, **kw: self.reply(text), entries, profile, '21')(tool, {})
+        recorder(lambda *a, **kw: self.reply(text), entries, profile, '21')(tool, arguments or {})
         return compact(next(iter(entries.values())))
 
     def test_order_escaping_and_numbers(self):
@@ -1096,16 +1158,21 @@ class RawResponseTests(unittest.TestCase):
 
     def test_every_reviewed_path(self):
         for rule in RAW_MASK_RULES:
-            if rule.get('kind') == 'requestId': continue
+            if rule['tool'] == 'V4 infrastructure only': continue
             with self.subTest(rule=rule):
-                value = '"2026-10-03T11:12:13.1234567-07:00"'
+                is_request_id = rule.get('kind') == 'requestId' or rule['path'][-1] == 'requestId'
+                original = 'a' * 32 if is_request_id else '2026-10-03T11:12:13.1234567-07:00'
+                replacement = '<string:requestId>' if is_request_id else '<string:timestamp>'
+                value = '"' + original + '"'
                 for key in reversed(rule['path']):
                     value = '{ "' + key + '" : ' + value + ' }'
                 tool = rule['tool'] if rule['tool'] != '*' else 'GetSessionState'
                 self.assertEqual(mask_raw_text(value, tool),
-                                 value.replace('2026-10-03T11:12:13.1234567-07:00', '<string:timestamp>'))
-                other = value.replace('2026-10-03T11:12:13.1234567-07:00', '2027-01-02T00:00:00Z')
-                self.assertEqual(self.call(value, tool), self.call(other, tool))
+                                 value.replace(original, replacement))
+                other_value = 'b' * 32 if is_request_id else '2027-01-02T00:00:00Z'
+                other = value.replace(original, other_value)
+                if not is_request_id:
+                    self.assertEqual(self.call(value, tool), self.call(other, tool))
 
     def test_no_unreviewed_masks(self):
         stamp = '2026-10-03T11:12:13Z'

@@ -18,6 +18,24 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class EnvironmentServicesTests(WpfContext wpf)
 {
     [Fact]
+    public void Missing_framework_page_finding_explains_the_bilingual_install_fix()
+    {
+        var previous = Loc.Current.Language;
+        try
+        {
+            var row = EnvironmentCheckCatalogue.Row(new EnvironmentFinding("framework", EnvironmentFindingStatus.Fail, "Fail", "not detected"));
+            Loc.Current.Language = AppLanguage.English;
+            Assert.Contains("Download and install", row.Detail.Resolve(), StringComparison.Ordinal);
+            Assert.Contains(".NET Framework 4.8", row.Detail.Resolve(), StringComparison.Ordinal);
+            Assert.Contains("https://dotnet.microsoft.com/download/dotnet-framework/net48", row.Detail.Resolve(), StringComparison.Ordinal);
+            Loc.Current.Language = AppLanguage.Chinese;
+            Assert.Contains("安装", row.Detail.Resolve(), StringComparison.Ordinal);
+            Assert.Contains(".NET Framework 4.8", row.Detail.Resolve(), StringComparison.Ordinal);
+        }
+        finally { Loc.Current.Language = previous; }
+    }
+
+    [Fact]
     public async Task Recheck_is_read_only_and_only_a_membership_click_invokes_the_existing_doctor()
     {
         using var fixture = new Fixture();

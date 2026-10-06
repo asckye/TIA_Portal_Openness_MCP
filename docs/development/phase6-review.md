@@ -317,7 +317,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 文件归属：引擎 `src/Engine/Program.cs`、`src/Engine/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs`、`McpServer.ToolBridge.cs`、`McpServer.Batch.cs` 与 `ToolCatalog.cs`，Foundation 的 `src/FoundationHost/Program.cs`、`FoundationTools.cs` 负责执行前门禁；`src/Shared` 新增本机审批协议，`src/Studio/Core`、`src/Studio/Gui/Services` 与 `ViewModels` 新增审批服务/视图，接入 `src/Studio/Gui/MainWindow.xaml`、`MainWindow.xaml.cs`、`Settings/UiSettings.cs` 和 `Localization`。`src/Logic/V4/Error.cs`、`V4Json.cs`、`V4Validation.cs` 承接拒绝详情；完整路径与测试归属见[附表 H/P6-44](#phase6-path-p6-44)。
 
-- 范围：经 MCP（HTTP/stdio，含 CallTool 与批次）到达完整引擎或 Foundation 宿主的每一次写调用。读写分类取自工具目录的写标记，
+- 范围：经 MCP（HTTP/stdio，含 CallTool 与批次）到达完整引擎或 Foundation 宿主的每一次写调用。读写分类取自工具目录的写标记；SaveProject、SaveProjectCopy（save-as）与 CloseProject 即使在目录中标为 SESSION 也须审批，其他连接、附着、打开和断开会话操作仍不审批；
   按单个调用判断：只读调用不排队，批次逐项列出写项。CLI 由本机用户直接执行，不经审批。
 - 流程：D1 已切换的族在 apply 处、仍为 current 的族在执行前，宿主把待批请求（请求 ID、tool、releaseKey、目标工程身份、
   对象与动作清单、planHash 或参数摘要）推送给工作台并等待；用户逐条批准或拒绝。批准只对该请求 ID 与 planHash 生效一次。
@@ -1888,12 +1888,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Gui/ConfigurationPage.cs](../../src/Studio/Gui/ConfigurationPage.cs):27 `FindBundleRoot` | P6-38：仅委托 BundleLayout.RequireWorkbenchRoot，校验正式包标记或已知 Studio 锚点 | 显式根或已知锚点 |
 | [Gui/Configuration/ConfigCore.cs](../../src/Studio/Gui/Configuration/ConfigCore.cs):80 `RequireWorkbenchRoot` | P6-38 已改：工作台经 BundleLayout 严格定位根并从产品表取引擎路径 | 严格根校验、新产品目录 |
 | [Gui/Configuration/UpdateCheck.cs](../../src/Studio/Gui/Configuration/UpdateCheck.cs):44 `RequirePath` | P6-38 已改：资源只在包根内严格解析，缺失即报错 | 严格资源解析，worktree 更新保护保留 |
-| [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):76 `BundleLayout` | P6-38：BundleLayout.RequireWorkbenchBridge 使用正式相邻布局或已知 worktree 输出锚点；不猜同级 Debug/Release | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
+| [Client/BridgeClient.cs](../../src/Studio/Client/BridgeClient.cs):77 `BundleLayout` | P6-38：BundleLayout.RequireWorkbenchBridge 使用正式相邻布局或已知 worktree 输出锚点；不猜同级 Debug/Release | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
 | [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs):67 `TIA_MCP_DATA_DIRECTORY` | 显式数据根或 bundle/data；不可写时按用途回退用户目录 | 沿用数据根政策；logs 按发布键/studio 分组 |
-| [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):44 `DiagnosticsDirectory` | P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流 | P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链 |
-| [Program.cs](../../src/Engine/Program.cs):897 `AppendLog` | P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log | 只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED |
+| [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):70 `DiagnosticsDirectory` | P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流 | P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链 |
+| [Program.cs](../../src/Engine/Program.cs):899 `AppendLog` | P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log | 只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):14 `.crash.log` | P6-39：Studio 崩溃日志在 logs/studio，PID/启动时间文件名 | Workbench 根政策；无可写位置报 IO_FAILED |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):87 `EcosystemPythonExecutable` | P6-39：LocalAppData/TiaMcp/ecosystem-python，显式 Python 优先 | 不执行或迁移旧私有环境；缺失/不可写报 IO_FAILED |
 | [Cli/ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs):44 `GetWorkspaceRoot` | P6-39：显式 --workspace-root；无包根/cwd/私人目录探测 | 缺输入 INVALID_ARGUMENT；CLI 语法退出 64 |

@@ -363,11 +363,12 @@
           "schemaVersion": 4,
           "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
         },
-        "resultReading": [
+        "resultReading":         [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
       },
       "CompilePlcDiagnostics": {
@@ -2216,11 +2217,12 @@
           "schemaVersion": 4,
           "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
         },
-        "resultReading": [
+        "resultReading":         [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
       },
       "SearchHardwareCatalog": {
@@ -2952,8 +2954,9 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading": [
-          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        "resultReading":         [
+          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
       },
       "CompareLibraries": {
@@ -14556,8 +14559,9 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading": [
-          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        "resultReading":         [
+          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
       },
       "SaveProject": {
@@ -14565,8 +14569,9 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading": [
-          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        "resultReading":         [
+          "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
       },
       "BuildProjectScaffold": {

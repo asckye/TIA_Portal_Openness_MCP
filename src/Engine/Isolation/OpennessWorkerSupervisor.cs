@@ -17,9 +17,15 @@ namespace TiaMcpServer.Isolation
     internal sealed class WorkerCallException : Exception
     {
         internal bool OutcomeUnknown { get; }
+        internal bool Dispatched { get; }
         internal ErrorDetails Details { get; }
-        internal WorkerCallException(string reason, bool unknown, ErrorDetails? details = null) : base(reason)
-        { OutcomeUnknown = unknown; Details = details ?? new ResourceUnavailableDetails("openness-worker"); }
+        internal WorkerCallException(string reason, bool dispatched, ErrorDetails? details = null) : base(reason)
+        {
+            Dispatched = dispatched;
+            Data[SessionToolContract.WorkerDispatchedExceptionDataKey] = dispatched;
+            OutcomeUnknown = dispatched;
+            Details = details ?? new ResourceUnavailableDetails("openness-worker");
+        }
     }
 
     internal sealed class OpennessWorkerSupervisor : IDisposable
@@ -39,7 +45,9 @@ namespace TiaMcpServer.Isolation
         private int admitted;
         private bool disposed;
         private bool bindingRequired;
+        private bool attachAttempted;
         private const int QueueLimit = 16;
+        private const string FirstAttachTimeoutHint = " A first attach from a new worker or build may be waiting for TIA Portal Openness access confirmation; choose ‘Yes’ or ‘Yes to all’ on the TIA machine.";
 
         internal OpennessWorkerSupervisor(Func<ProcessStartInfo> start, int major, string hash, IEnumerable<string> tools, TimeSpan deadline)
         {
@@ -83,7 +91,7 @@ namespace TiaMcpServer.Isolation
                 if (!confirm) return new JsonObject { ["success"] = true, ["dryRun"] = true, ["worker"] = Snapshot(), ["requiresExplicitProjectBinding"] = true };
                 if (admitted != 0) return new JsonObject { ["success"] = false, ["reason"] = "Calls are active or queued; wait for their results before restarting." };
                 old = connection; connection = null;
-                state = "NotStarted"; fault = null; bindingRequired = true; epoch++;
+                state = "NotStarted"; fault = null; bindingRequired = true; attachAttempted = false; epoch++;
             }
             old?.Dispose();
             InvocationJournal.Write(Guid.NewGuid().ToString("N"), "worker:restart", "RESET");
@@ -124,7 +132,7 @@ namespace TiaMcpServer.Isolation
                     new LimitExceededDetails("workerQueue", QueueLimit, admitted));
                 admitted++; ticket = epoch;
             }
-            bool entered = false, dispatched = false;
+            bool entered = false, dispatched = false, firstAttach = false;
             var elapsed = Stopwatch.StartNew();
             string id = Guid.NewGuid().ToString("N");
             string name = parameters["name"]?.GetValue<string>() ?? "unknown";
@@ -151,6 +159,10 @@ namespace TiaMcpServer.Isolation
                 if (parameters.ToJsonString().Length > WorkerConnection.MaxFrameChars - 1024)
                     throw new WorkerCallException("Request exceeds the worker frame limit; not dispatched.", false,
                         new LimitExceededDetails("workerFrame", WorkerConnection.MaxFrameChars - 1024, parameters.ToJsonString().Length));
+                if (IsAttachRequest(effectiveName, effectiveArguments))
+                {
+                    lock (sync) { firstAttach = !attachAttempted; attachAttempted = true; }
+                }
                 // Own correlation data; never rely on caller-supplied metadata for the dispatch record.
                 var meta = parameters["_meta"] as JsonObject;
                 if (meta == null) parameters["_meta"] = meta = new JsonObject();
@@ -158,6 +170,7 @@ namespace TiaMcpServer.Isolation
                 meta["tiaMcpWorkerGeneration"] = ticket;
                 InvocationJournal.Write(id, "worker:" + name, "BEFORE");
                 dispatched = true; // A partially written pipe request also has an unknown outcome.
+                InvocationJournal.NativeCallStarted(); // The host scope must include native calls executed in this worker.
                 var approvalWait = new ApprovalWaitBudget();
                 Action<JsonObject> notifications = frame =>
                 {
@@ -191,14 +204,21 @@ namespace TiaMcpServer.Isolation
             catch (Exception ex)
             {
                 Fault(ex is TimeoutException ? "DeadlineExceeded" : "WorkerFailure");
-                throw new WorkerCallException(dispatched ? "Worker failed or exceeded its deadline after dispatch; native outcome unknown. No replay." : "Worker could not start/validate; tool was not dispatched.", dispatched,
-                    ex is TimeoutException ? (ErrorDetails)new TimeoutDetails("worker-startup") : new ResourceUnavailableDetails("openness-worker"));
+                string timeoutHint = firstAttach && ex is TimeoutException ? FirstAttachTimeoutHint : "";
+                throw new WorkerCallException(dispatched ? "Worker failed or exceeded its deadline after dispatch; native outcome unknown. No replay." + timeoutHint : "Worker could not start/validate; tool was not dispatched.", dispatched,
+                    ex is TimeoutException ? (ErrorDetails)new TimeoutDetails(firstAttach ? "first-attach-openness-confirmation" : "worker-startup") : new ResourceUnavailableDetails("openness-worker"));
             }
             finally
             {
                 lock (sync) { admitted--; if (entered) activeTool = null; }
                 if (entered) gate.Release();
             }
+        }
+
+        private static bool IsAttachRequest(string name, JsonObject? arguments)
+        {
+            if (name is "ConnectPortal" or "ConnectProject" or "ConnectIsolatedPortal" or "AttachOpenProject" or "OpenProject" or "CreateProject") return true;
+            return name == "SessionCandidate" && (string?)arguments?["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
         }
 
         private async Task<T> Within<T>(Task<T> task, Stopwatch elapsed, CancellationToken cancellation, ApprovalWaitBudget? approvalWait = null)

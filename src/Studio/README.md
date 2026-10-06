@@ -10,6 +10,9 @@ the selected release. Closing the main window still handles its owned MCP servic
 Engineering operations continue to call Siemens Openness through the .NET Framework 4.8
 bridge. The MCP engines retain their existing process boundaries. The unified desktop
 requires the complete bundle, whose `runtime/dotnet` supplies .NET 10, including on an AI-only host.
+The root launcher checks for .NET Framework 4.8 or later before starting the Workbench; if it is
+missing, install the Microsoft .NET Framework 4.8 Runtime. The environment page reports this
+prerequisite in Chinese and English. The bundled .NET 10 runtime does not replace .NET Framework.
 The latest published package is v3.3.0; the 4.0 source is unreleased.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,

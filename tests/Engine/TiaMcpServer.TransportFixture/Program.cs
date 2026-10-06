@@ -24,7 +24,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), output, identity, ()
     var values = JsonNode.Parse(request.ArgumentsJson)!;
     Record(new { stage = "call", pid = Environment.ProcessId, operation, request.Id, request.Method });
     if (fault == "broken-pipe") Environment.Exit(0);
-    if (fault == "timeout") Thread.Sleep(10000);
+    if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);
     if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailure("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
     if (fault == "rejected") return ChannelResponse.Error(new ChannelFailure("Fixture rejected", -32602, ChannelOutcome.RejectedBeforeNative));
     if (fault == "session-fault") return ChannelResponse.Error(new ChannelFailure("Fixture outcome unknown", -32603, ChannelOutcome.Unknown));

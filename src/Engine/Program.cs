@@ -50,6 +50,8 @@ namespace TiaMcpServer
 
         public static async Task Main(string[] args)
         {
+            Console.OutputEncoding = new UTF8Encoding(false);
+            Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
             try
             {
                 var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);

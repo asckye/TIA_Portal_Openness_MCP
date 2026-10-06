@@ -51,9 +51,95 @@ namespace TiaMcpServer.Tests
                 return TiaMcpServer.ModelContextProtocol.McpServer.V4Result("CreateApprovalFixture", new System.Text.Json.Nodes.JsonObject { ["target"] = target }, completed: !dryRun);
             }
         }
+        public static class SessionApprovalProbe
+        {
+            internal static int Calls;
+            [global::ModelContextProtocol.Server.McpServerTool(Name = "SaveProject"), TiaMcpServer.ModelContextProtocol.ToolClassification("L0", "Project", "SESSION")]
+            public static global::ModelContextProtocol.Protocol.CallToolResult SaveProject(string mode = "preview", bool confirm = false,
+                string expectedPlanHash = "", string expectedProjectFile = "") => Entered("SaveProject");
+            [global::ModelContextProtocol.Server.McpServerTool(Name = "SaveProjectCopy"), TiaMcpServer.ModelContextProtocol.ToolClassification("L0", "Project", "SESSION")]
+            public static global::ModelContextProtocol.Protocol.CallToolResult SaveProjectCopy(string newProjectPath, string mode = "preview", bool confirm = false,
+                string expectedPlanHash = "", string expectedProjectFile = "") => Entered("SaveProjectCopy");
+            [global::ModelContextProtocol.Server.McpServerTool(Name = "CloseProject"), TiaMcpServer.ModelContextProtocol.ToolClassification("L0", "Project", "SESSION")]
+            public static global::ModelContextProtocol.Protocol.CallToolResult CloseProject(bool saveChanges = false, bool discardChanges = false,
+                bool confirmDiscard = false, string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
+                => Entered("CloseProject");
+            private static global::ModelContextProtocol.Protocol.CallToolResult Entered(string name)
+            { Calls++; return TiaMcpServer.ModelContextProtocol.McpServer.V4Result(name, new System.Text.Json.Nodes.JsonObject { ["called"] = true }); }
+        }
         private static string Scratch() => Path.GetFullPath(Path.Combine("bin-build", "P6-44", "approval-tests", Guid.NewGuid().ToString("N")));
         private static PendingApproval Request(int seconds = 3) => PendingApproval.Create("engine", "21", "WriteFixture",
             "{\"blockPath\":\"PLC/Block\",\"password\":\"private-input\"}", "{\"projectFile\":\"P.ap21\",\"bindingEpoch\":1}", seconds);
+
+        private static Task<global::ModelContextProtocol.Protocol.CallToolResult> CallToolWithDecision(string name, string arguments)
+        {
+            var previous = TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests;
+            TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = (pending, _, _) =>
+            {
+                Assert.Equal(name, pending.Tool);
+                return Task.FromResult(new ApprovalOutcome(pending, false, null));
+            };
+            try { return Task.FromResult(TiaMcpServer.ModelContextProtocol.McpServer.CallTool(name, Args(arguments))); }
+            finally { TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = previous; }
+        }
+
+        private static TiaMcp.Logic.V4.Inputs.ToolArguments Args(string json)
+            => new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json));
+
+        [Theory]
+        [InlineData("SaveProject")]
+        [InlineData("SaveProjectCopy")]
+        [InlineData("CloseProject")]
+        public async Task Session_save_and_close_targets_are_gated_but_connect_and_disconnect_are_not(string tool)
+        {
+            using var fixture = new InfrastructureContractsTests();
+            SessionApprovalProbe.Calls = 0;
+            TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(new TiaMcpServer.ModelContextProtocol.ToolCatalog(new[] {
+                typeof(TiaMcpServer.ModelContextProtocol.McpServer), typeof(SessionApprovalProbe) }),
+                () => false, new System.Collections.Generic.HashSet<string>());
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite(tool, "{}"));
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                "{\"name\":\"" + tool + "\",\"arguments\":{}}"));
+            foreach (string sessionTool in new[] { "ConnectPortal", "DisconnectPortal" })
+            {
+                Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite(sessionTool, "{}"));
+                Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                    "{\"name\":\"" + sessionTool + "\",\"arguments\":{}}"));
+                Assert.Null(await TiaMcpServer.ModelContextProtocol.McpServer.WaitForApproval(sessionTool, "{}", CancellationToken.None));
+            }
+            if (!OperatingSystem.IsWindows()) return;
+
+            var before = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            bool previous = TiaMcpServer.ModelContextProtocol.McpServer.EnterMcpApprovalContext();
+            try
+            {
+                new ApprovalSettings(true, 2).Save(ApprovalSettings.SettingsPath);
+                var callArguments = new System.Text.Json.Nodes.JsonObject { ["mode"] = "apply", ["confirm"] = true,
+                    ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = "C:/fixture.ap21" };
+                if (tool == "SaveProjectCopy") callArguments["newProjectPath"] = "C:/copy.ap21";
+                string arguments = callArguments.ToJsonString();
+                var absent = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(
+                    TiaMcpServer.ModelContextProtocol.McpServer.CallTool(tool, Args(arguments)))!;
+                Assert.Equal("CONFIRMATION_REQUIRED", (string?)absent["error"]?["code"]);
+                Assert.Equal("not-started", (string?)absent["meta"]?["execution"]);
+
+                var granted = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(
+                    await CallToolWithDecision(tool, arguments))!;
+                Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)granted["error"]?["code"]);
+                Assert.Equal(1, SessionApprovalProbe.Calls);
+
+                new ApprovalSettings(false, 2).Save(ApprovalSettings.SettingsPath);
+                var disabled = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(
+                    TiaMcpServer.ModelContextProtocol.McpServer.CallTool(tool, Args(arguments)))!;
+                Assert.Single(disabled["meta"]!["warnings"]!.AsArray(), row => (string?)row?["code"] == "APPROVAL_DISABLED");
+                Assert.Equal(2, SessionApprovalProbe.Calls);
+            }
+            finally
+            {
+                TiaMcpServer.ModelContextProtocol.McpServer.LeaveMcpApprovalContext(previous);
+                before.Save(ApprovalSettings.SettingsPath);
+            }
+        }
         [Fact]
         public void CallTool_write_target_refuses_before_dispatch_when_workbench_is_unavailable()
         {

@@ -237,7 +237,9 @@ namespace TiaMcpConfigurator
 
         private static void RunChecked(string executable, string arguments)
         {
-            var info = new ProcessStartInfo(executable, arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+            var childEncoding = ChildConsoleEncoding();
+            var info = new ProcessStartInfo(executable, arguments) { UseShellExecute = false, CreateNoWindow = true,
+                RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = childEncoding, StandardErrorEncoding = childEncoding };
             using (var process = Process.Start(info))
             {
                 var output = process.StandardOutput.ReadToEndAsync();
@@ -256,8 +258,10 @@ namespace TiaMcpConfigurator
             // would be needed to query ownership precisely. Adding an existing identical reservation is
             // handled by first checking its SDDL in netsh output below.
             string netsh = Path.Combine(Environment.SystemDirectory, "netsh.exe");
+            var childEncoding = ChildConsoleEncoding();
             var info = new ProcessStartInfo(netsh, "http show urlacl " + Quote("url=" + prefix)) {
-                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                StandardOutputEncoding = childEncoding, StandardErrorEncoding = childEncoding };
             string existing;
             using (var check = Process.Start(info))
             {
@@ -269,6 +273,12 @@ namespace TiaMcpConfigurator
                 RunChecked(netsh, "http add urlacl " + Quote("url=" + prefix) + " " + Quote("sddl=" + sddl));
             string rule = "TIA-MCP-" + address + "-" + port;
             TiaOpenness.Shared.WindowsFirewallRule.Configure(rule, "TIA MCP TCP " + port, address, port);
+        }
+
+        private static Encoding ChildConsoleEncoding()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
         }
     }
 

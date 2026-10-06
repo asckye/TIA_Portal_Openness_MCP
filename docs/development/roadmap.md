@@ -28,16 +28,6 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认开启审批：写调用派发前�
 - Foundation 绑定快照仍是生命周期集成边界；不得把仅凭 PID 的附着描述为已验证的进程启动身份。
 - 八版能力复核保持在[功能矩阵](../reference/openness-coverage.md)与
   [机器可读功能证据](../../reference/version-feature-matrix.json)中更新。
-- 未打开工程时调用 `SaveProject` 目前返回 `OUTCOME_UNKNOWN` 并要求重置会话，但原生保存并未执行；应改为操作前拒绝
-  （`PRECONDITION_FAILED` / `rejected-before-operation`）。
-
-## 3.3 时期遗留的改进
-
-- 缺少 .NET Framework 4.8 时，启动前给出中文提示。
-- 桥接进程的 stderr 诊断按控制台代码页（GBK）写出却按 UTF-8 读取，工作台日志中的中文会乱码。
-- 新 worker 首次附着超时时，TIA 通常在等待 Openness 访问确认（“全部选是”）；超时消息与工作台日志应提示这一点，
-  而不只是“Worker timed out; native outcome is unknown.”。
-
 ## 维护
 
 工具参数、语言示例、结果解读和调用顺序统一维护在 `reference/tool-examples`，由生成的 `GetToolUsage` 目录提供；

@@ -12,6 +12,8 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 HostOptions options;
+Console.OutputEncoding = new UTF8Encoding(false);
+Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
 try
 {
     var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);

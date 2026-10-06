@@ -16,7 +16,7 @@ Workbench 崩溃日志位于 `data/logs/studio`；进程键含 PID、启动 UTC�
 Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；自选解释器用 `TIA_MCP_PLC_TOOLS_PYTHON`，
 安装步骤见[生态工具](../reference/ecosystem-tools.md)。
 
-MCP `WRITE` / `ONLINE-WRITE` 操作默认须由 Workbench 审批后才派发。拒绝、120 秒默认超时或 Workbench 不可用会在操作开始前返回 `CONFIRMATION_REQUIRED`；MCP 客户端不能自批。每次决定和结果追加到 `data/logs/audit`，用 `tia audit verify` 或 Workbench 审计页检查保留链记录；校验不能证明整份日志没有被删除。`data/diagnostics` 保存原生调用诊断包。工具输出使用 V4 `ok` / `data` / `error` / `meta` 信封；`OUTCOME_UNKNOWN` 要先核对工程，不能自动重放写调用。
+MCP `WRITE` / `ONLINE-WRITE` 操作默认须由 Workbench 审批后才派发。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 即使在目录中分类为 `SESSION` 也须审批；connect、attach、open 和 disconnect 仍不审批。拒绝、120 秒默认超时或 Workbench 不可用会在操作开始前返回 `CONFIRMATION_REQUIRED`；MCP 客户端不能自批。每次决定和结果追加到 `data/logs/audit`，用 `tia audit verify` 或 Workbench 审计页检查保留链记录；校验不能证明整份日志没有被删除。`data/diagnostics` 保存原生调用诊断包。工具输出使用 V4 `ok` / `data` / `error` / `meta` 信封；`OUTCOME_UNKNOWN` 要先核对工程，不能自动重放写调用。
 
 ## 选择匹配的引擎
 

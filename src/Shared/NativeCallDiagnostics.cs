@@ -47,6 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (descriptor is Delegate callback) { receiver = callback.Target; info = callback.Method; }
                 bool native = category == "direct" || Known(receiver) || NativeType(info?.DeclaringType) || descriptor is Type type && NativeType(type);
                 if (!native) return null;
+                InvocationJournal.NativeCallStarted();
                 if (info != null) member = (info.DeclaringType?.FullName ?? "") + "::" + info.Name;
                 string owner = member.Split(new[] { "::" }, StringSplitOptions.None)[0];
                 owner = owner.Substring(owner.LastIndexOf(' ') + 1);

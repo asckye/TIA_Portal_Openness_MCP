@@ -376,7 +376,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "SaveProject"), Description("[L1][Project] Save the currently open project or session to disk. Requires: ConnectPortal + OpenProject. Call after any significant change (device add, block import, HMI edit). Compile first if there are pending changes to ensure consistency. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SaveProjectV4()
-            => SessionToolContract.Run("SaveProject", true, true, () => SaveProject());
+            => SessionToolContract.Run("SaveProject", true, true, () => SaveProject(), () => !_session.IsProjectNull());
 
         public ResponseSaveProject SaveProject()
         {
@@ -422,7 +422,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project]Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SaveProjectCopyV4(
             [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
-            => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath));
+            => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath), () => !_session.IsProjectNull());
 
         public ResponseSaveAsProject SaveAsProject(
             [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
@@ -458,7 +458,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "CloseProject"), Description("[L1][Project] Close the currently open project or multi-user session. Requires: ConnectPortal + OpenProject. Any unsaved changes are lost — call SaveProject first. After closing, the connection remains active but no project is open. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CloseProjectV4()
-            => SessionToolContract.Run("CloseProject", true, true, () => CloseProject());
+            => SessionToolContract.Run("CloseProject", true, true, () => CloseProject(), () => !_session.IsProjectNull());
 
         public ResponseCloseProject CloseProject()
         {

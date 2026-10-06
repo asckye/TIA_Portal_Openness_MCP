@@ -17,6 +17,7 @@ internal static class Program
             TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
         Console.InputEncoding = new System.Text.UTF8Encoding(false);
         Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+        Console.SetError(new System.IO.StreamWriter(Console.OpenStandardError(), new System.Text.UTF8Encoding(false)) { AutoFlush = true });
         // A worker is launched lazily by its exact-release host.
         if (args.Length != 4 || args[0] != "--native-session")
         {

@@ -14,6 +14,10 @@ namespace TiaMcp.LegacyHost;
 // worker protocol and bounded parsers; legacy names are not callable aliases.
 internal sealed class FoundationV4Tool : McpServerTool
 {
+    // P6-49 round 2 decision (2026-10-06): gate project save, save-as and close
+    // even though the catalog marks them SESSION. Disconnect remains a session operation.
+    private static readonly HashSet<string> SessionApprovalEntries = new(StringComparer.Ordinal)
+        { "SaveProject", "CloseProject" };
     internal static readonly IReadOnlyDictionary<string, string> Names = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["AddDeviceWithFallback"] = "CreateHardwareDevice", ["AttachToOpenProject"] = "AttachOpenProject",
@@ -55,16 +59,21 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly bool sourceCandidate;
     private readonly bool compileCandidate;
     private readonly Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings;
+    private readonly Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
+        CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
     internal FoundationV4Tool(McpServerTool inner, string release) : this(inner, release, null) { }
 
     internal FoundationV4Tool(McpServerTool inner, string release, Func<string, BehaviorPolicy>? policyForTest,
-        Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null)
+        Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null,
+        Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
+            CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null)
     {
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
+        this.approvalWait = approvalWait;
         var source = inner.ProtocolTool;
         deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
@@ -156,10 +165,19 @@ internal sealed class FoundationV4Tool : McpServerTool
 
     public override Tool ProtocolTool => tool;
     private bool Candidate => deviceCandidate || importCandidate || exportCandidate || sessionCandidate || saveCloseCandidate || sourceCandidate || compileCandidate;
+    private bool SessionApprovalApply(JsonObject args)
+    {
+        if (!SessionApprovalEntries.Contains(tool.Name)) return false;
+        if (saveCloseCandidate) return (string?)args["mode"] == "apply";
+        return !args.TryGetPropertyValue("dryRun", out var dryRun) || dryRun is not JsonValue value
+            || !value.TryGetValue<bool>(out var preview) || !preview;
+    }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
-        bool write = inner is FoundationTool { IsWrite: true } || Candidate && request.Params?.Arguments?.TryGetValue("mode", out var mode) == true
-            && mode.ValueKind == JsonValueKind.String && mode.GetString() == "apply";
+        var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
+        var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
+        bool write = inner is FoundationTool { IsWrite: true } || Candidate && arguments["mode"]?.ToString() == "apply"
+            || SessionApprovalApply(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
         using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name);
@@ -203,11 +221,14 @@ internal sealed class FoundationV4Tool : McpServerTool
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
-            if ((inner is FoundationTool { IsWrite: true } || Candidate) && !preview)
+            bool sessionApprovalApply = SessionApprovalApply(JsonSerializer.SerializeToNode(args) as JsonObject ?? new JsonObject());
+            if ((inner is FoundationTool { IsWrite: true } || Candidate || sessionApprovalApply) && !preview)
             {
                 var pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
-                var approval = await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken);
+                var approval = approvalWait == null
+                    ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
+                    : await approvalWait(pending, settings, cancellationToken);
                 capture(approval);
                 if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(approval.Reason, pending.PlanHash, id))));

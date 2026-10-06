@@ -45,7 +45,7 @@ namespace TiaMcp.WorkerChannel
         }
 
         public async Task<string> CallAsync(string method, string argumentsJson, BindingChange bindingChange,
-            bool readOnly, TimeSpan timeout, CancellationToken token = default)
+            bool readOnly, TimeSpan timeout, CancellationToken token = default, bool firstAttach = false)
         {
             token.ThrowIfCancellationRequested();
             Pending call;
@@ -70,7 +70,7 @@ namespace TiaMcp.WorkerChannel
             try
             {
                 // One budget covers both writing and receiving; progress never resets it.
-                var response = await Bounded(exchange, timeout, token).ConfigureAwait(false);
+                var response = await Bounded(exchange, timeout, token, firstAttach).ConfigureAwait(false);
                 lock (gate)
                 {
                     if (profile == ChannelProfile.Studio || response.Failure?.Outcome != ChannelOutcome.Unknown) RequireUsable();
@@ -180,7 +180,7 @@ namespace TiaMcp.WorkerChannel
             }
         }
 
-        private static async Task<T> Bounded<T>(Task<T> task, TimeSpan timeout, CancellationToken token)
+        private static async Task<T> Bounded<T>(Task<T> task, TimeSpan timeout, CancellationToken token, bool firstAttach = false)
         {
             if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
             using (var cancel = CancellationTokenSource.CreateLinkedTokenSource(token))
@@ -191,7 +191,9 @@ namespace TiaMcp.WorkerChannel
                     // Observe failures from a pipe operation that completes after the deadline.
                     _ = task.ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     token.ThrowIfCancellationRequested();
-                    throw new TimeoutException("Worker timed out; native outcome is unknown.");
+                    throw new TimeoutException(firstAttach
+                        ? "Worker timed out; native outcome is unknown. A first attach from a new worker or build may be waiting for TIA Portal Openness access confirmation; choose ‘Yes’ or ‘Yes to all’ on the TIA machine."
+                        : "Worker timed out; native outcome is unknown.");
                 }
                 cancel.Cancel();
                 return await task.ConfigureAwait(false);
