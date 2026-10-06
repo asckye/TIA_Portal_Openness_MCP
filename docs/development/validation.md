@@ -38,6 +38,24 @@ pwsh -NoProfile -File scripts/operations/Update-Engine.ps1 -SelfTest
 保护目录、路径越界和回滚新增文件清理，不连接网络或真实安装。资产自检用内存 tag 树和本地 ZIP，
 检查缺失/多余文件、误带验证器、二进制哈希、sidecar 和 tag 内容优先于 checkout。
 
+## 重定位与只读安装检查
+
+在 Windows 上对已提取的候选包运行下面的脚本。它将整包复制到仓库外、带空格和中文的临时路径，
+用临时只读 ACL 检查根目录，再通过 STDIO `tools/list` 检查六个 Foundation 发布键和 V20/V21 引擎的
+工具数量。Foundation 宿主使用 `--offline`；该检查不调用 TIA 工具。它还验证根启动器指向随包 Studio、
+无效显式 `--bundle-root` 不回退、缺少所选引擎会被拒绝，以及更新入口拒绝 source checkout。
+
+`SaveProject` 审批探针以 apply 确认请求验证默认开启的审批在没有工作台时于派发前拒绝，并核对只读安装下
+主日志、审批配置锁和审批审计分别进入 P6-39 的用户回退路径。探针会在当前用户的 config/audit 回退目录
+留下正常锁文件与审批审计行；若已有配置明确关闭审批，脚本保留该用户设置并将此项报告为未验证。
+需安装 .NET 10 SDK 与 .NET Framework 4.8 或更高版本。临时只读 ACL 会在退出时移除，复制目录默认清理；
+传入 `--keep-relocation` 可保留复制件供审查。
+
+```powershell
+python scripts/checks/Test-RelocatedBundle.py --self-test
+python scripts/checks/Test-RelocatedBundle.py --bundle-root <extracted-bundle-root>
+```
+
 ## 一次构建全部开发工程
 
 使用 Windows 和 .NET 10 SDK（支持 .slnx、Studio WPF 及 .NET Framework 目标）。
@@ -431,6 +449,10 @@ compare 报告每版 changed/added/removed 数及变化调用的首个差异路�
 source-contracts 同时运行 `Snapshot-ToolContracts.py verify` 和 `Snapshot-ToolResponses.py verify`：每类恰好八个发布键文件、release 与文件名一致、名称唯一、full/lite 与 ToolProfiles.resx 一致、Foundation 无 lite，并按现有捕获规则核对响应覆盖和调用记录。此步骤不构建/运行引擎，不扩展快照格式；P6-35 补充行为能力、最终 P6-41 冻结格式和刷新基线。默认 HTTP harness 两版仍在各 16 项检查通过后因 `HttpListener` 的 `PlatformNotSupportedException` 停止。以上均为离线证据，不代表原生 TIA 验收。
 
 ## 压力与故障检查
+
+Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立的 `TIA_MCP_DATA_DIRECTORY`，明确写入 `config/approval.settings`，并隔离 diagnostics、`LOCALAPPDATA` 和临时文件。功能检查关闭审批；成功后删除数据根，失败时保留供检查。读取 V4 结果的检查允许关闭审批的写入结果带唯一的 `APPROVAL_DISABLED` warning。每个 Engine 版本及六个 Foundation 发布键还单独运行默认开启审批的检查：无 Workbench 时写入必须以 `CONFIRMATION_REQUIRED` / `workbench-unavailable` 在派发前拒绝，读取仍成功。Foundation V4 冻结目录不包含 `CallTool`，因此该检查记录工具目录证明和直接调用结果，不扩展公共接口。
+
+真实机器 campaign、VM MCP probe、生产 MCP 生命周期和 VCI watcher 在执行前会提示：写入 campaign 期间保持 Workbench 打开以批准调用，或在 MCP 菜单关闭审批；这些客户端不绕过审批。
 
 `Test-LocalStability.py` 对 V20/V21 的普通/隔离进程、两种传输和 full/lite
 组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发；

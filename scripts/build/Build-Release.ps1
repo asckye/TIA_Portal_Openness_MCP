@@ -22,6 +22,7 @@ $expectedCheckCounts=[ordered]@{
     processLeases=@{value=2;mode='min'}
     workerFaults=@{value=25;mode='min'}
     workerProtocol=@{value=58;mode='min'}
+    approvalSafety=@{value=3;mode='exact'}
     softwareLookup=@{value=45;mode='min'}
     engineeringApiV20=@{value=2840;mode='min'}
     engineeringApiV21=@{value=3126;mode='min'}
@@ -60,6 +61,14 @@ function Wait-VersionPipelines($Jobs,[string]$Output) {
 }
 
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+# Isolated host roots live outside the repository: tests that create Git repositories or look for a source checkout must
+# not find this one. The outermost script fixes the root; nested scripts inherit it through the environment.
+if(-not $env:TIA_MCP_RELEASE_TEMP_ROOT){$env:TIA_MCP_RELEASE_TEMP_ROOT=Join-Path ([IO.Path]::GetTempPath()) ('tmr-'+[guid]::NewGuid().ToString('N').Substring(0,8))}
+$releaseTempRoot=[IO.Path]::GetFullPath($env:TIA_MCP_RELEASE_TEMP_ROOT)
+# Build servers started under an isolated TEMP would outlive the check and lock files there.
+$env:UseSharedCompilation='false'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER='0'
+if($releaseTempRoot.StartsWith(([IO.Path]::GetFullPath($repo).TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)){throw "Release temp root must be outside the repository: $releaseTempRoot"}
 if($SelfTest){
     $scratch=Join-Path $repo ('bin-build/parallel-selftest-'+[guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force $scratch | Out-Null
@@ -124,11 +133,9 @@ $sharedOut=$out
 if($PipelineMajor){$out=Join-Path $sharedOut "v$PipelineMajor"; New-Item -ItemType Directory -Force $out | Out-Null}
 $env:DOTNET_CLI_HOME=Join-Path $out 'dotnet-home'
 $env:MSBUILDDISABLENODEREUSE='1'
-if($PipelineMajor){
-    $env:TEMP=Join-Path $out 'temp'; $env:TMP=$env:TEMP
-    $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $out 'diagnostics'
-    New-Item -ItemType Directory -Force $env:TEMP,$env:TIA_MCP_DIAGNOSTICS_DIRECTORY | Out-Null
-}
+$env:TEMP=Join-Path $out 'temp'; $env:TMP=$env:TEMP
+$env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $out 'diagnostics'
+New-Item -ItemType Directory -Force $env:TEMP,$env:TIA_MCP_DIAGNOSTICS_DIRECTORY | Out-Null
 function Read-ReleaseInputs([switch]$Validation) {
     . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
     if ($Validation) { @(Get-ReleaseValidationInputs $repo 'engine') } else { @(Get-ReleaseSources $repo 'engine') }
@@ -136,15 +143,38 @@ function Read-ReleaseInputs([switch]$Validation) {
 if(-not $PipelineMajor){$sourceFiles=@(Read-ReleaseInputs);$validationInputs=@(Read-ReleaseInputs -Validation)}
 $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
-function Run([string]$Program,[string[]]$Arguments,[string]$Log) {
+function Run([string]$Program,[string[]]$Arguments,[string]$Log,[bool]$ApprovalEnabled=$false) {
     if($Program -eq $Dotnet -and $Arguments[0] -in 'build','restore'){$Arguments+=@('-nodeReuse:false','-p:UseSharedCompilation=false')}
+    $dataBase=Join-Path $releaseTempRoot 'br'
+    $safeName=[IO.Path]::GetFileNameWithoutExtension($Log) -replace '[^A-Za-z0-9._-]','_'
+    # Short ids keep nested paths below MAX_PATH; check.txt names the step.
+    $dataRoot=Join-Path $dataBase ([guid]::NewGuid().ToString('N').Substring(0,8))
+    New-Item -ItemType Directory -Force $dataRoot | Out-Null
+    [IO.File]::WriteAllText((Join-Path $dataRoot 'check.txt'),$safeName)
+    New-Item -ItemType Directory -Force -Path (Join-Path $dataRoot 'config'),(Join-Path $dataRoot 'temp'),(Join-Path $dataRoot 'local-app-data'),(Join-Path $dataRoot 'app-data') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $dataRoot 'config/approval.settings'),('enabled='+$ApprovalEnabled.ToString().ToLowerInvariant()+"`ntimeoutSeconds=120`n"),[Text.UTF8Encoding]::new($false))
+    $savedData=$env:TIA_MCP_DATA_DIRECTORY;$savedDiagnostics=$env:TIA_MCP_DIAGNOSTICS_DIRECTORY
+    $savedLocalAppData=$env:LOCALAPPDATA;$savedAppData=$env:APPDATA;$savedTemp=$env:TEMP;$savedTmp=$env:TMP
+    $completed=$false
     # Windows PowerShell wraps native stderr as ErrorRecord even for warnings.
     $savedPreference=$ErrorActionPreference
     try {
+        $env:TIA_MCP_DATA_DIRECTORY=$dataRoot
+        $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $dataRoot 'diagnostics'
+        $env:LOCALAPPDATA=Join-Path $dataRoot 'local-app-data'
+        $env:APPDATA=Join-Path $dataRoot 'app-data'
+        $env:TEMP=Join-Path $dataRoot 'temp';$env:TMP=$env:TEMP
         $ErrorActionPreference='Continue'
         & $Program @Arguments > (Join-Path $out $Log) 2>&1
         $exitCode=$LASTEXITCODE
-    } finally { $ErrorActionPreference=$savedPreference }
+        $completed=($exitCode -eq 0)
+    } finally {
+        $ErrorActionPreference=$savedPreference
+        $env:TIA_MCP_DATA_DIRECTORY=$savedData;$env:TIA_MCP_DIAGNOSTICS_DIRECTORY=$savedDiagnostics
+        $env:LOCALAPPDATA=$savedLocalAppData;$env:APPDATA=$savedAppData;$env:TEMP=$savedTemp;$env:TMP=$savedTmp
+        if($completed){try{Remove-Item -LiteralPath $dataRoot -Recurse -Force -ErrorAction Stop}catch{Write-Warning ("release check data still in use (kept): "+$dataRoot)}}
+        else{Write-Host "Retained failed release check data ($safeName): $dataRoot"}
+    }
     if($exitCode){throw "$Program failed ($exitCode); see $out/$Log"}
 }
 function Restore([string]$Project,[string[]]$Properties) {
@@ -160,6 +190,7 @@ function Run-DotnetSuite([string]$Name,[string]$Log) {
     return [int]$summary.passed
 }
 if(-not $PipelineMajor) {
+Run $Python @((Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py'),'--self-test') 'approval-gate-self-test.log'
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
 $nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
 if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
@@ -289,6 +320,12 @@ foreach($major in @($PipelineMajor)) {
     Run $Python @((Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "worker-protocol-v$major.log"
     $workerProtocol=[regex]::Match((Get-Content (Join-Path $out "worker-protocol-v$major.log") -Raw),'COMPLETE: (\d+) isolated MCP checks passed; no TIA connection attempted')
     Assert-MatchedCheckCount 'workerProtocol' $workerProtocol 'Isolated MCP protocol checks incomplete'
+    $approvalOut=Join-Path $out ("approval-default-v$major-"+[guid]::NewGuid().ToString('N'))
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py'),'--product','engine','--major',"$major",'--exe',$exe,'--portal-root',$api,'--host-harness',$harness,'--public-api',$api,'--temp-root',$env:TEMP,'--output',$approvalOut) "approval-safety-v$major.log" $true
+    $approvalResult=Get-Content (Join-Path $approvalOut 'result.json') -Raw | ConvertFrom-Json
+    Assert-CheckCount 'approvalSafety' $approvalResult.checksPassed "V$major default-approval checks incomplete"
+    if($approvalResult.status -ne 'passed' -or $approvalResult.checksExpected -ne 3 -or $approvalResult.workbenchConnected -ne $false -or $approvalResult.tiaConnected -ne $false -or
+        $approvalResult.results.direct -ne 'refused-before-dispatch; read-succeeded' -or $approvalResult.results.CallTool -ne 'refused-before-dispatch') {throw "V$major default-approval gate result is invalid"}
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
     Assert-MatchedCheckCount 'softwareLookup' $softwareLookup 'Software lookup/listing validation did not report complete success'
@@ -355,6 +392,7 @@ foreach($major in @($PipelineMajor)) {
     $coverage.sites | Group-Object category | ForEach-Object {$categories[$_.Name]=$_.Count}
     $checks["V$major"]['nativeDiagnostics']=[ordered]@{status='passed';sites=$coverage.count;categories=$categories;uncoveredSupportedBoundaries=0;coverageSha256=(Get-FileHash $coveragePath).Hash.ToLowerInvariant();instrumenterSha256=$coverage.instrumenterSha256;jitPrepared=[int]$nativeJit.Groups[1].Value;openGenericWrappers=[int]$nativeJit.Groups[2].Value;fixture=$diagnosticTests;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py')).Hash.ToLowerInvariant();liveTiaExecuted=$false;scope='Engine-owned Openness call sites; not SDK/server internals or a native stability claim'}
     $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$false;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
+    $checks["V$major"]['approvalSafety']=[ordered]@{status='passed';checksPassed=[int]$approvalResult.checksPassed;defaultEnabled=$true;directWriteRefusedBeforeDispatch=$true;callToolWriteRefusedBeforeDispatch=$true;readSucceeded=$true;workbenchConnected=$false;tiaConnected=$false;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value

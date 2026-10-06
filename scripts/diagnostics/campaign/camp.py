@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Real-machine campaign runner (scripts/diagnostics/campaign). Talks to the VM engine through scripts/diagnostics/Probe-McpServer.py
 (the tia-portal-vm entry of ~/.claude.json: url + Authorization header), so it works from any machine that has that entry.
+Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.
   python plans/plan_x.py                            regenerate plans/plan_x.json from its .py
   python camp.py run plans/plan_x.json [start]      run it; rows go to ledger/plan_x.jsonl; stops when TIA dies
   python make_ledger.py                             regenerate docs/reference/real-machine-ledger.md (ledger-runs.jsonl.gz + ledger/*.jsonl + overrides)
@@ -21,6 +22,10 @@ spec = importlib.util.spec_from_file_location("probe", os.path.join(REPO, "scrip
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 p = None
 LITE = set()
+APPROVAL_NOTICE = "Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval."
+
+def print_approval_notice():
+    print(APPROVAL_NOTICE, file=sys.stderr, flush=True)
 
 def connect():
     global p, LITE
@@ -76,6 +81,7 @@ def trim(v, n=900):
 if __name__ == "__main__":
     mode = sys.argv[1]
     if mode in ("call", "raw", "full"):
+        print_approval_notice()
         tool = sys.argv[2]; args = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
         d, txt = call_raw(tool, args)
         if mode == "raw": print(txt[:6000]); sys.exit()
@@ -89,6 +95,7 @@ if __name__ == "__main__":
             elif k in meta: print("   ", k, "=", trim(meta[k], 1500))
         print("   ", alive())
     elif mode == "run":
+        print_approval_notice()
         plan_path = sys.argv[2]; start = int(sys.argv[3]) if len(sys.argv) > 3 else 0
         plan = json.load(io.open(plan_path, encoding="utf-8"))
         os.makedirs(os.path.join(HERE, "ledger"), exist_ok=True)

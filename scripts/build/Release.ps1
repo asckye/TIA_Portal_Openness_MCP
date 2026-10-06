@@ -91,17 +91,54 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+# Isolated host roots live outside the repository: tests that create Git repositories or look for a source checkout must
+# not find this one. The outermost script fixes the root; nested scripts inherit it through the environment.
+if(-not $env:TIA_MCP_RELEASE_TEMP_ROOT){$env:TIA_MCP_RELEASE_TEMP_ROOT=Join-Path ([IO.Path]::GetTempPath()) ('tmr-'+[guid]::NewGuid().ToString('N').Substring(0,8))}
+$releaseTempRoot=[IO.Path]::GetFullPath($env:TIA_MCP_RELEASE_TEMP_ROOT)
+# Build servers started under an isolated TEMP would outlive the check and lock files there.
+$env:UseSharedCompilation='false'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER='0'
+if($releaseTempRoot.StartsWith(([IO.Path]::GetFullPath($repo).TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)){throw "Release temp root must be outside the repository: $releaseTempRoot"}
 Set-Location $repo
 $log = Join-Path $repo 'release.log'
+$script:releaseRunTemp = ''
 function Say([string]$text) { $line = "[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $text; Write-Host $line; Add-Content -LiteralPath $log -Value $line -Encoding UTF8 }
 function Fail([string]$text) { Say ("FAIL: " + $text); exit 1 }
 function Run([string]$exe, [string[]]$arguments, [string]$what) {
     Say ("> " + $what)
+    if (-not $script:releaseRunTemp) {
+        $script:releaseRunTemp = Join-Path $releaseTempRoot ('rel-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+        New-Item -ItemType Directory -Force -Path $script:releaseRunTemp | Out-Null
+    }
+    # Short ids keep nested paths below MAX_PATH; check.txt names the command.
+    $hostRoot = Join-Path $script:releaseRunTemp ([guid]::NewGuid().ToString('N').Substring(0,8))
+    New-Item -ItemType Directory -Force -Path $hostRoot | Out-Null
+    [IO.File]::WriteAllText((Join-Path $hostRoot 'check.txt'), [IO.Path]::GetFileNameWithoutExtension($exe))
+    New-Item -ItemType Directory -Force -Path (Join-Path $hostRoot 'config'),(Join-Path $hostRoot 'temp'),(Join-Path $hostRoot 'local-app-data'),(Join-Path $hostRoot 'app-data') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $hostRoot 'config/approval.settings'), "enabled=false`ntimeoutSeconds=120`n", (New-Object System.Text.UTF8Encoding($false)))
+    $savedData = $env:TIA_MCP_DATA_DIRECTORY; $savedDiagnostics = $env:TIA_MCP_DIAGNOSTICS_DIRECTORY
+    $savedLocalAppData = $env:LOCALAPPDATA; $savedAppData = $env:APPDATA; $savedTemp = $env:TEMP; $savedTmp = $env:TMP
+    $completed = $false; $exitCode = $null
     # Native programs (git in particular) write ordinary progress to stderr; under $ErrorActionPreference = 'Stop' PowerShell 5.1
     # turns a redirected stderr line into a terminating error, so the preference is relaxed around the call and only the exit code counts.
     $previous = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-    try { & $exe @arguments 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 } } finally { $ErrorActionPreference = $previous }
-    if ($LASTEXITCODE -ne 0) { Fail ($what + " exited with " + $LASTEXITCODE + " (see release.log)") }
+    try {
+        $env:TIA_MCP_DATA_DIRECTORY = $hostRoot
+        $env:TIA_MCP_DIAGNOSTICS_DIRECTORY = Join-Path $hostRoot 'diagnostics'
+        $env:LOCALAPPDATA = Join-Path $hostRoot 'local-app-data'
+        $env:APPDATA = Join-Path $hostRoot 'app-data'
+        $env:TEMP = Join-Path $hostRoot 'temp'; $env:TMP = $env:TEMP
+        & $exe @arguments 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 }
+        $exitCode = $LASTEXITCODE
+        $completed = ($exitCode -eq 0)
+    } finally {
+        $ErrorActionPreference = $previous
+        $env:TIA_MCP_DATA_DIRECTORY = $savedData; $env:TIA_MCP_DIAGNOSTICS_DIRECTORY = $savedDiagnostics
+        $env:LOCALAPPDATA = $savedLocalAppData; $env:APPDATA = $savedAppData; $env:TEMP = $savedTemp; $env:TMP = $savedTmp
+        if($completed){try{Remove-Item -LiteralPath $hostRoot -Recurse -Force -ErrorAction Stop}catch{Write-Warning ("release check data still in use (kept): "+$hostRoot)}}
+        else { Write-Host "Retained failed release check data: $hostRoot" }
+    }
+    if ($exitCode -ne 0) { Fail ($what + " exited with " + $exitCode + " (see release.log)") }
 }
 function ReadText([string]$path) { [IO.File]::ReadAllText($path) }
 function WriteText([string]$path, [string]$text) {
@@ -270,11 +307,18 @@ function Get-ReleaseReuseReason([string]$Kind) {
         foreach ($major in @(20,21)) {
             $check = $record.validation.runtimes."V$major"
             if ($check.localStability.status -ne 'passed' -or $check.localStability.runs.Count -ne 4 -or $check.isolatedLocalStability.status -ne 'passed' -or $check.isolatedLocalStability.runs.Count -ne 4 -or -not $check.isolatedLocalStability.isolatedWorker) { return "V$major validation incomplete" }
+            if ($check.approvalSafety.status -ne 'passed' -or $check.approvalSafety.checksPassed -ne 3 -or -not $check.approvalSafety.defaultEnabled -or -not $check.approvalSafety.directWriteRefusedBeforeDispatch -or -not $check.approvalSafety.callToolWriteRefusedBeforeDispatch -or -not $check.approvalSafety.readSucceeded -or $check.approvalSafety.workbenchConnected -or $check.approvalSafety.tiaConnected) { return "V$major default-approval gate incomplete" }
         }
         $property = 'runtimeFiles'
     } else {
-        foreach ($flag in @('foundationTransportExecuted','studioFunctionalTestsExecuted','configurationFunctionalTestsExecuted','toolUsageCoverageExecuted')) {
+        foreach ($flag in @('foundationTransportExecuted','studioFunctionalTestsExecuted','configurationFunctionalTestsExecuted','toolUsageCoverageExecuted','approvalSafetyExecuted')) {
             if (-not $record.validation.$flag) { return "validation missing: $flag" }
+        }
+        if ($record.validation.foundationApprovalSafetyChecksPassed -ne 18 -or (($record.validation.foundationCallToolUnsupportedReleases | Sort-Object) -join ',') -cne '14sp1,15.1,16,17,18,19') { return 'Foundation default-approval gate incomplete' }
+        $foundationRows = @($record.releases | Where-Object { $_.profile -eq 'plc-foundation' })
+        if ($foundationRows.Count -ne 6 -or (($foundationRows.releaseKey | Sort-Object) -join ',') -cne '14sp1,15.1,16,17,18,19') { return 'Foundation release approval inventory incomplete' }
+        foreach ($releaseRow in $foundationRows) {
+            if ($releaseRow.approvalSafetyChecksPassed -ne 3 -or -not $releaseRow.approvalDefaultEnabled -or $releaseRow.approvalSafety.status -ne 'passed' -or -not $releaseRow.approvalSafety.directWriteRefusedBeforeDispatch -or -not $releaseRow.approvalSafety.readSucceeded -or $releaseRow.approvalSafety.callTool -ne 'not-advertised-by-Foundation-V4') { return "Foundation approval gate incomplete: $($releaseRow.releaseKey)" }
         }
         if (($record.studioReleaseKeys -join ',') -ne '14sp1,15.1,16,17,18,19,20,21') { return 'eight-version validation missing' }
         $property = 'files'

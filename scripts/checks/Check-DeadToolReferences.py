@@ -363,12 +363,23 @@ def _markdown_scan_lines(relative, source):
             yield line_number, line
 
 
+def _current_markdown(root):
+    """Markdown files Git tracks or would add; ignored output (bin-build, build records) is not current guidance."""
+    import subprocess
+    try:
+        names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', '*.md'],
+                                        cwd=root).decode('utf-8').split('\0')
+        return [root / name for name in names if name]
+    except (OSError, subprocess.CalledProcessError):
+        return list(root.rglob('*.md'))
+
+
 def scan_markdown(root, extra_docs=None, include_tree=True):
     """Return retired 3.x names used as names in current Markdown guidance."""
     retired = retired_tool_names(root)
     documents = {}
     if include_tree:
-        for path in root.rglob('*.md'):
+        for path in _current_markdown(root):
             relative = path.relative_to(root).as_posix()
             if _skip_history_path(relative):
                 continue
@@ -495,7 +506,7 @@ def main(fix=False):
     print('引擎注册工具：%d 个；扫描文件：%d 个' % (len(names), len(src)))
     root = Path(ROOT).parents[1]
     doc_bad = scan_markdown(root)
-    doc_count = sum(1 for path in root.rglob('*.md')
+    doc_count = sum(1 for path in _current_markdown(root)
                     if not _skip_history_path(path.relative_to(root).as_posix()))
     print('当前 Markdown：%d 个文件；%d 个退役名称引用' % (doc_count, sum(map(len, doc_bad.values()))))
     for tool, locations in doc_bad.items():

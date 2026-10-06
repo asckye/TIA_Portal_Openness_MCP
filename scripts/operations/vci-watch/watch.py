@@ -11,6 +11,7 @@
    永远不调 WorkspaceToProject，也不调 SaveProject —— 存不存盘是工程师的决定。
 3. **只提交有实质变更的**。没有变更就一个字都不输出、不产生空提交。
 4. 日志落 log/，每轮追加；失败不抛给用户，写日志并以非 0 退出码结束。
+SynchronizeVersionControlWorkspace and compile calls can require MCP approval. Before running, keep the Workbench open to approve calls or switch approvals off in the MCP menu; this client does not bypass approval.
 """
 
 from pathlib import Path
@@ -313,6 +314,8 @@ def project_signal(project_folder):
 
 
 def main():
+    if sys.stderr is not None:
+        print("Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.", file=sys.stderr, flush=True)
     cfg = json.load(io.open(CONFIG, encoding="utf-8"))
     exe = cfg["enginePath"]
     tia_version = cfg.get("tiaMajorVersion", 21)

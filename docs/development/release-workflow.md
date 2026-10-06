@@ -121,8 +121,11 @@ powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -SelfTest
 powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -PublicApiRoot <SDK-root> -OutputDirectory <new-output-directory> -CompanionPython <prepared-python.exe> -NuGetConfig <offline-nuget.config>
 ```
 
-九步顺序为：
+步骤顺序为（第 0 步为预检）：
 
+0. `Test-ReleasePreflight.ps1`：不需构建的全部发布检查（仓库与链接、随包文档只链接包内文件、CHANGELOG 最新条目与
+   `Version.props` 一致、死引用、生成器、V4 快照格式、发布脚本与审批/重定位检查器自检、严格包规则）。几分钟内跑完全部项目后
+   一次列出所有失败，避免每次一小时的构建只暴露一个问题；也可单独运行 `pwsh -NoProfile -File scripts/build/Test-ReleasePreflight.ps1`。
 1. `Build-MultiVersion -PrepareOnly -Offline -Test`：八版 worker/Studio、六版 Foundation、bundled .NET 和功能/传输检查。
 2. `Build-Release`：V20/V21 完整门禁、配置器及严格交付验证；随后 `Build-MultiVersion -CompleteOnly -Offline -Test`，验证准备证据并完成八版本记录与交付绑定。
 3. `Package-Release.py --local`，生成 ZIP、sidecar 和 `package-result.json`。
@@ -138,3 +141,6 @@ powershell -NoProfile -File scripts/build/Run-ReleaseBuild.ps1 -PublicApiRoot <S
 缺失时停止；多版本构建还显式传 `-Offline`，不下载。每步成功或失败后都恢复原记录并验证哈希。
 `Package-MultiVersion.py` 的开发包也接受 bundled .NET 清单中的 `.version` 文件，框架目录以外仍保留扩展名限制；字体 `.ttf`/`.otf` 继续按原始字节哈希。
 完整链仍需要非受限的本地 HTTP 与原子文件操作能力；此命令不进入 TIA/PLC/VM 或 live 分支。
+
+何时运行完整链：合并任何改动宿主行为（引擎、Foundation、worker、审批与数据目录）、打包与交付清单、随包文档或发布脚本的变更后，
+从干净 worktree 运行一次，不要攒到发布前。日常审查验证不包含发布构建内的宿主检查，4.0 发布候选曾因此连续暴露多个只在发布时才检查的问题。

@@ -12,6 +12,14 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+# Isolated host roots live outside the repository: tests that create Git repositories or look for a source checkout must
+# not find this one. The outermost script fixes the root; nested scripts inherit it through the environment.
+if(-not $env:TIA_MCP_RELEASE_TEMP_ROOT){$env:TIA_MCP_RELEASE_TEMP_ROOT=Join-Path ([IO.Path]::GetTempPath()) ('tmr-'+[guid]::NewGuid().ToString('N').Substring(0,8))}
+$releaseTempRoot=[IO.Path]::GetFullPath($env:TIA_MCP_RELEASE_TEMP_ROOT)
+# Build servers started under an isolated TEMP would outlive the check and lock files there.
+$env:UseSharedCompilation='false'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER='0'
+if($releaseTempRoot.StartsWith(([IO.Path]::GetFullPath($repo).TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)){throw "Release temp root must be outside the repository: $releaseTempRoot"}
 if($PrepareOnly -and $CompleteOnly){throw '-PrepareOnly and -CompleteOnly cannot be combined'}
 [xml]$versionXml=Get-Content -LiteralPath (Join-Path $repo 'Version.props') -Raw
 $release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
@@ -27,7 +35,35 @@ $api=(Resolve-Path -LiteralPath $PublicApiRoot).Path
 $env:TIA_MCP_TEST_PUBLIC_API_ROOT=$api
 $logs=Join-Path $repo 'bin-build/multi-version'
 New-Item -ItemType Directory -Force $logs | Out-Null
+$runTemp=Join-Path $releaseTempRoot 'mv'
+New-Item -ItemType Directory -Force $runTemp | Out-Null
 $pendingPath=Join-Path $logs 'prepared-build.json'
+function Invoke-IsolatedHostCheck([string]$Name,[bool]$ApprovalEnabled,[scriptblock]$Action) {
+    # Short ids keep Git fixtures under the test's TEMP below MAX_PATH; check.txt names the check.
+    $hostRoot=Join-Path $runTemp ([guid]::NewGuid().ToString('N').Substring(0,8))
+    New-Item -ItemType Directory -Force $hostRoot | Out-Null
+    [IO.File]::WriteAllText((Join-Path $hostRoot 'check.txt'),$Name)
+    New-Item -ItemType Directory -Force -Path (Join-Path $hostRoot 'config'),(Join-Path $hostRoot 'temp'),(Join-Path $hostRoot 'local-app-data'),(Join-Path $hostRoot 'app-data') | Out-Null
+    $approvalText='enabled='+$ApprovalEnabled.ToString().ToLowerInvariant()+"`ntimeoutSeconds=120`n"
+    [IO.File]::WriteAllText((Join-Path $hostRoot 'config/approval.settings'),$approvalText,[Text.UTF8Encoding]::new($false))
+    $savedData=$env:TIA_MCP_DATA_DIRECTORY;$savedDiagnostics=$env:TIA_MCP_DIAGNOSTICS_DIRECTORY
+    $savedLocalAppData=$env:LOCALAPPDATA;$savedAppData=$env:APPDATA;$savedTemp=$env:TEMP;$savedTmp=$env:TMP
+    $completed=$false
+    try {
+        $env:TIA_MCP_DATA_DIRECTORY=$hostRoot
+        $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $hostRoot 'diagnostics'
+        $env:LOCALAPPDATA=Join-Path $hostRoot 'local-app-data'
+        $env:APPDATA=Join-Path $hostRoot 'app-data'
+        $env:TEMP=Join-Path $hostRoot 'temp';$env:TMP=$env:TEMP
+        & $Action
+        $completed=$true
+    } finally {
+        $env:TIA_MCP_DATA_DIRECTORY=$savedData;$env:TIA_MCP_DIAGNOSTICS_DIRECTORY=$savedDiagnostics
+        $env:LOCALAPPDATA=$savedLocalAppData;$env:APPDATA=$savedAppData;$env:TEMP=$savedTemp;$env:TMP=$savedTmp
+        if($completed){try{Remove-Item -LiteralPath $hostRoot -Recurse -Force -ErrorAction Stop}catch{Write-Warning ("release check data still in use (kept): "+$hostRoot)}}
+        else{Write-Host "Retained failed release check data ($Name): $hostRoot"}
+    }
+}
 function Read-RuntimeFiles([switch]$Prepared) {
     . (Join-Path $PSScriptRoot 'Release.ps1') -FunctionsOnly
     @(Get-ReleaseRuntimeFiles $repo -Prepared:$Prepared)
@@ -58,7 +94,9 @@ if($LASTEXITCODE){throw 'Native weaver build failed'}
 & (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') -Offline:$Offline *> (Join-Path $logs 'bundled-dotnet.log')
 if(!$?){throw 'Bundled .NET runtime layout failed'}
 & (Join-Path $PSScriptRoot 'Build-PlcAdapterWorkers.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -UseReferenceAssemblyPackage -EvidenceDirectory (Join-Path $logs 'adapters')
-& (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
+Invoke-IsolatedHostCheck 'studio-build-and-tests' $false {
+    & (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
+}
 $hostProject=Join-Path $repo 'src/FoundationHost/TiaMcpServer.LegacyHost.csproj'
 $publish=Join-Path $logs 'foundation-host'
 $publishArgs=@('publish',$hostProject,'-c','Release','-o',$publish,'-v:q',"-p:Version=$release","-p:FileVersion=$version")
@@ -76,8 +114,10 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     $workerBuild=Join-Path $repo "src/Worker/bin/$key/Release/$framework"
     Get-ChildItem -LiteralPath $workerBuild -File | Where-Object {$_.Extension -in '.exe','.dll','.config'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $worker -Force}
     if(@(Get-ChildItem -LiteralPath $worker -Filter 'TiaMcp.Adapter.*.dll').Count -ne 1){throw "Exactly one matching adapter is required: $key"}
-    & (Join-Path $runtime 'TiaMcp.FoundationHost.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
-    if($LASTEXITCODE){throw "Catalog failed: $key"}
+    Invoke-IsolatedHostCheck "foundation-catalog-$key" $false {
+        & (Join-Path $runtime 'TiaMcp.FoundationHost.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
+        if($LASTEXITCODE){throw "Catalog failed: $key"}
+    }
     $catalog=Get-Content -LiteralPath (Join-Path $logs "tools-$key.json") -Raw | ConvertFrom-Json
     $records+=@{releaseKey=$key;profile='plc-foundation';toolCount=$catalog.tools.Count;nativeAcceptance='NOT RUN'}
 }
@@ -99,19 +139,25 @@ function Assert-BundledRuntime([string]$Exe,[string[]]$Arguments,[string]$Name) 
     $fxr=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet/host/fxr'))
     if(!(Select-String -LiteralPath $trace -SimpleMatch -Pattern "Resolved fxr [$fxr" -Quiet)){throw "$Name does not load the bundled .NET runtime; see $trace"}
 }
-Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcp.FoundationHost.exe') @('--catalog') 'foundation-host'
+Invoke-IsolatedHostCheck 'foundation-bundled-runtime' $false {
+    Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcp.FoundationHost.exe') @('--catalog') 'foundation-host'
+}
 # The elevated network helper path exits at once with a handled error, so it proves the GUI host without a window.
-Assert-BundledRuntime (Join-Path $studioOutput 'TiaOpenness.exe') @('--network','127.0.0.1','not-a-port','S-1-5-18') 'studio'
+Invoke-IsolatedHostCheck 'studio-bundled-runtime' $false {
+    Assert-BundledRuntime (Join-Path $studioOutput 'TiaOpenness.exe') @('--network','127.0.0.1','not-a-port','S-1-5-18') 'studio'
+}
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
-$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false;toolUsageCoverageExecuted=$false}
+$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false;toolUsageCoverageExecuted=$false;approvalSafetyExecuted=$false}
 if($Test) {
     $suiteResults=Join-Path $logs 'dotnet-suites'
     $validation.dotnetSuites=@{}
     foreach($suite in @('foundation-api','prompt-registration','software-read','special-export-shape','device-add','hardware-catalog','diagnostic-membership')) {
         $suiteArgs=@((Join-Path $repo 'scripts/checks/Test-DotnetSuites.py'),'--suite',$suite,'--dotnet',$Dotnet,'--results-directory',$suiteResults)
         if($NuGetConfig){$suiteArgs+=('--dotnet-arg=-p:RestoreConfigFile='+(Resolve-Path -LiteralPath $NuGetConfig).Path)}
-        & $Python @suiteArgs *> (Join-Path $logs "$suite-tests.log")
-        if($LASTEXITCODE){throw "TRX suite gate failed: $suite"}
+        Invoke-IsolatedHostCheck "dotnet-suite-$suite" $false {
+            & $Python @suiteArgs *> (Join-Path $logs "$suite-tests.log")
+            if($LASTEXITCODE){throw "TRX suite gate failed: $suite"}
+        }
         $summary=Get-Content -LiteralPath (Join-Path $suiteResults "$suite.json") -Raw -Encoding UTF8 | ConvertFrom-Json
         $validation.dotnetSuites[$suite]=@{passed=[int]$summary.passed;failed=[int]$summary.failed;skipped=[int]$summary.skipped;total=[int]$summary.total;minimumPassed=[int]$summary.minimumPassed;maximumSkipped=[int]$summary.maximumSkipped}
     }
@@ -119,15 +165,43 @@ if($Test) {
     & $Dotnet build $fixture -c Release -v:q *> (Join-Path $logs 'fixture-build.log')
     if($LASTEXITCODE){throw 'Transport fixture build failed'}
     $fixtureExe=Join-Path (Split-Path $fixture -Parent) 'bin/Release/net10.0/TransportFixture.exe'
-    & $Python (Join-Path $repo 'scripts/checks/Test-FoundationTransport.py') --fixture $fixtureExe --output (Join-Path $logs 'transport') *> (Join-Path $logs 'transport.log')
-    if($LASTEXITCODE){throw 'Foundation transport test failed'}
+    Invoke-IsolatedHostCheck 'foundation-transport' $false {
+        & $Python (Join-Path $repo 'scripts/checks/Test-FoundationTransport.py') --fixture $fixtureExe --output (Join-Path $logs 'transport') *> (Join-Path $logs 'transport.log')
+        if($LASTEXITCODE){throw 'Foundation transport test failed'}
+    }
     $validation.foundationTransportExecuted=$true
+}
+if(-not $CompleteOnly) {
+    $approvalOutput=Join-Path $logs ('foundation-approval-default-'+[guid]::NewGuid().ToString('N'))
+    Invoke-IsolatedHostCheck 'foundation-default-approval' $true {
+        & $Python (Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py') --product foundation --runtime-root (Join-Path $repo 'runtime') --public-api $api --temp-root $runTemp --output $approvalOutput *> (Join-Path $logs 'foundation-approval-default.log')
+        if($LASTEXITCODE){throw 'Foundation default-approval gate failed'}
+    }
+    $approvalResult=Get-Content -LiteralPath (Join-Path $approvalOutput 'result.json') -Raw | ConvertFrom-Json
+    if($approvalResult.status -ne 'passed' -or $approvalResult.checksPassed -ne 18 -or $approvalResult.checksExpected -ne 18 -or $approvalResult.workbenchConnected -or $approvalResult.tiaConnected -or $approvalResult.approvalSettings -ne 'explicit enabled=true; timeoutSeconds=120' -or (($approvalResult.callToolUnsupportedReleases | Sort-Object) -join ',') -cne '14sp1,15.1,16,17,18,19'){
+        throw 'Foundation default-approval check count, state, or roster evidence is invalid'
+    }
+    foreach($releaseRecord in $records){
+        $releaseApproval=$approvalResult.releases.PSObject.Properties[$releaseRecord.releaseKey].Value
+        if($null -eq $releaseApproval -or $releaseApproval.checksPassed -ne 3 -or $releaseApproval.directWrite -ne 'refused-before-dispatch' -or $releaseApproval.read -ne 'succeeded' -or $releaseApproval.CallTool -ne 'not-advertised-by-Foundation-V4'){
+            throw "Foundation default-approval result is incomplete: $($releaseRecord.releaseKey)"
+        }
+        $releaseRecord['approvalSafetyChecksPassed']=3
+        $releaseRecord['approvalDefaultEnabled']=$true
+        $releaseRecord['approvalSafety']=[ordered]@{status='passed';checksPassed=3;defaultEnabled=$true;directWriteRefusedBeforeDispatch=$true;readSucceeded=$true;callTool='not-advertised-by-Foundation-V4'}
+    }
+    $validation.approvalSafetyExecuted=$true
+    $validation.foundationApprovalSafetyChecksPassed=[int]$approvalResult.checksPassed
+    $validation.foundationCallToolUnsupportedReleases=@($approvalResult.callToolUnsupportedReleases)
+    $validation.foundationApprovalResultPath=$approvalOutput.Substring($repo.Length+1).Replace('\','/')
+    $validation.approvalSafetyScriptSha256=(Get-FileHash -LiteralPath (Join-Path $repo 'scripts/checks/Test-ReleaseApprovalGate.py')).Hash.ToLowerInvariant()
 }
 # Bind the preparation to inputs, binaries and the transport/adapter audit evidence.
 $preparedFiles=@(Read-RuntimeFiles -Prepared)
 $evidence=@(Get-ChildItem -LiteralPath (Join-Path $logs 'adapters') -Filter 'coverage-*.json' -File)
 $evidence+=@(Get-ChildItem -LiteralPath $logs -Filter 'tools-*.json' -File)
 if($Test){$evidence+=Get-Item -LiteralPath (Join-Path $logs 'transport/tool-usage.json')}
+if($validation.approvalSafetyExecuted){$evidence+=Get-Item -LiteralPath (Join-Path (Join-Path $repo ([string]$validation.foundationApprovalResultPath)) 'result.json')}
 $evidenceRows=@($evidence | Sort-Object FullName | ForEach-Object {
     @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
 })

@@ -107,6 +107,8 @@ def check(root, no_binaries=False, package_mode=False):
     rules = layout.load_delivery(root)
     package_mode = package_mode or not (root / 'Version.props').is_file()
     errors = archive_errors(root) if not package_mode else []
+    if not package_mode:
+        errors.extend(changelog_version_errors(root))
     if (root / '.git').exists():
         names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root).decode('utf-8').split('\0')
     else:
@@ -243,6 +245,36 @@ def check(root, no_binaries=False, package_mode=False):
     return count, errors
 
 
+def changelog_version_errors(root):
+    """The strict delivery check compares the newest CHANGELOG entry with the packaged version, so an entry written ahead of
+    Version.props fails every release candidate; Release.ps1 adds the entry and bumps the version in one release commit."""
+    props = (root / 'Version.props').read_text(encoding='utf-8-sig')
+    release = re.search(r'<TiaMcpRelease>([^<]+)</TiaMcpRelease>', props)
+    entry = re.search(r'(?m)^## \[(\d+\.\d+\.\d+)\]', (root / 'CHANGELOG.md').read_text(encoding='utf-8-sig'))
+    if not release or not entry:
+        return ['CHANGELOG.md or Version.props has no release version']
+    if entry.group(1) != release.group(1).strip():
+        return [f'Newest CHANGELOG entry {entry.group(1)} differs from Version.props {release.group(1).strip()}; '
+                'write the entry in the release commit (Release.ps1), keep drafts in docs/releases']
+    return []
+
+
+def changelog_self_test():
+    import shutil
+    import uuid
+    root = ROOT / 'bin-build' / ('changelog-check-' + uuid.uuid4().hex)
+    root.mkdir(parents=True)
+    try:
+        (root / 'Version.props').write_text('<Project><PropertyGroup><TiaMcpRelease>3.3.0</TiaMcpRelease></PropertyGroup></Project>', encoding='utf-8')
+        (root / 'CHANGELOG.md').write_text('# Changes\n\n## [3.3.0] - 2026-10-03\n', encoding='utf-8')
+        assert not changelog_version_errors(root)
+        (root / 'CHANGELOG.md').write_text('# Changes\n\n## [4.0.0] - draft\n\n## [3.3.0] - 2026-10-03\n', encoding='utf-8')
+        assert changelog_version_errors(root), 'an entry ahead of Version.props must fail'
+    finally:
+        shutil.rmtree(root)
+    print('CHANGELOG version self-tests: 2 passed, 0 failed.')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT)
@@ -254,6 +286,7 @@ def main():
     if args.self_test:
         product_name_self_test()
         archive_self_test()
+        changelog_self_test()
         return 0
     # Negative sentinel: a broken link and a traversal must fail; a valid file must pass.
     source = args.root / 'docs/README.md'

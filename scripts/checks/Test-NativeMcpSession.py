@@ -2,6 +2,7 @@
 
 Creates its own headless TIA and new scratch project, never attaches to an existing
 instance. Keep artifacts on success/failure. No GUI automation or PLC/HMI download.
+Before a live write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.
 """
 import sys
 from pathlib import Path
@@ -167,4 +168,5 @@ if __name__ == '__main__':
         print(json.dumps({'status': 'NOT RUN', 'output': str(options.output), 'requires': '--run-live --confirm-new-portal',
                           'scope': 'Own headless TIA, new scratch project. No attachment to existing projects.'}, indent=2))
     else:
+        print('Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.', file=sys.stderr, flush=True)
         sys.exit(run(options))

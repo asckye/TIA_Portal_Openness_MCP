@@ -10,6 +10,7 @@ entry of ~/.claude.json (url + Authorization header). The proxy is bypassed. The
 Arguments given as @file.json avoid shell backslash mangling on Windows. Responses larger than the server's page size
 come back as a GetExportContent handle (see the engine's export paging); pass small `limit` values instead of paging here.
 Every call opens its own MCP session; the engine keeps its Portal state across sessions.
+Before using `call` or `bridge` for a write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval.
 """
 import sys
 from pathlib import Path
@@ -17,6 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mcp_results import envelope, successful
 
 import argparse, json, os, sys, urllib.request
+
+APPROVAL_NOTICE = "Before any write campaign, keep the Workbench open to approve each call, or switch approvals off in the MCP menu. This client does not bypass approval."
 
 
 def find_claude_entry(name="tia-portal-vm"):
@@ -127,6 +130,8 @@ def main():
     p.add_argument("--token", default=os.environ.get("TIA_MCP_TOKEN"), help="bearer token (without 'Bearer ')")
     p.add_argument("--timeout", type=int, default=600)
     a = p.parse_args()
+    if a.mode in ("call", "bridge"):
+        print(APPROVAL_NOTICE, file=sys.stderr, flush=True)
     url, auth = a.url, ("Bearer " + a.token) if a.token else None
     if not url or not auth:
         entry = find_claude_entry()

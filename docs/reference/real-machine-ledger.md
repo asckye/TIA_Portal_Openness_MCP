@@ -92,6 +92,44 @@ A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启
 | P6-FALLBACK 原生回退 | **NOT RUN**；20/21 在线下载及 VCI；其他版共享 VCI 路径按能力 | ApplyConfiguration 失败后不下载或换路线；自动下线分支改为前置条件拒绝；传输/通道每个中断点记录调用是否发出与真实结果；unknown 要求重建会话、不自动重放；VCI 仅显式允许且证明只读对象失效时重取一次，已写或未知时停止。 |
 | P6-PRODUCT 新产品启动/绑定 | **NOT RUN**；八版引擎/宿主与 Studio | 仓库外完整包从根 TiaOpenness.exe 打开 Studio；选择版本启动正确新 EXE/worker/adapter；逐版 hello 身份与绑定、读取、显式断开；新目录日志可关联，安装目录只读；不借用历史机器/PID 授权。 |
 
+### 4.0 纳入与延期（P6-42）
+
+本次八版候选的范围逐行由下方生成表中的 releaseKey、family、entries 表示。P6-42 没有任何 L5 通过：
+八版都只纳入已有 `current` 行为；没有 D1 行为族切换为 `safe-v4`。每个 family 对应的 L5 计划在主 checkout 的
+`bin-build` 中，提交与交付包不包含这些机器计划。
+
+| releaseKey | family | 4.0 纳入 | 延期 | L5 计划（主 checkout） |
+|---|---|---|---|---|
+| 14sp1、15.1、16、17、18、19、20、21 | P6-DEVICE | 所有有目录入口的版本保持 current | safe-v4 设备创建，逐目录能力验收 | `bin-build/P6-27/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-IMPORT | 现有导入入口保持 current | safe-v4 导入预览、覆盖与故障语义 | `bin-build/P6-28/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-EXPORT | 现有导出入口保持 current | safe-v4 导出暂存、覆盖与发布语义 | `bin-build/P6-29/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-SESSION | 现有 connect/open 入口保持 current | safe-v4 连接、绑定及工程打开边界 | `bin-build/P6-30/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-CLOSE | 现有 save/close 入口保持 current | safe-v4 保存、关闭与对象所有权边界 | `bin-build/P6-31/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-SOURCE | 现有 PLC 路径和外部源入口保持 current | safe-v4 精确路径与外部源写入顺序 | `bin-build/P6-32/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-COMPILE | 现有编译入口保持 current | safe-v4 编译范围、Safety 生命周期与拒绝 | `bin-build/P6-33/l5-plan.md` |
+| 14sp1、15.1、16、17、18、19、20、21 | P6-FALLBACK | 现有原生回退保持 current | safe-v4 在线下载与 VCI 回退；按版本能力执行 | `bin-build/P6-34/l5-plan.md` |
+
+family 计划按版本能力限定适用项；无入口的版本记录 N/A，不将 N/A 记作通过。下方生成表确认每个发布键的所有
+family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构建的行为能力表因此没有切换项。
+
+### 4.0 发布前仍需的真实机器步骤
+
+以下均为 **NOT RUN**，只能由维护者在各精确 TIA 版本 VM 上用测试工程副本完成；版本/补丁、候选 SHA-256、
+引擎/worker/adapter 哈希、完整日志、错误后的工程状态、回读和显式保存结果须登记。失败即停止发布。
+
+| 门槛 | 必须完成的机器步骤 |
+|---|---|
+| P6-PRODUCT（14sp1、15.1、16、17、18、19、20、21） | 用仓库外的完整 4.0 候选包启动根 `TiaOpenness.exe`；逐版选择对应 TIA；核对 hello 的 releaseKey 和新 Engine/worker/adapter 身份；连接该 VM 当前 TIA 进程并显式绑定测试工程副本；读取工程树和一个 PLC 对象；显式断开并确认本次 worker/桥接退出；检查新目录日志可关联、只读安装无包内写入，且不借用历史 PID/机器授权。 |
+| P4-E1 / P4-E2 Foundation worker（14sp1、15.1、16） | 每版用该版本真实 TIA 打开工程副本；启动 net48 worker，核对协议 2 hello 身份；读 PLC 列表和块；核对错误后会话仍可用；显式断开并确认 worker 退出。 |
+| P4-F Studio bridge（14sp1、16、21） | 用 Studio 连接对应真实 TIA、打开工程副本、读取块列表、导出一个块；触发一次已处理错误并确认原错误文本及会话恢复；断开并确认桥接退出。 |
+| G3 / P4-G2 Studio 共享会话路径（八版） | 对 14sp1、15.1、16、17、18、19、20、21 分别用同版工程副本比较默认路径与 `TiaSharedAdapterPaths` 开启路径：附加/启动、打开/复用、保存/关闭/断开、PLC/HMI 导航、块/类型/变量表、SimaticML/源导入导出、软件/设备编译与 VCI（按版本/服务能力）；核对原生调用顺序、参数、STA、进度回调、错误/部分成功、句柄失效和清理。 |
+| P4-I1 VCI 共享原语（V20、V21） | 默认与共享变体逐工具比对五个 VCI 工具；覆盖 workspace 列表/状态、双向同步、映射、dryRun、失败后继续、项目切换后句柄失效；回读文件和映射并显式保存。 |
+| P4-I2 监控/强制表与工艺对象（V20、V21） | 默认与共享变体回读监控表导出/覆盖导入/删除、强制表原有行为和工艺对象遍历/导入/导出/创建/修改/删除；检查目标对象、消息、计数、失败后状态及工程切换。在线监视或 S7 读取需单独授权。 |
+| P4-I3 硬件目录与设备创建（V20、V21；Foundation V19–V21） | 核对硬件候选排序、GSDML 回退、精确 TypeIdentifier、版本拒绝及 Foundation 的确认/计划哈希；回读新设备，确认创建调用恰一次，显式保存。 |
+| P4-I4a 块与编译（八版） | V20/V21 默认与共享变体回放块/类型组、保护、导入/导出与软件/设备编译；八版 Foundation/Studio 按各自入口回放遍历和批次导入导出；核对线程归属、诊断和失败后不重放。 |
+| P4-I4b 文档与外部源（八版） | V20/V21 对十个工具默认/共享变体做文档与外部源往返；八版 Foundation 按各自版本边界核对拒绝、精确寻址、覆盖、生成/编译、编号恢复和部分完成；回读文件/工程并显式保存。 |
+| J 清理阶段（上述 L5 全部通过后） | 才能移除 `TiaSharedAdapterPaths` 开关和旧 Studio/引擎路径；随后重跑八版构建、离线套件、响应/契约对比及严格候选包校验。L5 未全部通过时保持开关默认 false，试验变体不得发布。 |
+
 <!-- behavior-capabilities:start -->
 
 逐版行为能力由 `Generate-Phase6Plan.py` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。

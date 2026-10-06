@@ -73,7 +73,8 @@ namespace TiaOpenness.Shared.Tests
             Assert.Contains(blocked, Assert.Throws<IOException>(() => locations.LogFile("host.log", "21")).Message);
             Assert.Contains("DIAGNOSTIC_WRITE_FAILED", Assert.Throws<IOException>(() => _ = locations.WritableAuditDirectory).Message);
             var missing = DataLocations.Resolve(Temp, null!, "", "");
-            Assert.Contains("DIAGNOSTIC_WRITE_FAILED", Assert.Throws<IOException>(() => _ = missing.DiagnosticsDirectory).Message);
+            // No configured override: an inherited TIA_MCP_DIAGNOSTICS_DIRECTORY (release checks set one) must not hide the failure.
+            Assert.Contains("DIAGNOSTIC_WRITE_FAILED", Assert.Throws<IOException>(() => _ = missing.Diagnostics(null!)).Message);
             Assert.False(File.Exists(Path.Combine(Output, "host.log")));
         }
 

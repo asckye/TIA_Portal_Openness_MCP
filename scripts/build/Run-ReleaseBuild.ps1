@@ -18,13 +18,21 @@ param(
 )
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+# Isolated host roots live outside the repository: tests that create Git repositories or look for a source checkout must
+# not find this one. The outermost script fixes the root; nested scripts inherit it through the environment.
+if(-not $env:TIA_MCP_RELEASE_TEMP_ROOT){$env:TIA_MCP_RELEASE_TEMP_ROOT=Join-Path ([IO.Path]::GetTempPath()) ('tmr-'+[guid]::NewGuid().ToString('N').Substring(0,8))}
+$releaseTempRoot=[IO.Path]::GetFullPath($env:TIA_MCP_RELEASE_TEMP_ROOT)
+# Build servers started under an isolated TEMP would outlive the check and lock files there.
+$env:UseSharedCompilation='false'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER='0'
+if($releaseTempRoot.StartsWith(([IO.Path]::GetFullPath($repo).TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)){throw "Release temp root must be outside the repository: $releaseTempRoot"}
 function Get-BundleDirectory([string]$PackagePath) {
     if([IO.Path]::GetExtension($PackagePath) -ne '.zip'){throw 'Package result must name a ZIP'}
     # ChangeExtension(path,$null) receives '' from PowerShell and leaves a trailing dot.
     Join-Path (Split-Path -Parent $PackagePath) ([IO.Path]::GetFileNameWithoutExtension($PackagePath))
 }
 function Assert-StepOrder([string[]]$Names) {
-    $expected='01-multi-version,02-build-release,03-package-local,04-validate-bundle,05-prompt-registration,06-v4-contracts-capture,07-v4-contracts-compare,08-v4-responses-capture,09-v4-responses-compare'
+    $expected='00-preflight,01-multi-version,02-build-release,03-package-local,04-validate-bundle,05-prompt-registration,06-v4-contracts-capture,07-v4-contracts-compare,08-v4-responses-capture,09-v4-responses-compare'
     if(($Names -join ',') -cne $expected){throw 'Reviewer chain order changed; preparation must precede full engines and snapshots must follow binary validation'}
 }
 function Assert-OfflineNuGet([string]$Path) {
@@ -35,14 +43,38 @@ function Assert-OfflineNuGet([string]$Path) {
         if(!$value -or $value -match '^[a-z][a-z0-9+.-]*:' -and $value -notmatch '^[a-z]:[\\/]' -or $value.StartsWith('\\') -or $value.StartsWith('//')){throw "Network NuGet feed is forbidden: $value"}
     }
 }
-function Run-Command([string]$Exe,[string[]]$Arguments) {
+function Run-Command([string]$Exe,[string[]]$Arguments,[switch]$ProductDefaults) {
     $null=Get-Command $Exe -ErrorAction Stop
+    $tempBase=Join-Path $releaseTempRoot 'rc'
+    # Short ids keep nested Git fixtures below MAX_PATH; check.txt names the command.
+    $hostRoot=Join-Path $tempBase ([guid]::NewGuid().ToString('N').Substring(0,8))
+    New-Item -ItemType Directory -Force $hostRoot | Out-Null
+    [IO.File]::WriteAllText((Join-Path $hostRoot 'check.txt'),((@($Exe)+$Arguments) -join ' '))
+    New-Item -ItemType Directory -Force -Path (Join-Path $hostRoot 'config'),(Join-Path $hostRoot 'temp'),(Join-Path $hostRoot 'local-app-data'),(Join-Path $hostRoot 'app-data') | Out-Null
+    # Host checks run without the Workbench, so approvals are off for them; snapshot captures keep the product
+    # defaults because the V4 baselines record what a fresh installation answers.
+    if(!$ProductDefaults){[IO.File]::WriteAllText((Join-Path $hostRoot 'config/approval.settings'),"enabled=false`ntimeoutSeconds=120`n",[Text.UTF8Encoding]::new($false))}
+    $savedData=$env:TIA_MCP_DATA_DIRECTORY;$savedDiagnostics=$env:TIA_MCP_DIAGNOSTICS_DIRECTORY
+    $savedLocalAppData=$env:LOCALAPPDATA;$savedAppData=$env:APPDATA;$savedTemp=$env:TEMP;$savedTmp=$env:TMP
     $savedPreference=$ErrorActionPreference
+    $completed=$false;$code=$null
     try {
+        $env:TIA_MCP_DATA_DIRECTORY=$hostRoot
+        $env:TIA_MCP_DIAGNOSTICS_DIRECTORY=Join-Path $hostRoot 'diagnostics'
+        $env:LOCALAPPDATA=Join-Path $hostRoot 'local-app-data'
+        $env:APPDATA=Join-Path $hostRoot 'app-data'
+        $env:TEMP=Join-Path $hostRoot 'temp';$env:TMP=$env:TEMP
         $ErrorActionPreference='Continue'
         & $Exe @Arguments 2>&1
         $code=$LASTEXITCODE
-    } finally {$ErrorActionPreference=$savedPreference}
+        $completed=($code -eq 0)
+    } finally {
+        $ErrorActionPreference=$savedPreference
+        $env:TIA_MCP_DATA_DIRECTORY=$savedData;$env:TIA_MCP_DIAGNOSTICS_DIRECTORY=$savedDiagnostics
+        $env:LOCALAPPDATA=$savedLocalAppData;$env:APPDATA=$savedAppData;$env:TEMP=$savedTemp;$env:TMP=$savedTmp
+        if($completed){try{Remove-Item -LiteralPath $hostRoot -Recurse -Force -ErrorAction Stop}catch{Write-Warning ("release check data still in use (kept): "+$hostRoot)}}
+        else{Write-Output "Retained failed release check data: $hostRoot"}
+    }
     if($code -ne 0){throw "$Exe exited $code"}
 }
 function Restore-Records {
@@ -67,6 +99,8 @@ function Run-Step([string]$Name,[scriptblock]$Action) {
 $common=@('-Dotnet',$Dotnet,'-Python',$Python)
 $harness=Join-Path $repo 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
 $steps=@(
+    # Build-free release checks first: minutes instead of an hour-long run per problem, all failures at once.
+    @{label='00-preflight';action={Run-Command 'pwsh' @('-NoProfile','-File','scripts/build/Test-ReleasePreflight.ps1','-Python',$Python)}},
     @{label='01-multi-version';action={
         Run-Command 'powershell.exe' (@('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/build/Build-MultiVersion.ps1','-PublicApiRoot',$api,'-PrepareOnly','-Offline','-Test')+$common)
     }},
@@ -82,9 +116,9 @@ $steps=@(
         Run-Command 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/checks/Validate-Bundle.ps1','-Strict','-BundleRoot',$bundle,'-PackageMode')
     }},
     @{label='05-prompt-registration';action={Run-Command $Python @('scripts/checks/Test-DotnetSuites.py','--suite','prompt-registration','--dotnet',$Dotnet,'--results-directory',(Join-Path $logs 'dotnet-suites'))}},
-    @{label='06-v4-contracts-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolContracts.py','capture')+$snapshots+@('--output',(Join-Path $logs 'contracts')))}},
+    @{label='06-v4-contracts-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolContracts.py','capture')+$snapshots+@('--output',(Join-Path $logs 'contracts'))) -ProductDefaults}},
     @{label='07-v4-contracts-compare';action={Run-Command $Python @('scripts/checks/Snapshot-ToolContracts.py','compare','--baseline','manifest/contracts/v4/baseline','--current',(Join-Path $logs 'contracts'),'--releases','20','21')}},
-    @{label='08-v4-responses-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolResponses.py','capture')+$snapshots+@('--output',(Join-Path $logs 'responses'),'--temp-root',$logs))}},
+    @{label='08-v4-responses-capture';action={Run-Command $Python (@('scripts/checks/Snapshot-ToolResponses.py','capture')+$snapshots+@('--output',(Join-Path $logs 'responses'),'--temp-root',$logs)) -ProductDefaults}},
     @{label='09-v4-responses-compare';action={Run-Command $Python @('scripts/checks/Snapshot-ToolResponses.py','compare','--baseline','manifest/contracts/v4/responses','--current',(Join-Path $logs 'responses'),'--releases','20','21')}
     }
 )
@@ -92,7 +126,7 @@ Assert-StepOrder @($steps.label)
 if($SelfTest) {
     $passed=0
     Assert-StepOrder @($steps.label);$passed++
-    $wrong=@($steps.label);$wrong[0]='02-build-release';$wrong[1]='01-multi-version'
+    $wrong=@($steps.label);$wrong[1]='02-build-release';$wrong[2]='01-multi-version'
     $rejected=$false;try{Assert-StepOrder $wrong}catch{$rejected=$true}
     if(!$rejected){throw 'Wrong build order accepted'};$passed++
     foreach($name in @('delivery.zip','delivery.v4.zip','delivery with spaces.zip')) {
@@ -121,6 +155,11 @@ if($SelfTest) {
             if((Get-FileHash (Join-Path $repo 'record.json')).Hash -ne (Get-FileHash (Join-Path $original 'record.json')).Hash){throw 'Record restoration failed'};$passed++
         }
         Run-Command 'powershell.exe' @('-NoProfile','-Command','exit 0');$passed++
+        # Host checks get approvals off; snapshot captures see the product defaults (no approval settings file).
+        $probe='if(Test-Path (Join-Path $env:TIA_MCP_DATA_DIRECTORY ''config/approval.settings'')){exit 3}'
+        Run-Command 'powershell.exe' @('-NoProfile','-Command',$probe) -ProductDefaults;$passed++
+        $rejected=$false;try{Run-Command 'powershell.exe' @('-NoProfile','-Command',$probe)}catch{$rejected=$_.Exception.Message -like '*exited 3*'}
+        if(!$rejected){throw 'Host checks did not get approvals off'};$passed++
         $config=Join-Path $scratch 'nuget.config'
         foreach($source in @('https://example.invalid/feed','file://server/feed','//server/feed','\\server\feed')) {
             [IO.File]::WriteAllText($config,"<configuration><packageSources><clear/><add key='test' value='$source'/></packageSources></configuration>")
