@@ -7,6 +7,7 @@ internal sealed class HostOptions
     public required string ReleaseKey { get; init; }
     public required string WorkerExe { get; init; }
     public required string ApiDirectory { get; init; }
+    public string? ApiDirectorySource { get; init; }
     public required string BundleRoot { get; init; }
     public bool NativeEnabled { get; init; }
     public bool CatalogOnly { get; init; }
@@ -52,11 +53,26 @@ internal sealed class HostOptions
             if (string.IsNullOrWhiteSpace(key) || key.Any(char.IsControl)) throw new ArgumentException("HTTP requires a nonempty --http-api-key.");
         }
         var api = Value("--public-api");
-        if (api.Length == 0) api = version.FindApiDirectory(Value("--tia-portal-location", Environment.GetEnvironmentVariable("TiaPortalLocation") ?? "")) ?? "";
+        string? apiSource = string.IsNullOrWhiteSpace(api) ? null : "host-option";
+        if (api.Length == 0)
+        {
+            string location;
+            if (options.TryGetValue("--tia-portal-location", out var optionLocation))
+            {
+                location = optionLocation;
+                if (!string.IsNullOrWhiteSpace(location)) apiSource = "host-option";
+            }
+            else
+            {
+                location = Environment.GetEnvironmentVariable("TiaPortalLocation") ?? "";
+                if (!string.IsNullOrWhiteSpace(location)) apiSource = "environment";
+            }
+            api = version.FindApiDirectory(location) ?? "";
+        }
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release,
             WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
-            ApiDirectory = api, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key
+            ApiDirectory = api, ApiDirectorySource = apiSource, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key
         };
     }
 }

@@ -33,7 +33,7 @@ if (options.CatalogOnly)
     using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false);
     Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "plc-foundation", nativeAcceptance = "NOT RUN",
         behaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(FoundationV4Tool).Assembly, options.ReleaseKey),
-        tools = LegacyHostToolRegistry.Create(catalogWorker, options.ReleaseKey, false).Select(t => t.ProtocolTool) }));
+        tools = LegacyHostToolRegistry.Create(catalogWorker, options.ReleaseKey, false, options.ApiDirectory, options.ApiDirectorySource).Select(t => t.ProtocolTool) }));
     return 0;
 }
 
@@ -52,7 +52,7 @@ if (options.Transport == "http")
                 var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled);
                 context.Items["foundationWorker"] = worker;
                 var toolCollection = new McpServerPrimitiveCollection<McpServerTool>();
-                foreach (var tool in LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled)) toolCollection.Add(tool);
+                foreach (var tool in LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource)) toolCollection.Add(tool);
                 server.Capabilities = new ServerCapabilities { Tools = new ToolsCapability {
                     ToolCollection = toolCollection
                 } };
@@ -85,7 +85,7 @@ else
     builder.Logging.AddProvider(fileLogger);
     builder.Logging.SetMinimumLevel(LogLevel.Warning);
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
-        .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled));
+        .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource));
     using var host = builder.Build();
     await host.RunAsync();
 }

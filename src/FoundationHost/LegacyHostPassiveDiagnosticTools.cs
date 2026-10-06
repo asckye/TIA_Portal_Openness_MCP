@@ -8,9 +8,10 @@ namespace TiaMcp.LegacyHost;
 
 internal static class LegacyHostPassiveDiagnosticTools
 {
-    internal static IEnumerable<McpServerTool> Create(string release, bool nativeSessionConfigured, Func<IReadOnlyList<McpServerTool>> registry) => new McpServerTool[] {
-        new PassiveDiagnosticTool("Bootstrap", release, nativeSessionConfigured, registry),
-        new PassiveDiagnosticTool("RunCapabilitySelfTest", release, nativeSessionConfigured, registry)
+    internal static IEnumerable<McpServerTool> Create(string release, bool nativeSessionConfigured, Func<IReadOnlyList<McpServerTool>> registry,
+        Func<JsonObject>? readinessProvider = null) => new McpServerTool[] {
+        new PassiveDiagnosticTool("Bootstrap", release, nativeSessionConfigured, registry, readinessProvider),
+        new PassiveDiagnosticTool("RunCapabilitySelfTest", release, nativeSessionConfigured, registry, readinessProvider)
     };
 }
 internal sealed class PassiveDiagnosticTool : McpServerTool
@@ -19,13 +20,19 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
     private readonly string release;
     private readonly bool nativeSessionConfigured;
     private readonly Func<IReadOnlyList<McpServerTool>> registry;
+    private readonly Func<JsonObject>? readinessProvider;
     private readonly Tool tool;
-    internal PassiveDiagnosticTool(string name, string release, bool nativeSessionConfigured, Func<IReadOnlyList<McpServerTool>> registry)
+    internal PassiveDiagnosticTool(string name, string release, bool nativeSessionConfigured, Func<IReadOnlyList<McpServerTool>> registry,
+        Func<JsonObject>? readinessProvider = null)
     {
         this.release = release; this.nativeSessionConfigured = nativeSessionConfigured; this.registry = registry;
+        this.readinessProvider = readinessProvider;
         var properties = new JsonObject();
         if (name == "RunCapabilitySelfTest") foreach (var flag in Flags) properties[flag] = new JsonObject { ["type"] = "boolean", ["default"] = false, ["enum"] = new JsonArray(false), ["description"] = "Only false is supported. Native checks/attach are unavailable in this passive host contract." };
-        tool = new Tool { Name = name, Description = "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported.", InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false, ["required"] = new JsonArray() }) };
+        string description = name == "Bootstrap"
+            ? "[read-only Foundation readiness] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change."
+            : "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported.";
+        tool = new Tool { Name = name, Description = description, InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false, ["required"] = new JsonArray() }) };
     }
     public override Tool ProtocolTool => tool;
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
@@ -39,7 +46,8 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
         try
         {
             var result = LegacyHostPassiveDiagnostics.Inspect(release, nativeSessionConfigured, registry());
-            result["recommendedNextTool"] = tool.Name == "Bootstrap" ? "RunCapabilitySelfTest" : null;
+            if (tool.Name == "Bootstrap") LegacyHostPassiveDiagnostics.AddReadiness(result, readinessProvider?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release));
+            else result["recommendedNextTool"] = null;
             return ValueTask.FromResult(new CallToolResult { IsError = !result["checks"]!["passed"]!.GetValue<bool>(), Content = new List<ContentBlock> { new TextContentBlock { Text = result.ToJsonString() } } });
         }
         catch (Exception) { throw new McpException("Passive host diagnostic contract inspection failed.", null, McpErrorCode.InternalError); }

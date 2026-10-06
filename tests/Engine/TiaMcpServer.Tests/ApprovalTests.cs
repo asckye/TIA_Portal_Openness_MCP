@@ -87,18 +87,37 @@ namespace TiaMcpServer.Tests
             => new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json));
 
         [Fact]
-        public void Dry_run_writes_do_not_queue_for_approval()
+        public async Task Dry_run_writes_do_not_queue_for_approval()
         {
             using var fixture = new InfrastructureContractsTests();
             TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(new TiaMcpServer.ModelContextProtocol.ToolCatalog(new[] {
                 typeof(TiaMcpServer.ModelContextProtocol.McpServer), typeof(BatchGateProbe) }), () => false, new System.Collections.Generic.HashSet<string>());
 
             Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"preview\",\"dryRun\":true}"));
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"schema-default-preview\"}"));
             Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
                 "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"preview\",\"dryRun\":true}}"));
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"schema-default-preview\"}}"));
             Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"apply\",\"dryRun\":false}"));
             Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
                 "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"apply\",\"dryRun\":false}}"));
+            int waits = 0;
+            var previous = TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests;
+            TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = (pending, _, _) =>
+            {
+                waits++;
+                return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
+            };
+            try
+            {
+                Assert.Null(await TiaMcpServer.ModelContextProtocol.McpServer.WaitForApproval("CreateApprovalFixture", "{\"target\":\"schema-default-preview\"}", CancellationToken.None));
+                Assert.Equal(0, waits);
+                var apply = await TiaMcpServer.ModelContextProtocol.McpServer.WaitForApproval("CreateApprovalFixture", "{\"target\":\"apply\",\"dryRun\":false}", CancellationToken.None);
+                Assert.Equal("denied", apply?.Reason);
+                Assert.Equal(1, waits);
+            }
+            finally { TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = previous; }
         }
 
         [Theory]
@@ -365,7 +384,7 @@ namespace TiaMcpServer.Tests
                     Assert.Contains(first["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "APPROVAL_DISABLED");
                 }
                 var invalidBridge = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(TiaMcpServer.ModelContextProtocol.McpServer.CallTool("CreateApprovalFixture",
-                    new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"__invalid\":true}"))))!;
+                    new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("{\"__invalid\":true,\"dryRun\":false}"))))!;
                 Assert.Equal("INVALID_ARGUMENT", (string?)invalidBridge["error"]?["code"]);
                 Assert.Equal(!enabled, invalidBridge["meta"]!["warnings"]!.AsArray().Any(warning => (string?)warning?["code"] == "APPROVAL_DISABLED"));
                 Assert.Equal("INVALID_ARGUMENT", (string?)TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(

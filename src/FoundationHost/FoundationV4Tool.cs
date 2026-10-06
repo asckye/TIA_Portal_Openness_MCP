@@ -61,6 +61,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings;
     private readonly Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
         CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait;
+    private readonly Func<JsonObject>? readinessForTest;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -69,11 +70,13 @@ internal sealed class FoundationV4Tool : McpServerTool
     internal FoundationV4Tool(McpServerTool inner, string release, Func<string, BehaviorPolicy>? policyForTest,
         Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null,
         Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
-            CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null)
+            CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null,
+        Func<JsonObject>? readinessForTest = null)
     {
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
         this.approvalWait = approvalWait;
+        this.readinessForTest = readinessForTest;
         var source = inner.ProtocolTool;
         deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
@@ -169,16 +172,23 @@ internal sealed class FoundationV4Tool : McpServerTool
     {
         if (!SessionApprovalEntries.Contains(tool.Name)) return false;
         if (saveCloseCandidate) return (string?)args["mode"] == "apply";
-        return !args.TryGetPropertyValue("dryRun", out var dryRun) || dryRun is not JsonValue value
-            || !value.TryGetValue<bool>(out var preview) || !preview;
+        return DryRunApply(args);
+    }
+    private bool DryRunApply(JsonObject args)
+    {
+        if (args["dryRun"] is JsonValue value && value.TryGetValue<bool>(out var supplied)) return !supplied;
+        if (args.ContainsKey("dryRun")) return false;
+        var properties = inner.ProtocolTool.InputSchema.GetProperty("properties");
+        if (!properties.TryGetProperty("dryRun", out var schema) || !schema.TryGetProperty("default", out var defaultValue)
+            || defaultValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return false;
+        return defaultValue.ValueKind == JsonValueKind.False;
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
         bool write = Candidate ? arguments["mode"]?.ToString() == "apply"
-            : inner is FoundationTool { IsWrite: true }
-                && (!inputArguments.TryGetValue("dryRun", out var dryRun) || dryRun.ValueKind != JsonValueKind.True)
+            : (inner is FoundationTool { IsWrite: true } && DryRunApply(arguments))
                 || SessionApprovalApply(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
@@ -222,6 +232,12 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
+            {
+                var readiness = readinessForTest?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release);
+                if (!readiness["ready"]!.GetValue<bool>())
+                    return Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
+            }
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
             bool sessionApprovalApply = SessionApprovalApply(JsonSerializer.SerializeToNode(args) as JsonObject ?? new JsonObject());

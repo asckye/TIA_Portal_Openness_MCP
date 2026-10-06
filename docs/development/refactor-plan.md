@@ -217,6 +217,8 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-52 | 开发检查去 PowerShell：反射类发布检查与工具清单生成改 C#，能力矩阵生成与覆盖审计改 C# 单文件程序，适配器构建检查改写；[路径清单](phase6-review.md#phase6-path-p6-52) | 42 | T、C；各检查断言数不少于原脚本，生成结果逐字节一致 | done |
 | P6-53 | 构建发布链改 C#：Release、Build-Release、Run-ReleaseBuild、多版本构建、验包、预检等；CI 工作流；仓库检查禁止新增 .ps1/.bat/.cmd；[路径清单](phase6-review.md#phase6-path-p6-53) | 50、51、52 | 完整发布链从干净目录通过，产物清单与改写前一致 | todo |
 | P6-54 | V20/V21 改为与 Foundation 相同的“宿主 + worker”运行方式（同一引擎 EXE 的 `--isolate-openness`，工具数量与功能不变）：缺少 TIA、版本不符或不在 Siemens TIA Openness 组时照常启动，由 Bootstrap/InitializeEnvironment/环境体检报告并对需要博途的调用返回 V4 错误；默认隔离的代码与退路参数就绪，发布默认保持关闭至真机验收通过；八版启动/重定位检查直接启动真实 EXE；文档、客户端配置与工作台显示同步；[路径清单](phase6-review.md#phase6-path-p6-54) | 49 | T、V；真实 EXE 无 TIA 启动、worker 测试替身仅测试构建可用；L5：V20/V21 隔离模式连接绑定、导入导出、编译、worker 超时重启后重新绑定，通过前不切默认 | todo |
+| P6-55 | Foundation 可用性与审计修复（V14 SP1/V15.1/V16 真机验收发现）：worker 报错原文脱敏透传并标出参数；首个原生写入前的校验返回 rejected-before-operation、不毒化会话；plc/table 接受别名与原始表名；批量导出说明要求已存在目录；审计各行与响应 requestId 一致、start 在派发时写入；预演不排队审批；符号清单接受空表、用户常量和注释；Foundation InitializeEnvironment 报告就绪，安装缺失时按主机 API 目录拒绝；[路径清单](phase6-review.md#phase6-path-p6-55) | 54 | T、V；八版合同与 V14 SP1–V19 响应快照比对；L5：V14 SP1、V15.1、V16 回归 | done |
+| P6-56 | 无 TIA 发布机的 V20/V21 响应快照：sdk-only 夹具满足就绪检查（不改变真实安装的判定），重新捕获 V20/V21 响应基线；就绪修复建议提供中文；[路径清单](phase6-review.md#phase6-path-p6-56) | 55 | 发布链 08/09 在无 TIA 机器通过；V20/V21 响应比对只含预期变化 | todo |
 
 并行边界：02 完成后 03/04/05/06 可各建独立 DTO/测试文件；项目公共引用由 02 预置、后续缺项由 07 集成。
 07 完成且 I 合并后，08–23 按规范附表 G 的工具文件所有权并行。

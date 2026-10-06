@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
@@ -34,8 +35,26 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4)
                 return args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var value) && value == "apply";
-            if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview) return false;
+            if (TryDryRunDefault(tool, out var defaultPreview))
+            {
+                if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview))
+                {
+                    if (preview) return false;
+                }
+                else if (args.ContainsKey("dryRun") || defaultPreview) return false;
+                else return ToolCatalog.IsWrite(tool) || SessionApprovalEntries.Contains(tool);
+            }
             return ToolCatalog.IsWrite(tool) || SessionApprovalEntries.Contains(tool);
+        }
+        private static bool TryDryRunDefault(string tool, out bool defaultPreview)
+        {
+            defaultPreview = true;
+            if (!AllToolMethods(includeUnavailable: true).TryGetValue(tool, out var method)) return false;
+            var parameter = method.GetParameters().FirstOrDefault(item => item.Name == "dryRun" && item.ParameterType == typeof(bool));
+            if (parameter == null) return false;
+            if (!parameter.HasDefaultValue || parameter.DefaultValue is not bool value) return true;
+            defaultPreview = value;
+            return true;
         }
         internal static bool ApprovalResultWrite(string tool, string arguments)
         {

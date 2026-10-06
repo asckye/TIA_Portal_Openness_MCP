@@ -14,6 +14,10 @@ internal static class OfflineSymbolManifestTests
     {
         var root = Path.Combine(Path.GetTempPath(), "owned-manifest-test-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         const string tag = "<Document><Engineering version='V17'/><SW.Tags.PlcTagTable><ObjectList><SW.Tags.PlcTag><AttributeList><Name>Ready</Name><DataTypeName>Bool</DataTypeName><LogicalAddress>%M0.0</LogicalAddress></AttributeList></SW.Tags.PlcTag></ObjectList></SW.Tags.PlcTagTable></Document>";
+        const string emptyTable = "<Document><Engineering version='V14 SP1'/><SW.Tags.PlcTagTable><ObjectList/></SW.Tags.PlcTagTable></Document>";
+        const string tagWithComment = "<Document><Engineering version='V21'/><SW.Tags.PlcTagTable><ObjectList><SW.Tags.PlcTag><AttributeList><Name>Ready</Name><DataTypeName>Bool</DataTypeName><LogicalAddress>%M0.0</LogicalAddress><ExternalAccessible>true</ExternalAccessible></AttributeList><ObjectList><MultilingualText><AttributeList><Text>Ready flag</Text></AttributeList></MultilingualText></ObjectList></SW.Tags.PlcTag></ObjectList></SW.Tags.PlcTagTable></Document>";
+        const string userConstant = "<Document><Engineering version='V20'/><SW.Tags.PlcTagTable><ObjectList><SW.Tags.PlcUserConstant><AttributeList><Name>MaxCount</Name><DataTypeName>DInt</DataTypeName><Value>42</Value></AttributeList></SW.Tags.PlcUserConstant></ObjectList></SW.Tags.PlcTagTable></Document>";
+        const string systemConstant = "<SW.Tags.PlcSystemConstant><AttributeList><Name>SystemId</Name></AttributeList></SW.Tags.PlcSystemConstant>";
         const string db = "<Document><Engineering version='V21'/><SW.Blocks.GlobalDB><AttributeList><Name>DB</Name><Interface><Sections xmlns='http://www.siemens.com/automation/Openness/SW/Interface/v5'><Section Name='Static'><Member Name='Motor' Datatype='&quot;MotorType&quot;'><Member Name='Run' Datatype='Bool'/></Member></Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>";
         JsonObject Build(params string[] paths) => OfflineSymbolManifest.Build(root, paths, OfflineSymbolManifest.ExpectedOrigin);
         void Write(string name, string content) => File.WriteAllText(Path.Combine(root, name), content, new UTF8Encoding(false));
@@ -29,6 +33,40 @@ internal static class OfflineSymbolManifestTests
             check(result["files"]![0]!["sha256"]!.GetValue<string>() == Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(db))).ToLowerInvariant(), "manifest hashes exact consumed bytes");
             check(result["symbols"]!.AsArray().Any(s => s!["symbol"]!.GetValue<string>() == "DB.Motor.Run"), "manifest nested member");
             check(result["unresolvedReferences"]!.AsArray().Count == 1 && !result["referencesResolved"]!.GetValue<bool>(), "manifest explicit unresolved UDT");
+            Write("empty-table.xml", emptyTable);
+            result = Build("empty-table.xml");
+            check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 0, "manifest accepts an empty native tag table");
+            Write("comment-table.xml", tagWithComment);
+            result = Build("comment-table.xml");
+            check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 1, "manifest ignores native tag comments and accepts tag metadata");
+            Write("user-constant.xml", userConstant);
+            result = Build("user-constant.xml");
+            check(result["ok"]!.GetValue<bool>() && (string?)result["symbols"]![0]!["sourceKind"] == "PlcUserConstant"
+                && (string?)result["symbols"]![0]!["symbol"] == "MaxCount" && (string?)result["symbols"]![0]!["dataType"] == "DInt"
+                && (string?)result["symbols"]![0]!["value"] == "42", "manifest retains user-constant kind, name, type and raw value");
+            Write("system-constant.xml", userConstant.Replace("</ObjectList>", systemConstant + "</ObjectList>"));
+            result = Build("system-constant.xml");
+            check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 1
+                && result["warnings"]!.AsArray().Any(w => w!.GetValue<string>().Contains("System constants", StringComparison.Ordinal)), "manifest explicitly warns when skipping system constants");
+            foreach (var (release, marker) in new[] { ("14sp1", "V14 SP1"), ("15.1", "V15.1"), ("16", "V16"), ("17", "V17"), ("18", "V18"), ("19", "V19"), ("20", "V20"), ("21", "V21") })
+            {
+                string emptyFile = "empty-" + release.Replace('.', '-') + ".xml";
+                Write(emptyFile, "<Document><Engineering version='" + marker + "'/><SW.Tags.PlcTagTable><ObjectList></ObjectList></SW.Tags.PlcTagTable></Document>");
+                result = Build(emptyFile);
+                check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 0, "manifest empty table fixture " + release);
+                string tagFile = "comment-" + release.Replace('.', '-') + ".xml";
+                string versionedTag = tagWithComment.Replace("V21", marker);
+                Write(tagFile, versionedTag);
+                result = Build(tagFile);
+                check(result["ok"]!.GetValue<bool>() && result["files"]![0]!["engineeringVersion"]!.GetValue<string>() == marker
+                    && result["symbolCount"]!.GetValue<int>() == 1, "manifest tag/comment fixture " + release);
+                string constantFile = "constant-" + release.Replace('.', '-') + ".xml";
+                string versionedConstant = userConstant.Replace("V20", marker).Replace("MaxCount", "ReleaseValue");
+                Write(constantFile, versionedConstant);
+                result = Build(constantFile);
+                check(result["ok"]!.GetValue<bool>() && result["files"]![0]!["engineeringVersion"]!.GetValue<string>() == marker
+                    && result["symbols"]![0]!["sourceKind"]!.GetValue<string>() == "PlcUserConstant", "manifest user-constant fixture " + release);
+            }
             foreach (var flag in new[] { "wholeXmlSchemaValidated", "importValidated", "programSemanticsValidated", "nativeCertified" }) check(!result[flag]!.GetValue<bool>(), "manifest no certification " + flag);
             check(!result.ToJsonString().Contains(root), "manifest no absolute root leakage");
             Write("duplicate.xml", tag.Replace("Ready", "ready").Replace("Bool", "Int"));

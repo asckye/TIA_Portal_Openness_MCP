@@ -33,12 +33,67 @@ internal static class PassiveHostDiagnosticsTests
                 check(result["host"]!["nativeCallsDisabledByConfiguration"]!.GetValue<bool>() == !native, "configured native gate truthful");
                 check(!result["upstreamResponseCompatible"]!.GetValue<bool>() && !result["nativeCertified"]!.GetValue<bool>(), "bounded candidate is not full/native compatibility");
                 check(result["registeredToolCount"]!.GetValue<int>() == registry.Count && result["registeredTools"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).Order().SequenceEqual(registry.Select(t => t.ProtocolTool.Name).Order()), "actual full registry roster");
-                check(result["probes"]!.AsObject().All(p => p.Value!.GetValue<string>() == "not-probed"), "all native facts explicitly unprobed");
+                if (name == "InitializeEnvironment")
+                {
+                    check(result["ready"]!.GetValue<bool>() == (result["environment"]!["tiaInstallPath"] != null && result["environment"]!["opennessGroupOk"]!.GetValue<bool>()), "bootstrap readiness follows exact installation and group checks");
+                    check(result["environment"]!["tiaVersionInUse"]!.GetValue<int>() == release.MajorVersion, "bootstrap retains selected release identity");
+                    check(result["environment"]!["cause"] != null || result["ready"]!.GetValue<bool>(), "bootstrap readiness cause is present when not ready");
+                    check(result["probes"]!["installedTia"]!.GetValue<string>() != "not-probed" && result["probes"]!["groupMembership"]!.GetValue<string>() != "not-probed", "bootstrap probes installation and group membership");
+                }
+                else check(result["probes"]!.AsObject().All(p => p.Value!.GetValue<string>() == "not-probed"), "self-test leaves native facts unprobed");
                 check(result["sideEffects"]!.AsObject().All(p => !p.Value!.GetValue<bool>()), "no launch repair settings claims");
                 check(text.Length < 32768 && !text.Contains("SECRET") && !text.Contains(Environment.CurrentDirectory), "bounded redacted result");
             }
             check(worker.Calls == 0, "native enabled or disabled diagnostics never call worker");
         }
+        var missingInstall = LegacyHostPassiveDiagnostics.Readiness("14sp1", _ => null, () => true);
+        check(!missingInstall["ready"]!.GetValue<bool>() && missingInstall["environment"]!["tiaVersionDetected"] == null
+            && ((string)missingInstall["recommendedReason"]!).Contains("V14 SP1", StringComparison.Ordinal), "readiness is bound to the exact selected installation release");
+        var missingGroup = LegacyHostPassiveDiagnostics.Readiness("19", _ => @"C:\TIA\Portal V19", () => false);
+        check(!missingGroup["ready"]!.GetValue<bool>() && missingGroup["environment"]!["opennessGroupOk"]!.GetValue<bool>() == false
+            && ((string)missingGroup["recommendedFix"]!).Contains("Siemens TIA Openness", StringComparison.Ordinal), "readiness reports group-membership fix");
+        var apiFixtureRoot = Path.Combine(Path.GetTempPath(), "foundation-api-readiness-" + Guid.NewGuid().ToString("N"));
+        string api19 = Path.Combine(apiFixtureRoot, "TIA_V19_PublicAPI", "V19");
+        string api20 = Path.Combine(apiFixtureRoot, "TIA_V20_PublicAPI", "V20");
+        Directory.CreateDirectory(api19); Directory.CreateDirectory(api20);
+        File.WriteAllText(Path.Combine(api19, "Siemens.Engineering.dll"), "V19 API fixture");
+        File.WriteAllText(Path.Combine(api20, "Siemens.Engineering.dll"), "V20 API fixture");
+        try
+        {
+            int fallbackCalls = 0;
+            var hostOptionReady = LegacyHostPassiveDiagnostics.Readiness("19", api19, "host-option", _ => {
+                fallbackCalls++;
+                return new LegacyHostPassiveDiagnostics.InstallationLocation(null, null);
+            }, () => true);
+            check(hostOptionReady["ready"]!.GetValue<bool>() && (string?)hostOptionReady["environment"]!["installSource"] == "host-option"
+                && fallbackCalls == 0, "resolved host API directory admits the exact release before registry fallback");
+
+            var noOption = LegacyHostPassiveDiagnostics.Readiness("19", null, null, _ => {
+                fallbackCalls++;
+                return new LegacyHostPassiveDiagnostics.InstallationLocation(null, null);
+            }, () => true);
+            check(!noOption["ready"]!.GetValue<bool>() && ((string?)noOption["cause"])?.Contains("TIA Portal V19", StringComparison.Ordinal) == true,
+                "no host API option and no registry/default installation reports the exact-release cause");
+
+            int beforeWrongRelease = fallbackCalls;
+            var wrongRelease = LegacyHostPassiveDiagnostics.Readiness("19", api20, "host-option", _ => {
+                fallbackCalls++;
+                return new LegacyHostPassiveDiagnostics.InstallationLocation(api19, "registry");
+            }, () => true);
+            check(!wrongRelease["ready"]!.GetValue<bool>() && (string?)wrongRelease["environment"]!["installSource"] == "host-option"
+                && fallbackCalls == beforeWrongRelease, "wrong-release host API directory refuses readiness without registry fallback");
+
+            var environmentSource = LegacyHostPassiveDiagnostics.Readiness("19", api19, "environment", _ =>
+                new LegacyHostPassiveDiagnostics.InstallationLocation(null, null), () => true);
+            check(environmentSource["ready"]!.GetValue<bool>() && (string?)environmentSource["environment"]!["installSource"] == "environment",
+                "readiness reports environment as the resolved API directory source");
+
+            var registrySource = LegacyHostPassiveDiagnostics.Readiness("19", null, null, _ =>
+                new LegacyHostPassiveDiagnostics.InstallationLocation(api19, "registry"), () => true);
+            check(registrySource["ready"]!.GetValue<bool>() && (string?)registrySource["environment"]!["installSource"] == "registry",
+                "readiness reports registry as the fallback source");
+        }
+        finally { Directory.Delete(apiFixtureRoot, recursive: true); }
         var contractRegistry = LegacyHostToolRegistry.Create(new ForbiddenWorker(), "17", false);
         var duplicate = contractRegistry.Concat(new[] { contractRegistry[0] }).ToArray();
         check(!LegacyHostPassiveDiagnostics.Inspect("17", false, duplicate)["checks"]!["uniqueRegisteredNames"]!.GetValue<bool>(), "duplicate registration is a failed check");

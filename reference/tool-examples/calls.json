@@ -206,7 +206,7 @@
             "meaning": "Absolute directory containing the immutable native XML exports selected for analysis."
           },
           "files": {
-            "meaning": "Relative files within inputRoot from the same immutable export snapshot."
+            "meaning": "Relative native XML exports from the same immutable snapshot. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning."
           },
           "expectedOrigin": {
             "meaning": "Literal caller-owned-immutable-export-snapshot, asserting ownership of that input snapshot."
@@ -885,7 +885,11 @@
       },
       "DisconnectPortal": {
         "arguments": {},
-        "parameters": {},
+        "parameters": {
+          "path": {
+            "meaning": "An XML export or directory of native PLC tag-table and GlobalDB exports. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning."
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultContract": {
@@ -15809,7 +15813,11 @@
         "arguments": {
           "path": "C:\\Examples\\snapshot"
         },
-        "parameters": {},
+        "parameters": {
+          "path": {
+            "meaning": "XML export file or directory containing PLC tag-table or GlobalDB exports. Empty tag tables are valid, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning."
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },

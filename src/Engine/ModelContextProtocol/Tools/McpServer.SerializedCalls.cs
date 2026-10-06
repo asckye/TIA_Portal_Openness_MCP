@@ -102,7 +102,12 @@ namespace TiaMcpServer.ModelContextProtocol
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
-                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            {
+                bool callToolDisabled = McpServer.ApprovalResultWrite(ProtocolTool.Name,
+                    System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))
+                    && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+                return McpServer.FinishApproval(await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false), null, callToolDisabled);
+            }
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
             bool disabled = write && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;

@@ -162,7 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcSymbolManifestFromPath"), Description("[L2][PLC-Builders]Offline-only helper: extract a PLC symbol manifest from PLC tag table and GlobalDB XML files or directories. It does not connect to TIA Portal or modify projects.")]
+        [McpServerTool(Name = "BuildPlcSymbolManifestFromPath"), Description("[L2][PLC-Builders] Offline-only helper: extract PLC tag and GlobalDB declarations from XML files or directories. Empty tag tables are valid, tag comments are ignored, user constants include their raw value, and system constants are skipped with a warning. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult BuildPlcSymbolManifestFromXmlPathV4(
             [Description("path: XML file or directory containing PLC tag table / GlobalDB XML exports.")] string path)
             => OfflineContracts.Run("BuildPlcSymbolManifestFromPath", () => BuildPlcSymbolManifestFromXmlPath(path), writes: false, current: false);

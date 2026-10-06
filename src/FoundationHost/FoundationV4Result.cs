@@ -30,6 +30,20 @@ internal static class FoundationV4Result
     internal static Error Invalid(string parameter) => new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
         => Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current);
+    internal static CallToolResult ReadinessUnavailable(string release, string name, string id, JsonObject readiness)
+    {
+        var environment = Object(readiness["environment"]);
+        var data = new JsonObject { ["environment"] = environment };
+        string cause = readiness["cause"]?.GetValue<string>() ?? "TIA Openness environment is not ready.";
+        string fix = readiness["recommendedFix"]?.GetValue<string>() ?? "Run `tia doctor` to inspect the TIA Openness installation.";
+        string fixZh = readiness["recommendedFixZh"]?.GetValue<string>() ?? fix;
+        environment["ready"] = false;
+        environment["cause"] = cause;
+        environment["recommendedFix"] = fix;
+        environment["recommendedFixZh"] = fixZh;
+        return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
+            new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment")), false);
+    }
     internal static CallToolResult HostFailure(string release, string name, string id)
         => Wire(release, name, id, null, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,
             new Error("Foundation host operation failed.", new InternalErrorDetails(id)), false);

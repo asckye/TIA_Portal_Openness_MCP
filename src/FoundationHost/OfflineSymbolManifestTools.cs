@@ -15,7 +15,7 @@ internal sealed class OfflineSymbolManifestTool : McpServerTool
     private readonly Tool tool = new()
     {
         Name = "BuildPlcSymbolManifestFromXmlPath",
-        Description = "[offline candidate; native unverified] Read an explicit bounded list of XML exports in a caller-owned immutable snapshot. Extract tag and GlobalDB symbol declarations only. No directory enumeration, file writes, TIA, worker, network, XML schema validation, import validation or program-semantic certification. Not safe for concurrently hostile filesystem mutation.",
+        Description = "[offline candidate; native unverified] Read an explicit bounded list of XML exports in a caller-owned immutable snapshot. Extract PLC tag and GlobalDB declarations; empty tag tables are valid, tag comments are ignored, user constants include their raw value, and system constants are skipped with a warning. No directory enumeration, file writes, TIA, worker, network, XML schema validation, import validation or program-semantic certification. Not safe for concurrently hostile filesystem mutation.",
         InputSchema = JsonSerializer.SerializeToElement(new JsonObject
         {
             ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray("inputRoot", "files", "expectedOrigin"),

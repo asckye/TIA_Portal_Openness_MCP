@@ -85,6 +85,8 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | Teamcenter integration | ? | ? | ? | ? | B | B | P | P |
 | PLC upload/download | ? | B | B | B | B | B | P | P |
 
+`BuildPlcSymbolManifestFromPath` is an offline bounded extractor for native PLC tag-table and GlobalDB XML snapshots. Empty tag tables produce a valid file result with zero symbols; tag comments are ignored; user constants retain their raw value; system constants are omitted with an explicit warning. It does not certify the complete XML schema, import behavior, or program semantics.
+
 All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor
 a schema-valid example establishes a successful native import or compile.

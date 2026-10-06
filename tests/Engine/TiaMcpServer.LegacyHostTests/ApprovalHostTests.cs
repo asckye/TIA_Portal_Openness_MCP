@@ -145,11 +145,35 @@ public sealed class ApprovalHostTests
             });
 
         var result = await tool.InvokeAsync(Request("CreatePlcTagTable", "{\"plc\":\"PLC_1\",\"group\":\"\",\"name\":\"Preview\",\"dryRun\":true}"));
+        var defaultPreview = await tool.InvokeAsync(Request("CreatePlcTagTable", "{\"plc\":\"PLC_1\",\"group\":\"\",\"name\":\"SchemaDefaultPreview\"}"));
 
         Assert.Equal(0, waits);
-        Assert.Equal(1, worker.Calls);
+        Assert.Equal(2, worker.Calls);
         Assert.Equal("succeeded", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("succeeded", (string?)defaultPreview.StructuredContent?["meta"]?["outcome"]);
         Assert.Empty(audit.Read());
+    }
+
+    [Fact]
+    public async Task Foundation_missing_exact_installation_refuses_worker_tools_before_approval()
+    {
+        var worker = new Worker();
+        int waits = 0;
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTagTable"), worker), "19", null,
+            () => new ApprovalSettings(true, 1), (_, _, _) =>
+            {
+                waits++;
+                throw new InvalidOperationException("Readiness refusal must precede approval.");
+            }, () => LegacyHostPassiveDiagnostics.Readiness("19", _ => null, () => true));
+
+        var result = await tool.InvokeAsync(Request("CreatePlcTagTable", "{\"plc\":\"PLC_1\",\"group\":\"\",\"name\":\"Blocked\",\"dryRun\":true}"));
+        Assert.Equal("RESOURCE_UNAVAILABLE", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("tia-openness-environment", (string?)result.StructuredContent?["error"]?["details"]?["resource"]);
+        Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.False((bool)result.StructuredContent!["data"]!["environment"]!["ready"]!);
+        Assert.Equal(0, waits);
+        Assert.Equal(0, worker.Calls);
     }
 
     private sealed class Worker : IFoundationWorker
