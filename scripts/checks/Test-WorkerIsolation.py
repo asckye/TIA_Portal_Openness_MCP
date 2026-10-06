@@ -81,7 +81,9 @@ def main():
             print(f'PASS V{args.major} {transport} {profile}: readiness refusal left worker NotStarted', flush=True)
 
             with resources.server(args.exe, args.public_api, args.major, transport, profile, args.host_harness, args.public_api,
-                                  isolate=True, env_overrides=isolated_environment(TIA_MCP_MAX_RESPONSE_CHARS='2000')) as (rpc, http, logs):
+                                  isolate=True, env_overrides=isolated_environment(
+                                      # The explicit rebind needs a project; the worker double provides one without TIA.
+                                      TIA_MCP_MAX_RESPONSE_CHARS='2000', TIA_MCP_TEST_WORKER_FAULT='ok')) as (rpc, http, logs):
                 rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'isolation-test', 'version': '1'}})
                 rpc('notifications/initialized', notification=True)
                 number = 0
