@@ -665,6 +665,7 @@ TASK_PATHS = {
     "P6-51": [S+"Gui/Configuration/UpdateCheck.cs", L+"ModelContextProtocol/UpdateLogic.cs", SH+"BundleLayout.cs", E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "scripts/operations/delivery-files.json"],
     "P6-52": ["scripts/checks", "scripts/generate", A+"build", TE+"TiaMcpServer.HttpTests", "tests/test-suites.json"],
     "P6-53": ["scripts/build", "scripts/checks", ".github/workflows", "docs/development/release-workflow.md", "docs/development/validation.md", ".gitattributes"],
+    "P6-54": [E+"Program.cs", E+"Isolation", "src/Logic/CliOptions.cs", E+"ModelContextProtocol/Tools/McpServer.Worker.cs", E+"ModelContextProtocol/Tools/SessionTools.cs", E+"Runtime/EnvironmentDoctor.cs", S+"Gui/Configuration", "scripts/checks/Test-RelocatedBundle.py", "docs/reference/real-machine-ledger.md"],
 }
 for task in MIGRATION_GROUPS:
     paths = sorted(p for p in owners if owners[p] == task)
@@ -675,7 +676,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 54)}
+    expected = {f"P6-{i:02}" for i in range(1, 55)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():

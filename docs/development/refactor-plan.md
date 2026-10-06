@@ -216,6 +216,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-51 | 更新器改为 C#，替代 Update-Engine.ps1：运行中拒绝、下载与 SHA-256 校验、备份、含自身的替换、失败回滚、源码目录拒绝、旧文件清理；引擎与工作台的更新提示同步；[路径清单](phase6-review.md#phase6-path-p6-51) | 38、50 | T；本地假发布源全流程、中断回滚、3.3→4.0 升级路径 | todo |
 | P6-52 | 开发检查去 PowerShell：反射类发布检查与工具清单生成改 C#，能力矩阵生成与覆盖审计改 C# 单文件程序，适配器构建检查改写；[路径清单](phase6-review.md#phase6-path-p6-52) | 42 | T、C；各检查断言数不少于原脚本，生成结果逐字节一致 | todo |
 | P6-53 | 构建发布链改 C#：Release、Build-Release、Run-ReleaseBuild、多版本构建、验包、预检等；CI 工作流；仓库检查禁止新增 .ps1/.bat/.cmd；[路径清单](phase6-review.md#phase6-path-p6-53) | 50、51、52 | 完整发布链从干净目录通过，产物清单与改写前一致 | todo |
+| P6-54 | V20/V21 改为与 Foundation 相同的“宿主 + worker”运行方式（同一引擎 EXE 的 `--isolate-openness`，工具数量与功能不变）：缺少 TIA、版本不符或不在 Siemens TIA Openness 组时照常启动，由 Bootstrap/InitializeEnvironment/环境体检报告并对需要博途的调用返回 V4 错误；默认隔离的代码与退路参数就绪，发布默认保持关闭至真机验收通过；八版启动/重定位检查直接启动真实 EXE；文档、客户端配置与工作台显示同步；[路径清单](phase6-review.md#phase6-path-p6-54) | 49 | T、V；真实 EXE 无 TIA 启动、worker 测试替身仅测试构建可用；L5：V20/V21 隔离模式连接绑定、导入导出、编译、worker 超时重启后重新绑定，通过前不切默认 | todo |
 
 并行边界：02 完成后 03/04/05/06 可各建独立 DTO/测试文件；项目公共引用由 02 预置、后续缺项由 07 集成。
 07 完成且 I 合并后，08–23 按规范附表 G 的工具文件所有权并行。
