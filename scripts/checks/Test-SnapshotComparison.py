@@ -40,8 +40,9 @@ class SnapshotComparisonTests(unittest.TestCase):
                         return dict(release=release, profile='full-engine', tools=[dict(
                             name='Example', descriptionSha256='unchanged', inputSchema=dict(
                                 type='object', properties=dict(value=dict(type='integer' if changed else 'string'))))])
-                    return dict(release=release, calls=[dict(profile='full', tool='Example',
-                        arguments={}, response=dict(value='changed' if changed else 'original'))])
+                    return dict(formatVersion=3, release=release, calls=[dict(profile='full', tool='Example',
+                        arguments={}, rawTextBlocks=[dict(contentIndex=0, sha256='0' * 64)],
+                        response=dict(value='changed' if changed else 'original'))])
 
                 def write(folder, release, changed=False):
                     (folder / (release + '.json')).write_text(

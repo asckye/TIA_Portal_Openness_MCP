@@ -80,6 +80,7 @@
       "state": "current"
     }
   ],
+  "formatVersion": 1,
   "profile": "plc-foundation",
   "release": "19",
   "tools": [

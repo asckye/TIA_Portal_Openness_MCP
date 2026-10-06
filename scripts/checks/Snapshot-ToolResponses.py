@@ -85,6 +85,17 @@ contracts = helper('Snapshot-ToolContracts')
 RELEASES = contracts.RELEASES
 FULL_RELEASES = ('20', '21')
 RESPONSE_LIMIT = 16 * 1024
+RESPONSE_FORMAT_VERSION = 3
+FULL_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
+                        'maxResponseChars', 'coverage', 'calls'}
+FOUNDATION_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
+                              'coverage', 'calls'}
+FULL_COVERAGE_FIELDS = {'registeredTools', 'calledTools', 'behaviorCallTools', 'directRejectedTools',
+                        'directSkipped', 'calledOperations', 'usageTools', 'usageOperations',
+                        'offlineExamples', 'l1Domains', 'bridgeRejectedTools', 'bridgeSelfGuardTools',
+                        'bridgeSkipped', 'liteAdvertisedTools'}
+FOUNDATION_COVERAGE_FIELDS = {'registeredTools', 'calledTools', 'directRejectedTools', 'directSkipped',
+                              'passiveTools', 'passiveSkipped', 'bridgeRejectedTools', 'bridgeSkipped'}
 
 # Safety proof for every full-engine tool, including no-argument tools:
 # ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs::WrapTools wraps both
@@ -979,6 +990,27 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_frozen_snapshot_fields(self):
+        root = Path(__file__).resolve().parents[2]
+        snapshot = json.loads((root / 'manifest/contracts/v4/responses/21.json').read_text(encoding='utf-8'))
+        validate_response_snapshot(snapshot, '21.json')
+        invalid_cases = []
+        changed = json.loads(json.dumps(snapshot))
+        changed['formatVersion'] = RESPONSE_FORMAT_VERSION + 1
+        invalid_cases.append(changed)
+        changed = json.loads(json.dumps(snapshot))
+        changed['unexpected'] = True
+        invalid_cases.append(changed)
+        changed = json.loads(json.dumps(snapshot))
+        changed['coverage'].pop('registeredTools')
+        invalid_cases.append(changed)
+        changed = json.loads(json.dumps(snapshot))
+        changed['calls'][0]['unexpected'] = True
+        invalid_cases.append(changed)
+        for invalid in invalid_cases:
+            with self.assertRaises(ValueError):
+                validate_response_snapshot(invalid, 'negative.json')
+
     def test_current_behavior_disclosure_is_required(self):
         response = {'result': {'content': [{'text': {'schemaVersion': 4, 'ok': False, 'meta': {
             'behaviorPolicy': 'current', 'warnings': [{'code': 'UNVERIFIED_BEHAVIOR'}]}}}]}}
@@ -1280,6 +1312,7 @@ def verify(args):
     snapshots = load_snapshots(directory)
     rosters = contracts.catalog_rosters(root)
     for release, snapshot in snapshots.items():
+        validate_response_snapshot(snapshot, directory / (release + '.json'))
         verify_coverage(release, baseline[release], snapshot, rosters[release][1])
         inventory = {name for row in baseline[release]['behaviorCapabilities'] if row['state'] == 'current' for name in row['entries']}
         for call in snapshot['calls']:
@@ -1290,6 +1323,70 @@ def verify(args):
     print(f'V4 responses verified: {len(snapshots)} releases, '
           f'{sum(len(snapshot["calls"]) for snapshot in snapshots.values())} calls; 0 issues.')
     return 0
+
+
+def validate_response_snapshot(snapshot, path):
+    release = snapshot.get('release')
+    full = release in FULL_RELEASES
+    expected_fields = FULL_RESPONSE_FIELDS if full else FOUNDATION_RESPONSE_FIELDS
+    if set(snapshot) != expected_fields:
+        raise ValueError(f'{path}: response fields differ; missing={sorted(expected_fields - set(snapshot))}, '
+                         f'unknown={sorted(set(snapshot) - expected_fields)}')
+    if type(snapshot['formatVersion']) is not int or snapshot['formatVersion'] != RESPONSE_FORMAT_VERSION:
+        raise ValueError(f'{path}: expected response formatVersion {RESPONSE_FORMAT_VERSION}')
+    if (snapshot['profiles'] != (['full', 'lite'] if full else ['plc-foundation'])
+            or snapshot['transport'] != 'stdio'):
+        raise ValueError(f'{path}: invalid response profile or transport')
+    if full and (type(snapshot['maxResponseChars']) is not int or snapshot['maxResponseChars'] != 2000000):
+        raise ValueError(f'{path}: invalid maxResponseChars')
+    coverage_fields = FULL_COVERAGE_FIELDS if full else FOUNDATION_COVERAGE_FIELDS
+    coverage = snapshot['coverage']
+    if not isinstance(coverage, dict) or set(coverage) != coverage_fields:
+        actual = set(coverage) if isinstance(coverage, dict) else set()
+        raise ValueError(f'{path}: coverage fields differ; missing={sorted(coverage_fields - actual)}, '
+                         f'unknown={sorted(actual - coverage_fields)}')
+    rules = snapshot['rawMaskRules']
+    if not isinstance(rules, list):
+        raise ValueError(f'{path}: rawMaskRules must be an array')
+    for rule in rules:
+        if not isinstance(rule, dict) or set(rule) not in ({'tool', 'path', 'reason'},
+                                                           {'tool', 'kind', 'path', 'reason'}):
+            raise ValueError(f'{path}: invalid raw mask rule fields')
+        if (not isinstance(rule['tool'], str) or not isinstance(rule['path'], list)
+                or any(not isinstance(part, str) or not part for part in rule['path'])
+                or not isinstance(rule['reason'], str) or not rule['reason']):
+            raise ValueError(f'{path}: invalid raw mask rule')
+        if 'kind' in rule and rule['kind'] != 'requestId':
+            raise ValueError(f'{path}: unknown raw mask kind')
+    if not isinstance(snapshot['calls'], list) or not snapshot['calls']:
+        raise ValueError(f'{path}: calls must be a nonempty array')
+    for call in snapshot['calls']:
+        if not isinstance(call, dict):
+            raise ValueError(f'{path}: call must be an object')
+        fields = set(call)
+        expected_call_fields = {'profile', 'tool', 'arguments', 'rawTextBlocks'}
+        if fields == expected_call_fields | {'response'}:
+            if not isinstance(call['response'], dict) or not call['response']:
+                raise ValueError(f'{path}: response must be a nonempty object')
+        elif fields == expected_call_fields | {'responseDigest'}:
+            digest = call['responseDigest']
+            if (not isinstance(digest, dict) or set(digest) != {'length', 'sha256', 'shape', 'textShapes'}
+                    or type(digest['length']) is not int or digest['length'] <= 0
+                    or not re.fullmatch(r'[0-9a-f]{64}', digest['sha256'])
+                    or not isinstance(digest['shape'], dict) or not isinstance(digest['textShapes'], list)):
+                raise ValueError(f'{path}: invalid responseDigest')
+        else:
+            raise ValueError(f'{path}: call fields differ; unknown={sorted(fields - expected_call_fields - {"response", "responseDigest"})}, '
+                             f'missing={sorted(expected_call_fields - fields)}')
+        if (not isinstance(call['profile'], str) or not isinstance(call['tool'], str)
+                or not isinstance(call['arguments'], dict)):
+            raise ValueError(f'{path}: invalid call identity')
+        if not isinstance(call['rawTextBlocks'], list) or any(
+                not isinstance(block, dict) or set(block) != {'contentIndex', 'sha256'}
+                or type(block['contentIndex']) is not int or block['contentIndex'] < 0
+                or not re.fullmatch(r'[0-9a-f]{64}', block['sha256'])
+                for block in call['rawTextBlocks']):
+            raise ValueError(f'{path}: invalid rawTextBlocks')
 
 
 if __name__ == '__main__':

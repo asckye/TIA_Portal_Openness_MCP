@@ -78,6 +78,7 @@
       "state": "current"
     }
   ],
+  "formatVersion": 1,
   "profile": "plc-foundation",
   "release": "18",
   "tools": [

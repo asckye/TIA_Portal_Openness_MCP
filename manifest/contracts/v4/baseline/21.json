@@ -104,6 +104,7 @@
       "state": "current"
     }
   ],
+  "formatVersion": 1,
   "liteTools": [
     "ArchiveSavedProject",
     "AttachOpenProject",

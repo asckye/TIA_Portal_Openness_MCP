@@ -7,7 +7,7 @@ Published [v3.3.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/ta
 published-asset verification passed; see the [publication evidence](../../manifest/publication-v3.3.0.json),
 [release notes](../releases/v3.3.0.md) and [CHANGELOG](../../CHANGELOG.md). The release contains:
 
-- one WPF/.NET 10 workbench (configurator and Studio merged; `TiaMcpConfigurator.exe` remains the launcher) with menus
+- one WPF/.NET 10 workbench (configurator and Studio merged; root `TiaOpenness.exe` is the launcher) with menus
   grouped by owner (Project, View, PLC, MCP, Tools, Help) and an MCP service state chip in the title bar;
 - V14 SP1–V19 foundation hosts on .NET 10 and Microsoft .NET 10.0.12 bundled in `runtime/dotnet`, so a target computer
   needs only .NET Framework 4.8 for the Openness workers and engines;

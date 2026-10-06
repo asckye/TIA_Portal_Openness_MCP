@@ -806,15 +806,15 @@ end()
 
 section("E1. 当前资源定位/私有默认值与目标政策（源码定位生成）")
 layout_policies = [
-    (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", "RepositoryRoot", "R1 祖先桥接脚本探测、旧 root 变量", "严格 bundle-root；缺资源拒绝"),
-    (E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "FindInstallRoot", "R2 四层 delivery 探测", "已知安装根 + delivery 标记"),
-    (E+"Cli/SpecLoader.cs", "FindBundleRoot", "R3 十二层 templates/tools 探测", "显式根/已知锚点；未解析 __BUNDLE__ 报错"),
-    (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "R7 bin/bin-v20/v数字候选", "版本目录表 + 精确新产品名"),
+    (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", "RepositoryRoot", "P6-37：仅委托 BundleLayout.RequireRoot；不再探测祖先脚本或旧 root 变量", "严格 bundle-root；缺资源拒绝"),
+    (E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "FindInstallRoot", "P6-37：BundleLayout.FindRoot 后核对精确 runtime 发布键与 manifest/delivery.json；仅用于更新器资格判断", "已知安装根 + delivery 标记"),
+    (E+"Cli/SpecLoader.cs", "FindBundleRoot", "P6-37：BundleLayout.RequireRoot 并要求 templates 资源；仅解析 __BUNDLE__ token", "显式根/已知锚点；未解析 __BUNDLE__ 报错"),
+    (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "P6-37：通过 BundleLayout.RequireEngine 选择版本表中的精确产品名；无候选名扫描", "版本目录表 + 精确新产品名"),
     (E+"Cli/McpConfigInstaller.cs", "RequireEngine", "P6-37 已改：目标版本引擎缺失时报 RESOURCE_UNAVAILABLE，不再使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
-    (S+"Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
+    (S+"Gui/ConfigurationPage.cs", "FindBundleRoot", "P6-38：仅委托 BundleLayout.RequireWorkbenchRoot，校验正式包标记或已知 Studio 锚点", "显式根或已知锚点"),
     (S+"Gui/Configuration/ConfigCore.cs", "RequireWorkbenchRoot", "P6-38 已改：工作台经 BundleLayout 严格定位根并从产品表取引擎路径", "严格根校验、新产品目录"),
     (S+"Gui/Configuration/UpdateCheck.cs", "RequirePath", "P6-38 已改：资源只在包根内严格解析，缺失即报错", "严格资源解析，worktree 更新保护保留"),
-    (S+"Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
+    (S+"Client/BridgeClient.cs", "BundleLayout", "P6-38：BundleLayout.RequireWorkbenchBridge 使用正式相邻布局或已知 worktree 输出锚点；不猜同级 Debug/Release", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
     (S+"Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
     (S+"Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
     (SH+"DataLocations.cs", "TIA_MCP_DATA_DIRECTORY", "显式数据根或 bundle/data；不可写时按用途回退用户目录", "沿用数据根政策；logs 按发布键/studio 分组"),
@@ -825,8 +825,8 @@ layout_policies = [
     (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "P6-39：显式 --workspace-root；无包根/cwd/私人目录探测", "缺输入 INVALID_ARGUMENT；CLI 语法退出 64"),
     (E+"Cli/HmiTemplateBuilder.cs", "RequireInput", "P6-39：显式 HMI 模板路径与 workspace 输出根", "缺输入 INVALID_ARGUMENT；不猜 TIA_MCP_AI_PACK"),
     (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", "string workspaceRoot", "P6-39：显式 fixtureDirectory 与 workspaceRoot；不从夹具反推包根", "缺输入 INVALID_ARGUMENT；先拒绝再写报告"),
-    (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", "WithAutoOffline", "错误文本触发下线再执行", "D1/L5 后 OFFLINE_REQUIRED，不重试"),
-    (E+"Siemens/Services/OnlineDownloadService.cs", "ApplyConfiguration", "配置失败/候选路线继续", "D1/L5 后显式路线，失败/未知即停止"),
+    (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", "WithAutoOffline", "D1 行为保持 current；L5 未运行前仍保留现行路线实现", "L5 通过后切换 OFFLINE_REQUIRED，不重试"),
+    (E+"Siemens/Services/OnlineDownloadService.cs", "ApplyConfiguration", "D1 行为保持 current；L5 未运行前仍保留现行候选路线", "L5 通过后显式路线，失败/未知即停止"),
 ]
 policy_rows = []
 for path, needle, current, target in layout_policies:
@@ -840,9 +840,9 @@ section("E. 布局、构建、打包、校验、Studio 和文档修改位置（�
 # Scan tracked first-party text, including tests/metadata needing regeneration.
 # Exclude this proposal to avoid self-referential line churn and historical data.
 SCAN_TERMS = {
-    "产品": r"TiaMcp\.(?:FoundationHost|Engine\.V(?:20|21))|TiaOpenness(?:\.Launcher)?\.exe|TiaMcpServer(?:[\"'<])|TiaMcpConfigurator",
-    "根定位": r"TIA_MCP_REPOSITORY_ROOT|FindBundleRoot|FindInstallRoot|FindSiblingExe|BundleLayout|RepositoryRoot",
-    "写入/工作区": r"ecosystem-python|DiagLogPathLocal|TiaMcpServer\.log|\.crash\.log|GetWorkspaceRoot|TMP_EXPORT|TIA_MCP_AI_PACK",
+    "退役产品名": r"TiaMcpServer(?:\.exe|\.V(?:20|21)\.exe)|TiaMcpConfigurator\.exe",
+    "退役根变量": r"TIA_MCP_REPOSITORY_ROOT",
+    "退役私人默认值": r"DiagLogPathLocal|TIA_MCP_AI_PACK",
 }
 scan = []
 excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")
@@ -854,15 +854,19 @@ for f in sorted(files, key=lambda p: p.replace("manifest/history/contracts-v3/",
     hits = {k:v for k,v in hits.items() if v}
     if not hits: continue
     treatment = "修改引用并回归"
-    if f == REJECTIONS or f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"): treatment = "仅运行所属生成器更新；历史契约归档，不手改哈希"
-    elif f.startswith(("docs/releases/", "docs/archive/", "docs/development/evidence/")): treatment = "历史证据只读保留，不作为 V4 改写目标"
+    if f.startswith("manifest/history/"):
+        treatment = "历史契约只读归档；不编辑内容、不重算哈希"
+    elif f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"):
+        treatment = "生成记录只由所属生成器重建；不手工改写扫描命中"
+    elif f.startswith(("docs/releases/", "docs/archive/", "docs/development/evidence/", "docs/reference/real-machine-ledger.md")): treatment = "历史发布/验收证据只读保留，不作为 V4 改写目标"
+    elif f.startswith("tests/"): treatment = "回归负例证据只读保留；断言退役名称或变量不能重新生效"
+    elif f in ("docs/development/repository-layout.md", "docs/development/runtime-layout.md"): treatment = "BundleLayout 迁移证据只读保留；现行定位规则在同页明确"
     elif f.startswith("docs/development/"): treatment = "更新现行说明；历史阶段证据保留并注明被 V4 决策取代"
     scan.append([link(f, f), "; ".join(k+":"+",".join(v) for k,v in hits.items()), treatment])
-assert any("Package-Release.py" in r[0] for r in scan)
-assert any("Validate-Bundle.ps1" in r[0] for r in scan)
-assert any("ClientProfiles.cs" in r[0] or "ConfigCore.cs" in r[0] for r in scan)
+assert not any(r[2] in ("修改引用并回归", "更新现行说明") for r in scan), \
+    "Retired-name scan still has an open current-reference row"
 table(["文件", "类别:全部命中行", "实施方式"], scan)
-out.append(f"共 {len(scan)} 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。\n")
+out.append(f"共 {len(scan)} 个候选文件。扫描只匹配退役的产品文件名、TIA_MCP_REPOSITORY_ROOT 和私人默认路径标记；E1 表逐项核对仍在使用的严格 BundleLayout 入口。发布/验收/迁移证据和生成清单按其只读或再生成规则标注。扫描不命中已批准的新产品名、BundleLayout 包装器、显式 workspaceRoot 或当前日志文件名。\n")
 end()
 
 section("F. V20/V21 lite 数据提案（每项均有现有调用示例）")

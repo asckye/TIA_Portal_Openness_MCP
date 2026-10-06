@@ -17,6 +17,61 @@ import sys
 
 
 RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
+FORMAT_VERSION = 1
+CONTRACT_FIELDS = {'formatVersion', 'release', 'profile', 'tools', 'behaviorCapabilities'}
+ENGINE_CONTRACT_FIELDS = CONTRACT_FIELDS | {'liteTools'}
+TOOL_FIELDS = {'name', 'inputSchema', 'outputSchema', 'descriptionSha256'}
+CAPABILITY_FIELDS = {'family', 'state', 'l5', 'entries'}
+FOUNDATION_UNAVAILABLE_BELOW_20 = {
+    'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments',
+    'ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments',
+}
+
+
+def validate_contract_snapshot(snapshot, path):
+    release = snapshot.get('release')
+    expected_fields = ENGINE_CONTRACT_FIELDS if release in ('20', '21') else CONTRACT_FIELDS
+    if set(snapshot) != expected_fields:
+        raise ValueError(f'{path}: contract fields differ; missing={sorted(expected_fields - set(snapshot))}, '
+                         f'unknown={sorted(set(snapshot) - expected_fields)}')
+    if type(snapshot['formatVersion']) is not int or snapshot['formatVersion'] != FORMAT_VERSION:
+        raise ValueError(f'{path}: expected contract formatVersion {FORMAT_VERSION}')
+    expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
+    if snapshot['profile'] != expected_profile:
+        raise ValueError(f'{path}: invalid contract profile')
+    if not isinstance(snapshot['tools'], list) or not isinstance(snapshot['behaviorCapabilities'], list):
+        raise ValueError(f'{path}: tools and behaviorCapabilities must be arrays')
+    if [tool.get('name') for tool in snapshot['tools'] if isinstance(tool, dict)] != sorted(
+            tool.get('name') for tool in snapshot['tools'] if isinstance(tool, dict)):
+        raise ValueError(f'{path}: tools must be sorted by name')
+    for tool in snapshot['tools']:
+        if not isinstance(tool, dict) or set(tool) != TOOL_FIELDS:
+            actual = set(tool) if isinstance(tool, dict) else set()
+            raise ValueError(f'{path}: tool fields differ; missing={sorted(TOOL_FIELDS - actual)}, '
+                             f'unknown={sorted(actual - TOOL_FIELDS)}')
+        if not isinstance(tool['name'], str) or not tool['name']:
+            raise ValueError(f'{path}: tool name must be nonempty text')
+        if not isinstance(tool['inputSchema'], dict):
+            raise ValueError(f'{path}: {tool["name"]} inputSchema must be an object')
+        if tool['outputSchema'] is not None and not isinstance(tool['outputSchema'], dict):
+            raise ValueError(f'{path}: {tool["name"]} outputSchema must be an object or null')
+        if not isinstance(tool['descriptionSha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', tool['descriptionSha256']):
+            raise ValueError(f'{path}: {tool["name"]} descriptionSha256 must be lowercase SHA-256')
+    for row in snapshot['behaviorCapabilities']:
+        if not isinstance(row, dict) or set(row) != CAPABILITY_FIELDS:
+            actual = set(row) if isinstance(row, dict) else set()
+            raise ValueError(f'{path}: capability fields differ; missing={sorted(CAPABILITY_FIELDS - actual)}, '
+                             f'unknown={sorted(actual - CAPABILITY_FIELDS)}')
+        if (not isinstance(row['family'], str) or not isinstance(row['state'], str)
+                or not isinstance(row['l5'], str) or not isinstance(row['entries'], list)
+                or any(not isinstance(name, str) or not name for name in row['entries'])
+                or len(row['entries']) != len(set(row['entries']))
+                or row['entries'] != sorted(row['entries'])):
+            raise ValueError(f'{path}: invalid behavior capability record')
+    if 'liteTools' in snapshot and (not isinstance(snapshot['liteTools'], list)
+                                    or any(not isinstance(name, str) or not name for name in snapshot['liteTools'])
+                                    or snapshot['liteTools'] != sorted(snapshot['liteTools'])):
+        raise ValueError(f'{path}: liteTools must be an array of nonempty tool names')
 
 def tool_records(tools):
     names = [tool['name'] for tool in tools]
@@ -46,7 +101,7 @@ def capture(args):
         executables[release] = Path(path).resolve()
     for release in args.releases:
         exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
-        snapshot = {'release': release}
+        snapshot = {'formatVersion': FORMAT_VERSION, 'release': release}
         if release in ('20', '21'):
             public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':
@@ -406,7 +461,20 @@ def verified_contracts(directory, root):
         'entries': sorted({e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == release and e['family'] == r['family']})}
         for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
     contracts = current_parameters(root)
+    source_engine = {name for (profile, name) in contracts if profile == 'full-engine'}
+    catalog_engine = rosters['20'][0] | rosters['21'][0]
+    if source_engine != catalog_engine:
+        raise ValueError('Full-engine registered source inventory differs from generated catalog: '
+                         + f'missing={sorted(catalog_engine - source_engine)}, '
+                         + f'unregistered={sorted(source_engine - catalog_engine)}')
+    source_foundation = foundation_registered_names(root, contracts)
+    catalog_foundation = set().union(*(rosters[release][0] for release in RELEASES[:6]))
+    if source_foundation != catalog_foundation:
+        raise ValueError('Foundation registered source inventory differs from generated catalog: '
+                         + f'missing={sorted(catalog_foundation - source_foundation)}, '
+                         + f'unregistered={sorted(source_foundation - catalog_foundation)}')
     for release, snapshot in snapshots.items():
+        validate_contract_snapshot(snapshot, directory / (release + '.json'))
         names = unique_names([tool['name'] for tool in snapshot['tools']], f'V{release} full roster')
         full, lite = rosters[release]
         if names != full:
@@ -415,6 +483,27 @@ def verified_contracts(directory, root):
             raise ValueError(f'V{release}: behavior table differs from ledger-derived catalog')
         for tool in snapshot['tools']:
             validate_output(tool)
+            parameters = contracts.get((snapshot['profile'], tool['name']))
+            if parameters is None and tool['name'] not in source_foundation:
+                raise ValueError(f'V{release}: {tool["name"]} is absent from source registrations')
+            if parameters is None:
+                # These Foundation-host-only tools construct their own schemas in the
+                # registered McpServerTool implementation; the PR snapshot gate
+                # requires refreshing their baseline when those declarations change.
+                continue
+            properties = tool['inputSchema'].get('properties', {})
+            if not isinstance(properties, dict):
+                raise ValueError(f'V{release}: {tool["name"]} inputSchema.properties must be an object')
+            unregistered = set(properties) - set(parameters)
+            if unregistered:
+                raise ValueError(f'V{release}: {tool["name"]} schema has unregistered parameters: '
+                                 + ', '.join(sorted(unregistered)))
+            for name, schema in properties.items():
+                if not isinstance(schema, dict):
+                    raise ValueError(f'V{release}: {tool["name"]}.{name} schema must be an object')
+                if 'default' in schema and parameters[name] is not None \
+                        and schema['default'] != parameters[name]:
+                    raise ValueError(f'V{release}: {tool["name"]}.{name} default differs from source declaration')
         check_current_schemas(snapshot, contracts, root)
         expected_profile = 'full-engine' if release in ('20', '21') else 'plc-foundation'
         if snapshot['profile'] != expected_profile:
@@ -462,6 +551,22 @@ def current_parameters(root):
     return params
 
 
+def foundation_registered_names(root, parameters=None):
+    parameters = parameters if parameters is not None else current_parameters(root)
+    names = {name for (profile, name) in parameters if profile == 'plc-foundation'}
+    names.difference_update(FOUNDATION_UNAVAILABLE_BELOW_20)
+    wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
+    renames = dict(re.findall(r'\["([^"\n]+)"\]\s*=\s*"([^"\n]+)"', wrapper))
+    for path in (root / 'src/FoundationHost').glob('*.cs'):
+        text = path.read_text(encoding='utf-8-sig')
+        names.update(renames.get(name, name) for name in re.findall(
+            r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"\n]+)"', text))
+    for filename in ('ToolUsageTool.cs', 'ImportOrderTool.cs', 'OfflineSymbolManifestTools.cs'):
+        text = (root / 'src/FoundationHost' / filename).read_text(encoding='utf-8-sig')
+        names.update(renames.get(name, name) for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))
+    return names
+
+
 def candidate_parameters(root):
     fields = set()
     for path in (root / 'src/Logic/V4').glob('*Contract.cs'):
@@ -491,6 +596,7 @@ def self_test(args):
     import copy
     root = ROOT
     snapshot = load_snapshots(root / 'manifest/contracts/v4/baseline')['21']
+    snapshot['formatVersion'] = FORMAT_VERSION
     contracts = current_parameters(root)
     # The inventory table itself must not be able to bless a candidate parameter.
     if 'behaviorCapabilities' not in snapshot:
@@ -516,7 +622,14 @@ def self_test(args):
     scratch = root / 'bin-build' / ('p6-35-contract-selftest-' + uuid.uuid4().hex)
     scratch.mkdir(parents=True)
     try:
-        for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'): shutil.copyfile(path, scratch / path.name)
+        for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'):
+            source = json.loads(path.read_text(encoding='utf-8'))
+            source['formatVersion'] = FORMAT_VERSION
+            (scratch / path.name).write_text(json.dumps(source, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+                                             encoding='utf-8', newline='\n')
+        verified_contracts(scratch, root)
+        baseline21 = json.loads((root / 'manifest/contracts/v4/baseline/21.json').read_text(encoding='utf-8'))
+        baseline21['formatVersion'] = FORMAT_VERSION
         for field in ('behaviorCapabilities', 'outputSchema'):
             current = copy.deepcopy(load_snapshots(scratch)['21'])
             if field == 'outputSchema': current['tools'][0].pop(field)
@@ -525,7 +638,8 @@ def self_test(args):
             try: verified_contracts(scratch, root)
             except ValueError: count += 1
             else: raise AssertionError('Invalid capability/output snapshot accepted')
-            shutil.copyfile(root / 'manifest/contracts/v4/baseline/21.json', scratch / '21.json')
+            (scratch / '21.json').write_text(json.dumps(baseline21, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+                                             encoding='utf-8', newline='\n')
     finally:
         for path in scratch.iterdir(): path.unlink()
         scratch.rmdir()
@@ -534,6 +648,22 @@ def self_test(args):
         except ValueError: count += 1
         else: raise AssertionError('Invalid outputSchema accepted')
     validate_output({'name': 'sentinel', 'outputSchema': None})
+    for field in ('formatVersion', 'tools', 'behaviorCapabilities'):
+        invalid = copy.deepcopy(snapshot)
+        if field == 'formatVersion':
+            invalid[field] = FORMAT_VERSION + 1
+        elif field == 'tools':
+            invalid['tools'][0]['unexpected'] = True
+        else:
+            invalid['behaviorCapabilities'][0]['unexpected'] = True
+        try: validate_contract_snapshot(invalid, 'negative.json')
+        except ValueError: count += 1
+        else: raise AssertionError('Invalid frozen contract format accepted: ' + field)
+    invalid = copy.deepcopy(snapshot)
+    invalid['tools'][0].pop('outputSchema')
+    try: validate_contract_snapshot(invalid, 'negative.json')
+    except ValueError: count += 1
+    else: raise AssertionError('Missing contract field accepted: outputSchema')
     print(f'Contract negative self-tests: {count} passed, 0 failed.')
     return 0
 
