@@ -695,7 +695,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ExportPlcBlocks"), Description("[L2][PLC-Software] Export all (or regexName-filtered) blocks to an existing directory as SimaticML XML; exportPath must already exist. This XML export does not create a new directory. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments (which requires a new directory); a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public Task<CallToolResult> ExportBlocksV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,

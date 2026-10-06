@@ -31,10 +31,11 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static IDisposable BeginReadOnlyApprovalPreview() => new InternalPreviewScope();
         internal static bool ApprovalWrite(string tool, string arguments)
         {
-            if (ToolCatalog.IsWrite(tool) || SessionApprovalEntries.Contains(tool)) return true;
             var args = JsonNode.Parse(arguments)!.AsObject();
-            return BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
-                && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var value) && value == "apply";
+            if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4)
+                return args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var value) && value == "apply";
+            if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview) return false;
+            return ToolCatalog.IsWrite(tool) || SessionApprovalEntries.Contains(tool);
         }
         internal static bool ApprovalResultWrite(string tool, string arguments)
         {
@@ -49,7 +50,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (tool == "SaveExportContent" && JsonNode.Parse(arguments)?["outputPath"] is JsonValue output
                 && output.TryGetValue<string>(out var path) && ApprovalSettings.IsAdministrativeTarget(path))
-                return ApprovalClient.RejectAdministrativeWrite(PendingApproval.Create("engine", ReleaseKey, tool, arguments, null, 120));
+            {
+                var rejected = PendingApproval.Create("engine", ReleaseKey, tool, arguments, null, 120, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+                TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(rejected.PlanHash);
+                return ApprovalClient.RejectAdministrativeWrite(rejected);
+            }
             if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch") return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
             if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
@@ -57,7 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             string? identity = null;
             ApprovalBindingIdentity(ref identity);
-            var pending = PendingApproval.Create("engine", ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds);
+            var pending = PendingApproval.Create("engine", ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+            TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(pending.PlanHash);
             if (ApprovalWaitOverride.Value is { } overrideWait) return await overrideWait(pending, settings, token).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
             try { return await ApprovalClient.Wait(pending, settings, token).ConfigureAwait(false); }
@@ -90,12 +96,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult ApprovedBridgeCall(string name, string arguments, Func<CallToolResult> invoke)
         {
-            if (!McpApprovalContext.Value) return invoke(); // Local user's CLI is outside MCP.
+            if (!McpApprovalContext.Value) { TiaOpenness.Shared.AuditInvocation.StartCurrent(); return invoke(); } // Local user's CLI is outside MCP.
             if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
                 ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
             var approval = WaitForApproval(name, arguments, CancellationToken.None).GetAwaiter().GetResult();
             if (approval?.Reason != null) return ApprovalRefusal(approval);
             if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
+            TiaOpenness.Shared.AuditInvocation.StartCurrent();
             try { return FinishApproval(invoke(), approval, ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
             catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
         }

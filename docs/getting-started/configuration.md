@@ -89,11 +89,17 @@ V20/V21 默认 lite 显示 60 个常用工具，其余用 `FindTools` / `CallToo
 
 基础目录的工具数依次为 V14 SP1 59、V15.1 60、V16/V17/V18 各 62、V19 64，不使用完整引擎的 profile 和发现入口。所有版本都用 `GetToolUsage` 读取自己的工具参数、语言示例和调用序列。修改服务配置后重启服务与客户端，避免旧目录缓存。
 
+Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也接受唯一的 PLC/device 别名；`plc` 参数使用同一规则。`table` 可传 `ListPlcTagTables` 返回的精确转义路径，或唯一的单段原始 `Name`（包含中文名称）。批量块/类型导出和目录导入保留精确软件路径及组路径要求。`ExportPlcBlocks` 与 `ExportPlcTypes` 的目标目录必须已存在；单项 XML 导出则使用现有目录下的新 `.xml` 文件。
+
 ## V4 结果、审批与审计
 
 每个工具结果都是 V4 信封：检查 `ok`、`data`、`error` 和 `meta`，重点读取 `meta.outcome`、`meta.execution`、`meta.completeness` 与分页字段。遇到 `OUTCOME_UNKNOWN` 时先检查工程实际状态，按要求重置会话，不要自动重放写操作。D1 原生行为目前仍为 `current`、L5 为 `NOT RUN`；离线测试不会改变真机验收状态。
 
-MCP 的 `WRITE` / `ONLINE-WRITE` 默认等待 Workbench 审批后才派发。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 也须审批，尽管工具目录将它们标为 `SESSION`；连接、附着、打开和断开等其他会话操作仍不审批。拒绝、默认 120 秒超时或 Workbench 不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过 Workbench 审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和 Studio 日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
+Foundation worker 的前置参数错误会把可修正的 worker 消息放在 `error.message`，并在 `INVALID_ARGUMENT` 中标出参数；路径和密钥按既有脱敏规则处理，消息长度有上限。读失败的诊断位于 `error.details.nativeMessage`。未知写入仍返回 `OUTCOME_UNKNOWN`，worker 消息位于错误详情中；先核对 TIA 状态，再按结果要求重置会话。
+
+MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待 Workbench 审批后才派发；`dryRun=true` 和候选工具的 `mode=preview` 不等待审批，也不作为写请求写入审计。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 的实际执行也须审批，尽管工具目录将它们标为 `SESSION`；连接、附着、打开和断开等其他会话操作仍不审批。拒绝、默认 120 秒超时或 Workbench 不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过 Workbench 审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和 Studio 日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。
+
+同一次 MCP 实际写调用只记录一条 `request`，使用响应 `meta.requestId`，已知时带上 `planHash`。获批或关闭审批后的实际派发才记录 `start`；拒绝和超时记录 request、审批决定及 end，不记录 start。各类审计事件用同一 requestId 关联响应和审批决定。
 
 ## 更新
 

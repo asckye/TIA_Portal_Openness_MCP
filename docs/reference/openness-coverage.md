@@ -89,6 +89,14 @@ All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor
 a schema-valid example establishes a successful native import or compile.
 
+## Foundation selector, failure and audit behavior
+
+Foundation reads and ordinary single-object tools accept an exact `softwarePath` or a unique PLC/device alias; ambiguous aliases are refused. The `plc` declaration tools use the same resolver. For `table`, use the exact escaped path returned by `ListPlcTagTables`, or a unique raw table name when it is one path segment. A Chinese name such as `默认变量表` can be passed as returned. Directory batch export and import deliberately require the exact canonical `softwarePath` and exact group paths.
+
+Worker-side validations that finish before the first native mutation return `rejected-before-operation` and identify the known argument. They do not poison the session. A worker read failure exposes a bounded, redacted `nativeMessage`; an unknown write outcome retains the bounded worker message in its details and still requires inspection before another write. `ExportPlcBlocks` and `ExportPlcTypes` write into an existing directory. These source-contract changes do not change the **NOT RUN** native acceptance status; retest the exact release and TIA build before claiming native acceptance.
+
+For audited MCP writes, one `request` row uses the result's `meta.requestId` and records `planHash` when available. An approved or approval-disabled dispatch adds `start` after the decision; a denied or timed-out call records its approval decision and `end` without `start`. Request, approval, start and end rows share that request ID on Foundation and V20/V21 engine paths. `dryRun=true` and candidate `mode=preview` calls do not queue for approval or enter the write audit.
+
 ## Findings that determine implementation order
 
 1. **The source pipeline is available in the official APIs.** Every inspected SDK has

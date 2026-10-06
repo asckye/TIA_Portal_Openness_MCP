@@ -363,7 +363,7 @@
           "schemaVersion": 4,
           "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
         },
-        "resultReading":         [
+        "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
@@ -373,13 +373,13 @@
       },
       "CompilePlcDiagnostics": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "password": {
             "exampleValue": "<password supplied for this target>",
@@ -416,13 +416,13 @@
       },
       "CompilePlcSoftware": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "password": {
             "exampleValue": "<password supplied for this target>",
@@ -632,10 +632,10 @@
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
+            "meaning": "Copy the exact encoded table path, or the unique raw Name returned by ListPlcTagTables. For example, 默认变量表 is accepted as-is."
           },
           "name": {
             "meaning": "Supply name according to this tool description; values below refer to the example project."
@@ -682,10 +682,10 @@
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "group": {
-            "meaning": "Supply group according to this tool description; values below refer to the example project."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "name": {
             "meaning": "Supply name according to this tool description; values below refer to the example project."
@@ -728,10 +728,10 @@
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
+            "meaning": "Copy the exact encoded table path, or the unique raw Name returned by ListPlcTagTables. For example, 默认变量表 is accepted as-is."
           },
           "name": {
             "meaning": "Supply name according to this tool description; values below refer to the example project."
@@ -811,7 +811,7 @@
       },
       "DeletePlcExternalSource": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -819,10 +819,10 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "The ordinary external-source root is required; pass an empty string."
           },
           "externalSourceName": {
             "meaning": "Supply externalSourceName according to this tool description; values below refer to the example project."
@@ -902,21 +902,21 @@
       },
       "ExportPlcBlock": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
+          "exportPath": "C:\\Examples\\exports\\Main.xml",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "blockPath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
           },
           "preservePath": {
             "exampleValue": false,
@@ -954,21 +954,21 @@
       },
       "ExportPlcBlocks": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
-          "exportPath": "C:\\Examples\\exports",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "groupPath": "",
+          "exportPath": "C:\\Examples\\existing-exports",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path to an existing directory. Create/select the directory before calling; these XML batch exports do not create it. ExportPlcBlocksDocuments requires a new directory instead."
           },
           "recursive": {
             "exampleValue": false,
@@ -1013,21 +1013,21 @@
       },
       "ExportPlcTagTable": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "tagTableName": "Default tag table",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "tagTableName": "默认变量表",
           "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "tagTableName": {
             "meaning": "Supply tagTableName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
@@ -1058,7 +1058,7 @@
       },
       "ExportPlcWatchTable": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "watchTableName": "Watch_1",
           "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
@@ -1066,13 +1066,13 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "watchTableName": {
             "meaning": "Supply watchTableName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
             "exampleValue": "<expectedPlanHash from this same preview>",
@@ -1108,7 +1108,7 @@
       },
       "ExportTechnologyObject": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
@@ -1116,13 +1116,13 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "toName": {
             "meaning": "Supply toName according to this tool description; values below refer to the example project."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path for a new output file in an existing directory; existing files are never overwritten."
           },
           "expectedPlanHash": {
             "exampleValue": "<expectedPlanHash from this same preview>",
@@ -1158,18 +1158,18 @@
       },
       "ExportPlcType": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path for a new .xml file inside an existing directory; existing files are never overwritten."
           },
           "typePath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=typePath."
@@ -1207,21 +1207,21 @@
       },
       "ExportPlcTypes": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
-          "exportPath": "C:\\Examples\\exports",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "groupPath": "",
+          "exportPath": "C:\\Examples\\existing-exports",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "exportPath": {
-            "meaning": "Output path as specified by this tool: ExportPlcBlock/ExportPlcType use a directory; tag/watch/technology exports use a file."
+            "meaning": "Absolute path to an existing directory. Create/select the directory before calling; these XML batch exports do not create it. ExportPlcBlocksDocuments requires a new directory instead."
           },
           "recursive": {
             "exampleValue": false,
@@ -1266,12 +1266,12 @@
       },
       "GetPlcBlockInfo": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "blockPath": "Main"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "blockPath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
@@ -1292,11 +1292,11 @@
       },
       "ListPlcBlocks": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "regexName": {
             "exampleValue": "<regexName from this operation's target or user input>",
@@ -1319,11 +1319,11 @@
       },
       "GetPlcBlockHierarchy": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1341,11 +1341,11 @@
       },
       "ListPlcExternalSources": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1364,11 +1364,11 @@
       },
       "ListPlcTagTables": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1386,11 +1386,11 @@
       },
       "ListPlcWatchTables": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1440,11 +1440,11 @@
       },
       "GetSoftwareInfo": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1462,11 +1462,11 @@
       },
       "GetSoftwareTree": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1500,11 +1500,11 @@
       },
       "ListTechnologyObjects": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           }
         },
         "operations": {},
@@ -1572,12 +1572,12 @@
       },
       "GetPlcTypeInfo": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "typePath": "UDT_Status"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "typePath": {
             "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=typePath."
@@ -1598,11 +1598,11 @@
       },
       "ListPlcTypes": {
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "regexName": {
             "exampleValue": "<regexName from this operation's target or user input>",
@@ -1625,18 +1625,18 @@
       },
       "ImportPlcBlock": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "groupPath": "",
           "importPath": "C:\\Examples\\exports\\Main.xml",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "importPath": {
             "meaning": "Supply importPath according to this tool description; values below refer to the example project."
@@ -1678,18 +1678,18 @@
       },
       "ImportPlcBlocksFromDirectory": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "groupPath": "",
           "dir": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "dir": {
             "meaning": "Supply dir according to this tool description; values below refer to the example project."
@@ -1750,14 +1750,14 @@
       },
       "ImportPlcProgramFromDirectory": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "sourceDir": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "sourceDir": {
             "meaning": "Supply sourceDir according to this tool description; values below refer to the example project."
@@ -1846,7 +1846,7 @@
       },
       "ImportPlcTagTable": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "folderPath": "",
           "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
           "dryRun": true,
@@ -1854,10 +1854,10 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "folderPath": {
-            "meaning": "Supply folderPath according to this tool description; values below refer to the example project."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "importPath": {
             "meaning": "Supply importPath according to this tool description; values below refer to the example project."
@@ -1896,18 +1896,18 @@
       },
       "ImportPlcType": {
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "Examples",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
           },
           "importPath": {
             "meaning": "Supply importPath according to this tool description; values below refer to the example project."
@@ -2032,7 +2032,7 @@
       },
       "PlanPlcExternalSourceImport": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -2041,10 +2041,10 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact software path from GetProjectTree/GetSoftwareTree for this release."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "groupPath": {
-            "meaning": "Existing relative PLC group path from GetSoftwareTree; empty means root. External-source tools require root."
+            "meaning": "The ordinary external-source root is required; pass an empty string."
           },
           "filePath": {
             "meaning": "Supply filePath according to this tool description; values below refer to the example project."
@@ -2083,14 +2083,14 @@
       "ListPlcSystemConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "Default tag table"
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
+            "meaning": "Copy the exact encoded table path, or the unique raw Name returned by ListPlcTagTables. For example, 默认变量表 is accepted as-is."
           }
         },
         "operations": {},
@@ -2110,14 +2110,14 @@
       "ListPlcTags": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "Default tag table"
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
+            "meaning": "Copy the exact encoded table path, or the unique raw Name returned by ListPlcTagTables. For example, 默认变量表 is accepted as-is."
           }
         },
         "operations": {},
@@ -2137,14 +2137,14 @@
       "ListPlcUserConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "Default tag table"
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
-            "meaning": "Exact case-sensitive PLC software path from GetProjectTree."
+            "meaning": "Use the exact PLC software path or a unique software alias such as PLC_1. Ambiguous aliases are refused."
           },
           "table": {
-            "meaning": "Exact case-sensitive tag-table path in this PLC; select it from ListPlcTagTables."
+            "meaning": "Copy the exact encoded table path, or the unique raw Name returned by ListPlcTagTables. For example, 默认变量表 is accepted as-is."
           }
         },
         "operations": {},
@@ -2217,7 +2217,7 @@
           "schemaVersion": 4,
           "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
         },
-        "resultReading":         [
+        "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
@@ -2253,7 +2253,7 @@
       },
       "ImportPlcExternalSource": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -2261,7 +2261,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact selected PLC path from GetProjectTree; device/name aliases are not accepted by this operation."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
@@ -2274,7 +2274,7 @@
           },
           "groupPath": {
             "exampleValue": "",
-            "meaning": "The native ordinary external-source group is root-only; use an empty string."
+            "meaning": "The ordinary external-source root is required; pass an empty string."
           },
           "filePath": {
             "exampleValue": "C:\\Examples\\FC_Add.scl",
@@ -2307,14 +2307,14 @@
       },
       "GenerateBlocksFromExternalSource": {
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact selected PLC path from GetProjectTree; device/name aliases are not accepted by this operation."
+            "meaning": "Copy the canonical softwarePath from GetProjectTree/GetSoftwareTree. Foundation accepts unique aliases such as PLC_1, except ExportPlcBlocks, ExportPlcTypes and directory imports, which require the exact path."
           },
           "expectedProjectFile": {
             "exampleValue": "C:\\Examples\\Example.ap{extension}",
@@ -2954,7 +2954,7 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading":         [
+        "resultReading": [
           "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
@@ -14559,7 +14559,7 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading":         [
+        "resultReading": [
           "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]
@@ -14569,7 +14569,7 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "resultReading":         [
+        "resultReading": [
           "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
         ]

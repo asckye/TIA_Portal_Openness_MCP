@@ -8,6 +8,7 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.PlcFoundation
 {
@@ -24,10 +25,10 @@ namespace TiaMcp.PlcFoundation
         private static PlcBatchImportObject BatchBlock(PlcBlock block,string group)
         {
             var kind=block.GetType().Name;
-            if(!new[]{"FC","FB","OB","GlobalDB","InstanceDB"}.Contains(kind)) throw new NotSupportedException("Target contains a block kind outside the bounded ordinary inventory.");
+            if(!new[]{"FC","FB","OB","GlobalDB","InstanceDB"}.Contains(kind)) throw new AdapterPreconditionException("Target contains a block kind outside the bounded ordinary inventory.","softwarePath",false);
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
-            if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new InvalidOperationException("Cannot establish exact existing block number.");
+            if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
             return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
@@ -63,10 +64,11 @@ namespace TiaMcp.PlcFoundation
                 PlcBatchImportPolicy.ValidateOptions(validation);
             }
             var selected=ReadSelection(request.Software);
-            if(request.Software!=selected.ExactPath) throw new ArgumentException("Exact software path required, aliases refused.");
+            if(request.Software!=selected.ExactPath) throw new AdapterPreconditionException("Exact software path required, aliases refused.","softwarePath");
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new InvalidOperationException("Explicit process identity required.");
-            foreach(var path in new[]{request.BlockGroup,request.TypeGroup,request.TagGroup}) if(path!=PlcExchangePolicy.ObjectPath(path,true)) throw new ArgumentException("Exact canonical group path required.");
+            foreach(var item in new[]{(Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),(Path:request.TagGroup,Parameter:"tagFolderPath")})
+                if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter)) throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
             var blocks=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),request.BlockGroup);
             var types=request.Program ? BatchGroup(TypeGroups(PlcNative.TypeGroup(selected.Value)),request.TypeGroup) : null;
             var tags=request.Program ? BatchGroup(TagGroups(selected.Value.TagTableGroup),request.TagGroup) : null;

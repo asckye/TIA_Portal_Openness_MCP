@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.PlcFoundation;
 using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
@@ -116,12 +117,16 @@ internal static class Program
                     if(!method.GetParameters().Any(p=>p.Name=="expectedProjectFile")) values.Remove("expectedProjectFile");
                     if(WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.False)
                     {
-                        if(!WorkerJson.IsBoolean(confirm) || !WorkerJson.IsString(expected))
-                            throw new ArgumentException("Execution requires confirmation and an absolute expected project file.");
-                        MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
-                            WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
-                            WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
-                            WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",engine.RequireProjectIdentity);
+                        if(!WorkerJson.IsBoolean(confirm)) throw new AdapterPreconditionException("Execution requires confirm=true.","confirm");
+                        if(!WorkerJson.IsString(expected)) throw new AdapterPreconditionException("Execution requires an absolute expected project file.","expectedProjectFile");
+                        try
+                        {
+                            MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
+                                WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
+                                WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
+                                WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",engine.RequireProjectIdentity);
+                        }
+                        catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
                     }
                     var parameters = method.GetParameters();
                     var call = WorkerJson.Arguments(parameters, values);
@@ -152,9 +157,9 @@ internal static class Program
                 catch (Exception ex)
                 {
                     var cause = ex is TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
-                    return ChannelResponse.Error(new ChannelFailure(cause.Message,cause is ArgumentException ? -32602 : -32603,
-                        !enteredOperation ? ChannelOutcome.RejectedBeforeNative : readOnly ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown,
-                        WorkerJson.Evidence(cause)));
+                    var classification = WorkerFailurePolicy.Classify(cause, enteredOperation, readOnly);
+                    return ChannelResponse.Error(new ChannelFailure(cause.Message, classification.Code,
+                        classification.Outcome, WorkerJson.Evidence(cause)));
                 }
             });
             try { server.Run(); }

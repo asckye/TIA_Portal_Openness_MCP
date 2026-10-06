@@ -176,12 +176,15 @@ internal sealed class FoundationV4Tool : McpServerTool
     {
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
-        bool write = inner is FoundationTool { IsWrite: true } || Candidate && arguments["mode"]?.ToString() == "apply"
-            || SessionApprovalApply(arguments);
+        bool write = Candidate ? arguments["mode"]?.ToString() == "apply"
+            : inner is FoundationTool { IsWrite: true }
+                && (!inputArguments.TryGetValue("dryRun", out var dryRun) || dryRun.ValueKind != JsonValueKind.True)
+                || SessionApprovalApply(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
-        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name);
-        var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value);
+        string id = Meta.Correlate(null);
+        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name, id);
+        var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
         if (body != null && (approval != null || write && !settings.Enabled))
         {
@@ -195,9 +198,9 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
 
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken,
-        TiaOpenness.Shared.ApprovalSettings settings, Action<TiaOpenness.Shared.ApprovalOutcome> capture)
+        TiaOpenness.Shared.ApprovalSettings settings, Action<TiaOpenness.Shared.ApprovalOutcome> capture,
+        string id, TiaOpenness.Shared.AuditInvocation? audit, bool write)
     {
-        string id = Meta.Correlate(null);
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         using var journal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
@@ -222,10 +225,11 @@ internal sealed class FoundationV4Tool : McpServerTool
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
             bool sessionApprovalApply = SessionApprovalApply(JsonSerializer.SerializeToNode(args) as JsonObject ?? new JsonObject());
-            if ((inner is FoundationTool { IsWrite: true } || Candidate || sessionApprovalApply) && !preview)
+            if (write && !preview)
             {
                 var pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
+                audit?.RecordRequest(pending.PlanHash);
                 var approval = approvalWait == null
                     ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
                     : await approvalWait(pending, settings, cancellationToken);
@@ -240,6 +244,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                         new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
                 }
             }
+            if (Candidate) audit?.Start();
             if (compileCandidate) return Recorded(await ((FoundationTool)inner).InvokeCompileCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (sourceCandidate) return Recorded(await ((FoundationTool)inner).InvokeSourceCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (saveCloseCandidate) return Recorded(await ((FoundationTool)inner).InvokeSaveCloseCandidateAsync(args, release, tool.Name, id, cancellationToken));
@@ -266,6 +271,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             request.Params = new CallToolRequestParams { Name = inner.ProtocolTool.Name, Arguments = adapted };
             try
             {
+                audit?.Start();
                 if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);

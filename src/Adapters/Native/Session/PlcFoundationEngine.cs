@@ -13,6 +13,7 @@ using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 using TiaMcpServer.Siemens;
+using TiaMcp.Adapters.Contracts;
 #if PLC_SAFETY
 using EngineeringProject = Siemens.Engineering.ProjectBase;
 #else
@@ -79,7 +80,7 @@ namespace TiaMcp.PlcFoundation
             disconnect.RequireActive();
             lifecycle.RequireAttach(processId);
             var process = TiaPortal.GetProcesses().SingleOrDefault(p => p.Id == processId)
-                ?? throw new InvalidOperationException("Selected TIA process was not found by this release's API.");
+                ?? throw new AdapterPreconditionException("Selected TIA process was not found by this release's API.","processId");
             portal = process.Attach();
             lifecycle.Attached(processId);
             ownsPortal=false;
@@ -104,18 +105,21 @@ namespace TiaMcp.PlcFoundation
         public PlcMutationResult BindProject(string projectName,string expectedProjectFile)
         {
             Portal(); lifecycle.RequireUnbound();
-            var full=Path.GetFullPath(expectedProjectFile);
-            MutationIdentityPolicy.RequireSameProject(expectedProjectFile,full);
+            string full;
+            try { full=Path.GetFullPath(expectedProjectFile); }
+            catch(ArgumentException ex) { throw new AdapterPreconditionException("An absolute expected project file is required.","expectedProjectFile",true,ex); }
+            try { MutationIdentityPolicy.RequireSameProject(expectedProjectFile,full); }
+            catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,full);
 #if PLC_SAFETY
             if(session)
             {
-                localSession=portal!.LocalSessions.SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException("The exact named local session is not open.");
+                localSession=portal!.LocalSessions.SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named local session is not open.","expectedProjectFile");
                 project=localSession.Project;
             }
             else
 #endif
-                project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException("The exact named project is not open.");
+                project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile");
             lifecycle.Bound(full,false,session);
             return Mutation("BindProject",false);
         }
@@ -126,11 +130,11 @@ namespace TiaMcp.PlcFoundation
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,path);
             PlcLifecyclePolicy.RequireLocalSessionExecution(session,dryRun);
             var input = new FileInfo(path);
-            if (!input.Exists) throw new FileNotFoundException("Project file does not exist.", input.FullName);
+            if (!input.Exists) throw new AdapterPreconditionException("Project file does not exist.", "path", true, new FileNotFoundException());
             if (p.Projects.Any(x => string.Equals(x.Path.FullName, input.FullName, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Project is already open; bind it explicitly instead.");
+                throw new AdapterPreconditionException("Project is already open; bind it explicitly instead.","path");
 #if PLC_SAFETY
-            if(p.LocalSessions.Any(s=>string.Equals(s.Project.Path.FullName,input.FullName,StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("Local session already open; bind it explicitly.");
+            if(p.LocalSessions.Any(s=>string.Equals(s.Project.Path.FullName,input.FullName,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Local session already open; bind it explicitly.","path");
 #endif
             if (!dryRun)
             {
@@ -150,7 +154,7 @@ namespace TiaMcp.PlcFoundation
             lifecycle.RequireUnbound();
             var parent = new DirectoryInfo(directoryPath);
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
-                throw new ArgumentException("Use an existing parent directory and a new project name.");
+                throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath" : "projectName");
             var expected=PlcLifecyclePolicy.CreationFile(ReleaseKey,parent.FullName,projectName);
             if (!dryRun) { project = p.Projects.Create(parent, projectName); lifecycle.Bound(project.Path.FullName,true,false); }
             var result=Mutation("CreateProject",dryRun); result.ProjectFile=dryRun ? expected : project!.Path.FullName; return result;
@@ -228,7 +232,7 @@ namespace TiaMcp.PlcFoundation
             foreach (var child in item.DeviceItems) foreach (var s in ItemPlcs(child, path, depth + 1)) yield return s;
         }
         public PlcObjectInfo[] ListPlcs() => Plcs().Select(x => Info(x.Path, x.Value.Name, "plc-software")).ToArray();
-        private PlcSoftware Plc(string path) => PlcFoundationPolicy.Exact(Plcs(), x => x.Path, path).Value;
+        private PlcSoftware Plc(string path) => ReadSelection(path).Value;
 
         private static IEnumerable<Located<PlcBlockGroup>> BlockGroups(PlcBlockGroup group, string path = "", int depth = 0)
         {
@@ -248,13 +252,17 @@ namespace TiaMcp.PlcFoundation
         private IEnumerable<Located<PlcBlock>> Blocks(string plc) => BlockGroups(Plc(plc).BlockGroup).SelectMany(g => g.Value.Blocks.Select(b => new Located<PlcBlock>(Child(g.Path, b.Name), b)));
         private IEnumerable<Located<PlcType>> Types(string plc) => TypeGroups(Plc(plc).TypeGroup).SelectMany(g => g.Value.Types.Select(t => new Located<PlcType>(Child(g.Path, t.Name), t)));
         private IEnumerable<Located<PlcTagTable>> Tables(string plc) => TagGroups(Plc(plc).TagTableGroup).SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t)));
-        private PlcTagTable Table(string plc, string path) => PlcFoundationPolicy.Exact(Tables(plc), x => x.Path, path).Value;
+        private Located<PlcTagTable> SelectTable(string plc, string path)
+        {
+            return PlcExchangePolicy.SelectTable(Tables(plc),path,x=>x.Path,x=>x.Value.Name);
+        }
+        private PlcTagTable Table(string plc, string path) => SelectTable(plc,path).Value;
         public PlcObjectInfo[] ListBlocks(string plc) => Blocks(plc).Select(x => Info(x.Path, x.Value.Name, x.Value.ProgrammingLanguage.ToString())).ToArray();
         public PlcObjectInfo[] ListTypes(string plc) => Types(plc).Select(x => Info(x.Path, x.Value.Name, "plc-type")).ToArray();
         public PlcObjectInfo[] ListTagTables(string plc) => Tables(plc).Select(x => Info(x.Path, x.Value.Name, "tag-table")).ToArray();
-        public PlcObjectInfo[] ListTags(string plc, string table) => Table(plc, table).Tags.Select(t => new PlcObjectInfo { Name = t.Name, Path = Child(table, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress }).ToArray();
-        public PlcObjectInfo[] ListUserConstants(string plc, string table) => Table(plc, table).UserConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(table, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray();
-        public PlcObjectInfo[] ListSystemConstants(string plc, string table) => Table(plc, table).SystemConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(table, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray();
+        public PlcObjectInfo[] ListTags(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.Tags.Select(t => new PlcObjectInfo { Name = t.Name, Path = Child(selected.Path, t.Name), Kind = "tag", DataType = t.DataTypeName, Value = t.LogicalAddress }).ToArray(); }
+        public PlcObjectInfo[] ListUserConstants(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.UserConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "user-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray(); }
+        public PlcObjectInfo[] ListSystemConstants(string plc, string table) { var selected=SelectTable(plc,table); return selected.Value.SystemConstants.Select(c => new PlcObjectInfo { Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value }).ToArray(); }
 
         private PlcMutationResult Export(string operation, string file, bool dryRun, Action<FileInfo> export)
         {
@@ -266,10 +274,10 @@ namespace TiaMcp.PlcFoundation
         public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true)
         {
             var selected=ReadSelection(softwarePath);
-            var path=PlcExchangePolicy.ObjectPath(blockPath);
+            var path=PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
             var blocks=BlockGroups(selected.Value.BlockGroup).SelectMany(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
-            var target=PlcExchangePolicy.Exact(blocks,x=>x.Path,path).Value;
-            if(!target.IsConsistent) throw new ArgumentException("Compile the inconsistent block before export.");
+            var target=PlcExchangePolicy.Exact(blocks,x=>x.Path,path,"blockPath").Value;
+            if(!target.IsConsistent) throw new AdapterPreconditionException("Compile the inconsistent block before export.","blockPath",false);
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             var capability=PlcBlockXmlPolicy.Export(ReleaseKey,target.ProgrammingLanguage.ToString());
             var result=Export("ExportBlock",file.FullName,dryRun,f=>{ RequireTargetOffline(selected); target.Export(f,ExportOptions.None); });
@@ -278,37 +286,37 @@ namespace TiaMcp.PlcFoundation
         public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true)
         {
             var selected=ReadSelection(softwarePath);
-            var path=PlcExchangePolicy.ObjectPath(typePath);
+            var path=PlcExchangePolicy.ObjectPath(typePath,false,"typePath");
             var types=TypeGroups(selected.Value.TypeGroup).SelectMany(g=>g.Value.Types.Select(t=>new Located<PlcType>(Child(g.Path,t.Name),t)));
-            var target=PlcExchangePolicy.Exact(types,x=>x.Path,path).Value;
-            if(!target.IsConsistent) throw new ArgumentException("Compile the inconsistent type before export.");
+            var target=PlcExchangePolicy.Exact(types,x=>x.Path,path,"typePath").Value;
+            if(!target.IsConsistent) throw new AdapterPreconditionException("Compile the inconsistent type before export.","typePath",false);
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             return Export("ExportType", file.FullName, dryRun, f => { RequireTargetOffline(selected); target.Export(f, ExportOptions.None); });
         }
         public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true)
         {
             var tables=ReadPlc(softwarePath).TagTableGroup.TagTables;
-            var target=PlcExchangePolicy.Exact(tables,t=>t.Name,tagTableName);
+            var target=PlcExchangePolicy.Exact(tables,t=>t.Name,tagTableName,"tagTableName");
             return Export("ExportTagTable", exportPath, dryRun, f => target.Export(f, ExportOptions.None));
         }
         public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(BlockGroups(selected.Value.BlockGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true)).Value;
+            var target = PlcExchangePolicy.Exact(BlockGroups(selected.Value.BlockGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>target.Blocks.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName));
         }
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(TypeGroups(selected.Value.TypeGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true)).Value;
+            var target = PlcExchangePolicy.Exact(TypeGroups(selected.Value.TypeGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>target.Types.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name)));
         }
         public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var input = PlcFoundationPolicy.XmlInput(importPath);
-            var target = PlcExchangePolicy.Exact(TagGroups(ReadPlc(softwarePath).TagTableGroup), x => x.Path, PlcExchangePolicy.ObjectPath(folderPath,true)).Value;
+            var target = PlcExchangePolicy.Exact(TagGroups(ReadPlc(softwarePath).TagTableGroup), x => x.Path, PlcExchangePolicy.ObjectPath(folderPath,true,"folderPath"),"folderPath").Value;
             return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name));
         }
         private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null)
@@ -335,26 +343,26 @@ namespace TiaMcp.PlcFoundation
         public PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            var target = PlcFoundationPolicy.Exact(TagGroups(Plc(plc).TagTableGroup), x => x.Path, group).Value;
-            if (target.TagTables.Find(name) != null) throw new InvalidOperationException("Tag table already exists.");
+            var target = PlcFoundationPolicy.Exact(TagGroups(Plc(plc).TagTableGroup), x => x.Path, group,"group").Value;
+            if (target.TagTables.Find(name) != null) throw new AdapterPreconditionException("Tag table already exists.","name");
             if (!dryRun) target.TagTables.Create(name);
             return Mutation("CreateTagTable", dryRun, new[] { name });
         }
         public PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(address)) throw new ArgumentException("Data type and logical address are required.");
+            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(address)) throw new AdapterPreconditionException("Data type and logical address are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "address");
             var target = Table(plc, table);
-            if (target.Tags.Find(name) != null) throw new InvalidOperationException("Tag already exists.");
+            if (target.Tags.Find(name) != null) throw new AdapterPreconditionException("Tag already exists.","name");
             if (!dryRun) target.Tags.Create(name, dataType, address);
             return Mutation("CreateTag", dryRun, new[] { name });
         }
         public PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(value)) throw new ArgumentException("Data type and value are required.");
+            if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(value)) throw new AdapterPreconditionException("Data type and value are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "value");
             var target = Table(plc, table);
-            if (target.UserConstants.Find(name) != null) throw new InvalidOperationException("User constant already exists.");
+            if (target.UserConstants.Find(name) != null) throw new AdapterPreconditionException("User constant already exists.","name");
             if (!dryRun) target.UserConstants.Create(name, dataType, value);
             return Mutation("CreateUserConstant", dryRun, new[] { name });
         }
@@ -363,7 +371,7 @@ namespace TiaMcp.PlcFoundation
             PlcCompilePolicy.RequirePasswordCapability(ReleaseKey,password);
             var selected=ReadSelection(softwarePath);
             var compiler = ((IEngineeringServiceProvider)selected.Value).GetService<ICompilable>()
-                ?? throw new NotSupportedException("The selected software does not provide ICompilable.");
+                ?? throw new AdapterPreconditionException("The selected software does not provide ICompilable.","softwarePath",false);
             if(dryRun) return new PlcCompileResult { Executed=false,ProjectFile=Project().Path.FullName };
             RequireTargetOffline(selected); var unobservedDevices=CheckProjectOfflineProviders();
             CompilerResult result;
@@ -379,7 +387,7 @@ namespace TiaMcp.PlcFoundation
                     if(!string.Equals(Path.GetDirectoryName(assembly.Location),Path.GetDirectoryName(typeof(PlcSoftware).Assembly.Location),StringComparison.OrdinalIgnoreCase)) throw new FileLoadException("Safety must come from the selected V21 API directory.");
                 }
                 admin=((IEngineeringServiceProvider)(DeviceItem)selected.Context!).GetService<Siemens.Engineering.Safety.SafetyAdministration>()
-                    ?? throw new NotSupportedException("The selected PLC does not provide SafetyAdministration; password was not ignored.");
+                    ?? throw new AdapterPreconditionException("The selected PLC does not provide SafetyAdministration; password was not ignored.","softwarePath",false);
                 if(!admin.IsLoggedOnToSafetyOfflineProgram)
                 {
                     using(var secure=new System.Net.NetworkCredential("",password).SecurePassword)

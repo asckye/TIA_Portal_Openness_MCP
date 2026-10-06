@@ -84,9 +84,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             catch(ChannelFailure failure)
             {
                 sent=true;
-                var detail=failure.Message;
-                if(failure.EvidenceJson!="null") detail+="; failure evidence: "+failure.EvidenceJson;
-                throw new WorkerOperationException(detail,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown",failure.EvidenceJson);
+                throw new WorkerOperationException(failure.Message,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown",failure.EvidenceJson);
             }
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
@@ -107,6 +105,10 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         }
         catch(Exception ex)
         {
+            // ChannelClient marks OutcomeUnknown only after it has dispatched a request.
+            // A first-attach timeout therefore remains an unknown native outcome instead
+            // of being mistaken for a failure before the worker request was sent.
+            sent |= channel?.OutcomeUnknown == true;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
             {
                 int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];

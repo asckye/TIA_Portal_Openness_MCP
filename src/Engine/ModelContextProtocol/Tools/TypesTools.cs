@@ -272,7 +272,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software] Export all (or regexName-filtered) PLC types as SimaticML XML into an existing directory; exportPath must already exist. This XML export does not create a new directory. Use the document export tools for a new directory. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public Task<CallToolResult> ExportTypesV4(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,

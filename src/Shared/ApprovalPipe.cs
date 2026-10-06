@@ -78,8 +78,6 @@ namespace TiaOpenness.Shared
         internal static ApprovalOutcome RejectAdministrativeWrite(PendingApproval request)
         {
             var log = AuditLog.Current;
-            try { log.Append("request", request.RequestId, request.Host, request.ReleaseKey, request.Tool, planHash: request.PlanHash); }
-            catch (Exception ex) { Trace.TraceWarning("Approval request audit unavailable: " + ex.GetType().Name); }
             try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
             return new ApprovalOutcome(request, false, "denied");
@@ -107,9 +105,7 @@ namespace TiaOpenness.Shared
         {
             if (!settings.Enabled) return new ApprovalOutcome(request, true, null);
             string? reason = "workbench-unavailable";
-            var log = audit ?? AuditLog.Current;
-            try { log.Append("request", request.RequestId, request.Host, request.ReleaseKey, request.Tool, planHash: request.PlanHash); }
-            catch (Exception ex) { Trace.TraceWarning("Approval request audit unavailable: " + ex.GetType().Name); }
+            var log = audit ?? AuditInvocation.CurrentLog ?? AuditLog.Current;
             bool connected = false;
             using (var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
             {

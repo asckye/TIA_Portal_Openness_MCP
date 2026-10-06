@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -100,11 +101,23 @@ namespace TiaMcpServer.ModelContextProtocol
         public override Tool ProtocolTool => inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
+            if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
+                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
             bool disabled = write && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+            string? correlation = null;
+            if (Isolation.IsolatedWorkerHost.IsChild)
+            {
+                try
+                {
+                    var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request?.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+                    correlation = meta?["tiaMcpWorkerCorrelation"]?.GetValue<string>();
+                }
+                catch (System.Exception) /* swallow(parse-fallback): malformed optional correlation metadata uses a new audit id */ { }
+            }
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
-                "engine", McpServer.ReleaseKey, ProtocolTool.Name);
+                "engine", McpServer.ReleaseKey, ProtocolTool.Name, correlation);
             var result = McpServer.FinishApproval(await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false), null, disabled);
             if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ??
                 (result.Content.Count == 1 && result.Content[0] is TextContentBlock text ? text.Text : null));
@@ -138,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 catch /* swallow(parse-fallback): malformed optional correlation metadata uses a new journal id without leaking the call gate */ { /* Malformed optional metadata must not leak the serialization gate. */ }
             }
-            string id = InvocationJournal.Begin(ProtocolTool.Name, correlation);
+            string id = InvocationJournal.Begin(ProtocolTool.Name, correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
             using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, "engine", McpServer.ReleaseKey,
                 McpServer.IsWriteTool(ProtocolTool.Name),
                 () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
@@ -149,6 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())))
                     return McpServer.ChangedApprovalRefusal(approval);
                 McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
+                TiaOpenness.Shared.AuditInvocation.StartCurrent();
                 issued = true;
                 var result = McpServer.DiscloseTargets(McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));

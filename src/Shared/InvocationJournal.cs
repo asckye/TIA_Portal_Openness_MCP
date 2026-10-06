@@ -20,7 +20,22 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Func<string>? correlationSource;
         private static long failedWrites;
         private static string? lastWriteFailure;
-        internal static string CorrelationId => correlationSource?.Invoke() ?? Current.Value ?? (Current.Value = Guid.NewGuid().ToString("N"));
+        internal static string CorrelationId => Current.Value ?? correlationSource?.Invoke() ?? (Current.Value = Guid.NewGuid().ToString("N"));
+
+        internal static IDisposable UseCorrelation(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A correlation id is required.", nameof(id));
+            string? previous = Current.Value;
+            Current.Value = id;
+            return new CorrelationScope(previous);
+        }
+        private sealed class CorrelationScope : IDisposable
+        {
+            private readonly string? previous;
+            private bool disposed;
+            internal CorrelationScope(string? previous) { this.previous = previous; }
+            public void Dispose() { if (!disposed) { disposed = true; Current.Value = previous; } }
+        }
 
         internal sealed class NativeCallScope : IDisposable
         {

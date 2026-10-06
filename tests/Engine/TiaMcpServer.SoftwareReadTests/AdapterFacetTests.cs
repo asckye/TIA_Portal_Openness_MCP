@@ -70,8 +70,10 @@ public sealed class AdapterFacetTests
             Assert.Equal(JsonSerializer.Serialize(engine.ReadSoftwareInfo(path)), JsonSerializer.Serialize(facet.ReadSoftwareInfo(path)));
             Assert.Equal(JsonSerializer.Serialize(engine.ReadSoftwareTree(path)), JsonSerializer.Serialize(facet.ReadSoftwareTree(path)));
         }
-        Assert.Equal(Assert.Throws<ArgumentException>(() => engine.ReadSoftwareInfo("missing")).Message,
-            Assert.Throws<ArgumentException>(() => facet.ReadSoftwareInfo("missing")).Message);
+        var engineRejection = Assert.Throws<AdapterPreconditionException>(() => engine.ReadSoftwareInfo("missing"));
+        var facetRejection = Assert.Throws<AdapterPreconditionException>(() => facet.ReadSoftwareInfo("missing"));
+        Assert.Equal("softwarePath", engineRejection.ParamName);
+        Assert.Equal(engineRejection.Message, facetRejection.Message);
         engine.Software.BlockGroup.FailEnumeration = true;
         Assert.Equal(Assert.Throws<IOException>(() => engine.ReadSoftwareTree("D")).Message,
             Assert.Throws<IOException>(() => facet.ReadSoftwareTree("D")).Message);

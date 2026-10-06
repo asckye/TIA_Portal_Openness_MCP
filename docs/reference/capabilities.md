@@ -49,7 +49,7 @@
 | HMI / Unified | 完整引擎提供普通画面、控件、标签、报警、事件、全局脚本、列表及库等接口。事件代码与全局脚本模块使用不同 API；面板类型内部创作仍有未实现边界。 |
 | 硬件、库与选件 | 以实际版本 SDK、安装选件、许可证和对象提供的服务为准。工具名称存在不表示所有动作都能在所有版本执行。 |
 | 运行时数据 | 完整引擎另有 S7 Web API、Unified Open Pipe、PLCSIM Advanced 等通道；这些不属于 Openness 工程对象读取。 |
-| 写操作审批与审计 | MCP `WRITE` / `ONLINE-WRITE` 默认先由 Workbench 审批；拒绝、超时或 Workbench 不可用时在派发前返回 `CONFIRMATION_REQUIRED`。请求、决定及结果写入 `data/logs/audit` 哈希链。 |
+| 写操作审批与审计 | MCP `WRITE` / `ONLINE-WRITE` 实际执行默认先由 Workbench 审批；`dryRun=true` 或候选工具 `mode=preview` 不排队审批。拒绝、超时或 Workbench 不可用时在派发前返回 `CONFIRMATION_REQUIRED`。实际写调用的请求、决定及结果使用响应 `requestId` 写入 `data/logs/audit` 哈希链。 |
 | 梯形图渲染 | `RenderPlcBlock` 与 `RenderPlcProgramAtlas` 生成静态视图/图册，不在线编辑或下载；原生导出仍受对应导出族的验收状态约束。 |
 | 数据目录 | 包根由 `--bundle-root` 或 `TIA_MCP_BUNDLE_ROOT` 选择。日志和审计位于 `data/logs`，调用诊断包位于 `data/diagnostics`；PLC Tools Python 默认是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`。 |
 | 第三方复用 | 已接入的源码、伴随进程及其用途见[生态集成](ecosystem-tools.md)。外部候选不计作已实现工具。 |

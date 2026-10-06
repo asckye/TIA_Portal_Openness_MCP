@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 
@@ -54,19 +55,26 @@ internal static class FoundationV4Result
                 new Error("Inspect the previous operation before starting a new session.", new SessionResetRequiredDetails("previous-outcome-unknown")), true, true);
         if (!dispatched || exception is WorkerOperationException { Outcome: "rejected-before-operation" })
         {
+            var workerFailure = exception as WorkerOperationException;
+            string message = SafeWorkerMessage(exception?.Message) ?? "Foundation precondition failed before operation.";
+            string parameter = workerFailure?.Parameter ?? (exception is ArgumentException argument && !string.IsNullOrWhiteSpace(argument.ParamName)
+                ? argument.ParamName! : "arguments");
             var error = exception is OperationCanceledException
                 ? new Error("Request cancelled before operation.", new CancelledDetails("host"))
-                : exception is ArgumentException or WorkerOperationException { Code: -32602 } ? Invalid("arguments")
-                : new Error("Foundation precondition failed before operation.", new PreconditionFailedDetails("worker-admission", null));
+                : exception is ArgumentException or WorkerOperationException { Code: -32602 }
+                    ? new Error(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()))
+                    : new Error(message, new PreconditionFailedDetails("worker-admission", null));
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, true);
         }
         bool unknown = mutation && exception is not WorkerOperationException { KnownNoMutation: true };
         string? reason = exception == null ? null : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
+        string? workerMessage = SafeWorkerMessage(exception?.Message);
+        if (workerMessage != null) details["workerMessage"] = JsonSerializer.SerializeToElement(workerMessage);
         return Wire(release, name, id, data,
             unknown ? Outcome.Unknown : Outcome.ReadFailed, unknown ? Execution.Unknown : Execution.ReadOnly,
             unknown ? Completeness.Unknown : Completeness.None,
             unknown ? new Error(reason == null ? "The operation outcome is unknown; inspect the retained evidence before a new session." : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationGuidance, new OutcomeUnknownDetails("worker", details, reason))
-                : new Error("Foundation read failed.", new NativeOperationFailedDetails(null, null, details)), true, unknown);
+                : new Error("Foundation read failed.", new NativeOperationFailedDetails(null, workerMessage, details)), true, unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
@@ -174,6 +182,22 @@ internal static class FoundationV4Result
     private static bool Incomplete(JsonNode? node) => node is JsonArray rows ? rows.Any(Incomplete)
         : node is JsonObject obj && (obj["unavailableAttributes"] is JsonArray { Count: > 0 }
             || Flag(obj, "truncated") == true || Flag(obj, "complete") == false || obj.Any(p => Incomplete(p.Value)));
+    private static string? SafeWorkerMessage(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return null;
+        string json = TiaOpenness.Shared.CallJournalPayload.Sanitize(JsonSerializer.Serialize(message));
+        try
+        {
+            string? safe = JsonSerializer.Deserialize<string>(json);
+            if (safe == null) return null;
+            // Native diagnostics can include an installation or project path. Keep the
+            // surrounding message while avoiding disclosure of the machine-local path.
+            safe = Regex.Replace(safe, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            return TiaOpenness.Shared.CallJournalPayload.Bound(safe);
+        }
+        catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is RegexMatchTimeoutException)
+        { return "Worker operation failed."; }
+    }
     internal static JsonObject Object(JsonNode? raw) => Fields(raw) switch {
         JsonObject obj => obj, JsonArray items => new JsonObject { ["items"] = items },
         JsonNode value => new JsonObject { ["value"] = value }, _ => new JsonObject() };

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.PlcFoundation
 {
@@ -21,16 +22,16 @@ namespace TiaMcp.PlcFoundation
         { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant(); }
         internal static PlcBatchExportResult Run(string kind,string project,string software,string group,bool recursive,string directory,int maxItems,bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string?>? publish=null)
         {
-            if(kind!="blocks" && kind!="types") throw new ArgumentException("Unknown batch kind.");
-            if(maxItems<1 || maxItems>MaximumItems) throw new ArgumentException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.");
-            if(!Path.IsPathRooted(directory)) throw new ArgumentException("An absolute existing export directory is required.");
+            if(kind!="blocks" && kind!="types") throw new AdapterPreconditionException("Unknown batch kind.","kind");
+            if(maxItems<1 || maxItems>MaximumItems) throw new AdapterPreconditionException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.","maxItems");
+            if(!Path.IsPathRooted(directory)) throw new AdapterPreconditionException("An absolute existing export directory is required.","exportPath");
             var root=new DirectoryInfo(directory);
-            if(!root.Exists) throw new ArgumentException("Export directory must already exist.");
+            if(!root.Exists) throw new AdapterPreconditionException("Export directory must already exist.","exportPath");
             for(var ancestor=root; ancestor!=null; ancestor=ancestor.Parent)
-                if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new ArgumentException("Export directory ancestry cannot contain reparse points.");
+                if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new AdapterPreconditionException("Export directory ancestry cannot contain reparse points.","exportPath");
             var sources=inventory.Take(maxItems+1).OrderBy(x=>x.Path,StringComparer.Ordinal).ToArray();
-            if(sources.Length>maxItems) throw new ArgumentException("Complete inventory exceeds maxItems; narrow the exact group scope.");
-            if(sources.Select(x=>x.Path).Distinct(StringComparer.Ordinal).Count()!=sources.Length) throw new ArgumentException("Ambiguous inventory paths.");
+            if(sources.Length>maxItems) throw new AdapterPreconditionException("Complete inventory exceeds maxItems; narrow the exact group scope.","groupPath");
+            if(sources.Select(x=>x.Path).Distinct(StringComparer.Ordinal).Count()!=sources.Length) throw new AdapterPreconditionException("Ambiguous inventory paths.","groupPath");
             var result=new PlcBatchExportResult { Executed=!dryRun,ProjectFile=project,SoftwarePath=software,GroupPath=group,Recursive=recursive };
             result.Items=sources.Select(source=>new PlcBatchExportItem {
                 ObjectPath=PlcExchangePolicy.ObjectPath(source.Path),
@@ -39,10 +40,10 @@ namespace TiaMcp.PlcFoundation
                 OutputFile=PlcFoundationPolicy.XmlOutput(Path.Combine(root.FullName,kind+"-"+Hash(source.Path)+".xml")).FullName,
                 Status=source.Consistent ? "planned" : "inconsistent",XmlContent=source.Capability.Content,Warnings=source.Capability.Warnings
             }).ToArray();
-            if(result.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=sources.Length) throw new ArgumentException("Export destination collision.");
+            if(result.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=sources.Length) throw new AdapterPreconditionException("Export destination collision.","exportPath");
             result.InventoryHash=Hash(kind+"\n"+project+"\n"+software+"\n"+group+"\n"+recursive+"\n"+string.Join("\n",result.Items.Select(x=>x.ObjectPath+"\t"+x.Status+"\t"+x.XmlContent+"\t"+x.OutputFile)));
             if(dryRun) return result;
-            if(!string.Equals(expectedInventoryHash,result.InventoryHash,StringComparison.Ordinal)) throw new ArgumentException("Execution requires the exact inventory hash from a fresh preview.");
+            if(!string.Equals(expectedInventoryHash,result.InventoryHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Execution requires the exact inventory hash from a fresh preview.","expectedInventoryHash");
             publish=publish ?? PlcExportPublication.Publish;
             bool stopped=false;
             for(int i=0;i<sources.Length;i++)

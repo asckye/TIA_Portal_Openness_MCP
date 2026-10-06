@@ -138,15 +138,15 @@ namespace TiaMcp.PlcFoundation
         }
         public PlcBlockDetails ReadBlockInfo(string softwarePath, string blockPath)
         {
-            var path=PlcExchangePolicy.ObjectPath(blockPath);
+            var path=PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
             var blocks=BlockGroups(ReadPlc(softwarePath).BlockGroup).SelectMany(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
-            return BlockDetails(PlcExchangePolicy.Exact(blocks,x=>x.Path,path).Value);
+            return BlockDetails(PlcExchangePolicy.Exact(blocks,x=>x.Path,path,"blockPath").Value);
         }
         public PlcTypeDetails ReadTypeInfo(string softwarePath, string typePath)
         {
-            var path=PlcExchangePolicy.ObjectPath(typePath);
+            var path=PlcExchangePolicy.ObjectPath(typePath,false,"typePath");
             var types=TypeGroups(ReadPlc(softwarePath).TypeGroup).SelectMany(g=>g.Value.Types.Select(t=>new Located<PlcType>(Child(g.Path,t.Name),t)));
-            return TypeDetails(PlcExchangePolicy.Exact(types,x=>x.Path,path).Value);
+            return TypeDetails(PlcExchangePolicy.Exact(types,x=>x.Path,path,"typePath").Value);
         }
         public PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "")
         {

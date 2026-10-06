@@ -86,6 +86,21 @@ namespace TiaMcpServer.Tests
         private static TiaMcp.Logic.V4.Inputs.ToolArguments Args(string json)
             => new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json));
 
+        [Fact]
+        public void Dry_run_writes_do_not_queue_for_approval()
+        {
+            using var fixture = new InfrastructureContractsTests();
+            TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(new TiaMcpServer.ModelContextProtocol.ToolCatalog(new[] {
+                typeof(TiaMcpServer.ModelContextProtocol.McpServer), typeof(BatchGateProbe) }), () => false, new System.Collections.Generic.HashSet<string>());
+
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"preview\",\"dryRun\":true}"));
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"preview\",\"dryRun\":true}}"));
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"apply\",\"dryRun\":false}"));
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"apply\",\"dryRun\":false}}"));
+        }
+
         [Theory]
         [InlineData("SaveProject")]
         [InlineData("SaveProjectCopy")]
@@ -216,6 +231,64 @@ namespace TiaMcpServer.Tests
             string ordinary = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path)!, "export.txt"); File.WriteAllText(ordinary, "fixture");
             Assert.False(ApprovalSettings.IsAdministrativeTarget(ordinary));
         }
+
+        [Theory]
+        [InlineData("granted")]
+        [InlineData("denied")]
+        [InlineData("timeout")]
+        [InlineData("disabled")]
+        public void Engine_write_audit_uses_response_id_and_starts_only_after_approval(string decision)
+        {
+            using var fixture = new InfrastructureContractsTests();
+            TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(new TiaMcpServer.ModelContextProtocol.ToolCatalog(new[] {
+                typeof(TiaMcpServer.ModelContextProtocol.McpServer), typeof(BatchGateProbe) }), () => false, new System.Collections.Generic.HashSet<string>());
+            var previousSettings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            var previousWait = TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests;
+            bool priorContext = false;
+            string requestId = Guid.NewGuid().ToString("N");
+            var audit = new AuditLog(Scratch());
+            bool enabled = decision != "disabled";
+            try
+            {
+                new ApprovalSettings(enabled, 1).Save(ApprovalSettings.SettingsPath);
+                using var auditScope = AuditInvocation.UseLog(audit);
+                using var correlation = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(requestId);
+                TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = (pending, _, _) =>
+                {
+                    if (enabled) audit.Approval(pending.RequestId, pending.Host, pending.ReleaseKey, pending.Tool,
+                        decision == "granted" ? "granted" : decision, pending.PlanHash);
+                    return Task.FromResult(new ApprovalOutcome(pending, !enabled, decision == "granted" || !enabled ? null : decision));
+                };
+                priorContext = TiaMcpServer.ModelContextProtocol.McpServer.EnterMcpApprovalContext();
+                InfrastructureContractsTests.BatchProbes.Calls.Clear();
+                var arguments = new TiaMcp.Logic.V4.Inputs.ToolArguments(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(
+                    "{\"target\":\"audit\",\"dryRun\":false}"));
+                var result = TiaMcpServer.ModelContextProtocol.McpServer.CallTool("CreateApprovalFixture", arguments);
+                var body = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(result)!;
+                Assert.Equal(requestId, (string?)body["meta"]!["requestId"]);
+                var rows = audit.Read();
+                string[] expected = decision switch
+                {
+                    "granted" => new[] { "request", "approval-granted", "start", "end" },
+                    "denied" => new[] { "request", "approval-denied", "end" },
+                    "timeout" => new[] { "request", "approval-timeout", "end" },
+                    _ => new[] { "request", "start", "end" }
+                };
+                Assert.Equal(expected, rows.Select(row => row.Event));
+                Assert.All(rows, row => Assert.Equal(requestId, row.RequestId));
+                Assert.False(string.IsNullOrWhiteSpace(rows[0].PlanHash));
+                Assert.All(rows.Where(row => row.Event.StartsWith("approval-", StringComparison.Ordinal)), row => Assert.Equal(rows[0].PlanHash, row.PlanHash));
+                Assert.Equal(enabled && decision != "granted" ? 0 : 1, InfrastructureContractsTests.BatchProbes.Calls.Count);
+                Assert.True(audit.Verify().Passed);
+            }
+            finally
+            {
+                TiaMcpServer.ModelContextProtocol.McpServer.LeaveMcpApprovalContext(priorContext);
+                TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = previousWait;
+                previousSettings.Save(ApprovalSettings.SettingsPath);
+            }
+        }
+
         [Fact]
         public void Approval_wait_preserves_native_budget_but_cannot_pause_indefinitely()
         {

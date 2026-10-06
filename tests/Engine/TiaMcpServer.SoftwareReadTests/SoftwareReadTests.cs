@@ -21,9 +21,13 @@ internal static class SoftwareReadTests
         Reject(()=>PlcSoftwareReadPolicy.Render("PLC",new[]{deep}),"depth guard");
         var candidates=new[]{new PlcReadCandidate<int>{Value=1,ExactPath="devices/D/CPU",Device="D",Host="CPU"},new PlcReadCandidate<int>{Value=2,ExactPath="devices/E/CPU",Device="E",Host="CPU"}};
         Check(PlcReadPathPolicy.Resolve(candidates,"devices/D/CPU")==1,"exact selection");
+        Check(PlcReadPathPolicy.Resolve(candidates,"D")==1,"unique device alias selection");
+        Check(PlcReadPathPolicy.Resolve(candidates,"D/CPU")==1,"unique device/host alias selection");
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"CPU"),"ambiguous alias");
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"Missing"),"missing software");
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"D/CPU/unused"),"unused segment");
+        var grouped=new[]{new PlcReadCandidate<int>{Value=3,ExactPath="devices/D/Group/PLC_1",Groups=new[]{"Group"},Device="D",Host="PLC_1"}};
+        Check(PlcReadPathPolicy.Resolve(grouped,"Group/PLC_1")==3,"group-qualified PLC alias selection");
         var options=new JsonSerializerOptions {PropertyNamingPolicy=JsonNamingPolicy.CamelCase,DefaultIgnoreCondition=JsonIgnoreCondition.WhenWritingNull};
         JsonObject Info()=>JsonNode.Parse("""{"Name":"PLC","Attributes":[{"Name":"Custom","Value":{"KeepCase":1},"AccessMode":"Read"}],"Description":null,"Meta":{"softwarePath":"devices/D/CPU","scope":"ordinary PLC attributes","unreadableAttributes":[]}}""")!.AsObject();
         var input=Info(); var result=SoftwareReadContract.Wrap("GetSoftwareInfo",input,options);

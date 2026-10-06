@@ -84,6 +84,74 @@ public sealed class ApprovalHostTests
         Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)invocation.StructuredContent?["error"]?["code"]);
         Assert.True(worker.Calls > 0);
     }
+
+    [Theory]
+    [InlineData("granted")]
+    [InlineData("denied")]
+    [InlineData("timeout")]
+    [InlineData("disabled")]
+    public async Task Foundation_write_audit_uses_response_id_and_starts_only_after_approval(string decision)
+    {
+        string auditDirectory = Path.GetFullPath(Path.Combine("bin-build", "P6-55", "foundation-audit", Guid.NewGuid().ToString("N")));
+        var audit = new AuditLog(auditDirectory);
+        using var auditScope = AuditInvocation.UseLog(audit);
+        var worker = new Worker();
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "SaveProject");
+        bool enabled = decision != "disabled";
+        Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>? wait = enabled
+            ? (pending, _, _) =>
+            {
+                audit.Approval(pending.RequestId, pending.Host, pending.ReleaseKey, pending.Tool,
+                    decision == "granted" ? "granted" : decision, pending.PlanHash);
+                return Task.FromResult(new ApprovalOutcome(pending, false, decision == "granted" ? null : decision));
+            }
+            : null;
+        var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", _ => BehaviorPolicy.SafeV4,
+            () => new ApprovalSettings(enabled, 1), wait);
+        var args = new JsonObject { ["mode"] = "apply", ["confirm"] = true,
+            ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = @"C:\fixture.ap19" };
+        var result = await tool.InvokeAsync(Request("SaveProject", args.ToJsonString()));
+        string requestId = (string)result.StructuredContent!["meta"]!["requestId"]!;
+        var rows = audit.Read();
+        string[] expected = decision switch
+        {
+            "granted" => new[] { "request", "approval-granted", "start", "end" },
+            "denied" => new[] { "request", "approval-denied", "end" },
+            "timeout" => new[] { "request", "approval-timeout", "end" },
+            _ => new[] { "request", "start", "end" }
+        };
+        Assert.Equal(expected, rows.Select(row => row.Event));
+        Assert.All(rows, row => Assert.Equal(requestId, row.RequestId));
+        Assert.False(string.IsNullOrWhiteSpace(rows[0].PlanHash));
+        Assert.All(rows.Where(row => row.Event.StartsWith("approval-", StringComparison.Ordinal)), row => Assert.Equal(rows[0].PlanHash, row.PlanHash));
+        Assert.Equal(enabled && decision != "granted" ? 0 : 1, worker.Calls);
+        Assert.True(audit.Verify().Passed);
+    }
+
+    [Fact]
+    public async Task Foundation_dry_run_does_not_request_approval_or_enter_write_audit()
+    {
+        string auditDirectory = Path.GetFullPath(Path.Combine("bin-build", "P6-55", "foundation-preview-audit", Guid.NewGuid().ToString("N")));
+        var audit = new AuditLog(auditDirectory);
+        using var auditScope = AuditInvocation.UseLog(audit);
+        var worker = new Worker();
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTagTable");
+        int waits = 0;
+        var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null,
+            () => new ApprovalSettings(true, 1), (_, _, _) =>
+            {
+                waits++;
+                throw new InvalidOperationException("A dry-run preview must not request approval.");
+            });
+
+        var result = await tool.InvokeAsync(Request("CreatePlcTagTable", "{\"plc\":\"PLC_1\",\"group\":\"\",\"name\":\"Preview\",\"dryRun\":true}"));
+
+        Assert.Equal(0, waits);
+        Assert.Equal(1, worker.Calls);
+        Assert.Equal("succeeded", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Empty(audit.Read());
+    }
+
     private sealed class Worker : IFoundationWorker
     {
         public int Calls;
@@ -103,6 +171,12 @@ public sealed class ApprovalHostTests
         var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
         var result = await tool.InvokeAsync(Request("ImportPlcBlock", "{\"softwarePath\":\"PLC\",\"groupPath\":\"\",\"importPath\":\"C:\\\\fixture.xml\",\"dryRun\":" + dryRun.ToString().ToLowerInvariant() + "}"));
         var body = result.StructuredContent!;
+        if (dryRun)
+        {
+            Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
+            Assert.Equal(1, worker.Calls);
+            return;
+        }
         Assert.Equal("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
         Assert.Equal("workbench-unavailable", (string?)body["error"]?["details"]?["reason"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);

@@ -102,6 +102,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var op in plan.Operations.OfType<JsonObject>())
             {
                 string name = (string)op["name"]!;
+                string requestId = Guid.NewGuid().ToString("N");
+                using var correlation = InvocationJournal.UseCorrelation(requestId);
                 CallToolResult result;
                 bool issued = false;
                 if (cause.HasValue) result = V4Reject(name, new Error("An earlier batch item stopped execution.", new NotExecutedDetails(cause)));
@@ -126,7 +128,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var row = BatchRow(rows.Count, name, result);
                 if (!issued)
                 {
-                    using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, "engine", ReleaseKey, name);
+                    using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, "engine", ReleaseKey, name, requestId);
                     audit?.Complete(ResultBody(result)?.ToJsonString());
                 }
                 // An unreadable target result must never make the parent successful.

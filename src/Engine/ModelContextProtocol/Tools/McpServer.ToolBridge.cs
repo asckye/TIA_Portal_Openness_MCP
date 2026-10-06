@@ -277,7 +277,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             bool write = AllToolMethods(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
             bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
-            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "engine", ReleaseKey, name ?? "");
+            string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
+            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "engine", ReleaseKey, name ?? "", requestId);
             var error = BindV4Call(name, arguments ?? EmptyArguments(), out var method, out var call);
             if (error != null)
             {

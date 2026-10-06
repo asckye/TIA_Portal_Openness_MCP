@@ -1,9 +1,20 @@
 using TiaMcp.PlcWorker;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.LegacyHost;
+using TiaMcp.WorkerChannel;
 
 internal static class WorkerSessionOutcomeTests
 {
     internal static void Run(Action<bool, string> check)
     {
+        var rejected=WorkerFailurePolicy.Classify(new AdapterPreconditionException("Export directory must already exist.","exportPath"),true,false);
+        check(rejected.Code==-32602 && rejected.Outcome==ChannelOutcome.RejectedBeforeNative,"Typed argument precondition is rejected without poisoning after method entry");
+        var stateRefusal=WorkerFailurePolicy.Classify(new AdapterPreconditionException("Borrowed projects are never closed.",isArgument:false),true,false);
+        check(stateRefusal.Code==-32603 && stateRefusal.Outcome==ChannelOutcome.RejectedBeforeNative,"Typed state precondition is rejected without an argument code");
+        var ordinaryArgument=WorkerFailurePolicy.Classify(new ArgumentException("untyped failure"),true,false);
+        check(ordinaryArgument.Outcome==ChannelOutcome.Unknown,"An untyped ArgumentException after write dispatch remains uncertain");
+        check(!WorkerProtocol.RequiresSessionReset(true,new WorkerOperationException("safe refusal",-32602,"rejected-before-operation")),"A worker rejection does not poison the host session");
+
         var state = new WorkerSessionOutcomeState();
         int dispatched = 0;
         void Dispatch(bool readOnly)

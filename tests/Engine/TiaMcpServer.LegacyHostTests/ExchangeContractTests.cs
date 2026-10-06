@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using ModelContextProtocol;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.LegacyHost;
 using TiaMcp.PlcFoundation;
 
@@ -29,6 +30,13 @@ internal static class ExchangeContractTests
             check(File.ReadAllText(flat.FullName)=="existing export","Collision retains original bytes");
             Reject(()=>PlcExchangePolicy.Exact(new[]{"Root","Group"},x=>x,"Missing"),"Wrong group never falls back to root");
             Reject(()=>PlcExchangePolicy.Exact(new[]{"A","A"},x=>x,"A"),"Duplicate object refused");
+            var tagTables=new[]{(Path:"devices/PLC/Tags/%E9%BB%98%E8%AE%A4%E5%8F%98%E9%87%8F%E8%A1%A8",Name:"默认变量表"),
+                (Path:"devices/PLC/Tags/Archive",Name:"Archive")};
+            check(PlcExchangePolicy.SelectTable(tagTables,"devices/PLC/Tags/%E9%BB%98%E8%AE%A4%E5%8F%98%E9%87%8F%E8%A1%A8",x=>x.Path,x=>x.Name).Name=="默认变量表","Exact encoded non-ASCII table path is selected");
+            check(PlcExchangePolicy.SelectTable(tagTables,"默认变量表",x=>x.Path,x=>x.Name).Name=="默认变量表","Unique raw non-ASCII table name is selected");
+            Reject(()=>PlcExchangePolicy.SelectTable(tagTables,"Missing",x=>x.Path,x=>x.Name),"Missing table selector is refused");
+            Reject(()=>PlcExchangePolicy.SelectTable(tagTables.Concat(new[]{(Path:"devices/PLC/Tags/Other/%E9%BB%98%E8%AE%A4%E5%8F%98%E9%87%8F%E8%A1%A8",Name:"默认变量表")}),"默认变量表",x=>x.Path,x=>x.Name),"Ambiguous raw table name is refused");
+            Reject(()=>PlcExchangePolicy.SelectTable(tagTables,"devices/PLC/Tags/默认变量表",x=>x.Path,x=>x.Name),"Unencoded hierarchical table path is not treated as a raw name");
             var xml=Path.Combine(root,"Input.xml");
             File.WriteAllText(xml,"<Document><Engineering version=\"V21\" /></Document>");
             var bytes=File.ReadAllBytes(xml);
@@ -41,7 +49,8 @@ internal static class ExchangeContractTests
                 try { PlcFoundationPolicy.RequireRelease(release,mismatch); throw new Exception("Version mismatch allowed"); } catch(InvalidOperationException) { check(true,"Cross-version import facade refused"); }
             }
             File.WriteAllText(xml,"<!DOCTYPE Document [<!ENTITY e SYSTEM 'file:///unavailable'>]><Document>&e;</Document>");
-            try { PlcFoundationPolicy.XmlInput(xml); throw new Exception("External entity accepted"); } catch(System.Xml.XmlException) { check(true,"DTD rejected before native import"); }
+            try { PlcFoundationPolicy.XmlInput(xml); throw new Exception("External entity accepted"); }
+            catch(AdapterPreconditionException ex) { check(ex.ParamName=="importPath","DTD rejected as an importPath precondition before native import"); }
             File.WriteAllText(xml,"<WrongRoot />");
             Reject(()=>PlcFoundationPolicy.XmlInput(xml),"Wrong XML root refused");
             foreach(var tool in new[]{"ImportBlock","ImportType","ImportPlcTagTable","ExportBlock","ExportType","ExportPlcTagTable"})

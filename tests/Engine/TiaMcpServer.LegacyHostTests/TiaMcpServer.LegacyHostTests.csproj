@@ -71,6 +71,7 @@
     <Compile Include="../../../src/FoundationHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
     <Compile Include="../../../src/Worker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/Worker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
+    <Compile Include="../../../src/Worker/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineXmlBuilders.cs" Link="OfflineXmlBuilders.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineXmlTools.cs" Link="OfflineXmlTools.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcDocumentImportPolicy.cs" Link="PlcDocumentImportPolicy.cs" />
