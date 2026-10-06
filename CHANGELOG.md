@@ -2,6 +2,10 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
+## [4.0.0] - 未发布（草稿）
+
+4.0.0：MCP 工具名称、输入类型、返回结构和产品目录的破坏性变更版本，尚未发布，详见 [v4.0.0](docs/releases/v4.0.0.md)。包括逐版本的工具与参数迁移对照、V4 返回信封、新的产品入口与数据目录、工作台写操作审批与审计、D1 安全政策的实际状态和验收情况。
+
 ## [3.3.0] - 2026-10-03
 
 3.3.0：统一桌面与内部重构后的首个发布版本，详见 [v3.3.0](docs/releases/v3.3.0.md)。除 G9 名称解析行为外，保持 3.2.0 的 MCP 工具名称、参数类型、返回结构和错误约定；八版工具数仍为 57 / 58 / 60 / 60 / 60 / 62 / 477 / 488，V20/V21 lite 均为 63 项。`TiaSharedAdapterPaths` 默认关闭，其后的试验路径不在本版范围内；阶段 6 属于 4.0。
