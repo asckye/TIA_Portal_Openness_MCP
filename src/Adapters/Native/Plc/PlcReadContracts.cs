@@ -54,6 +54,18 @@ namespace TiaMcp.PlcFoundation
             var ungrouped=new List<PlcReadCandidate<PlcSoftware>>();
             foreach(var device in p.UngroupedDevicesGroup.Devices) ReadDeviceCandidates(device,new string[0],"ungrouped",ungrouped);
             foreach(var candidate in ungrouped) { candidate.AllowLegacyAlias=false; candidates.Add(candidate); }
+            if (TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(PlcFoundationEngine).Assembly, ReleaseKey, "P6-SOURCE"))
+            {
+                var exact = new List<TiaMcp.Adapters.Contracts.Candidates.PlcPathTarget<PlcReadCandidate<PlcSoftware>>>();
+                foreach (var c in candidates)
+                {
+                    var query = new[] { c.ExactPath, c.Value.Name };
+                    var same = exact.FirstOrDefault(r => object.Equals(r.Value.Value, c.Value));
+                    if (same == null) exact.Add(new TiaMcp.Adapters.Contracts.Candidates.PlcPathTarget<PlcReadCandidate<PlcSoftware>> { Value = c, Path = c.ExactPath, QueryNames = query });
+                    else same.QueryNames = same.QueryNames.Concat(query).Distinct(StringComparer.Ordinal).ToArray();
+                }
+                return TiaMcp.Adapters.Contracts.Candidates.PlcPathSelection.Select(exact, softwarePath).Value;
+            }
             return PlcReadPathPolicy.Select(candidates,softwarePath);
         }
         private static void ReadGroupCandidates(DeviceUserGroup group,string[] parents,string path,List<PlcReadCandidate<PlcSoftware>> result,int depth)

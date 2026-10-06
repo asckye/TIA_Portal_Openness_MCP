@@ -356,6 +356,16 @@ namespace TiaMcpServer.Siemens
                 _softwareCacheProject = _project;
             }
 
+            if (SourceCandidateEnabled)
+            {
+                try { return SourceCandidateSelection(softwarePath).Value; }
+                catch (TiaMcp.Adapters.Contracts.Candidates.PlcPathException ex) when (!ex.Ambiguous && softwarePath != "")
+                {
+                    var other = ResolveSoftwareContainerUncached(softwarePath);
+                    if (other?.Software is not PlcSoftware && other != null) return other;
+                    throw;
+                }
+            }
             if (_softwareContainerCache.TryGetValue(softwarePath, out var cached))
             {
                 return cached;

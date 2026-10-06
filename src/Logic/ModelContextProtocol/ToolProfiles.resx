@@ -447,6 +447,21 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "DisconnectPortal",
       "family": "P6-CLOSE",
       "example": {
@@ -526,6 +541,21 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -557,6 +587,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -606,6 +652,15 @@
         "onError": "stop",
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
         "groupPath": ""
       }
     },
@@ -626,6 +681,23 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "SaveProject",
       "family": "P6-CLOSE",
       "example": {
@@ -672,6 +744,21 @@
         "upgrade": "reject",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
       }
     },
     {
@@ -755,6 +842,21 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -786,6 +888,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -840,6 +958,15 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "OpenProject",
       "family": "P6-SESSION",
       "example": {
@@ -851,6 +978,23 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -905,6 +1049,21 @@
     },
     {
       "releaseKey": "16",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "DisconnectPortal",
       "family": "P6-CLOSE",
       "example": {
@@ -984,6 +1143,21 @@
     },
     {
       "releaseKey": "16",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -1015,6 +1189,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1064,6 +1254,15 @@
         "onError": "stop",
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
         "groupPath": ""
       }
     },
@@ -1084,6 +1283,23 @@
     },
     {
       "releaseKey": "16",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "SaveProject",
       "family": "P6-CLOSE",
       "example": {
@@ -1130,6 +1346,21 @@
         "upgrade": "reject",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
       }
     },
     {
@@ -1213,6 +1444,21 @@
     },
     {
       "releaseKey": "17",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -1244,6 +1490,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1298,6 +1560,15 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "OpenProject",
       "family": "P6-SESSION",
       "example": {
@@ -1309,6 +1580,23 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1359,6 +1647,21 @@
         "upgrade": "reject",
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
       }
     },
     {
@@ -1442,6 +1745,21 @@
     },
     {
       "releaseKey": "18",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -1473,6 +1791,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1527,6 +1861,15 @@
     },
     {
       "releaseKey": "18",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "OpenProject",
       "family": "P6-SESSION",
       "example": {
@@ -1538,6 +1881,23 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1604,6 +1964,21 @@
     },
     {
       "releaseKey": "19",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "DisconnectPortal",
       "family": "P6-CLOSE",
       "example": {
@@ -1683,6 +2058,21 @@
     },
     {
       "releaseKey": "19",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -1714,6 +2104,22 @@
         "importOrder": [
           "Object_1.xml"
         ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1768,6 +2174,15 @@
     },
     {
       "releaseKey": "19",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "OpenProject",
       "family": "P6-SESSION",
       "example": {
@@ -1779,6 +2194,23 @@
         "mode": "preview",
         "confirm": false,
         "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlanPlcExternalSourceImport",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+        "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
       }
     },
     {
@@ -1910,6 +2342,21 @@
     },
     {
       "releaseKey": "20",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "DisconnectPortal",
       "family": "P6-CLOSE",
       "example": {
@@ -2017,6 +2464,21 @@
     },
     {
       "releaseKey": "20",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -2088,6 +2550,22 @@
     },
     {
       "releaseKey": "20",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ImportPlcProgramFromDirectory",
       "family": "P6-IMPORT",
       "example": {
@@ -2153,6 +2631,31 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -2309,6 +2812,21 @@
     },
     {
       "releaseKey": "21",
+      "entry": "DeletePlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "DisconnectPortal",
       "family": "P6-CLOSE",
       "example": {
@@ -2416,6 +2934,21 @@
     },
     {
       "releaseKey": "21",
+      "entry": "GenerateBlocksFromExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "ImportPlcBlock",
       "family": "P6-IMPORT",
       "example": {
@@ -2487,6 +3020,22 @@
     },
     {
       "releaseKey": "21",
+      "entry": "ImportPlcExternalSource",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+      }
+    },
+    {
+      "releaseKey": "21",
       "entry": "ImportPlcProgramFromDirectory",
       "family": "P6-IMPORT",
       "example": {
@@ -2552,6 +3101,31 @@
         "compileAfter": false,
         "importPath": "C:\\reviewed-imports\\Object_1.xml",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ListPlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {

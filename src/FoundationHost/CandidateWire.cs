@@ -52,6 +52,26 @@ internal static class CandidateWire
         }
         return reply;
     }
+    internal static SourceReply Source(JsonNode? body, JsonObject args)
+    {
+        var reply = Read<SourceReply>(body); string action = Action(args);
+        if (reply.Fault != null)
+        { if (reply.RequiresSessionReset || reply.Attempt != null || reply.Observation != null) throw new InvalidDataException("Conflicting source preflight reply."); return reply; }
+        if (action == "execute")
+        {
+            var attempt = reply.Attempt ?? throw new InvalidDataException("Missing source outcome.");
+            Attempt(attempt.Issued, attempt.RequiresSessionReset, attempt.Fault != null);
+            if (reply.RequiresSessionReset != attempt.RequiresSessionReset || reply.Observation != null) throw new InvalidDataException("Conflicting source reset state.");
+            if (attempt.After != null) CandidateExecution.ValidateSourceObservation(attempt.After);
+            if (attempt.Fault == null) CandidateExecution.VerifySourceReadback(Read<SourceCall>(args["candidate"]).Check!, attempt);
+        }
+        else
+        {
+            if (action != "observe" || reply.Attempt != null || reply.RequiresSessionReset || reply.Observation == null) throw new InvalidDataException("Incomplete source observation.");
+            CandidateExecution.ValidateSourceObservation(reply.Observation);
+        }
+        return reply;
+    }
     internal static SaveCloseReply SaveClose(JsonNode? body, JsonObject args)
     {
         var reply = Read<SaveCloseReply>(body); string action = Action(args);

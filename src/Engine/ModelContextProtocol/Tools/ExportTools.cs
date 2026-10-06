@@ -269,6 +269,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {
+                if (cause is TiaMcp.Adapters.Contracts.Candidates.PlcPathException path) error = SourceSession.Map(path);
                 if (cause is PortalException portal) error = StatusError(new JsonObject { ["status"] = portal.Code.ToString() });
                 if (cause is ArgumentException) error = InvalidInput("arguments");
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error = InvalidInput("arguments");

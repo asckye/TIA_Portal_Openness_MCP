@@ -380,6 +380,17 @@ internal static partial class Program
                 Console.WriteLine("COMPLETE: " + Passed + " save/close candidate checks passed");
                 return 0;
             }
+            if(args.Length >= 4 && args[1] == "source-candidate-only") {
+                string api=Path.GetFullPath(args[2]);
+                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
+                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
+                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
+                };
+                SourceCandidateChecks.Run(Server, args[3] == "safe-v4", args.Length > 4 ? args[4] : "",
+                    (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                Console.WriteLine("COMPLETE: " + Passed + " source candidate checks passed");
+                return 0;
+            }
             if(args.Length >= 4 && args[1] == "export-candidate-only") {
                 string api=Path.GetFullPath(args[2]);
                 AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{

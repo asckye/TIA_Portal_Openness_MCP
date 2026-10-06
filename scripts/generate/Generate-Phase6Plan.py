@@ -444,6 +444,16 @@ for k in keys[-2:]:
 candidate_entries = dict(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
     '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs'))))
 def candidate_example(entry, family, release):
+    if family == 'P6-SOURCE':
+        example = {'softwarePath': '', 'groupPath': ''}
+        if entry != 'ListPlcExternalSources':
+            example.update(mode='preview', confirm=False, overwrite=False, onError='stop', missingPolicy='reject')
+            example['sourceName'] = 'Source_1.scl'
+        if entry in ('ImportPlcExternalSource', 'PlanPlcExternalSourceImport'):
+            example['filePath'] = r'C:\authorized-project-copy\Source_1.scl'
+        if entry == 'PlanPlcExternalSourceImport': example['allowedFilePath'] = example['filePath']
+        if entry == 'ManagePlcExternalSources': example['action'] = 'list'
+        return example
     if family == 'P6-CLOSE':
         example = {"mode": "preview", "confirm": False}
         if entry == 'CloseProject': example.update(saveChanges=False, discardChanges=False, confirmDiscard=False)

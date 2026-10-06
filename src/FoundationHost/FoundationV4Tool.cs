@@ -52,6 +52,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly bool exportCandidate;
     private readonly bool sessionCandidate;
     private readonly bool saveCloseCandidate;
+    private readonly bool sourceCandidate;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -71,6 +72,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             && (policyForTest?.Invoke("P6-SESSION") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SESSION")) == BehaviorPolicy.SafeV4;
         saveCloseCandidate = SaveCloseContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-CLOSE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-CLOSE")) == BehaviorPolicy.SafeV4;
+        sourceCandidate = SourceContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+            && (policyForTest?.Invoke("P6-SOURCE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE")) == BehaviorPolicy.SafeV4;
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
         var properties = schema["properties"]!.AsObject();
         JsonElement? typedSchema = null;
@@ -138,8 +141,9 @@ internal sealed class FoundationV4Tool : McpServerTool
             schema = JsonNode.Parse(SaveCloseContract.Schema(Name(source.Name)).GetRawText())!.AsObject();
             description = SaveCloseContract.Description;
         }
+        if (sourceCandidate) { schema = JsonNode.Parse(SourceContract.Schema(Name(source.Name)).GetRawText())!.AsObject(); description = SourceContract.Description; }
         tool = new Tool { Name = Name(source.Name), Description = description
-            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate && !sessionCandidate && !saveCloseCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
+            + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate && !sessionCandidate && !saveCloseCandidate && !sourceCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
@@ -167,6 +171,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
+            if (validation.Error != null && sourceCandidate) return Recorded(FoundationV4Result.ImportCandidate(SourceSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && saveCloseCandidate) return Recorded(FoundationV4Result.ImportCandidate(SaveCloseSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && sessionCandidate) return Recorded(FoundationV4Result.ImportCandidate(SessionCandidateSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && exportCandidate) return Recorded(FoundationV4Result.ImportCandidate(PlcExportSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
@@ -174,12 +179,20 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (sourceCandidate) return Recorded(await ((FoundationTool)inner).InvokeSourceCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (saveCloseCandidate) return Recorded(await ((FoundationTool)inner).InvokeSaveCloseCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (sessionCandidate) return Recorded(await ((FoundationTool)inner).InvokeSessionCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (deviceCandidate) return Recorded(await ((FoundationTool)inner).InvokeDeviceCandidateAsync(args, release, id, cancellationToken));
             if (importCandidate) return Recorded(await ((FoundationTool)inner).InvokeImportCandidateAsync(args, release, tool.Name, id, cancellationToken));
             if (exportCandidate) return Recorded(await ((FoundationTool)inner).InvokeExportCandidateAsync(args, release, tool.Name, id, cancellationToken));
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
+            if (inner is FoundationTool nativePath && args.TryGetValue("softwarePath", out var softwarePath)
+                && BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE") == BehaviorPolicy.SafeV4)
+            {
+                var target = await nativePath.ResolveSourcePathAsync(release, tool.Name, id, softwarePath.GetString()!, cancellationToken);
+                if (!target.Ok) return Recorded(FoundationV4Result.ImportCandidate(target));
+                adapted["softwarePath"] = JsonSerializer.SerializeToElement(target.Data!.Value.GetProperty("softwarePath").GetString());
+            }
             if (parameter != null)
             {
                 var input = convert!(args[parameter]);

@@ -37,6 +37,7 @@ namespace TiaMcpServer.Siemens
                 _plcResolutionCache.Clear();
                 _softwareCacheProject = _project;
             }
+            if (SourceCandidateEnabled) return SourceCandidateSelection(softwarePath).Value.Software as PlcSoftware;
             return ResolveCachedPlc(softwarePath, path => ResolveSoftwareLookup(path, true),
                 container => container.Software as PlcSoftware)
                 ?? MatchAvailablePlcSoftware((softwarePath ?? string.Empty).Trim());
