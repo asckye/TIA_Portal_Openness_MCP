@@ -239,7 +239,24 @@ internal static partial class Program
             return Parse(task.GetType().GetProperty("Result")!.GetValue(task)!.ToString()!);
         }
         public void Dispose() { ((IDisposable)Supervisor).Dispose(); }
-        internal int Dispatches => File.Exists(Log) ? File.ReadAllLines(Log).Length : 0;
+        internal int Dispatches => ReadDispatches();
+        private int ReadDispatches()
+        {
+            // The fake child appends while the parent polls: share the handle and retry a held file briefly.
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    if (!File.Exists(Log)) return 0;
+                    using var stream = new FileStream(Log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    using var reader = new StreamReader(stream);
+                    int lines = 0;
+                    while (reader.ReadLine() != null) lines++;
+                    return lines;
+                }
+                catch (IOException) when (attempt < 40) { Thread.Sleep(25); }
+            }
+        }
     }
 
     private static async Task WorkerFailure(Task task, bool unknown, WorkerFixture? fixture = null, string? code = null)
