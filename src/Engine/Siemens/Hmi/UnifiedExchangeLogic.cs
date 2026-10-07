@@ -19,7 +19,7 @@ namespace TiaMcpServer.Siemens
         internal static DirectoryInfo ValidateDirectory(string directory, bool forExport)
         {
             if (string.IsNullOrWhiteSpace(directory) || !Path.IsPathRooted(directory)) throw new ArgumentException("Absolute directory on the MCP server required.");
-            var dir = new DirectoryInfo(directory);
+            var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory));
             if (forExport && dir.Exists) throw new InvalidOperationException("Use a new export directory; overwrites refused: " + dir.FullName);
             if (forExport && dir.Parent?.Exists != true) throw new DirectoryNotFoundException("Export parent directory must exist: " + dir.FullName);
             if (!forExport && !dir.Exists) throw new DirectoryNotFoundException("Import directory not found: " + dir.FullName);
@@ -79,7 +79,7 @@ namespace TiaMcpServer.Siemens
             if (reported.Exists && reported.Length > 0) return reported;
             foreach (var extension in NativeExtensions)
             {
-                var candidate = new FileInfo(reported.FullName + extension);
+                var candidate = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(reported.FullName + extension));
                 if (candidate.Exists && candidate.Length > 0) return candidate;
             }
             var stem = reported.Name + ".";

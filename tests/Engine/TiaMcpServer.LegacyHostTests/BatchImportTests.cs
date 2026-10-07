@@ -21,6 +21,10 @@ internal static class BatchImportTests
         JsonObject Wire(PlcBatchImportResult r)=>JsonSerializer.SerializeToNode(r)!.AsObject();
         try
         {
+            var missing=Request();missing.Program=true;missing.Directory=Path.Combine(root,"absent");
+            try {Run(missing);throw new Exception("Missing input accepted");}
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {check(error.IsArgument && error.ParamName=="sourceDir" && imports==0,"Program directory input failure retains the actual public file argument before import");}
             Files();var preview=Run(Request());var original=Directory.GetFiles(root).ToDictionary(x=>x,File.ReadAllBytes);
             check(imports==0 && gates==0 && preview.Items.Select(x=>x.Planned.Name).SequenceEqual(new[]{"LogicalZ","LogicalA","Last"}),"Preview reads actual XML names, invokes no writes/gates and does not infer filename identity");
             check(preview.DependencyStatus=="unverified-caller-order-required" && !preview.Executed,"Suggested ordinal ordering explicitly has no dependency proof");
@@ -40,6 +44,9 @@ internal static class BatchImportTests
             Reject(()=>Run(Request(),new[]{new PlcBatchImportObject {Name="LogicalZ",Kind="FB",GroupPath="other"}}),"Cross-group/name collision blocks filename mismatch bypass");
             Reject(()=>Run(Request(),new[]{new PlcBatchImportObject {Name="Other",Kind="FC",Number=1}}),"Fixed number collision is blocked");
             check(Run(Request(),new[]{new PlcBatchImportObject {Name="Other",Kind="FB",Number=1}}).Items.Length==3,"FC1 and FB1 are separate number namespaces");
+            try {Run(Apply(preview),gate:()=>PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC"));throw new Exception("Policy refusal accepted");}
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {check(!error.IsArgument && imports==0 && gates==0,"Known offline refusal before first import stays a precondition and issues no import");}
             var result=Run(Apply(preview));check(result.ImportedCount==3 && !result.RequiresSessionReset && imports==3 && gates==3,"Fake native callbacks verify all identities and gate every item");
             check(original.All(x=>File.ReadAllBytes(x.Key).SequenceEqual(x.Value)),"Input bytes stay unchanged throughout preview/apply");
             imports=0;var partial=Run(Apply(preview),import:(f,p)=>{if(++imports==2)throw new IOException("uncertain write");return new[]{p};});
@@ -58,6 +65,7 @@ internal static class BatchImportTests
             BatchImportContract.Validate(Wire(unexpectedSecond),false);
             check(unexpectedSecond.ImportedCount==1 && unexpectedSecond.FailedCount==1 && imports==2 && unexpectedSecond.Items[1].ReturnedObjects[0].Kind=="UnexpectedNativeBlock" && unexpectedSecond.Items[2].Status=="not-attempted","Unexpected second native kind/owner preserves first success and raw evidence through host contract");
             gates=0;imports=0;var online=Run(Apply(preview),gate:()=>{if(++gates==2)throw new InvalidOperationException("online/project swap");});check(online.ImportedCount==1 && imports==1 && !online.Items[1].Attempted && online.RequiresSessionReset,"Target changes before second import preserve first mutation and stop without another callback");
+            gates=0;imports=0;var refused=Run(Apply(preview),gate:()=>{if(++gates==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});check(refused.ImportedCount==1 && imports==1 && !refused.Items[1].Attempted && refused.RequiresSessionReset,"Typed policy refusal after first import retains prior mutation and requires reset");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("Duplicate"));File.WriteAllText(Path.Combine(root,"B.xml"),Xml("Duplicate"));Reject(()=>Run(Request()),"Duplicate logical identity is rejected, never silently deduplicated");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("A"));File.WriteAllText(Path.Combine(root,"a.xml"),Xml("B"));if(Directory.GetFiles(root).Length==2)Reject(()=>Run(Request()),"Windows case aliases refused on Linux fake filesystem");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("A"));var limits=Request();limits.MaxItems=0;Reject(()=>Run(limits),"Invalid maxItems refused");

@@ -41,9 +41,9 @@ namespace TiaMcpServer.Siemens
             => RunHmiStepTool("RetrieveProjectArchive", meta => {
                 if (_portal == null) throw new InvalidOperationException("Connect to TIA first.");
                 if (_project != null || _session != null || _portal.Projects.Any() || _portal.LocalSessions.Any()) throw new InvalidOperationException("Use a connected Portal with no open project/session. Existing projects will never be closed automatically.");
-                var file = new FileInfo(archivePath); if (!file.Exists) throw new FileNotFoundException("Archive not found.");
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(archivePath)); if (!file.Exists) throw new FileNotFoundException("Archive not found.");
                 if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destination required.");
-                var directory = new DirectoryInfo(destinationDirectory); if (directory.Exists) throw new IOException("Destination must be new; merge/overwrite refused.");
+                var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory)); if (directory.Exists) throw new IOException("Destination must be new; merge/overwrite refused.");
                 meta["dryRun"] = dryRun; meta["upgrade"] = upgrade; meta["mayHaveWrittenFiles"] = false; meta["destination"] = directory.FullName;
                 if (!dryRun)
                 {
@@ -71,7 +71,7 @@ namespace TiaMcpServer.Siemens
             });
         public ResponseMessage ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun = true)
             => RunHmiStepTool("ImportProjectTexts", meta => {
-                var file = new FileInfo(filePath); if (!file.Exists) throw new FileNotFoundException("Text import file not found.");
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new FileNotFoundException("Text import file not found.");
                 var signature = new[] { typeof(FileInfo), typeof(bool) };
                 if (_project!.GetType().GetMethod("ImportProjectTexts", signature) == null) throw new NotSupportedException("Native project text import unavailable.");
                 using var access = dryRun ? null : AcquireHmiEditAccess();

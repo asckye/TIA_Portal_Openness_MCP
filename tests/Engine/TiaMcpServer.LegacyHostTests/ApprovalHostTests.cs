@@ -209,7 +209,8 @@ public sealed class ApprovalHostTests
         if (dryRun)
         {
             Assert.NotEqual("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
-            Assert.Equal(1, worker.Calls);
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal(0, worker.Calls);
             return;
         }
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);

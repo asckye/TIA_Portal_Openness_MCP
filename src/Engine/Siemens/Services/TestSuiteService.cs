@@ -263,7 +263,7 @@ namespace TiaMcpServer.Siemens.Services
                 PlcSoftware? plc = action == "setScope" && category == "application" ? _session.ExactPlcForEngineering(softwarePath, false) : null;
                 var scopeObjects = new List<IEngineeringObject>(); var resolved = new JsonArray();
                 if (action == "setScope" && category == "styleGuide") { foreach (var entry in r.Scope) scopeObjects.Add(ResolveStyleGuideScopeObject(entry, resolved)); meta["scopeObjects"] = resolved; }
-                DirectoryInfo? folder = action == "setScope" && category == "system" && !string.IsNullOrEmpty(interfaceFolderPath) ? new DirectoryInfo(interfaceFolderPath) : null;
+                DirectoryInfo? folder = action == "setScope" && category == "system" && !string.IsNullOrEmpty(interfaceFolderPath) ? new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(interfaceFolderPath)) : null;
                 if (folder != null && !folder.Exists) throw new DirectoryNotFoundException("interfaceFolderPath does not exist: " + interfaceFolderPath);
                 if (action == "showInEditor")
                 {

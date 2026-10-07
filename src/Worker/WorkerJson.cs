@@ -36,11 +36,13 @@ namespace TiaMcp.PlcWorker
 
         internal static string Serialize(object? value) => JsonSerializer.Serialize(value, Options);
 
-        internal static string Evidence(Exception cause) => Serialize(cause is AdapterPreconditionException precondition
-            ? new { parameter = precondition.ParamName, isArgument = precondition.IsArgument }
-            : cause.Data.Contains("inputSha256") || cause.Data.Contains("outputFile") || cause.Data.Contains("safetyCleanup")
-                ? new { inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],exportPhase=cause.Data["exportPhase"],stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"] }
-                : null);
+        internal static string Evidence(Exception cause) => Serialize(new {
+            exceptionType = cause.GetType().Name,
+            parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
+            isArgument = cause is AdapterPreconditionException precondition ? precondition.IsArgument : (bool?)null,
+            inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],
+            stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],exportPhase=cause.Data["exportPhase"],
+            stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"] });
 
         internal static Dictionary<string, JsonElement> ParseArguments(string json)
         {

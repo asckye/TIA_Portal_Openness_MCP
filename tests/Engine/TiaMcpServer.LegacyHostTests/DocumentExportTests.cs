@@ -99,6 +99,10 @@ internal static class DocumentExportTests
             var definition=FoundationTools.Definitions.Single(d=>d.Name=="ExportAsDocuments");
             check(definition.ResponseMember=="DocumentExport" && TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ExportAsDocuments"),"Document tool and worker operation explicitly registered");
             check(calls==1,"Only valid injected pair invokes test export once; preflight refusals have no callback");
+            var refusedPath=Path.Combine(root,"policy-refused");var refusedPlan=Run(refusedPath);
+            try {Run(refusedPath,false,refusedPlan.PlanHash,export:(_,_)=>throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Block eligibility changed after preview.","export-plan",false),move:(from,to)=>Directory.Move(from.FullName,to.FullName));throw new Exception("Policy refusal accepted");}
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {check(!error.IsArgument && calls==1 && !Directory.Exists(refusedPath),"Document policy refusal before native export stays a precondition without publication");}
         }
         finally { Directory.Delete(root,true); }
     }

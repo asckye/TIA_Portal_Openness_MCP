@@ -24,7 +24,7 @@ internal sealed class WorkerOutcomeState
 {
     internal bool Poisoned { get; private set; }
     internal void RequireUsable()
-    { if(Poisoned) throw new InvalidOperationException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed."); }
+    { if(TiaOpenness.Shared.SessionBehavior.RequiresReset(Poisoned, true)) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery); }
     internal void Failed(bool sent,Exception error) { if(WorkerProtocol.RequiresSessionReset(sent,error)) Poisoned=true; }
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
@@ -40,7 +40,7 @@ internal sealed class WorkerOutcomeState
 }
 internal static class WorkerProtocol
 {
-    internal static bool RequiresSessionReset(bool sent,Exception error) => sent && !(error is WorkerOperationException known && known.KnownNoMutation);
+    internal static bool RequiresSessionReset(bool sent,Exception error) => TiaOpenness.Shared.SessionBehavior.LocksSession(sent, !(error is WorkerOperationException known && known.KnownNoMutation), true);
     internal static void ValidateExchangeResult(string operation,JsonObject arguments,JsonNode? result)
     {
         if (operation == TiaMcp.PlcWorker.WorkerOperations.CompileCandidate) { CandidateWire.Compile(result, arguments); return; }

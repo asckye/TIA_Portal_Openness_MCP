@@ -62,6 +62,9 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseImportBatch ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
         {
+            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
+
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
 
@@ -217,6 +220,8 @@ namespace TiaMcpServer.Siemens.Services
                 if (to == null)
                     return new ResponseMessage { Message = $"Technology object '{toName}' not found in '{softwarePath}': {lookupError}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
+                TiaOpenness.Shared.NativeExportPolicy.RequireApply(to.IsConsistent ? "planned" : "inconsistent");
+                exportPath = TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 _session.TryExportEngineeringObject(to, exportPath, out var err);
                 if (err != null)
@@ -230,6 +235,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
+                if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException) throw;
                 _session.Logger?.LogError(ex, "ExportTechnologyObject failed");
                 return new ResponseMessage { Message = $"Export failed: {ex.Message}" };
             }
@@ -238,6 +244,9 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseImportBatch ExportTechnologyObjectsToDirectory(
             string softwarePath, string exportDir, string regexName = "")
         {
+            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
+
             var exported = new List<string>();
             var failed = new List<ImportFailure>();
 

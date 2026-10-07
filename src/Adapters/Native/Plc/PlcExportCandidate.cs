@@ -19,7 +19,7 @@ namespace TiaMcp.PlcFoundation
             {
                 Check();
                 var selected = ReadSelection(candidate.Request.SoftwarePath);
-                if (selected.ExactPath != candidate.Request.SoftwarePath) CandidatePrimitives.Invalid("softwarePath");
+                TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(candidate.Request.SoftwarePath, selected.ExactPath, candidate.Tool == "ExportPlcBlocks" || candidate.Tool == "ExportPlcTypes" || candidate.Tool == "ExportPlcBlocksDocuments");
                 PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession, false);
                 var project = Project();
                 CandidateIdentity Identity()
@@ -61,7 +61,7 @@ namespace TiaMcp.PlcFoundation
                 }
             }
             catch (Exception ex)
-            { result.Fault = ex is CandidateObservationException observed ? observed.Fault : new CandidateFault { Kind = ex is IOException ? "io" : "preflight", Subject = "plc-import-target" }; }
+            { result.Fault = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed ? new CandidateFault { Kind = typed.IsArgument ? "invalid" : "precondition", Subject = typed.ParamName ?? "arguments" } : ex is CandidateObservationException observed ? observed.Fault : new CandidateFault { Kind = ex is IOException ? "io" : "preflight", Subject = "plc-import-target" }; }
             return result;
         }
     }

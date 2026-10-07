@@ -80,7 +80,7 @@ namespace TiaMcpServer.Siemens.Services
                 throw new PortalException(PortalErrorCode.InvalidState, "CAx/AML export service is not available for this project");
             }
 
-            var result = cax.Export(device, new FileInfo(filePath));
+            var result = cax.Export(device, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)));
             var messageLines = FlattenTransferMessages(result?.Messages);
             var state = result?.State.ToString() ?? "Unknown";
             var ok = result != null && result.State != TransferResultState.Error;

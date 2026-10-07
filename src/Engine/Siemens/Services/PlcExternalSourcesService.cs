@@ -153,7 +153,7 @@ namespace TiaMcpServer.Siemens.Services
             if (group == null)
                 throw new PortalException(PortalErrorCode.NotFound, $"ImportPlcExternalSource: ExternalSourceGroup not found (groupPath='{groupPath}')");
 
-            var fi = new FileInfo(filePath);
+            var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
             if (!fi.Exists) throw new PortalException(PortalErrorCode.InvalidParams, "External source file not found: " + filePath);
             var target = group as global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceGroup;
             if (target == null) throw new PortalException(PortalErrorCode.OpennessError, "Expected a public PLC external-source group.");
@@ -360,7 +360,7 @@ namespace TiaMcpServer.Siemens.Services
                     MasterCopy? copy = null; MasterCopyMode? mode = null;
                     if (action == "createFromFile")
                     {
-                        var file = new FileInfo(filePath);
+                        var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
                         if (!file.Exists || file.Length == 0) throw new FileNotFoundException("Source file missing or empty on the TIA Portal machine: " + filePath, filePath);
                         meta["sourceFile"] = SoftwareUnitDeepLogic.FileRow(file);
                     }

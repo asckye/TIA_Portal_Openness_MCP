@@ -163,9 +163,9 @@ namespace TiaMcp.Adapters.Native.Vci
                 var source = Read(() => NativeVci.Workspaces(NativeVci.Group(Service())), a);
                 a.OperationIssued = true; a.WriteIssued = true;
 #if STUDIO_VCI_INITIAL
-                var created = NativeVci.Create(source, name); NativeVci.SetRoot(created, new DirectoryInfo(folder));
+                var created = NativeVci.Create(source, name); NativeVci.SetRoot(created, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(folder)));
 #else
-                var created = NativeVci.Create(source, name, new DirectoryInfo(folder));
+                var created = NativeVci.Create(source, name, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(folder)));
 #endif
                 items.Add(new Dictionary<string, string> { ["name"] = NativeVci.Name(created), ["rootPath"] = NativeVci.Root(created).FullName });
             }
@@ -194,7 +194,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         string name = "object_" + CandidatePrimitives.ByteHash(System.Text.Encoding.UTF8.GetBytes(target.RelativePath + "\n" + target.Name));
                         row["execution"] = "unknown"; a.WriteIssued = true;
 #if STUDIO_VCI_MODERN
-                        var created = NativeVci.Export(w, target.Object, new DirectoryInfo(root), name, format);
+                        var created = NativeVci.Export(w, target.Object, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(root)), name, format);
                         row["mappedObject"] = MappingId(created);
 #else
                         var created = w.Mappings.Create(name + ".xml", target.Object);

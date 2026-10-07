@@ -17,10 +17,9 @@ namespace TiaMcp.PlcFoundation
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey,true);
 #if PLC_WATCH_READ
             var selected=ReadSelection(softwarePath);
-            if(softwarePath!=selected.ExactPath) throw new ArgumentException("Exact software path required; aliases are not export identities.");
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var root=Native.WatchGroup(selected.Value);
-            if(root==null) throw new InvalidOperationException("WatchAndForceTableGroup unavailable.");
+            if(root==null) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("WatchAndForceTableGroup unavailable.","export-plan",false);
             // Use the existing bounded read traversal to collect genuine typed objects.
             var objects=new Dictionary<string,PlcWatchTable>(StringComparer.Ordinal);
             var groups=new Dictionary<PlcWatchAndForceTableGroup,string> { [root]="" };
@@ -28,28 +27,27 @@ namespace TiaMcp.PlcFoundation
                 var folder=groups[g]; var path=folder+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(t)));
                 objects.Add(path,t); return Native.Name(t);
             }),g=>Native.Groups(g).Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(child)))+"/"); return child; }),g=>g.Name);
-            if(!objects.TryGetValue(watchTableName,out var table)) throw new ArgumentException("Exact canonical watch-table path not found.");
+            if(!objects.TryGetValue(watchTableName,out var table)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact canonical watch-table path not found.");
             return PlcSpecialExportPolicy.Run("watch-table",ReleaseKey,Project().Path.FullName,selected.ExactPath,watchTableName,exportPath,Native.IsConsistent(table),dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),file=> {
 #if PLC_SPECIAL_EXPORT || PLC_WATCH_EXPORT
                 RequireTargetOffline(selected);
-                if(!Native.IsConsistent(table)) throw new InvalidOperationException("Watch table is no longer consistent.");
+                if(!Native.IsConsistent(table)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Watch table is no longer consistent.","export-plan",false);
                 Native.Export(table,file,ExportOptions.None);
 #else
-                throw new NotSupportedException("Export method evidence is unknown for this release.");
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export method evidence is unknown for this release.","export-plan",false);
 #endif
             });
 #else
-            throw new NotSupportedException("V14 SP1 watch-table API is absent.");
+            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("V14 SP1 watch-table API is absent.","export-plan",false);
 #endif
         }
         public PlcSpecialExportResult ExportTechnologyObject(string softwarePath,string toName,string exportPath,string expectedPlanHash="",bool dryRun=true)
         {
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey);
             var selected=ReadSelection(softwarePath);
-            if(softwarePath!=selected.ExactPath) throw new ArgumentException("Exact software path required; aliases are not export identities.");
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var root=Native.TechnologyGroup(selected.Value);
-            if(root==null) throw new InvalidOperationException("TechnologicalObjectGroup unavailable.");
+            if(root==null) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("TechnologicalObjectGroup unavailable.","export-plan",false);
             var objects=new Dictionary<string,TechnologicalInstanceDB>(StringComparer.Ordinal);
             var groups=new Dictionary<TechnologicalInstanceDBGroup,string> { [root]="" };
             PlcSupplementaryReadPolicy.Technologies(root,g=>Native.Objects(g).Select(t=> {
@@ -61,17 +59,17 @@ namespace TiaMcp.PlcFoundation
                 return new TechnologicalInstanceDBGroup[0];
 #endif
             },g=>Native.Name(g));
-            if(!objects.TryGetValue(toName,out var item)) throw new ArgumentException("Exact canonical technology-object path not found within this release's documented read scope.");
-            if(item.IsKnowHowProtected) throw new NotSupportedException("Know-how protected technology objects are outside this export scope.");
+            if(!objects.TryGetValue(toName,out var item)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact canonical technology-object path not found within this release's documented read scope.");
+            if(item.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Know-how protected technology objects are outside this export scope.","export-plan",false);
             bool consistent=item.IsConsistent;
             return PlcSpecialExportPolicy.Run("technology-object",ReleaseKey,Project().Path.FullName,selected.ExactPath,toName,exportPath,consistent,dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),file=> {
 #if PLC_SPECIAL_EXPORT
                 RequireTargetOffline(selected);
-                if(item.IsKnowHowProtected) throw new NotSupportedException("Technology object protection changed after preview.");
-                if(!item.IsConsistent) throw new InvalidOperationException("Technology object is no longer consistent.");
+                if(item.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Technology object protection changed after preview.","export-plan",false);
+                if(!item.IsConsistent) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Technology object is no longer consistent.","export-plan",false);
                 item.Export(file,ExportOptions.None);
 #else
-                throw new NotSupportedException("Export method evidence is unknown for this release.");
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export method evidence is unknown for this release.","export-plan",false);
 #endif
             });
         }

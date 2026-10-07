@@ -32,10 +32,10 @@ namespace TiaMcpServer.Siemens
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 temporary = Path.Combine(Path.GetDirectoryName(destination)!, ".tia-export-" + Guid.NewGuid().ToString("N") + Path.GetExtension(destination));
                 result["temporaryPath"] = temporary;
-                var args = method.GetParameters().Length == 1 ? new object[] { new FileInfo(temporary) }
-                    : new object[] { new FileInfo(temporary), Enum.Parse(method.GetParameters()[1].ParameterType, "None") };
+                var args = method.GetParameters().Length == 1 ? new object[] { new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)) }
+                    : new object[] { new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)), Enum.Parse(method.GetParameters()[1].ParameterType, "None") };
                 method.Invoke(target, args);
-                var file = new FileInfo(temporary);
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary));
                 if (!file.Exists || file.Length == 0) throw new IOException("Native export produced no non-empty file.");
                 result["length"] = file.Length;
                 result["sha256"] = HashFile(temporary);

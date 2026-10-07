@@ -49,7 +49,7 @@ namespace TiaMcpServer.Siemens
             if (!string.Equals(Path.GetDirectoryName(Path.GetFullPath(path)), directory, StringComparison.OrdinalIgnoreCase)
                 || (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
                 throw new NotSupportedException("Native export contains a file outside its isolated directory or a reparse point.");
-            if (new FileInfo(path).Length > MaxBytes) throw new NotSupportedException("Native file exceeds the 1 MiB edit limit.");
+            if (new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)).Length > MaxBytes) throw new NotSupportedException("Native file exceeds the 1 MiB edit limit.");
         }
         internal static NativePair ReadPair(string directory, string moduleName)
         {
@@ -83,7 +83,7 @@ namespace TiaMcpServer.Siemens
             meta["phase"] = phase;
             var module = UnifiedScriptAccess.Module(resolveHmi(), moduleName);
             Directory.CreateDirectory(directory);
-            var capture = NativeExportCapture.Read(module, "/Scripts/" + MigrationRead.Segment(moduleName), false, new DirectoryInfo(directory));
+            var capture = NativeExportCapture.Read(module, "/Scripts/" + MigrationRead.Segment(moduleName), false, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)));
             meta[phase] = capture.Status();
             if (!capture.ApiCallSuccess || !capture.NativeSuccess || !capture.InspectionComplete)
             {
@@ -156,7 +156,7 @@ namespace TiaMcpServer.Siemens
             if (import == null || import.ReturnType != typeof(bool)) throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
             meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo)";
             meta["apiCallSuccess"] = false; meta["importAttempted"] = true; meta["mayHaveChanged"] = true;
-            bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(candidate) })!;
+            bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate)) })!;
             meta["apiCallSuccess"] = true; meta["importReturned"] = returned;
             if (!returned)
             {

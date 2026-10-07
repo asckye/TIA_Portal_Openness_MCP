@@ -523,7 +523,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         public ResponseMessage ImportLibraryTypeDocuments(string filePath,string folderPath="",string libraryName="",string importOptions="None",string typePath="",string createOptions="None",string targetSoftwarePath="",string targetGroupKind="",string targetGroupPath="",bool dryRun=true)
             =>_session.RunHmiStepTool("ImportLibraryTypeDocuments",meta=>{
-                var file=new FileInfo(filePath);if(!file.Exists)throw new FileNotFoundException("Library type native document not found.");
+                var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));if(!file.Exists)throw new FileNotFoundException("Library type native document not found.");
                 LibraryDeepLogic.RequireOneOf(importOptions,LibraryDeepLogic.ImportOptions,"importOptions");LibraryDeepLogic.RequireOneOf(createOptions,LibraryDeepLogic.CreateOptions,"createOptions");
                 if(targetGroupKind!="" && targetGroupKind!="blocks" && targetGroupKind!="types")throw new ArgumentException("targetGroupKind must be empty, blocks or types.");
                 if((targetGroupKind=="")!=string.IsNullOrEmpty(targetSoftwarePath))throw new ArgumentException("targetSoftwarePath and targetGroupKind go together (STEP 7 documents need a PlcBlockGroup/PlcTypeGroup target environment).");
@@ -600,7 +600,7 @@ namespace TiaMcpServer.Siemens.Services
                     LibraryDeepLogic.RequireOneOf(archiveMode, LibraryDeepLogic.ArchivationModes, "archiveMode"); LibraryDeepLogic.ValidateArchiveName(archiveName);
                     var target = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                     if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destinationDirectory required.");
-                    var archiveDirectory = new DirectoryInfo(destinationDirectory);
+                    var archiveDirectory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
                     meta["library"] = EngineeringScalarProperties.Read(target); meta["archiveMode"] = archiveMode; meta["archiveName"] = archiveName; meta["destinationDirectory"] = archiveDirectory.FullName;
                     if (target.IsModified) throw new InvalidOperationException("Library has unsaved changes; TIA refuses Archive until it is saved (action=save first).");
                     if (dryRun) return "Archive preview; nothing written (None/DiscardRestorableData produce a folder that cannot be retrieved through the API; Compressed modes produce a .zalXX file).";
@@ -622,11 +622,11 @@ namespace TiaMcpServer.Siemens.Services
                     if (EngineeringGroupOperations.Find(libraries, libraryName) != null) throw new InvalidOperationException("Library with this name already open.");
                 } else library = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                 if (action == "open" || action == "retrieve") {
-                    file = new FileInfo(filePath); if (!file.Exists) throw new FileNotFoundException("Library file not found.");
+                    file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new FileNotFoundException("Library file not found.");
                 }
                 if (action == "create" || action == "retrieve" || action == "saveAs") {
                     if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute new destination directory required.");
-                    directory = new DirectoryInfo(destinationDirectory);
+                    directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
                     if (directory.Exists || File.Exists(directory.FullName)) throw new IOException("Destination already exists; overwrite/merge refused.");
                 }
                 if (upgrade && action != "open" && action != "retrieve") throw new ArgumentException("upgrade applies only to open/retrieve.");
@@ -1005,7 +1005,7 @@ namespace TiaMcpServer.Siemens.Services
         private static object? TryOpenGlobalLibrary(object globalLibraries, string libraryFile, out string? error)
         {
             error = null;
-            var fi = new FileInfo(libraryFile);
+            var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(libraryFile));
             try
             {
                 var methods = globalLibraries.GetType()

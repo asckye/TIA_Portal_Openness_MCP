@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,12 +25,12 @@ namespace TiaMcp.PlcFoundation
             { foreach(var device in selected) { requireOffline(device); count++; } }
             void CheckGroups(IEnumerable<TGroup> selected,int depth)
             {
-                if(depth>128) throw new NotSupportedException("Project device-group tree is too deep.");
+                if(depth>128) throw new AdapterPreconditionException("Project device-group tree is too deep.","offline-state",false);
                 foreach(var group in selected)
                 { CheckDevices(groupDevices(group)); CheckGroups(children(group),depth+1); }
             }
             CheckDevices(devices); CheckDevices(ungrouped); CheckGroups(groups,0);
-            if(count==0) throw new NotSupportedException("An empty device inventory cannot establish all-device offline coverage.");
+            if(count==0) throw new AdapterPreconditionException("An empty device inventory cannot establish all-device offline coverage.","offline-state",false);
         }
         // Shared traversal/policy exercised with fake graphs; native service adapters
         // remain separately subject to real SDK builds and native acceptance.
@@ -40,17 +41,17 @@ namespace TiaMcp.PlcFoundation
             where TItem:class where TSoftware:class
         {
             if(redundant)
-                throw new NotSupportedException("R/H XML exchange is outside the standard-target offline contract.");
+                throw new AdapterPreconditionException("R/H XML exchange is outside the standard-target offline contract.","offline-state",false);
             if(selectedItem==null || selectedSoftware==null)
-                throw new NotSupportedException("Exact selected PLC and owner are required.");
+                throw new AdapterPreconditionException("Exact selected PLC and owner are required.","offline-state",false);
             var owners=new List<TItem>();
             var visited=new HashSet<TItem>();
             CollectOwners(roots,selectedSoftware,children,software,owners,visited,0);
             if(owners.Count!=1 || !object.Equals(owners[0],selectedItem))
-                throw new NotSupportedException("Selected PLC must have one exact matching owner in its device.");
+                throw new AdapterPreconditionException("Selected PLC must have one exact matching owner in its device.","offline-state",false);
             var observation=observe(owners[0]);
             if(observation==null || !observation.HasStandardProvider)
-                throw new NotSupportedException("Owning CPU has no positive standard OnlineProvider evidence.");
+                throw new AdapterPreconditionException("Owning CPU has no positive standard OnlineProvider evidence.","offline-state",false);
             RequireStates(new[]{observation.State},true,"selected standard-provider PLC");
         }
         private static void CollectOwners<TItem,TSoftware>(IEnumerable<TItem> items,TSoftware selected,
@@ -59,11 +60,11 @@ namespace TiaMcp.PlcFoundation
             where TItem:class where TSoftware:class
         {
             if(items==null || depth>128)
-                throw new NotSupportedException("Selected-device ownership graph is incomplete or too deep.");
+                throw new AdapterPreconditionException("Selected-device ownership graph is incomplete or too deep.","offline-state",false);
             foreach(var item in items)
             {
                 if(item==null || !visited.Add(item))
-                    throw new NotSupportedException("Selected-device ownership graph is cyclic or ambiguous.");
+                    throw new AdapterPreconditionException("Selected-device ownership graph is cyclic or ambiguous.","offline-state",false);
                 if(object.Equals(software(item),selected)) owners.Add(item);
                 CollectOwners(children(item),selected,children,software,owners,visited,depth+1);
             }
@@ -71,12 +72,12 @@ namespace TiaMcp.PlcFoundation
         internal static void RequireDocumentedRelease(string release)
         {
             if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(release))
-                throw new NotSupportedException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.");
+                throw new AdapterPreconditionException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.","offline-state",false);
         }
         internal static bool CheckCompileStates(IEnumerable<string?> states,bool plcCoverageComplete,string scope)
         {
             var observed=states.ToArray();
-            if(!plcCoverageComplete) throw new NotSupportedException("A PLC in "+scope+" has no observable online-state provider.");
+            if(!plcCoverageComplete) throw new AdapterPreconditionException("A PLC in "+scope+" has no observable online-state provider.","offline-state",false);
             // OnlineProvider is a PLC service. HMI/passive devices may expose none;
             // report that limitation rather than treating absence as Online or Offline.
             if(observed.Length==0) return false;
@@ -87,9 +88,9 @@ namespace TiaMcp.PlcFoundation
         {
             var values=states.ToArray();
             if(!coverageComplete || values.Length==0)
-                throw new NotSupportedException("Offline-state coverage is unknown for "+scope+"; missing services are not evidence of Offline.");
+                throw new AdapterPreconditionException("Offline-state coverage is unknown for "+scope+"; missing services are not evidence of Offline.","offline-state",false);
             if(values.Any(s=>!string.Equals(s,"Offline",StringComparison.Ordinal)))
-                throw new InvalidOperationException("Every observed connection must be exactly Offline for "+scope+"; no connection state is changed automatically.");
+                throw new AdapterPreconditionException("Every observed connection must be exactly Offline for "+scope+"; no connection state is changed automatically.","offline-state",false);
         }
     }
 }

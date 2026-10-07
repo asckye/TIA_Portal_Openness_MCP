@@ -74,6 +74,8 @@ namespace TiaMcp.Logic.V4
                 }
                 string root = Resolve(request.OutputPath, request.WorkspaceRoot);
                 objects = adapter.ReadObjects(tool, request).ToArray();
+                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent(tool.Contains("Type") ? "types" : "blocks",
+                    objects.Where(o => o != null && !o.Consistent).Select(o => o.Path), PlcExportContract.Batch(tool) ? "groupPath" : tool.Contains("Type") ? "typePath" : "blockPath");
                 if (objects.Length < 1 || objects.Length > request.MaxItems || objects.Any(o => o == null || string.IsNullOrEmpty(o.Id) || string.IsNullOrEmpty(o.Path)
                     || string.IsNullOrEmpty(o.Name) || !o.Consistent || o.ContentHash != null && !IsHash(o.ContentHash))
                     || objects.Select(o => o.Id).Distinct(StringComparer.Ordinal).Count() != objects.Length
@@ -152,8 +154,11 @@ namespace TiaMcp.Logic.V4
                 }
                 catch (Exception) /* swallow(privacy): preserve unavailable destination/staging residue after failed observation */ { }
                 data ??= new JsonObject(); data["residue"] = residue;
+                var admission = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
+                    ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
+                        typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message)) : null;
                 var error = unknown ? new Error("Export outcome is unknown; inspect staging and destination and rebuild the session. Never replay.", new OutcomeUnknownDetails("native-export-or-readback", new Dictionary<string, JsonElement> { ["residue"] = V4Json.Data(residue)!.Value }))
-                    : new Error("Export stopped; retained staging and original destination evidence are available.", details);
+                    : admission ?? new Error("Export stopped; retained staging and original destination evidence are available.", details);
                 if (mode == "apply" && objects.Length > 0)
                 {
                     children.Add(new BatchItem(index, destination, Result(release, tool, id, new JsonObject { ["residue"] = residue.DeepClone(), ["nativeExportCalls"] = issued ? 1 : 0 }, error,

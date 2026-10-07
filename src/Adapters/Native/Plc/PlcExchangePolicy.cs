@@ -39,7 +39,7 @@ namespace TiaMcp.PlcFoundation
         }
         internal static FileInfo ExportDestination(string directory,string objectPath,bool preservePath)
         {
-            var root=new DirectoryInfo(directory);
+            var root=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory));
             if(!root.Exists) throw new AdapterPreconditionException("Export directory must already exist.","exportPath");
             var segments=ObjectPath(objectPath,false,"exportPath").Split('/').Select(Uri.UnescapeDataString).ToArray();
             foreach(var name in segments) PlcFoundationPolicy.RequireName(name);

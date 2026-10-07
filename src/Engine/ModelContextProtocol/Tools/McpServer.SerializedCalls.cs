@@ -248,6 +248,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Arguments = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(previewArguments) };
                 try
                 {
+                    McpServer.ValidateCallerInputFiles(ProtocolTool.Name, previewArguments);
                     var preview = McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false));
                     InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
                     return preview;
@@ -297,6 +298,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     TiaOpenness.Shared.AuditInvocation.StartCurrent();
                 }
                 issued = true;
+                McpServer.ValidateCallerInputFiles(ProtocolTool.Name, arguments);
                 var result = McpServer.DiscloseTargets(McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
                 ExitFaultedWorker(id, approval);

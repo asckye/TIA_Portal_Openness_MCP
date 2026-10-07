@@ -15,6 +15,10 @@
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <ProjectReference Include="../../third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <Compile Include="../Shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" />
+    <Compile Include="../Shared/NativeInputPolicy.cs" Link="Shared/NativeInputPolicy.cs" />
+    <Compile Include="../Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
+    <Compile Include="../Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
+    <Compile Include="../Shared/NativeExportPolicy.cs" Link="Shared/NativeExportPolicy.cs" />
     <Compile Include="../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <Compile Include="../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" />

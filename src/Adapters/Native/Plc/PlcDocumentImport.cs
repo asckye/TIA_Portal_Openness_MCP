@@ -29,9 +29,9 @@ namespace TiaMcp.PlcFoundation
 #if PLC_DOCUMENT_EXPORT
             var softwarePath=r.Software;var groupPath=r.Group;var importPath=r.Directory;var fileNameWithoutExtension=r.Name;
             var selected=ReadSelection(softwarePath);
-            if(selected.ExactPath!=softwarePath) throw new ArgumentException("Exact ordinary PLC softwarePath required.");
+            r.Software=selected.ExactPath;
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            var project=Project();r.Project=project.Path.FullName;r.ProcessId=lifecycle.ProcessId??throw new InvalidOperationException("Explicit process identity required.");
+            var project=Project();r.Project=project.Path.FullName;r.ProcessId=lifecycle.ProcessId??throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
             var target=BatchGroup(BlockGroups(Documents.BlockGroup(selected.Value)),groupPath);
             r.TargetIdentity=string.Join(":",new[]{project,(object)selected.Value,selected.Context,(object)target}.Select(documentImportIdentities.Get));
             var names=new List<string>();
@@ -43,7 +43,7 @@ namespace TiaMcp.PlcFoundation
                     yield return PlcDocumentImportPolicy.InventoryItem(group.Path,"","group",documentImportIdentities.Get(group.Value));
                     foreach(var block in Documents.Blocks(group.Value))
                     {
-                        if(string.IsNullOrEmpty(Documents.Name(block)) || !object.Equals(Documents.Parent(block),group.Value)) throw new InvalidOperationException("Ordinary block inventory ownership missing.");
+                        if(string.IsNullOrEmpty(Documents.Name(block)) || !object.Equals(Documents.Parent(block),group.Value)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary block inventory ownership missing.","softwarePath",false);
                         names.Add(Documents.Name(block));
                         yield return PlcDocumentImportPolicy.InventoryItem(group.Path,Documents.Name(block),block.GetType().Name,documentImportIdentities.Get(block));
                     }
@@ -51,18 +51,18 @@ namespace TiaMcp.PlcFoundation
             }
             Action recheck=()=> {
                 RequireProjectIdentity(r.Project);
-                if(lifecycle.ProcessId!=r.ProcessId || !object.Equals(Project(),project))throw new InvalidOperationException("Project/process identity changed.");
+                if(lifecycle.ProcessId!=r.ProcessId || !object.Equals(Project(),project))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Project/process identity changed.","softwarePath",false);
                 var fresh=ReadSelection(softwarePath);
-                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context) || !object.Equals(BatchGroup(BlockGroups(Documents.BlockGroup(fresh.Value)),groupPath),target))throw new InvalidOperationException("Exact PLC/group identity changed.");
+                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context) || !object.Equals(BatchGroup(BlockGroups(Documents.BlockGroup(fresh.Value)),groupPath),target))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact PLC/group identity changed.","softwarePath",false);
                 RequireTargetOffline(fresh);
             };
             return new PlcDocumentImportContext {Request=r,Scan=()=>PlcDocumentImportPolicy.Scan(r),Open=path=> {
-                var file=new FileInfo(path);PlcDocumentImportPolicy.SafePath(file);
-                return new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+                var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));PlcDocumentImportPolicy.SafePath(file);
+                return TiaOpenness.Shared.NativeInputPolicy.OpenRead(path,"importPath");
             },Inventory=Inventory,Collision=name=>names.Any(n=>string.Equals(n,name,StringComparison.OrdinalIgnoreCase)),Recheck=recheck,Import=()=> {
                 // Exactly one typed native call. Exact V20/V21 SDK XML: None = "Throw if exists".
                 // It does NOT promise atomicity, normalization, rollback or race-free preflight.
-                var native=Documents.Import(Documents.Blocks(target),new DirectoryInfo(Path.GetFullPath(importPath)),fileNameWithoutExtension,ImportDocumentOptions.None);
+                var native=Documents.Import(Documents.Blocks(target),new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(importPath))),fileNameWithoutExtension,ImportDocumentOptions.None);
                 if(native==null) return null!;
                 var outcome=new PlcDocumentImportNative();
                 try
@@ -83,7 +83,7 @@ namespace TiaMcp.PlcFoundation
                 return outcome;
             }};
 #else
-            throw new NotSupportedException("Exact V20/V21 document SDK support is not compiled for this release.");
+            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact V20/V21 document SDK support is not compiled for this release.","softwarePath",false);
 #endif
         }
     }

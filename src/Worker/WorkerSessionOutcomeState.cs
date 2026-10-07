@@ -11,13 +11,13 @@ namespace TiaMcp.PlcWorker
         {
             mutationOutcomeUnknown = true;
             // A later outcome cannot relax an earlier whole-session refusal.
-            readsBlocked |= blockReads;
+            readsBlocked = true;
         }
 
         internal void RequireUsable(bool readOnly)
         {
-            if (readsBlocked || (mutationOutcomeUnknown && !readOnly))
-                throw new InvalidOperationException("Prior native outcome is unknown; new explicit worker session required. Never replay.");
+            if (TiaOpenness.Shared.SessionBehavior.RequiresReset(readsBlocked || mutationOutcomeUnknown, true))
+                throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
         }
     }
 }

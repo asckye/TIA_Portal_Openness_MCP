@@ -25,13 +25,14 @@ namespace TiaMcp.PlcFoundation
             if(kind!="blocks" && kind!="types") throw new AdapterPreconditionException("Unknown batch kind.","kind");
             if(maxItems<1 || maxItems>MaximumItems) throw new AdapterPreconditionException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.","maxItems");
             if(!Path.IsPathRooted(directory)) throw new AdapterPreconditionException("An absolute existing export directory is required.","exportPath");
-            var root=new DirectoryInfo(directory);
+            var root=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory));
             if(!root.Exists) throw new AdapterPreconditionException("Export directory must already exist.","exportPath");
             for(var ancestor=root; ancestor!=null; ancestor=ancestor.Parent)
                 if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new AdapterPreconditionException("Export directory ancestry cannot contain reparse points.","exportPath");
             var sources=inventory.Take(maxItems+1).OrderBy(x=>x.Path,StringComparer.Ordinal).ToArray();
             if(sources.Length>maxItems) throw new AdapterPreconditionException("Complete inventory exceeds maxItems; narrow the exact group scope.","groupPath");
             if(sources.Select(x=>x.Path).Distinct(StringComparer.Ordinal).Count()!=sources.Length) throw new AdapterPreconditionException("Ambiguous inventory paths.","groupPath");
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent(kind,sources.Where(x=>!x.Consistent).Select(x=>x.Path),"groupPath");
             var result=new PlcBatchExportResult { Executed=!dryRun,ProjectFile=project,SoftwarePath=software,GroupPath=group,Recursive=recursive };
             result.Items=sources.Select(source=>new PlcBatchExportItem {
                 ObjectPath=PlcExchangePolicy.ObjectPath(source.Path),
@@ -54,10 +55,11 @@ namespace TiaMcp.PlcFoundation
                 try
                 {
                     requireOffline();
-                    var recovery=publish(new FileInfo(item.OutputFile),sources[i].Export);
+                    var recovery=publish(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(item.OutputFile)),sources[i].Export);
                     item.Status="exported";
                     if(recovery!=null) item.Evidence["recoveryDirectory"]=recovery;
                 }
+                catch(AdapterPreconditionException) when(i==0) { throw; }
                 catch(Exception error)
                 {
                     item.Status="failed"; stopped=true; result.RequiresSessionReset=true;

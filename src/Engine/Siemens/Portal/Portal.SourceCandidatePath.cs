@@ -43,7 +43,9 @@ namespace TiaMcpServer.Siemens
             if (!ReferenceEquals(_project, _softwareCacheProject)) { _softwareContainerCache.Clear(); _plcResolutionCache.Clear(); _softwareCacheProject = _project; }
             Devices(_project!.Devices, Array.Empty<string>()); Groups(_project.DeviceGroups, Array.Empty<string>(), 0);
             Devices(_project.UngroupedDevicesGroup.Devices, new[] { _project.UngroupedDevicesGroup.Name });
-            return PlcPathSelection.Select(rows, path);
+            var selected = PlcPathSelection.Select(rows, path);
+            SoftwareContainerLookup.RememberPath(selected.Value, selected.Path);
+            return selected;
         }
         internal string SourceCandidatePath(string path) => SourceCandidateSelection(path).Path;
         private bool SourceCandidateEnabled => TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(typeof(Portal).Assembly, PortalMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), "P6-SOURCE");

@@ -1,6 +1,7 @@
 using System;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.WorkerChannel;
+using TiaOpenness.Shared;
 
 internal sealed class WorkerFailureClassification
 {
@@ -15,11 +16,10 @@ internal static class WorkerFailurePolicy
 {
     internal static WorkerFailureClassification Classify(Exception cause, bool enteredOperation, bool readOnly)
     {
-        bool explicitPrecondition = cause is AdapterPreconditionException;
-        int code = cause is AdapterPreconditionException typed ? typed.IsArgument ? -32602 : -32603
-            : cause is ArgumentException ? -32602 : -32603;
-        ChannelOutcome outcome = !enteredOperation || explicitPrecondition ? ChannelOutcome.RejectedBeforeNative
-            : readOnly ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown;
+        var kind = HostFailurePolicy.Classify(cause, enteredOperation, readOnly);
+        int code = kind == HostFailureKind.Argument ? -32602 : -32603;
+        ChannelOutcome outcome = kind == HostFailureKind.Unknown ? ChannelOutcome.Unknown
+            : kind == HostFailureKind.ReadFailed ? ChannelOutcome.ReadFailed : ChannelOutcome.RejectedBeforeNative;
         return new WorkerFailureClassification(code, outcome);
     }
 }

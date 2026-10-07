@@ -266,6 +266,12 @@ namespace TiaMcpServer.ModelContextProtocol
             if (observation.Changed || observation.Confirmed > 0) return Result(tool, data,
                 new Error("Confirmed effects remain, but result reporting did not complete.", new PartialFailureDetails(0, 0, 0)),
                 Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+            if (exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException admission)
+            {
+                var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(admission, false, !write);
+                return Reject(tool, HostBehavior.FailureError(kind, admission.ParamName, Evidence(data),
+                    HostBehavior.AdmissionDiagnostic(admission)), data, current);
+            }
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {

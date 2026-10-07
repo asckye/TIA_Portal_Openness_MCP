@@ -88,7 +88,7 @@ namespace TiaMcpServer.Siemens
         }
         internal static IEnumerable<JsonObject> Export(object target, string scope, bool libraryVersion)
         {
-            var directory = new DirectoryInfo(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-read-" + Guid.NewGuid().ToString("N")));
+            var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-read-" + Guid.NewGuid().ToString("N"))));
             directory.Create();
             try
             {
@@ -107,7 +107,7 @@ namespace TiaMcpServer.Siemens
                 foreach (var path in reported)
                 {
                     error = null;
-                    try { candidates.Add(new FileInfo(path)); }
+                    try { candidates.Add(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path))); }
                     catch (Exception ex) { error = MigrationRead.Failure(scope + "/ExportedDocuments", "NativeFileLocationRejected", ex); error["reportedPath"] = path; }
                     if (error != null) { complete = false; yield return error; }
                 }

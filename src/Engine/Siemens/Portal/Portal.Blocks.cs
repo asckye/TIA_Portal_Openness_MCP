@@ -291,21 +291,19 @@ namespace TiaMcpServer.Siemens
                 exportPath = ResolveExportFile(exportPath, block.Name, blockGroupPath, preservePath);
 
                 // TIA Portal never exports inconsistent blocks
-                if (!block.IsConsistent)
-                {
-                    throw new PortalException(PortalErrorCode.InvalidState, "Block is inconsistent; TIA Portal does not export inconsistent blocks.");
-                }
+                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
 
                 if (File.Exists(exportPath))
                 {
                     File.Delete(exportPath);
                 }
 
-                block.Export(new FileInfo(exportPath), ExportOptions.None);
+                block.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), ExportOptions.None);
                 LastExportedFile = exportPath;
 
                 return block;
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 //If the exception is already a PortalException, use it; otherwise, wrap it in a new PortalException
@@ -335,10 +333,7 @@ namespace TiaMcpServer.Siemens
                 var type = Guard.RequireNotNull(GetType(softwarePath, typePath), "Type", typePath);
 
                 // TIA Portal never exports inconsistent types
-                if (!type.IsConsistent)
-                {
-                    throw new PortalException(PortalErrorCode.InvalidState, "Type is inconsistent; TIA Portal does not export inconsistent types.");
-                }
+                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("types", type.IsConsistent ? Array.Empty<string>() : new[] { typePath }, "typePath");
 
                 var typeGroupPath = type.Parent is PlcTypeGroup parentTypeGroup ? GetPlcTypeGroupPath(parentTypeGroup) : "";
                 exportPath = ResolveExportFile(exportPath, type.Name, typeGroupPath, preservePath);
@@ -348,11 +343,12 @@ namespace TiaMcpServer.Siemens
                     File.Delete(exportPath);
                 }
 
-                type.Export(new FileInfo(exportPath), ExportOptions.None);
+                type.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), ExportOptions.None);
                 LastExportedFile = exportPath;
 
                 return type;
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ExportFailed, "Export failed", null, ex);
@@ -379,9 +375,9 @@ namespace TiaMcpServer.Siemens
         {
             try
             {
-                var bytes = File.ReadAllBytes(path);
+                var bytes = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllBytes(path));
                 bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-                var text = File.ReadAllText(path, Encoding.UTF8);
+                var text = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllText(path, Encoding.UTF8));
 
                 var fixedText = text;
                 int major = Engineering.TiaMajorVersion;
@@ -399,6 +395,7 @@ namespace TiaMcpServer.Siemens
                 File.WriteAllText(tmp, fixedText, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
                 return tmp;
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch
             {
  /* swallow(parse-fallback): If XML preparation fails, preserve the original path so native import reports the input error. */                return path; // best effort; on any failure import the original file
@@ -426,9 +423,9 @@ namespace TiaMcpServer.Siemens
                     throw new PortalException(PortalErrorCode.NotFound,
                         $"PLC block group not found for groupPath='{groupPath}'; use empty string for root program blocks");
 
-                if (!new FileInfo(importPath).Exists)
+                if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PortalException(PortalErrorCode.InvalidParams, $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(PrepareXmlForImport(importPath));
+                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
 
                 var imported = group.Blocks.Import(fileInfo, ImportOptions.Override);
                 if (imported == null || imported.Count == 0)
@@ -436,6 +433,7 @@ namespace TiaMcpServer.Siemens
 
                 return true;
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 // Surface the real Openness error to callers — without this the message
@@ -468,6 +466,9 @@ namespace TiaMcpServer.Siemens
 
         public ResponseImportBatch ImportBlocksFromDirectory(string softwarePath, string groupPath, string dir, string regexName = "", bool overwrite = true)
         {
+            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(ResolvePlc(softwarePath, PlcAccess.Read)), true);
+
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
 
@@ -515,12 +516,12 @@ namespace TiaMcpServer.Siemens
 
                     try
                     {
-                        if (!new FileInfo(file).Exists)
+                        if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file)).Exists)
                         {
                             failed.Add(new ImportFailure { Path = file, Error = "File not found" });
                             continue;
                         }
-                        var fi = new FileInfo(PrepareXmlForImport(file));
+                        var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(file)));
 
                         // Let Openness check the XML object's identity atomically. A filename
                         // lookup cannot enforce overwrite=false (and may miss renamed files).
@@ -534,7 +535,8 @@ namespace TiaMcpServer.Siemens
                             imported.Add(name);
                         }
                     }
-                    catch (Exception ex)
+                    catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
+            catch (Exception ex)
                     {
                         failed.Add(new ImportFailure { Path = file, Error = ex.ToString() });
                     }
@@ -542,6 +544,7 @@ namespace TiaMcpServer.Siemens
 
                 return new ResponseImportBatch { Imported = imported, Failed = failed };
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
@@ -570,9 +573,9 @@ namespace TiaMcpServer.Siemens
                     throw new PortalException(PortalErrorCode.NotFound,
                         $"PLC type group not found for groupPath='{groupPath}'; use empty string for root PLC data types");
 
-                if (!new FileInfo(importPath).Exists)
+                if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PortalException(PortalErrorCode.InvalidParams, $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(PrepareXmlForImport(importPath));
+                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
 
                 var imported = group.Types.Import(fileInfo, ImportOptions.Override);
                 if (imported == null || imported.Count == 0)
@@ -580,6 +583,7 @@ namespace TiaMcpServer.Siemens
 
                 return true;
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ImportFailed, "Import failed", null, ex);

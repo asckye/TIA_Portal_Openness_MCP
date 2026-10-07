@@ -310,33 +310,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
         {
-            if (error is TargetInvocationException invocation && invocation.InnerException != null) error = invocation.InnerException;
-            if (error is TiaMcp.Adapters.Contracts.AdapterPreconditionException precondition)
-                return V4Reject(tool, new Error("The native precondition refused the request before operation.", precondition.IsArgument
-                    ? (ErrorDetails)new InvalidArgumentDetails(precondition.ParamName ?? "arguments", Array.Empty<string>())
-                    : new PreconditionFailedDetails("native-admission", tool)));
-            if (ApprovalPreviewDepth.Value > 0 && error is OperationCanceledException)
-                return V4Reject(tool, new Error("The approval precheck was cancelled.", new CancelledDetails("approval-precheck")));
-            var evidence = new JsonObject { ["exceptionType"] = error.GetType().Name };
-            var data = new JsonObject { ["evidence"] = evidence };
-            if (!issued) return V4Reject(tool, new Error("The tool was rejected before dispatch.",
-                error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams
-                    ? (ErrorDetails)new InvalidArgumentDetails("arguments", Array.Empty<string>())
-                    : new PreconditionFailedDetails("tool-dispatch", tool)), data);
-            // A thrown state-changing call does not establish its post-state. Retain only typed
-            // evidence, never exception text that may contain arguments or credentials.
+            error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
             var classification = AllToolMethods(includeUnavailable: true).TryGetValue(tool, out var method)
                 ? ClassificationOf(method) : ToolMetadata.Find(tool);
             string operation = classification?.Operation ?? ToolTaxonomy.OperationOf(tool, null).Operation;
             bool readOnly = ApprovalPreviewDepth.Value > 0 || operation is "READ" or "OFFLINE" || operation == "SESSION" && classification?.BatchRead == true;
-            if (!readOnly) return V4Result(tool, data,
-                new Error("The issued tool outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
-                    new OutcomeUnknownDetails("tool-call", evidence.ToDictionary(pair => pair.Key,
-                        pair => JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal))),
-                Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true);
-            return V4Result(tool, data, new Error("The tool read could not be completed.", new InternalErrorDetails(null)),
-                Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
+            var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(error, issued, readOnly,
+                reportedCode: error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams ? -32602 : (int?)null,
+                nativeRead: InvocationJournal.NativeCallIssued);
+            var evidence = HostBehavior.FailureEvidence(error.GetType().Name);
+            var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
+            string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(error);
+            string? message = HostBehavior.AdmissionDiagnostic(error);
+            return V4Result(tool, data, HostBehavior.FailureError(kind, parameter, evidence, message),
+                HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind), current: issued);
         }
+
+        internal static void ValidateCallerInputFiles(string tool, string arguments)
+            => CallerInputFiles.Validate(tool, JsonNode.Parse(arguments)!.AsObject());
 
         internal static Error? BindV4Call(string name, ToolArguments arguments, out MethodInfo? method, out object?[]? call)
         {

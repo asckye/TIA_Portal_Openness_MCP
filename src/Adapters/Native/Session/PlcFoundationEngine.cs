@@ -129,7 +129,7 @@ namespace TiaMcp.PlcFoundation
             lifecycle.RequireUnbound();
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,path);
             PlcLifecyclePolicy.RequireLocalSessionExecution(session,dryRun);
-            var input = new FileInfo(Path.GetFullPath(path));
+            var input = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(path)));
             if (!input.Exists) throw new AdapterPreconditionException("Project file does not exist.", "path", true, new FileNotFoundException());
             if (p.Projects.Any(x => string.Equals(x.Path.FullName, input.FullName, StringComparison.OrdinalIgnoreCase)))
                 throw new AdapterPreconditionException("Project is already open; bind it explicitly instead.","path");
@@ -152,7 +152,7 @@ namespace TiaMcp.PlcFoundation
             var p = Portal();
             PlcFoundationPolicy.RequireName(projectName);
             lifecycle.RequireUnbound();
-            var parent = new DirectoryInfo(Path.GetFullPath(directoryPath));
+            var parent = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(directoryPath)));
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
                 throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath" : "projectName");
             var expected=PlcLifecyclePolicy.CreationFile(ReleaseKey,parent.FullName,projectName);
@@ -277,7 +277,7 @@ namespace TiaMcp.PlcFoundation
             var path=PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
             var blocks=BlockGroups(selected.Value.BlockGroup).SelectMany(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
             var target=PlcExchangePolicy.Exact(blocks,x=>x.Path,path,"blockPath").Value;
-            if(!target.IsConsistent) throw new AdapterPreconditionException("Compile the inconsistent block before export.","blockPath",false);
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks",target.IsConsistent?new string[0]:new[]{blockPath},"blockPath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             var capability=PlcBlockXmlPolicy.Export(ReleaseKey,target.ProgrammingLanguage.ToString());
             var result=Export("ExportBlock",file.FullName,dryRun,f=>{ RequireTargetOffline(selected); target.Export(f,ExportOptions.None); });
@@ -289,7 +289,7 @@ namespace TiaMcp.PlcFoundation
             var path=PlcExchangePolicy.ObjectPath(typePath,false,"typePath");
             var types=TypeGroups(selected.Value.TypeGroup).SelectMany(g=>g.Value.Types.Select(t=>new Located<PlcType>(Child(g.Path,t.Name),t)));
             var target=PlcExchangePolicy.Exact(types,x=>x.Path,path,"typePath").Value;
-            if(!target.IsConsistent) throw new AdapterPreconditionException("Compile the inconsistent type before export.","typePath",false);
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("types",target.IsConsistent?new string[0]:new[]{typePath},"typePath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             return Export("ExportType", file.FullName, dryRun, f => { RequireTargetOffline(selected); target.Export(f, ExportOptions.None); });
         }
@@ -324,7 +324,7 @@ namespace TiaMcp.PlcFoundation
         }
         private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null, Action<System.Xml.Linq.XDocument>? precheck=null)
         {
-            using(var stream=new FileStream(input.FullName,FileMode.Open,FileAccess.Read,FileShare.Read))
+            using(var stream=TiaOpenness.Shared.NativeInputPolicy.OpenRead(input.FullName,"importPath"))
             using(var sha=System.Security.Cryptography.SHA256.Create())
             {
                 // Keep the file read-locked from validation/hash through native import.

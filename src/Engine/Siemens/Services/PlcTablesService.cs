@@ -55,6 +55,9 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
         {
+            if (!_session.IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
+
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
 
@@ -137,11 +140,16 @@ namespace TiaMcpServer.Siemens.Services
             }
 
             if (table == null) return false;
-            return _session.TryExportEngineeringObject(table, exportPath, out _);
+            if (table is global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable watch)
+                TiaOpenness.Shared.NativeExportPolicy.RequireApply(watch.IsConsistent ? "planned" : "inconsistent");
+            return _session.TryExportEngineeringObject(table, TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath), out _);
         }
 
         public ResponseImportBatch ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "")
         {
+            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
+
             var exported = new List<string>();
             var failed = new List<ImportFailure>();
 
@@ -264,7 +272,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     tempFile = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
                     if (File.Exists(tempFile)) File.Delete(tempFile);
-                    Native.Export(table, new FileInfo(tempFile), ExportOptions.None);
+                    Native.Export(table, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempFile)), ExportOptions.None);
                     doc = XDocument.Load(tempFile);
                     meta["entriesBefore"] = WatchTableEntryXml.Entries(doc).Count();
                 }
@@ -279,7 +287,7 @@ namespace TiaMcpServer.Siemens.Services
                 doc.Save(tempFile);
 
                 meta["mayHaveChanged"] = true;
-                var imported = Native.Import(Native.WatchTables(group), new FileInfo(tempFile), ImportOptions.Override).ToArray();
+                var imported = Native.Import(Native.WatchTables(group), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempFile)), ImportOptions.Override).ToArray();
                 meta["importedCount"] = imported.Length;
                 meta["apiCallSuccess"] = true;
 
@@ -923,7 +931,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true)
             => _session.RunHmiStepTool("ImportPlcWatchTableOffline", meta => {
-                var source = new FileInfo(filePath); if (!source.Exists) throw new FileNotFoundException("Watch table XML missing.", filePath);
+                var source = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!source.Exists) throw new FileNotFoundException("Watch table XML missing.", filePath);
                 meta["expectedCount"] = WatchTableImportValidation.Validate(source.FullName);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);

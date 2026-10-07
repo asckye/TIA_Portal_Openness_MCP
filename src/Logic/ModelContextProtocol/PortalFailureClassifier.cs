@@ -26,30 +26,9 @@ namespace TiaMcpServer.ModelContextProtocol
         /// </summary>
         internal static bool IsPortalProcessLost(Exception? ex)
         {
-            for (var e = ex; e != null; e = e.InnerException)
-            {
-                var name = e.GetType().FullName ?? string.Empty;
-
-                // Openness 的 NonRecoverableException：进程级致命错，博途已经退出。
-                if (Has(name, "NonRecoverable"))
-                {
-                    return Lost(name);
-                }
-
-                // 进程没了以后再碰任何 Openness 对象，拿到的是 RPC / 远程调用层的错。
-                if (Has(name, "System.Runtime.InteropServices.COMException") ||
-                    Has(name, "RemotingException") || Has(name, "CommunicationObjectFaultedException") || Has(name, "CommunicationObjectAbortedException"))
-                {
-                    return Lost(name);
-                }
-            }
-
-            return false;
+            string? reason = TiaOpenness.Shared.HostFailurePolicy.ProcessLossReason(ex);
+            return reason != null && Lost(reason);
         }
 
-        private static bool Has(string? haystack, string needle)
-        {
-            return (haystack ?? string.Empty).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
     }
 }

@@ -162,7 +162,7 @@ namespace TiaMcpServer.Siemens
                 && m.GetParameters().Length == 2 && m.GetParameters()[0].ParameterType == typeof(FileInfo)
                 && m.GetParameters()[1].ParameterType.IsEnum && Enum.IsDefined(m.GetParameters()[1].ParameterType, "WithReadOnly"))
                 ?? throw new NotSupportedException("No document format or public Export(FileInfo, ExportOptions.WithReadOnly) action is available on the selected version. Internal content is unknown, not empty.");
-            var file = new FileInfo(Path.Combine(directory.FullName, "Type.xml"));
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directory.FullName, "Type.xml")));
             var options = Enum.Parse(method.GetParameters()[1].ParameterType, "WithReadOnly");
             Begin("invokeLibraryXmlExport");
             ExportAttempted = true;

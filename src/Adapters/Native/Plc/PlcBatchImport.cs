@@ -64,9 +64,9 @@ namespace TiaMcp.PlcFoundation
                 PlcBatchImportPolicy.ValidateOptions(validation);
             }
             var selected=ReadSelection(request.Software);
-            if(request.Software!=selected.ExactPath) throw new AdapterPreconditionException("Exact software path required, aliases refused.","softwarePath");
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.Software,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new InvalidOperationException("Explicit process identity required.");
+            request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
             foreach(var item in new[]{(Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),(Path:request.TagGroup,Parameter:"tagFolderPath")})
                 if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter)) throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
             var blocks=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),request.BlockGroup);
@@ -76,11 +76,11 @@ namespace TiaMcp.PlcFoundation
             Action check=()=>
             {
                 RequireProjectIdentity(request.Project);
-                if(lifecycle.ProcessId!=request.ProcessId) throw new InvalidOperationException("Process identity changed.");
+                if(lifecycle.ProcessId!=request.ProcessId) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Process identity changed.","softwarePath",false);
                 var fresh=ReadSelection(request.Software);
-                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new InvalidOperationException("Selected target identity changed.");
+                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Selected target identity changed.","softwarePath",false);
                 if(!object.Equals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
-                   (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new InvalidOperationException("Destination group identity changed.");
+                   (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
                 RequireTargetOffline(fresh);
             };
             return PlcBatchImportPolicy.Run(request,inventory,check,(file,planned)=>

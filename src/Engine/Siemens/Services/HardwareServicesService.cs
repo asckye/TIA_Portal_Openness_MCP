@@ -345,7 +345,7 @@ namespace TiaMcpServer.Siemens.Services
                         // V20: TelecontrolManagement exposes ExportDataPoints / ImportDataPoints only (typed data point rows are V21).
                         TelecontrolManagement management = _session.RequireHardwareService<TelecontrolManagement>(owner, "itemPathJson");
                         if (action != "export" && action != "import") throw new NotSupportedException("Telecontrol data point objects (TelecontrolDataPoint*) exist in the V21 PublicAPI only; V20 offers export / import.");
-                        var file = new FileInfo(filePath); meta["filePath"] = file.FullName;
+                        var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); meta["filePath"] = file.FullName;
                         if (action == "export" && file.Exists) throw new IOException("Export refuses to overwrite an existing file.");
                         if (action == "import" && !file.Exists) throw new FileNotFoundException("Data point file not found.", file.FullName);
                         if (!write) return action + " preview; nothing " + (action == "export" ? "written" : "imported") + ".";
@@ -362,7 +362,7 @@ namespace TiaMcpServer.Siemens.Services
                         if (action == "read") { meta["records"] = Rows(); meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "Telecontrol data points read (TelecontrolManagement); no modification."; }
                         if (action == "export" || action == "import")
                         {
-                            var file = new FileInfo(filePath); meta["filePath"] = file.FullName;
+                            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); meta["filePath"] = file.FullName;
                             if (action == "export" && file.Exists) throw new IOException("Export refuses to overwrite an existing file.");
                             if (action == "import" && !file.Exists) throw new FileNotFoundException("Data point file not found.", file.FullName);
                             if (!write) return action + " preview; nothing " + (action == "export" ? "written" : "imported") + ".";
@@ -678,7 +678,7 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "ModuleInformationProvider." + action + " answered; no modification.";
                 }
-                var file = new FileInfo(filePath); if (file.Exists) throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (file.Exists) throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
                 var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson); meta["ownerPath"] = _session.HardwareOwnerPath(owner); meta["filePath"] = file.FullName;
                 if (dryRun) return action + " preview; nothing written (" + (action == "exportOpcUa" ? "OpcUaExportProvider.Export(DeviceItem, FileInfo) writes the PLC data as OPC UA XML" : "CardReaderPscProvider.Export(Device, FileInfo[, SecureString]) creates a .psc card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+") + ").";
                 meta["mayHaveChanged"] = true;

@@ -61,8 +61,12 @@ internal static class BatchDocumentExportTests
             Reject(()=>Run(output,Enumerable.Range(0,257).Select(i=>Source("group/B"+i)),max:256),"Batch document complete over-bound inventory refused");
             foreach(var max in new[]{0,257}) Reject(()=>Run(output,max:max),"Batch document invalid max refused "+max);
             Reject(()=>Run(output,new[]{Source("group/CON")}),"Batch document device filename refused");
-            var inconsistent=Run(output,new[]{Source("group/A",consistent:false)});Validate(inconsistent);
-            Reject(()=>Run(output,new[]{Source("group/A",consistent:false)},false,inconsistent.PlanHash),"Batch document inconsistent apply refused without partial export");
+            foreach(bool dry in new[]{true,false})
+            {
+                try {Run(output,new[]{Source("group/A",consistent:false)},dry);throw new Exception("Inconsistent batch accepted");}
+                catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+                {check(!error.IsArgument && error.Message.Contains("group/A") && native==0,"Batch document inconsistent inventory names its objects before preview/apply");}
+            }
             Directory.CreateDirectory(output);Reject(()=>Run(output),"Batch document existing target refused");Directory.Delete(output);
             File.WriteAllText(output,"original");Reject(()=>Run(output),"Batch document existing file refused");File.Delete(output);
             if(!OperatingSystem.IsWindows())Reject(()=>Run(output,dry:false,hash:plan.PlanHash),"Batch document production non-Windows refused before calls");
@@ -121,6 +125,15 @@ internal static class BatchDocumentExportTests
             malformed=Wire(success);malformed["Items"]![0]!["Status"]="staged";Reject(()=>BatchDocumentExportContract.Validate(malformed,Request(success,false)),"Batch document false all-success rejected");
             malformed=Wire(plan);malformed["Items"]![0]!["BlockPath"]="group/Z";Reject(()=>BatchDocumentExportContract.Validate(malformed,Request(plan)),"Batch document unordered forged inventory rejected");
             check(FoundationTools.Definitions.Single(d=>d.Name=="ExportBlocksAsDocuments").ResponseMember=="BatchDocumentExport" && TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ExportBlocksAsDocuments"),"Batch document host/worker explicit registration");
+            var refusedPath=Path.Combine(root,"policy-refused");
+            var refusedSources=new[]{Source("group/A",callback:(_,_)=>throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Block eligibility changed after preview.","export-plan",false))};
+            var refusedPlan=Run(refusedPath,refusedSources);
+            try {Run(refusedPath,refusedSources,false,refusedPlan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));throw new Exception("Policy refusal accepted");}
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {check(!error.IsArgument && !Directory.Exists(refusedPath),"Batch document policy refusal before first export stays a precondition without publication");}
+            var partialPath=Path.Combine(root,"policy-partial");var partialSources=new[]{Source("group/A"),refusedSources[0]};partialSources[1].Path="group/B";
+            var partialPlan=Run(partialPath,partialSources);var partialResult=Run(partialPath,partialSources,false,partialPlan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));
+            check(partialResult.RequiresSessionReset && partialResult.Items[0].Status=="staged" && partialResult.Items[1].Status=="failed","Batch document policy refusal after native export retains staging evidence and requires reset");
         }
         finally {Directory.Delete(root,true);}
     }

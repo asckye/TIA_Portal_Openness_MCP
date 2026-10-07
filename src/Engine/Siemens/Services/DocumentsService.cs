@@ -202,18 +202,15 @@ namespace TiaMcpServer.Siemens.Services
             var list = _session.GetBlocks(softwarePath, regexName)?.ToArray()
                 ?? throw new PortalException(PortalErrorCode.InvalidState, "No project is open; document export did not run.");
 
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                SoftwareContainerLookup.PathOf(_session.GetSoftwareContainer(softwarePath)), true);
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", list.Where(x => !Documents.IsConsistent(x)).Select(Documents.Name), "groupPath");
+
             for (int i = 0; i < list.Count(); i++)
             {
                 var block = list[i];
 
                 _session.Logger?.LogDebug($"- Exporting block as document {i}/{list.Count()} : {Documents.Name(block)}");
-
-                // Skip inconsistent blocks (TIA generally won’t export them)
-                if (!Documents.IsConsistent(block))
-                {
-                    _session.Logger?.LogWarning($"Skipping inconsistent block {Documents.Name(block)}");
-                    continue;
-                }
 
                 // Determine base directory (preserve group path if requested)
                 string targetDir = exportPath;
@@ -268,7 +265,7 @@ namespace TiaMcpServer.Siemens.Services
                     try
                     {
                         PlcExchangeContract.StartWrite("document-export");
-                        result = Documents.Export(block, new DirectoryInfo(targetDir), Documents.Name(block));
+                        result = Documents.Export(block, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(targetDir)), Documents.Name(block));
                     }
                     catch (EngineeringNotSupportedException ex)
                     {
@@ -349,7 +346,7 @@ namespace TiaMcpServer.Siemens.Services
                 throw new PortalException(PortalErrorCode.NotFound, $"PLC software '{softwarePath}' not found. Use GetProjectTree for the exact PLC name.");
             }
 
-            var dir = new DirectoryInfo(importPath);
+            var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
             if (!dir.Exists)
             {
                 throw new PortalException(PortalErrorCode.InvalidParams, $"Import directory does not exist: {importPath}");
@@ -519,6 +516,8 @@ namespace TiaMcpServer.Siemens.Services
 
             if (IsProjectNull()) return null;
             if (Engineering.TiaMajorVersion < 20) return null;
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (!(Documents.Software(softwareContainer) is PlcSoftware plcSoftware))
@@ -527,7 +526,7 @@ namespace TiaMcpServer.Siemens.Services
             var group = string.IsNullOrWhiteSpace(groupPath) ? Documents.BlockGroup(plcSoftware)
                 : _session.GetPlcBlockGroupByPath(softwarePath, groupPath)
                     ?? throw new PortalException(PortalErrorCode.NotFound, $"Group path '{groupPath}' not found under PLC '{softwarePath}'. No import attempted.");
-            var dir = new DirectoryInfo(importPath);
+            var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
             if (!dir.Exists)
                 throw new PortalException(PortalErrorCode.InvalidParams, $"Import directory does not exist: {importPath}. No import attempted.");
             var rx = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.Compiled);

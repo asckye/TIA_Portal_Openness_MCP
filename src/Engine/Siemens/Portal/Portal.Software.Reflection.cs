@@ -55,7 +55,7 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var fi = new FileInfo(importPath);
+                var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
                 if (!fi.Exists)
                 {
                     error = "File not found";
@@ -106,7 +106,7 @@ namespace TiaMcpServer.Siemens
             var firstNameIndex = importedNames.Count;
             try
             {
-                var file = new FileInfo(importPath);
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
                 if (!file.Exists)
                 {
                     error = "File not found";

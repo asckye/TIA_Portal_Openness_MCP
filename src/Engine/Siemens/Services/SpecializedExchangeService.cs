@@ -20,7 +20,7 @@ namespace TiaMcpServer.Siemens.Services
                 bool write=action!="export"; using var access=!dryRun&&write ? _session.AcquireHmiEditAccess() : null;
                 var plc=_session.ExactPlcForEngineering(softwarePath,!dryRun&&write);
                 var service=OfficialServiceAccess.Require(plc,"Siemens.Engineering.SW.Supervision.SupervisionProvider","Siemens.Engineering.Step7");
-                var file=write ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
+                var file=write ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                 if(write&&!file.Exists) throw new FileNotFoundException("Supervision input not found.");
                 // importOptions applies only to the two imports; export does not parse it.
                 var options=write ? (ImportOptions)EngineeringScalarProperties.ConvertValue(JsonValue.Create(string.IsNullOrWhiteSpace(importOptions) ? "None" : importOptions),typeof(ImportOptions))! : ImportOptions.None;

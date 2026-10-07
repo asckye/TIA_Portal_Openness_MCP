@@ -52,76 +52,56 @@ internal static class FoundationV4Result
         definition.Arguments.Any(p => p.Name == "dryRun") ? args["dryRun"]?.GetValue<bool>() == false
         : definition.ResponseMember is "Connection" or "Bind" or "Disconnect";
 
-    internal static bool PreviewHasNoEffect(JsonNode? body)
-    {
-        if (body?["ok"]?.GetValue<bool>() != true || body["data"] is not JsonObject data) return false;
-        // A false executed/attempted flag alone only describes a preview, not its proposed effect.
-        return Text(data, "status") == "not-found-not-deleted" && Flag(data, "attempted") == false
-                && Flag(data, "executed") == false && Flag(data, "deleted") == false && Text(data, "targetIdentity") == ""
-            || data["plan"]?["operations"] is JsonArray { Count: 0 }
-            || data["inventoryComplete"]?.GetValue<bool>() == true && data["items"] is JsonArray { Count: 0 };
-    }
+    internal static bool PreviewHasNoEffect(JsonNode? body) => HostBehavior.PreviewHasNoEffect(body);
 
     internal static Error WorkerRejection(Exception exception)
     {
         string message = SafeWorkerMessage(exception.Message) ?? "Foundation precondition failed before operation.";
         string parameter = (exception as WorkerOperationException)?.Parameter
             ?? (exception is ArgumentException argument ? argument.ParamName : null) ?? "arguments";
-        return exception is OperationCanceledException
-            ? new Error("Request cancelled before operation.", new CancelledDetails("host"))
-            : exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: false }
-                ? new Error(message, new PreconditionFailedDetails("worker-admission", null))
-                : exception is ArgumentException or WorkerOperationException { Code: -32602 }
-                    ? new Error(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()))
-                    : new Error(message, new PreconditionFailedDetails("worker-admission", null));
+        var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, false, true,
+            (exception as WorkerOperationException)?.Outcome, (exception as WorkerOperationException)?.Code);
+        return HostBehavior.FailureError(kind, parameter, Empty, message);
     }
 
     internal static CallToolResult Failure(string release, string name, string id, bool dispatched, bool mutation, JsonNode? evidence, Exception? exception = null)
     {
         var data = evidence == null ? null : Object(evidence);
-        var details = new Dictionary<string, JsonElement>();
-        if (exception is WorkerOperationException { EvidenceJson: not null } worker && worker.EvidenceJson != "null")
+        var worker = exception as WorkerOperationException;
+        string? exceptionType = exception?.GetType().Name;
+        if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")
         {
             var retained = JsonNode.Parse(worker.EvidenceJson);
             data ??= new JsonObject();
             data["evidence"] = retained;
-            details["worker"] = JsonSerializer.SerializeToElement(retained);
+            exceptionType = (string?)retained?["exceptionType"];
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
-            return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
-                new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true, true);
-        if (!dispatched || exception is WorkerOperationException { Outcome: "rejected-before-operation" }
-            || exception is WorkerOperationException { Code: -32602, KnownNoMutation: true })
-        {
-            var error = exception == null ? new Error("Foundation precondition failed before operation.", new PreconditionFailedDetails("worker-admission", null)) : WorkerRejection(exception);
-            return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, true);
-        }
-        if (!mutation && exception is OperationCanceledException)
-            return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
-                new Error("The read-only request was cancelled before a write could start.", new CancelledDetails("approval-precheck")), true);
-        bool unknown = mutation && exception is not WorkerOperationException { KnownNoMutation: true };
-        string? reason = exception == null ? null : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
-        string? workerMessage = SafeWorkerMessage(exception?.Message);
-        if (workerMessage != null) details["workerMessage"] = JsonSerializer.SerializeToElement(workerMessage);
-        return Wire(release, name, id, data,
-            unknown ? Outcome.Unknown : Outcome.ReadFailed, unknown ? Execution.Unknown : Execution.ReadOnly,
-            unknown ? Completeness.Unknown : Completeness.None,
-            unknown ? new Error(reason == null ? "The operation outcome is unknown; inspect the retained evidence before a new session." : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationGuidance, new OutcomeUnknownDetails("worker", details, reason))
-                : new Error("Foundation read failed.", new NativeOperationFailedDetails(null, workerMessage, details)), true, unknown);
+            return Reject(release, name, id, HostBehavior.SessionReset(), true);
+        exception ??= new InvalidOperationException();
+        var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
+        string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
+        var details = HostBehavior.FailureEvidence(exceptionType);
+        string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
+        return Wire(release, name, id, data, HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
+            HostBehavior.FailureError(kind, parameter, details,
+                HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome),
+                reason), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
     {
         string name = FoundationV4Tool.Name(definition.Name);
         var data = Object(raw);
+        HostBehavior.ExportPreview(data);
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
         bool reset = Flag(data, "requiresSessionReset") == true;
         string? status = Text(data, "status");
         if (raw == null || mutation && Flag(data, "executed") == null && definition.ResponseMember is not ("Connection" or "Disconnect"))
             return Failure(release, name, id, true, mutation, raw);
-        Outcome outcome = status == "outcome-unknown" ? Outcome.Unknown : status == "failed" ? Outcome.Failed : Outcome.Succeeded;
+        Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown", false, mutation);
         Error? error = null;
         if (definition.ResponseMember is "BatchImport" or "BatchExport")
         {
@@ -207,31 +187,13 @@ internal static class FoundationV4Result
 
     private static Error Unknown() => new("The operation outcome is unknown; do not replay the request.", new OutcomeUnknownDetails("worker", Empty));
     private static Error NativeFailure() => new("The operation did not complete successfully; see retained evidence.", new NativeOperationFailedDetails(null, null, Empty));
-    private static Execution Execute(Outcome outcome, bool mutation) => outcome switch {
-        Outcome.RejectedBeforeOperation => Execution.NotStarted, Outcome.ReadFailed => Execution.ReadOnly,
-        Outcome.Failed => Execution.Completed, Outcome.Partial => Execution.Partial, Outcome.Unknown => Execution.Unknown,
-        _ => mutation ? Execution.Completed : Execution.ReadOnly };
+    private static Execution Execute(Outcome outcome, bool mutation) => HostBehavior.ExecutionOf(outcome, mutation);
     private static bool? Flag(JsonObject? data, string key) => data?[key] is JsonValue v && v.TryGetValue<bool>(out var b) ? b : null;
     private static string? Text(JsonObject data, string key) => data[key] is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;
     private static bool Incomplete(JsonNode? node) => node is JsonArray rows ? rows.Any(Incomplete)
         : node is JsonObject obj && (obj["unavailableAttributes"] is JsonArray { Count: > 0 }
             || Flag(obj, "truncated") == true || Flag(obj, "complete") == false || obj.Any(p => Incomplete(p.Value)));
-    private static string? SafeWorkerMessage(string? message)
-    {
-        if (string.IsNullOrWhiteSpace(message)) return null;
-        string json = TiaOpenness.Shared.CallJournalPayload.Sanitize(JsonSerializer.Serialize(message));
-        try
-        {
-            string? safe = JsonSerializer.Deserialize<string>(json);
-            if (safe == null) return null;
-            // Native diagnostics can include an installation or project path. Keep the
-            // surrounding message while avoiding disclosure of the machine-local path.
-            safe = Regex.Replace(safe, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-            return TiaOpenness.Shared.CallJournalPayload.Bound(safe);
-        }
-        catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is RegexMatchTimeoutException)
-        { return "Worker operation failed."; }
-    }
+    private static string? SafeWorkerMessage(string? message) => HostBehavior.SafeDiagnostic(message);
     internal static JsonObject Object(JsonNode? raw) => Fields(raw) switch {
         JsonObject obj => obj, JsonArray items => new JsonObject { ["items"] = items },
         JsonNode value => new JsonObject { ["value"] = value }, _ => new JsonObject() };

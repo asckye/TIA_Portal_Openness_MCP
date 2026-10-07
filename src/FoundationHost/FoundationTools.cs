@@ -255,6 +255,7 @@ internal sealed partial class FoundationTool : McpServerTool
         try
         {
             ReadArguments(request.Params?.Arguments, values);
+            if (release != null) TiaMcp.Logic.V4.CallerInputFiles.Validate(FoundationV4Tool.Name(definition.Name), values);
             if (definition.ResponseMember == "PlcRender")
             {
                 var mapped = TiaMcp.Logic.V4.McpResult.From(TiaMcpServer.ModelContextProtocol.PlcProgramRenderer.Write(

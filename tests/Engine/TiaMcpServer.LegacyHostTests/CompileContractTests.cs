@@ -36,35 +36,35 @@ internal static class CompileContractTests
         {
             device.State="Online";
             try { Compile(); throw new Exception("Online project device admitted"); }
-            catch(InvalidOperationException) { check(compilations==1,"Online device prevents compilation: "+device.Name); }
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(compilations==1,"Online device prevents compilation: "+device.Name); }
             device.State="Offline";
         }
         nested.Covered=false;
         try { Compile(); throw new Exception("Unknown device coverage admitted"); }
-        catch(NotSupportedException) { check(compilations==1,"Unknown PLC device coverage prevents compilation"); }
+        catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(compilations==1,"Unknown PLC device coverage prevents compilation"); }
         nested.Covered=true;
         try { PlcOfflinePolicy.RequireProjectDevicesOffline(Array.Empty<Device>(),Array.Empty<Device>(),Array.Empty<Group>(),g=>g.Devices,g=>g.Children,d=>{}); throw new Exception("Empty project admitted"); }
-        catch(NotSupportedException) { check(true,"Empty project cannot prove all devices offline"); }
+        catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Empty project cannot prove all devices offline"); }
         try { PlcOfflinePolicy.RequireProjectDevicesOffline(Array.Empty<Device>(),Array.Empty<Device>(),new[]{group},g=>throw new IOException("inventory read failed"),g=>g.Children,d=>{}); throw new Exception("Unreadable inventory admitted"); }
         catch(IOException) { check(true,"Device inventory failure propagates before compilation"); }
         check(!PlcOfflinePolicy.CheckCompileStates(Array.Empty<string>(),true,"HMI"),"A device with no PLC online service is reported unobserved, not falsely treated as Online");
         check(PlcOfflinePolicy.CheckCompileStates(new[]{"Offline"},true,"PLC"),"Observed offline PLC state is accepted for compilation");
         try { PlcOfflinePolicy.CheckCompileStates(Array.Empty<string>(),false,"PLC"); throw new Exception("Missing PLC provider admitted"); }
-        catch(NotSupportedException) { check(true,"Missing required PLC provider is distinct from non-PLC devices without that service"); }
+        catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Missing required PLC provider is distinct from non-PLC devices without that service"); }
         try { PlcOfflinePolicy.CheckCompileStates(new[]{"Online"},true,"PLC"); throw new Exception("Online PLC admitted"); }
-        catch(InvalidOperationException) { check(true,"Observable online project device still blocks compilation"); }
+        catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Observable online project device still blocks compilation"); }
         foreach(var release in new[]{"14sp1","15.1","16","17","18","19","20","21"}) { PlcOfflinePolicy.RequireDocumentedRelease(release); check(true,"Exact-release offline workflow reviewed "+release); }
         foreach(var release in new[]{"14","15","bogus"})
-        { try { PlcOfflinePolicy.RequireDocumentedRelease(release); throw new Exception("Missing manual evidence admitted"); } catch(NotSupportedException) { check(true,"Unreviewed release denied"); } }
+        { try { PlcOfflinePolicy.RequireDocumentedRelease(release); throw new Exception("Missing manual evidence admitted"); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Unreviewed release denied"); } }
         PlcOfflinePolicy.RequireStates(new[]{"Offline","Offline"},true,"R/H"); check(true,"Both R/H states explicitly Offline");
         foreach(var state in new string?[]{null,"","Online","Connecting","Disconnecting","Incompatible","NotReachable","Protected","offline","999"})
         {
             foreach(var states in new[]{new[]{state,"Offline"},new[]{"Offline",state}})
-            { try { PlcOfflinePolicy.RequireStates(states,true,"R/H"); throw new Exception("Non-offline state admitted"); } catch(InvalidOperationException) { check(true,"Neither R/H side may be unknown/non-Offline"); } }
+            { try { PlcOfflinePolicy.RequireStates(states,true,"R/H"); throw new Exception("Non-offline state admitted"); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Neither R/H side may be unknown/non-Offline"); } }
         }
         foreach(var states in new[]{Array.Empty<string>(),new[]{"Offline"}})
-        { try { PlcOfflinePolicy.RequireStates(states,false,"coverage"); throw new Exception("Missing service admitted"); } catch(NotSupportedException) { check(true,"Missing coverage is not offline"); } }
-        try { PlcOfflinePolicy.RequireStates(Array.Empty<string>(),true,"empty"); throw new Exception("Empty proof admitted"); } catch(NotSupportedException) { check(true,"Empty inventory rejected"); }
+        { try { PlcOfflinePolicy.RequireStates(states,false,"coverage"); throw new Exception("Missing service admitted"); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Missing coverage is not offline"); } }
+        try { PlcOfflinePolicy.RequireStates(Array.Empty<string>(),true,"empty"); throw new Exception("Empty proof admitted"); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Empty inventory rejected"); }
         foreach(var key in new[]{"14sp1","15.1","16","17","18","19","20","21"})
         {
             PlcCompilePolicy.RequirePasswordCapability(key,""); check(true,"Password-free compile available "+key);

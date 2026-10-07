@@ -204,7 +204,7 @@ namespace TiaMcpServer.Siemens.Services
                     return new ResponseMessage { Message = $"{interfaceType} '{interfaceName}' not found.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                _session.TryInvokeMethodByName(item, "Export", new FileInfo(exportPath));
+                _session.TryInvokeMethodByName(item, "Export", new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)));
                 return new ResponseMessage
                 {
                     Message = $"{interfaceType} '{interfaceName}' exported to '{exportPath}'.",
@@ -243,7 +243,7 @@ namespace TiaMcpServer.Siemens.Services
                 // Check the file before creation, propagate Import failures and attempt to remove a newly created interface on failure.
                 // Native observation: importing a missing file left an empty server interface when the exception was discarded.
                 // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
-                var fi = new FileInfo(importPath);
+                var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
                 if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
                 var interfaceName = Path.GetFileNameWithoutExtension(importPath);
                 var existing = FindByName(collection, interfaceName);

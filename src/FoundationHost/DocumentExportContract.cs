@@ -21,7 +21,9 @@ internal static class DocumentExportContract
     internal static void ValidateRequest(JsonObject request,JsonNode? payload)
     {
         bool dry=request["dryRun"]?.GetValue<bool>()??true; var result=Validate(payload,dry);
-        foreach(var pair in new[]{("SoftwarePath","softwarePath"),("BlockPath","blockPath"),("OutputDirectory","exportPath")})
+        if(!TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(request["softwarePath"]!.GetValue<string>(),result["SoftwarePath"]!.GetValue<string>())) throw new InvalidDataException("Document software identity mismatch.");
+        if(TiaOpenness.Shared.NativeInputPolicy.FullPath(request["exportPath"]!.GetValue<string>())!=TiaOpenness.Shared.NativeInputPolicy.FullPath(result["OutputDirectory"]!.GetValue<string>())) throw new InvalidDataException("Document output identity mismatch.");
+        foreach(var pair in new[]{("BlockPath","blockPath")})
             if(result[pair.Item1]!.GetValue<string>()!=request[pair.Item2]?.GetValue<string>()) throw new InvalidDataException("Document result identity mismatch.");
         if(request["preservePath"]?.GetValue<bool>()==true || (!dry && (result["PlanHash"]!.GetValue<string>()!=request["expectedPlanHash"]?.GetValue<string>() || !string.Equals(Path.GetFullPath(result["ProjectFile"]!.GetValue<string>()),Path.GetFullPath(request["expectedProjectFile"]!.GetValue<string>()),StringComparison.OrdinalIgnoreCase)))) throw new InvalidDataException("Document result differs from reviewed request.");
     }

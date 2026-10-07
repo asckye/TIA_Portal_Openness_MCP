@@ -13,7 +13,7 @@ namespace TiaOpenness.Shared
 {
     internal static class ApprovalPrecheck
     {
-        internal const string Recovery = "A previous native write has an unknown outcome. Inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Never replay the failed request.";
+        internal const string Recovery = SessionBehavior.Recovery;
         internal static System.Text.Json.Nodes.JsonNode Mark(System.Text.Json.Nodes.JsonNode body, string? requestId)
         {
             body = body.DeepClone();

@@ -32,11 +32,11 @@ namespace TiaMcp.PlcFoundation
         public PlcExternalSourceImportResult ImportPlcExternalSource(string softwarePath,string groupPath,string filePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
             PlcExternalSourceWorkflowPolicy.RequireRoot(groupPath);
-            var input=new FileInfo(PlcExternalSourceImportPolicy.ValidateFile(filePath));
+            var input=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PlcExternalSourceImportPolicy.ValidateFile(filePath)));
             var check=ExternalSourceTargetCheck(softwarePath,out var software,out var exactPath,out var projectFile,out var processId);
             var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
             var result=new PlcExternalSourceImportResult {Operation="ImportPlcExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=exactPath,FilePath=input.FullName,RequestedSourceName=input.Name};
-            using(var stream=new FileStream(input.FullName,FileMode.Open,FileAccess.Read,FileShare.Read))
+            using(var stream=TiaOpenness.Shared.NativeInputPolicy.OpenRead(input.FullName,"filePath"))
                 PlcExternalSourceWorkflowPolicy.Import(result,stream,dryRun,expectedPlanHash,confirm,expectedProjectFile,()=>sources.Select(x=>Documents.Name(x)),check,(name,path)=> {
                     // Exact SDK signature on all eight releases: name first, full path second.
                     var created=Documents.CreateFromFile(sources,name,path);

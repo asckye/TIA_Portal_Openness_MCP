@@ -17,8 +17,8 @@ namespace TiaMcp.PlcFoundation
             if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
                 throw new PlatformNotSupportedException("Safe XML export publication requires the Windows worker.");
             var output=PlcFoundationPolicy.XmlOutput(destination.FullName);
-            var stage=new DirectoryInfo(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N")));
-            var staged=new FileInfo(Path.Combine(stage.FullName,output.Name));
+            var stage=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N"))));
+            var staged=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(stage.FullName,output.Name)));
             string phase="create-stage"; string? hash=null;
             try
             {
@@ -46,6 +46,7 @@ namespace TiaMcp.PlcFoundation
                     File.Move(staged.FullName,output.FullName);
                 }
             }
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch(Exception cause)
             {
                 // Native exception messages/XML may contain project data: wire only the

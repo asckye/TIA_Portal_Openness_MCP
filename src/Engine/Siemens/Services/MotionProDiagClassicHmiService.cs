@@ -330,7 +330,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var provider = settings ?? throw new NotSupportedException("SupervisionSettingsProvider is " + settingsState + ".");
                     bool import = action == "importSettings";
-                    var file = import ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
+                    var file = import ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                     if (import && !file.Exists) throw new FileNotFoundException("Supervision settings input (.dat) not found.");
                     var method = import ? "Import" : "Export";
                     if (provider.GetType().GetMethod(method, new[] { typeof(FileInfo) }) == null) throw new NotSupportedException("Native SupervisionSettingsProvider." + method + "(FileInfo) unavailable.");
@@ -432,7 +432,7 @@ namespace TiaMcpServer.Siemens.Services
         }
         private static string ClassicImport(object composition, string filePath, string importOptions, bool confirmDelete, JsonObject meta, bool writing)
         {
-            var file = new FileInfo(filePath);
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
             if (!file.Exists) throw new FileNotFoundException("Import input not found.");
             var options = (ImportOptions)EngineeringScalarProperties.ConvertValue(JsonValue.Create(importOptions), typeof(ImportOptions))!;
             Logic.RequireImportConfirmation(options.ToString(), confirmDelete);
@@ -721,7 +721,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["block"] = new JsonObject { ["name"] = code.Name, ["blockClass"] = code.GetType().Name, ["programmingLanguage"] = code.ProgrammingLanguage.ToString(), ["isConsistent"] = code.IsConsistent, ["unit"] = unit?.Name };
                 var refusal = ProDiagExportRules.ProDiagRefusal(code.ProgrammingLanguage.ToString(), code.IsConsistent);
                 if (refusal != null) throw new PortalException(PortalErrorCode.InvalidState, refusal);
-                var directory = new DirectoryInfo(directoryPath);
+                var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));
                 if (!directory.Exists) throw new DirectoryNotFoundException("directoryPath must already exist: " + directoryPath);
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
                 if (dryRun) return "ProDiag CSV export preview; no files written.";
@@ -740,7 +740,7 @@ namespace TiaMcpServer.Siemens.Services
                 var target=_session.ExactTechnology(softwarePath,objectPath,write&&!dryRun);
                 var service=OfficialServiceAccess.Require(target,"Siemens.Engineering.SW.TechnologicalObjects.Motion.CamDataSupport","Siemens.Engineering.Step7");
                 var call=service.GetType().GetMethods().Single(m=>m.Name==method);
-                var file=write ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
+                var file=write ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                 if(write&&!file.Exists)throw new FileNotFoundException("Cam input not found.");
                 var parameters=call.GetParameters();var args=new object[parameters.Length];args[0]=file;
                 for(int i=1;i<parameters.Length;i++)args[i]=parameters[i].ParameterType==typeof(int) ? pointCount : EngineeringScalarProperties.ConvertValue(JsonValue.Create(parameters[i].ParameterType.Name=="CamDataFormat" ? format : separator),parameters[i].ParameterType)!;

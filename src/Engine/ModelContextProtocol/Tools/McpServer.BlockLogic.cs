@@ -73,10 +73,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.Failed, Completeness.Partial, current);
             // Exceptions after a write may have been issued cannot establish its outcome.
             // The original exception remains in the existing diagnostic log, not the wire data.
-            var evidence = new JsonObject { ["exceptionType"] = exception.GetType().Name };
-            return Result(tool, new JsonObject { ["evidence"] = evidence },
-                writes ? Unknown(evidence) : new Error("The PLC read could not be completed.", new InternalErrorDetails(null)),
-                writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, current);
+            var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, true, !writes, nativeRead: InvocationJournal.NativeCallIssued);
+            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name);
+            string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
+            return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
+                HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception)),
+                HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), current, writes);
         }
 
         internal static CallToolResult Map(string tool, object response, bool writes, bool current)
@@ -91,6 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
             root.Remove("message");
             root["summary"] = summary;
             root["evidence"] = evidence;
+            HostBehavior.ExportPreview(root);
             Clean(root);
 
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(root[key]);
@@ -143,8 +146,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, root, Unknown(evidence), Outcome.Unknown, Completeness.Unknown, current);
             if (success != true)
             {
-                Outcome outcome = before || tool.StartsWith("PlanOnline", StringComparison.Ordinal) ? Outcome.RejectedBeforeOperation
-                    : preview ? Outcome.ReadFailed : succeeded > 0 && failed > 0 ? Outcome.Partial : Outcome.Failed;
+                Outcome outcome = HostBehavior.OperationOutcome(false, false, before || tool.StartsWith("PlanOnline", StringComparison.Ordinal),
+                    !preview, succeeded > 0 && failed > 0);
                 Error error = outcome == Outcome.RejectedBeforeOperation ? McpServer.InvalidInput("arguments")
                     : outcome == Outcome.Partial ? new Error("Some PLC operations did not complete.", new PartialFailureDetails(succeeded, failed, 0))
                     : new Error("The PLC operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
@@ -184,9 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "The returned observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
-            Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted
-                : outcome == Outcome.Unknown ? Execution.Unknown : outcome == Outcome.Partial ? Execution.Partial
-                : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
+            Execution execution = HostBehavior.ExecutionOf(outcome, writes);
             Paging? paging = null;
             var page = (data?["evidence"]?["data"] ?? data?["evidence"]?["result"] ?? data) as JsonObject;
             int? offset = Int(page?["offset"]), limit = Int(page?["limit"]), total = Int(page?["total"]);

@@ -198,7 +198,7 @@ namespace TiaMcpServer.Siemens.Services
                     throw new ArgumentException("workspaceName is required.");
                 if (string.IsNullOrWhiteSpace(folderPath))
                     throw new ArgumentException("folderPath is required.");
-                var dir = new DirectoryInfo(folderPath.Trim());
+                var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(folderPath.Trim()));
                 if (!dir.Exists)
                     throw new DirectoryNotFoundException(
                         "folderPath does not exist: " + dir.FullName + ". Create the folder (or clone the repo) first.");
@@ -637,7 +637,7 @@ namespace TiaMcpServer.Siemens.Services
                                 // Use the established root layout once. An exception can follow a partial
                                 // export, so never retry the same object with a different target directory.
                                 issued = true;
-                                Vci.Export(ws, node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
+                                Vci.Export(ws, node.Obj, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(wsRootPath)), flatName, fmt);
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt +
                                           " | dir=<root> | file=" + flatName);

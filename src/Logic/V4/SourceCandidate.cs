@@ -37,10 +37,11 @@ namespace TiaMcp.Logic.V4
                     if (!new[] { "import", "generate", "delete" }.Contains(i.Action, StringComparer.Ordinal) || i.SourceName.Length == 0 || i.SourceName.Any(char.IsControl)) Refuse(new InvalidArgumentDetails("items", Array.Empty<string>()));
                     if (i.Action == "import")
                     {
+                        i.FilePath = TiaOpenness.Shared.NativeInputPolicy.NormalizeSeparators(i.FilePath);
                         if (!Path.IsPathRooted(i.FilePath) || Path.GetFullPath(i.FilePath) != i.FilePath || !new[] { ".scl", ".awl", ".db", ".udt" }.Contains(Path.GetExtension(i.FilePath), StringComparer.OrdinalIgnoreCase)
                             || !string.Equals(Path.GetExtension(i.FilePath), Path.GetExtension(i.SourceName), StringComparison.OrdinalIgnoreCase)) Refuse(new InvalidArgumentDetails("filePath", Array.Empty<string>()));
                         CandidateImportFiles.SafePath(new FileInfo(i.FilePath));
-                        if (!locks.ContainsKey(i.FilePath)) locks.Add(i.FilePath, new FileStream(i.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read));
+                        if (!locks.ContainsKey(i.FilePath)) locks.Add(i.FilePath, TiaOpenness.Shared.NativeInputPolicy.OpenRead(i.FilePath, "filePath"));
                         CandidatePrimitives.Read(locks[i.FilePath]);
                     }
                     else if (i.FilePath != "") Refuse(new InvalidArgumentDetails("filePath", Array.Empty<string>()));
@@ -154,6 +155,9 @@ namespace TiaMcp.Logic.V4
         }
         public static Error Map(Exception ex, string hash = "")
         {
+            if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed)
+                return HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
+                    typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message));
             if (ex is SourceRejection r) return r.Error;
             if (ex is PlcPathException p) return new Error(p.Message, p.Ambiguous ? (ErrorDetails)new TargetAmbiguousDetails(p.Path, p.Candidates) : new NotFoundDetails(p.Path));
             if (ex is CandidateObservationException e)

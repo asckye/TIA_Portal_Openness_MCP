@@ -35,10 +35,9 @@ internal static class WorkerSessionOutcomeTests
         Dispatch(false);
         check(dispatched == 2, "Healthy worker permits reads and mutations");
 
-        // Older XML batch candidates explicitly retain read-only inspection.
+        // Every unknown native write locks the session, including inspection.
         state.MarkUncertain();
-        Dispatch(true);
-        check(dispatched == 3, "XML batch uncertainty still permits read-only inspection");
+        Refuse(true, "XML batch uncertainty blocks native reads");
         Refuse(false, "XML batch uncertainty blocks further mutation");
 
         // An uncertain document batch locks the entire session, including previews.

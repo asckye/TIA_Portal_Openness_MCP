@@ -21,6 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static long failedWrites;
         private static string? lastWriteFailure;
         internal static string CorrelationId => Current.Value ?? correlationSource?.Invoke() ?? (Current.Value = Guid.NewGuid().ToString("N"));
+        internal static bool NativeCallIssued => ActiveNativeCallScope.Value?.NativeCallIssued == true;
 
         internal static IDisposable UseCorrelation(string id)
         {

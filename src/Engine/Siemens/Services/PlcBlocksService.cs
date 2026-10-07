@@ -92,6 +92,10 @@ namespace TiaMcpServer.Siemens.Services
                 return exportList;
             }
 
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                SoftwareContainerLookup.PathOf(_session.GetSoftwareContainer(softwarePath)), true);
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", list.Where(x => !PlcNative.IsConsistent(x)).Select(x => PlcNative.Name(x)), "groupPath");
+
             for (int k = 0; k < list.Count(); k++)
             {
                 var block = list[k];
@@ -115,13 +119,6 @@ namespace TiaMcpServer.Siemens.Services
 
                 try
                 {
-                    if (!PlcNative.IsConsistent(block))
-                    {
-                        _session.Logger?.LogWarning("Skipping inconsistent block {Name}", PlcNative.Name(block));
-
-                        continue;
-                    }
-
                     var dir = Path.GetDirectoryName(path);
                     if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     {
@@ -142,7 +139,7 @@ namespace TiaMcpServer.Siemens.Services
 
                     try
                     {
-                        PlcNative.Export(block, new FileInfo(path), ExportOptions.None);
+                        PlcNative.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.None);
                     }
                     catch (LicenseNotFoundException licEx)
                     {
@@ -922,11 +919,11 @@ namespace TiaMcpServer.Siemens.Services
                     void Export(string path) {
                         var block = Resolve();
                         if (!PlcNative.IsConsistent(block)) throw new InvalidOperationException("Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
-                        PlcNative.Export(block, new FileInfo(path), ExportOptions.WithDefaults | ExportOptions.WithReadOnly);
+                        PlcNative.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.WithDefaults | ExportOptions.WithReadOnly);
                     }
                     void Import(string path) {
                         Resolve();
-                        var result = PlcNative.Import(PlcNative.Blocks(group), new FileInfo(path), ImportOptions.Override);
+                        var result = PlcNative.Import(PlcNative.Blocks(group), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ImportOptions.Override);
                         if (result == null || result.Count != 1) throw new InvalidOperationException("Import did not return exactly one block; inspect retained evidence.");
                     }
                     void Compile() {
@@ -1106,7 +1103,7 @@ namespace TiaMcpServer.Siemens.Services
                 bool usedDocs;
                 try
                 {
-                    var exp = PlcNative.ExportDocuments(block, new DirectoryInfo(tempDir), blockName);
+                    var exp = PlcNative.ExportDocuments(block, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName);
                     usedDocs = exp != null && PlcNative.State(exp) == DocumentResultState.Success;
                 }
                 catch (EngineeringNotSupportedException)
@@ -1117,7 +1114,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (usedDocs)
                 {
                     PlcNative.Delete(block);
-                    var res = PlcNative.ImportDocuments(PlcNative.Blocks(targetGroup), new DirectoryInfo(tempDir), blockName, ImportDocumentOptions.Override);
+                    var res = PlcNative.ImportDocuments(PlcNative.Blocks(targetGroup), new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName, ImportDocumentOptions.Override);
                     if (res == null || PlcNative.State(res) != DocumentResultState.Success)
                     {
                         throw new PortalException(PortalErrorCode.ImportFailed,
@@ -1128,9 +1125,9 @@ namespace TiaMcpServer.Siemens.Services
                 else
                 {
                     var xml = Path.Combine(tempDir, blockName + ".xml");
-                    PlcNative.Export(block, new FileInfo(xml), ExportOptions.None);
+                    PlcNative.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ExportOptions.None);
                     PlcNative.Delete(block);
-                    var imp = PlcNative.Import(PlcNative.Blocks(targetGroup), new FileInfo(xml), ImportOptions.Override);
+                    var imp = PlcNative.Import(PlcNative.Blocks(targetGroup), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ImportOptions.Override);
                     if (imp == null || imp.Count == 0)
                     {
                         throw new PortalException(PortalErrorCode.ImportFailed,

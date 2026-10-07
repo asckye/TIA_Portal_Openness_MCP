@@ -10,12 +10,16 @@ internal static class SpecialExportTests
         var root=Path.Combine(Path.GetTempPath(),"tia-special-export-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         var output=Path.Combine(root,"special.xml"); int exports=0,offline=0;
         void Refuse(Action action,string label) { try {action();throw new Exception("Accepted: "+label);} catch(ArgumentException){check(true,label);} catch(NotSupportedException){check(true,label);} }
-        PlcSpecialExportResult Run(bool dry,string hash="",string kind="watch-table",string release="17",string path="folder/WT",bool consistent=true,Func<FileInfo,Action<FileInfo>,string?>? publisher=null)=>PlcSpecialExportPolicy.Run(kind,release,"/project.ap17","devices/PLC",path,output,consistent,dry,hash,()=>offline++,f=>{exports++; File.WriteAllText(f.FullName,"<Document><Name>Original</Name><Number>42</Number></Document>");},publisher);
+        PlcSpecialExportResult Run(bool dry,string hash="",string kind="watch-table",string release="17",string path="folder/WT",bool consistent=true,Func<FileInfo,Action<FileInfo>,string?>? publisher=null)=>PlcSpecialExportPolicy.Run(kind,release,"/project.ap17","devices/Station/PLC",path,output,consistent,dry,hash,()=>offline++,f=>{exports++; File.WriteAllText(f.FullName,"<Document><Name>Original</Name><Number>42</Number></Document>");},publisher);
         JsonObject Wire(PlcSpecialExportResult value)=>JsonSerializer.SerializeToNode(value)!.AsObject();
         try
         {
             var preview=Run(true); SpecialExportContract.Validate(Wire(preview),true);
             check(exports==0 && offline==0 && Directory.GetFileSystemEntries(root).Length==0,"Special export preview performs no native export, offline callback or filesystem writes");
+            output=output.Replace('\\','/');
+            var slash=Run(true);
+            check(slash.PlanHash==preview.PlanHash && slash.OutputFile==Path.GetFullPath(output),"Forward slashes normalize before special export canonical validation");
+            output=Path.GetFullPath(output);
             Refuse(()=>Run(false,"wrong"),"Special export requires exact fresh plan hash");
             Refuse(()=>Run(false,preview.PlanHash,path:"different"),"Special export hash binds exact object path");
             Refuse(()=>Run(false,preview.PlanHash,release:"18"),"Special export hash binds exact release");
@@ -52,8 +56,17 @@ internal static class SpecialExportTests
             var failed=Run(false,preview.PlanHash,publisher:(_,_)=>{var error=new IOException("private native text"); error.Data["stagedFile"]="retained.xml"; error.Data["secret"]="hidden"; throw error;});
             check(failed.Status=="failed" && failed.RequiresSessionReset && failed.Evidence.Count==1,"Unknown export outcome requires fail-stop and preserves only allowlisted evidence");
             SpecialExportContract.Validate(Wire(failed),false);
-            var request=new JsonObject { ["dryRun"]=false,["softwarePath"]="devices/PLC",["watchTableName"]="folder/WT",["exportPath"]=output,["expectedProjectFile"]="/project.ap17",["expectedPlanHash"]=preview.PlanHash };
+            var blockedWire=TiaMcp.LegacyHost.FoundationV4Result.Worker("16",FoundationTools.Definitions.Single(x=>x.Name=="ExportTechnologyObject"),"blocked-preview",
+                new JsonObject { ["dryRun"]=true },Wire(inconsistent),Wire(inconsistent)).StructuredContent!;
+            check((bool?)blockedWire["data"]?["applyBlocked"]==true && !string.IsNullOrEmpty((string?)blockedWire["data"]?["applyBlockedReason"]),"Actual special export preview discloses why apply is blocked");
+            var classification=WorkerFailurePolicy.Classify(new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Blocked policy","export-plan",false),true,false);
+            check(classification.Outcome==TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,"Typed worker export policy refusal never becomes unknown");
+            var request=new JsonObject { ["dryRun"]=false,["softwarePath"]="devices/Station/PLC",["watchTableName"]="folder/WT",["exportPath"]=output,["expectedProjectFile"]="/project.ap17",["expectedPlanHash"]=preview.PlanHash };
             SpecialExportContract.ValidateRequest("ExportPlcWatchTable",request,Wire(failed));
+            request["softwarePath"]="PLC"; request["exportPath"]=output.Replace('\\','/');
+            SpecialExportContract.ValidateRequest("ExportPlcWatchTable",request,Wire(failed));
+            check(true,"Special transport accepts resolved short PLC identity and normalized slash spelling");
+            request["softwarePath"]="devices/Station/PLC";
             request["watchTableName"]="other";
             try {SpecialExportContract.ValidateRequest("ExportPlcWatchTable",request,Wire(failed)); throw new Exception("Conflicting result accepted");} catch(InvalidDataException){check(true,"Host refuses mismatched special export identity");}
             var malformed=Wire(failed);malformed["RequiresSessionReset"]=false;

@@ -71,6 +71,7 @@ internal static class AdapterSourceClosureTests
     }
     private static void CheckEnginePrimitiveSelection(string src,string[] primitives,Action<bool,string> check)
     {
+        var viaLogic=new[]{"NativeInputPolicy.cs","HostFailurePolicy.cs","SessionBehavior.cs","NativePathSelection.cs","NativeExportPolicy.cs"};
         foreach(var release in new[]{"20","21"})
         foreach(var enabled in new[]{false,true})
         {
@@ -94,8 +95,8 @@ internal static class AdapterSourceClosureTests
             using var result=JsonDocument.Parse(output.GetAwaiter().GetResult());
             var compile=result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray();
             foreach(var primitive in primitives)
-                check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(enabled?0:1),
-                    "Engine links each domain primitive only by default: V"+release+" shared="+enabled+" / "+Path.GetFileName(primitive));
+                check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(viaLogic.Contains(Path.GetFileName(primitive))||enabled?0:1),
+                    "Engine owns native primitives locally and pure behavior through Logic: V"+release+" shared="+enabled+" / "+Path.GetFileName(primitive));
             var defines=result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';');
             check(defines.Contains("TIA_ENGINE_LOCAL_PRIMITIVES")==!enabled,"Engine-local namespace selection matches the source link: V"+release+" shared="+enabled);
         }

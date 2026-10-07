@@ -17,7 +17,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (category != "textLists" && category != "graphicLists") throw new ArgumentException("category must be textLists or graphicLists.");
                 var names = JsonNode.Parse(expectedNamesJson)?.AsArray().Select(n => n!.GetValue<string>()).ToArray() ?? throw new ArgumentException("expectedNamesJson must be an array.");
                 if (names.Length == 0 || names.Length > 500 || names.Any(string.IsNullOrWhiteSpace) || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length) throw new ArgumentException("Provide 1..500 unique exact expected list names for readback.");
-                var file = new System.IO.FileInfo(filePath); if (!file.Exists) throw new System.IO.FileNotFoundException("Native list import file not found.", filePath);
+                var file = new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!file.Exists) throw new System.IO.FileNotFoundException("Native list import file not found.", filePath);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                 if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Unified HMI required.");

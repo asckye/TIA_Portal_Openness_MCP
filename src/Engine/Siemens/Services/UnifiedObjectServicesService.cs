@@ -133,7 +133,7 @@ namespace TiaMcpServer.Siemens.Services
                 var signature = new[] { typeof(DirectoryInfo), typeof(string) };
                 if (collection.GetType().GetMethod("Export", signature) == null) throw new NotSupportedException("Native Export(DirectoryInfo,string) unavailable.");
                 if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute export directory required.");
-                var dir = new DirectoryInfo(destinationDirectory);
+                var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
                 if (dir.Exists) throw new InvalidOperationException("Use a new export directory; overwrites refused.");
                 meta["dryRun"] = dryRun; meta["destination"] = dir.FullName; meta["projectModified"] = false;
                 if (dryRun) return "Native export preview; no file written.";

@@ -470,6 +470,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool stopOnImportFailure = false,
             bool dryRun = false)
         {
+            if (!_session.IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
+
             var importedTypes = new List<string>();
             var importedTagTables = new List<string>();
             var importedTechnologyObjects = new List<string>();

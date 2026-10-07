@@ -33,7 +33,7 @@ internal static class SpecialExportContract
         string Requested(string key)=>request[key]?.GetValue<string>()??throw new InvalidDataException("Missing special export request identity.");
         string Actual(string key)=>result[key]!.GetValue<string>();
         var kind=operation=="ExportPlcWatchTable"?"watch-table":operation=="ExportTechnologyObject"?"technology-object":throw new InvalidDataException("Invalid special export operation.");
-        if(Actual("Kind")!=kind || Actual("SoftwarePath")!=Requested("softwarePath") || Actual("ObjectPath")!=Requested(kind=="watch-table"?"watchTableName":"toName") ||
+        if(Actual("Kind")!=kind || !TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(Requested("softwarePath"),Actual("SoftwarePath")) || Actual("ObjectPath")!=Requested(kind=="watch-table"?"watchTableName":"toName") ||
             !string.Equals(Actual("OutputFile"),Path.GetFullPath(Requested("exportPath")),StringComparison.OrdinalIgnoreCase) ||
             (!dryRun && (Actual("PlanHash")!=Requested("expectedPlanHash") || !string.Equals(Path.GetFullPath(Actual("ProjectFile")),Path.GetFullPath(Requested("expectedProjectFile")),StringComparison.OrdinalIgnoreCase))))
             throw new InvalidDataException("Special export outcome conflicts with the exact request; session stopped.");

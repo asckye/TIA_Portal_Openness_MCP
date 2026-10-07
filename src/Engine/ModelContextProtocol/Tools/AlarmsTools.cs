@@ -57,8 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         : new PreconditionFailedDetails("engineering-session", null);
                     return Result(tool, null, new Error("The engineering prerequisites were not satisfied.", details), Outcome.RejectedBeforeOperation, Completeness.None);
                 }
-                return Result(tool, new JsonObject { ["exceptionType"] = ex.GetType().Name },
-                    writes ? Unknown() : NativeFailure(), writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown);
+                return PlcToolContract.Failure(tool, ex, writes, true);
             }
         }
         private static bool? Flag(JsonObject obj, string key)

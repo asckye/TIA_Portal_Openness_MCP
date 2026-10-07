@@ -20,7 +20,7 @@ namespace TiaMcp.PlcFoundation
         public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true)
         {
             var selected=ReadSelection(softwarePath);
-            if(!string.Equals(softwarePath,selected.ExactPath,StringComparison.Ordinal)) throw new AdapterPreconditionException("Batch export requires the exact software path, not an alias.","softwarePath");
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
             if(path!=groupPath) throw new AdapterPreconditionException("Use the exact canonical group path from the software inventory.","groupPath");
@@ -35,7 +35,7 @@ namespace TiaMcp.PlcFoundation
         public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true)
         {
             var selected=ReadSelection(softwarePath);
-            if(!string.Equals(softwarePath,selected.ExactPath,StringComparison.Ordinal)) throw new AdapterPreconditionException("Batch export requires the exact software path, not an alias.","softwarePath");
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
             if(path!=groupPath) throw new AdapterPreconditionException("Use the exact canonical group path from the software inventory.","groupPath");

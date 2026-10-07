@@ -73,6 +73,10 @@ namespace TiaMcpServer.Siemens.Services
                 return exportList;
             }
 
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
+                SoftwareContainerLookup.PathOf(_session.GetSoftwareContainer(softwarePath)), true);
+            TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("types", list.Where(x => !x.IsConsistent).Select(x => x.Name), "groupPath");
+
             for (int i = 0; i < list.Count(); i++)
             {
                 var type = list[i];
@@ -96,12 +100,6 @@ namespace TiaMcpServer.Siemens.Services
 
                 try
                 {
-                    if (!type.IsConsistent)
-                    {
-                        _session.Logger?.LogWarning("Skipping inconsistent type {Name}", type.Name);
-                        continue;
-                    }
-
                     var dir = Path.GetDirectoryName(path);
                     if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     {
@@ -124,7 +122,7 @@ namespace TiaMcpServer.Siemens.Services
 
                     try
                     {
-                        type.Export(new FileInfo(path), ExportOptions.None);
+                        type.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.None);
                     }
                     catch (Exception ex)
                     {

@@ -12,7 +12,9 @@ internal static class PathAndIdentityTests
         var pc=new PlcReadCandidate<int> { Value=2,ExactPath="device-groups/Line/devices/PC/Slot/CPU",Groups=new[]{"Line"},Device="PC",Host="CPU" };
         var rows=new[]{cpu,pc};
         foreach(var alias in new[]{"PLC_1","plc_1","Station","station/PLC_1","devices/Station/PLC_1"}) check(PlcReadPathPolicy.Resolve(rows,alias)==1,"Hardware and exact alias "+alias);
-        foreach(var alias in new[]{"Line/CPU","Line/pc","Line/PC/cpu","device-groups/Line/devices/PC/Slot/CPU"}) check(PlcReadPathPolicy.Resolve(rows,alias)==2,"Group/PC alias "+alias);
+        foreach(var alias in new[]{"CPU","pc","Line/CPU","Line/pc","Line/PC/cpu","device-groups/Line/devices/PC/Slot/CPU"}) check(PlcReadPathPolicy.Resolve(rows,alias)==2,"Group/PC alias "+alias);
+        foreach(var alias in new[]{"CPU","Line/CPU","Line/pc","Line/PC/cpu"}) check(TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(alias,pc.ExactPath),"Transport accepts the resolved grouped short/qualified PLC identity "+alias);
+        check(TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches("PLC_1",cpu.ExactPath),"Transport accepts the ordinary root PLC short identity");
         foreach(var invalid in new[]{""," ","/PLC_1","PLC_1/","Station//PLC_1","Station/PLC_1/ignored","line/CPU","Line/Missing","../PLC_1","PLC"}) Reject(()=>PlcReadPathPolicy.Resolve(rows,invalid),"Unresolved/full-consumption rule "+invalid);
         var duplicate=new PlcReadCandidate<int> { Value=3,ExactPath="devices/Other/PLC_1",Device="Other",Host="PLC_1" };
         Reject(()=>PlcReadPathPolicy.Resolve(new[]{cpu,duplicate},"PLC_1"),"Duplicate CPU alias refused");
@@ -21,7 +23,8 @@ internal static class PathAndIdentityTests
         Reject(()=>PlcReadPathPolicy.Resolve(new[]{cpu,secondSlot},"Station"),"Device with multiple CPUs refused");
         check(PlcReadPathPolicy.Resolve(new[]{cpu,secondSlot},"Station/Slot2")==4,"Specific PC CPU succeeds");
         var ungrouped=new PlcReadCandidate<int> { Value=5,ExactPath="ungrouped/Other/PLC_1",Device="Other",Host="PLC_1",AllowLegacyAlias=false };
-        check(PlcReadPathPolicy.Resolve(new[]{cpu,ungrouped},"PLC_1")==1,"Canonical-only ungrouped entry cannot shadow V17 alias");
+        Reject(()=>PlcReadPathPolicy.Resolve(new[]{cpu,ungrouped},"PLC_1"),"Short PLC identity must be unique across grouped and ungrouped devices");
+        check(PlcReadPathPolicy.Resolve(new[]{ungrouped},"PLC_1")==5,"Unique ungrouped short PLC identity resolves");
         check(PlcReadPathPolicy.Resolve(new[]{cpu,ungrouped},ungrouped.ExactPath)==5,"Ungrouped canonical address works");
         Reject(()=>PlcReadPathPolicy.Resolve(new[]{cpu,cpu},cpu.ExactPath),"Duplicate canonical path refused");
 

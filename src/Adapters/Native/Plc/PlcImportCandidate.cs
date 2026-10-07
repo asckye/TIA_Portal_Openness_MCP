@@ -20,7 +20,7 @@ namespace TiaMcp.PlcFoundation
             {
                 Check();
                 var selected = ReadSelection(candidate.Request.SoftwarePath);
-                if (selected.ExactPath != candidate.Request.SoftwarePath) CandidatePrimitives.Invalid("softwarePath");
+                TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(candidate.Request.SoftwarePath, selected.ExactPath, CandidateImportNames.IsDirectory(candidate.Tool));
                 PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession, false);
                 var project = Project();
                 CandidateIdentity Identity()
@@ -59,8 +59,8 @@ namespace TiaMcp.PlcFoundation
                             || candidate.Check.Request.SoftwarePath != candidate.Request.SoftwarePath) CandidatePrimitives.Invalid("candidate");
                         foreach (var file in candidate.Check!.Files)
                         {
-                            CandidateImportFiles.SafePath(new FileInfo(file.Path));
-                            locks.Add(file.Path, new FileStream(file.Path, FileMode.Open, FileAccess.Read, FileShare.Read));
+                            CandidateImportFiles.SafePath(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file.Path)));
+                            locks.Add(file.Path, TiaOpenness.Shared.NativeInputPolicy.OpenRead(file.Path, "importPath"));
                         }
                         result.Attempt = CandidateExecution.Import(adapter, candidate.Check, locks);
                         result.RequiresSessionReset = result.Attempt.RequiresSessionReset;
@@ -69,7 +69,7 @@ namespace TiaMcp.PlcFoundation
                 }
             }
             catch (Exception ex)
-            { result.Fault = ex is CandidateObservationException observed ? observed.Fault : new CandidateFault { Kind = ex is IOException ? "io" : "preflight", Subject = "plc-import-target" }; }
+            { result.Fault = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed ? new CandidateFault { Kind = typed.IsArgument ? "invalid" : "precondition", Subject = typed.ParamName ?? "arguments" } : ex is CandidateObservationException observed ? observed.Fault : new CandidateFault { Kind = ex is IOException ? "io" : "preflight", Subject = "plc-import-target" }; }
             foreach (var stream in locks.Values)
                 try { stream.Dispose(); }
                 catch (Exception) /* swallow(cleanup): preserve an explicit uncertain outcome when input lock cleanup fails */

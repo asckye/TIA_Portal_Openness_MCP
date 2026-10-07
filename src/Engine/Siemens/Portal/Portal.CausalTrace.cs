@@ -74,7 +74,7 @@ namespace TiaMcpServer.Siemens
                     if (!block.IsConsistent) { warnings.Add($"Skipped inconsistent block '{blockName}' (compile first)."); continue; }
 
                     string xmlPath = Path.Combine(tmpDir, blockName + ".xml");
-                    try { block.Export(new FileInfo(xmlPath), ExportOptions.None); }
+                    try { block.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xmlPath)), ExportOptions.None); }
                     catch (Exception ex) { warnings.Add($"Export failed for '{blockName}': {ex.Message}"); continue; }
 
                     XDocument doc;

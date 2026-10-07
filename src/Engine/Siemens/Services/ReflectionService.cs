@@ -277,8 +277,8 @@ namespace TiaMcpServer.Siemens.Services
                     if (pt == typeof(long)) { converted[i] = Convert.ToInt64(av); continue; }
                     if (pt == typeof(double)) { converted[i] = Convert.ToDouble(av); continue; }
                     if (pt == typeof(bool)) { converted[i] = Convert.ToBoolean(av); continue; }
-                    if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(directory); continue; }
-                    if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(file); continue; }
+                    if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)); continue; }
+                    if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file)); continue; }
                     // Convert enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
                     // plain string (SetPassword / Protect / LoginToSafetyOfflineProgram) - the bridge could reach neither before.
                     if (pt.IsEnum && av is string enumName) { converted[i] = Enum.Parse(pt, enumName, true); continue; }

@@ -33,11 +33,12 @@ namespace TiaMcp.PlcFoundation
         {
             // Openness receives the FileInfo as constructed: V14 SP1 refuses a caller spelling with forward slashes
             // ("The argument 'path' cannot be a specific path"), so pass the normalized full path.
-            var file = new FileInfo(Path.GetFullPath(path));
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(path)));
             if (!file.Exists || !file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
                 throw new AdapterPreconditionException("An existing Openness XML file is required.", "importPath");
             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 64 * 1024 * 1024 };
-            using (var reader = XmlReader.Create(file.FullName, settings))
+            using (var stream = TiaOpenness.Shared.NativeInputPolicy.OpenRead(file.FullName, "importPath"))
+            using (var reader = XmlReader.Create(stream, settings))
             {
                 try { document = XDocument.Load(reader); }
                 catch (XmlException ex) { throw new AdapterPreconditionException("Import input must be valid Openness XML.", "importPath", true, ex); }
@@ -93,7 +94,7 @@ namespace TiaMcp.PlcFoundation
 
         internal static FileInfo XmlOutput(string path)
         {
-            var file = new FileInfo(path);
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if (!file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase) ||
                 file.Directory == null || !file.Directory.Exists || file.Exists)
                 throw new AdapterPreconditionException("Choose a new .xml file in an existing output directory; existing files are never overwritten.", "exportPath");

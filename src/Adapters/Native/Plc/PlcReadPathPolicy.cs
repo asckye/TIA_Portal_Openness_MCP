@@ -27,18 +27,15 @@ namespace TiaMcp.PlcFoundation
         {
             if(string.IsNullOrWhiteSpace(path)) throw new AdapterPreconditionException("softwarePath must not be empty.","softwarePath");
             var all=inventory.ToArray();
-            var exact=all.Where(c=>string.Equals(c.ExactPath,path,StringComparison.Ordinal)).ToArray();
-            if(exact.Length==1) return exact[0];
-            if(exact.Length>1) throw new AdapterPreconditionException("Ambiguous exact softwarePath: "+path,"softwarePath");
-            var parts=path.Split('/');
-            if(parts.Any(p=>p.Length==0 || p=="." || p=="..")) throw new AdapterPreconditionException("softwarePath contains an empty or traversal segment.","softwarePath");
-            var matches=all.Where(c=>Matches(c,parts)).ToArray();
-            if(matches.Length==0) throw new AdapterPreconditionException("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
-            if(matches.Length>1) throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string.Join(", ",matches.Select(c=>c.ExactPath)),"softwarePath");
-            return matches[0];
+            int selected=TiaOpenness.Shared.NativePathSelection.Select(path,all.Select(c=>c.ExactPath).ToArray(),(index,parts)=>Matches(all[index],parts));
+            if(selected==-3) throw new AdapterPreconditionException("softwarePath contains an empty or traversal segment.","softwarePath");
+            if(selected==-2) throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string.Join(", ",all.Select(c=>c.ExactPath)),"softwarePath");
+            if(selected<0) throw new AdapterPreconditionException("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
+            return all[selected];
         }
         private static bool Matches<T>(PlcReadCandidate<T> c,string[] parts)
         {
+            if(TiaOpenness.Shared.NativePathSelection.ShortAlias(parts,c.Device,c.Host)) return true;
             if(!c.AllowLegacyAlias) return false;
             int remaining=parts.Length-c.Groups.Length;
             if(remaining<1 || remaining>2) return false;

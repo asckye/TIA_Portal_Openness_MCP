@@ -60,7 +60,8 @@ var unknown=Run(()=>throw new IOException());DocumentImportContract.Validate(Wir
 var state=new WorkerOutcomeState();state.AcceptResult("ImportFromDocuments",request,Wire(unknown));Check(state.Poisoned,"Document unknown outcome poisons host session");
 var forged=Wire(unknown);forged["MayHaveChanged"]=false;Reject(()=>DocumentImportContract.Validate(forged,request),"Unknown cannot claim no mutation");
 foreach(var field in new[]{"softwarePath","groupPath","importPath","fileNameWithoutExtension","expectedProjectFile","expectedPlanHash"}) {var bad=request.DeepClone().AsObject();bad[field]="other";Reject(()=>DocumentImportContract.Validate(Wire(valid),bad),"Request identity mismatch "+field);}
-foreach(var path in new[]{@"C:\dir.",@"C:\dir ",@"C:\dir:ads",@"C:\CON",@"C:\dir\..\other",@"C:\dir\\sub",@"C:\dir\",@"\\server\share",@"C:/dir",@"relative"})Reject(()=>PlcDocumentImportPolicy.ValidateDirectory(path),"Document directory rejects Win32 ambiguity "+path);
+foreach(var path in new[]{@"C:\dir.",@"C:\dir ",@"C:\dir:ads",@"C:\CON",@"C:\dir\..\other",@"C:\dir\\sub",@"C:\dir\",@"\\server\share",@"relative"})Reject(()=>PlcDocumentImportPolicy.ValidateDirectory(path),"Document directory rejects Win32 ambiguity "+path);
+PlcDocumentImportPolicy.ValidateDirectory(@"C:/Documents");
 PlcDocumentImportPolicy.ValidateDirectory(@"C:\Documents");Check(true,"Canonical local Windows directory admitted lexically");
 var overflow=Encoding.ASCII.GetBytes(code.Replace("-12","18446744073709551616"));Check(PlcDocumentDeclaration.Parse(overflow)=="Demo","Lexical admission does not certify native integer range validity");
 var cleanup=PlcDocumentImportPolicy.Run(r,()=>files,_=>new DisposeFailureStream(input),()=>Array.Empty<string>(),_=>false,()=>{},Native);

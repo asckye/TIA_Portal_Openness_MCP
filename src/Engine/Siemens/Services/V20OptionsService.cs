@@ -24,7 +24,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             if (!Path.IsPathRooted(path) || !string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Expected an absolute " + extension + " file path on the server.");
-            var file = new FileInfo(path);
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if (input && !file.Exists) throw new FileNotFoundException("Input file missing.", path);
             if (!input && file.Exists) throw new IOException("Output file exists; overwrite refused.");
             if (file.Directory?.Exists != true) throw new DirectoryNotFoundException("Parent directory must already exist.");

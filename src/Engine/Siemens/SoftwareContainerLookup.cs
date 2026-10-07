@@ -8,6 +8,11 @@ namespace TiaMcpServer.Siemens
     // Traverses only the hardware/group tree. Never reads block groups or HMI contents.
     internal static class SoftwareContainerLookup
     {
+        private sealed class ResolvedPath { internal string Value = ""; }
+        private static readonly ConditionalWeakTable<object, ResolvedPath> Paths = new ConditionalWeakTable<object, ResolvedPath>();
+        internal static void RememberPath(object value, string path) => Paths.GetValue(value, _ => new ResolvedPath()).Value = path;
+        internal static string PathOf(object? value) => value != null && Paths.TryGetValue(value, out var path) ? path.Value : "";
+
         // PLC names are literal. Scan the complete hardware tree before certifying uniqueness;
         // a station or ancestor DeviceItem is an alias only when it owns one matching PLC.
         internal static T? FindPlc<T>(IEnumerable<object> roots,
@@ -77,6 +82,7 @@ namespace TiaMcpServer.Siemens
                             }
                         }
                         var path = string.Join("/", groups.Concat(hardware).Concat(new[] { actual! }));
+                        RememberPath(value, path);
                         if (candidates.TryGetValue(value, out var existing)) existing.Aliases.UnionWith(names);
                         else candidates.Add(value, (value, names, path));
                     }
@@ -87,11 +93,13 @@ namespace TiaMcpServer.Siemens
                 + string.Join(", ", candidates.Values.Select(c => c.Path).OrderBy(p => p, StringComparer.Ordinal)));
             // Preserve the existing omitted-name failure when there is no sole PLC.
             if (token.Length == 0) return candidates.Count == 1 ? candidates.Values.First().Value : null;
-            var matches = candidates.Values.Where(c => c.Aliases.Contains(token)).ToArray();
-            if (matches.Length > 1)
+            var choices = candidates.Values.ToArray();
+            int selected = TiaOpenness.Shared.NativePathSelection.Select(token, choices.Select(c => c.Path).ToArray(),
+                (index, _) => choices[index].Aliases.Contains(token));
+            if (selected == -2)
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    $"Ambiguous PLC software name '{name}': {string.Join(", ", matches.Select(c => c.Path).OrderBy(p => p, StringComparer.Ordinal))}. Use a group-qualified device/software path.");
-            return matches.Length == 1 ? matches[0].Value : null;
+                    $"Ambiguous PLC software name '{name}': {string.Join(", ", choices.Select(c => c.Path).OrderBy(p => p, StringComparer.Ordinal))}. Use a group-qualified device/software path.");
+            return selected >= 0 ? choices[selected].Value : null;
         }
 
         internal static T? FindUnique<T>(IEnumerable<object> roots,

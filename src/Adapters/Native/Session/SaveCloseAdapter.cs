@@ -96,7 +96,7 @@ namespace TiaMcp.Adapters.Native.Session
         {
             checkThread();
 #if PLC_SAFETY
-            ((Project)project()!).SaveAs(new DirectoryInfo(Path.GetFullPath(directory))); savedCopy();
+            ((Project)project()!).SaveAs(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(directory)))); savedCopy();
 #else
             throw new NotSupportedException("SaveProjectCopy is not advertised by this host.");
 #endif

@@ -23,6 +23,7 @@ internal static partial class ReleaseCommands
 
     private static int BuildReleasePipeline(Options options)
     {
+        if (options.Has("CompileOnly")) return BuildReleaseCompilation(options);
         if (options.Has("SelfTest"))
             return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=Pipeline"], Root, "Parallel pipeline tests");
 
@@ -163,6 +164,38 @@ internal static partial class ReleaseCommands
         var deliveryCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", releaseDate], "Delivery preparation");
         if (deliveryCode != 0) return deliveryCode;
         Console.WriteLine($"Built and checked both runtimes: {fileVersion}. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate.");
+        return 0;
+    }
+
+    // Compile refactor proofs without refreshing release manifests or publication evidence.
+    private static int BuildReleaseCompilation(Options options)
+    {
+        EnsureWindows("build-release -CompileOnly");
+        string v20 = RequiredDirectory(options.Get("V20ReferenceRoot"), "-V20ReferenceRoot");
+        string v21 = RequiredDirectory(options.Get("V21ReferenceRoot"), "-V21ReferenceRoot");
+        string? nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
+        if (string.IsNullOrWhiteSpace(nuget)) throw new ReleaseException("-CompileOnly requires an offline -NuGetConfig");
+        nuget = Path.GetFullPath(nuget);
+        var error = ReleaseValidation.OfflineNuGetError(nuget);
+        if (error != null) throw new ReleaseException(error);
+        string dotnet = options.Get("Dotnet", Dotnet);
+        string logs = Path.Combine(Root, "bin-build/release-compile");
+        Directory.CreateDirectory(logs);
+        string weaver = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
+        void Build(string name, string project, string? api = null)
+        {
+            var args = new List<string> { "build", project, "-c", "Release", "--disable-build-servers", "-m:1", "-nodeReuse:false",
+                "-p:UseSharedCompilation=false", "-p:NuGetAudit=false" };
+            if (api != null) { args.Add("-p:SiemensEngineeringDirectory=" + api); args.Add("-p:NativeCallWeaverPath=" + weaver); }
+            var result = RunLoggedProcess(dotnet, args, logs, name + ".log", nuget);
+            ProcessRunner.RequireSuccess(result, name + " compilation failed");
+            Console.WriteLine("PASS " + name + " compilation; " + Path.Combine(logs, name + ".log"));
+        }
+        Build("native-call-weaver", "build-tools/native-call-weaver/NativeCallWeaver.csproj");
+        Build("engine-v20", "src/Engine/TiaMcpServer.V20.csproj", v20);
+        Build("engine-v21", "src/Engine/TiaMcpServer.V21.csproj", v21);
+        Build("foundation-host", "src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+        Build("http-tests", "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
         return 0;
     }
 

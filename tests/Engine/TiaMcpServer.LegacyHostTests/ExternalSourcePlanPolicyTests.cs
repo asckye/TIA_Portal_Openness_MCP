@@ -37,6 +37,8 @@ internal static class ExternalSourcePlanPolicyTests
         reviewed.Confirm=false;Reject(()=>Run(reviewed),"confirmation required");reviewed.Confirm=true;reviewed.ExpectedProject="";Reject(()=>Run(reviewed),"expected project required");reviewed.ExpectedProject=reviewed.Project;Reject(()=>Run(reviewed,new byte[]{65}),"changed input hash");
         var apply=Request();apply.DryRun=false;apply.Confirm=true;apply.ExpectedProject=apply.Project;apply.ExpectedHash=baseline.PlanHash;
         int opened=0,read=0,rechecked=0;Reject(()=>PlcExternalSourceImportPolicy.Plan(apply,_=>{opened++;return new MemoryStream(new byte[]{65});},()=>{read++;return Array.Empty<string>();},()=>rechecked++),"apply hard block");Check(opened==0 && read==0 && rechecked==0,"apply refuses before all I/O");
+        try {PlcExternalSourceImportPolicy.ValidateOptions(apply);throw new Exception("Read-only apply accepted");}
+        catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error) {Check(!error.IsArgument && error.Message.StartsWith(PlcExternalSourceImportPolicy.ApplyBlock,StringComparison.Ordinal),"Read-only source plan apply reports its typed policy precondition");}
         var mutable=new MemoryStream(new byte[]{65});Reject(()=>PlcExternalSourceImportPolicy.Plan(Request(),_=>mutable,()=>Array.Empty<string>(),()=>{mutable.Position=0;mutable.WriteByte(66);}),"immutable bytes rehash");Check(!mutable.CanRead,"lock disposed after failure");
     }
 }

@@ -165,11 +165,11 @@ public sealed class FoundationV4ContractsTests
         var result = Body(FoundationV4Result.Failure("19", "ImportPlcBlock", "x", true, true, null, error));
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
         Assert.Equal("[1,null]", result["data"]!["evidence"]!["ExactNativeKey"]!["nested"]!.ToJsonString());
-        Assert.Equal("private worker detail", (string?)result["error"]!["details"]!["evidence"]!["workerMessage"]);
-        Assert.Contains("private worker detail", result.ToJsonString());
+        Assert.Null(result["error"]!["details"]!["evidence"]!["workerMessage"]);
+        Assert.DoesNotContain("private worker detail", result.ToJsonString());
         var read = Body(FoundationV4Result.Failure("19", "ListPlcBlocks", "x", true, false, null,
             new WorkerOperationException("Project tree is incomplete.", -32603, "read-failed")));
-        Assert.Equal("Project tree is incomplete.", (string?)read["error"]!["details"]!["nativeMessage"]);
+        Assert.Null(read["error"]!["details"]!["nativeMessage"]);
         var rejected = Body(FoundationV4Result.Failure("19", "ExportPlcBlocks", "x", true, true, null,
             new WorkerOperationException("Export directory must already exist.", -32602, "rejected-before-operation", "{\"parameter\":\"exportPath\",\"isArgument\":true}")));
         Assert.Equal("rejected-before-operation", (string?)rejected["meta"]!["outcome"]);
@@ -180,11 +180,10 @@ public sealed class FoundationV4ContractsTests
         string longMessage = "Failed at " + privatePath + "; token=private-secret " + new string('x', 6000);
         var unknown = Body(FoundationV4Result.Failure("19", "ImportPlcBlock", "x", true, true, null,
             new WorkerOperationException(longMessage, -32603, "unknown")));
-        string safeMessage = (string)unknown["error"]!["details"]!["evidence"]!["workerMessage"]!;
+        Assert.Null(unknown["error"]!["details"]!["evidence"]!["workerMessage"]);
+        string safeMessage = unknown.ToJsonString();
         Assert.DoesNotContain(privatePath, safeMessage);
         Assert.DoesNotContain("private-secret", safeMessage);
-        Assert.Contains("<path>", safeMessage);
-        Assert.True(safeMessage.Length <= TiaOpenness.Shared.CallJournalPayload.Limit);
         error.Data["foundationRequestSent"] = false;
         result = Body(FoundationV4Result.Failure("19", "ImportPlcBlock", "x", true, true, null, error));
         Assert.Equal("not-started", (string?)result["meta"]!["execution"]);

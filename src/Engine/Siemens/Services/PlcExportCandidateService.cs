@@ -31,6 +31,8 @@ namespace TiaMcpServer.Siemens.Services
                 var project = session.CurrentProject;
                 if (project == null || session.CurrentPortal == null) PlcExportSession.Refuse("No project is bound.", new ProjectNotBoundDetails());
                 var software = session.ExactPlcForEngineering(request.SoftwarePath, false);
+                if (PlcExportContract.Batch(tool)) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.SoftwarePath,
+                    SoftwareContainerLookup.PathOf(software), true);
                 CandidateIdentity Identity()
                 {
                     session.VerifyBinding("plc-export-candidate");
@@ -61,7 +63,10 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                var error = ex is PlcExportRejection rejected ? rejected.Error
+                var error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
+                    ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
+                        typed.ParamName, new Dictionary<string, System.Text.Json.JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
+                    : ex is PlcExportRejection rejected ? rejected.Error
                     : new Error("The exact PLC export target is unavailable; no export was issued.", new PreconditionFailedDetails("plc-export-target", null));
                 return PlcExportSession.Result(release, tool, id, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }

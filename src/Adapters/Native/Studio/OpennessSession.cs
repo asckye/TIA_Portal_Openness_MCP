@@ -185,7 +185,7 @@ namespace TiaOpenness.Openness
         {
             RequireConnected();
 
-            var file = new FileInfo(path);
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if (!file.Exists)
             {
                 throw new FileNotFoundException("Project file not found: " + path, path);
@@ -346,7 +346,7 @@ namespace TiaOpenness.Openness
 
         private static string ExportAsXml(ExportTarget target, string directory)
         {
-            var file = new FileInfo(Path.Combine(directory, SafeFileName(target.Name) + ".xml"));
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directory, SafeFileName(target.Name) + ".xml")));
             if (file.Exists) throw new IOException("Export file already exists: " + file.FullName);
 
             if (target.Block != null) PlcNative.Export(target.Block, file, ExportOptions.WithDefaults);
@@ -365,7 +365,7 @@ namespace TiaOpenness.Openness
                 : target.Block is DataBlock ? ".db"
                 : ".scl";
 
-            var file = new FileInfo(Path.Combine(directory, SafeFileName(target.Name) + extension));
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directory, SafeFileName(target.Name) + extension)));
             if (file.Exists) throw new IOException("Export file already exists: " + file.FullName);
 
             if (target.Block != null)
@@ -440,7 +440,7 @@ namespace TiaOpenness.Openness
 
         private static string ImportSimaticMl(PlcContext plc, string path, bool overwrite)
         {
-            var file = new FileInfo(path);
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             var options = overwrite ? ImportOptions.Override : ImportOptions.None;
 
             // A UDT and a block both arrive as .xml; the root element decides which composition

@@ -490,8 +490,8 @@ namespace TiaMcpServer.Siemens.Services
                     meta["mayHaveChanged"] = true;
                     switch (action)
                     {
-                        case "install": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.Install(FileInfo)"; meta["result"] = provider.Install(new FileInfo(filePath)); break;
-                        case "installAndGetIdentifier": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.InstallAndGetIdentifier(FileInfo)"; var id = provider.InstallAndGetIdentifier(new FileInfo(filePath)); meta["identifier"] = id; Safe(meta, "package", () => { var p = provider.TechnologyExtensionPackages.Find(id); return p == null ? null : TechnologyExtensionPackageRow(p); }); break;
+                        case "install": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.Install(FileInfo)"; meta["result"] = provider.Install(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath))); break;
+                        case "installAndGetIdentifier": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.InstallAndGetIdentifier(FileInfo)"; var id = provider.InstallAndGetIdentifier(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath))); meta["identifier"] = id; Safe(meta, "package", () => { var p = provider.TechnologyExtensionPackages.Find(id); return p == null ? null : TechnologyExtensionPackageRow(p); }); break;
                         case "uninstall": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.Uninstall(string, bool)"; meta["result"] = provider.Uninstall(identifier, confirmUninstallInUse); meta["verifiedAbsent"] = provider.TechnologyExtensionPackages.Find(identifier) == null; break;
                     }
                     if (meta["result"] is JsonValue v && v.TryGetValue<bool>(out var ok) && !ok) meta["operationSuccess"] = false;
@@ -571,7 +571,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var report = device?.GetService<SafetyAcceptanceTestReport>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAcceptanceTestReport not provided by the owning device.");
                     var operation = (FileOperations)Enum.Parse(typeof(FileOperations), fileOperation);
-                    var file = operation == FileOperations.Overwrite ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
+                    var file = operation == FileOperations.Overwrite ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                     meta["file"] = file.FullName; meta["fileOperation"] = fileOperation;
                     if (!write) return "Safety acceptance test protocol preview; no file written.";
                     meta["mayHaveWrittenFiles"] = true; meta["nativeSignature"] = "SafetyAcceptanceTestReport.CreateProtocol(FileInfo, FileOperations)";

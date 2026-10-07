@@ -44,7 +44,7 @@ namespace TiaMcp.PlcFoundation
                 {
                     var check = candidate.Check;
                     if (mode != "apply" || check == null || check.Release != ReleaseKey || check.Request.SoftwarePath != candidate.Request.SoftwarePath || check.Request.Items != null && check.Request.Items.Length == 0) CandidatePrimitives.Invalid("source-candidate");
-                    foreach (var f in check!.Files) { CandidateImportFiles.SafePath(new FileInfo(f.Path)); locks.Add(f.Path, new FileStream(f.Path, FileMode.Open, FileAccess.Read, FileShare.Read)); }
+                    foreach (var f in check!.Files) { CandidateImportFiles.SafePath(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(f.Path))); locks.Add(f.Path, TiaOpenness.Shared.NativeInputPolicy.OpenRead(f.Path, "filePath")); }
                     reply.Attempt = CandidateExecution.Source(adapter, check, locks); reply.RequiresSessionReset = reply.Attempt.RequiresSessionReset;
                 }
                 else CandidatePrimitives.Invalid("source-action");

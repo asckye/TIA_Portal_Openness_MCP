@@ -37,7 +37,12 @@ namespace TiaMcpServer.Siemens
                 _plcResolutionCache.Clear();
                 _softwareCacheProject = _project;
             }
-            if (SourceCandidateEnabled) return SourceCandidateSelection(softwarePath).Value.Software as PlcSoftware;
+            if (SourceCandidateEnabled)
+            {
+                var selected = SourceCandidateSelection(softwarePath); var plc = selected.Value.Software as PlcSoftware;
+                if(plc!=null) SoftwareContainerLookup.RememberPath(plc,selected.Path);
+                return plc;
+            }
             return ResolveCachedPlc(softwarePath, path => ResolveSoftwareLookup(path, true),
                 container => container.Software as PlcSoftware)
                 ?? MatchAvailablePlcSoftware((softwarePath ?? string.Empty).Trim());
@@ -55,6 +60,7 @@ namespace TiaMcpServer.Siemens
                 if (plc != null)
                 {
                     _softwareContainerCache[cacheKey] = cached;
+                    SoftwareContainerLookup.RememberPath(plc,SoftwareContainerLookup.PathOf(cached));
                     return plc;
                 }
                 _plcResolutionCache.Remove(path);
@@ -68,6 +74,7 @@ namespace TiaMcpServer.Siemens
                 // Service lookup uses this same CPU, including on normalized cache hits.
                 _plcResolutionCache[path] = container;
                 _softwareContainerCache[cacheKey] = container;
+                SoftwareContainerLookup.RememberPath(resolved,SoftwareContainerLookup.PathOf(container));
             }
             return resolved;
         }

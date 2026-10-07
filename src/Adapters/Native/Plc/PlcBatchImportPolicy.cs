@@ -17,6 +17,7 @@ namespace TiaMcp.PlcFoundation
         internal int ProcessId,MaxItems=128;
         internal bool Program,Overwrite,CompileAfter,Confirm,DryRun=true,StopOnImportFailure=true;
         internal string[] Order=new string[0];
+        internal string InputParameter=>Program ? "sourceDir" : "dir";
     }
     internal sealed class PlcBatchImportDependency
     {
@@ -29,15 +30,15 @@ namespace TiaMcp.PlcFoundation
         private static string Field(string value)=>value.Length+":"+value;
         private static string Identity(PlcBatchImportObject x)=>Field(x.Kind)+Field(x.GroupPath)+Field(x.Name)+Field(x.Number.HasValue ? x.Number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "automatic");
         private static string Namespace(string kind)=>kind=="UDT" ? "type" : kind=="TagTable" ? "table" : "block";
-        private static void SafePath(FileSystemInfo entry)
+        private static void SafePath(FileSystemInfo entry,string parameter)
         {
             for(FileSystemInfo? current=entry;current!=null;current=current is DirectoryInfo dir ? dir.Parent : ((FileInfo)current).Directory)
-                if((current.Attributes & FileAttributes.ReparsePoint)!=0) throw new AdapterPreconditionException("Input path ancestry contains a link/reparse point.","dir");
+                if((current.Attributes & FileAttributes.ReparsePoint)!=0) throw new AdapterPreconditionException("Input path ancestry contains a link/reparse point.",parameter);
         }
         private static string[] Scan(PlcBatchImportRequest request)
         {
-            if(!Path.IsPathRooted(request.Directory)) throw new AdapterPreconditionException("Input directory must be absolute and existing.","dir");
-            var root=new DirectoryInfo(Path.GetFullPath(request.Directory)); if(!root.Exists) throw new AdapterPreconditionException("Input directory does not exist.","dir"); SafePath(root);
+            if(!Path.IsPathRooted(request.Directory)) throw new AdapterPreconditionException("Input directory must be absolute and existing.",request.InputParameter);
+            var root=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.Directory))); if(!root.Exists) throw new AdapterPreconditionException("Input directory does not exist.",request.InputParameter); SafePath(root,request.InputParameter);
             Regex regex;
             try { regex=new Regex(request.Regex,RegexOptions.IgnoreCase|RegexOptions.CultureInvariant,TimeSpan.FromMilliseconds(100)); }
             catch(ArgumentException ex) { throw new AdapterPreconditionException("regexName must be a valid bounded regular expression.","regexName",true,ex); }
@@ -45,11 +46,11 @@ namespace TiaMcp.PlcFoundation
             var aliases=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             while(pending.Count>0)
             {
-                var dir=pending.Pop(); if(++dirs>1024) throw new AdapterPreconditionException("Directory count exceeds bounded scan.","dir");
+                var dir=pending.Pop(); if(++dirs>1024) throw new AdapterPreconditionException("Directory count exceeds bounded scan.",request.InputParameter);
                 foreach(var entry in dir.EnumerateFileSystemInfos())
                 {
-                    if(++entries>4096) throw new AdapterPreconditionException("Entry count exceeds bounded scan.","dir");
-                    SafePath(entry); if(!aliases.Add(entry.FullName)) throw new AdapterPreconditionException("Case-insensitive input path collision.","dir");
+                    if(++entries>4096) throw new AdapterPreconditionException("Entry count exceeds bounded scan.",request.InputParameter);
+                    SafePath(entry,request.InputParameter); if(!aliases.Add(entry.FullName)) throw new AdapterPreconditionException("Case-insensitive input path collision.",request.InputParameter);
                     if(entry is DirectoryInfo child) {if(request.Program) pending.Push(child);continue;}
                     if(!entry.Extension.Equals(".xml",StringComparison.OrdinalIgnoreCase) || !regex.IsMatch(entry.Name)) continue;
                     files.Add(entry.FullName); if(files.Count>request.MaxItems) throw new AdapterPreconditionException("Selected files exceed maxItems; never truncated.","maxItems");
@@ -82,31 +83,31 @@ namespace TiaMcp.PlcFoundation
             XDocument document;
             try
             {
-                using(var reader=XmlReader.Create(stream,settings)) while(reader.Read()) if(reader.Depth>64) throw new AdapterPreconditionException("XML nesting exceeds 64.","dir");
+                using(var reader=XmlReader.Create(stream,settings)) while(reader.Read()) if(reader.Depth>64) throw new AdapterPreconditionException("XML nesting exceeds 64.",request.InputParameter);
                 stream.Position=0;
                 using(var reader=XmlReader.Create(stream,settings)) document=XDocument.Load(reader);
             }
-            catch(XmlException ex) { throw new AdapterPreconditionException("Input must be valid bounded XML.","dir",true,ex); }
-            if(document.Root==null || document.Root.Name!=XName.Get("Document")) throw new AdapterPreconditionException("Only ordinary native Document XML is supported.","dir");
+            catch(XmlException ex) { throw new AdapterPreconditionException("Input must be valid bounded XML.",request.InputParameter,true,ex); }
+            if(document.Root==null || document.Root.Name!=XName.Get("Document")) throw new AdapterPreconditionException("Only ordinary native Document XML is supported.",request.InputParameter);
             var roots=document.Root.Elements().Where(x=>x.Name.LocalName!="Engineering" && x.Name.LocalName!="DocumentInfo").ToArray();
-            if(roots.Length!=1) throw new AdapterPreconditionException("Exactly one ordinary root object per file is required; no roots are skipped.","dir");
+            if(roots.Length!=1) throw new AdapterPreconditionException("Exactly one ordinary root object per file is required; no roots are skipped.",request.InputParameter);
             var node=roots[0]; var kinds=new Dictionary<string,string> {{"SW.Blocks.FC","FC"},{"SW.Blocks.FB","FB"},{"SW.Blocks.OB","OB"},{"SW.Blocks.GlobalDB","GlobalDB"},{"SW.Blocks.InstanceDB","InstanceDB"},{"SW.Types.PlcStruct","UDT"},{"SW.Tags.PlcTagTable","TagTable"}};
-            if(node.Name.NamespaceName!="" || !kinds.TryGetValue(node.Name.LocalName,out var kind) || (!request.Program && Namespace(kind)!="block")) throw new AdapterPreconditionException("Unknown or out-of-scope XML root; nothing was skipped.","dir",false);
+            if(node.Name.NamespaceName!="" || !kinds.TryGetValue(node.Name.LocalName,out var kind) || (!request.Program && Namespace(kind)!="block")) throw new AdapterPreconditionException("Unknown or out-of-scope XML root; nothing was skipped.",request.InputParameter,false);
             var engineering=document.Root.Elements("Engineering").ToArray();
             var expected=request.Release=="14sp1" ? "V14 SP1" : "V"+request.Release;
             // Original V14 markers cannot establish SP1. Exact producer only, no inferred upgrades.
-            if(engineering.Length!=1 || (string?)engineering[0].Attribute("version")!=expected) throw new AdapterPreconditionException("XML must identify the exact reviewed release producer; no version rewrite or cross-release inference.","dir",false);
-            var attrs=node.Elements("AttributeList").ToArray(); if(attrs.Length!=1) throw new AdapterPreconditionException("Missing or ambiguous object AttributeList.","dir");
-            var names=attrs[0].Elements("Name").ToArray(); if(names.Length!=1 || string.IsNullOrWhiteSpace(names[0].Value)) throw new AdapterPreconditionException("Missing or ambiguous XML logical name.","dir");
-            if(document.Descendants().Any(x=>(x.Name.LocalName.IndexOf("Safety",StringComparison.OrdinalIgnoreCase)>=0 || x.Name.LocalName.IndexOf("KnowHow",StringComparison.OrdinalIgnoreCase)>=0 || x.Name.LocalName.IndexOf("Protection",StringComparison.OrdinalIgnoreCase)>=0) && !string.Equals(x.Value,"false",StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Protected/Safety XML is outside this candidate.","dir",false);
+            if(engineering.Length!=1 || (string?)engineering[0].Attribute("version")!=expected) throw new AdapterPreconditionException("XML must identify the exact reviewed release producer; no version rewrite or cross-release inference.",request.InputParameter,false);
+            var attrs=node.Elements("AttributeList").ToArray(); if(attrs.Length!=1) throw new AdapterPreconditionException("Missing or ambiguous object AttributeList.",request.InputParameter);
+            var names=attrs[0].Elements("Name").ToArray(); if(names.Length!=1 || string.IsNullOrWhiteSpace(names[0].Value)) throw new AdapterPreconditionException("Missing or ambiguous XML logical name.",request.InputParameter);
+            if(document.Descendants().Any(x=>(x.Name.LocalName.IndexOf("Safety",StringComparison.OrdinalIgnoreCase)>=0 || x.Name.LocalName.IndexOf("KnowHow",StringComparison.OrdinalIgnoreCase)>=0 || x.Name.LocalName.IndexOf("Protection",StringComparison.OrdinalIgnoreCase)>=0) && !string.Equals(x.Value,"false",StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Protected/Safety XML is outside this candidate.",request.InputParameter,false);
             var language=attrs[0].Elements("ProgrammingLanguage").Select(x=>x.Value).ToArray();
-            if(Namespace(kind)=="block" && (language.Length!=1 || !new[]{"LAD","FBD","STL","SCL","DB"}.Contains(language[0]))) throw new AdapterPreconditionException("Block language is missing or not reviewed for ordinary import.","dir",false);
-            if(request.Release=="14sp1" && language.Contains("SCL")) throw new AdapterPreconditionException("V14 SP1 SCL XML is interface-only and cannot restore a complete block.","dir",false);
-            if(language.Contains("SCL") && !node.Descendants().Any(x=>x.Name.LocalName=="SW.Blocks.CompileUnit" && x.Descendants().Any(e=>e.Name.LocalName=="StructuredText" && e.HasElements))) throw new AdapterPreconditionException("SCL implementation is absent or unverified; interface-only input cannot restore a complete block.","dir",false);
+            if(Namespace(kind)=="block" && (language.Length!=1 || !new[]{"LAD","FBD","STL","SCL","DB"}.Contains(language[0]))) throw new AdapterPreconditionException("Block language is missing or not reviewed for ordinary import.",request.InputParameter,false);
+            if(request.Release=="14sp1" && language.Contains("SCL")) throw new AdapterPreconditionException("V14 SP1 SCL XML is interface-only and cannot restore a complete block.",request.InputParameter,false);
+            if(language.Contains("SCL") && !node.Descendants().Any(x=>x.Name.LocalName=="SW.Blocks.CompileUnit" && x.Descendants().Any(e=>e.Name.LocalName=="StructuredText" && e.HasElements))) throw new AdapterPreconditionException("SCL implementation is absent or unverified; interface-only input cannot restore a complete block.",request.InputParameter,false);
             var numbers=attrs[0].Elements("Number").ToArray(); int? number=null;
-            if(numbers.Length>1) throw new AdapterPreconditionException("Ambiguous block number.","dir");
-            if(Namespace(kind)!="block" && numbers.Length!=0) throw new AdapterPreconditionException("Number verification for non-block objects is outside this bounded candidate.","dir",false);
-            if(numbers.Length==1) {int n;if(!int.TryParse(numbers[0].Value,System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out n) || n<0) throw new AdapterPreconditionException("Invalid fixed block number.","dir");number=n;}
+            if(numbers.Length>1) throw new AdapterPreconditionException("Ambiguous block number.",request.InputParameter);
+            if(Namespace(kind)!="block" && numbers.Length!=0) throw new AdapterPreconditionException("Number verification for non-block objects is outside this bounded candidate.",request.InputParameter,false);
+            if(numbers.Length==1) {int n;if(!int.TryParse(numbers[0].Value,System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out n) || n<0) throw new AdapterPreconditionException("Invalid fixed block number.",request.InputParameter);number=n;}
             // Recognized declarations only; this is deliberately not a complete dependency analyzer.
             var references=document.Descendants().Attributes().Where(a=>a.Name.LocalName=="Datatype" || a.Name.LocalName=="DataType").Select(a=>a.Value)
                 .Where(v=>v.StartsWith("\"",StringComparison.Ordinal) && v.EndsWith("\"",StringComparison.Ordinal)).Select(v=>v.Substring(1,v.Length-2))
@@ -118,7 +119,7 @@ namespace TiaMcp.PlcFoundation
         {
             ValidateOptions(request);
             var inventory=existing.Take(4097).ToArray(); if(inventory.Length>4096) throw new AdapterPreconditionException("Target inventory exceeds 4096 objects.","maxItems");
-            var files=Scan(request); if(files.Length==0) throw new AdapterPreconditionException("No selected XML inputs.","dir");
+            var files=TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>Scan(request)); if(files.Length==0) throw new AdapterPreconditionException("No selected XML inputs.",request.InputParameter);
             var root=Path.GetFullPath(request.Directory).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar)+Path.DirectorySeparatorChar;
             var byRelative=files.ToDictionary(x=>x.Substring(root.Length).Replace('\\','/'),x=>x,StringComparer.Ordinal);
             string[] order=request.Order.Length==0 ? byRelative.Keys.OrderBy(x=>x,StringComparer.Ordinal).ToArray() : request.Order.ToArray();
@@ -128,33 +129,37 @@ namespace TiaMcp.PlcFoundation
             {
                 var result=new PlcBatchImportResult {Executed=!request.DryRun,ProjectFile=request.Project,SoftwarePath=request.Software,Release=request.Release,Recursive=request.Program};
                 var items=new List<PlcBatchImportItem>();long total=0;
-                foreach(var path in order)
+                TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>
                 {
-                    var file=new FileInfo(byRelative[path]);SafePath(file);
-                    if(file.Length<=0 || file.Length>MaximumFileBytes) throw new AdapterPreconditionException("Input must be a nonempty bounded regular XML file.","dir");
-                    var stream=new FileStream(file.FullName,FileMode.Open,FileAccess.Read,FileShare.Read);locks.Add(stream);
-                    var expectedLength=stream.Length;
-                    if(expectedLength>MaximumFileBytes || (total+=expectedLength)>MaximumTotalBytes) throw new AdapterPreconditionException("Input file or aggregate byte limit exceeded.","dir");
-                    byte[] bytes;
-                    using(var memory=new MemoryStream())
+                    foreach(var path in order)
                     {
-                        var buffer=new byte[8192];int read;
-                        while((read=stream.Read(buffer,0,buffer.Length))>0)
+                        var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(byRelative[path]));SafePath(file,request.InputParameter);
+                        if(file.Length<=0 || file.Length>MaximumFileBytes) throw new AdapterPreconditionException("Input must be a nonempty bounded regular XML file.",request.InputParameter);
+                        var stream=TiaOpenness.Shared.NativeInputPolicy.OpenRead(file.FullName,request.InputParameter);locks.Add(stream);
+                        var expectedLength=stream.Length;
+                        if(expectedLength>MaximumFileBytes || (total+=expectedLength)>MaximumTotalBytes) throw new AdapterPreconditionException("Input file or aggregate byte limit exceeded.",request.InputParameter);
+                        byte[] bytes;
+                        using(var memory=new MemoryStream())
                         {
-                            if(memory.Length+read>MaximumFileBytes) throw new AdapterPreconditionException("Input grew beyond byte budget.","dir");
-                            memory.Write(buffer,0,read);
+                            var buffer=new byte[8192];int read;
+                            while((read=stream.Read(buffer,0,buffer.Length))>0)
+                            {
+                                if(memory.Length+read>MaximumFileBytes) throw new AdapterPreconditionException("Input grew beyond byte budget.",request.InputParameter);
+                                memory.Write(buffer,0,read);
+                            }
+                            bytes=memory.ToArray();
                         }
-                        bytes=memory.ToArray();
+                        if(bytes.LongLength!=expectedLength || stream.Length!=expectedLength) throw new AdapterPreconditionException("Input changed while locked.",request.InputParameter);
+                        PlcBatchImportObject planned;PlcBatchImportDependency[] dependencies;
+                        using(var input=new MemoryStream(bytes,false)) planned=Parse(input,request,out dependencies);
+                        if(dependencies.Any(dependency=>!inventory.Concat(items.Select(x=>x.Planned)).Any(x=>x.Name==dependency.Name && x.Kind==dependency.Kind))) throw new AdapterPreconditionException("Recognized type/instance dependency missing or ordered after its consumer; explicit order is not dependency proof.","importOrder");
+                        if(inventory.Concat(items.Select(x=>x.Planned)).Any(x=>Namespace(x.Kind)==Namespace(planned.Kind) && string.Equals(x.Name,planned.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Duplicate or existing logical object name, including cross-group collision: "+planned.Name,request.InputParameter);
+                        string NumberSpace(string kind)=>kind=="GlobalDB" || kind=="InstanceDB" ? "DB" : kind;
+                        if(planned.Number.HasValue && inventory.Concat(items.Select(x=>x.Planned)).Any(x=>NumberSpace(x.Kind)==NumberSpace(planned.Kind) && x.Number==planned.Number)) throw new AdapterPreconditionException("Fixed number collision within block-kind namespace.",request.InputParameter);
+                        items.Add(new PlcBatchImportItem {RelativePath=path,InputSha256=Hash(bytes),Planned=planned,RecognizedDependencies=dependencies.Select(x=>x.Kind+":"+x.Name).ToArray()});
                     }
-                    if(bytes.LongLength!=expectedLength || stream.Length!=expectedLength) throw new AdapterPreconditionException("Input changed while locked.","dir");
-                    PlcBatchImportObject planned;PlcBatchImportDependency[] dependencies;
-                    using(var input=new MemoryStream(bytes,false)) planned=Parse(input,request,out dependencies);
-                    if(dependencies.Any(dependency=>!inventory.Concat(items.Select(x=>x.Planned)).Any(x=>x.Name==dependency.Name && x.Kind==dependency.Kind))) throw new AdapterPreconditionException("Recognized type/instance dependency missing or ordered after its consumer; explicit order is not dependency proof.","importOrder");
-                    if(inventory.Concat(items.Select(x=>x.Planned)).Any(x=>Namespace(x.Kind)==Namespace(planned.Kind) && string.Equals(x.Name,planned.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Duplicate or existing logical object name, including cross-group collision: "+planned.Name,"dir");
-                    string NumberSpace(string kind)=>kind=="GlobalDB" || kind=="InstanceDB" ? "DB" : kind;
-                    if(planned.Number.HasValue && inventory.Concat(items.Select(x=>x.Planned)).Any(x=>NumberSpace(x.Kind)==NumberSpace(planned.Kind) && x.Number==planned.Number)) throw new AdapterPreconditionException("Fixed number collision within block-kind namespace.","dir");
-                    items.Add(new PlcBatchImportItem {RelativePath=path,InputSha256=Hash(bytes),Planned=planned,RecognizedDependencies=dependencies.Select(x=>x.Kind+":"+x.Name).ToArray()});
-                }
+                    return true;
+                });
                 result.Items=items.ToArray();
                 var canonical=string.Concat(new[]{"batch-import-v1",request.Release,request.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),request.Project,request.Software,root,request.BlockGroup,request.TypeGroup,request.TagGroup,request.Program.ToString(),request.Regex,"None","stop-on-first-failure"}.Select(Field));
                 canonical+=string.Concat(inventory.Select(Identity).OrderBy(x=>x,StringComparer.Ordinal).Select(Field));
@@ -163,7 +168,7 @@ namespace TiaMcp.PlcFoundation
                 if(request.DryRun) return result;
                 if(!string.Equals(result.PlanHash,request.ExpectedHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Plan changed; preview and review the full manifest again.","expectedPlanHash");
                 // All original files remain read locked through every native call. Re-scan prevents added/deleted selections before first mutation.
-                if(!files.SequenceEqual(Scan(request),StringComparer.Ordinal)) throw new AdapterPreconditionException("Input selection changed during planning.","dir");
+                if(!files.SequenceEqual(TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>Scan(request)),StringComparer.Ordinal)) throw new AdapterPreconditionException("Input selection changed during planning.",request.InputParameter);
                 bool stopped=false;
                 for(int i=0;i<items.Count;i++)
                 {
@@ -171,12 +176,13 @@ namespace TiaMcp.PlcFoundation
                     try
                     {
                         recheck(); item.Attempted=true;
-                        var actual=import(new FileInfo(byRelative[item.RelativePath]),item.Planned);
+                        var actual=import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(byRelative[item.RelativePath])),item.Planned);
                         item.ReturnedObjects=actual ?? new PlcBatchImportObject[0];
                         if(actual==null || actual.Length!=1 || actual.Any(x=>x==null || x.Name!=item.Planned.Name || x.Kind!=item.Planned.Kind || x.GroupPath!=item.Planned.GroupPath || (Namespace(x.Kind)=="block" && !x.Number.HasValue) || (item.Planned.Number.HasValue && x.Number!=item.Planned.Number))) throw new InvalidDataException("Native returned identities do not match the reviewed XML object.");
                         item.Status="imported";
                     }
-                    catch(Exception) /* swallow(native-fallback): failed recheck or import stops the batch and reports uncertainty with a required session reset */
+                    catch(AdapterPreconditionException) when(i==0 && !item.Attempted) { throw; }
+                    catch(Exception) /* swallow(native-fallback): failed recheck after prior imports or an issued import stops the batch and requires reset */
                     {
                         item.Status="failed";item.Failure=item.Attempted ? "native-outcome-uncertain" : "target-recheck-failed";
                         stopped=true;result.RequiresSessionReset=true;

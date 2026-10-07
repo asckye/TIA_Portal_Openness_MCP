@@ -36,7 +36,7 @@ namespace TiaMcp.PlcFoundation
         }
         internal static void ValidateOptions(PlcExternalSourceImportRequest request)
         {
-            if(!request.DryRun) throw new NotSupportedException(ApplyBlock);
+            if(!request.DryRun) throw new AdapterPreconditionException(ApplyBlock,"import-plan",false);
             if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release; V14/V15 are not aliases.","release");
             if(request.Group!="") throw new AdapterPreconditionException("Only groupPath empty string denotes the supported external-source root.","groupPath");
             request.File=ValidateFile(request.File);
@@ -47,12 +47,12 @@ namespace TiaMcp.PlcFoundation
         {
             ValidateFile(path);
             if(Path.DirectorySeparatorChar!='\\') throw new PlatformNotSupportedException("Native input validation requires Windows; no host-dependent path reinterpretation.");
-            var info=new FileInfo(path);
+            var info=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if(!info.Exists || (info.Attributes & FileAttributes.Directory)!=0) throw new AdapterPreconditionException("An existing regular source file is required.","filePath");
             for(FileSystemInfo? item=info;item!=null;item=item is DirectoryInfo dir ? dir.Parent : ((FileInfo)item).Directory)
                 if((item.Attributes & FileAttributes.ReparsePoint)!=0) throw new AdapterPreconditionException("Source path ancestry contains a reparse point.","filePath");
             // Reuse the reviewed read-only share: hold against write/delete for the whole validation.
-            return new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+            return TiaOpenness.Shared.NativeInputPolicy.OpenRead(path,"filePath");
         }
         private static byte[] Read(Stream input)
         {

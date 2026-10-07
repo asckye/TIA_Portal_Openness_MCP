@@ -47,7 +47,8 @@ internal static class DocumentImportContract
             if(status=="unknown" && Text("Error")!="native-outcome-uncertain-inspect-before-new-session")throw new InvalidDataException("Unknown outcome missing uncertainty disclosure.");
             if(request["confirm"]?.GetValue<bool>()!=true || Text("ProjectFile")!=request["expectedProjectFile"]?.GetValue<string>() || Text("PlanHash")!=request["expectedPlanHash"]?.GetValue<string>())throw new InvalidDataException("Document result differs from reviewed project/hash.");
         }
-        foreach(var pair in new[]{("SoftwarePath","softwarePath"),("GroupPath","groupPath"),("InputDirectory","importPath"),("DeclaredName","fileNameWithoutExtension")})if(Text(pair.Item1)!=request[pair.Item2]?.GetValue<string>())throw new InvalidDataException("Document request/response identity mismatch.");
+        if(!TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(request["softwarePath"]!.GetValue<string>(),Text("SoftwarePath")) || TiaOpenness.Shared.NativeInputPolicy.FullPath(request["importPath"]!.GetValue<string>())!=TiaOpenness.Shared.NativeInputPolicy.FullPath(Text("InputDirectory")))throw new InvalidDataException("Document input/software identity mismatch.");
+        foreach(var pair in new[]{("GroupPath","groupPath"),("DeclaredName","fileNameWithoutExtension")})if(Text(pair.Item1)!=request[pair.Item2]?.GetValue<string>())throw new InvalidDataException("Document request/response identity mismatch.");
         if(request["overwrite"]?.GetValue<bool>()==true)throw new InvalidDataException("Document overwrite is not admitted.");
         return result;
     }

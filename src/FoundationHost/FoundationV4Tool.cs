@@ -14,10 +14,6 @@ namespace TiaMcp.LegacyHost;
 // worker protocol and bounded parsers; legacy names are not callable aliases.
 internal sealed class FoundationV4Tool : McpServerTool
 {
-    // P6-49 round 2 decision (2026-10-06): gate project save, save-as and close
-    // even though the catalog marks them SESSION. Disconnect remains a session operation.
-    private static readonly HashSet<string> SessionApprovalEntries = new(StringComparer.Ordinal)
-        { "SaveProject", "CloseProject" };
     internal static readonly IReadOnlyDictionary<string, string> Names = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["AddDeviceWithFallback"] = "CreateHardwareDevice", ["AttachToOpenProject"] = "AttachOpenProject",
@@ -168,28 +164,19 @@ internal sealed class FoundationV4Tool : McpServerTool
 
     public override Tool ProtocolTool => tool;
     private bool Candidate => deviceCandidate || importCandidate || exportCandidate || sessionCandidate || saveCloseCandidate || sourceCandidate || compileCandidate;
-    private bool SessionApprovalApply(JsonObject args)
+    private bool IsApprovalWrite(JsonObject args)
     {
-        if (!SessionApprovalEntries.Contains(tool.Name)) return false;
-        if (saveCloseCandidate) return (string?)args["mode"] == "apply";
-        return DryRunApply(args);
-    }
-    private bool DryRunApply(JsonObject args)
-    {
-        if (args["dryRun"] is JsonValue value && value.TryGetValue<bool>(out var supplied)) return !supplied;
-        if (args.ContainsKey("dryRun")) return false;
         var properties = inner.ProtocolTool.InputSchema.GetProperty("properties");
-        if (!properties.TryGetProperty("dryRun", out var schema) || !schema.TryGetProperty("default", out var defaultValue)
-            || defaultValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return false;
-        return defaultValue.ValueKind == JsonValueKind.False;
+        bool hasDryRun = properties.TryGetProperty("dryRun", out var schema);
+        bool defaultPreview = !hasDryRun || !schema.TryGetProperty("default", out var defaultValue)
+            || defaultValue.ValueKind != JsonValueKind.False;
+        return HostBehavior.ApprovalWrite(tool.Name, args, Candidate, inner is FoundationTool { IsWrite: true }, hasDryRun, defaultPreview);
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
-        bool write = Candidate ? arguments["mode"]?.ToString() == "apply"
-            : (inner is FoundationTool { IsWrite: true } && DryRunApply(arguments))
-                || SessionApprovalApply(arguments);
+        bool write = IsApprovalWrite(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
         string id = Meta.Correlate(null);
@@ -201,7 +188,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), operation: operation)["example"] as JsonObject : null))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
-        if (write && (string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool uncertain)
+        if (TiaOpenness.Shared.SessionBehavior.LocksSession(write, (string?)body?["meta"]?["outcome"] == "unknown", write) && inner is FoundationTool uncertain)
             uncertain.MarkSessionUncertain();
         if (body != null && (approval != null || write && !settings.Enabled))
         {
@@ -242,7 +229,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
             if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true));
+                    HostBehavior.SessionReset(), true));
             if (inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 var readiness = readinessForTest?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release);
@@ -251,7 +238,6 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
-            bool sessionApprovalApply = SessionApprovalApply(JsonSerializer.SerializeToNode(args) as JsonObject ?? new JsonObject());
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && !preview)
@@ -259,7 +245,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
-                if (settings.Enabled && !internalPrecheck)
+                if (HostBehavior.NeedsPrecheck(internalPrecheck, write, settings.Enabled, true))
                 {
                     var precheckArguments = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
                     bool hasPreview = Candidate || tool.InputSchema.GetProperty("properties").TryGetProperty("dryRun", out _);
@@ -270,12 +256,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                         {
                             if (Candidate)
                             {
-                                foreach (var key in sessionCandidate && SessionCandidateContract.Action(tool.Name) == "attach"
-                                    ? new[] { "expectedPlanHash" } : new[] { "expectedProjectFile", "expectedPlanHash" })
-                                    if (!args.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value.GetString()))
-                                        throw new ArgumentException("Apply requires " + key + ".", key);
-                                if (!args.TryGetValue("confirm", out var confirmed) || !confirmed.GetBoolean())
-                                    throw new ArgumentException("Apply requires confirm=true.", "confirm");
+                                string? missing = HostBehavior.MissingApplyArgument(JsonSerializer.SerializeToNode(args)!.AsObject(),
+                                    sessionCandidate && SessionCandidateContract.Action(tool.Name) == "attach");
+                                if (missing != null) throw new ArgumentException("Apply requires " + missing + ".", missing);
                             }
                             else if (inner is FoundationTool applyTool) applyTool.ValidateApplyArguments(args);
                         }
@@ -294,6 +277,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                             }
                             finally { request.Params = originalRequest; }
                         }
+                        var blocked = HostBehavior.PreviewApplyRefusal(refusal.StructuredContent);
+                        if (blocked != null) refusal = FoundationV4Result.Reject(release, tool.Name, id, blocked, true);
                         if (refusal.StructuredContent?["ok"]?.GetValue<bool>() != true)
                         {
                             var marked = TiaOpenness.Shared.ApprovalPrecheck.Mark(refusal.StructuredContent!, id);
@@ -309,7 +294,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     : await approvalWait(pending, settings, cancellationToken);
                 capture(approval);
                 if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(approval.Reason, pending.PlanHash, id))));
+                    HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id)));
             }
             if (inner is FoundationTool targetLaneTool)
             {
@@ -318,7 +303,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true));
+                    HostBehavior.SessionReset(), true));
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {

@@ -169,15 +169,15 @@ namespace TiaMcp.Adapters.Native.Plc
             {
 #if PLC_DOCUMENT_EXPORT
                 if (!(value is PlcBlock block)) CandidatePrimitives.Unsupported(release, "documents");
-                var result = PlcDocumentPrimitives.Export((PlcBlock)value, new DirectoryInfo(stagingPath), item.Name);
+                var result = PlcDocumentPrimitives.Export((PlcBlock)value, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), item.Name);
                 if (result == null || PlcDocumentPrimitives.State(result) != DocumentResultState.Success) throw new InvalidDataException("Native document export did not succeed.");
 #else
                 CandidatePrimitives.Unsupported(release, "documents");
 #endif
             }
-            else if (value is PlcBlock block) block.Export(new FileInfo(stagingPath), ExportOptions.None);
-            else if (value is PlcType type) type.Export(new FileInfo(stagingPath), ExportOptions.None);
-            else if (value is PlcTagTable table) table.Export(new FileInfo(stagingPath), ExportOptions.None);
+            else if (value is PlcBlock block) block.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), ExportOptions.None);
+            else if (value is PlcType type) type.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), ExportOptions.None);
+            else if (value is PlcTagTable table) table.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), ExportOptions.None);
             else throw new NotSupportedException("Object is outside ordinary export scope.");
         }
     }

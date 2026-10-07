@@ -174,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         string target = r.Parameters["targetForSoftware"]; if (target != "CPU" && target != "PlcSimulationAdvanced") CandidatePrimitives.Invalid("targetForSoftware");
                         policy.Explicit["TargetForSoftware"] = target; policy.Explicit["OverwriteOnMemoryCard"] = "NoAction";
-                        var directory = new DirectoryInfo(r.Parameters["destinationDirectory"]);
+                        var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(r.Parameters["destinationDirectory"]));
                         if (directory.Exists && directory.EnumerateFileSystemInfos().Any()) CandidatePrimitives.Fail("stale", "card-directory-changed");
                         evidence.WriteIssued = true; if (!directory.Exists) directory.Create();
                         evidence.OperationIssued = true; result = provider!.Download(directory, pre); Returned(result); folderCompleted = true;

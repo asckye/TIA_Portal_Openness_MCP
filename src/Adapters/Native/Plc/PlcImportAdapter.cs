@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         public CandidateIdentity ReadIdentity() => Identity();
         public IReadOnlyList<PlcImportInput> ReadInputs(string key, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
-        { if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release"); return CandidateImportFiles.Read(key, tool, request, locks); }
+        { if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release"); return TiaOpenness.Shared.NativeInputPolicy.Read(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", () => CandidateImportFiles.Read(key, tool, request, locks)); }
         private static string Space(string kind) => kind == "UDT" ? "type" : kind == "TagTable" ? "tag" : "block";
         private static string Key(string space, string group) => space + ":" + group;
         public string TargetGroupIdentity(PlcImportObject target)
@@ -116,16 +116,16 @@ namespace TiaMcp.Adapters.Native.Plc
             if (input.Documents)
             {
 #if PLC_DOCUMENT_EXPORT
-                var result = ((PlcBlockGroup)group).Blocks.ImportFromDocuments(new DirectoryInfo(Path.GetDirectoryName(input.Path)!), Path.GetFileNameWithoutExtension(input.Path), overwrite ? ImportDocumentOptions.Override : ImportDocumentOptions.None);
+                var result = ((PlcBlockGroup)group).Blocks.ImportFromDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetDirectoryName(input.Path)!)), Path.GetFileNameWithoutExtension(input.Path), overwrite ? ImportDocumentOptions.Override : ImportDocumentOptions.None);
                 if (result == null || result.State != DocumentResultState.Success) throw new InvalidDataException("Native document import did not return success.");
                 imported = result.ImportedPlcBlocks.Take(2).Cast<object>().ToArray();
 #else
                 throw new NotSupportedException("Document import is not available on this exact release.");
 #endif
             }
-            else if (input.Target.Kind == "UDT") imported = ((PlcTypeGroup)group).Types.Import(new FileInfo(input.Path), option).Take(2).Cast<object>().ToArray();
-            else if (input.Target.Kind == "TagTable") imported = ((PlcTagTableGroup)group).TagTables.Import(new FileInfo(input.Path), option).Take(2).Cast<object>().ToArray();
-            else imported = ((PlcBlockGroup)group).Blocks.Import(new FileInfo(input.Path), option).Take(2).Cast<object>().ToArray();
+            else if (input.Target.Kind == "UDT") imported = ((PlcTypeGroup)group).Types.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
+            else if (input.Target.Kind == "TagTable") imported = ((PlcTagTableGroup)group).TagTables.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
+            else imported = ((PlcBlockGroup)group).Blocks.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
             if (imported.Length != 1) throw new InvalidDataException("Native import must return exactly one reviewed object.");
             return Describe(imported[0], group, input.Target.GroupPath);
         }
@@ -136,7 +136,7 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         private static string XmlReadback(object item)
         {
-            string path = Path.Combine(AuditDirectory(), "readback.xml"); var file = new FileInfo(path);
+            string path = Path.Combine(AuditDirectory(), "readback.xml"); var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
             if (item is PlcBlock block) block.Export(file, ExportOptions.None);
             else if (item is PlcType type) type.Export(file, ExportOptions.None);
             else ((PlcTagTable)item).Export(file, ExportOptions.None);
@@ -149,7 +149,7 @@ namespace TiaMcp.Adapters.Native.Plc
             if (!input.Documents) return XmlReadback(item);
 #if PLC_DOCUMENT_EXPORT
             string path = AuditDirectory(), name = imported.Name;
-            var result = ((PlcBlock)item).ExportAsDocuments(new DirectoryInfo(path), name);
+            var result = ((PlcBlock)item).ExportAsDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), name);
             if (result == null || result.State != DocumentResultState.Success) throw new InvalidDataException("Document content export did not succeed.");
             byte[] Read(string file) { using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read); return CandidatePrimitives.Read(stream); }
             var code = Read(Path.Combine(path, name + ".s7dcl"));

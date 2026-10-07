@@ -82,7 +82,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (!exportPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
                     return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                AlarmClassExportImportResult result = provider.Export(new FileInfo(exportPath));
+                AlarmClassExportImportResult result = provider.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
                 bool ok = state == "Success" || state == "Warning";
@@ -116,7 +116,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase) || !File.Exists(importPath))
                     return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false)) };
-                AlarmClassExportImportResult result = provider.Import(new FileInfo(importPath));
+                AlarmClassExportImportResult result = provider.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
                 bool ok = state == "Success" || state == "Warning";
@@ -148,7 +148,7 @@ namespace TiaMcpServer.Siemens.Services
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
                 if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(exportPath));
+                TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)));
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result?.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
@@ -174,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
                 if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false)) };
                 if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
-                TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(importPath), ImportOptions.None);
+                TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)), ImportOptions.None);
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result?.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
@@ -206,7 +206,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (includeAdditionalTexts) option |= PlcAlarmTextXlsxExportOption.IncludeAdditionalTexts;
                 if (includeAlarmClass) option |= PlcAlarmTextXlsxExportOption.IncludeAlarmClass;
                 var languages = EngineeringGroupOperations.Items(_session.CurrentProject!.LanguageSettings.ActiveLanguages).Cast<Language>().ToList();
-                PlcAlarmTextXlsxResult result = provider.ExportInstanceTextsToXlsx(new FileInfo(exportPath), languages, option);
+                PlcAlarmTextXlsxResult result = provider.ExportInstanceTextsToXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), languages, option);
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result?.State != PlcAlarmTextXlsxResultState.Error;
                 return new ResponseMessage
@@ -269,7 +269,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ImportPlcAlarmInstanceTexts(string softwarePath, string filePath, string culturesJson, bool dryRun = true)
             => _session.RunHmiStepTool("ImportPlcAlarmInstanceTexts", meta => {
                 meta["mayHaveChanged"] = false;
-                var file = new FileInfo(filePath); if (!Path.IsPathRooted(filePath) || !file.Exists) throw new FileNotFoundException("Absolute existing xlsx file required.");
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!Path.IsPathRooted(filePath) || !file.Exists) throw new FileNotFoundException("Absolute existing xlsx file required.");
                 var cultures = PlcBlockServicesLogic.ParseCultureNames(culturesJson);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);

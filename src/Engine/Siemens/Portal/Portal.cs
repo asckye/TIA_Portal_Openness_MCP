@@ -453,7 +453,7 @@ namespace TiaMcpServer.Siemens
                 else
                 {
                     // see [5.3.1 Projekt öffnen, S.113]
-                    var fi = new FileInfo(projectPath);
+                    var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(projectPath));
 
                     try
                     {
@@ -547,7 +547,7 @@ namespace TiaMcpServer.Siemens
                 }
 
                 Directory.CreateDirectory(directoryPath);
-                var di = new DirectoryInfo(directoryPath);
+                var di = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));
 
                 var created = _portal!.Projects.Create(di, projectName);
                 _project = created;
@@ -614,7 +614,7 @@ namespace TiaMcpServer.Siemens
                 return false;
             }
 
-            var di = new DirectoryInfo(path);
+            var di = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
 
             (_project as Project)?.SaveAs(di);
             CaptureBinding();
@@ -703,7 +703,7 @@ namespace TiaMcpServer.Siemens
                 }
                 else
                 {
-                    _session = _portal?.LocalSessions.Open(new FileInfo(localSessionPath));
+                    _session = _portal?.LocalSessions.Open(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(localSessionPath)));
                     if (_session != null)
                     {
                         // Correctly cast MultiuserProject to Project

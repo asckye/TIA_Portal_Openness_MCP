@@ -85,7 +85,7 @@ namespace TiaMcpServer.Siemens.Services
                 else if (action == "import" || action == "export")
                 {
                     if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("filePath required.");
-                    var file = new FileInfo(filePath);
+                    var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
                     if (action == "import" && !file.Exists) throw new FileNotFoundException("Certificate file missing.", filePath);
                     if (action == "export" && file.Exists) throw new InvalidOperationException("Export refuses to overwrite an existing file.");
                     if (writing)

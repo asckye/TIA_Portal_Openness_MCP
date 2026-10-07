@@ -61,7 +61,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (action != "import" && block == null) throw new PortalException(PortalErrorCode.NotFound, "Exact block not found: " + name);
                 if (action == "read") { meta["block"] = EngineeringScalarProperties.Read(block!); return "Exact block properties read."; }
                 if (!Path.IsPathRooted(directoryPath) || !Directory.Exists(directoryPath)) throw new ArgumentException("directoryPath must be an existing absolute directory on the server.");
-                var directory = new DirectoryInfo(directoryPath);
+                var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));
                 if (action == "export")
                 {
                     if (directory.GetFiles(name + ".*").Length != 0) throw new IOException("Export basename already exists; choose a fresh directory/name.");
@@ -72,7 +72,7 @@ namespace TiaMcpServer.Siemens.Services
                     if (exported.State != DocumentResultState.Success) throw new PortalException(PortalErrorCode.ExportFailed, "Document export did not return Success.");
                     return "Exact scoped block exported as SIMATIC SD; format limitations apply.";
                 }
-                var declaration = new FileInfo(Path.Combine(directoryPath, name + ".s7dcl"));
+                var declaration = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directoryPath, name + ".s7dcl")));
                 if (!declaration.Exists) throw new FileNotFoundException("SIMATIC SD declaration missing.", declaration.FullName);
                 meta["formatPreflight"] = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(declaration.FullName), Engineering.TiaMajorVersion, null);
                 var option = (ImportDocumentOptions)EngineeringScalarProperties.ConvertValue(JsonValue.Create(importOption), typeof(ImportDocumentOptions))!;

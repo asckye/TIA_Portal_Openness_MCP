@@ -1305,6 +1305,16 @@ internal static partial class ReleaseCommands
                     }
                 }))).ToArray();
                 ParallelPipeline.Run(suiteJobs, Path.Combine(logs, "dotnet-suite-pipeline"), GetMaxParallelism(options));
+                var parityRows = new JsonObject();
+                foreach (string major in new[] { "20", "21" })
+                {
+                    var parityDirectory = Path.Combine(suiteResults, "host-behavior-parity-v" + major);
+                    ProcessRunner.RequireSuccess(RunLoggedProcess(python,
+                        ["scripts/checks/Test-HostBehaviorParity.py", "--dotnet", dotnet, "--engine-major", major, "--results-directory", parityDirectory],
+                        logs, "host-behavior-parity-v" + major + ".log", nuget), "Host behavior parity gate failed: V" + major);
+                    parityRows[major] = JsonNode.Parse(File.ReadAllText(Path.Combine(parityDirectory, "host-behavior-parity.json")));
+                }
+                validationNode["hostBehaviorParity"] = parityRows;
                 foreach (var suite in suites)
                 {
                     using var summary = JsonDocument.Parse(File.ReadAllText(Path.Combine(suiteResults, suite, suite + ".json")));

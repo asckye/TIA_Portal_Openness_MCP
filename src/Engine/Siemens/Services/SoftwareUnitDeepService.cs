@@ -214,7 +214,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 if (exporting || action == "import")
                 {
-                    var directory = new DirectoryInfo(directoryPath);
+                    var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directoryPath));
                     if (!directory.Exists) throw new DirectoryNotFoundException("directoryPath must already exist: " + directoryPath);
                     var before = SoftwareUnitDeepLogic.SnapshotDirectory(directory.FullName);
                     if (exporting)
@@ -231,7 +231,7 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     var inputs = before.Where(f => string.Equals(Path.GetFileNameWithoutExtension(f), name, StringComparison.OrdinalIgnoreCase)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
                     if (inputs.Length == 0) throw new FileNotFoundException("No file named '" + name + ".*' in directoryPath.", directoryPath);
-                    meta["inputFiles"] = new JsonArray(inputs.Select(f => (JsonNode)SoftwareUnitDeepLogic.FileRow(new FileInfo(f))).ToArray());
+                    meta["inputFiles"] = new JsonArray(inputs.Select(f => (JsonNode)SoftwareUnitDeepLogic.FileRow(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(f)))).ToArray());
                     meta["existingBefore"] = target != null;
                     var option = (ImportDocumentOptions)EngineeringScalarProperties.ConvertValue(JsonValue.Create(importOption), typeof(ImportDocumentOptions))!;
                     if (target != null && option == ImportDocumentOptions.None) throw new InvalidOperationException("A " + objectKind + " named '" + name + "' already exists; pass importOption Override to replace it.");

@@ -42,7 +42,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (exception is TiaOpenness.Shared.BundleResourceUnavailableException resource)
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
-            if (writes && !nativeCallIssued)
+            var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, !writes || nativeCallIssued, !writes, nativeRead: nativeCallIssued);
+            if (writes && !nativeCallIssued && kind == TiaOpenness.Shared.HostFailureKind.Precondition)
             {
                 var portalStateFailure = ContainsInvalidPortalState(exception);
                 var details = new PreconditionFailedDetails(portalStateFailure ? "engine-state" : "native-call-not-issued", null);
@@ -52,14 +53,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
-            var evidence = new JsonObject { ["exceptionType"] = exception.GetType().Name };
+            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name);
             string? reason = new[] { "ConnectPortal", "ConnectProject", "AttachOpenProject" }.Contains(tool, StringComparer.Ordinal)
                 ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
-            var unknown = reason == null ? Unknown(evidence) : new Error(TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationGuidance,
-                new OutcomeUnknownDetails("session operation", Evidence(evidence), reason));
-            return Result(tool, new JsonObject { ["evidence"] = evidence },
-                writes ? unknown : new Error("The diagnostic read could not be completed.", new InternalErrorDetails(null)),
-                writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
+            string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
+            return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
+                HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception), reason),
+                HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), writes, current);
         }
 
         private static bool ContainsInvalidPortalState(Exception exception)
@@ -182,9 +182,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "The diagnostic observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
-            var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted
-                : outcome == Outcome.Unknown ? Execution.Unknown : outcome == Outcome.Partial ? Execution.Partial
-                : writes ? Execution.Completed : Execution.ReadOnly;
+            var execution = HostBehavior.ExecutionOf(outcome, writes);
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
                 outcome, execution, outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                 completeness, null, warnings);

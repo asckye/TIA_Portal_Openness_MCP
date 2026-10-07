@@ -22,7 +22,7 @@ namespace TiaMcp.PlcFoundation
         {
             PlcOfflinePolicy.RequireDocumentedRelease(ReleaseKey);
             if(!(selected.DeviceContext is Device device) || !(selected.Context is DeviceItem item))
-                throw new NotSupportedException("Exact device and device-item identity are required for offline checking.");
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact device and device-item identity are required for offline checking.","offline-state",false);
             // Positive standard-provider evidence, never absence of R/H as proof.
             // R/H exchange remains outside this bounded standard-target contract.
             bool redundant=false;

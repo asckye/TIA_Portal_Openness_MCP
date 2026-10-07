@@ -1429,7 +1429,7 @@ namespace TiaMcpServer.Siemens.Services
             => _session.RunHmiStepTool("DownloadPlcToFolder", meta => {
                 if (!new[] { "CPU", "PlcSimulationAdvanced" }.Contains(targetForSoftware)) throw new ArgumentException("targetForSoftware must be CPU or PlcSimulationAdvanced.");
                 if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destinationDirectory required.");
-                var directory = new DirectoryInfo(destinationDirectory);
+                var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
                 if (directory.Exists && directory.EnumerateFileSystemInfos().Any()) throw new IOException("destinationDirectory must be new or empty; merging into existing content is refused.");
                 var policy = BuildDownloadPromptPolicy(true, keepActualValues, false, false, userManagementMode, promptAnswersJson, null, null, null);
                 policy.Explicit["TargetForSoftware"] = targetForSoftware;

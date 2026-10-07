@@ -145,10 +145,13 @@ namespace TiaMcp.Logic.V4
             catch (Exception ex)
             {
                 if (ex is CandidateObservationException observed) ex = CandidateHostMapping.Import(observed.Fault);
-                if (mode == "apply" && data == null && identity != null && (ex is not PlcImportRejection rejected
+                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejection rejected
                     || rejected.Error.Code != ErrorCode.IdentityMismatch && rejected.Error.Code != ErrorCode.PlanStale))
                     ex = new PlcImportRejection(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
-                Error error = ex is PlcImportRejection refused ? refused.Error
+                Error error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
+                    ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
+                        typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
+                    : ex is PlcImportRejection refused ? refused.Error
                     : new Error("Import preflight could not establish the reviewed target; no native import was issued for this item.",
                         ex is IOException || ex is UnauthorizedAccessException ? (ErrorDetails)new IoFailedDetails("read", null) : new PreconditionFailedDetails("plc-import-preflight", null));
                 if (issued)
