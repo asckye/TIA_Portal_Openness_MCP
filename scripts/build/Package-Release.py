@@ -314,8 +314,8 @@ def main():
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     # Validate compiler inputs and release-only IL verifier in the repository before
     # projecting the delivery set. Source/build evidence never enters the ZIP.
-    subprocess.run(['dotnet', 'run', '--project', str(ROOT / 'build-tools/release'), '--',
-                    'validate-bundle', '-BundleRoot', str(root), '-Strict'], cwd=ROOT, check=True)
+    subprocess.run(['dotnet', 'run', '--project', str(root / 'build-tools/release'), '--',
+                    'validate-bundle', '-BundleRoot', str(root), '-Strict'], cwd=root, check=True)
     files = {name: data for name, data in files.items() if layout.delivered(name, rules)}
     require(all(name in files for name in required_exes), 'Delivery rules exclude a required executable/license')
     require(all(layout.delivered(row['path'], rules) or row['path'].startswith('runtime/verification/')
@@ -330,8 +330,8 @@ def main():
         path.write_bytes(data)
     # The validator checks configuration launcher targets, blueprints, JSON, tool roster,
     # exact binary versions and build hashes in the actual delivery directory.
-    subprocess.run(['dotnet', 'run', '--project', str(ROOT / 'build-tools/release'), '--',
-                    'validate-bundle', '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=ROOT, check=True)
+    subprocess.run(['dotnet', 'run', '--project', str(root / 'build-tools/release'), '--',
+                    'validate-bundle', '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=root, check=True)
     subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py'), '--root', str(stage), '--package-mode'], check=True)
     with zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for name, data in sorted(files.items()):

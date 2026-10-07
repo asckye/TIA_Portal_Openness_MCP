@@ -711,6 +711,8 @@ internal static partial class ReleaseCommands
             foreach (var row in TryArray(build, "runtimeFiles"))
             {
                 var relative = JsonString(row, "path");
+                // The release-only IL verifier is recorded with the engine but never delivered (Validate-Bundle.ps1 skipped it in package mode).
+                if (package && relative.StartsWith("runtime/verification/", StringComparison.Ordinal)) continue;
                 var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                 if (!File.Exists(path)) throw new ReleaseException("Runtime dependency missing: " + relative);
                 if (!string.Equals(ReleaseRecords.HashFile(path), JsonString(row, "sha256"), StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Runtime hash differs: " + relative);
