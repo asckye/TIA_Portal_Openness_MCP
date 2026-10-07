@@ -158,7 +158,7 @@ internal static class ReleaseRecords
                     if (name == "isolatedLocalStability" && !GetBool(stability, "isolatedWorker")) return $"V{major} validation incomplete";
                 }
                 if (includes("engine-approval") && (!runtime.TryGetProperty("approvalSafety", out var approval) || GetString(approval, "status") != "passed" ||
-                    GetInt(approval, "checksPassed") != 4 || !GetBool(approval, "defaultEnabled") ||
+                    GetInt(approval, "checksPassed") != 7 || !GetBool(approval, "defaultEnabled") ||
                     !GetBool(approval, "directWriteRefusedBeforeDispatch") || !GetBool(approval, "callToolWriteRefusedBeforeDispatch") ||
                     !GetBool(approval, "readSucceeded") || GetBool(approval, "workbenchConnected") || GetBool(approval, "tiaConnected")))
                     return $"V{major} default-approval gate incomplete";

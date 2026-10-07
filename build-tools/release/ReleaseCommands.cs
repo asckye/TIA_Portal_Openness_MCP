@@ -1361,7 +1361,7 @@ internal static partial class ReleaseCommands
                 using var approval = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOutput, "result.json")));
                 var approvalRoot = approval.RootElement;
                 var unsupported = approvalRoot.GetProperty("callToolUnsupportedReleases").EnumerateArray().Select(item => item.GetString() ?? "").Order(StringComparer.Ordinal).ToArray();
-                if (GetJsonString(approvalRoot, "status") != "passed" || GetJsonInt(approvalRoot, "checksPassed") != 18 || GetJsonInt(approvalRoot, "checksExpected") != 18 ||
+                if (GetJsonString(approvalRoot, "status") != "passed" || GetJsonInt(approvalRoot, "checksPassed") != 24 || GetJsonInt(approvalRoot, "checksExpected") != 24 ||
                     GetJsonBool(approvalRoot, "workbenchConnected") || GetJsonBool(approvalRoot, "tiaConnected") || GetJsonString(approvalRoot, "approvalSettings") != "explicit enabled=true; timeoutSeconds=120" ||
                     !unsupported.SequenceEqual(new[] { "14sp1", "15.1", "16", "17", "18", "19" }, StringComparer.Ordinal))
                     throw new ReleaseException("Foundation default-approval check count, state, or roster evidence is invalid");
@@ -1369,12 +1369,13 @@ internal static partial class ReleaseCommands
                 {
                     var key = (string)row.GetType().GetProperty("releaseKey")!.GetValue(row)!;
                     var releaseApproval = approvalRoot.GetProperty("releases").GetProperty(key);
-                    if (GetJsonInt(releaseApproval, "checksPassed") != 3 || GetJsonString(releaseApproval, "directWrite") != "refused-before-dispatch" ||
+                    if (GetJsonInt(releaseApproval, "checksPassed") != 4 || GetJsonString(releaseApproval, "directWrite") != "refused-before-dispatch" ||
+                        GetJsonString(releaseApproval, "stagingWrite") != "approval-refused-before-filesystem-write" ||
                         GetJsonString(releaseApproval, "read") != "succeeded" || GetJsonString(releaseApproval, "CallTool") != "not-advertised-by-Foundation-V4")
                         throw new ReleaseException("Foundation default-approval result is incomplete: " + key);
                 }
                 validationNode["approvalSafetyExecuted"] = true;
-                validationNode["foundationApprovalSafetyChecksPassed"] = 18;
+                validationNode["foundationApprovalSafetyChecksPassed"] = 24;
                 validationNode["foundationCallToolUnsupportedReleases"] = JsonSerializer.SerializeToNode(unsupported);
                 validationNode["foundationApprovalResultPath"] = Path.GetRelativePath(Root, approvalOutput).Replace('\\', '/') + "/result.json";
                 validationNode["approvalSafetyScriptSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"));
@@ -1385,8 +1386,8 @@ internal static partial class ReleaseCommands
                     releaseRows[index] = new
                     {
                         releaseKey = key, profile = "plc-foundation", toolCount = (int)row.GetType().GetProperty("toolCount")!.GetValue(row)!, nativeAcceptance = "NOT RUN",
-                        approvalSafetyChecksPassed = 3, approvalDefaultEnabled = true,
-                        approvalSafety = new { status = "passed", checksPassed = 3, defaultEnabled = true, directWriteRefusedBeforeDispatch = true, readSucceeded = true, callTool = "not-advertised-by-Foundation-V4" }
+                        approvalSafetyChecksPassed = 4, approvalDefaultEnabled = true,
+                        approvalSafety = new { status = "passed", checksPassed = 4, defaultEnabled = true, directWriteRefusedBeforeDispatch = true, readSucceeded = true, callTool = "not-advertised-by-Foundation-V4" }
                     };
                 }
                 evidencePaths.Add(Path.Combine(approvalOutput, "result.json"));

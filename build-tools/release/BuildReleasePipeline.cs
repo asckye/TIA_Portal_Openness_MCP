@@ -15,7 +15,7 @@ internal static partial class ReleaseCommands
         {
             ["nativeMcpSafety"] = (8, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
             ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
-            ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (4, true),
+            ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
             ["softwareLookup"] = (45, false), ["engineeringApiV20"] = (2840, false), ["engineeringApiV21"] = (3126, false),
             ["v21Ecosystem"] = (75, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
             ["runtimeSettingsV20"] = (8, false), ["runtimeSettingsV21"] = (9, false), ["ecosystem"] = (31, false)
@@ -521,7 +521,7 @@ internal static partial class ReleaseCommands
         var approval = approvalDoc.RootElement.Clone();
         CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
         var approvalResults = approval.GetProperty("results");
-        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 4 || GetJsonBool(approval, "workbenchConnected") ||
+        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 7 || GetJsonBool(approval, "workbenchConnected") ||
             GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
             GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
         return approval;
