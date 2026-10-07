@@ -25,6 +25,7 @@
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />
     <Compile Include="../Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
+    <Compile Include="../Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="../Shared/SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"
                       GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier" />

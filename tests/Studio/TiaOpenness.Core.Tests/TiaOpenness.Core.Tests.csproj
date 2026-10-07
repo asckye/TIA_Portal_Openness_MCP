@@ -19,5 +19,6 @@
     <Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
     <Compile Include="../../../src/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Journal/PortalFailureClassifier.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
   </ItemGroup>
 </Project>

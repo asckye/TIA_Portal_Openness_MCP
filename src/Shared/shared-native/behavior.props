@@ -2,6 +2,7 @@
   <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
     <Compile Include="$(MSBuildThisFileDirectory)../NativeInputPolicy.cs" Link="Shared/NativeInputPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../NativeExportPolicy.cs" Link="Shared/NativeExportPolicy.cs" />

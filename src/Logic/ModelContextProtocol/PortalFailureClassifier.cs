@@ -26,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// </summary>
         internal static bool IsPortalProcessLost(Exception? ex)
         {
-            string? reason = TiaOpenness.Shared.HostFailurePolicy.ProcessLossReason(ex);
+            string? reason = TiaOpenness.Shared.ProcessLossPolicy.Reason(ex);
             return reason != null && Lost(reason);
         }
 

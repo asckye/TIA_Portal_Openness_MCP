@@ -8,16 +8,7 @@ namespace TiaOpenness.Shared
 
     internal static class HostFailurePolicy
     {
-        internal static string? ProcessLossReason(Exception? error)
-        {
-            for (var cause = error; cause != null; cause = cause.InnerException)
-            {
-                string name = cause.GetType().FullName ?? "";
-                foreach (string pattern in new[] { "NonRecoverable", "System.Runtime.InteropServices.COMException", "RemotingException", "CommunicationObjectFaultedException", "CommunicationObjectAbortedException" })
-                    if (name.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0) return name;
-            }
-            return null;
-        }
+        internal static string? ProcessLossReason(Exception? error) => ProcessLossPolicy.Reason(error);
 
         internal static Exception Unwrap(Exception error)
         {
