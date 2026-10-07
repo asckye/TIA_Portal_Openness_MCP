@@ -100,12 +100,8 @@ def exercise(client, key, logfile, expected_before):
     assert 'GetToolUsage' in initialized.get('instructions', '')
     tools = client.call('tools/list', {})['tools']
     names = {t['name'] for t in tools}
-    def usage_call(name, args):
-        body = tool(client, name, args)
-        if name == 'PlanArtifactImportOrder':
-            return {'Valid': body['data']['valid'], 'Order': body['data']['order']}
-        return body
-    USAGE_REPORTS.append(check_usage(usage_call, tools, key))
+    # check_usage reads the V4 envelope (Foundation plan fields are camelCase since P6-59).
+    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key))
     assert 'CallTool' not in names and 'Bootstrap' not in names and 'Connect' not in names
     for name in names:
         refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})

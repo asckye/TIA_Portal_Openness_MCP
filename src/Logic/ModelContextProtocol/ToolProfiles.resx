@@ -18700,8 +18700,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -18749,7 +18749,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -18772,10 +18772,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -18811,7 +18810,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -18867,7 +18866,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -18881,7 +18880,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19006,10 +19005,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -19025,7 +19024,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19040,10 +19039,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -19057,8 +19056,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19072,7 +19071,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -19110,9 +19109,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19126,9 +19125,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19142,9 +19141,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19158,7 +19157,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -19174,9 +19173,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19190,7 +19189,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -19205,7 +19204,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -19218,7 +19217,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19230,7 +19229,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19242,7 +19241,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19254,7 +19253,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19286,7 +19285,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19298,7 +19297,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19320,7 +19319,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19344,7 +19343,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -19357,7 +19356,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19369,9 +19368,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19385,11 +19384,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -19401,7 +19402,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -19417,10 +19418,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -19432,9 +19435,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19448,7 +19451,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -19474,7 +19477,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19510,7 +19513,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -19566,8 +19569,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19579,8 +19582,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19621,8 +19624,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -19670,7 +19673,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -19693,10 +19696,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -19732,7 +19734,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -19788,7 +19790,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19802,7 +19804,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19927,10 +19929,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -19946,7 +19948,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19961,10 +19963,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -19978,8 +19980,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -19993,7 +19995,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -20031,9 +20033,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20047,9 +20049,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20063,9 +20065,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20079,7 +20081,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -20095,9 +20097,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20111,7 +20113,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -20126,7 +20128,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -20139,7 +20141,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20151,7 +20153,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20163,7 +20165,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20175,7 +20177,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20187,7 +20189,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20219,7 +20221,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20231,7 +20233,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20253,7 +20255,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20277,7 +20279,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -20290,7 +20292,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20302,9 +20304,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20318,11 +20320,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -20334,7 +20338,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -20350,10 +20354,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -20365,9 +20371,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20381,7 +20387,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -20407,7 +20413,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20443,7 +20449,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -20499,8 +20505,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20512,8 +20518,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20554,8 +20560,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -20603,7 +20609,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -20626,10 +20632,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -20665,7 +20670,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -20721,7 +20726,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20735,7 +20740,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20860,10 +20865,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -20879,7 +20884,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20894,10 +20899,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -20911,8 +20916,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20926,7 +20931,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -20964,9 +20969,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20980,9 +20985,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -20996,9 +21001,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21012,7 +21017,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
           "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
@@ -21028,7 +21033,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
@@ -21044,7 +21049,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -21060,9 +21065,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21076,7 +21081,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -21091,7 +21096,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -21104,7 +21109,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21116,7 +21121,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21128,7 +21133,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21140,7 +21145,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21152,7 +21157,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21184,7 +21189,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21196,7 +21201,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21218,7 +21223,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21242,7 +21247,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -21255,7 +21260,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21267,9 +21272,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21283,11 +21288,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -21299,7 +21306,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -21315,10 +21322,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -21330,9 +21339,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21346,7 +21355,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -21372,7 +21381,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21408,7 +21417,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -21464,8 +21473,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21477,8 +21486,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21519,8 +21528,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -21568,7 +21577,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -21591,10 +21600,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -21630,7 +21638,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -21686,7 +21694,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21700,7 +21708,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21825,10 +21833,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -21844,7 +21852,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21859,10 +21867,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -21876,8 +21884,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21891,7 +21899,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -21929,9 +21937,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21945,9 +21953,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21961,9 +21969,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -21977,7 +21985,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
           "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
@@ -21993,7 +22001,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
@@ -22009,7 +22017,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -22025,9 +22033,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22041,7 +22049,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -22056,7 +22064,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -22069,7 +22077,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22081,7 +22089,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22093,7 +22101,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22105,7 +22113,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22117,7 +22125,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22149,7 +22157,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22161,7 +22169,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22183,7 +22191,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22207,7 +22215,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -22220,7 +22228,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22232,9 +22240,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22248,11 +22256,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -22264,7 +22274,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -22280,10 +22290,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -22295,9 +22307,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22311,7 +22323,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -22337,7 +22349,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22373,7 +22385,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -22429,8 +22441,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22442,8 +22454,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22484,8 +22496,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22533,7 +22545,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -22556,10 +22568,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -22595,7 +22606,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -22651,7 +22662,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22665,7 +22676,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22790,10 +22801,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -22809,7 +22820,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22824,10 +22835,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -22841,8 +22852,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22856,7 +22867,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -22894,9 +22905,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22910,9 +22921,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22926,9 +22937,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -22942,7 +22953,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
           "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
@@ -22958,7 +22969,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
@@ -22974,7 +22985,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -22990,9 +23001,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23006,7 +23017,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -23021,7 +23032,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -23034,7 +23045,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23046,7 +23057,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23058,7 +23069,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23070,7 +23081,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23082,7 +23093,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23114,7 +23125,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23126,7 +23137,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23148,7 +23159,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23172,7 +23183,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -23185,7 +23196,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23197,9 +23208,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23213,11 +23224,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -23229,7 +23242,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -23245,10 +23258,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -23260,9 +23275,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23276,7 +23291,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -23302,7 +23317,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23338,7 +23353,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -23394,8 +23409,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23407,8 +23422,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23466,8 +23481,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "projectName": "Example",
-          "expectedProjectFile": "C:\\Examples\\Example.ap{extension}"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -23515,7 +23530,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -23538,10 +23553,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputRoot": "C:\\Examples\\snapshot",
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
           "files": [
-            "tags.xml",
-            "db.xml"
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
@@ -23577,7 +23591,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "{release}",
+          "outputReleaseKey": "21",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -23633,7 +23647,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23647,7 +23661,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23772,10 +23786,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Ready",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide tag name&gt;",
           "dataType": "Bool",
-          "address": "%M0.0",
+          "address": "%M100.0",
           "dryRun": true,
           "confirm": false
         },
@@ -23791,7 +23805,7 @@
         "arguments": {
           "plc": "PLC_1",
           "group": "",
-          "name": "ExampleTags",
+          "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23806,10 +23820,10 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "ExampleTags",
-          "name": "Limit",
+          "table": "&lt;new table name from completed CreatePlcTagTable; verify ListPlcTagTables&gt;",
+          "name": "&lt;fresh PLC-wide constant name&gt;",
           "dataType": "Int",
-          "value": "10",
+          "value": "5",
           "dryRun": true,
           "confirm": false
         },
@@ -23823,8 +23837,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "directoryPath": "C:\\Examples",
-          "projectName": "Example",
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23838,7 +23852,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "externalSourceName": "FC_Add",
           "dryRun": true,
@@ -23876,9 +23890,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports\\Main.xml",
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23892,9 +23906,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23908,9 +23922,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23924,7 +23938,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
           "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
@@ -23940,7 +23954,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "Axis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
@@ -23956,7 +23970,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
@@ -23972,9 +23986,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "exportPath": "C:\\Examples\\existing-exports",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -23988,7 +24002,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -24003,7 +24017,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -24016,7 +24030,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24028,7 +24042,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24040,7 +24054,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24052,7 +24066,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24064,7 +24078,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24096,7 +24110,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24108,7 +24122,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24130,7 +24144,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24154,7 +24168,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -24167,7 +24181,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24179,9 +24193,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -24195,11 +24209,13 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "dir": "C:\\Examples\\exports",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -24211,7 +24227,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
@@ -24227,10 +24243,12 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
-          "sourceDir": "C:\\Examples\\exports",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -24242,9 +24260,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\ExampleTags.xml",
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -24258,7 +24276,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
@@ -24284,7 +24302,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}",
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
         },
@@ -24320,7 +24338,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "devices/S71500%2FET200MP%20station_1/PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
@@ -24376,8 +24394,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -24389,8 +24407,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
