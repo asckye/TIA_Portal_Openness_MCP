@@ -4,7 +4,7 @@ These eight peer projects compile the PLC foundation subset and Studio native
 extension surfaces into separate typed libraries. V20 and V21 have exactly the same project structure as
 the earlier releases. The foundation host publishes the matching subset for V14 SP1–V19,
 while V20/V21 retain their full engines. Each worker references exactly one selected adapter.
-Use `scripts/build/Build-MultiVersion.ps1` from the repository root to build, test and deploy
+Use `dotnet run --project build-tools/release -- build-multi-version` from the repository root to build, test and deploy
 the eight-version distribution. Native TIA acceptance remains pending.
 
 The native source allowlist is shared by source, not by an API-bound binary.
@@ -72,7 +72,7 @@ dotnet build build-tools/native-call-weaver/NativeCallWeaver.csproj -c Release
 dotnet build src/Adapters/V20/Adapter.20.csproj -c Release -p:SiemensEngineeringDirectory="C:/authorized-sdk/TIA_V20_PublicAPI/V20"
 ```
 
-`scripts/build/Build-PlcAdapterWorkers.ps1 -PublicApiRoot <eight-version-root>`
+`dotnet run --project build-tools/release -- build-plc-workers -PublicApiRoot <eight-version-root>`
 builds each release-matched worker with exactly its matching Adapter project. It
 verifies coverage again on the copied Adapter DLL, checks that no old Foundation
 or Siemens DLL was copied, and records hashes. It never launches a worker or TIA.
@@ -115,7 +115,7 @@ common diagnostic abstraction removes the duplication, not eight runtime copies.
 
 Each worker selects one exact adapter and preserves its resolver and STA session model.
 The host and configurator now select the eight precise release keys. V14 SP1–V19 use
-the foundation catalog; V20/V21 retain their full engines. `Build-MultiVersion.ps1`
+the foundation catalog; V20/V21 retain their full engines. `build-multi-version`
 assembles the runtime directories, tests real STDIO/HTTP against synthetic child workers,
 and records hashes. The former blanket Publish/Pack refusal has been removed.
 

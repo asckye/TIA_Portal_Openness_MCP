@@ -43,6 +43,6 @@ AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取�
 
 ## 开发和维护
 
-仅维护 `master`。运行二进制随完整 Release 分发，不提交到 Git。准备 SDK 和伴随 Python 环境后，使用 `Build-MultiVersion.ps1 -Test` 构建全部版本。
+仅维护 `master`。运行二进制随完整 Release 分发，不提交到 Git。准备 SDK 和伴随 Python 环境后，使用 `dotnet run --project build-tools/release -- build-multi-version -Test` 构建全部版本。
 
 [构建与验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [发布流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)

@@ -711,7 +711,7 @@ internal static partial class ReleaseCommands
             foreach (var row in TryArray(build, "runtimeFiles"))
             {
                 var relative = JsonString(row, "path");
-                // The release-only IL verifier is recorded with the engine but never delivered (Validate-Bundle.ps1 skipped it in package mode).
+                // The release-only IL verifier is recorded with the engine but never delivered (the former PowerShell validator skipped it in package mode).
                 if (package && relative.StartsWith("runtime/verification/", StringComparison.Ordinal)) continue;
                 var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                 if (!File.Exists(path)) throw new ReleaseException("Runtime dependency missing: " + relative);
@@ -836,7 +836,7 @@ internal static partial class ReleaseCommands
             foreach (var folder in new[] { "Gui", "Client", "Core", "Contracts", "Bridge" })
             {
                 var path = Path.Combine(Root, "src/Studio", folder);
-                // Generated sources under bin/obj are build output, not inputs (as Build-Configurator.ps1 and Package-Release.py define them).
+                // Generated sources under bin/obj are build output, not inputs (as the former PowerShell build and Package-Release.py define them).
                 if (Directory.Exists(path)) foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Where(file => IsBuildSource(file) && !IsBuildOutput(file))) inputs.Add(file);
             }
             var testsFolder = Path.Combine(Root, "tests/Studio/TiaOpenness.Configuration.Tests");

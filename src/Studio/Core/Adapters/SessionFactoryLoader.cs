@@ -18,7 +18,7 @@ namespace TiaOpenness.Core.Abstractions
             var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(install.Version);
             string key = release.Key;
             string path = AdapterPath(AppDomain.CurrentDomain.BaseDirectory, key);
-            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with scripts/build/Build-Studio.ps1 and deploy it under bridge/adapters/v" + key + ".");
+            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with \"dotnet run --project build-tools/release -- build-studio\" and deploy it under bridge/adapters/v" + key + ".");
             OpennessAssemblyResolver.Install(install.Version);
 #if TIA_SHARED_ADAPTER_PATHS
             ITiaSessionFactory factory = new TiaOpenness.Core.Adapters.AdapterSessionFactory(path, key);

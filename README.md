@@ -46,7 +46,7 @@ All eight runtimes and Studio are built locally against the supplied SDKs. Funct
 `master` is the maintained branch. Runtime binaries are release assets, not tracked Git files. With the documented SDK layout and companion Python environment:
 
 ```powershell
-pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
 [Build and validation](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [Release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [Current handoff](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)

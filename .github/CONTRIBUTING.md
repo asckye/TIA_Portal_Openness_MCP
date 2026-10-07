@@ -22,7 +22,7 @@ Do not attach customer projects or credentials. Use the smallest reproducible sa
 4. For actual import/compile acceptance, report the selected test project/PLC, imported identities, compile error/warning counts and readback. A build or successful method return does not establish engineering success.
 5. Update affected docs and add user-visible changes to `CHANGELOG.md` using the existing format. Keep dates and versions accurate.
 
-Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `Build-Release.ps1` builds the full engines/configurator; `Build-MultiVersion.ps1` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/development/validation.md) and the [release workflow](../docs/development/release-workflow.md); source or test changes require refreshed matching evidence.
+Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `dotnet run --project build-tools/release -- build-release` builds the full engines/configurator; `dotnet run --project build-tools/release -- build-multi-version` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/development/validation.md) and the [release workflow](../docs/development/release-workflow.md); source or test changes require refreshed matching evidence.
 
 Repository checks include:
 

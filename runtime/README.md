@@ -1,6 +1,6 @@
 # Runtime outputs
 
-`Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Test` produces these ignored local outputs:
+`dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <SDK-root> -Test` produces these ignored local outputs:
 
 | Release | Executable | Profile |
 |---|---|---|

@@ -38,5 +38,5 @@ remain the caller's responsibility; no new override name is introduced.
 The table contains tracked delivery resources, including the template and guide
 directories. Runtime executables are build outputs, not entries in this table.
 `Check-BundleLayout.py` verifies Git membership and the enforced resource list in
-`Validate-Bundle.ps1`. Build-Configurator records this shared desktop input;
-Build-Release and Build-MultiVersion already inventory the whole shared directory.
+`validate-bundle` (release tool). `build-configurator` records this shared desktop input;
+`build-release` and `build-multi-version` already inventory the whole shared directory.
