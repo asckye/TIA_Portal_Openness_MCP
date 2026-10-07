@@ -17,6 +17,9 @@ internal static class DeclarationReadContract
         string kind=tool switch { "ReadPlcTags"=>"tag", "ReadPlcUserConstants"=>"user-constant", "ReadPlcSystemConstants"=>"system-constant", _=>throw new InvalidDataException("Unknown declaration reader.") };
         if(result is not JsonArray rows) throw new InvalidDataException("Worker returned an invalid declaration list for "+tool);
         var paths=new HashSet<string>(StringComparer.Ordinal);
+        // The table may be the exact encoded path or (P6-55) a unique raw single-segment name, which the worker
+        // answers with the canonical encoded path; every row must then share that one prefix.
+        string? prefix=null;
         foreach(var node in rows)
         {
             if(node is not JsonObject row || row.Count!=5)
@@ -25,9 +28,13 @@ internal static class DeclarationReadContract
                 if(row[field] is not JsonValue value || !value.TryGetValue<string>(out _))
                     throw new InvalidDataException("Worker returned an invalid declaration field for "+tool);
             string name=row["Name"]!.GetValue<string>(), path=row["Path"]!.GetValue<string>();
-            if(string.IsNullOrWhiteSpace(name) || row["Kind"]!.GetValue<string>()!=kind ||
-                path!=table+"/"+Uri.EscapeDataString(name) || !paths.Add(path))
+            string leaf="/"+Uri.EscapeDataString(name);
+            string? rowPrefix=path.EndsWith(leaf,StringComparison.Ordinal) ? path.Substring(0,path.Length-leaf.Length) : null;
+            bool knownPrefix=rowPrefix==table || (!table.Contains('/') && rowPrefix==Uri.EscapeDataString(table));
+            if(string.IsNullOrWhiteSpace(name) || row["Kind"]!.GetValue<string>()!=kind || !knownPrefix ||
+                (prefix!=null && rowPrefix!=prefix) || !paths.Add(path))
                 throw new InvalidDataException("Worker returned conflicting declaration identity for "+tool);
+            prefix=rowPrefix;
         }
         // Empty addresses, data types and constant text remain exactly as returned.
         // This is engineering metadata, never a live PLC value or expression evaluation.
