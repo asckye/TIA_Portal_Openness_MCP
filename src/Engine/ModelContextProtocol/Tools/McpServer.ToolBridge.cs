@@ -311,6 +311,12 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
         {
             if (error is TargetInvocationException invocation && invocation.InnerException != null) error = invocation.InnerException;
+            if (error is TiaMcp.Adapters.Contracts.AdapterPreconditionException precondition)
+                return V4Reject(tool, new Error("The native precondition refused the request before operation.", precondition.IsArgument
+                    ? (ErrorDetails)new InvalidArgumentDetails(precondition.ParamName ?? "arguments", Array.Empty<string>())
+                    : new PreconditionFailedDetails("native-admission", tool)));
+            if (ApprovalPreviewDepth.Value > 0 && error is OperationCanceledException)
+                return V4Reject(tool, new Error("The approval precheck was cancelled.", new CancelledDetails("approval-precheck")));
             var evidence = new JsonObject { ["exceptionType"] = error.GetType().Name };
             var data = new JsonObject { ["evidence"] = evidence };
             if (!issued) return V4Reject(tool, new Error("The tool was rejected before dispatch.",
@@ -322,7 +328,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var classification = AllToolMethods(includeUnavailable: true).TryGetValue(tool, out var method)
                 ? ClassificationOf(method) : ToolMetadata.Find(tool);
             string operation = classification?.Operation ?? ToolTaxonomy.OperationOf(tool, null).Operation;
-            bool readOnly = operation is "READ" or "OFFLINE" || operation == "SESSION" && classification?.BatchRead == true;
+            bool readOnly = ApprovalPreviewDepth.Value > 0 || operation is "READ" or "OFFLINE" || operation == "SESSION" && classification?.BatchRead == true;
             if (!readOnly) return V4Result(tool, data,
                 new Error("The issued tool outcome is unconfirmed. Inspect the evidence and reset the session before further writes.",
                     new OutcomeUnknownDetails("tool-call", evidence.ToDictionary(pair => pair.Key,

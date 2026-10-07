@@ -31,6 +31,69 @@ namespace TiaMcpServer.ModelContextProtocol
             public void Dispose() => ApprovalPreviewDepth.Value = previous;
         }
         internal static IDisposable BeginReadOnlyApprovalPreview() => new InternalPreviewScope();
+        private sealed class SessionFault { internal bool Unknown; }
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, SessionFault> SessionFaults =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<object, SessionFault>();
+        private static readonly AsyncLocal<Func<object?>?> ApprovalSessionOverride = new AsyncLocal<Func<object?>?>();
+        internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
+        static partial void ApprovalSessionKey(ref object? key);
+        private static object? CurrentApprovalSession()
+        { object? key = null; ApprovalSessionKey(ref key); return ApprovalSessionOverride.Value?.Invoke() ?? key; }
+        internal static CallToolResult? SessionPrecheckRefusal(string name)
+        {
+            var key = CurrentApprovalSession();
+            return ToolTaxonomy.UsesOpennessLane(name) && key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown
+                ? V4Reject(name, new Error(ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"))) : null;
+        }
+        internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write)
+        {
+            var key = CurrentApprovalSession();
+            var body = ResultBody(result);
+            var data = body?["data"] as JsonObject;
+            bool True(JsonNode? value) => value is JsonValue flag && flag.TryGetValue<bool>(out var truth) && truth;
+            bool nativeIssued = True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
+            bool mutation = write || nativeIssued && ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
+            if (mutation && key != null && ToolTaxonomy.UsesOpennessLane(name) && (string?)body?["meta"]?["outcome"] == "unknown")
+                SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
+            return result;
+        }
+        internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
+            Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
+        {
+            if (ApprovalPreviewDepth.Value > 0) return null;
+            var reset = SessionPrecheckRefusal(name);
+            if (reset != null) return reset;
+            if (!ApprovalWrite(name, arguments) || !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled) return null;
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
+            if (!TryDryRunDefault(name, out _) && !candidate) return null;
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            string? identity = null; ApprovalBindingIdentity(ref identity);
+            AuditInvocation.RecordCurrentRequest(PendingApproval.Create("engine", ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
+            CallToolResult? result = null;
+            if (candidate)
+            {
+                foreach (var key in SessionCandidateContract.Entries.Contains(name, StringComparer.Ordinal) && SessionCandidateContract.Action(name) == "attach"
+                    ? new[] { "expectedPlanHash" } : new[] { "expectedProjectFile", "expectedPlanHash" })
+                    if (args[key] is not JsonValue value || !value.TryGetValue<string>(out var text) || string.IsNullOrWhiteSpace(text))
+                    { result = V4Reject(name, InvalidInput(key)); break; }
+                if (result == null && args["confirm"]?.GetValue<bool>() != true) result = V4Reject(name, InvalidInput("confirm"));
+            }
+            if (result == null)
+            {
+                args[candidate ? "mode" : "dryRun"] = candidate ? JsonValue.Create("preview") : JsonValue.Create(true);
+                using var preview = BeginReadOnlyApprovalPreview();
+                using var audit = AuditInvocation.ReadOnlyPreview();
+                try { token.ThrowIfCancellationRequested(); result = await previewCall(args.ToJsonString()).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }
+                catch (OperationCanceledException) /* swallow(privacy): cancellation in the read-only precheck has no issued write */
+                { result = V4Reject(name, new Error("The approval precheck was cancelled.", new CancelledDetails("approval-precheck"))); }
+                catch (Exception ex) /* swallow(privacy): preview failures are classified before a write is issued */
+                { result = TargetFailure(name, ex, false); }
+            }
+            if (ResultSucceeded(ResultBody(result)) == true) return null;
+            var body = ApprovalPrecheck.Mark(ResultBody(result)!, AuditInvocation.CurrentRequestId);
+            return new CallToolResult { IsError = true, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+        }
         internal static bool ApprovalWrite(string tool, string arguments)
         {
             var args = JsonNode.Parse(arguments)!.AsObject();
@@ -119,6 +182,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
+            var refusal = McpApprovalContext.Value ? PrecheckBeforeApproval(name, arguments, previewArgs => Task.FromResult(CallTool(name,
+                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs)))), McpDispatchCancellation.Value).GetAwaiter().GetResult() : SessionPrecheckRefusal(name);
+            if (refusal != null) return refusal;
             var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0
                 ? WaitForApproval(name, arguments, McpDispatchCancellation.Value).GetAwaiter().GetResult() : null;
             if (approval?.Reason != null) return ApprovalRefusal(approval);
@@ -128,13 +194,15 @@ namespace TiaMcpServer.ModelContextProtocol
             IDisposable? targetLane = null;
             if (beforeDispatch != null) EnterTargetLane(name, arguments, ref targetLane);
             using var boundedTargetLane = targetLane;
+            var reset = SessionPrecheckRefusal(name);
+            if (reset != null) return FinishApproval(reset, approval);
             if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
             var rejection = beforeDispatch?.Invoke();
             if (rejection != null) return FinishApproval(rejection, approval);
             if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
                 ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
-            try { return FinishApproval(invoke(), approval, McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
+            try { return FinishApproval(ObserveSessionOutcome(name, invoke(), ApprovalWrite(name, arguments)), approval, McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
             catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
         }
         static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane);

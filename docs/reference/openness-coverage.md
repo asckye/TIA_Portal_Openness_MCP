@@ -99,6 +99,10 @@ Worker-side validations that finish before the first native mutation return `rej
 
 For audited MCP writes, one `request` row uses the result's `meta.requestId` and records `planHash` when available. An approved or approval-disabled dispatch adds `start` after the decision; a denied or timed-out call records its approval decision and `end` without `start`. Request, approval, start and end rows share that request ID on Foundation and V20/V21 engine paths. `dryRun=true` and candidate `mode=preview` calls do not queue for approval or enter the write audit.
 
+When approval is enabled, writes with a preview first run their own `dryRun:true` or `mode:"preview"` call through the same session and native dispatch lane. A refused precheck returns the original error with `meta.outcome="rejected-before-operation"`, `meta.execution="not-started"`, and a `meta.warnings` entry `{ "code": "NATIVE_WARNING", "details": { "stage": "approval-precheck" } }`. Only the original write records `request` and `end`; the internal preview adds no write audit, approval decision or start. A successful preview releases the lane before approval waits; the real call checks preconditions again under the lane. Approval disabled skips the precheck. Tools without a preview retain their existing gate. Current FILE/EXECUTE tools that were not approval gated retain their classification; promoted export/compile candidates use their own mode preview.
+
+After a native write has an unknown outcome, subsequent native reads and writes are refused before approval with `SESSION_RESET_REQUIRED`, `error.details.reason="previous-outcome-unknown"`, `rejected-before-operation` and `not-started`. Inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. A poisoned Foundation worker needs a new host session; an isolated engine worker needs an explicit restart and project binding. Neither host automatically replays the interrupted request.
+
 ## Findings that determine implementation order
 
 1. **The source pipeline is available in the official APIs.** Every inspected SDK has

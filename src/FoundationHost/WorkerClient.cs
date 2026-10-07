@@ -39,6 +39,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private readonly Queue<string> diagnostics = new();
     private JsonObject approvalIdentity = new();
     internal string ApprovalIdentity => approvalIdentity.ToJsonString();
+    internal bool Poisoned => outcome.Poisoned;
     // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
 
@@ -47,6 +48,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         bool acquired = !ReferenceEquals(Held.Value, this);
         if (acquired) await serial.WaitAsync(token);
         bool sent = false;
+        bool usableAtEntry = !outcome.Poisoned;
         try
         {
             outcome.RequireUsable();
@@ -126,7 +128,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             // ChannelClient marks OutcomeUnknown only after it has dispatched a request.
             // A first-attach timeout therefore remains an unknown native outcome instead
             // of being mistaken for a failure before the worker request was sent.
-            sent |= channel?.OutcomeUnknown == true;
+            sent |= usableAtEntry && channel?.OutcomeUnknown == true;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
             {
                 int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
@@ -141,7 +143,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.TimeoutReason(true, matching);
                 if (reason != null) ex.Data["sessionReason"] = reason;
             }
-            if(channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
+            if(usableAtEntry && channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
             ex.Data["foundationRequestSent"] = sent;
             outcome.Failed(sent,ex);
             ex.Data["foundationSessionPoisoned"] = outcome.Poisoned;

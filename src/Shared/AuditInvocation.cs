@@ -14,6 +14,15 @@ namespace TiaOpenness.Shared
         private bool completed, requestWritten, started;
         private static readonly AsyncLocal<AuditInvocation?> Current = new AsyncLocal<AuditInvocation?>();
         private static readonly AsyncLocal<AuditLog?> LogOverride = new AsyncLocal<AuditLog?>();
+        private static readonly AsyncLocal<int> PreviewDepth = new AsyncLocal<int>();
+        internal static bool IsReadOnlyPreview => PreviewDepth.Value > 0;
+        internal static IDisposable ReadOnlyPreview() => new PreviewScope();
+        private sealed class PreviewScope : IDisposable
+        {
+            private readonly int previous = PreviewDepth.Value;
+            internal PreviewScope() { PreviewDepth.Value = previous + 1; }
+            public void Dispose() => PreviewDepth.Value = previous;
+        }
         private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool)
         { this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; previous = Current.Value; Current.Value = this; }
         internal string RequestId => requestId;
@@ -21,7 +30,7 @@ namespace TiaOpenness.Shared
         internal static AuditLog? CurrentLog => Current.Value?.log ?? LogOverride.Value;
         internal static AuditInvocation? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null)
         {
-            if (!write) return null;
+            if (!write || PreviewDepth.Value > 0) return null;
             try { return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool); }
             catch (Exception ex) { ReportFailure(ex); return null; }
         }
@@ -44,13 +53,13 @@ namespace TiaOpenness.Shared
             requestWritten = true;
             Emit("request", planHash: planHash);
         }
-        internal static void RecordCurrentRequest(string? planHash = null) => Current.Value?.RecordRequest(planHash);
+        internal static void RecordCurrentRequest(string? planHash = null) { if (PreviewDepth.Value == 0) Current.Value?.RecordRequest(planHash); }
         internal void Start()
         {
             if (started || completed) return;
             RecordRequest(); started = true; Emit("start");
         }
-        internal static void StartCurrent() => Current.Value?.Start();
+        internal static void StartCurrent() { if (PreviewDepth.Value == 0) Current.Value?.Start(); }
         internal void Complete(string? json)
         {
             string outcome = "unknown";

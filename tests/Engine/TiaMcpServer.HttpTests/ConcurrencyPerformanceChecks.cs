@@ -52,6 +52,63 @@ internal static class ConcurrencyPerformanceChecks
         return (T)Activator.CreateInstance(typeof(T), All, null, new object?[] { pending, false, null }, null)!;
     }
 
+    private sealed class PrecheckTool : McpServerTool
+    {
+        private readonly Assembly engine;
+        internal int Previews, Writes;
+        internal bool Refuse;
+        internal PrecheckTool(Assembly engine) { this.engine = engine; }
+        public override Tool ProtocolTool => new Tool { Name = "CreatePlcTypeGroup", InputSchema = JsonSerializer.SerializeToElement(new { type = "object" }) };
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken token = default)
+        {
+            bool preview = request.Params.Arguments!["dryRun"].GetBoolean();
+            if (preview) Previews++; else Writes++;
+            var facade = engine.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+            object? result;
+            if (Refuse)
+            {
+                var details = Activator.CreateInstance(Program.FindServerType(engine, "TiaMcp.Logic.V4.InvalidArgumentDetails"), new object[] { "name", Array.Empty<string>() });
+                var error = Activator.CreateInstance(Program.FindServerType(engine, "TiaMcp.Logic.V4.Error"), new object[] { "Existing fixture symbol.", details! });
+                var method = facade.GetMethod("V4Reject", All)!;
+                var values = method.GetParameters().Select(p => p.DefaultValue).ToArray(); values[0] = "CreatePlcTypeGroup"; values[1] = error;
+                result = method.Invoke(null, values);
+            }
+            else
+            {
+                var method = facade.GetMethods(All).Single(m => m.Name == "V4Result" && m.GetParameters().Length == 5);
+                result = method.Invoke(null, new object?[] { "CreatePlcTypeGroup", new JsonObject(), null, false, !preview });
+            }
+            return new ValueTask<CallToolResult>((CallToolResult)result!);
+        }
+    }
+    private static async Task ApprovalPrecheckChecks(Assembly engine, Func<McpServerTool, McpServerTool> wrap, Delegate callback, PropertyInfo wait)
+    {
+        RequestContext<CallToolRequestParams> Apply() { var request = Request("CreatePlcTypeGroup"); request.Params = new CallToolRequestParams { Name = "CreatePlcTypeGroup", Arguments = new Dictionary<string, JsonElement> { ["dryRun"] = JsonSerializer.SerializeToElement(false) } }; return request; }
+        var settingsType = Program.FindServerType(engine, "TiaOpenness.Shared.ApprovalSettings");
+        var settingsPath = settingsType.GetProperty("SettingsPath", All)!.GetValue(null);
+        var prior = settingsType.GetMethod("Load", All)!.Invoke(null, new[] { settingsPath });
+        var save = settingsType.GetMethod("Save", All)!;
+        void Save(object settings) { var args = save.GetParameters().Select(p => p.DefaultValue).ToArray(); args[0] = settingsPath; save.Invoke(settings, args); }
+        Save(Activator.CreateInstance(settingsType, All, null, new object[] { true, 1 }, null)!);
+        approvalEntered = Signal(); approvalGranted = Signal(); wait.SetValue(null, callback);
+        try
+        {
+            var refused = new PrecheckTool(engine) { Refuse = true };
+            var rejection = await wrap(refused).InvokeAsync(Apply());
+            if (approvalEntered.Task.IsCompleted || refused.Previews != 1 || refused.Writes != 0
+                || rejection.StructuredContent?["meta"]?["warnings"]?.AsArray().Any(w => (string?)w?["details"]?["stage"] == "approval-precheck") != true)
+                throw new Exception("Refused precheck requested approval or dispatched a write.");
+            var valid = new PrecheckTool(engine);
+            var writing = wrap(valid).InvokeAsync(Apply()).AsTask(); await Bound(approvalEntered.Task);
+            if (valid.Previews != 1 || valid.Writes != 0) throw new Exception("Approval preceded the own preview.");
+            await Bound(wrap(new FakeTool("GetSessionState", _ => Task.CompletedTask)).InvokeAsync(Request("GetSessionState")).AsTask());
+            approvalGranted.SetResult(true); await Bound(writing);
+            if (valid.Previews != 1 || valid.Writes != 1 || writing.Result.IsError == true) throw new Exception("Valid prechecked write did not dispatch once.");
+            Console.WriteLine("PASS serialized approval precheck refusal, own preview and lane release during approval");
+        }
+        finally { wait.SetValue(null, null); Save(prior!); }
+    }
+
     internal static async Task RegressionChecks(Assembly engine)
     {
         engine.GetType("TiaMcpServer.Runtime.OpennessReadiness", true)!.GetMethod("MarkUnavailable", All)!
@@ -185,6 +242,7 @@ internal static class ConcurrencyPerformanceChecks
                 throw new Exception("Changed approved binding dispatched a write.");
         }
         finally { wait.SetValue(null, null); binding.SetValue(null, previousBinding); }
+        await ApprovalPrecheckChecks(engine, Wrap, callback, wait);
         await AuditChecks(engine);
         Console.WriteLine("PASS classification of " + tools.Count + " tools, registration metadata, independent sessions, queued cancellation, local bound and approval-before-lane");
     }

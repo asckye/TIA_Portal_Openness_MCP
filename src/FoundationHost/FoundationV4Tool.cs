@@ -196,6 +196,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name, id);
         var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
+        if (write && (string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool uncertain)
+            uncertain.MarkSessionUncertain();
         if (body != null && (approval != null || write && !settings.Enabled))
         {
             body = TiaOpenness.Shared.ApprovalResult.Decorate(body, write && !settings.Enabled, approval?.Request.RequestId);
@@ -209,14 +211,14 @@ internal sealed class FoundationV4Tool : McpServerTool
 
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken,
         TiaOpenness.Shared.ApprovalSettings settings, Action<TiaOpenness.Shared.ApprovalOutcome> capture,
-        string id, TiaOpenness.Shared.AuditInvocation? audit, bool write)
+        string id, TiaOpenness.Shared.AuditInvocation? audit, bool write, bool internalPrecheck = false)
     {
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-        using var journal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
+        using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         CallToolResult Recorded(CallToolResult result)
         {
-            journal.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
+            journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }
         IDisposable? lane = null;
@@ -233,6 +235,9 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true));
             if (inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 var readiness = readinessForTest?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release);
@@ -249,6 +254,50 @@ internal sealed class FoundationV4Tool : McpServerTool
                 pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
+                if (settings.Enabled && !internalPrecheck)
+                {
+                    var precheckArguments = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
+                    bool hasPreview = Candidate || tool.InputSchema.GetProperty("properties").TryGetProperty("dryRun", out _);
+                    if (hasPreview)
+                    {
+                        CallToolResult? refusal = null;
+                        try
+                        {
+                            if (Candidate)
+                            {
+                                foreach (var key in sessionCandidate && SessionCandidateContract.Action(tool.Name) == "attach"
+                                    ? new[] { "expectedPlanHash" } : new[] { "expectedProjectFile", "expectedPlanHash" })
+                                    if (!args.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value.GetString()))
+                                        throw new ArgumentException("Apply requires " + key + ".", key);
+                                if (!args.TryGetValue("confirm", out var confirmed) || !confirmed.GetBoolean())
+                                    throw new ArgumentException("Apply requires confirm=true.", "confirm");
+                            }
+                            else if (inner is FoundationTool applyTool) applyTool.ValidateApplyArguments(args);
+                        }
+                        catch (ArgumentException ex)
+                        { refusal = FoundationV4Result.Reject(release, tool.Name, id, new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "arguments", Array.Empty<string>())), inner is FoundationTool { IsNative: true }); }
+                        if (refusal == null)
+                        {
+                            precheckArguments[Candidate ? "mode" : "dryRun"] = Candidate
+                                ? JsonSerializer.SerializeToElement("preview") : JsonSerializer.SerializeToElement(true);
+                            var originalRequest = request.Params;
+                            request.Params = new CallToolRequestParams { Name = tool.Name, Arguments = precheckArguments };
+                            try
+                            {
+                                using var readOnlyAudit = TiaOpenness.Shared.AuditInvocation.ReadOnlyPreview();
+                                refusal = await InvokeCoreAsync(request, cancellationToken, settings, _ => { }, id, null, false, true);
+                            }
+                            finally { request.Params = originalRequest; }
+                        }
+                        if (refusal.StructuredContent?["ok"]?.GetValue<bool>() != true)
+                        {
+                            var marked = TiaOpenness.Shared.ApprovalPrecheck.Mark(refusal.StructuredContent!, id);
+                            return Recorded(new CallToolResult { IsError = true, StructuredContent = marked,
+                                Content = new[] { new TextContentBlock { Text = marked.ToJsonString() } } });
+                        }
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+                }
                 approval = approvalWait == null
                     ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
                     : await approvalWait(pending, settings, cancellationToken);
@@ -261,6 +310,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
                 WorkerClient.ActivateLane(lane);
             }
+            if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true));
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {

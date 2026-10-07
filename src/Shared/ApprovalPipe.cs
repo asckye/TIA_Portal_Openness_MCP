@@ -11,6 +11,23 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TiaOpenness.Shared
 {
+    internal static class ApprovalPrecheck
+    {
+        internal const string Recovery = "A previous native write has an unknown outcome. Inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Never replay the failed request.";
+        internal static System.Text.Json.Nodes.JsonNode Mark(System.Text.Json.Nodes.JsonNode body, string? requestId)
+        {
+            body = body.DeepClone();
+            var meta = body["meta"]!;
+            if (requestId != null) meta["requestId"] = requestId;
+            meta["outcome"] = "rejected-before-operation";
+            meta["execution"] = "not-started";
+            meta["completeness"] = "none";
+            meta["warnings"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject {
+                ["code"] = "NATIVE_WARNING", ["message"] = "The write was refused by the approval precheck; no approval was requested.",
+                ["details"] = new System.Text.Json.Nodes.JsonObject { ["stage"] = "approval-precheck" } });
+            return body;
+        }
+    }
     internal static class ApprovalPipe
     {
         internal static string CurrentSid => WindowsIdentity.GetCurrent().User?.Value ?? throw new IOException("No current user SID.");

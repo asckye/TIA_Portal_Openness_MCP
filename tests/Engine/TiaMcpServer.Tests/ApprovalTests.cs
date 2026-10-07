@@ -192,7 +192,7 @@ namespace TiaMcpServer.Tests
                 Assert.Equal("workbench-unavailable", (string?)body["error"]?["details"]?["reason"]);
                 Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
                 Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-                Assert.Empty(InfrastructureContractsTests.BatchProbes.Calls);
+                Assert.Equal(new[] { "bridge:True" }, InfrastructureContractsTests.BatchProbes.Calls);
             }
             finally { TiaMcpServer.ModelContextProtocol.McpServer.LeaveMcpApprovalContext(previous); }
         }
@@ -297,7 +297,7 @@ namespace TiaMcpServer.Tests
                 Assert.All(rows, row => Assert.Equal(requestId, row.RequestId));
                 Assert.False(string.IsNullOrWhiteSpace(rows[0].PlanHash));
                 Assert.All(rows.Where(row => row.Event.StartsWith("approval-", StringComparison.Ordinal)), row => Assert.Equal(rows[0].PlanHash, row.PlanHash));
-                Assert.Equal(enabled && decision != "granted" ? 0 : 1, InfrastructureContractsTests.BatchProbes.Calls.Count);
+                Assert.Equal(enabled ? decision == "granted" ? 2 : 1 : 1, InfrastructureContractsTests.BatchProbes.Calls.Count);
                 Assert.True(audit.Verify().Passed);
             }
             finally

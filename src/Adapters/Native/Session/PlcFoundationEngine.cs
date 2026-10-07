@@ -304,28 +304,32 @@ namespace TiaMcp.PlcFoundation
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(BlockGroups(selected.Value.BlockGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
-            return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>target.Blocks.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName));
+            return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>target.Blocks.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Blocks.", overwrite,
+                name => BlockGroups(selected.Value.BlockGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))));
         }
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var selected=ReadSelection(softwarePath);
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(TypeGroups(selected.Value.TypeGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
-            return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>target.Types.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name)));
+            return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>target.Types.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name)), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Types.", overwrite,
+                name => TypeGroups(selected.Value.TypeGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))));
         }
         public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(TagGroups(ReadPlc(softwarePath).TagTableGroup), x => x.Path, PlcExchangePolicy.ObjectPath(folderPath,true,"folderPath"),"folderPath").Value;
-            return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name));
+            return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
+                name => TagGroups(ReadPlc(softwarePath).TagTableGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))));
         }
-        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null)
+        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null, Action<System.Xml.Linq.XDocument>? precheck=null)
         {
             using(var stream=new FileStream(input.FullName,FileMode.Open,FileAccess.Read,FileShare.Read))
             using(var sha=System.Security.Cryptography.SHA256.Create())
             {
                 // Keep the file read-locked from validation/hash through native import.
-                PlcFoundationPolicy.XmlInput(input.FullName);
+                PlcFoundationPolicy.XmlInput(input.FullName, out var document);
+                precheck?.Invoke(document);
                 var hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
                 try
                 {
@@ -369,14 +373,14 @@ namespace TiaMcp.PlcFoundation
             return Mutation("CreateUserConstant", dryRun, new[] { name });
         }
         // Tags and constants share one symbol namespace per PLC: TIA refuses a duplicate in any table only inside the
-        // native Create (seen on the V14 SP1 VM as an unknown outcome). Check every table first, case-insensitively.
+        // native Create (seen on the V14 SP1 VM as an unknown outcome). Look up each composition before Create.
         private void RequireUniqueSymbol(string plc, string name)
         {
             foreach (var table in Tables(plc))
             {
-                bool clash = table.Value.Tags.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
-                    || table.Value.UserConstants.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))
-                    || table.Value.SystemConstants.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
+                bool clash = PlcFoundationPolicy.SymbolExists(table.Value.Tags, selectedName => table.Value.Tags.Find(selectedName), t => t.Name, name)
+                    || PlcFoundationPolicy.SymbolExists(table.Value.UserConstants, selectedName => table.Value.UserConstants.Find(selectedName), c => c.Name, name)
+                    || PlcFoundationPolicy.SymbolExists(table.Value.SystemConstants, selectedName => table.Value.SystemConstants.Find(selectedName), c => c.Name, name);
                 if (clash) throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Value.Name + "'; PLC symbol names are unique per PLC.", "name");
             }
         }

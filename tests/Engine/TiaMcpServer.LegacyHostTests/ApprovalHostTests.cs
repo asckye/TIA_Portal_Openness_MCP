@@ -16,16 +16,20 @@ public sealed class ApprovalHostTests
     [InlineData("CompileSoftware", "{\"softwarePath\":\"PLC\"}")]
     [InlineData("ImportPlcExternalSource", "{\"sourceName\":\"fixture.scl\",\"filePath\":\"C:/fixture.scl\"}")]
     [InlineData("AttachToOpenProject", "{\"processId\":1,\"processStartUtc\":\"2026-10-05T00:00:00Z\",\"projectPath\":\"C:/fixture.ap19\"}")]
-    public async Task Candidate_apply_waits_before_worker_dispatch_in_every_merged_family(string source, string json)
+    public async Task Candidate_apply_runs_its_own_preview_before_requesting_approval(string source, string json)
     {
         var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
         var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", _ => TiaMcp.Logic.V4.BehaviorPolicy.SafeV4, () => new ApprovalSettings(true, 1));
         var args = JsonNode.Parse(json)!.AsObject(); args["mode"] = "apply"; args["confirm"] = true;
         args["expectedPlanHash"] = new string('a', 64); args["expectedProjectFile"] = "C:/fixture.ap19";
         var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.ToJsonString()));
-        Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal("workbench-unavailable", (string?)result.StructuredContent?["error"]?["details"]?["reason"]);
-        Assert.Equal(0, worker.Calls);
+        if (source is "SaveProject" or "CloseProject")
+        {
+            Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("workbench-unavailable", (string?)result.StructuredContent?["error"]?["details"]?["reason"]);
+        }
+        else Assert.Single(result.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w?["details"]?["stage"] == "approval-precheck");
+        Assert.Equal(source == "ImportPlcExternalSource" ? 0 : 1, worker.Calls);
     }
 
     [Theory]
@@ -38,14 +42,14 @@ public sealed class ApprovalHostTests
         {
             var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
             var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
-            var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false}"));
+            var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false,\"confirm\":true,\"expectedProjectFile\":\"C:/fixture.ap19\"}"));
             Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
-            Assert.Equal(0, worker.Calls);
+            Assert.Equal(1, worker.Calls);
 
             tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(false, 1));
-            result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false}"));
+            result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"dryRun\":false,\"confirm\":true,\"expectedProjectFile\":\"C:/fixture.ap19\"}"));
             Assert.Single(result.StructuredContent!["meta"]!["warnings"]!.AsArray(), row => (string?)row?["code"] == "APPROVAL_DISABLED");
         }
         finally { before.Save(ApprovalSettings.SettingsPath); }
@@ -124,7 +128,7 @@ public sealed class ApprovalHostTests
         Assert.All(rows, row => Assert.Equal(requestId, row.RequestId));
         Assert.False(string.IsNullOrWhiteSpace(rows[0].PlanHash));
         Assert.All(rows.Where(row => row.Event.StartsWith("approval-", StringComparison.Ordinal)), row => Assert.Equal(rows[0].PlanHash, row.PlanHash));
-        Assert.Equal(enabled && decision != "granted" ? 0 : 1, worker.Calls);
+        Assert.Equal(enabled ? decision == "granted" ? 2 : 1 : 1, worker.Calls);
         Assert.True(audit.Verify().Passed);
     }
 
@@ -180,7 +184,14 @@ public sealed class ApprovalHostTests
     {
         public int Calls;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        { Calls++; return Task.FromResult<JsonNode?>(new JsonObject()); }
+        {
+            Calls++;
+            if (operation == "SaveCloseCandidate")
+                return Task.FromResult(JsonSerializer.SerializeToNode(new SaveCloseReply { Observation = new SaveCloseObservation {
+                    Binding = new SessionState { ProcessId = 1, ProcessStartUtc = DateTimeOffset.Parse("2026-10-05T00:00:00Z"), ProjectFile = @"C:\fixture.ap19", Ownership = "owned", Epoch = 1, WorkerEpoch = 1 },
+                    Dirty = false, ObjectValidity = "valid", DisconnectSupported = true, WorkerCleanup = "deferred-until-channel-close" } }));
+            return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = arguments["dryRun"]?.GetValue<bool>() != true, ["ProjectFile"] = @"C:\fixture.ap19" });
+        }
         public void Dispose() { }
     }
     private static RequestContext<CallToolRequestParams> Request(string tool, string json)
@@ -201,11 +212,10 @@ public sealed class ApprovalHostTests
             Assert.Equal(1, worker.Calls);
             return;
         }
-        Assert.Equal("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
-        Assert.Equal("workbench-unavailable", (string?)body["error"]?["details"]?["reason"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Single(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["details"]?["stage"] == "approval-precheck");
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.Equal((string?)body["meta"]?["requestId"], (string?)body["error"]?["details"]?["requestId"]);
         Assert.Equal(0, worker.Calls);
     }
     [Fact]

@@ -198,6 +198,55 @@ internal sealed partial class FoundationTool : McpServerTool
                 unknown ? TiaMcp.Logic.V4.Execution.Unknown : TiaMcp.Logic.V4.Execution.NotStarted));
         }
     }
+    internal bool SessionRequiresReset => FoundationCandidateSession.For(worker).RequiresSessionReset
+        || worker is WorkerClient { Poisoned: true };
+    internal void MarkSessionUncertain() => FoundationCandidateSession.For(worker).MarkUncertain();
+    internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
+        => ReadArguments(arguments, new JsonObject());
+    private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)
+    {
+        if(arguments != null) foreach(var pair in arguments!)
+        {
+            var spec=definition.Arguments.SingleOrDefault(p=>p.Name==pair.Key) ?? throw new ArgumentException("Unknown/case-mismatched argument: "+pair.Key,pair.Key);
+            var value=pair.Value;
+            bool valid=spec.Type=="string" ? value.ValueKind==JsonValueKind.String : spec.Type=="boolean" ? value.ValueKind is JsonValueKind.True or JsonValueKind.False : spec.Type=="array" ? value.ValueKind==JsonValueKind.Array && value.GetArrayLength()<=256 && value.EnumerateArray().All(x=>x.ValueKind==JsonValueKind.String) : value.ValueKind==JsonValueKind.Number && value.TryGetInt32(out _);
+            if(!valid) throw new ArgumentException("Invalid argument type: "+pair.Key,pair.Key);
+            values[pair.Key]=JsonNode.Parse(value.GetRawText());
+        }
+        foreach(var p in definition.Arguments) if(!values.ContainsKey(p.Name)) { if(p.Required) throw new ArgumentException("Missing argument: "+p.Name,p.Name); values[p.Name]=JsonSerializer.SerializeToNode(p.Default); }
+        if(values["dryRun"] is JsonValue dry && !dry.GetValue<bool>())
+        {
+            if(values["confirm"]?.GetValue<bool>()!=true) throw new ArgumentException("Execution requires confirm=true; preview is the default.","confirm");
+            if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
+        }
+        if(definition.Name=="DiagnosePortalConnectReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
+        if(definition.ResponseMember=="HardwareCatalog") HardwareCatalogContract.ValidateArguments(values);
+        if(definition.ResponseMember=="Declarations") DeclarationReadContract.ValidateArguments(values);
+        if(definition.ResponseMember=="BatchExport" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedInventoryHash"]!.GetValue<string>())) throw new ArgumentException("Execution requires expectedInventoryHash from a fresh preview.","expectedInventoryHash");
+        if(definition.ResponseMember is "SpecialExport" or "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
+        if(definition.ResponseMember is "DocumentImport" or "BatchDocumentImport" && values["overwrite"]!.GetValue<bool>()) throw new ArgumentException("Document import supports native None only, no overwrite.","overwrite");
+        if(definition.ResponseMember=="BatchDocumentImport")
+        {
+            var names=values["fileNamesWithoutExtension"]!.AsArray().Select(x=>x!.GetValue<string>()).ToArray();
+            if(names.Length<1||names.Length>16||names.Any(x=>string.IsNullOrWhiteSpace(x)||x.Length>128)||names.Distinct(StringComparer.OrdinalIgnoreCase).Count()!=names.Length)throw new ArgumentException("Explicit ordered unique manifest of 1..16 basenames required.","fileNamesWithoutExtension");
+        }
+        if(definition.ResponseMember=="BatchImport")
+        {
+            if(values["overwrite"]!.GetValue<bool>()) throw new ArgumentException("Batch import supports overwrite=false only.","overwrite");
+            if(values["compileAfter"]?.GetValue<bool>() ?? false) throw new ArgumentException("Batch import does not support compileAfter.","compileAfter");
+            if(!(values["stopOnImportFailure"]?.GetValue<bool>() ?? true)) throw new ArgumentException("Batch import stops on the first failure.","stopOnImportFailure");
+            if(!string.IsNullOrEmpty(values["technologyFolderPath"]?.GetValue<string>())) throw new ArgumentException("Technology objects are outside bounded batch import scope.","technologyFolderPath");
+            if(!values["dryRun"]!.GetValue<bool>())
+            {
+                if(values["importOrder"]!.AsArray().Count==0) throw new ArgumentException("Apply requires importOrder from a reviewed preview.","importOrder");
+                if(string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
+            }
+        }
+        if(definition.ResponseMember=="DeviceAdd" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Creation requires a reviewed expectedPlanHash.","expectedPlanHash");
+        if(definition.ResponseMember=="ExternalSourceDelete" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Delete requires a reviewed expectedPlanHash.","expectedPlanHash");
+        if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.","dryRun");
+        if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.","expectedPlanHash");
+    }
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken, string? release = null, string? id = null)
     {
         bool dispatched = false;
@@ -205,47 +254,7 @@ internal sealed partial class FoundationTool : McpServerTool
         JsonNode? raw = null;
         try
         {
-            if(request.Params?.Arguments != null) foreach(var pair in request.Params.Arguments)
-            {
-                var spec=definition.Arguments.SingleOrDefault(p=>p.Name==pair.Key) ?? throw new ArgumentException("Unknown/case-mismatched argument: "+pair.Key,pair.Key);
-                var value=pair.Value;
-                bool valid=spec.Type=="string" ? value.ValueKind==JsonValueKind.String : spec.Type=="boolean" ? value.ValueKind is JsonValueKind.True or JsonValueKind.False : spec.Type=="array" ? value.ValueKind==JsonValueKind.Array && value.GetArrayLength()<=256 && value.EnumerateArray().All(x=>x.ValueKind==JsonValueKind.String) : value.ValueKind==JsonValueKind.Number && value.TryGetInt32(out _);
-                if(!valid) throw new ArgumentException("Invalid argument type: "+pair.Key,pair.Key);
-                values[pair.Key]=JsonNode.Parse(value.GetRawText());
-            }
-            foreach(var p in definition.Arguments) if(!values.ContainsKey(p.Name)) { if(p.Required) throw new ArgumentException("Missing argument: "+p.Name,p.Name); values[p.Name]=JsonSerializer.SerializeToNode(p.Default); }
-            if(values["dryRun"] is JsonValue dry && !dry.GetValue<bool>())
-            {
-                if(values["confirm"]?.GetValue<bool>()!=true) throw new ArgumentException("Execution requires confirm=true; preview is the default.","confirm");
-                if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
-            }
-            if(definition.Name=="DiagnosePortalConnectReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
-            if(definition.ResponseMember=="HardwareCatalog") HardwareCatalogContract.ValidateArguments(values);
-            if(definition.ResponseMember=="Declarations") DeclarationReadContract.ValidateArguments(values);
-            if(definition.ResponseMember=="BatchExport" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedInventoryHash"]!.GetValue<string>())) throw new ArgumentException("Execution requires expectedInventoryHash from a fresh preview.","expectedInventoryHash");
-            if(definition.ResponseMember is "SpecialExport" or "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
-            if(definition.ResponseMember is "DocumentImport" or "BatchDocumentImport" && values["overwrite"]!.GetValue<bool>()) throw new ArgumentException("Document import supports native None only, no overwrite.","overwrite");
-            if(definition.ResponseMember=="BatchDocumentImport")
-            {
-                var names=values["fileNamesWithoutExtension"]!.AsArray().Select(x=>x!.GetValue<string>()).ToArray();
-                if(names.Length<1||names.Length>16||names.Any(x=>string.IsNullOrWhiteSpace(x)||x.Length>128)||names.Distinct(StringComparer.OrdinalIgnoreCase).Count()!=names.Length)throw new ArgumentException("Explicit ordered unique manifest of 1..16 basenames required.","fileNamesWithoutExtension");
-            }
-            if(definition.ResponseMember=="BatchImport")
-            {
-                if(values["overwrite"]!.GetValue<bool>()) throw new ArgumentException("Batch import supports overwrite=false only.","overwrite");
-                if(values["compileAfter"]?.GetValue<bool>() ?? false) throw new ArgumentException("Batch import does not support compileAfter.","compileAfter");
-                if(!(values["stopOnImportFailure"]?.GetValue<bool>() ?? true)) throw new ArgumentException("Batch import stops on the first failure.","stopOnImportFailure");
-                if(!string.IsNullOrEmpty(values["technologyFolderPath"]?.GetValue<string>())) throw new ArgumentException("Technology objects are outside bounded batch import scope.","technologyFolderPath");
-                if(!values["dryRun"]!.GetValue<bool>())
-                {
-                    if(values["importOrder"]!.AsArray().Count==0) throw new ArgumentException("Apply requires importOrder from a reviewed preview.","importOrder");
-                    if(string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
-                }
-            }
-            if(definition.ResponseMember=="DeviceAdd" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Creation requires a reviewed expectedPlanHash.","expectedPlanHash");
-            if(definition.ResponseMember=="ExternalSourceDelete" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Delete requires a reviewed expectedPlanHash.","expectedPlanHash");
-            if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.","dryRun");
-            if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.","expectedPlanHash");
+            ReadArguments(request.Params?.Arguments, values);
             if (definition.ResponseMember == "PlcRender")
             {
                 var mapped = TiaMcp.Logic.V4.McpResult.From(TiaMcpServer.ModelContextProtocol.PlcProgramRenderer.Write(

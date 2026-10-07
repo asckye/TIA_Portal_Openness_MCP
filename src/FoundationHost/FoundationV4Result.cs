@@ -29,7 +29,7 @@ internal static class FoundationV4Result
     private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
     internal static Error Invalid(string parameter) => new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
-        => Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current);
+        => Wire(release, name, id, null, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, current, error.Code == ErrorCode.SessionResetRequired);
     internal static CallToolResult ReadinessUnavailable(string release, string name, string id, JsonObject readiness)
     {
         var environment = Object(readiness["environment"]);
@@ -66,7 +66,7 @@ internal static class FoundationV4Result
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
-                new Error("Inspect the previous operation before starting a new session.", new SessionResetRequiredDetails("previous-outcome-unknown")), true, true);
+                new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true, true);
         if (!dispatched || exception is WorkerOperationException { Outcome: "rejected-before-operation" })
         {
             var workerFailure = exception as WorkerOperationException;
@@ -80,6 +80,9 @@ internal static class FoundationV4Result
                     : new Error(message, new PreconditionFailedDetails("worker-admission", null));
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, true);
         }
+        if (!mutation && exception is OperationCanceledException)
+            return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
+                new Error("The read-only request was cancelled before a write could start.", new CancelledDetails("approval-precheck")), true);
         bool unknown = mutation && exception is not WorkerOperationException { KnownNoMutation: true };
         string? reason = exception == null ? null : TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         string? workerMessage = SafeWorkerMessage(exception?.Message);

@@ -16,6 +16,8 @@ internal sealed partial class FoundationCandidateSession(IFoundationWorker worke
     private readonly PlcImportSession imports = new();
     private readonly PlcExportSession exports = new();
     private bool poisoned;
+    internal bool RequiresSessionReset { get { lock (serial) return poisoned; } }
+    internal void MarkUncertain() { lock (serial) poisoned = true; }
 
     internal Envelope Device(string release, string id, string type, string name, string family, string mode, bool confirm, string hash, string project, CancellationToken token)
     {
