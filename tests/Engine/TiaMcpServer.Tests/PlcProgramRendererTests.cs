@@ -71,6 +71,178 @@ namespace TiaMcpServer.Tests
             Assert.Contains("inside this atlas only", html);
         }
 
+        [Fact]
+        public void Primer_tokens_dark_scheme_components_and_footer_are_self_contained()
+        {
+            var input = Put("block.xml", Block("Primer", "LAD", Ladder));
+            Assert.True(PlcProgramRenderer.Write(input, Output(), false, "21").Ok);
+            string html = File.ReadAllText(Output());
+            foreach (string expected in new[] { ":root{color-scheme:light dark", "--bg:#F6F8FA", "--card:#FFFFFF", "--cardBorder:#D0D7DE", "--accent:#0B7A99",
+                "--warnBg:#FFF8C5", "--codeText:var(--text)", "@media(prefers-color-scheme:dark)", "--bg:#0D1117", "--card:#161B22", "--accent:#4FC3E0",
+                "--warnBg:rgba(210,153,34,.15)", "'Noto Sans SC'", "'JetBrains Mono'", "padding:26px 36px", "<details class=\"interface\" open>",
+                "grid-template-columns:80px 1.2fr 90px 1fr 1.6fr", "grid-template-columns:52px 1.5fr 60px 56px 1.1fr 1fr 1fr 1.3fr",
+                "class=\"network-id\">N1", "class=\"inspection-note\"", "aria-label=\"Inspection\">!", "← Back to catalog",
+                "Drawn offline from exported SimaticML files — not a TIA Portal screenshot." }) Assert.Contains(expected, html);
+            Assert.DoesNotContain("<script", html);
+            Assert.DoesNotContain("@import", html);
+            Assert.DoesNotContain("url(", html);
+            var svg = Svgs(html).Single();
+            var marked = svg.Descendants().Single(e => (string?)e.Attribute("data-uid") == "10");
+            Assert.Equal("contact-no has-finding", (string?)marked.Attribute("class"));
+            var highlight = marked.Elements().Single(e => (string?)e.Attribute("class") == "finding");
+            Assert.Equal("rect", highlight.Name.LocalName);
+            Assert.Equal("36", (string?)highlight.Attribute("width"));
+            Assert.Equal("40", (string?)highlight.Attribute("height"));
+            Assert.Equal("Finding: constant open contact", highlight.Value);
+        }
+
+        [Fact]
+        public void Every_light_token_has_an_explicit_dark_counterpart_with_the_README_palette()
+        {
+            string html = RenderFixture("tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _);
+            var blocks = Regex.Matches(html, @":root\{([^}]+)\}").Cast<Match>().Select(m =>
+                Regex.Matches(m.Groups[1].Value, @"--([\w]+):([^;}]+)").Cast<Match>().ToDictionary(t => t.Groups[1].Value, t => t.Groups[2].Value)).ToArray();
+            Assert.Equal(2, blocks.Length);
+            Assert.Equal(blocks[0].Keys.OrderBy(k => k), blocks[1].Keys.OrderBy(k => k));
+            string palette = "bg=#0D1117;card=#161B22;cardSoft=#0D1117;cardSel=#1A2730;cardBorder=#30363D;divider=#21262D;input=#0D1117;inputBorder=#30363D;"
+                + "pill=#21262D;pillHover=#30363D;menuBg=#161B22;text=#E6EDF3;textMuted=#8D96A0;textFaint=#6E7681;checkBorder=#6E7681;accent=#4FC3E0;"
+                + "onAccent=#0D1117;primaryBg=#238636;warn=#D29922;warnBg=rgba(210,153,34,.15);ok=#3FB950;okBg=rgba(63,185,80,.15);"
+                + "noteBg=rgba(56,139,253,.15);noteBorder=rgba(56,139,253,.4);noteAccent=#58A6FF;codeBg=#0D1117;codeText=var(--text)";
+            foreach (string token in palette.Split(';'))
+            {
+                var pair = token.Split('=');
+                Assert.Equal(pair[1], blocks[1][pair[0]]);
+            }
+            Assert.Equal(blocks[0]["font"], blocks[1]["font"]);
+            Assert.Equal(blocks[0]["mono"], blocks[1]["mono"]);
+        }
+
+        [Fact]
+        public void Catalog_cells_are_single_line_with_short_headers_and_a_filename_tooltip()
+        {
+            string input = Put("source & name.xml", Block("A long block name", "LAD", Ladder));
+            Assert.True(PlcProgramRenderer.Write(input, Output(), false, "21").Ok);
+            string html = File.ReadAllText(Output());
+            string table = Regex.Match(html, "<table class=\"catalog\".*?</table>", RegexOptions.Singleline).Value;
+            Assert.Contains("min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis", html);
+            Assert.Equal(new[] { "No.", "Name", "Lang.", "Nets", "L / C / E", "Calls", "Called by", "Source file" },
+                Regex.Matches(table, "<th>(.*?)</th>").Cast<Match>().Select(m => m.Groups[1].Value));
+            Assert.Contains("<td class=\"mono source\" title=\"" + System.Net.WebUtility.HtmlEncode(input) + "\">source &amp; name.xml</td>", table);
+            Assert.DoesNotContain("<br>", table);
+            Assert.Contains("No.: block type and number. Lang.: programming language. Nets: network count. L / C / E: ladder / code / empty networks.", html);
+            Assert.Contains("inside this atlas only; external callers are not counted", html);
+        }
+
+        [Fact]
+        public void Terminal_coils_and_boolean_box_outputs_reach_the_right_rail_on_a_640_unit_canvas()
+        {
+            var primer = Svgs(RenderFixture("tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Catalog/Primer.xml", out _));
+            foreach (var svg in primer)
+            {
+                Assert.Equal("640", ((string)svg.Attribute("viewBox")!).Split(' ')[2]);
+                Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "power-rail" && ((string)e.Attribute("d")!).StartsWith("M 640 16 V ", StringComparison.Ordinal));
+                string id = (string)svg.Descendants().Single(e => ((string?)e.Attribute("class"))?.StartsWith("coil", StringComparison.Ordinal) == true).Attribute("data-uid")!;
+                var coil = SymbolBounds(svg, id);
+                Assert.Equal(616, coil.right);
+                Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && (string?)e.Attribute("d") == $"M {coil.right} {coil.y} H 640");
+                Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && ((string)e.Attribute("d")!).StartsWith($"M {coil.left} {coil.y} H ", StringComparison.Ordinal));
+            }
+            var boxes = Svgs(RenderFixture("tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _));
+            foreach (var svg in boxes)
+            {
+                var node = svg.Descendants().Single(e => e.Attribute("data-uid") != null);
+                var box = node.Elements().Single(e => (string?)e.Attribute("class") == "box");
+                var flow = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "pin-name" && (e.Value == "Q" || e.Value == "ENO" || e.Value == "QU" || e.Value == "QD"));
+                int right = (int)box.Attribute("x")! + (int)box.Attribute("width")!;
+                Assert.Equal(616, right);
+                if (flow != null)
+                {
+                    int y = (int)flow.Attribute("y")! - 4;
+                    Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && (string?)e.Attribute("d") == $"M {right} {y} H 640");
+                }
+                else Assert.DoesNotContain(svg.Elements(), e => (string?)e.Attribute("class") == "wire" && ((string)e.Attribute("d")!).StartsWith($"M {right} ", StringComparison.Ordinal));
+                foreach (var pin in node.Elements().Where(e => (string?)e.Attribute("class") == "pin"))
+                {
+                    var point = ((string)pin.Attribute("d")!).Split(' ');
+                    int edge = int.Parse(point[1]), outer = int.Parse(point[4]);
+                    Assert.True(edge == (int)box.Attribute("x")! || edge == right);
+                    Assert.Equal(16, Math.Abs(edge - outer));
+                }
+            }
+            string open = "<FlgNet xmlns=\"NS\"><Parts><Part UId=\"10\" Name=\"TON\"/></Parts><Wires><Wire><NameCon UId=\"10\" Name=\"IN\"/><OpenCon/></Wire></Wires></FlgNet>";
+            Assert.True(PlcProgramRenderer.Write(Put("open.xml", Block("Open", "LAD", open)), Output(), false, "21").Ok);
+            var opened = Svgs(File.ReadAllText(Output())).Single();
+            var openPin = opened.Elements().Single(e => (string?)e.Attribute("class") == "open-pin");
+            var openBox = opened.Descendants().Single(e => (string?)e.Attribute("class") == "box");
+            int pinX = (int)openPin.Attribute("cx")!, pinY = (int)openPin.Attribute("cy")!;
+            Assert.Equal((int)openBox.Attribute("x")! - 18, pinX);
+            Assert.Contains(opened.Elements(), e => (string?)e.Attribute("class") == "wire" && (string?)e.Attribute("d") == $"M {pinX + 18} {pinY} H {pinX}");
+        }
+
+        [Fact]
+        public void Primer_svg_uses_contact_coil_rail_and_timer_geometry_without_losing_pins()
+        {
+            string html = RenderFixture("tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Parts/BoxParts.xml", out _);
+            var svgs = Svgs(html);
+            Assert.All(svgs, svg => Assert.Equal("640", (string?)svg.Attribute("width")));
+            Assert.Contains("svg .symbol,svg .power-rail{stroke-width:2}", html);
+            var timer = svgs[0].Descendants().Single(e => (string?)e.Attribute("data-uid") == "10");
+            var box = timer.Elements().Single(e => (string?)e.Attribute("class") == "box");
+            Assert.Equal("150", (string?)box.Attribute("width"));
+            Assert.Equal("100", (string?)box.Attribute("height"));
+            Assert.Equal(new[] { "IN", "PT", "Q", "ET" }, timer.Elements().Where(e => (string?)e.Attribute("class") == "pin-name").Select(e => e.Value));
+            Assert.True((int)timer.Elements().Single(e => (string?)e.Attribute("class") == "instance").Attribute("y")! < (int)box.Attribute("y")!);
+            foreach (var pin in timer.Elements().Where(e => (string?)e.Attribute("class") == "pin-name"))
+                Assert.Equal(pin.Value == "Q" || pin.Value == "ET" ? (int)box.Attribute("x")! + 142 : (int)box.Attribute("x")! + 8, (int)pin.Attribute("x")!);
+            var drawing = Svgs(RenderFixture("tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Parts/RoutingParts.xml", out _))[0];
+            var contact = drawing.Descendants().Single(e => (string?)e.Attribute("data-uid") == "10");
+            var path = (string)contact.Elements().Single(e => (string?)e.Attribute("class") == "symbol").Attribute("d")!;
+            var bars = Regex.Matches(path, @"M (-?\d+) (-?\d+) V (-?\d+)").Cast<Match>().ToArray();
+            Assert.Equal(2, bars.Length);
+            Assert.All(bars, bar => Assert.Equal(24, int.Parse(bar.Groups[3].Value) - int.Parse(bar.Groups[2].Value)));
+            Assert.Equal(16, int.Parse(bars[1].Groups[1].Value) - int.Parse(bars[0].Groups[1].Value));
+            var coil = drawing.Descendants().Single(e => (string?)e.Attribute("data-uid") == "17");
+            Assert.Equal(4, Regex.Matches((string)coil.Elements().Single(e => (string?)e.Attribute("class") == "symbol").Attribute("d")!, " Q ").Count);
+        }
+
+        [Fact]
+        public void Catalog_matches_generated_golden_and_preserves_all_export_data()
+        {
+            var repository = new DirectoryInfo(AppContext.BaseDirectory);
+            while (repository != null && !File.Exists(Path.Combine(repository.FullName, "Version.props"))) repository = repository.Parent;
+            Assert.NotNull(repository);
+            var inputs = Directory.GetFiles(Path.Combine(repository!.FullName, "plugin/skill/lad-cookbook"), "*.xml").OrderBy(p => p, StringComparer.Ordinal).ToArray();
+            Assert.Equal(4, inputs.Length);
+            string exports = Directory.CreateDirectory(Path.Combine(root, "catalog")).FullName;
+            foreach (string input in inputs) File.Copy(input, Path.Combine(exports, Path.GetFileName(input)));
+            Assert.True(PlcProgramRenderer.Write(exports, Output(), true, "21").Ok);
+            string html = File.ReadAllText(Output());
+            foreach (string input in inputs)
+                html = html.Replace(System.Net.WebUtility.HtmlEncode(Path.Combine(exports, Path.GetFileName(input))), "plugin/skill/lad-cookbook/" + Path.GetFileName(input));
+            Assert.Equal(File.ReadAllText(Path.Combine(repository.FullName, "tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Catalog/cookbook.html")), html);
+            Assert.Contains("PROGRAM ATLAS", html);
+            Assert.Contains("class=\"uncalled\"", html);
+            Assert.Contains("class=\"called-by\">0 · Not called", html);
+            Assert.Equal(4, Regex.Matches(html, "<article class=\"doc page\"").Count);
+        }
+
+        [Fact]
+        public void Primer_sample_keeps_mixed_networks_and_matches_generated_golden()
+        {
+            string relative = "tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/Catalog/Primer.xml";
+            string html = RenderFixture(relative, out string input);
+            Assert.Equal(File.ReadAllText(input + ".html"), html.Replace(System.Net.WebUtility.HtmlEncode(input), relative));
+            Assert.Equal(3, Svgs(html).Length);
+            Assert.Contains("3 / 1 / 1", html);
+            Assert.Contains("<code>#Speed_SP := LIMIT(MN := 0, IN := #Speed_SP, MX := 100);</code>", html);
+            Assert.Contains("Finding: constant open contact", html);
+            Assert.Contains("Empty network.", html);
+            var svg = Svgs(html)[0];
+            Assert.Equal(2, svg.Elements().Count(e => (string?)e.Attribute("class") == "power-rail"));
+            var nc = svg.Descendants().Single(e => (string?)e.Attribute("class") == "contact-nc");
+            Assert.Matches(@"^M \d+ \d+ L \d+ \d+$", (string)nc.Elements().Where(e => (string?)e.Attribute("class") == "symbol").Last().Attribute("d")!);
+        }
+
         [Theory]
         [InlineData("LAD", "<FlgNet xmlns=\"NS\"><Parts/><Wires/></FlgNet>")]
         [InlineData("SCL", "<StructuredText/>")]
@@ -164,7 +336,7 @@ namespace TiaMcpServer.Tests
             Assert.True((int)operand.Attribute("y")! < rungY - 15);
             Assert.DoesNotContain(symbol.Elements(), e => (string?)e.Attribute("class") == "pin-name");
             if (mark.Length > 0) Assert.Equal(mark, symbol.Elements().Single(e => (string?)e.Attribute("class") == "symbol-mark").Value);
-            Assert.Contains(".diagram svg{display:block;width:100%;height:auto}", html);
+            Assert.Contains(".diagram svg{display:block;width:640px;max-width:100%;height:auto;overflow:visible}", html);
             Assert.Contains(svg.Elements(), e => (string?)e.Attribute("class") == "power-rail");
         }
 

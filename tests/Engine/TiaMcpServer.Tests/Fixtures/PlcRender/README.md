@@ -1,5 +1,44 @@
 # PLC render goldens
 
+## Regeneration (P6-62)
+
+From the repository root, run:
+
+```text
+python tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/generate.py
+```
+
+The generator invokes `PlcProgramRenderer.Write` through a temporary .NET runner
+under `bin-build/P6-62/generator`. It uses only cached NuGet packages and an empty
+local package source. It sets the child process `TEMP` and `TMP` to the absolute
+`bin-build/P6-62` directory, disables MSBuild node reuse/build servers/shared
+compilation and uses inherited directory permissions in the Windows sandbox.
+All fifteen block goldens and `Catalog/cookbook.html` are replaced by the full
+generated HTML with only source paths normalized. The catalog uses the four
+tracked cookbook exports, preserving ambiguous/outside-atlas call labels.
+Sixteen identical reviewer pages are written to `bin-build/P6-62/samples`.
+No golden is edited by hand, and the design handoff is never copied.
+
+`Catalog/Primer.xml` is a synthetic P6-62 presentation fixture, with no native
+export provenance. Its adjacent golden/sample demonstrates NO/NC contacts,
+coil lenses, a TON and instance/pins, FBD, SCL, an empty network and the existing
+constant-contact inspection finding on one page. `Catalog/cookbook.html` is
+checked against all four unchanged cookbook inputs, including call references.
+
+P6-62 changes presentation only: Primer CSS tokens and system dark scheme,
+document panels, collapsible interfaces, network cards, contact/coil/TON
+geometry and visible inspection notes. Round 2 uses a 640-unit canvas and right
+rail, with terminal coils and boxes aligned at 616. Coils and known boolean
+box outputs (Q/ENO/QU/QD) connect to the rail. Relocated wire endpoints, shared branch buses and junctions retain
+their connections; contact/box sizes and pin pitch remain unchanged. Data-only
+outputs are not connected to the rail. Catalog headers and cells use one line
+with ellipsis, short labels and a filename whose tooltip holds the source path.
+Every light token has an explicit dark counterpart. Export metadata has no
+project/PLC identity, so the existing page title is retained. Output is still
+one self-contained English HTML file with internal anchors and no scripts.
+The earlier round descriptions below record the provenance and historical
+geometry checks; their byte-identical statements apply to those earlier rounds.
+
 The ten HTML files in this directory are generated from the ten tracked block XML inputs under
 `plugin/skill/lad-cookbook`, `templates/mcp-full-e2e-verify/plc/blocks`, and
 `templates/plc/block-xml/DB_HMI_Interface.xml`. The golden filename encodes its

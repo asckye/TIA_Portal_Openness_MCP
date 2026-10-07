@@ -1,0 +1,47 @@
+<Document>
+  <Engineering version="V21" />
+  <SW.Blocks.FB ID="0">
+    <AttributeList>
+      <Name>Primer_Demo_FB</Name><Number>120</Number><ProgrammingLanguage>LAD</ProgrammingLanguage>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+        <Section Name="Input"><Member Name="Enable" Datatype="Bool"><StartValue>false</StartValue></Member><Member Name="RampTime" Datatype="Time"><StartValue>T#2s</StartValue></Member></Section>
+        <Section Name="Output"><Member Name="Run" Datatype="Bool" /><Member Name="RampDone" Datatype="Bool" /></Section>
+      </Sections></Interface>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText CompositionName="Title"><ObjectList><MultilingualTextItem><AttributeList><Text>Primer presentation fixture · 样式示例</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>
+      <MultilingualText CompositionName="Comment"><ObjectList><MultilingualTextItem><AttributeList><Text>Synthetic offline fixture: contacts, timer, code, an empty network and an existing constant-contact finding. No native export provenance.</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>
+      <SW.Blocks.CompileUnit ID="1"><AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource>
+        <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5"><Parts>
+          <Access Scope="LocalVariable" UId="1"><Symbol><Component Name="Enable" /></Symbol></Access>
+          <Access Scope="LocalVariable" UId="2"><Symbol><Component Name="Fault" /></Symbol></Access>
+          <Access Scope="LocalVariable" UId="3"><Symbol><Component Name="Run" /></Symbol></Access>
+          <Part Name="Contact" UId="10" /><Part Name="Contact" UId="11"><Negated Name="operand" /></Part><Part Name="Coil" UId="12" />
+        </Parts><Wires>
+          <Wire><IdentCon UId="1" /><NameCon UId="10" Name="operand" /></Wire><Wire><IdentCon UId="2" /><NameCon UId="11" Name="operand" /></Wire><Wire><IdentCon UId="3" /><NameCon UId="12" Name="operand" /></Wire>
+          <Wire><Powerrail /><NameCon UId="10" Name="in" /></Wire><Wire><NameCon UId="10" Name="out" /><NameCon UId="11" Name="in" /></Wire><Wire><NameCon UId="11" Name="out" /><NameCon UId="12" Name="in" /></Wire>
+        </Wires></FlgNet>
+      </NetworkSource></AttributeList><ObjectList><MultilingualText CompositionName="Title"><ObjectList><MultilingualTextItem><AttributeList><Text>Enable and fault interlock</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit ID="2"><AttributeList><ProgrammingLanguage>FBD</ProgrammingLanguage><NetworkSource>
+        <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5"><Parts>
+          <Access Scope="LocalVariable" UId="1"><Symbol><Component Name="Run" /></Symbol></Access>
+          <Access Scope="LocalVariable" UId="2"><Symbol><Component Name="RampTime" /></Symbol></Access>
+          <Access Scope="LocalVariable" UId="3"><Symbol><Component Name="RampElapsed" /></Symbol></Access>
+          <Access Scope="LocalVariable" UId="4"><Symbol><Component Name="RampDone" /></Symbol></Access>
+          <Part Name="Contact" UId="10" /><Part Name="TON" UId="11"><Instance Scope="LocalVariable"><Component Name="tRamp" /></Instance></Part><Part Name="Coil" UId="12" />
+        </Parts><Wires>
+          <Wire><IdentCon UId="1" /><NameCon UId="10" Name="operand" /></Wire><Wire><IdentCon UId="2" /><NameCon UId="11" Name="PT" /></Wire><Wire><IdentCon UId="3" /><NameCon UId="11" Name="ET" /></Wire><Wire><IdentCon UId="4" /><NameCon UId="12" Name="operand" /></Wire>
+          <Wire><Powerrail /><NameCon UId="10" Name="in" /></Wire><Wire><NameCon UId="10" Name="out" /><NameCon UId="11" Name="IN" /></Wire><Wire><NameCon UId="11" Name="Q" /><NameCon UId="12" Name="in" /></Wire>
+        </Wires></FlgNet>
+      </NetworkSource></AttributeList><ObjectList><MultilingualText CompositionName="Title"><ObjectList><MultilingualTextItem><AttributeList><Text>Ramp timer</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit ID="3"><AttributeList><ProgrammingLanguage>SCL</ProgrammingLanguage><NetworkSource><StructuredText><Token Text="#Speed_SP := LIMIT(MN := 0, IN := #Speed_SP, MX := 100);" /></StructuredText></NetworkSource></AttributeList><ObjectList><MultilingualText CompositionName="Title"><ObjectList><MultilingualTextItem><AttributeList><Text>Speed limit</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit ID="4"><AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource><FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5"><Parts /><Wires /></FlgNet></NetworkSource></AttributeList></SW.Blocks.CompileUnit>
+      <SW.Blocks.CompileUnit ID="5"><AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource>
+        <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5"><Parts>
+          <Access Scope="LiteralConstant" UId="1"><Constant><ConstantType>Bool</ConstantType><ConstantValue>FALSE</ConstantValue></Constant></Access>
+          <Access Scope="LocalVariable" UId="2"><Symbol><Component Name="LegacyLock" /></Symbol></Access><Part Name="Contact" UId="10" /><Part Name="Coil" UId="11" />
+        </Parts><Wires><Wire><IdentCon UId="1" /><NameCon UId="10" Name="operand" /></Wire><Wire><IdentCon UId="2" /><NameCon UId="11" Name="operand" /></Wire><Wire><Powerrail /><NameCon UId="10" Name="in" /></Wire><Wire><NameCon UId="10" Name="out" /><NameCon UId="11" Name="in" /></Wire></Wires></FlgNet>
+      </NetworkSource></AttributeList><ObjectList><MultilingualText CompositionName="Title"><ObjectList><MultilingualTextItem><AttributeList><Text>Constant-contact inspection</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FB>
+</Document>

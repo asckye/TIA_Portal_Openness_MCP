@@ -21,6 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public const int MaxNetworks = 512;
         public const int MaxElements = 256;
         private const long MaxBytes = 64 * 1024 * 1024;
+        private const int LadderWidth = 640, ContactHeight = 24, ContactGap = 16, TimerWidth = 150, TimerHeight = 100;
 
         private sealed class Rejected : Exception
         {
@@ -186,59 +187,279 @@ namespace TiaMcpServer.ModelContextProtocol
                 : E(name) + (matches.Length == 0 ? " (outside atlas)" : " (ambiguous in atlas)");
         }
 
+        private const string Styles = @"
+:root{color-scheme:light dark;--bg:#F6F8FA;--card:#FFFFFF;--cardSoft:#F6F8FA;--cardSel:#F0F8FA;--cardBorder:#D0D7DE;--divider:#D8DEE4;--input:#FFFFFF;--inputBorder:#D0D7DE;--pill:#F6F8FA;--pillHover:#EAEEF2;--menuBg:#FFFFFF;--text:#1F2328;--textMuted:#656D76;--textFaint:#8C959F;--checkBorder:#8C959F;--accent:#0B7A99;--onAccent:#FFFFFF;--primaryBg:#1F883D;--warn:#9A6700;--warnBg:#FFF8C5;--ok:#1A7F37;--okBg:#DAFBE1;--noteBg:#DDF4FF;--noteBorder:rgba(84,174,255,.4);--noteAccent:#0969DA;--codeBg:#F6F8FA;--codeText:var(--text);--diffGreen:#1A7F37;--diffRed:#CF222E;--font:system-ui,'Segoe UI','Noto Sans SC',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#0D1117;--card:#161B22;--cardSoft:#0D1117;--cardSel:#1A2730;--cardBorder:#30363D;--divider:#21262D;--input:#0D1117;--inputBorder:#30363D;--pill:#21262D;--pillHover:#30363D;--menuBg:#161B22;--text:#E6EDF3;--textMuted:#8D96A0;--textFaint:#6E7681;--checkBorder:#6E7681;--accent:#4FC3E0;--onAccent:#0D1117;--primaryBg:#238636;--warn:#D29922;--warnBg:rgba(210,153,34,.15);--ok:#3FB950;--okBg:rgba(63,185,80,.15);--noteBg:rgba(56,139,253,.15);--noteBorder:rgba(56,139,253,.4);--noteAccent:#58A6FF;--codeBg:#0D1117;--codeText:var(--text);--diffGreen:#3FB950;--diffRed:#F85149;--font:system-ui,'Segoe UI','Noto Sans SC',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}}
+*{box-sizing:border-box}body{font:12.5px/1.55 var(--font);margin:0;color:var(--text);background:var(--bg)}main{max-width:1440px;margin:auto;padding:20px 24px}h1,h2,p{margin:0}h1{font-size:24px;font-weight:600;letter-spacing:-.02em}h2{font-size:13px;font-weight:600}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.mono{font-family:var(--mono)}.scope,.comment,.meta,.footer{color:var(--textMuted)}.comment{white-space:pre-wrap;overflow-wrap:anywhere}.comment:empty{display:none}
+.doc{background:var(--card);border:1px solid var(--cardBorder);border-radius:6px;padding:26px 36px;margin-bottom:20px}.doc>*+*{margin-top:18px}.page{break-before:page}.page-nav{font-size:11px;font-weight:600}.block-header{display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--divider);padding-bottom:16px}.block-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.chip{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--pill);color:var(--textMuted)}.language{background:var(--cardSel);color:var(--accent);font-weight:600}.block-title{font-size:13px;color:var(--textMuted)}.meta{display:flex;gap:8px 24px;flex-wrap:wrap;font-size:11.5px}.meta span{overflow-wrap:anywhere}.meta .value{color:var(--text)}.scope{font-size:11px;line-height:1.6}
+.catalog-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}.eyebrow{font:11px var(--mono);letter-spacing:.14em;color:var(--accent);margin-bottom:4px}.stats{display:flex;gap:22px;font-size:12px;color:var(--textMuted)}.stat{display:flex;flex-direction:column;gap:2px;white-space:nowrap}.stat strong{font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--text)}.table-scroll{overflow:auto}table{border-collapse:collapse;width:100%;text-align:left}th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--textMuted);height:28px}td,th{border-bottom:1px solid var(--divider);padding:6px 10px;vertical-align:top;overflow-wrap:anywhere}td{font-size:11.5px;min-height:34px}thead{border-top:1px solid var(--divider)}.catalog{min-width:900px}.catalog tr{display:grid;grid-template-columns:52px 1.5fr 60px 56px 1.1fr 1fr 1fr 1.3fr;column-gap:12px}.catalog td,.catalog th{border:0;padding:8px 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.catalog tr{border-bottom:1px solid var(--divider);padding:0 10px;min-height:38px}.catalog thead tr{min-height:32px}.catalog a{font-weight:600}.catalog .source{font-size:11px}.uncalled{background:var(--warnBg)}.uncalled .called-by{color:var(--warn);font-weight:600}
+.interface{border:1px solid var(--cardBorder);border-radius:6px;overflow:hidden}.interface summary{cursor:pointer;padding:10px 14px;background:var(--cardSoft);font-size:12.5px;font-weight:600}.interface table{min-width:640px}.interface tr{display:grid;grid-template-columns:80px 1.2fr 90px 1fr 1.6fr;column-gap:12px;padding:0 14px;border-top:1px solid var(--divider)}.interface thead{border:0}.interface td,.interface th{border:0;padding:6px 0}.interface td:first-child{font-size:10.5px;font-weight:600;color:var(--accent)}.interface td:nth-child(2),.interface td:nth-child(3),.interface td:nth-child(4){font-family:var(--mono)}.interface td:nth-child(n+3){color:var(--textMuted)}
+.network{border:1px solid var(--cardBorder);border-radius:6px;padding:14px 16px}.network>*+*{margin-top:8px}.network-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.network-id{font:11px var(--mono);color:var(--textMuted)}.network .chip{font-size:10px;padding:2px 7px}.network .comment{font-size:11.5px}pre{background:var(--codeBg);color:var(--codeText);padding:12px 14px;font:11px/1.65 var(--mono);border:1px solid var(--cardBorder);border-radius:6px;white-space:pre;overflow:auto}code{font:inherit}.empty{padding:14px;border:1px dashed var(--divider);border-radius:6px;color:var(--textMuted);text-align:center;font-size:11.5px}.diagram{overflow:auto}.diagram svg{display:block;width:640px;max-width:100%;height:auto;overflow:visible}svg text{font:11px var(--mono);fill:var(--text)}svg path{fill:none;stroke:var(--text);stroke-width:1.5}svg .symbol,svg .power-rail{stroke-width:2}svg .box{fill:var(--card);stroke:var(--text);stroke-width:2}svg .box-divider{stroke:var(--divider)}svg .junction{fill:var(--text)}svg .instruction-name,svg .symbol-mark{font-weight:600}svg .instance{fill:var(--accent)}svg .symbol-comment,svg .instruction-type{fill:var(--textMuted);font-size:10px}svg .finding{fill:var(--warnBg);stroke:var(--warn);stroke-width:1.5}svg .has-finding .symbol{stroke:var(--warn)}svg .has-finding .operand{fill:var(--warn);font-weight:600}.inspection-note{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:6px;background:var(--warnBg);color:var(--warn);font-size:11.5px}.inspection-note strong{font-weight:600}.render-notes{border:1px solid var(--noteBorder);border-radius:6px;padding:12px;background:var(--noteBg)}.footer{font-size:11px;line-height:1.6;border-top:1px solid var(--divider);padding-top:12px}
+@media(max-width:700px){main{padding:12px}.doc{padding:26px 18px}.stats{gap:14px}.meta{gap:8px 16px}}
+@media print{body{color-scheme:light;background:var(--card)}main{padding:0}.doc{border:0;border-radius:0}.page-nav{display:none}.table-scroll,.diagram{overflow:visible}.catalog,.interface table{min-width:0}.network{break-inside:avoid}}
+";
+
+        private static Page[] Callers(Page page, List<Page> pages)
+            => pages.Where(p => p.Calls.Contains(page.Block.Name ?? "") && pages.Count(q => q.Block.Name == page.Block.Name) == 1).ToArray();
+        private static string CallerLinks(Page[] callers)
+            => callers.Length + (callers.Length == 0 ? "" : ": " + string.Join(", ", callers.Select(p => "<a href=\"#" + p.Id + "\">" + E(p.Block.Name) + "</a>")));
+        private const string Footer = "Drawn offline from exported SimaticML files — not a TIA Portal screenshot.";
+
         private static string Html(List<Page> pages, bool atlas)
         {
             var b = new StringBuilder("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>PLC program atlas</title><style>");
-            b.Append("body{font:15px system-ui,sans-serif;margin:0;color:#172b40;background:#eef2f6}main{max-width:1440px;margin:auto;padding:28px}h1{font-size:30px}h2{margin-top:28px}.page{background:white;border:1px solid #cbd5e1;border-radius:10px;margin:24px 0;padding:24px;break-before:page}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #cbd5e1;text-align:left;padding:9px;vertical-align:top;overflow-wrap:anywhere}a{color:#075c96}pre,.comment{white-space:pre-wrap;overflow-wrap:anywhere}pre{background:#f1f5f9;padding:16px}.diagram{overflow:auto;border:1px solid #cbd5e1}svg text{font:13px monospace}.empty{padding:16px;border:1px dashed #94a3b8;color:#475569}.scope{color:#475569}dl{display:grid;grid-template-columns:120px 1fr;gap:8px}dd{margin:0;overflow-wrap:anywhere}@media print{body{background:white}main{padding:0}.page{border:0;border-radius:0}.diagram{overflow:visible}svg{width:100%;height:auto}}");
-            b.Append(".diagram{overflow:hidden;background:white;padding:8px}.diagram svg{display:block;width:100%;height:auto}svg path{fill:none;stroke:#243746;stroke-width:1.5}svg .symbol,svg .power-rail{stroke-width:2}svg .box{fill:#fff;stroke:#243746;stroke-width:1.5}svg .junction{fill:#243746}svg .open-pin{fill:white;stroke:#243746}svg .finding{fill:#c48a12}svg text{fill:#172b40}svg .operand,svg .instance{font-size:14px}svg .instruction-name,svg .symbol-mark{font-weight:bold;font-size:14px}svg .symbol-comment,svg .instruction-type{fill:#64748b;font-size:12px}@media print{.diagram{overflow:visible}}");
-            b.Append("</style></head><body><main><header id=\"contents\"><h1>").Append(atlas ? "PLC program atlas" : "PLC block page")
-                .Append("</h1><p class=\"scope\">Offline SimaticML exports. Static logic only; no online power-flow display. Simplified layout; source exports remain the engineering authority.</p><p>Called by: distinct caller blocks inside this atlas only; external callers are not counted.</p></header>");
-            b.Append("<table aria-label=\"Contents\"><thead><tr><th>Number / type</th><th>Name</th><th>Language</th><th>Networks: ladder / code / empty</th><th>Calls</th><th>Called by (inside atlas)</th><th>Source file</th></tr></thead><tbody>");
+            b.Append(Styles).Append("</style></head><body><main><header class=\"doc\" id=\"contents\"><div class=\"catalog-heading\"><div><p class=\"eyebrow\">")
+                .Append(atlas ? "PROGRAM ATLAS" : "PLC BLOCK PAGE").Append("</p><h1>").Append(atlas ? "PLC program atlas" : "PLC block page").Append("</h1></div><div class=\"stats\">");
+            Stat(b, pages.Count, "blocks");
+            foreach (string kind in new[] { "ladder", "code", "empty" }) Stat(b, pages.Sum(p => p.Networks.Count(n => n.Kind == kind)), kind == "empty" ? "empty" : kind + " nets");
+            b.Append("</div></div><p class=\"scope\">Offline SimaticML exports. Static logic only; no online power-flow display. Simplified layout; source exports remain the engineering authority.</p>");
+            b.Append("<div class=\"table-scroll\"><table class=\"catalog\" aria-label=\"Contents\"><thead><tr><th>No.</th><th>Name</th><th>Lang.</th><th>Nets</th><th>L / C / E</th><th>Calls</th><th>Called by</th><th>Source file</th></tr></thead><tbody>");
             foreach (var page in pages)
             {
-                var callers = pages.Where(p => p.Calls.Contains(page.Block.Name ?? "") && pages.Count(q => q.Block.Name == page.Block.Name) == 1).ToArray();
-                b.Append("<tr><td>").Append(page.Block.Number).Append(' ').Append(E(page.Block.BlockKind)).Append("</td><td><a href=\"#").Append(page.Id).Append("\">")
-                    .Append(E(page.Block.Name)).Append("</a></td><td>").Append(E(page.Block.ProgrammingLanguage)).Append("</td><td>")
+                var callers = Callers(page, pages);
+                b.Append("<tr").Append(callers.Length == 0 ? " class=\"uncalled\"" : "").Append("><td class=\"mono\">").Append(E(page.Block.BlockKind)).Append(' ').Append(page.Block.Number)
+                    .Append("</td><td><a href=\"#").Append(page.Id).Append("\">").Append(E(page.Block.Name)).Append("</a></td><td>").Append(E(page.Block.ProgrammingLanguage))
+                    .Append("</td><td class=\"mono\">").Append(page.Networks.Count).Append("</td><td class=\"mono\">")
                     .Append(string.Join(" / ", new[] { "ladder", "code", "empty" }.Select(k => page.Networks.Count(n => n.Kind == k))))
-                    .Append("</td><td>").Append(string.Join("<br>", page.Calls.Select(n => Link(n, pages))))
-                    .Append("</td><td>").Append(callers.Length).Append(callers.Length == 0 ? "" : ": " + string.Join(", ", callers.Select(p => "<a href=\"#" + p.Id + "\">" + E(p.Block.Name) + "</a>")))
-                    .Append("</td><td>").Append(E(page.Source)).Append("</td></tr>");
+                    .Append("</td><td>").Append(string.Join(", ", page.Calls.Select(n => Link(n, pages))))
+                    .Append("</td><td class=\"called-by\">").Append(CallerLinks(callers)).Append(callers.Length == 0 ? " · Not called" : "")
+                    .Append("</td><td class=\"mono source\" title=\"").Append(E(page.Source)).Append("\">").Append(E(Path.GetFileName(page.Source))).Append("</td></tr>");
             }
-            b.Append("</tbody></table>");
+            b.Append("</tbody></table></div><p class=\"footer\">No.: block type and number. Lang.: programming language. Nets: network count. L / C / E: ladder / code / empty networks. Called by: distinct caller blocks inside this atlas only; external callers are not counted. Source file: full path in the tooltip. · ").Append(Footer).Append("</p></header>");
             foreach (var page in pages)
             {
                 var block = page.Block;
                 var unknownParts = new SortedSet<string>(StringComparer.Ordinal);
-                b.Append("<article class=\"page\" id=\"").Append(page.Id).Append("\"><a href=\"#contents\">Contents</a><h1>").Append(E(block.Name)).Append("</h1><dl>");
-                foreach (var field in new[] { ("Number", block.Number?.ToString(CultureInfo.InvariantCulture)), ("Type", block.BlockKind), ("Language", block.ProgrammingLanguage),
-                    ("Title", Texts(block.Texts, "Title")), ("Comment", Texts(block.Texts, "Comment")), ("Source file", page.Source), ("Export version", page.Version) })
-                    b.Append("<dt>").Append(field.Item1).Append("</dt><dd class=\"comment\">").Append(E(field.Item2)).Append("</dd>");
-                b.Append("</dl><h2>Interface</h2><table><thead><tr><th>Section</th><th>Name</th><th>Type</th><th>Start / default</th><th>Comment</th></tr></thead><tbody>");
+                b.Append("<article class=\"doc page\" id=\"").Append(page.Id).Append("\"><nav class=\"page-nav\"><a href=\"#contents\">← Back to catalog</a></nav>")
+                    .Append("<header class=\"block-header\"><div class=\"block-heading\"><span class=\"chip mono\">").Append(E(block.BlockKind)).Append(' ').Append(block.Number)
+                    .Append("</span><h1>").Append(E(block.Name)).Append("</h1><span class=\"chip language\">").Append(E(block.ProgrammingLanguage))
+                    .Append("</span><span class=\"block-title comment\">").Append(E(Texts(block.Texts, "Title"))).Append("</span></div><p class=\"comment\">")
+                    .Append(E(Texts(block.Texts, "Comment"))).Append("</p><div class=\"meta\"><span>Source file · <span class=\"mono value\">").Append(E(page.Source))
+                    .Append("</span></span><span>Export version · <span class=\"mono value\">").Append(E(page.Version))
+                    .Append("</span></span><span>Called by · <span class=\"value\">").Append(CallerLinks(Callers(page, pages)))
+                    .Append("</span></span><span>Calls · <span class=\"value\">").Append(string.Join(", ", page.Calls.Select(n => Link(n, pages)))).Append("</span></span></div></header>");
+                b.Append("<details class=\"interface\" open><summary>Block interface</summary><div class=\"table-scroll\"><table aria-label=\"Block interface\"><thead><tr><th>Section</th><th>Name</th><th>Type</th><th>Start / default</th><th>Comment</th></tr></thead><tbody>");
                 foreach (var section in block.InterfaceSections) Members(b, section.Name, "", section.Members);
-                b.Append("</tbody></table>");
+                b.Append("</tbody></table></div></details>");
                 if (page.Networks.Count == 0) b.Append("<p class=\"empty\">No networks (declaration-only or empty block).</p>");
                 for (int i = 0; i < page.Networks.Count; i++)
                 {
                     var n = page.Networks[i];
                     var title = Texts(n.Unit.Texts, "Title");
-                    b.Append("<section><h2>Network ").Append(i + 1).Append(string.IsNullOrWhiteSpace(title) ? "" : " — " + E(title)).Append("</h2><p>").Append(E(n.Language));
-                    if (n.Language == "FBD") b.Append(" — FBD shown as ladder equivalent");
-                    b.Append("</p><p class=\"comment\">").Append(E(Texts(n.Unit.Texts, "Comment"))).Append("</p>");
+                    b.Append("<section class=\"network\"><header class=\"network-heading\"><span class=\"network-id\">N").Append(i + 1).Append("</span><h2>")
+                        .Append(string.IsNullOrWhiteSpace(title) ? "Network " + (i + 1) : E(title)).Append("</h2><span class=\"chip\">").Append(E(n.Language)).Append("</span>");
+                    if (n.Language == "FBD") b.Append("<span class=\"scope\">FBD shown as ladder equivalent</span>");
+                    b.Append("</header><p class=\"comment\">").Append(E(Texts(n.Unit.Texts, "Comment"))).Append("</p>");
                     if (n.Kind == "empty") b.Append("<p class=\"empty\">Empty network.</p>");
                     else if (n.Kind == "code") b.Append("<pre><code>").Append(E(n.Code)).Append("</code></pre>");
-                    else b.Append("<div class=\"diagram\">").Append(PlcLadderDrawing.NetworkSvg(n.Unit.Network!, name =>
+                    else
                     {
-                        var match = pages.Where(p => p.Block.Name == name).ToArray();
-                        return match.Length == 1 ? "#" + match[0].Id : null;
-                    }, unknownParts)).Append("</div>");
-                    if (n.Calls.Length > 0) b.Append("<p>Calls in this network: ").Append(string.Join(", ", n.Calls.Select(name => Link(name, pages)))).Append("</p>");
+                        string drawing = PlcLadderDrawing.NetworkSvg(n.Unit.Network!, name =>
+                        {
+                            var match = pages.Where(p => p.Block.Name == name).ToArray();
+                            return match.Length == 1 ? "#" + match[0].Id : null;
+                        }, unknownParts);
+                        b.Append("<div class=\"diagram\">").Append(PrimerSvg(drawing, out var findings)).Append("</div>");
+                        foreach (string finding in findings) b.Append("<aside class=\"inspection-note\"><strong aria-label=\"Inspection\">!</strong><span>").Append(E(finding)).Append("</span></aside>");
+                    }
+                    if (n.Calls.Length > 0) b.Append("<p class=\"scope\">Calls in this network: ").Append(string.Join(", ", n.Calls.Select(name => Link(name, pages)))).Append("</p>");
                     b.Append("</section>");
                 }
                 if (unknownParts.Count > 0) b.Append("<aside class=\"render-notes\"><h2>Rendering notes</h2><p>Unknown parts shown as labelled boxes: ")
                     .Append(string.Join(", ", unknownParts.Select(E))).Append(".</p></aside>");
-                b.Append("</article>");
+                b.Append("<footer class=\"footer\">").Append(Footer).Append("</footer></article>");
             }
             return b.Append("</main></body></html>").ToString();
+        }
+
+        private static void Stat(StringBuilder b, int count, string label)
+            => b.Append("<div class=\"stat\"><strong>").Append(count).Append("</strong><span>").Append(label).Append("</span></div>");
+
+        // Presentation only: retain the shared routing, node identities, labels and inspection findings.
+        private static string PrimerSvg(string drawing, out string[] findings)
+        {
+            var svg = XElement.Parse(drawing);
+            XNamespace ns = svg.Name.Namespace;
+            int width = (int)svg.Attribute("width")!, height = (int)svg.Attribute("height")!;
+            svg.SetAttributeValue("width", LadderWidth);
+            var notes = new List<string>();
+            var endpoints = new Dictionary<(int x, int y), (int x, int y)>();
+            foreach (var node in svg.Descendants().Where(e => e.Attribute("data-uid") != null))
+            {
+                string kind = (string)node.Attribute("class")!;
+                var symbol = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "symbol");
+                if (symbol != null && (kind.StartsWith("contact-", StringComparison.Ordinal) || kind.StartsWith("coil", StringComparison.Ordinal)))
+                {
+                    var start = System.Text.RegularExpressions.Regex.Match((string)symbol.Attribute("d")!, @"^M (-?\d+) (-?\d+)");
+                    int x = int.Parse(start.Groups[1].Value, CultureInfo.InvariantCulture) + 30, y = int.Parse(start.Groups[2].Value, CultureInfo.InvariantCulture);
+                    int half = ContactGap / 2, tall = ContactHeight / 2;
+                    symbol.SetAttributeValue("d", kind.StartsWith("contact-", StringComparison.Ordinal)
+                        ? $"M {x - 30} {y} H {x - half} M {x + half} {y} H {x + 30} M {x - half} {y - tall} V {y + tall} M {x + half} {y - tall} V {y + tall}"
+                        : $"M {x - 30} {y} H {x - 18} M {x + 18} {y} H {x + 30} M {x - 18} {y} Q {x - 12} {y - 12} {x} {y - 12} Q {x + 12} {y - 12} {x + 18} {y} Q {x + 12} {y + 12} {x} {y + 12} Q {x - 12} {y + 12} {x - 18} {y}");
+                    var finding = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "finding");
+                    if (finding != null)
+                    {
+                        notes.Add(finding.Value);
+                        node.SetAttributeValue("class", kind + " has-finding");
+                        finding.ReplaceWith(new XElement(ns + "rect", new XAttribute("class", "finding"), new XAttribute("x", x - 18), new XAttribute("y", y - 20),
+                            new XAttribute("width", 36), new XAttribute("height", 40), new XAttribute("rx", 4), new XElement(ns + "title", finding.Value)));
+                        var highlight = node.Elements().Single(e => (string?)e.Attribute("class") == "finding");
+                        highlight.Remove(); symbol.AddBeforeSelf(highlight);
+                    }
+                }
+                if (kind == "instruction" && node.Elements().Any(e => (string?)e.Attribute("class") == "instruction-name" && e.Value == "TON"))
+                {
+                    var box = node.Elements().Single(e => (string?)e.Attribute("class") == "box");
+                    int left = (int)box.Attribute("x")!, right = left + (int)box.Attribute("width")!, center = (left + right) / 2;
+                    int newLeft = center - TimerWidth / 2, newRight = newLeft + TimerWidth;
+                    var pins = node.Elements().Where(e => (string?)e.Attribute("class") == "pin").ToArray();
+                    int y = pins.Select(p => int.Parse(((string)p.Attribute("d")!).Split(' ')[2], CultureInfo.InvariantCulture)).Min();
+                    int top = y - 28;
+                    box.SetAttributeValue("x", newLeft); box.SetAttributeValue("y", top); box.SetAttributeValue("width", TimerWidth); box.SetAttributeValue("height", TimerHeight); box.SetAttributeValue("rx", 3);
+                    node.Elements().Where(e => (string?)e.Attribute("class") == "box-divider").Remove();
+                    foreach (var pin in pins)
+                    {
+                        var point = System.Text.RegularExpressions.Regex.Match((string)pin.Attribute("d")!, @"^M (-?\d+) (-?\d+) H (-?\d+)$");
+                        int oldX = int.Parse(point.Groups[1].Value, CultureInfo.InvariantCulture), pinY = int.Parse(point.Groups[2].Value, CultureInfo.InvariantCulture);
+                        int edge = oldX == left ? newLeft : newRight;
+                        endpoints[(oldX, pinY)] = (edge, pinY);
+                        pin.SetAttributeValue("d", $"M {edge} {pinY} H {edge + (oldX == left ? -16 : 16)}");
+                    }
+                    foreach (var label in node.Elements().Where(e => e.Name.LocalName == "text"))
+                    {
+                        string labelKind = (string)label.Attribute("class")!;
+                        if (labelKind == "instance" || labelKind == "instruction-name" || labelKind == "instruction-type")
+                            label.SetAttributeValue("y", top + (labelKind == "instance" ? -8 - Math.Max(0, label.Elements().Count() - 1) * 16 : labelKind == "instruction-name" ? 20 : 34));
+                        else if (labelKind == "pin-name" || labelKind == "pin-value")
+                        {
+                            int x = (int)label.Attribute("x")!;
+                            int shift = x < center ? newLeft - left : newRight - right;
+                            label.SetAttributeValue("x", x + shift);
+                            foreach (var line in label.Elements()) line.SetAttributeValue("x", (int)line.Attribute("x")! + shift);
+                        }
+                    }
+                    height = Math.Max(height, top + TimerHeight + 30);
+                }
+            }
+            foreach (var wire in svg.Elements().Where(e => (string?)e.Attribute("class") == "wire"))
+                wire.SetAttributeValue("d", MoveEndpoints((string)wire.Attribute("d")!, endpoints));
+            AlignRungOutputs(svg, width);
+            svg.SetAttributeValue("viewBox", $"0 0 {LadderWidth} {height}");
+            svg.SetAttributeValue("height", height);
+            svg.Elements().Single(e => (string?)e.Attribute("class") == "power-rail").SetAttributeValue("d", $"M 24 16 V {height - 16}");
+            svg.Add(new XElement(ns + "path", new XAttribute("class", "power-rail"), new XAttribute("d", $"M {LadderWidth} 16 V {height - 16}")));
+            findings = notes.ToArray();
+            return svg.ToString(SaveOptions.DisableFormatting).Replace("\r\n", "\n");
+        }
+
+        private static void AlignRungOutputs(XElement svg, int sourceWidth)
+        {
+            var wires = svg.Elements().Where(e => (string?)e.Attribute("class") == "wire").Select(e =>
+            {
+                var match = System.Text.RegularExpressions.Regex.Match((string)e.Attribute("d")!, @"^M (-?\d+) (-?\d+) H (-?\d+)$");
+                return (element: e, x: int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture),
+                    y: int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture), bus: int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture));
+            }).ToArray();
+            var endpoints = new Dictionary<(int x, int y), (int x, int y)>();
+            var outputs = new List<(int x, int y)>();
+            int Fit(int x) => 24 + (int)Math.Round((double)(x - 24) * (LadderWidth - 48) / (sourceWidth - 48));
+            foreach (var node in svg.Descendants().Where(e => e.Attribute("data-uid") != null))
+            {
+                string kind = (string)node.Attribute("class")!;
+                var box = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "box");
+                var symbol = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "symbol");
+                int left, right, y;
+                int? outputY = null;
+                bool terminal = false;
+                if (box != null)
+                {
+                    left = (int)box.Attribute("x")!; right = left + (int)box.Attribute("width")!;
+                    var flow = node.Elements().FirstOrDefault(e => (string?)e.Attribute("class") == "pin-name" && (e.Value == "ENO" || e.Value == "Q" || e.Value == "QU" || e.Value == "QD") && (int)e.Attribute("x")! > (left + right) / 2);
+                    y = flow == null ? (int)box.Attribute("y")! : (int)flow.Attribute("y")! - 4;
+                    terminal = !wires.Any(w => w.x == right);
+                    if (terminal && flow != null) outputY = y;
+                }
+                else if (symbol != null)
+                {
+                    var leads = System.Text.RegularExpressions.Regex.Matches((string)symbol.Attribute("d")!, @"M (-?\d+) (-?\d+) H (-?\d+)");
+                    left = int.Parse(leads[0].Groups[1].Value, CultureInfo.InvariantCulture);
+                    right = int.Parse(leads[1].Groups[3].Value, CultureInfo.InvariantCulture);
+                    y = int.Parse(leads[0].Groups[2].Value, CultureInfo.InvariantCulture);
+                    terminal = kind.StartsWith("coil", StringComparison.Ordinal) && !wires.Any(w => w.x == right && w.y == y);
+                    if (terminal) outputY = y;
+                }
+                else continue;
+                int shift = terminal ? LadderWidth - 24 - right : Fit((left + right) / 2) - (left + right) / 2;
+                if (box != null)
+                {
+                    foreach (var pin in node.Elements().Where(e => (string?)e.Attribute("class") == "pin"))
+                    {
+                        var point = ((string)pin.Attribute("d")!).Split(' ');
+                        int pinX = int.Parse(point[1], CultureInfo.InvariantCulture), pinY = int.Parse(point[2], CultureInfo.InvariantCulture);
+                        endpoints[(pinX, pinY)] = (pinX + shift, pinY);
+                    }
+                }
+                else
+                {
+                    endpoints[(left, y)] = (left + shift, y);
+                    endpoints[(right, y)] = (right + shift, y);
+                }
+                foreach (var element in node.Descendants())
+                {
+                    foreach (string coordinate in new[] { "x", "cx" })
+                        if (element.Attribute(coordinate) != null) element.SetAttributeValue(coordinate, (int)element.Attribute(coordinate)! + shift);
+                    if (element.Attribute("d") != null) element.SetAttributeValue("d", ShiftPath((string)element.Attribute("d")!, shift));
+                }
+                if (outputY.HasValue) outputs.Add((right + shift, outputY.Value));
+            }
+            // Move each shared bus between its relocated sources and targets, including every branch/junction.
+            foreach (var group in wires.GroupBy(w => w.bus))
+            {
+                int bus = group.Key;
+                int[] sources = group.Where(w => w.x < bus).Select(w => endpoints.TryGetValue((w.x, w.y), out var p) ? p.x : Fit(w.x)).ToArray();
+                int[] targets = group.Where(w => w.x > bus).Select(w => endpoints.TryGetValue((w.x, w.y), out var p) ? p.x : Fit(w.x)).ToArray();
+                int newBus = bus == 24 ? 24 : sources.Length > 0 && targets.Length > 0 ? (sources.Max() + targets.Min()) / 2 : Fit(bus);
+                var stub = group.First();
+                if (svg.Elements().Any(e => (string?)e.Attribute("class") == "open-pin" && (int)e.Attribute("cx")! == bus && (int)e.Attribute("cy")! == stub.y))
+                    newBus = endpoints[(stub.x, stub.y)].x + Math.Sign(bus - stub.x) * 18;
+                foreach (int rung in group.Select(w => w.y).Distinct()) endpoints[(bus, rung)] = (newBus, rung);
+                foreach (var junction in svg.Elements().Where(e => (string?)e.Attribute("class") == "junction" && (int)e.Attribute("cx")! == bus))
+                    junction.SetAttributeValue("cx", newBus);
+            }
+            foreach (var path in svg.Elements().Where(e => (string?)e.Attribute("class") == "wire" || (string?)e.Attribute("class") == "branch"))
+                path.SetAttributeValue("d", MoveEndpoints((string)path.Attribute("d")!, endpoints));
+            foreach (var pin in svg.Elements().Where(e => (string?)e.Attribute("class") == "open-pin"))
+            {
+                int x = (int)pin.Attribute("cx")!, y = (int)pin.Attribute("cy")!;
+                pin.SetAttributeValue("cx", endpoints.TryGetValue((x, y), out var point) ? point.x : Fit(x));
+            }
+            foreach (var output in outputs)
+                svg.Add(new XElement(svg.Name.Namespace + "path", new XAttribute("class", "wire"), new XAttribute("d", $"M {output.x} {output.y} H {LadderWidth}")));
+        }
+
+        private static string ShiftPath(string path, int shift)
+        {
+            string command = ""; int coordinate = 0;
+            return System.Text.RegularExpressions.Regex.Replace(path, @"[A-Z]|-?\d+", m =>
+            {
+                if (char.IsLetter(m.Value[0])) { command = m.Value; coordinate = 0; return m.Value; }
+                bool horizontal = command == "H" || (command != "V" && coordinate % 2 == 0);
+                coordinate++;
+                return horizontal ? (int.Parse(m.Value, CultureInfo.InvariantCulture) + shift).ToString(CultureInfo.InvariantCulture) : m.Value;
+            });
+        }
+
+        private static string MoveEndpoints(string path, Dictionary<(int x, int y), (int x, int y)> endpoints)
+        {
+            int x = 0, y = 0;
+            return System.Text.RegularExpressions.Regex.Replace(path, @"M (-?\d+) (-?\d+)|([HV]) (-?\d+)", m =>
+            {
+                if (m.Groups[1].Success) { x = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture); y = int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture); }
+                else if (m.Groups[3].Value == "H") x = int.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture);
+                else y = int.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture);
+                if (!endpoints.TryGetValue((x, y), out var point)) return m.Value;
+                return m.Groups[1].Success ? $"M {point.x} {point.y}" : m.Groups[3].Value == "H" ? "H " + point.x : "V " + point.y;
+            });
         }
 
         private static void Members(StringBuilder b, string section, string parent, IEnumerable<InterfaceMember> members)
