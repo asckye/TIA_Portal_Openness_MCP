@@ -169,7 +169,7 @@ def run_profile(args, transport, profile, run_dir):
             meta = value.get('meta', {})
             error_codes = {
                 'journal_bad_range': 'INTERNAL_ERROR', 'journal_bad_type': 'INVALID_ARGUMENT',
-                'format_missing_file': 'INTERNAL_ERROR', 'format_bad_version': 'INTERNAL_ERROR',
+                'format_missing_file': 'INVALID_ARGUMENT', 'format_bad_version': 'INTERNAL_ERROR',
                 'bridge_recursion': 'INVALID_ARGUMENT', 'bridge_bad_json': 'INVALID_ARGUMENT',
                 'bridge_bad_shape': 'INVALID_ARGUMENT', 'bridge_missing_args': 'INVALID_ARGUMENT',
                 'bridge_unknown_tool': 'TOOL_NOT_FOUND', 'reflect_suffix_refused': 'NATIVE_OPERATION_FAILED',

@@ -67,7 +67,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ApprovalPreviewDepth.Value > 0) return null;
             var reset = SessionPrecheckRefusal(name);
             if (reset != null) return reset;
-            ValidateCallerInputFiles(name, arguments);
+            // A missing or unreadable caller file is a typed argument refusal for every tool, reads included.
+            try { ValidateCallerInputFiles(name, arguments); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
             var args = JsonNode.Parse(arguments)!.AsObject();
             bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
@@ -199,7 +201,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
             var rejection = beforeDispatch?.Invoke();
             if (rejection != null) return FinishApproval(rejection, approval);
-            ValidateCallerInputFiles(name, arguments);
+            try { ValidateCallerInputFiles(name, arguments); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return FinishApproval(TargetFailure(name, error, false), approval); }
             if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
                 ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
