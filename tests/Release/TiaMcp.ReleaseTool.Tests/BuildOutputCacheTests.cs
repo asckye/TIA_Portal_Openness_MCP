@@ -132,6 +132,117 @@ public sealed class BuildOutputCacheTests
         }
     }
 
+    [Theory]
+    [InlineData("build")]
+    [InlineData("publish")]
+    public void CleanSecondWorktreeHitRestoresReferencedOutputsWithoutCompiling(string command)
+    {
+        var repo = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repo is not null && !File.Exists(Path.Combine(repo.FullName, "TiaPortalOpenness.slnx"))) repo = repo.Parent;
+        var parent = Path.Combine(repo!.FullName, "bin-build/P6-66/key-tests", Guid.NewGuid().ToString("N"));
+        var priorCache = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY");
+        var priorDisabled = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY", Path.Combine(parent, "cache"));
+            Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "0");
+            ReleaseArtifact[]? expected = null;
+            string? firstKey = null;
+            foreach (var name in new[] { "first", "second" })
+            {
+                var root = Path.Combine(parent, name);
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
+                File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
+                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                var config = Path.Combine(root, "nuget.config");
+                File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
+                foreach (var projectName in new[] { "Shared", "Unit" })
+                {
+                    var folder = Path.Combine(root, projectName);
+                    System.IO.Directory.CreateDirectory(folder);
+                    File.WriteAllText(Path.Combine(folder, "Input.cs"), "public class " + projectName + " {}\n");
+                    File.WriteAllText(Path.Combine(folder, projectName + ".csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup>" +
+                        (projectName == "Shared" ? "<TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>" : "<TargetFramework>net10.0</TargetFramework>") +
+                        "</PropertyGroup>" + (projectName == "Unit" ? "<ItemGroup><ProjectReference Include=\"../Shared/Shared.csproj\" /></ItemGroup>" : "") + "</Project>");
+                }
+                var project = Path.Combine(root, "Unit/Unit.csproj");
+                var args = new List<string> { command, project, "-c", "Release", "--no-restore", "-m:1", "-nodeReuse:false", "-p:RestoreConfigFile=" + config, "-p:NuGetAudit=false" };
+                if (command == "publish") args.AddRange(["-o", Path.Combine(root, "published")]);
+                var calls = new List<string[]>();
+                CommandResult Run()
+                {
+                    calls.Add(args.ToArray());
+                    return ProcessRunner.Run("dotnet", args, root);
+                }
+                Assert.False(System.IO.Directory.Exists(Path.Combine(root, "Shared/bin")));
+                Assert.Equal(0, ReleaseCommands.CachedBuild("dotnet", args, Run, root: root).ExitCode);
+                var evaluated = ReleaseCommands.BuildKey("dotnet", project, args, root);
+                Assert.Equal(command == "publish" ? 3 : 2, evaluated.Outputs.Length);
+                Assert.Contains("Shared/bin/Release/net10.0", evaluated.Outputs);
+                Assert.DoesNotContain("Shared/bin/Release/net10.0-windows", evaluated.Outputs);
+                Assert.True(File.Exists(Path.Combine(root, "Shared/bin/Release/net10.0/Shared.dll")));
+                var actual = evaluated.Outputs.SelectMany(output => System.IO.Directory.EnumerateFiles(Path.Combine(root, output), "*", SearchOption.AllDirectories))
+                    .Select(path => new ReleaseArtifact(Path.GetRelativePath(root, path).Replace('\\', '/'), ReleaseRecords.HashFile(path))).OrderBy(row => row.Path, StringComparer.Ordinal).ToArray();
+                if (name == "first")
+                {
+                    Assert.Equal(command == "publish" ? 3 : 2, calls.Count);
+                    expected = actual;
+                    firstKey = evaluated.Key;
+                }
+                else
+                {
+                    Assert.Equal("msbuild", Assert.Single(calls)[0]);
+                    Assert.Equal(firstKey, evaluated.Key);
+                    Assert.Equal(expected, actual);
+                }
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY", priorCache);
+            Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", priorDisabled);
+            if (System.IO.Directory.Exists(parent)) System.IO.Directory.Delete(parent, true);
+        }
+    }
+
+    [Fact]
+    public void SharedDirectoryRemainsCompleteAfterTwoUnitsRestoreTheirInventories()
+    {
+        using var fixture = new CacheFixture();
+        var first = new BuildOutputCache(fixture.Directory, "worker-one");
+        var second = new BuildOutputCache(fixture.Directory, "worker-two");
+        File.WriteAllText(Path.Combine(fixture.Source, "bridge/first.dll"), "first");
+        first.Populate(fixture.Key, fixture.Source, ["bridge"]);
+        File.Delete(Path.Combine(fixture.Source, "bridge/first.dll"));
+        File.WriteAllText(Path.Combine(fixture.Source, "bridge/second.dll"), "second");
+        second.Populate(fixture.Key, fixture.Source, ["bridge"]);
+        Assert.True(first.Restore(fixture.Key, fixture.Destination, ["bridge"]));
+        Assert.True(second.Restore(fixture.Key, fixture.Destination, ["bridge"]));
+        Assert.Equal("first", File.ReadAllText(Path.Combine(fixture.Destination, "bridge/first.dll")));
+        Assert.Equal("second", File.ReadAllText(Path.Combine(fixture.Destination, "bridge/second.dll")));
+        Assert.Equal("nested", File.ReadAllText(Path.Combine(fixture.Destination, "bridge/adapter.dll")));
+    }
+
+    [Theory]
+    [InlineData("change")]
+    [InlineData("remove")]
+    [InlineData("add")]
+    [InlineData("directories")]
+    public void CorruptReferencedOutputIsAMissBeforeAnyDirectoryIsRestored(string corruption)
+    {
+        using var fixture = new CacheFixture();
+        System.IO.Directory.CreateDirectory(Path.Combine(fixture.Source, "unit"));
+        File.WriteAllText(Path.Combine(fixture.Source, "unit/unit.dll"), "unit");
+        fixture.Cache.Populate(fixture.Key, fixture.Source, ["unit", "bridge"]);
+        var payload = Path.Combine(fixture.Cache.UnitDirectory, fixture.Key, "payload/bridge");
+        if (corruption == "change") File.AppendAllText(Path.Combine(payload, "adapter.dll"), "corrupt");
+        if (corruption == "remove") File.Delete(Path.Combine(payload, "adapter.dll"));
+        if (corruption == "add") File.WriteAllText(Path.Combine(payload, "extra.dll"), "extra");
+        Assert.False(fixture.Cache.Restore(fixture.Key, fixture.Destination, corruption == "directories" ? ["unit"] : ["unit", "bridge"]));
+        Assert.Empty(System.IO.Directory.EnumerateFiles(fixture.Destination, "*", SearchOption.AllDirectories));
+    }
+
     [Fact]
     public void EveryBuildUnitHasTheSameKeyInTwoRepositoryLocations()
     {
@@ -258,13 +369,13 @@ public sealed class BuildOutputCacheTests
     }
 
     [Fact]
-    public void VerifiedHitRestoresCompleteOutputAndRemovesStaleFiles()
+    public void VerifiedHitRestoresItsInventoryAndPreservesOtherUnitsFiles()
     {
         using var fixture = new CacheFixture();
         fixture.Cache.Populate(fixture.Key, fixture.Source);
         File.WriteAllText(Path.Combine(fixture.Destination, "stale.dll"), "stale");
         Assert.True(fixture.Cache.Restore(fixture.Key, fixture.Destination));
-        Assert.False(File.Exists(Path.Combine(fixture.Destination, "stale.dll")));
+        Assert.Equal("stale", File.ReadAllText(Path.Combine(fixture.Destination, "stale.dll")));
         Assert.Equal("engine", File.ReadAllText(Path.Combine(fixture.Destination, "engine.exe")));
         Assert.Equal("nested", File.ReadAllText(Path.Combine(fixture.Destination, "bridge/adapter.dll")));
         Assert.Empty(System.IO.Directory.EnumerateDirectories(fixture.Cache.UnitDirectory, ".pending-*"));

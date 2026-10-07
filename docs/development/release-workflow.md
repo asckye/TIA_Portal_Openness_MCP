@@ -81,6 +81,11 @@ dotnet run --project build-tools/release -- cache-clear
 其他会影响构建的设置应通过显式 `-p:` 参数或已哈希的 props/targets 提供。
 求值失败或输入缺失时重建且不写缓存；构建后再次求值，输入变化则不保存。
 先在唯一暂存目录保存完整产物及文件哈希，再原子移动为完整条目；复用前验证全部文件、清单与哈希，损坏或缺失均重建。
+schema 5 的条目按仓库相对路径保存本项目及实际构建的所有 ProjectReference 的 TargetDir，publish 还保存发布目录。
+引用的框架、配置与属性沿用 MSBuild 的 `PrepareProjectReferences` 求值；不确定的自定义引用构建目标退回冷构建。
+每个目录保存独立清单，全部目录验证成功后才按清单覆盖文件；不删除目录或清单外的文件，保留其他单元恢复的共享输出。
+路径嵌入检查覆盖每个输出目录；任一引用产物记录 worktree 路径时也不缓存整个单元。旧 schema 的条目不会命中。
+发布链不直接读取 `obj/` 编译中间产物；缓存命中前的 restore 重新生成 NuGet assets 与导入文件。
 缓存只复用编译结果，各档选择的检查每次重新执行。包内 tier record 和运行结果保存 `buildCache` 命中/缺失记录。
 
 正式 `release` 强制完整档冷构建并禁用构建缓存，避免把缓存的正确性当作发布信任边界。

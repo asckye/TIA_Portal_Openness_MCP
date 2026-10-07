@@ -27,6 +27,9 @@
 MSBuild 输入变化对依赖单元的精确失效、缓存文件新增/丢失/损坏、完整输出恢复、单元索引恢复、最近命中更新、跨单元 LRU 容量淘汰和定向清理、
 release/publish 拒绝非 full 记录。跳过的检查保存零计数、null 或 skipped，不复制历史通过数。
 包记录 `tier`、`checkStatus`、`checksRan`、`checksSkipped` 与 `buildCache`；正式 release 禁用缓存并冷构建。
+缓存回归包含两个干净目录间复用真实 ProjectReference 构建、恢复全部 TargetDir 与 publish 目录、共享引用目录的清单合并，
+以及引用目录损坏时在写入任何目标前拒绝命中。全档验证应在两个新 worktree 使用同一缓存串行运行；第二次仍执行全部检查，
+特别是直接读取适配器 bin 目录的 foundation-api 套件。沙箱限制导致的检查失败单独报告，不降低通过标准。
 
 ```powershell
 dotnet test tests/Release/TiaMcp.ReleaseTool.Tests -c Release -p:RestoreConfigFile=<offline-nuget.config> -p:NuGetAudit=false

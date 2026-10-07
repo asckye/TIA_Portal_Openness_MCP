@@ -6,7 +6,8 @@ using System.Text.RegularExpressions;
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record BuildCacheEvent(string Unit, string Key, string Result, string Reason);
-internal sealed record BuildCacheFiles(string Unit, string Key, DateTime CreatedUtc, DateTime LastHitUtc, ReleaseArtifact[] Files);
+internal sealed record BuildCacheOutput(string Path, ReleaseArtifact[] Files);
+internal sealed record BuildCacheFiles(string Unit, string Key, DateTime CreatedUtc, DateTime LastHitUtc, BuildCacheOutput[] Outputs);
 internal sealed record BuildCacheEntry(string InputHash, DateTime CreatedUtc, DateTime LastHitUtc, long SizeBytes);
 internal sealed record BuildCacheUnit(string Unit, BuildCacheEntry[] Entries);
 internal sealed record BuildCacheInfo(string Directory, long MaxBytes, long SizeBytes, BuildCacheUnit[] Units);
@@ -26,7 +27,7 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
     internal static string Key(IEnumerable<ReleaseArtifact> inputs, IEnumerable<string> properties) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
         {
-            schema = 4, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
+            schema = 5, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
         }, JsonOptions)))).ToLowerInvariant();
 
     // Keys ignore the worktree location, so an output that records that location (for example a [CallerFilePath]
@@ -67,7 +68,22 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
         return -1;
     }
 
-    internal bool Restore(string key, string output)
+    internal bool Restore(string key, string output) => Restore(key, new Dictionary<string, string> { [""] = output });
+
+    internal bool Restore(string key, string root, IEnumerable<string> outputs) => Restore(key, OutputPaths(root, outputs));
+
+    private static Dictionary<string, string> OutputPaths(string root, IEnumerable<string> outputs)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var output in outputs)
+        {
+            if (!SafeRelative(output)) throw new IOException("Unsafe cache output directory");
+            result.Add(output, Path.GetFullPath(Path.Combine(root, output)));
+        }
+        return result;
+    }
+
+    private bool Restore(string key, Dictionary<string, string> outputs)
     {
         try
         {
@@ -75,24 +91,36 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
             {
                 var entry = EntryPath(key);
                 var record = ReadFiles(entry);
-                if (record is null || record.Unit != unit || record.Key != key || record.Files is null || record.Files.Length == 0 ||
-                    record.Files.Select(row => row.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != record.Files.Length) return false;
+                if (record is null || record.Unit != unit || record.Key != key || record.Outputs is null || record.Outputs.Length == 0 ||
+                    record.Outputs.Length != outputs.Count ||
+                    record.Outputs.Select(row => row.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != outputs.Count) return false;
                 var payload = Path.Combine(entry, "payload");
-                if (!Inventory(payload).SequenceEqual(record.Files)) return false;
                 // Validate every file before changing any destination. Reject path traversal and links.
-                foreach (var row in record.Files)
-                    if (!SafeRelative(row.Path) || Linked(Path.Combine(payload, row.Path))) return false;
-                if (Directory.Exists(output))
+                var inventory = new List<ReleaseArtifact>();
+                foreach (var output in record.Outputs)
                 {
-                    if (Linked(output)) return false;
-                    Directory.Delete(output, true);
+                    if (!outputs.TryGetValue(output.Path, out var destination) || Linked(destination) || output.Files is null || output.Files.Length == 0 ||
+                        output.Files.Any(row => !SafeRelative(row.Path)) ||
+                        output.Files.Select(row => row.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != output.Files.Length) return false;
+                    if (!Inventory(Path.Combine(payload, output.Path)).SequenceEqual(output.Files)) return false;
+                    foreach (var row in output.Files)
+                    {
+                        if (Linked(Path.Combine(destination, row.Path))) return false;
+                        inventory.Add(row with { Path = Path.Combine(output.Path, row.Path).Replace('\\', '/') });
+                    }
                 }
-                foreach (var row in record.Files)
+                if (!Inventory(payload).SequenceEqual(inventory.OrderBy(row => row.Path, StringComparer.Ordinal))) return false;
+                foreach (var output in record.Outputs)
                 {
-                    var target = Path.Combine(output, row.Path);
-                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                    File.Copy(Path.Combine(payload, row.Path), target);
-                    if (ReleaseRecords.HashFile(target) != row.Sha256) throw new IOException("Cache copy hash mismatch");
+                    // References are shared by units: replace only inventoried files, retaining files
+                    // restored by another unit. Never delete the destination directory wholesale.
+                    foreach (var row in output.Files)
+                    {
+                        var target = Path.Combine(outputs[output.Path], row.Path);
+                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                        File.Copy(Path.Combine(payload, output.Path, row.Path), target, true);
+                        if (ReleaseRecords.HashFile(target) != row.Sha256) throw new IOException("Cache copy hash mismatch");
+                    }
                 }
                 AtomicJson(Path.Combine(entry, "files.json"), record with { LastHitUtc = Now });
                 Prune(directory, maxBytes);
@@ -102,7 +130,11 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NullReferenceException) { return false; }
     }
 
-    internal void Populate(string key, string output)
+    internal void Populate(string key, string output) => Populate(key, new Dictionary<string, string> { [""] = output });
+
+    internal void Populate(string key, string root, IEnumerable<string> outputs) => Populate(key, OutputPaths(root, outputs));
+
+    private void Populate(string key, Dictionary<string, string> outputs)
     {
         Locked(directory, () =>
         {
@@ -113,18 +145,23 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
             var final = EntryPath(key);
             try
             {
-                var files = Inventory(output);
-                if (files.Length == 0) return 0;
-                foreach (var row in files)
+                if (outputs.Count == 0) throw new IOException("No build output directories");
+                var inventories = outputs.OrderBy(row => row.Key, StringComparer.Ordinal).Select(row => new BuildCacheOutput(row.Key, Inventory(row.Value))).ToArray();
+                if (inventories.Any(output => output.Files.Length == 0)) throw new IOException("Empty build output directory");
+                foreach (var output in inventories)
                 {
-                    var source = Path.Combine(output, row.Path);
-                    if (!SafeRelative(row.Path) || Linked(source)) throw new IOException("Unsupported cache payload");
-                    var target = Path.Combine(staging, "payload", row.Path);
-                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                    File.Copy(source, target);
+                    foreach (var row in output.Files)
+                    {
+                        var source = Path.Combine(outputs[output.Path], row.Path);
+                        if (!SafeRelative(row.Path) || Linked(source)) throw new IOException("Unsupported cache payload");
+                        var target = Path.Combine(staging, "payload", output.Path, row.Path);
+                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                        File.Copy(source, target);
+                    }
+                    if (!Inventory(Path.Combine(staging, "payload", output.Path)).SequenceEqual(output.Files) ||
+                        !Inventory(outputs[output.Path]).SequenceEqual(output.Files)) throw new IOException("Build outputs changed during cache population");
                 }
-                if (!Inventory(Path.Combine(staging, "payload")).SequenceEqual(files)) throw new IOException("Build outputs changed during cache population");
-                AtomicJson(Path.Combine(staging, "files.json"), new BuildCacheFiles(unit, key, Now, Now, files));
+                AtomicJson(Path.Combine(staging, "files.json"), new BuildCacheFiles(unit, key, Now, Now, inventories));
                 if (Directory.Exists(final)) DeleteEntry(directory, final);
                 Directory.Move(staging, final);
                 Prune(directory, maxBytes);
@@ -255,7 +292,7 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
     private static bool Linked(string path)
     {
         for (var info = new FileInfo(path) as FileSystemInfo; info is not null; info = info is FileInfo file ? file.Directory : ((DirectoryInfo)info).Parent)
-            if ((info.Attributes & FileAttributes.ReparsePoint) != 0) return true;
+            if (info.Attributes is var attributes && attributes != (FileAttributes)(-1) && (attributes & FileAttributes.ReparsePoint) != 0) return true;
         return false;
     }
     private static IEnumerable<string> Files(string root)
@@ -320,14 +357,15 @@ internal static partial class ReleaseCommands
         ? Directory.EnumerateFiles(directory, "*.json").Order(StringComparer.Ordinal).Select(path => JsonSerializer.Deserialize<BuildCacheEvent>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!).ToArray() : [];
 
     internal static CommandResult CachedBuild(string executable, IReadOnlyList<string> arguments, Func<CommandResult> build,
-        IDictionary<string, string?>? environment = null)
+        IDictionary<string, string?>? environment = null, string? root = null)
     {
+        root = Path.GetFullPath(root ?? Root);
         var cacheDirectory = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY");
         if (cacheDirectory is null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1" ||
             !Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase) ||
             arguments.Count < 2 || arguments[0] is not ("build" or "publish") || arguments.Contains("--no-build") || !arguments[1].EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)) return build();
-        var project = Path.GetFullPath(arguments[1], Root);
-        var unit = Path.GetRelativePath(Root, project).Replace('\\', '/') + " " + arguments[0] + " " + string.Join(" ", arguments.Where(arg => arg.StartsWith("-p:TiaReleaseKey=", StringComparison.OrdinalIgnoreCase)));
+        var project = Path.GetFullPath(arguments[1], root);
+        var unit = Path.GetRelativePath(root, project).Replace('\\', '/') + " " + arguments[0] + " " + string.Join(" ", arguments.Where(arg => arg.StartsWith("-p:TiaReleaseKey=", StringComparison.OrdinalIgnoreCase)));
         CommandResult ColdBuild()
         {
             if (arguments is not List<string> mutable) throw new ReleaseException("Cached build requires mutable command arguments");
@@ -354,7 +392,8 @@ internal static partial class ReleaseCommands
             CacheEvent(new(unit, "", "disabled", "publication or -NoBuildCache requires a cold rebuild"));
             return ColdBuild();
         }
-        string key = "", output = "";
+        string key = "";
+        string[] outputs = [];
         try
         {
             // Use the same runner/environment and effective properties as compilation. A fresh
@@ -368,9 +407,11 @@ internal static partial class ReleaseCommands
                 ProcessRunner.RequireSuccess(build(), "Restore build cache inputs");
             }
             finally { mutable.Clear(); mutable.AddRange(original); }
-            (key, output) = BuildKey(executable, project, arguments, environment: environment);
+            var evaluated = BuildKey(executable, project, arguments, root, environment);
+            key = evaluated.Key;
+            outputs = evaluated.Outputs;
             var cache = new BuildOutputCache(cacheDirectory!, unit, CacheLimit());
-            if (cache.Restore(key, output))
+            if (cache.Restore(key, root, outputs))
             {
                 CacheEvent(new(unit, key, "hit", "verified all payload hashes"));
                 return new CommandResult(0, "Verified build cache hit: " + unit + Environment.NewLine, "");
@@ -388,11 +429,11 @@ internal static partial class ReleaseCommands
         {
             try
             {
-                var after = BuildKey(executable, project, arguments, environment: environment);
+                var after = BuildKey(executable, project, arguments, root, environment);
                 if (after.Key != key) Console.WriteLine("Cache not populated: build inputs changed during compilation: " + unit);
-                else if (BuildOutputCache.EmbeddedPath(output, Root) is { } embedded)
-                    Console.WriteLine("Cache not populated: output records the worktree path (" + Path.GetRelativePath(output, embedded) + "): " + unit);
-                else new BuildOutputCache(cacheDirectory!, unit, CacheLimit()).Populate(key, output);
+                else if (outputs.Select(output => BuildOutputCache.EmbeddedPath(Path.Combine(root, output), root)).FirstOrDefault(path => path is not null) is { } embedded)
+                    Console.WriteLine("Cache not populated: output records the worktree path (" + Path.GetRelativePath(root, embedded) + "): " + unit);
+                else new BuildOutputCache(cacheDirectory!, unit, CacheLimit()).Populate(key, root, outputs);
             }
             catch (Exception ex) { Console.WriteLine("Cache not populated: " + ex.Message); }
         }
@@ -473,7 +514,7 @@ internal static partial class ReleaseCommands
         return result.Select(arg => NormalizeCacheText(arg, root ?? Root)).ToArray();
     }
 
-    internal static (string Key, string Output) BuildKey(string dotnet, string project, IReadOnlyList<string> arguments,
+    internal static (string Key, string Output, string[] Outputs) BuildKey(string dotnet, string project, IReadOnlyList<string> arguments,
         string? root = null, IDictionary<string, string?>? environment = null)
     {
         root = Path.GetFullPath(root ?? Root);
@@ -488,6 +529,13 @@ internal static partial class ReleaseCommands
             inputs[name] = normalizeText ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(NormalizeCacheText(File.ReadAllText(path), root)))) : ReleaseRecords.HashFile(path);
         }
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var outputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Output(string path)
+        {
+            var full = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Uncertain build output location");
+            outputs.Add(Path.GetRelativePath(root, full).Replace('\\', '/'));
+        }
         string Visit(string file, List<string> props)
         {
             if (!visited.Add(file + string.Join('|', props))) return "";
@@ -504,6 +552,22 @@ internal static partial class ReleaseCommands
                 foreach (var framework in frameworks.Split(';')) Visit(file, [.. props, "-p:TargetFramework=" + framework]);
                 return "";
             }
+            Output(values.GetProperty("TargetDir").GetString()!);
+            // Ask MSBuild which framework/configuration it actually builds for each reference.
+            // Simply visiting all TargetFrameworks would demand outputs never built by this unit.
+            JsonDocument? references = null;
+            if (doc.RootElement.GetProperty("Items").GetProperty("ProjectReference").GetArrayLength() != 0)
+            {
+                var prepared = ProcessRunner.Run(dotnet, ["msbuild", file, "-nologo", "-m:1", "-nodeReuse:false", .. props,
+                    "-t:PrepareProjectReferences", "-getProperty:BuildProjectReferences,_GlobalPropertiesToRemoveFromProjectReferences",
+                    "-getItem:_MSBuildProjectReferenceExistent,_MSBuildProjectReferenceNonExistent"], root, environment);
+                ProcessRunner.RequireSuccess(prepared, "Evaluate referenced build outputs");
+                references = JsonDocument.Parse(prepared.StandardOutput);
+                if (references.RootElement.GetProperty("Properties").GetProperty("BuildProjectReferences").GetString() != "true" ||
+                    references.RootElement.GetProperty("Items").GetProperty("_MSBuildProjectReferenceNonExistent").GetArrayLength() != 0)
+                    throw new IOException("Uncertain referenced build outputs");
+            }
+            using var referenceLifetime = references;
             // MSBuildAllProjects can name only the most recently modified import. Hash the
             // complete preprocessed import closure instead; restore timestamps are not inputs.
             var pp = Path.Combine(Path.GetTempPath(), "tia-cache-" + Guid.NewGuid().ToString("N") + ".xml");
@@ -545,11 +609,19 @@ internal static partial class ReleaseCommands
                     }
                     else if (group.Name == "ProjectReference")
                     {
+                        var resolved = references!.RootElement.GetProperty("Items").GetProperty("_MSBuildProjectReferenceExistent").EnumerateArray()
+                            .Single(row => row.GetProperty("FullPath").GetString()!.Equals(path, StringComparison.OrdinalIgnoreCase));
+                        if (resolved.GetProperty("BuildReference").GetString() != "true" ||
+                            resolved.TryGetProperty("Targets", out var targets) && targets.GetString() is { Length: > 0 })
+                            throw new IOException("Uncertain project reference build targets");
                         var child = new List<string>(props);
                         foreach (var name in new[] { "GlobalPropertiesToRemove", "UndefineProperties" })
-                            if (item.TryGetProperty(name, out var removes))
+                            if (resolved.TryGetProperty(name, out var removes))
                                 foreach (var remove in removes.GetString()!.Split(';', StringSplitOptions.RemoveEmptyEntries)) child.RemoveAll(prop => prop.StartsWith("-p:" + remove + "=", StringComparison.OrdinalIgnoreCase));
-                        if (item.TryGetProperty("AdditionalProperties", out var additions)) child.AddRange(additions.GetString()!.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(prop => "-p:" + prop));
+                        foreach (var remove in references.RootElement.GetProperty("Properties").GetProperty("_GlobalPropertiesToRemoveFromProjectReferences").GetString()!.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                            child.RemoveAll(prop => prop.StartsWith("-p:" + remove + "=", StringComparison.OrdinalIgnoreCase));
+                        foreach (var name in new[] { "AdditionalProperties", "SetConfiguration", "SetPlatform", "SetTargetFramework" })
+                            if (resolved.TryGetProperty(name, out var additions)) child.AddRange(additions.GetString()!.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(prop => "-p:" + prop));
                         Visit(path, child);
                     }
                     else if (group.Name == "Reference")
@@ -565,7 +637,9 @@ internal static partial class ReleaseCommands
         }
         var output = Visit(project, properties);
         for (var i = 0; i < arguments.Count - 1; i++) if (arguments[i] is "-o" or "--output") output = Path.GetFullPath(arguments[i + 1], root);
-        if (output.Length == 0 || !Path.GetFullPath(output).StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Uncertain build output location");
+        if (output.Length != 0) Output(output);
+        if (outputs.Count == 0) throw new IOException("Uncertain build output location");
+        var outputPaths = outputs.Order(StringComparer.Ordinal).ToArray();
         if (properties.FirstOrDefault(prop => prop.StartsWith("-p:SiemensEngineeringDirectory=", StringComparison.OrdinalIgnoreCase)) is { } api)
             foreach (var path in Directory.EnumerateFiles(api[(api.IndexOf('=') + 1)..], "*", SearchOption.AllDirectories)) Add(path);
         foreach (var config in arguments.Where(arg => arg.StartsWith("-p:RestoreConfigFile=", StringComparison.OrdinalIgnoreCase))) Add(config[(config.IndexOf('=') + 1)..]);
@@ -582,9 +656,9 @@ internal static partial class ReleaseCommands
         var sdk = ProcessRunner.Run(dotnet, ["--version"], root, environment);
         ProcessRunner.RequireSuccess(sdk, "Identify .NET SDK");
         var buildEnvironment = EffectiveCacheEnvironment(root, environment);
-        var key = BuildOutputCache.Key(inputs.Select(row => new ReleaseArtifact(row.Key, row.Value)), [.. CacheArguments(project, arguments, root), sdk.StandardOutput.Trim(), .. buildEnvironment]);
+        var key = BuildOutputCache.Key(inputs.Select(row => new ReleaseArtifact(row.Key, row.Value)), [.. CacheArguments(project, arguments, root), sdk.StandardOutput.Trim(), .. buildEnvironment, "outputs:", .. outputPaths]);
         if (Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DEBUG") is { } debug)
             WriteJson(Path.Combine(debug, key + ".json"), new { project, inputs, environmentHash = BuildOutputCache.Key([], buildEnvironment), arguments = CacheArguments(project, arguments, root) });
-        return (key, output);
+        return (key, output, outputPaths);
     }
 }
