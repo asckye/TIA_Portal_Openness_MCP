@@ -123,9 +123,14 @@ internal static partial class ReleaseCommands
         if (!SameArtifacts(sourceFiles, ReleaseRecords.GetSources(Root, "engine"))) throw new ReleaseException("Build inputs changed while validation was running; refusing to record results");
         if (!SameArtifacts(validationInputs, ReleaseRecords.GetValidationInputs(Root, "engine"))) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
 
-        var runtimeFiles = Directory.EnumerateFiles(Path.Combine(Root, "runtime"), "*", SearchOption.AllDirectories)
+        // Same roots as ReleaseRecords' engine inventory check (the PowerShell Build-Release recorded these four only);
+        // Foundation, Studio and bundled .NET runtimes belong to the multi-version record.
+        var runtimeFiles = new[] { "runtime/v20", "runtime/v21", "runtime/tools", "runtime/verification" }
+            .Select(relative => Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar)))
+            .Where(Directory.Exists)
+            .SelectMany(directory => Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
             .Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" ||
-                (Path.GetDirectoryName(path) == Path.Combine(Root, "runtime/verification") && Path.GetFileName(path) is "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json"))
+                Path.GetFileName(path) is "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(path => new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), length = new FileInfo(path).Length, sha256 = ReleaseRecords.HashFile(path) }).ToArray();
         var artifacts = new List<object>();
