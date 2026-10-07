@@ -30,7 +30,9 @@ namespace TiaMcp.PlcFoundation
 
         internal static FileInfo XmlInput(string path)
         {
-            var file = new FileInfo(path);
+            // Openness receives the FileInfo as constructed: V14 SP1 refuses a caller spelling with forward slashes
+            // ("The argument 'path' cannot be a specific path"), so pass the normalized full path.
+            var file = new FileInfo(Path.GetFullPath(path));
             if (!file.Exists || !file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
                 throw new AdapterPreconditionException("An existing Openness XML file is required.", "importPath");
             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 64 * 1024 * 1024 };

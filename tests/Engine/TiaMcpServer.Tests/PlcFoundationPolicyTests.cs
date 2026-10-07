@@ -43,6 +43,8 @@ namespace TiaMcpServer.Tests
                 var bytes = File.ReadAllBytes(file);
                 check(PlcFoundationPolicy.XmlInput(file).FullName == file, "Openness XML input accepted");
                 check(Convert.ToBase64String(bytes) == Convert.ToBase64String(File.ReadAllBytes(file)), "input is not rewritten or silently retargeted");
+                var slashed = PlcFoundationPolicy.XmlInput(file.Replace('\\', '/'));
+                check(slashed.ToString() == file && slashed.FullName == file, "forward-slash input reaches Openness as the normalized full path");
                 check(Refuses(() => PlcFoundationPolicy.XmlOutput(file)), "export refuses existing file");
                 var output = Path.Combine(temp, "new.xml");
                 check(PlcFoundationPolicy.XmlOutput(output).FullName == output && !File.Exists(output), "export planning creates no file");

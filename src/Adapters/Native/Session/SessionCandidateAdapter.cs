@@ -138,9 +138,9 @@ namespace TiaMcp.Adapters.Native.Session
             if (p.LocalSessions.Any()) CandidatePrimitives.Fail("precondition", "empty-selected-process");
             if (Path.GetExtension(request.ProjectPath).StartsWith(".als", StringComparison.OrdinalIgnoreCase))
             { if (!localSessionOpenSupported) CandidatePrimitives.Fail("precondition", "local-session-execution-gate");
-                var session = p.LocalSessions.Open(new FileInfo(request.ProjectPath)); bound(session.Project, true); Remember(); return; }
+                var session = p.LocalSessions.Open(new FileInfo(Path.GetFullPath(request.ProjectPath))); bound(session.Project, true); Remember(); return; }
 #endif
-            var opened = request.Upgrade == "allow" ? p.Projects.OpenWithUpgrade(new FileInfo(request.CopyPath)) : p.Projects.Open(new FileInfo(request.ProjectPath));
+            var opened = request.Upgrade == "allow" ? p.Projects.OpenWithUpgrade(new FileInfo(Path.GetFullPath(request.CopyPath))) : p.Projects.Open(new FileInfo(Path.GetFullPath(request.ProjectPath)));
             bound(opened, true); Remember();
         }
         public void MarkUncertain() { RequiresReset = true; }

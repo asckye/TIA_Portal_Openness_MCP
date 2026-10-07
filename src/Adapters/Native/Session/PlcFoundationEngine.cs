@@ -129,7 +129,7 @@ namespace TiaMcp.PlcFoundation
             lifecycle.RequireUnbound();
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,path);
             PlcLifecyclePolicy.RequireLocalSessionExecution(session,dryRun);
-            var input = new FileInfo(path);
+            var input = new FileInfo(Path.GetFullPath(path));
             if (!input.Exists) throw new AdapterPreconditionException("Project file does not exist.", "path", true, new FileNotFoundException());
             if (p.Projects.Any(x => string.Equals(x.Path.FullName, input.FullName, StringComparison.OrdinalIgnoreCase)))
                 throw new AdapterPreconditionException("Project is already open; bind it explicitly instead.","path");
@@ -152,7 +152,7 @@ namespace TiaMcp.PlcFoundation
             var p = Portal();
             PlcFoundationPolicy.RequireName(projectName);
             lifecycle.RequireUnbound();
-            var parent = new DirectoryInfo(directoryPath);
+            var parent = new DirectoryInfo(Path.GetFullPath(directoryPath));
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
                 throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath" : "projectName");
             var expected=PlcLifecyclePolicy.CreationFile(ReleaseKey,parent.FullName,projectName);

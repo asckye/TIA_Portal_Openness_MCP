@@ -37,7 +37,7 @@ namespace TiaMcp.PlcFoundation
         private static string[] Scan(PlcBatchImportRequest request)
         {
             if(!Path.IsPathRooted(request.Directory)) throw new AdapterPreconditionException("Input directory must be absolute and existing.","dir");
-            var root=new DirectoryInfo(request.Directory); if(!root.Exists) throw new AdapterPreconditionException("Input directory does not exist.","dir"); SafePath(root);
+            var root=new DirectoryInfo(Path.GetFullPath(request.Directory)); if(!root.Exists) throw new AdapterPreconditionException("Input directory does not exist.","dir"); SafePath(root);
             Regex regex;
             try { regex=new Regex(request.Regex,RegexOptions.IgnoreCase|RegexOptions.CultureInvariant,TimeSpan.FromMilliseconds(100)); }
             catch(ArgumentException ex) { throw new AdapterPreconditionException("regexName must be a valid bounded regular expression.","regexName",true,ex); }

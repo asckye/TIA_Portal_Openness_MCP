@@ -62,7 +62,7 @@ namespace TiaMcp.PlcFoundation
             },Inventory=Inventory,Collision=name=>names.Any(n=>string.Equals(n,name,StringComparison.OrdinalIgnoreCase)),Recheck=recheck,Import=()=> {
                 // Exactly one typed native call. Exact V20/V21 SDK XML: None = "Throw if exists".
                 // It does NOT promise atomicity, normalization, rollback or race-free preflight.
-                var native=Documents.Import(Documents.Blocks(target),new DirectoryInfo(importPath),fileNameWithoutExtension,ImportDocumentOptions.None);
+                var native=Documents.Import(Documents.Blocks(target),new DirectoryInfo(Path.GetFullPath(importPath)),fileNameWithoutExtension,ImportDocumentOptions.None);
                 if(native==null) return null!;
                 var outcome=new PlcDocumentImportNative();
                 try
