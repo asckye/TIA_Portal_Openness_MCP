@@ -54,7 +54,7 @@ namespace TiaMcpServer.Siemens
         internal object XmlFileArgument(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("An XML file path is required.", nameof(path));
-            return Key == "14" ? (object)path : new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
+            return Key == "14" ? (object)path : new FileInfo(TiaOpenness.Shared.NativePathSelection.FullPath(path));
         }
 
         internal string UnifiedCollection(string logicalName)

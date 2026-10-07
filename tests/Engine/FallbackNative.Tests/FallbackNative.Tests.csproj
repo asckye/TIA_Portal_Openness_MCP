@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../../src/Adapters/Native/Vci/VciFallbackAdapter.cs" Link="VciFallbackAdapter.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
   </ItemGroup>

@@ -18,6 +18,7 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Policy/PlcSoftwareReadPolicy.cs" Link="PlcSoftwareReadPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
   </ItemGroup>
 </Project>

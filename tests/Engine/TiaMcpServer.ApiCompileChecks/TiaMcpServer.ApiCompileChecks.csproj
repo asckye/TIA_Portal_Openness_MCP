@@ -26,6 +26,7 @@
   <ItemGroup>
     <Compile Include="ApiCompileChecks.cs" />
     <Compile Include="../../../src/Engine/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>

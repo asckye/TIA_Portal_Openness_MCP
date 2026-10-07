@@ -5,6 +5,8 @@
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../../../src/Studio/Contracts/TiaOpenness.Contracts.csproj" />
     <Compile Include="../../../src/Worker/WorkerJson.cs" Link="WorkerJson.cs" />
+    <Compile Include="../../../src/Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="../../../src/Worker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

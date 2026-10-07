@@ -202,7 +202,9 @@ public sealed class WorkerJsonGoldenTests
     {
         var cause = new InvalidOperationException("native failed");
         cause.Data[trigger] = "生产线 <&> 😀\u00a0\u0085\u2028\u2029\u001b\n\t\"\\";
-        var expected = JsonConvert.SerializeObject(trigger == "unrelated" ? null : new {
+        // Evidence always names the failure shape (shared host rule); data fields stay byte-exact.
+        var expected = JsonConvert.SerializeObject(new {
+            exceptionType = cause.GetType().Name, parameter = (string?)null, isArgument = (bool?)null,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],stagedFile=cause.Data["stagedFile"],
             recoveryDirectory=cause.Data["recoveryDirectory"],exportPhase=cause.Data["exportPhase"],stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"] });
         Assert.Equal(expected, WorkerJson.Evidence(cause));
