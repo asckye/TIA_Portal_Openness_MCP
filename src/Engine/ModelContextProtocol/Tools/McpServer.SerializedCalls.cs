@@ -9,6 +9,18 @@ using ModelContextProtocol.Server;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    internal static partial class InvocationJournal
+    {
+        // Engine dispatch policy stays out of the JSON adapter linked by Studio tests.
+        static partial void RequireDiskFlush(string row, ref bool flush)
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(row);
+            string tool = document.RootElement.GetProperty("tool").GetString() ?? "";
+            // Local READ rows have no native crash evidence. Native boundaries,
+            // writes and session calls retain synchronous hardware flushes.
+            if (!ToolTaxonomy.UsesOpennessLane(tool) && ToolTaxonomy.OperationOf(tool, null).Operation == "READ") flush = false;
+        }
+    }
     public static partial class McpServer
     {
         private static readonly AsyncLocal<RequestContext<CallToolRequestParams>?> ProgressRequest = new AsyncLocal<RequestContext<CallToolRequestParams>?>();

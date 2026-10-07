@@ -45,6 +45,11 @@ namespace TiaMcpServer
         private static readonly ConcurrentDictionary<string, Session> _sessions
             = new ConcurrentDictionary<string, Session>(StringComparer.OrdinalIgnoreCase);
 
+        internal static McpHttpResponseRouter CreateRouter(McpBlockingStream requests, McpBlockingStream responses)
+            // The router correlates responses and serializes frame writes. Tool and
+            // worker lanes own dispatch; waiting for a response cannot block HTTP peers.
+            => new McpHttpResponseRouter(requests, responses, serializeRequests: false);
+
         public static async Task Run(
             CliOptions? options,
             McpBlockingStream httpToMcp,
@@ -57,7 +62,7 @@ namespace TiaMcpServer
             string? secret = options?.HttpApiKey;
 
             using var listener = new HttpListener();
-            using var router = new McpHttpResponseRouter(httpToMcp, mcpToHttp, Isolation.IsolatedWorkerHost.Current == null);
+            using var router = CreateRouter(httpToMcp, mcpToHttp);
             var handlers = new HashSet<Task>();
             Action stop = () =>
             {

@@ -10,15 +10,6 @@ namespace TiaMcpServer.ModelContextProtocol
     // Keep the engine's JSON contract at its existing boundary.
     internal static partial class InvocationJournal
     {
-        static partial void RequireDiskFlush(string row, ref bool flush)
-        {
-            using var document = JsonDocument.Parse(row);
-            string tool = document.RootElement.GetProperty("tool").GetString() ?? "";
-            // These reviewed local READ tools have no native crash evidence or writes.
-            // Their rows are written synchronously; hardware flushes remain mandatory
-            // for every native boundary, write audit, session call and call completion.
-            if (!ToolTaxonomy.UsesOpennessLane(tool) && ToolTaxonomy.OperationOf(tool, null).Operation == "READ") flush = false;
-        }
         internal static Func<JsonObject?>? BindingSnapshot;
         private static string? ReadBinding() => BindingSnapshot?.Invoke()?.ToJsonString();
         internal static JsonObject Health() => JsonNode.Parse(HealthRow().ToString())!.AsObject();

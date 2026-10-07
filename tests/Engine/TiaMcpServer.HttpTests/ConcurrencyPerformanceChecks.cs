@@ -252,6 +252,107 @@ internal static class ConcurrencyPerformanceChecks
         }
     }
 
+    internal static async Task HttpPipeline(Assembly engine, string outputPath, bool baseline)
+    {
+        string root = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(outputPath))!, "http-pipeline-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", root);
+        engine.GetType("TiaMcpServer.Runtime.OpennessReadiness", true)!.GetMethod("MarkUnavailable", All)!
+            .Invoke(null, new object?[] { "Offline HTTP concurrency fixture", "No native dispatch", "No native dispatch", null });
+        var streamType = engine.GetType("TiaMcpServer.McpBlockingStream", true)!;
+        using var input = (Stream)Activator.CreateInstance(streamType, true)!;
+        using var output = (Stream)Activator.CreateInstance(streamType, true)!;
+        var clock = Stopwatch.StartNew();
+        var host = engine.GetType("TiaMcpServer.Program", true)!.GetMethod("BuildHttpMcpHost", All)!
+            .Invoke(null, new object?[] { null, input, output })!;
+        using var hostLifetime = (IDisposable)host;
+        var services = (IServiceProvider)host.GetType().GetProperty("Services")!.GetValue(host)!;
+        var optionsType = Assembly.Load("Microsoft.Extensions.Options").GetType("Microsoft.Extensions.Options.IOptions`1", true)!
+            .MakeGenericType(typeof(McpServerOptions));
+        var configured = services.GetService(optionsType)!;
+        var options = (McpServerOptions)optionsType.GetProperty("Value")!.GetValue(configured)!;
+        var tools = options.Capabilities!.Tools!.ToolCollection!;
+        var facade = engine.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        McpServerTool Wrap(McpServerTool tool) => ((IList<McpServerTool>)facade.GetMethod("WrapWithSerializedCalls", All)!
+            .Invoke(null, new object[] { new List<McpServerTool> { tool } })!)[0];
+        int active = 0, maximum = 0;
+        bool measuring = true;
+        var entered = Signal();
+        var native = Wrap(new FakeTool("GetSessionState", async token => {
+            int current = Interlocked.Increment(ref active); maximum = Math.Max(maximum, current);
+            try { entered.TrySetResult(true); await Task.Delay(measuring ? 60000 : 30, token); }
+            finally { Interlocked.Decrement(ref active); }
+        }));
+        tools.Remove(tools.Single(t => t.ProtocolTool.Name == "GetSessionState")); tools.Add(native);
+        var routerType = engine.GetType("TiaMcpServer.McpHttpResponseRouter", true)!;
+        var router = baseline
+            ? Activator.CreateInstance(routerType, All, null, new object[] { input, output, true }, null)!
+            : engine.GetType("TiaMcpServer.HttpMcpServer", true)!.GetMethod("CreateRouter", All)!
+                .Invoke(null, new object[] { input, output })!;
+        using var routerLifetime = (IDisposable)router;
+        var send = routerType.GetMethod("SendAsync", All)!;
+        async Task<JsonObject?> Send(string method, object? parameters, int? id = 1)
+        {
+            var body = new JsonObject { ["jsonrpc"] = "2.0", ["method"] = method };
+            if (id.HasValue) body["id"] = id.Value;
+            if (parameters != null) body["params"] = JsonSerializer.SerializeToNode(parameters);
+            var reply = await (Task<string?>)send.Invoke(router, new object[] { body.ToJsonString(), TimeSpan.FromSeconds(90) })!;
+            if (!id.HasValue) { if (reply != null) throw new Exception("HTTP notification returned a reply."); return null; }
+            var result = JsonNode.Parse(reply!)!.AsObject();
+            if ((int?)result["id"] != id || result["error"] != null) throw new Exception("HTTP response ID or envelope mismatch: " + result);
+            return result;
+        }
+        var start = host.GetType().GetMethod("StartAsync")!;
+        var stop = host.GetType().GetMethod("StopAsync")!;
+        try
+        {
+            await (Task)start.Invoke(host, new object[] { CancellationToken.None })!;
+            // The listener's four session headers share this real SDK host. Reused
+            // client IDs must remain separate after HTTP wire-ID correlation.
+            for (int session = 0; session < 4; session++)
+            {
+                await Send("initialize", new { protocolVersion = "2024-11-05", capabilities = new { }, clientInfo = new { name = "P6-58 HTTP pipeline", version = "2" } });
+                await Send("notifications/initialized", null, null);
+            }
+            double startupMs = clock.Elapsed.TotalMilliseconds;
+            clock.Restart(); await Send("tools/list", new { }); double toolsListMs = clock.Elapsed.TotalMilliseconds;
+            var local = new { name = "GetToolUsage", arguments = new { toolName = "GetSessionState" } };
+            await Send("tools/call", local);
+            var held = Send("tools/call", new { name = "GetSessionState", arguments = new { } });
+            await Bound(entered.Task);
+            clock.Restart();
+            var clients = Enumerable.Range(0, 8).Select(async client => {
+                var values = new List<double>();
+                for (int request = 0; request < 5; request++)
+                {
+                    var elapsed = Stopwatch.StartNew();
+                    var reply = await Send("tools/call", local, client / 4 * 100 + request + 1);
+                    if ((bool?)reply!["result"]?["isError"] == true) throw new Exception("HTTP local tool failed.");
+                    values.Add(elapsed.Elapsed.TotalMilliseconds);
+                }
+                return values;
+            }).ToArray();
+            var latencies = (await Task.WhenAll(clients)).SelectMany(values => values).OrderBy(value => value).ToArray();
+            double callsPerSecond = latencies.Length / clock.Elapsed.TotalSeconds;
+            await held;
+            measuring = false;
+            await Task.WhenAll(Enumerable.Range(0, 12).Select(id => Send("tools/call", new { name = "GetSessionState", arguments = new { } }, id)));
+            if (maximum != 1) throw new Exception("HTTP native lane overlapped.");
+            File.WriteAllText(outputPath, JsonSerializer.Serialize(new { baseline, startupMs, toolsListMs,
+                local = new { p50Ms = latencies[19], p95Ms = latencies[37], maxMs = latencies[39], callsPerSecond },
+                sessions = 4, concurrentClients = 8, fakeSeconds = 60, listener = false,
+                assertions = new { exclusive = maximum == 1, nativeCalls = 13, responseIds = true } }, new JsonSerializerOptions { WriteIndented = true }));
+            if (!baseline && latencies[37] >= 100) throw new Exception("HTTP local p95 exceeded 100 ms: " + latencies[37]);
+            Console.WriteLine("PASS real HTTP router, host/SDK dispatch, response IDs and 60-second lane: " + outputPath);
+        }
+        finally
+        {
+            routerLifetime.Dispose();
+            await (Task)stop.Invoke(host, new object[] { CancellationToken.None })!;
+            await (Task)routerType.GetProperty("Completion", All)!.GetValue(router)!;
+        }
+    }
+
     internal static async Task Run(Assembly engine, string output, bool baseline)
     {
         string root = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "data-" + Guid.NewGuid().ToString("N"));

@@ -171,6 +171,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--stdio-only', action='store_true')
+    parser.add_argument('--sequential', action='store_true', help='Measure startup without competing transport jobs')
     args = parser.parse_args()
     common = ['--bundle-root', str(ROOT)]
     engine = [str(args.engine.resolve())] + common + ['--no-isolate-openness', '--logging', '0']
@@ -182,7 +183,7 @@ def main():
     result = {}
     if args.stdio_only:
         jobs = [job for job in jobs if not job[2]]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1 if args.sequential else 6) as pool:
         futures = {pool.submit(measure, command, args.output.parent / (args.output.stem + '-' + name),
                                http, fake, args.baseline): name for name, command, http, fake in jobs}
         for future in concurrent.futures.as_completed(futures):

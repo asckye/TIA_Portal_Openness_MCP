@@ -97,13 +97,15 @@ internal static partial class Program
         public readonly StreamReader RequestReader;
         private readonly StreamWriter ResponseWriter;
         private readonly Type RouterType;
-        public Fixture()
+        public Fixture(bool production = false)
         {
             var streamType = Server.GetType("TiaMcpServer.McpBlockingStream", true)!;
             Requests = (Stream)Activator.CreateInstance(streamType, true)!;
             Responses = (Stream)Activator.CreateInstance(streamType, true)!;
             RouterType = Server.GetType("TiaMcpServer.McpHttpResponseRouter", true)!;
-            Router = Activator.CreateInstance(RouterType, All, null, new object[] { Requests, Responses }, null)!;
+            Router = production
+                ? Server.GetType("TiaMcpServer.HttpMcpServer", true)!.GetMethod("CreateRouter", All)!.Invoke(null, new object[] { Requests, Responses })!
+                : Activator.CreateInstance(RouterType, All, null, new object[] { Requests, Responses }, null)!;
             RequestReader = new StreamReader(Requests, new UTF8Encoding(false));
             ResponseWriter = new StreamWriter(Responses, new UTF8Encoding(false)) { AutoFlush = true, NewLine = "\n" };
         }
@@ -125,6 +127,34 @@ internal static partial class Program
 
     private static async Task RouterTests()
     {
+        await Test("production HTTP peers dispatch before the first response and retain identical client IDs", async () => {
+            using var f = new Fixture(production: true);
+            var first = f.Send(Request(1)); var second = f.Send(Request(1));
+            var a = Parse((await Bounded(f.Read()))!); var b = Parse((await Bounded(f.Read()))!);
+            Check(!Equals(a["id"], b["id"]), "Concurrent HTTP peers share a wire ID");
+            f.Write(Reply(b["id"], "second"));
+            Check((string)Parse((await Bounded(second))!)["result"] == "second" && !first.IsCompleted,
+                "HTTP peer waited for the outstanding response");
+            f.Write(Reply(a["id"], "first"));
+            Check((int)Parse((await Bounded(first))!)["id"] == 1 && (int)Parse((await Bounded(second))!)["id"] == 1,
+                "Concurrent HTTP response changed the client ID");
+        });
+        await Test("production HTTP timeout cannot consume another peer's reply", async () => {
+            using var f = new Fixture(production: true);
+            var first = f.Send(Request(1), 100); var second = f.Send(Request(1));
+            var a = Parse((await Bounded(f.Read()))!); var b = Parse((await Bounded(f.Read()))!);
+            await Fault(first, typeof(TimeoutException));
+            f.Write(Reply(a["id"], "late")); f.Write(Reply(b["id"], "second"));
+            Check((string)Parse((await Bounded(second))!)["result"] == "second", "Expired HTTP waiter stole a reply");
+        });
+        await Test("production HTTP shutdown releases all outstanding peers", async () => {
+            using var f = new Fixture(production: true);
+            var peers = Enumerable.Range(0, 8).Select(i => f.Send(Request(i))).ToArray();
+            for (int i = 0; i < peers.Length; i++) await Bounded(f.Read());
+            f.Dispose();
+            foreach (var peer in peers) await Fault(peer, typeof(ObjectDisposedException));
+            await Bounded(AsResult(f.Completion));
+        });
         await Test("removed launcher key is ignored and explicit HTTP key still works", () => {
             string? previous = Environment.GetEnvironmentVariable("TIA_MCP_HTTP_API_KEY");
             try {
@@ -414,6 +444,10 @@ internal static partial class Program
             }
             if (args.Length >= 4 && args[1] == "concurrency-performance") {
                 await ConcurrencyPerformanceChecks.Run(Server, args[2], args[3] == "baseline");
+                return 0;
+            }
+            if (args.Length >= 3 && args[1] == "http-pipeline-concurrency") {
+                await ConcurrencyPerformanceChecks.HttpPipeline(Server, args[2], args.Skip(3).Contains("baseline"));
                 return 0;
             }
             if(args.Length >= 3 && args[1] == "host-build-no-tia") {
