@@ -89,6 +89,8 @@ namespace TiaMcpServer.Tests
                 Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]); Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
                 Assert.Equal(condition == "cancel" ? "CANCELLED" : "INVALID_ARGUMENT", (string?)body["error"]?["code"]);
                 Assert.Single(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["details"]?["stage"] == "approval-precheck");
+                Assert.Contains(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "APPROVAL_PRECHECK_REFUSED");
+                Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "NATIVE_WARNING");
                 Assert.Equal(0, waits); Assert.Equal(1, Probe.Previews); Assert.Equal(0, Probe.Writes);
                 Assert.Equal(new[] { "request", "end" }, audit.Read().Select(r => r.Event));
                 Assert.All(audit.Read(), r => Assert.Equal((string?)body["meta"]?["requestId"], r.RequestId));

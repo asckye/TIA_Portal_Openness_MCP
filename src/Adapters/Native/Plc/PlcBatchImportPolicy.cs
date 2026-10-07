@@ -138,7 +138,7 @@ namespace TiaMcp.PlcFoundation
             return ordered.ToArray();
         }
         internal static PlcBatchImportResult Run(PlcBatchImportRequest request,IEnumerable<PlcBatchImportObject> existing,Action recheck,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]> import,
-            Action<PlcBatchImportObject,FileInfo>? backup=null,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore=null,Func<string>? recoveryDirectory=null,Action? recoveryPrecheck=null)
+            Action<PlcBatchImportObject,FileInfo>? backup=null,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore=null,Func<string>? recoveryDirectory=null,Action? recoveryPrecheck=null,Func<PlcBatchImportObject,string>? inspectBlocker=null)
         {
             ValidateOptions(request);
             var inventory=existing.Take(4097).ToArray(); if(inventory.Length>4096) throw new AdapterPreconditionException("Target inventory exceeds 4096 objects.","maxItems");
@@ -180,6 +180,7 @@ namespace TiaMcp.PlcFoundation
                     var collisions=inventory.Where(x=>Namespace(x.Kind)==Namespace(planned.Kind) && string.Equals(x.Name,planned.Name,StringComparison.OrdinalIgnoreCase)).ToArray();
                     if(collisions.Length>0 && (!request.Overwrite || collisions.Length!=1 || collisions[0].Name!=planned.Name || collisions[0].Kind!=planned.Kind || collisions[0].GroupPath!=planned.GroupPath)) throw new AdapterPreconditionException("Existing or cross-group/kind/case collision: "+planned.Name,request.InputParameter);
                     var replaced=collisions.SingleOrDefault();
+                    if(request.Overwrite && replaced!=null && inspectBlocker!=null) replaced.BackupBlocker=TiaOpenness.Shared.NativeExportPolicy.InspectBlocker(()=>inspectBlocker(replaced));
                     string NumberSpace(string kind)=>kind=="GlobalDB" || kind=="InstanceDB" ? "DB" : kind;
                     if(planned.Number.HasValue && inventory.Where(x=>x!=replaced).Concat(items.Select(x=>x.Planned)).Any(x=>NumberSpace(x.Kind)==NumberSpace(planned.Kind) && x.Number==planned.Number)) throw new AdapterPreconditionException("Fixed number collision within block-kind namespace.",request.InputParameter);
                     items.Add(new PlcBatchImportItem {RelativePath=path,InputSha256=Hash(bytes),Planned=planned,Action=replaced==null ? "create" : replaced.BackupBlocker=="" ? "replace" : "replace-blocked: "+replaced.BackupBlocker,Status=replaced?.BackupBlocker.Length>0 ? "replace-blocked" : "planned",Failure=replaced?.BackupBlocker ?? "",Replaced=replaced,RecognizedDependencies=dependencies.Select(x=>x.Kind+":"+x.Name).ToArray()});

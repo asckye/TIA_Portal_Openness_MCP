@@ -16,6 +16,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs" Link="CfcTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />

@@ -19,7 +19,7 @@ namespace TiaMcpServer.Siemens.Services
     {
         internal static CallToolResult Run(IEngineeringSession session, string tool, string softwarePath, string groupPath, string path, string kind, Func<CallToolResult> import)
         {
-            string? recovery = null; bool entered = false; string? warning = null;
+            string? recovery = null; bool entered = false; string? warning = null; var skipped = new JsonArray();
             var files = new JsonObject();
             try
             {
@@ -45,32 +45,39 @@ namespace TiaMcpServer.Siemens.Services
                 var software = session.ExactPlcForEngineering(softwarePath, true);
                 void Check() { session.VerifyBinding(tool); if (!object.Equals(software, session.ExactPlcForEngineering(softwarePath, true))) throw new AdapterPreconditionException("PLC binding changed.", "softwarePath", false); }
                 var adapter = new PlcImportAdapter(McpServer.ReleaseKey, () => throw new NotSupportedException(), () => software, Check, true);
+                if (McpServer.IsReadOnlyApprovalPreview)
+                {
+                    adapter.ReadRecoveryTargets(kind, groupPath, names); Check();
+                    return McpServer.V4Result(tool, new JsonObject { ["executed"] = false }, completed: false);
+                }
                 IEnumerable<TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget> Backups()
                 {
                     foreach (var target in adapter.ReadRecoveryTargets(kind, groupPath, names))
                         yield return new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = target.GroupPath + "/" + target.Name,
-                            Blocker = adapter.RecoveryBlocker(target), Export = file => { Check(); adapter.ExportRecovery(target, file); } };
+                            InspectBlocker = () => adapter.RecoveryBlocker(target), Export = file => { Check(); adapter.ExportRecovery(target, file); } };
                 }
                 var saved = TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(Backups(),
                     PlcBatchImportRunner.SingleImportRecoveryDirectory, TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
-                recovery = saved.Directory; warning = saved.Warning;
+                recovery = saved.Directory; warning = saved.Warning; skipped = System.Text.Json.JsonSerializer.SerializeToNode(saved.Skipped)!.AsArray();
                 foreach (var file in saved.Files) files[file.Key] = file.Value;
                 Check(); entered = true;
-                return Evidence(import(), recovery, files, warning);
+                return Evidence(import(), recovery, files, warning, skipped);
             }
             catch (AdapterPreconditionException ex) when (!entered)
-            { return Evidence(McpServer.TargetFailure(tool, ex, false), recovery ?? ex.Data["recoveryDirectory"] as string, ex.Data["recoveryFiles"] is Dictionary<string, string> retained ? System.Text.Json.JsonSerializer.SerializeToNode(retained)!.AsObject() : files, warning); }
+            { return Evidence(McpServer.TargetFailure(tool, ex, false), recovery ?? ex.Data["recoveryDirectory"] as string, ex.Data["recoveryFiles"] is Dictionary<string, string> retained ? System.Text.Json.JsonSerializer.SerializeToNode(retained)!.AsObject() : files, warning, skipped); }
             catch (Exception ex)
-            { return Evidence(McpServer.TargetFailure(tool, ex, entered), recovery, files, warning); }
+            { return Evidence(McpServer.TargetFailure(tool, ex, entered), recovery, files, warning, skipped); }
         }
-        private static CallToolResult Evidence(CallToolResult result, string? directory, JsonObject files, string? warning = null)
+        internal static CallToolResult Evidence(CallToolResult result, string? directory, JsonObject files, string? warning = null, JsonArray? skipped = null)
         {
             if (directory == null && warning == null) return result;
             var body = McpServer.ResultBody(result)!.DeepClone().AsObject();
             if (body["data"] == null) body["data"] = new JsonObject();
             body["data"]!["recoveryDirectory"] = directory; body["data"]!["recoveryFiles"] = files.DeepClone();
             body["data"]!["recoveryStatus"] = warning != null ? "backup-skipped" : (string?)body["error"]?["code"] == "PRECONDITION_FAILED" ? "backup-failed-before-import" : "backup-ready";
-            if (warning != null) body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "BACKUP_SKIPPED", ["message"] = warning, ["details"] = new JsonObject() });
+            body["data"]!["recoveryWarning"] = warning; body["data"]!["recoverySkipped"] = skipped?.DeepClone() ?? new JsonArray();
+            if (HostBehavior.BackupSkipped(body["data"]!.AsObject()) is Warning backup)
+                body["meta"]!["warnings"]!.AsArray().Add(JsonNode.Parse(V4Json.Serialize(backup)));
             if ((string?)body["error"]?["code"] is "OUTCOME_UNKNOWN" or "NATIVE_OPERATION_FAILED" && body["error"]?["details"] is JsonObject details)
             {
                 if (details["evidence"] == null) details["evidence"] = new JsonObject();

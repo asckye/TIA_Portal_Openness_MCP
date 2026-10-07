@@ -1676,16 +1676,17 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):70 | `private const int MaxEntries = 32;` |
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):71 | `private const int MaxTotalChars = 8_000_000;` |
 | [ModelContextProtocol/ExportStore.cs](../../src/Logic/ModelContextProtocol/ExportStore.cs):82 | `private const int MaxTombstones = 512;` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):26 | `public const int MaximumFiles = 128, MaximumBatches = 32;` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):76 | `if (file == null \|\| string.IsNullOrWhiteSpace(file.FileName) \|\| file.FileName.Length > 128 \|\| file.FileName.Trim() != file.FileName` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):88 | `if (string.IsNullOrWhiteSpace(file.Content) \|\| file.Content.Length > MaximumFileBytes) throw new ArgumentException("Content must be nonempty and at most 4 MiB.", "files");` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):92 | `if (bytes.LongLength > MaximumFileBytes) throw new ArgumentException("UTF-8 file size exceeds 4 MiB.", "files");` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):95 | `var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaximumFileBytes };` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):113 | `if (files == null \|\| files.Length < 1 \|\| files.Length > MaximumFiles) throw new ArgumentException("Supply 1..128 files.", "files");` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):127 | `if (batches.Count >= MaximumBatches \|\| count + files.Length > MaximumFiles \|\| retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", "files");` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):130 | `if (Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):184 | `if (stream.Length < 1 \|\| stream.Length > 128 * 1024) return null;` |
-| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):193 | `if (name == null \|\| name.Length < 1 \|\| name.Length > 128 \|\| name != Path.GetFileName(name) \|\| name.Contains("..")` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):27 | `public const int MaximumFiles = 128, MaximumBatches = 32;` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):36 | `public const int MaximumListedBatches = 200;` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):85 | `if (file == null \|\| string.IsNullOrWhiteSpace(file.FileName) \|\| file.FileName.Length > 128 \|\| file.FileName.Trim() != file.FileName` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):97 | `if (string.IsNullOrWhiteSpace(file.Content) \|\| file.Content.Length > MaximumFileBytes) throw new ArgumentException("Content must be nonempty and at most 4 MiB.", "files");` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):101 | `if (bytes.LongLength > MaximumFileBytes) throw new ArgumentException("UTF-8 file size exceeds 4 MiB.", "files");` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):104 | `var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaximumFileBytes };` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):122 | `if (files == null \|\| files.Length < 1 \|\| files.Length > MaximumFiles) throw new ArgumentException("Supply 1..128 files.", "files");` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):136 | `if (batches.Count >= MaximumBatches \|\| count + files.Length > MaximumFiles \|\| retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", "files");` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):139 | `if (Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):212 | `if (stream.Length < 1 \|\| stream.Length > 128 * 1024) return null;` |
+| [ModelContextProtocol/ImportStagingStore.cs](../../src/Logic/ModelContextProtocol/ImportStagingStore.cs):229 | `if (leaf == null \|\| leaf.Length < 1 \|\| leaf.Length > 128 \|\| leaf != Path.GetFileName(leaf) \|\| leaf.Contains("..")` |
 | [ModelContextProtocol/PreflightLogic.cs](../../src/Logic/ModelContextProtocol/PreflightLogic.cs):173 | `if (tail.Length >= 4 && string.Equals(tail, givenTail, StringComparison.OrdinalIgnoreCase)) score = Math.Max(score, 50);` |
 | [Runtime/PlcSimAdvancedLogic.cs](../../src/Logic/Runtime/PlcSimAdvancedLogic.cs):18 | `public const int MaxScenarioSteps = 500;` |
 | [Runtime/PlcSimAdvancedLogic.cs](../../src/Logic/Runtime/PlcSimAdvancedLogic.cs):19 | `public const int MaxTagsPerCall = 500;` |
@@ -1824,7 +1825,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Json.cs](../../src/Logic/V4/V4Json.cs):77 | `var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions { MaxDepth = MaximumInputDepth + 1 });` |
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 
-共 295 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 296 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 

@@ -45,7 +45,7 @@ namespace TiaMcpServer.Tests
             var nodes = new System.Text.Json.Nodes.JsonArray(parent);
             if (flat) foreach (var leaf in leaves) nodes.Add(leaf!.DeepClone());
             else parent["Messages"] = leaves;
-            var data = new System.Text.Json.Nodes.JsonObject { ["state"] = "Error", ["errorCount"] = 12, ["warningCount"] = 2, ["diagnosticMessages"] = nodes };
+            var data = new System.Text.Json.Nodes.JsonObject { ["state"] = "Error", ["errorCount"] = flat ? 0 : 12, ["warningCount"] = 2, ["diagnosticMessages"] = nodes };
             var error = CompileResultMapping.Errors(data)!;
             var details = Assert.IsType<CompileErrorsDetails>(error.Details);
             Assert.Equal(12, details.ErrorCount); Assert.Equal(2, details.WarningCount);
@@ -204,6 +204,8 @@ namespace TiaMcpServer.Tests
         [Theory]
         [InlineData(WarningCode.IncompleteData, "INCOMPLETE_DATA")]
         [InlineData(WarningCode.NativeWarning, "NATIVE_WARNING")]
+        [InlineData(WarningCode.ApprovalPrecheckRefused, "APPROVAL_PRECHECK_REFUSED")]
+        [InlineData(WarningCode.StagingFolderRetained, "STAGING_FOLDER_RETAINED")]
         [InlineData(WarningCode.CandidateOnly, "CANDIDATE_ONLY")]
         [InlineData(WarningCode.UnverifiedBehavior, "UNVERIFIED_BEHAVIOR")]
         [InlineData(WarningCode.CleanupFailed, "CLEANUP_FAILED")]
@@ -482,7 +484,7 @@ namespace TiaMcpServer.Tests
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
             Assert.Equal(26, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(10, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(12, Enum.GetValues<WarningCode>().Length);
             Assert.Equal(26, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 

@@ -43,6 +43,7 @@ public sealed class BatchOverwriteTests : IDisposable
     [Theory]
     [InlineData(false, "inconsistent")][InlineData(true, "inconsistent")]
     [InlineData(false, "know-how-protected")][InlineData(true, "know-how-protected")]
+    [InlineData(false, "unknown-consistency")][InlineData(true, "unknown-consistency")]
     public void Replacement_blockers_are_planned_hashed_and_refused_before_backup(bool program, string blocker)
     {
         Inputs(("A", "FC", ""), ("B", "FC", "")); var request = Request(); request.Program = program;
@@ -58,6 +59,19 @@ public sealed class BatchOverwriteTests : IDisposable
         BatchImportContract.Validate(Wire(rejected), false); Assert.Equal(envelope.Error.Message, Envelope(rejected).Error!.Message);
         inventory[1].BackupBlocker = "";
         Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => Run(apply)); Assert.Empty(calls);
+    }
+    [Fact]
+    public void Only_collision_replacements_read_blockers_and_getter_failures_are_per_object()
+    {
+        Inputs(("A", "FC", ""));
+        inventory = inventory.Concat(new[] { new PlcBatchImportObject { Name = "Unrelated", Kind = "FC", Number = 99 } }).ToArray();
+        var inspected = new List<string>();
+        PlcBatchImportResult Inspect(PlcBatchImportRequest request) => PlcBatchImportPolicy.Run(request, inventory, () => { }, (_, item) => new[] { item },
+            inspectBlocker: item => { inspected.Add(item.Name); throw new IOException("Getter failed"); });
+        var blocked = Inspect(Request()); Assert.Equal(new[] { "A" }, inspected); Assert.Equal("unknown-consistency", blocked.Items[0].Failure);
+        BatchImportContract.Validate(Wire(blocked), true);
+        inspected.Clear(); Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => Inspect(Request(false))); Assert.Empty(inspected);
+        inventory = inventory.Where(x => x.Name != "A").ToArray(); Assert.Equal("create", Inspect(Request()).Items[0].Action); Assert.Empty(inspected);
     }
     [Fact]
     public void All_backups_precede_first_import_and_are_hashed()

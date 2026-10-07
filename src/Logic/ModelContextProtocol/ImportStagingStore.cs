@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -31,10 +32,18 @@ namespace TiaMcp.Logic.ModelContextProtocol
         private readonly string release;
         private readonly string session;
         private const string ManifestName = ".staging-batch.json";
+        private const string CompanionName = ".staging-batch.previous.json";
+        public const int MaximumListedBatches = 200;
+        private readonly int hostPid = Process.GetCurrentProcess().Id;
+        private readonly string hostStartedUtc = Process.GetCurrentProcess().StartTime.ToUniversalTime().ToString("O");
         private readonly Dictionary<string, JsonObject> batches = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
         internal Action<string>? BeforeWriteForTests { get; set; }
         internal Action<string>? WriteAccessForTests { get; set; }
+        internal Action<string>? BeforeManifestPublishForTests { get; set; }
+        internal Action<string>? BeforeDeleteForTests { get; set; }
+        internal Action<string>? DiscoverForTests { get; set; }
+        internal Func<int, string, bool>? OwnerAliveForTests { get; set; }
         public static ImportStagingStore Create(string release)
         {
             var bundle = BundleLayout.RequireRoot(AppContext.BaseDirectory);
@@ -119,7 +128,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     bytes.Add(content);
                 }
                 if (files.Select(f => f.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Length) throw new ArgumentException("Case-insensitive duplicate filenames are refused.", "files");
-                foreach (var disk in Discover().Where(b => (bool?)b["identified"] == true && (bool?)b["currentSession"] == true))
+                foreach (var disk in Discover(root).Where(b => (bool?)b["identified"] == true))
                     batches[(string)disk["batchId"]!] = disk;
                 foreach (var id in batches.Keys.Where(id => !Directory.Exists(Path.Combine(root, id))).ToArray()) batches.Remove(id);
                 long retained = batches.Values.Sum(b => b["byteLength"]!.GetValue<long>());
@@ -140,6 +149,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 result["batchId"] = batchId; result["directory"] = folder;
                 result["createdUtc"] = DateTimeOffset.UtcNow.ToString("O");
                 result["sessionId"] = session; result["releaseKey"] = release; result["manifestVersion"] = 1;
+                result["hostPid"] = hostPid; result["hostStartedUtc"] = hostStartedUtc;
                 result["writtenFileCount"] = 0;
                 // Reserve quota before publication, including partially written batches after IO failures.
                 batches.Add(batchId, result);
@@ -152,93 +162,194 @@ namespace TiaMcp.Logic.ModelContextProtocol
                         var path = Path.Combine(folder, files[i].FileName); BeforeWriteForTests?.Invoke(path); Safe(path);
                         entries[i]!["path"] = path;
                         using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                        result["writtenFileCount"] = i + 1; SaveManifest(folder, result);
                         stream.Write(bytes[i], 0, bytes[i].Length); stream.Flush(true);
+                        result["writtenFileCount"] = i + 1; SaveManifest(folder, result);
                     }
                 }
                 catch (Exception error) when (error is ArgumentException || error is IOException || error is UnauthorizedAccessException)
                 { result["partial"] = true; var failure = new IOException("Staging publication failed after batch reservation: " + error.Message, error);
-                    failure.Data["stagingMutationStarted"] = true; failure.Data["batchId"] = batchId; failure.Data["attemptedPath"] = folder; throw failure; }
+                    failure.Data["stagingMutationStarted"] = Directory.Exists(folder); failure.Data["batchId"] = batchId; failure.Data["attemptedPath"] = folder;
+                    failure.Data["succeeded"] = (int)result["writtenFileCount"]!; failure.Data["total"] = files.Length; throw failure; }
                 return result.DeepClone().AsObject();
             }
         }
-        private static void SaveManifest(string folder, JsonObject batch)
+        private static readonly string[] ManifestKeys = { "manifestVersion", "sessionId", "releaseKey", "batchId", "createdUtc", "hostPid", "hostStartedUtc", "writtenFileCount", "partial" };
+        private static readonly string[] FileKeys = { "fileName", "kind", "encoding", "byteLength", "sha256" };
+        private void AtomicWrite(string path, byte[] bytes)
         {
-            string path = Path.Combine(folder, ManifestName); Safe(path);
-            var manifest = new JsonObject();
-            foreach (var key in new[] { "manifestVersion", "sessionId", "releaseKey", "batchId", "createdUtc", "writtenFileCount", "partial" }) manifest[key] = batch[key]?.DeepClone();
-            manifest["files"] = new JsonArray(batch["files"]!.AsArray().Select(entry => {
-                var file = new JsonObject(); foreach (var key in new[] { "fileName", "kind", "encoding", "byteLength", "sha256" }) file[key] = entry![key]?.DeepClone(); return (JsonNode?)file;
-            }).ToArray());
-            byte[] bytes = Utf8.GetBytes(manifest.ToJsonString());
-            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            stream.Write(bytes, 0, bytes.Length); stream.Flush(true);
-        }
-        private JsonObject? ReadManifest(string folder, string owner, string id)
-        {
+            Safe(path);
+            string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
-                string path = Path.Combine(folder, ManifestName); Safe(path);
-                if (!Guid.TryParseExact(owner, "N", out _) || !Guid.TryParseExact(id, "N", out _) || !File.Exists(path)) return null;
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                if (stream.Length < 1 || stream.Length > 128 * 1024) return null;
-                var batch = JsonNode.Parse(stream)?.AsObject();
-                if ((int?)batch?["manifestVersion"] != 1 || (string?)batch?["sessionId"] != owner || (string?)batch?["batchId"] != id
-                    || !DateTimeOffset.TryParse((string?)batch?["createdUtc"], out _) || batch?["files"] is not JsonArray files
-                    || files.Count > MaximumFiles || (int?)batch["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
-                long total = 0; var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var entry in files.OfType<JsonObject>())
-                {
-                    string? name = (string?)entry["fileName"], hash = (string?)entry["sha256"];
-                    if (name == null || name.Length < 1 || name.Length > 128 || name != Path.GetFileName(name) || name.Contains("..")
-                        || name.Any(c => char.IsControl(c) || "\\/:*\"<>|".Contains(c)) || name.Trim() != name || name.EndsWith(".", StringComparison.Ordinal)
-                        || name.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || !names.Add(name)
-                        || hash == null || hash.Length != 64 || hash.Any(c => !Uri.IsHexDigit(c))
-                        || (long?)entry["byteLength"] is not long size || size < 0 || size > MaximumFileBytes) return null;
-                    total += size; if (total > MaximumBytes) return null;
-                    entry["path"] = Path.Combine(folder, name);
-                }
-                if (names.Count != files.Count) return null;
-                batch["directory"] = folder; batch["stagingDirectory"] = Path.GetDirectoryName(folder); batch["byteLength"] = total;
-                batch["executed"] = true;
-                batch["identified"] = true; batch["currentSession"] = owner == session;
-                batch["unknownEntries"] = UnknownEntries(folder, batch);
-                return batch;
+                using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                { stream.Write(bytes, 0, bytes.Length); stream.Flush(true); }
+                BeforeManifestPublishForTests?.Invoke(path);
+                if (File.Exists(path)) File.Replace(temporary, path, null, true);
+                else File.Move(temporary, path);
             }
-            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is ArgumentException || error is JsonException || error is InvalidOperationException || error is FormatException)
-            { /* swallow(probe-optional): an unreadable or invalid manifest is unknown content, never a cleanup target */ return null; }
+            finally { if (File.Exists(temporary)) System.IO.File.Delete(temporary); }
+        }
+        private void SaveManifest(string folder, JsonObject batch)
+        {
+            var manifest = new JsonObject();
+            foreach (var key in ManifestKeys) manifest[key] = batch[key]?.DeepClone();
+            manifest["files"] = new JsonArray(batch["files"]!.AsArray().Select(entry => {
+                var file = new JsonObject(); foreach (var key in FileKeys) file[key] = entry![key]?.DeepClone(); return (JsonNode?)file;
+            }).ToArray());
+            byte[] bytes = Utf8.GetBytes(manifest.ToJsonString());
+            // Each publication is atomic. The companion may lag by one publication after a crash.
+            AtomicWrite(Path.Combine(folder, ManifestName), bytes);
+            AtomicWrite(Path.Combine(folder, CompanionName), bytes);
+        }
+        private static bool ProbeFailure(Exception error) => error is IOException || error is UnauthorizedAccessException
+            || error is ArgumentException || error is JsonException || error is InvalidOperationException || error is FormatException;
+        private sealed class ManifestIdentityException : ArgumentException { }
+        private JsonObject? ReadManifest(string folder, string owner, string id, string name)
+        {
+            string path = Path.Combine(folder, name); Safe(path);
+            if (!Guid.TryParseExact(owner, "N", out _) || !Guid.TryParseExact(id, "N", out _)) return null;
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (stream.Length < 1 || stream.Length > 128 * 1024) return null;
+            var input = JsonNode.Parse(stream)?.AsObject();
+            if (input != null && ((string?)input["sessionId"] != owner || (string?)input["batchId"] != id)) throw new ManifestIdentityException();
+            if ((int?)input?["manifestVersion"] != 1 || !DateTimeOffset.TryParse((string?)input?["createdUtc"], out _) || input?["files"] is not JsonArray files
+                || files.Count > MaximumFiles || (int?)input["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
+            if ((string?)input["releaseKey"] is not string releaseKey || !new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(releaseKey)) return null;
+            if (input["hostPid"] != null && (input["hostPid"] is not JsonValue pidValue || !pidValue.TryGetValue<int>(out var pid) || pid < 1)
+                || input["hostStartedUtc"] != null && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset.TryParse(started, out _))
+                || input["partial"] != null && (input["partial"] is not JsonValue partialValue || !partialValue.TryGetValue<bool>(out _))) return null;
+            // Persisted JSON is untrusted; publish only the schema we own.
+            var batch = new JsonObject(); foreach (string key in ManifestKeys) batch[key] = input[key]?.DeepClone();
+            var outputFiles = new JsonArray(); long total = 0; var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in files)
+            {
+                if (item is not JsonObject entry) return null;
+                string? leaf = (string?)entry["fileName"], hash = (string?)entry["sha256"];
+                if ((string?)entry["kind"] is not ("scl" or "simaticml" or "tagtable" or "udt" or "s7dcl" or "s7res") || (string?)entry["encoding"] is not ("ascii" or "utf-8")) return null;
+                if (leaf == null || leaf.Length < 1 || leaf.Length > 128 || leaf != Path.GetFileName(leaf) || leaf.Contains("..")
+                    || leaf.Any(c => char.IsControl(c) || "\\/:*?\"<>|".Contains(c)) || leaf.Trim() != leaf || leaf.EndsWith(".", StringComparison.Ordinal)
+                    || leaf.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || leaf.Equals(CompanionName, StringComparison.OrdinalIgnoreCase) || !names.Add(leaf)
+                    || hash == null || hash.Length != 64 || hash.Any(c => !Uri.IsHexDigit(c))
+                    || (long?)entry["byteLength"] is not long size || size < 0 || size > MaximumFileBytes) return null;
+                total += size; if (total > MaximumBytes) return null;
+                var file = new JsonObject(); foreach (string key in FileKeys) file[key] = entry[key]?.DeepClone();
+                file["path"] = Path.Combine(folder, leaf); outputFiles.Add(file);
+            }
+            batch["files"] = outputFiles; batch["directory"] = folder; batch["stagingDirectory"] = Path.GetDirectoryName(folder);
+            batch["byteLength"] = total; batch["executed"] = true; batch["identified"] = true; batch["currentSession"] = owner == session;
+            return batch;
+        }
+        private static bool Matches(Stream stream, JsonNode entry)
+        {
+            if (stream.Length != (long)entry["byteLength"]!) return false;
+            using var sha = SHA256.Create();
+            return string.Equals(BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", ""), (string)entry["sha256"]!, StringComparison.OrdinalIgnoreCase);
         }
         private static JsonArray UnknownEntries(string folder, JsonObject batch)
         {
-            int written = (int?)batch["writtenFileCount"] ?? 0;
-            var known = new HashSet<string>(batch["files"]!.AsArray().Take(written).Select(x => (string)x!["fileName"]!), StringComparer.OrdinalIgnoreCase) { ManifestName };
-            return new JsonArray(Directory.EnumerateFileSystemEntries(folder).Where(path => !known.Contains(Path.GetFileName(path)))
-                .OrderBy(path => path, StringComparer.Ordinal).Select(path => (JsonNode?)JsonValue.Create(Path.GetFileName(path))).ToArray());
-        }
-        private IEnumerable<JsonObject> Discover()
-        {
-            string staging = Path.Combine(bundleRoot, "staging");
-            Safe(Path.Combine(staging, "probe"));
-            if (!Directory.Exists(staging)) yield break;
-            foreach (string ownerFolder in Directory.EnumerateDirectories(staging).OrderBy(x => x, StringComparer.Ordinal))
+            var known = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ManifestName, CompanionName };
+            var reasons = new JsonObject();
+            foreach (var entry in batch["files"]!.AsArray())
             {
-                if ((File.GetAttributes(ownerFolder) & FileAttributes.ReparsePoint) != 0)
-                { yield return new JsonObject { ["directory"] = ownerFolder, ["sessionId"] = Path.GetFileName(ownerFolder), ["identified"] = false, ["reason"] = "linked-session-folder" }; continue; }
-                foreach (string folder in Directory.EnumerateDirectories(ownerFolder).OrderBy(x => x, StringComparer.Ordinal))
+                string leaf = (string)entry!["fileName"]!, path = Path.Combine(folder, leaf);
+                try
                 {
-                    string owner = Path.GetFileName(ownerFolder), id = Path.GetFileName(folder);
-                    var batch = ReadManifest(folder, owner, id);
-                    yield return batch ?? new JsonObject { ["directory"] = folder, ["sessionId"] = owner, ["batchId"] = id,
-                        ["createdUtc"] = Directory.GetCreationTimeUtc(folder).ToString("O"), ["identified"] = false, ["currentSession"] = owner == session,
-                        ["files"] = new JsonArray(), ["byteLength"] = null, ["reason"] = "missing-or-invalid-manifest" };
+                    Safe(path);
+                    using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                    if (Matches(stream, entry)) known.Add(leaf); else reasons[leaf] = "content-mismatch";
+                }
+                catch (FileNotFoundException) { /* swallow(probe-optional): absent owned leaves need no deletion */ }
+                catch (Exception error) when (ProbeFailure(error)) { reasons[leaf] = "unreadable-or-unsafe-file"; }
+            }
+            var entries = Directory.GetFileSystemEntries(folder).Select(Path.GetFileName).Where(name => !known.Contains(name!)).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+            batch["unknownEntryReasons"] = reasons;
+            return new JsonArray(entries.Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
+        }
+        private JsonObject Unknown(string folder, string reason) => new JsonObject { ["directory"] = folder,
+            ["sessionId"] = Path.GetFileName(Path.GetDirectoryName(folder)), ["batchId"] = Path.GetFileName(folder),
+            ["identified"] = false, ["currentSession"] = Path.GetDirectoryName(folder) == root,
+            ["files"] = new JsonArray(), ["byteLength"] = null, ["reason"] = reason };
+        private JsonObject Inspect(string folder)
+        {
+            try
+            {
+                DiscoverForTests?.Invoke(folder); Safe(Path.Combine(folder, "probe"));
+                string owner = Path.GetFileName(Path.GetDirectoryName(folder)), id = Path.GetFileName(folder);
+                JsonObject? batch;
+                try
+                {
+                    batch = ReadManifest(folder, owner, id, ManifestName);
+                    if (batch == null)
+                    { batch = ReadManifest(folder, owner, id, CompanionName); if (batch != null) batch["reason"] = "manifest-invalid"; }
+                }
+                catch (ManifestIdentityException) { /* swallow(probe-optional): identity mismatch is never a cleanup target */ return Unknown(folder, "manifest-invalid"); }
+                catch (Exception error) when (ProbeFailure(error))
+                {
+                    // A truncated/unreadable primary can use the last atomically published companion.
+                    batch = ReadManifest(folder, owner, id, CompanionName);
+                    if (batch != null) batch["reason"] = "manifest-invalid";
+                }
+                if (batch == null) return Unknown(folder, "manifest-invalid");
+                batch["unknownEntries"] = UnknownEntries(folder, batch);
+                return batch;
+            }
+            catch (Exception error) when (ProbeFailure(error)) { return Unknown(folder, "unreadable-or-missing-batch"); }
+        }
+        private IEnumerable<JsonObject> Discover(string? onlySession = null)
+        {
+            var found = new List<JsonObject>(); string staging = Path.Combine(bundleRoot, "staging");
+            string[] owners;
+            try
+            {
+                Safe(Path.Combine(staging, "probe"));
+                owners = onlySession != null ? new[] { onlySession } : Directory.Exists(staging) ? Directory.GetDirectories(staging) : Array.Empty<string>();
+            }
+            catch (Exception error) when (ProbeFailure(error)) { return new[] { Unknown(staging, "unreadable-staging-root") }; }
+            foreach (string owner in owners)
+            {
+                try
+                {
+                    DiscoverForTests?.Invoke(owner); Safe(Path.Combine(owner, "probe"));
+                    if (!Directory.Exists(owner))
+                    {
+                        if (onlySession != null) continue;
+                        throw new DirectoryNotFoundException("The enumerated staging session disappeared.");
+                    }
+                    foreach (string folder in Directory.GetDirectories(owner)) found.Add(Inspect(folder));
+                }
+                catch (Exception error) when (ProbeFailure(error))
+                {
+                    var unknown = Unknown(owner, "unreadable-or-missing-session");
+                    unknown["sessionId"] = Path.GetFileName(owner); unknown.Remove("batchId"); unknown["currentSession"] = owner == root;
+                    found.Add(unknown);
                 }
             }
+            return found;
         }
         public JsonObject List()
         {
-            lock (gate) return new JsonObject { ["batches"] = new JsonArray(Discover().Select(b => (JsonNode?)b).ToArray()),
-                ["stagingDirectory"] = Path.Combine(bundleRoot, "staging"), ["sessionId"] = session,
-                ["maximumFiles"] = MaximumFiles, ["maximumBytes"] = MaximumBytes };
+            lock (gate)
+            {
+                var found = Discover().OrderByDescending(b => (string?)b["createdUtc"] ?? "", StringComparer.Ordinal).ThenBy(b => (string?)b["directory"], StringComparer.Ordinal).ToArray();
+                return new JsonObject { ["batches"] = new JsonArray(found.Take(MaximumListedBatches).Select(b => (JsonNode?)b).ToArray()),
+                    ["totalBatches"] = found.Length, ["returnedBatches"] = Math.Min(found.Length, MaximumListedBatches), ["truncated"] = found.Length > MaximumListedBatches,
+                    ["stagingDirectory"] = Path.Combine(bundleRoot, "staging"), ["sessionId"] = session,
+                    ["maximumFiles"] = MaximumFiles, ["maximumBytes"] = MaximumBytes };
+            }
+        }
+        private bool OwnerAlive(JsonObject batch)
+        {
+            if ((bool?)batch["currentSession"] == true) return false;
+            if ((int?)batch["hostPid"] is not int pid || pid < 1 || (string?)batch["hostStartedUtc"] is not string started) return true;
+            if (OwnerAliveForTests != null) return OwnerAliveForTests(pid, started);
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                return !process.HasExited && process.StartTime.ToUniversalTime().ToString("O") == started;
+            }
+            catch (ArgumentException) { /* swallow(probe-optional): the owning process no longer exists */ return false; }
+            catch (Exception error) when (error is System.ComponentModel.Win32Exception || error is InvalidOperationException)
+            { /* swallow(probe-optional): an uninspectable owner must not be treated as dead */ return true; }
         }
         public JsonObject Cleanup(string batchId, bool dryRun = true)
         {
@@ -248,40 +359,50 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 var matches = Discover().Where(b => (string?)b["batchId"] == batchId).ToArray();
                 if (matches.Length != 1 || (bool?)matches[0]["identified"] != true) throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", "batchId");
                 var batch = matches[0]; string folder = (string)batch["directory"]!;
+                if (OwnerAlive(batch)) throw new ArgumentException("The batch belongs to another live or uninspectable host session; cleanup refused.", "batchId");
                 Safe(Path.Combine(folder, "probe"));
-                NativeExportPolicy.CheckWritableDirectory(folder, WriteAccessForTests);
-                var leaves = batch["files"]!.AsArray().Take((int)batch["writtenFileCount"]!).Select(x => Path.Combine(folder, (string)x!["fileName"]!)).ToArray();
-                foreach (var path in leaves)
-                {
-                    try { Safe(path); }
-                    catch (ArgumentException error) { throw new ArgumentException(error.Message, "batchId", error); }
-                    if (Directory.Exists(path)) throw new ArgumentException("A known staged file was replaced by a directory; cleanup refused.", "batchId");
-                }
-                var unknown = UnknownEntries(folder, batch); bool retained = unknown.Count > 0;
+                try { NativeExportPolicy.CheckWritableDirectory(folder, WriteAccessForTests); }
+                catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
+                { error.Data["attemptedPath"] = folder; error.Data["batchId"] = batchId; throw; }
+                var unknown = UnknownEntries(folder, batch); int deleted = 0; bool mutated = false;
+                var leaves = batch["files"]!.AsArray().ToArray();
                 if (!dryRun)
                 {
                     try
                     {
-                    foreach (var path in leaves) if (File.Exists(path)) File.Delete(path);
-                    // Recheck after deleting known leaves: new or unknown content is always retained.
-                    unknown = UnknownEntries(folder, batch); retained = unknown.Count > 0;
-                    batch["files"] = new JsonArray(); batch["writtenFileCount"] = 0; batch["byteLength"] = 0;
-                    if (retained) SaveManifest(folder, batch);
-                    else
+                        foreach (var entry in leaves)
+                        {
+                            string path = Path.Combine(folder, (string)entry!["fileName"]!);
+                            if (unknown.Any(x => x!.ToString() == (string)entry["fileName"]!) || !System.IO.File.Exists(path)) continue;
+                            BeforeDeleteForTests?.Invoke(path); Safe(path);
+                            if (NativeExportPolicy.DeleteVerifiedFile(path, stream => Matches(stream, entry))) { deleted++; mutated = true; }
+                        }
+                        unknown = UnknownEntries(folder, batch);
+                        batch["files"] = new JsonArray(); batch["writtenFileCount"] = 0; batch["byteLength"] = 0;
+                        if (unknown.Count > 0) SaveManifest(folder, batch);
+                        else
+                        {
+                            foreach (string metadata in new[] { ManifestName, CompanionName })
+                            {
+                                string path = Path.Combine(folder, metadata); Safe(path);
+                                if (System.IO.File.Exists(path)) { System.IO.File.Delete(path); mutated = true; }
+                            }
+                            if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder, false);
+                            else { SaveManifest(folder, batch); unknown = UnknownEntries(folder, batch); }
+                        }
+                        batches.Remove(batchId);
+                    }
+                    catch (Exception cause) when (ProbeFailure(cause))
                     {
-                        File.Delete(Path.Combine(folder, ManifestName));
-                        if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder, false);
-                        else { retained = true; SaveManifest(folder, batch); unknown = UnknownEntries(folder, batch); }
+                        var failure = new IOException("Cleanup failed: " + cause.Message, cause);
+                        failure.Data["stagingMutationStarted"] = mutated; failure.Data["batchId"] = batchId;
+                        failure.Data["attemptedPath"] = folder; failure.Data["succeeded"] = Math.Min(deleted, leaves.Length);
+                        failure.Data["total"] = leaves.Length; throw failure;
                     }
-                    batches.Remove(batchId);
-                    }
-                    catch (Exception cause) when (cause is IOException || cause is UnauthorizedAccessException)
-                    { var failure = new IOException("Cleanup failed after starting deletion: " + cause.Message, cause);
-                        failure.Data["stagingMutationStarted"] = true; failure.Data["attemptedPath"] = folder; throw failure; }
                 }
                 return new JsonObject { ["batchId"] = batchId, ["executed"] = !dryRun, ["deleted"] = !dryRun,
                     ["directory"] = folder, ["sessionId"] = batch["sessionId"]!.DeepClone(), ["currentSession"] = batch["currentSession"]!.DeepClone(),
-                    ["folderRetained"] = retained, ["unknownEntries"] = unknown };
+                    ["folderRetained"] = unknown.Count > 0, ["unknownEntries"] = unknown };
             }
         }
         public Envelope Run(string tool, StagedTextFile[]? files = null, string batchId = "", bool dryRun = true, string? id = null)
@@ -296,18 +417,17 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 string attemptedPath = ex.Data["attemptedPath"] as string ?? root;
                 data = new JsonObject { ["attemptedPath"] = attemptedPath, ["batchId"] = ex.Data["batchId"] as string ?? batchId, ["parameter"] = tool == "CleanupStagedImportFiles" ? "batchId" : "files", ["reason"] = ex.Message };
                 bool partial = !dryRun && ex.Data["stagingMutationStarted"] is true;
-                var retained = batches.Values.LastOrDefault(b => (bool?)b["partial"] == true);
-                int kept = (int?)retained?["writtenFileCount"] ?? 0;
-                int count = (retained?["files"] as JsonArray)?.Count ?? 1;
+                int kept = ex.Data["succeeded"] is int succeeded ? succeeded : 0;
+                int count = ex.Data["total"] is int total ? total : 1;
                 error = new Error("Staging IO failed for " + (tool == "CleanupStagedImportFiles" ? "batchId " + batchId : "files") + ": " + ex.Message + " Attempted path: " + attemptedPath,
                     partial ? (ErrorDetails)new PartialFailureDetails(kept, 1, Math.Max(0, count - kept - 1)) : new IoFailedDetails("import-staging", attemptedPath));
                 outcome = partial ? Outcome.Partial : Outcome.RejectedBeforeOperation; execution = partial ? Execution.Partial : Execution.NotStarted;
             }
-            if ((bool?)data?["folderRetained"] == true) warnings.Add(new Warning(WarningCode.NativeWarning,
+            if ((bool?)data?["folderRetained"] == true) warnings.Add(new Warning(WarningCode.StagingFolderRetained,
                 "The batch folder is retained because it contains unknown entries; only staging-owned files are deleted.",
                 new Dictionary<string, JsonElement> { ["unknownEntries"] = JsonSerializer.SerializeToElement(data["unknownEntries"]) }));
             return Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
-                false, BehaviorPolicy.NotApplicable, error == null ? Completeness.Complete : Completeness.Partial, null, warnings));
+                false, BehaviorPolicy.NotApplicable, error == null ? ((bool?)data?["truncated"] == true ? Completeness.Partial : Completeness.Complete) : execution == Execution.NotStarted ? Completeness.None : Completeness.Partial, null, warnings));
         }
     }
 }

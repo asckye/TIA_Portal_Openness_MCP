@@ -23,15 +23,15 @@ public sealed class BehaviorParityTests
         {
             bool preview = (bool?)args["dryRun"] == true || operation == "ListTags";
             if (preview) Previews++; else Writes++;
-            if (scenario == "compile-errors")
+            if (scenario.StartsWith("compile-", StringComparison.Ordinal))
             {
-                var data = BehaviorParityCases.CompileData();
+                var data = BehaviorParityCases.CompileData(); if (scenario == "compile-zero-count") data["errorCount"] = 0;
                 data["executed"] = !preview;
                 data["messages"] = data["errors"]!.DeepClone(); data["warnings"] = new JsonArray(); data["info"] = new JsonArray();
                 if (preview) { data["state"] = null; data["errorCount"] = null; data["warningCount"] = null; data["errors"] = new JsonArray(); data["messages"] = new JsonArray(); }
                 return Task.FromResult<JsonNode?>(new JsonObject(data.Select(p => new KeyValuePair<string, JsonNode?>(char.ToUpperInvariant(p.Key[0]) + p.Key.Substring(1), p.Value?.DeepClone()))));
             }
-            if (scenario is "batch-inconsistent" or "batch-protected")
+            if (scenario is "batch-inconsistent" or "batch-protected" or "batch-unknown-consistency")
             {
                 var data = BehaviorParityCases.BatchData(scenario);
                 // Foundation mapping accepts the worker's PascalCase transport fields.
@@ -41,7 +41,11 @@ public sealed class BehaviorParityTests
             }
             if (scenario.StartsWith("single-", StringComparison.Ordinal))
             {
-                var data = BehaviorParityCases.SingleBackup(scenario, preview);
+                JsonObject data;
+                try { data = BehaviorParityCases.SingleBackup(scenario, preview); }
+                catch (AdapterPreconditionException cause) { throw new WorkerOperationException(cause.Message, -32603, "rejected-before-operation", JsonSerializer.Serialize(new { exceptionType = cause.GetType().Name, parameter = cause.ParamName })); }
+                if (!preview && scenario == "single-import-failed") throw new WorkerOperationException("Fixture native interruption.", -32603, "unknown", JsonSerializer.Serialize(new {
+                    exceptionType = "IOException", recoveryDirectory = data["recoveryDirectory"], recoveryStatus = data["recoveryStatus"], recoveryWarning = data["recoveryWarning"], recoverySkipped = data["recoverySkipped"] }));
                 return Task.FromResult<JsonNode?>(new JsonObject(data.Select(p => new KeyValuePair<string, JsonNode?>(char.ToUpperInvariant(p.Key[0]) + p.Key.Substring(1), p.Value?.DeepClone()))));
             }
             if (scenario == "batch-stale") return Task.FromResult(JsonSerializer.SerializeToNode(new PlcBatchImportResult { Executed = !preview, ProjectFile = "C:/fixture.ap19", SoftwarePath = "CPU/PLC_1", Release = "19", PlanHash = new string('a', 64),
@@ -111,6 +115,9 @@ public sealed class BehaviorParityTests
                     var body = (await tool.InvokeAsync(Request(source, arguments))).StructuredContent!;
                     var row = BehaviorParityCases.Project(body);
                     Assert.Equal(code, (string?)row["code"]); Assert.Equal(outcome, (string?)row["outcome"]); Assert.Equal(execution, (string?)row["execution"]);
+                    Assert.False((bool?)row["nativeWarning"]);
+                    if (scenario is "staging-extra-cleanup" or "staging-modified-cleanup") Assert.NotNull(row["stagingWarning"]);
+                    if (scenario is "staging-name" or "staging-cleanup" or "staging-live-cleanup") Assert.NotNull(row["precheckWarning"]);
                     var stagedFoundation = new JsonObject { ["results"] = new JsonArray(row), ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 };
                     Assert.True(JsonNode.DeepEquals(engine, stagedFoundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + stagedFoundation);
                 }
@@ -122,15 +129,27 @@ public sealed class BehaviorParityTests
                 () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "refused-approval" ? "denied" : null)); });
             async Task<JsonObject> Call(string source, JsonObject args)
             {
+                if (scenario == "single-legacy-group-missing") { args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 if (source == "CompileSoftware") { args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 var tool = Tool(source);
                 var body = (await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!;
                 if (source == "CompileSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
                 return BehaviorParityCases.Project(body);
             }
-            var results = new JsonArray(await Call(scenario == "compile-errors" ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
+            var results = new JsonArray(await Call(scenario == "single-legacy-group-missing" ? "ImportBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
                 : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
+            if (scenario is "argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent")
+            { Assert.NotNull(results[0]?["precheckWarning"]); Assert.False((bool?)results[0]?["nativeWarning"]); }
+            if (scenario is "single-inconsistent" or "single-export-refused" or "single-import-failed" or "single-native-warning")
+            {
+                var details = results[0]!["backupDetails"]!;
+                Assert.Equal("Group/Uncompiled", (string?)details["objects"]?[0]?["object"]);
+                Assert.Equal(scenario == "single-inconsistent" ? "inconsistent" : "export-or-validation-refused (IOException)", (string?)details["objects"]?[0]?["reason"]);
+                Assert.True(details.AsObject().ContainsKey("recoveryDirectory"));
+                Assert.Equal(scenario == "single-inconsistent" ? null : Path.GetFullPath("bin-build/P6-68"), (string?)details["recoveryDirectory"]);
+                Assert.Equal(scenario == "single-native-warning", (bool?)results[0]?["nativeWarning"]);
+            }
             if (scenario.StartsWith("blocked-export", StringComparison.Ordinal) || scenario == "typed-export-refusal")
             {
                 worker.Followup = true;

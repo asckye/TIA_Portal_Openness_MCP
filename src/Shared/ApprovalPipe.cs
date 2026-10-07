@@ -23,7 +23,7 @@ namespace TiaOpenness.Shared
             meta["execution"] = "not-started";
             meta["completeness"] = "none";
             meta["warnings"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject {
-                ["code"] = "NATIVE_WARNING", ["message"] = "The write was refused by the approval precheck; no approval was requested.",
+                ["code"] = "APPROVAL_PRECHECK_REFUSED", ["message"] = "The write was refused by the approval precheck; no approval was requested.",
                 ["details"] = new System.Text.Json.Nodes.JsonObject { ["stage"] = "approval-precheck" } });
             return body;
         }

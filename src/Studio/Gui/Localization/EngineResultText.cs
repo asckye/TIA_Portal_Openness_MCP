@@ -35,6 +35,7 @@ public static class EngineResultText
         "SESSION_RESET_REQUIRED" => Loc.Current["Engine.Error.SessionResetRequired"],
         "RESOURCE_UNAVAILABLE" => Loc.Current["Engine.Error.ResourceUnavailable"],
         "IO_FAILED" => Loc.Current["Engine.Error.IoFailed"],
+        "COMPILE_ERRORS" => Loc.Current["Engine.Error.CompileErrors"],
         "NATIVE_OPERATION_FAILED" => Loc.Current["Engine.Error.NativeOperationFailed"],
         "CANCELLED" => Loc.Current["Engine.Error.Cancelled"],
         "TIMEOUT" => Loc.Current["Engine.Error.Timeout"],

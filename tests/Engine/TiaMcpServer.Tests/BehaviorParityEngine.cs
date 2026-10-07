@@ -32,9 +32,13 @@ namespace TiaMcpServer.Tests
                 if (scenario.StartsWith("single-", StringComparison.Ordinal))
                 {
                     var data = BehaviorParityCases.SingleBackup(scenario, dryRun);
-                    var body = McpServer.ResultBody(McpServer.V4Result("CreatePlcTag", data, completed: !dryRun))!.AsObject();
-                    if (!dryRun) body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "BACKUP_SKIPPED", ["message"] = data["warnings"]![0]!.ToString(), ["details"] = new JsonObject() });
-                    return new CallToolResult { IsError = false, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+                    var baseResult = !dryRun && scenario == "single-import-failed" ? McpServer.TargetFailure("CreatePlcTag", new IOException("Fixture native interruption."), true) : McpServer.V4Result("CreatePlcTag", data, completed: !dryRun);
+                    var body = McpServer.ResultBody(baseResult)!.AsObject();
+                    body["data"] = data;
+                    if (TiaMcp.Logic.V4.HostBehavior.BackupSkipped(data) is TiaMcp.Logic.V4.Warning backup)
+                        body["meta"]!["warnings"]!.AsArray().Add(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(backup)));
+                    if (!dryRun && scenario == "single-native-warning") body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "NATIVE_WARNING", ["message"] = "Native diagnostics include warnings; see data.warnings.", ["details"] = new JsonObject() });
+                    return new CallToolResult { IsError = baseResult.IsError, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
                 }
                 BehaviorParityCases.ExportAdmission(scenario);
                 if (scenario.StartsWith("blocked-export", StringComparison.Ordinal))
@@ -60,6 +64,13 @@ namespace TiaMcpServer.Tests
                 if (!ReferenceEquals(selected, software)) throw new AdapterPreconditionException("Fixture PLC missing.", "plc");
                 return McpServer.V4Result("CreatePlcTag", new JsonObject { ["executed"] = !dryRun }, completed: !dryRun);
             }
+            [McpServerTool(Name = "ImportPlcBlock"), ToolClassification("L1", "PLC-Software", "WRITE", batchWrite: true)]
+            public static CallToolResult LegacyImport(string softwarePath, string groupPath, string importPath)
+            {
+                if (McpServer.IsReadOnlyApprovalPreview) previews++; else writes++;
+                BehaviorParityCases.SingleBackup(scenario, McpServer.IsReadOnlyApprovalPreview);
+                return McpServer.V4Result("ImportPlcBlock", new JsonObject { ["executed"] = !McpServer.IsReadOnlyApprovalPreview });
+            }
             [McpServerTool(Name = "ImportPlcExternalSource"), ToolClassification("L1", "PLC-Software", "WRITE", batchWrite: true)]
             public static CallToolResult Import(string softwarePath, string groupPath, string filePath, bool dryRun = true)
                 => McpServer.V4Result("ImportPlcExternalSource", new JsonObject());
@@ -68,7 +79,7 @@ namespace TiaMcpServer.Tests
                 string[]? importOrder = null, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
             {
                 if (dryRun) previews++; else writes++;
-                if (scenario is "batch-inconsistent" or "batch-protected")
+                if (scenario is "batch-inconsistent" or "batch-protected" or "batch-unknown-consistency")
                 {
                     var envelope = TiaMcp.Logic.V4.PlcBatchImportResultMapping.Result(BehaviorParityCases.BatchData(scenario), McpServer.ReleaseKey, "ImportPlcBlocksFromDirectory", "fixture", dryRun);
                     var wire = TiaMcp.Logic.V4.McpResult.From(envelope);
@@ -80,7 +91,7 @@ namespace TiaMcpServer.Tests
             public static CallToolResult Compile(string softwarePath, bool dryRun = true)
             {
                 if (dryRun) { previews++; return McpServer.V4Result("CompilePlcSoftware", new JsonObject { ["executed"] = false }); }
-                writes++; var data = BehaviorParityCases.CompileData();
+                writes++; var data = BehaviorParityCases.CompileData(); if (scenario == "compile-zero-count") data["errorCount"] = 0;
                 return PlcToolContract.Map("CompilePlcSoftware", data, true, true);
             }
             [McpServerTool(Name = "ListPlcTags"), ToolClassification("L1", "PLC-Software", "READ")]
@@ -110,7 +121,7 @@ namespace TiaMcpServer.Tests
                     scenario == "refused-approval" ? "denied" : null)); };
                 JsonNode Call(string tool, JsonObject args) => McpServer.ResultBody(McpServer.CallTool(tool,
                     new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
-                var results = new JsonArray(BehaviorParityCases.Project(Call(value == "compile-errors" ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
+                var results = new JsonArray(BehaviorParityCases.Project(Call(value == "single-legacy-group-missing" ? "ImportPlcBlock" : value.StartsWith("compile-", StringComparison.Ordinal) ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
                     : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
                 if (value.StartsWith("blocked-export", StringComparison.Ordinal) || value == "typed-export-refusal")
                 {

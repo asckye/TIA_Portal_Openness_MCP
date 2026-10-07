@@ -44,10 +44,21 @@ namespace TiaMcp.BehaviorParity
             new object[] { "batch-hash", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "batch-project", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "single-inconsistent", "", "succeeded", "completed" },
+            new object[] { "single-import-failed", "OUTCOME_UNKNOWN", "unknown", "unknown" },
+            new object[] { "single-native-warning", "", "succeeded", "completed" },
+            new object[] { "single-legacy-group-missing", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
+            new object[] { "single-group-missing", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
             new object[] { "single-export-refused", "", "succeeded", "completed" },
             new object[] { "batch-inconsistent", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
             new object[] { "batch-protected", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
+            new object[] { "batch-unknown-consistency", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
+            new object[] { "compile-zero-count", "COMPILE_ERRORS", "failed", "completed" },
             new object[] { "compile-errors", "COMPILE_ERRORS", "failed", "completed" },
+            new object[] { "staging-live-cleanup", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "staging-modified-cleanup", "", "succeeded", "completed" },
+            new object[] { "staging-truncated-cleanup", "", "succeeded", "completed" },
+            new object[] { "staging-first-delete-cleanup", "IO_FAILED", "rejected-before-operation", "not-started" },
+            new object[] { "staging-partial-cleanup", "PARTIAL_FAILURE", "partial", "partial" },
             new object[] { "staging-old-list", "", "succeeded", "read-only" },
             new object[] { "staging-old-cleanup", "", "succeeded", "completed" },
             new object[] { "staging-extra-cleanup", "", "succeeded", "completed" },
@@ -56,6 +67,12 @@ namespace TiaMcp.BehaviorParity
 
         public static JsonObject Arguments(string scenario)
         {
+            if (scenario == "single-legacy-group-missing")
+            {
+                string path = System.IO.Path.GetFullPath("bin-build/P6-68/parity-single.xml"); System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+                System.IO.File.WriteAllText(path, "<Document/>");
+                return new JsonObject { ["softwarePath"] = "PLC_1", ["groupPath"] = "Missing", ["importPath"] = path };
+            }
             if (scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias")
             {
                 string dir = System.IO.Path.GetFullPath("bin-build/P6-67r/parity-batch"); System.IO.Directory.CreateDirectory(dir);
@@ -65,7 +82,7 @@ namespace TiaMcp.BehaviorParity
                 if (missing != null) batch.Remove(missing);
                 return batch;
             }
-            if (scenario == "compile-errors") return new JsonObject { ["softwarePath"] = "PLC_1", ["dryRun"] = false };
+            if (scenario.StartsWith("compile-", StringComparison.Ordinal)) return new JsonObject { ["softwarePath"] = "PLC_1", ["dryRun"] = false };
             if (scenario == "staging-cleanup") return new JsonObject { ["batchId"] = Guid.NewGuid().ToString("N"), ["dryRun"] = false };
             if (scenario.StartsWith("staging-", StringComparison.Ordinal)) return new JsonObject { ["dryRun"] = scenario == "staging-preview",
                 ["files"] = new JsonArray(new JsonObject { ["fileName"] = scenario == "staging-name" ? "../bad.scl" : "Main.scl", ["kind"] = "scl", ["content"] = scenario == "staging-size" ? new string('x', 4194305) : "FUNCTION Main : Void\nBEGIN\nEND_FUNCTION" }) };
@@ -86,7 +103,7 @@ namespace TiaMcp.BehaviorParity
             ["errors"] = new JsonArray("State=Error; Description=The input address of the drive telegram is not set.; Path=ASIS (DB1); ErrorCount=1; WarningCount=0") };
         public static JsonObject BatchData(string scenario)
         {
-            string reason = scenario == "batch-inconsistent" ? "inconsistent" : "know-how-protected";
+            string reason = scenario == "batch-inconsistent" ? "inconsistent" : scenario == "batch-unknown-consistency" ? "unknown-consistency" : "know-how-protected";
             return new JsonObject { ["executed"] = false, ["projectFile"] = "C:/fixture.ap19", ["softwarePath"] = "CPU/PLC_1", ["release"] = "19",
                 ["planHash"] = new string('a', 64), ["recursive"] = false, ["dependencyStatus"] = "unverified-caller-order-required",
                 ["requiresSessionReset"] = false, ["importedCount"] = 0, ["failedCount"] = 0, ["imported"] = new JsonArray(), ["failed"] = new JsonArray(),
@@ -98,18 +115,31 @@ namespace TiaMcp.BehaviorParity
         public static JsonObject SingleBackup(string scenario, bool preview)
         {
             var data = new JsonObject { ["executed"] = !preview };
+            if (scenario.EndsWith("group-missing", StringComparison.Ordinal))
+            {
+                System.Collections.Generic.IEnumerable<TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget> Targets()
+                { yield return Fail(); }
+                TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget Fail() => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact destination unavailable", "groupPath", false);
+                TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(Targets(), () => throw new Exception("Must not create directory"), "fixture");
+            }
             if (preview) return data;
             var target = new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = "Group/Uncompiled", Blocker = scenario == "single-inconsistent" ? "inconsistent" : "",
                 Export = _ => throw new System.IO.IOException("Native export refused.") };
             var saved = TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(new[] { target }, () => System.IO.Path.GetFullPath("bin-build/P6-68"), "fixture");
-            data["recoveryStatus"] = saved.Status; data["warnings"] = new JsonArray(saved.Warning);
+            data["recoveryDirectory"] = saved.Directory; data["recoveryStatus"] = saved.Status; data["recoveryWarning"] = saved.Warning; data["recoverySkipped"] = JsonSerializer.SerializeToNode(saved.Skipped);
+            if (scenario == "single-native-warning") data["warnings"] = new JsonArray("Separate native diagnostic");
             return data;
         }
         public static JsonObject StagingArguments(string scenario, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore store, string bundle, string release)
         {
-            if (scenario is not ("staging-old-list" or "staging-old-cleanup" or "staging-extra-cleanup")) return Arguments(scenario);
+            if (scenario is not ("staging-old-list" or "staging-old-cleanup" or "staging-extra-cleanup" or "staging-live-cleanup" or "staging-modified-cleanup" or "staging-truncated-cleanup" or "staging-first-delete-cleanup" or "staging-partial-cleanup")) return Arguments(scenario);
             var old = new TiaMcp.Logic.ModelContextProtocol.ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N"));
-            var batch = old.Stage(new[] { new TiaMcp.Logic.ModelContextProtocol.StagedTextFile { FileName = "F.scl", Kind = "scl", Content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION" } }, false);
+            var batch = old.Stage(new[] { new TiaMcp.Logic.ModelContextProtocol.StagedTextFile { FileName = "F.scl", Kind = "scl", Content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION" }, new TiaMcp.Logic.ModelContextProtocol.StagedTextFile { FileName = "G.scl", Kind = "scl", Content = "FUNCTION G : Void\nBEGIN\nEND_FUNCTION" } }, false);
+            if (scenario != "staging-live-cleanup") store.OwnerAliveForTests = (_, _) => false;
+            if (scenario == "staging-modified-cleanup") System.IO.File.WriteAllText(System.IO.Path.Combine((string)batch["directory"]!, "F.scl"), "caller replacement");
+            if (scenario == "staging-truncated-cleanup") System.IO.File.WriteAllText(System.IO.Path.Combine((string)batch["directory"]!, ".staging-batch.json"), "{");
+            if (scenario == "staging-first-delete-cleanup") store.BeforeDeleteForTests = _ => throw new System.IO.IOException("Fixture deletion failure");
+            if (scenario == "staging-partial-cleanup") { int deletes = 0; store.BeforeDeleteForTests = _ => { if (++deletes == 2) throw new ArgumentException("Fixture safety guard changed"); }; }
             if (scenario == "staging-extra-cleanup") System.IO.File.WriteAllText(System.IO.Path.Combine((string)batch["directory"]!, "caller.xml"), "caller export");
             return scenario == "staging-old-list" ? new JsonObject() : new JsonObject { ["batchId"] = batch["batchId"]!.DeepClone(), ["dryRun"] = false };
         }
@@ -132,11 +162,16 @@ namespace TiaMcp.BehaviorParity
         public static JsonObject Project(JsonNode body)
             => new JsonObject { ["code"] = (string?)body["error"]?["code"] ?? "", ["outcome"] = (string?)body["meta"]?["outcome"],
                 ["execution"] = (string?)body["meta"]?["execution"], ["reset"] = (bool?)body["meta"]?["requiresSessionReset"],
+                ["compileErrorCount"] = (int?)body["error"]?["details"]?["errorCount"],
                 ["details"] = Shape(body["error"]?["details"]), ["applyBlocked"] = (bool?)body["data"]?["applyBlocked"],
                 ["applyBlockedReason"] = (string?)body["data"]?["applyBlockedReason"],
                 ["recoveryStatus"] = (string?)body["data"]?["recoveryStatus"], ["folderRetained"] = (bool?)body["data"]?["folderRetained"],
                 ["unknownEntries"] = body["data"]?["unknownEntries"]?.DeepClone(),
                 ["backupWarning"] = (string?)body["meta"]?["warnings"]?.AsArray().FirstOrDefault(w => (string?)w?["code"] == "BACKUP_SKIPPED")?["message"],
+                ["backupDetails"] = body["meta"]?["warnings"]?.AsArray().FirstOrDefault(w => (string?)w?["code"] == "BACKUP_SKIPPED")?["details"]?.DeepClone(),
+                ["nativeWarning"] = body["meta"]?["warnings"]?.AsArray().Any(w => (string?)w?["code"] == "NATIVE_WARNING") ?? false,
+                ["precheckWarning"] = body["meta"]?["warnings"]?.AsArray().FirstOrDefault(w => (string?)w?["code"] == "APPROVAL_PRECHECK_REFUSED")?.DeepClone(),
+                ["stagingWarning"] = body["meta"]?["warnings"]?.AsArray().FirstOrDefault(w => (string?)w?["code"] == "STAGING_FOLDER_RETAINED")?.DeepClone(),
                 ["hint"] = (string?)body["meta"]?["warnings"]?.AsArray().FirstOrDefault(w => (string?)w?["code"] == "RECOVERY_GUIDANCE")?["message"] ?? "" };
 
         private static JsonNode? Shape(JsonNode? node)

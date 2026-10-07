@@ -22,6 +22,8 @@ namespace TiaMcp.PlcFoundation
         public string? InputFile { get; internal set; }
         public string? InputSha256 { get; internal set; }
         public string? RecoveryDirectory { get; internal set; }
+        public string? RecoveryWarning { get; internal set; }
+        public Dictionary<string, string>[] RecoverySkipped { get; internal set; } = new Dictionary<string, string>[0];
         public string? RecoveryStatus { get; internal set; }
         public System.Collections.Generic.Dictionary<string, string> RecoveryFiles { get; internal set; } = new System.Collections.Generic.Dictionary<string, string>();
         public string? XmlContent { get; internal set; }

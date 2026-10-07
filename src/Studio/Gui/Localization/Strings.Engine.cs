@@ -22,6 +22,7 @@ internal static partial class Strings
         ("Engine.Error.SessionResetRequired", "Reset the session before continuing.", "请重置会话后再继续。"),
         ("Engine.Error.ResourceUnavailable", "A required resource is unavailable.", "所需资源不可用。"),
         ("Engine.Error.IoFailed", "A file operation failed.", "文件操作失败。"),
+        ("Engine.Error.CompileErrors", "Compilation finished with errors. Review the diagnostics and compile again.", "编译已完成，但存在错误。请查看诊断并重新编译。"),
         ("Engine.Error.NativeOperationFailed", "The native operation failed.", "原生操作失败。"),
         ("Engine.Error.Cancelled", "The operation was cancelled.", "操作已取消。"),
         ("Engine.Error.Timeout", "The operation timed out.", "操作超时。"),

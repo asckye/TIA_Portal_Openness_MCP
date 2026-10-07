@@ -54,6 +54,7 @@ namespace TiaMcp.Logic.V4
                     messages.Add(new CompileErrorMessage(Field("Path"), description != "" ? description : text));
                 }
             if (errors == 0 && state != "Error" && messages.Count == 0) return null;
+            errors = Math.Max(errors, messages.Count);
             var first = messages.Take(MaximumErrorMessages).ToArray();
             string message = "Compile finished with " + errors + " errors and " + warnings + " warnings";
             if (first.Length > 0) message += "; first: " + (first[0].Path == "" ? "" : first[0].Path + ": ") + first[0].Description;

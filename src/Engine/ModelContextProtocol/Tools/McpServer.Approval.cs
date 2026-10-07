@@ -61,6 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
             return result;
         }
+        internal static bool IsReadOnlyApprovalPreview => ApprovalPreviewDepth.Value > 0;
         internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
@@ -79,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (HostBehavior.LegacyBatchImport(name, args)) return null;
             bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
-                TryDryRunDefault(name, out _) || candidate)) return null;
+                TryDryRunDefault(name, out _) || candidate || HostBehavior.IsSingleXmlImport(name))) return null;
             string? identity = null; ApprovalBindingIdentity(ref identity);
             AuditInvocation.RecordCurrentRequest(PendingApproval.Create("engine", ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
             CallToolResult? result = null;
@@ -93,7 +94,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (result == null)
             {
-                args[candidate ? "mode" : "dryRun"] = candidate ? JsonValue.Create("preview") : JsonValue.Create(true);
+                if (candidate || TryDryRunDefault(name, out _))
+                    args[candidate ? "mode" : "dryRun"] = candidate ? JsonValue.Create("preview") : JsonValue.Create(true);
                 using var preview = BeginReadOnlyApprovalPreview();
                 using var audit = AuditInvocation.ReadOnlyPreview();
                 try { token.ThrowIfCancellationRequested(); result = await previewCall(args.ToJsonString()).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }

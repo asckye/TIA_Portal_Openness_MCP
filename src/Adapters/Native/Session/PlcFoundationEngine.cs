@@ -306,7 +306,7 @@ namespace TiaMcp.PlcFoundation
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(BlockGroups(selected.Value.BlockGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>target.Blocks.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Blocks.", overwrite,
-                name => BlockGroups(selected.Value.BlockGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), backups: !overwrite ? null : document => target.Blocks.Where(b => ImportNames(document).Contains(b.Name)).Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + b.Name, Blocker = TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file => WithTargetOffline(selected, () => { b.Export(file, ExportOptions.None); return true; }) }));
+                name => BlockGroups(selected.Value.BlockGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), backups: !overwrite ? null : document => target.Blocks.Where(b => ImportNames(document).Contains(b.Name)).Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + b.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file => WithTargetOffline(selected, () => { b.Export(file, ExportOptions.None); return true; }) }));
         }
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
@@ -314,7 +314,7 @@ namespace TiaMcp.PlcFoundation
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(TypeGroups(selected.Value.TypeGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>target.Types.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name)), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Types.", overwrite,
-                name => TypeGroups(selected.Value.TypeGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))), backups: !overwrite ? null : document => target.Types.Where(t => ImportNames(document).Contains(t.Name)).Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + t.Name, Blocker = TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent), Export = file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.None); return true; }) }));
+                name => TypeGroups(selected.Value.TypeGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))), backups: !overwrite ? null : document => target.Types.Where(t => ImportNames(document).Contains(t.Name)).Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = groupPath + "/" + t.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent), Export = file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.None); return true; }) }));
         }
         public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
@@ -333,7 +333,7 @@ namespace TiaMcp.PlcFoundation
                 PlcFoundationPolicy.XmlInput(input.FullName, out var document);
                 precheck?.Invoke(document);
                 var hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
-                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>();
+                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>(); var recoverySkipped=new Dictionary<string,string>[0];
                 try
                 {
                     var capability=format?.Invoke();
@@ -341,12 +341,12 @@ namespace TiaMcp.PlcFoundation
                     if(!dryRun && backups!=null)
                     {
                         var recovery=TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(backups(document),PlcBatchImportRecovery.Directory,TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
-                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files;
+                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files; recoverySkipped=recovery.Skipped.ToArray();
                     }
                     var result=Mutation(operation,dryRun,dryRun ? null : import());
                     capability?.Apply(result);
                     result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles; result.RecoveryStatus=recoveryWarning!=null ? "backup-skipped" : recoveryDirectory!=null ? "backup-ready" : "not-needed";
-                    if(recoveryWarning!=null) result.Warnings=result.Warnings.Concat(new[]{recoveryWarning}).ToArray();
+                    result.RecoveryWarning=recoveryWarning; result.RecoverySkipped=recoverySkipped;
                     return result;
                 }
                 catch(Exception ex)
@@ -354,7 +354,7 @@ namespace TiaMcp.PlcFoundation
                     ex.Data["inputFile"]=input.FullName; ex.Data["inputSha256"]=hash;
                     if(recoveryDirectory!=null) ex.Data["recoveryDirectory"]=recoveryDirectory;
                     if(!ex.Data.Contains("recoveryFiles")) ex.Data["recoveryFiles"]=recoveryFiles;
-                    if(recoveryWarning!=null) { ex.Data["recoveryStatus"]="backup-skipped";ex.Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath; }
+                    if(recoveryWarning!=null) { ex.Data["recoveryStatus"]="backup-skipped";ex.Data["recoveryWarning"]=recoveryWarning;ex.Data["recoverySkipped"]=recoverySkipped;ex.Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath; }
                     throw;
                 }
             }

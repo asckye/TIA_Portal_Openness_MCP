@@ -88,7 +88,7 @@ internal static class BatchImportContract
             if(item["Action"] is JsonValue action)
             {
                 string value=action.GetValue<string>();
-                if(value is not ("create" or "replace" or "replace-blocked: inconsistent" or "replace-blocked: know-how-protected") || value.StartsWith("replace",StringComparison.Ordinal) && item["Replaced"] is not JsonObject) throw new InvalidDataException("Invalid replacement action/evidence.");
+                if(value is not ("create" or "replace" or "replace-blocked: inconsistent" or "replace-blocked: know-how-protected" or "replace-blocked: unknown-consistency") || value.StartsWith("replace",StringComparison.Ordinal) && item["Replaced"] is not JsonObject) throw new InvalidDataException("Invalid replacement action/evidence.");
                 if(item["Replaced"] is JsonObject replaced) Object(replaced);
                 if(value.StartsWith("replace",StringComparison.Ordinal) && item["Replaced"] is JsonObject old)
                     foreach(var key in new[]{"Name","Kind","GroupPath"}) if(Text(old,key)!=Text(planned,key)) throw new InvalidDataException("Replacement identity differs from the planned namespace target.");
@@ -107,7 +107,7 @@ internal static class BatchImportContract
             if(dryRun || blocked)
             {
                 if(attempted || returned.Count!=0 || status is not ("planned" or "replace-blocked")
-                    || status=="planned" && failure!="" || status=="replace-blocked" && (failure is not ("inconsistent" or "know-how-protected")
+                    || status=="planned" && failure!="" || status=="replace-blocked" && (failure is not ("inconsistent" or "know-how-protected" or "unknown-consistency")
                         || (string?)item["Action"]!="replace-blocked: "+failure || (string?)item["Replaced"]?["BackupBlocker"]!=failure)) throw new InvalidDataException("Blocked/preview plan mutated or has conflicting blockers.");
                 continue;
             }

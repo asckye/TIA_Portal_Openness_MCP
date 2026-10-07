@@ -77,7 +77,9 @@ internal static class FoundationV4Result
             if ((string?)retained?["recoveryStatus"] == "backup-skipped")
             {
                 data["recoveryStatus"] = "backup-skipped";
-                data["warnings"] = new JsonArray("No recovery backup was available for this import; inspect the attempted recovery location in data.evidence.");
+                data["recoveryDirectory"] = retained?["recoveryDirectory"]?.DeepClone();
+                data["recoveryWarning"] = retained?["recoveryWarning"]?.DeepClone();
+                data["recoverySkipped"] = retained?["recoverySkipped"]?.DeepClone();
             }
             exceptionType = (string?)retained?["exceptionType"];
         }
@@ -222,9 +224,8 @@ internal static class FoundationV4Result
         var warnings = new List<Warning>();
         if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
         if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
-        if ((string?)data?["recoveryStatus"] == "backup-skipped")
-            warnings.Add(new Warning(WarningCode.BackupSkipped, string.Join("; ", data?["warnings"]?.AsArray().Select(x => x?.ToString()) ?? Array.Empty<string>()), Empty));
-        else if (current && data?["warnings"] is JsonArray { Count: > 0 })
+        if (HostBehavior.BackupSkipped(data) is Warning backup) warnings.Add(backup);
+        if (current && data?["warnings"] is JsonArray { Count: > 0 })
             warnings.Add(new Warning(WarningCode.NativeWarning, "Native diagnostics include warnings; see data.warnings.", Empty));
         if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
         return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,

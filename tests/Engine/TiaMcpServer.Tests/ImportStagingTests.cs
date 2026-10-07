@@ -179,9 +179,21 @@ namespace TiaMcpServer.Tests
             var failed = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
                 file => System.IO.File.WriteAllText(file.FullName,"<Document/>"), _ => throw new IOException("Export failed before import.") }, () => bundle, bundle);
             Assert.Equal("backup-skipped", failed.Status); Assert.Single(failed.Files);
+            var typedExport = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Ready", Export = _ => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Recovery output is unavailable.", "exportPath") } }, () => bundle, bundle);
+            Assert.Equal("backup-skipped", typedExport.Status); Assert.Contains("Group/Ready", typedExport.Warning);
+            Assert.Equal("export-or-validation-refused (AdapterPreconditionException)", typedExport.Skipped[0]["reason"]);
+            var typedLocation = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget { Object = "Group/Ready" } },
+                () => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Recovery output is unavailable.", "exportPath"), bundle);
+            Assert.Equal("backup-skipped", typedLocation.Status); Assert.Null(typedLocation.Directory); Assert.Contains("Group/Ready", typedLocation.Warning);
             var inconsistent = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
                 Object = "Group/Uncompiled", Blocker = "inconsistent", Export = _ => exports++ } }, () => bundle, bundle);
             Assert.Equal(0, exports); Assert.Contains("Group/Uncompiled: inconsistent", inconsistent.Warning);
+            var mixed = NativeExportPolicy.SingleImportRecovery(new[] {
+                new NativeExportPolicy.RecoveryTarget { Object = "Group/Blocked", Blocker = "inconsistent" },
+                new NativeExportPolicy.RecoveryTarget { Object = "Group/Ready", Export = file => { Assert.Equal("001.xml", file.Name); System.IO.File.WriteAllText(file.FullName, "<Document/>"); } }
+            }, () => bundle, bundle);
+            Assert.Single(mixed.Files);
             var oversized = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
                 file => System.IO.File.WriteAllText(file.FullName,new string('x',4194305)) }, () => bundle, bundle);
             Assert.Equal("backup-skipped", oversized.Status);
@@ -193,7 +205,7 @@ namespace TiaMcpServer.Tests
             var old = Store(release); var batch = old.Stage(new[] { File() }, false);
             string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!;
             System.IO.File.WriteAllText(Path.Combine(folder, "caller.xml"), "private export");
-            var connected = Store(release); var listed = Assert.Single(connected.List()["batches"]!.AsArray())!;
+            var connected = Store(release); connected.OwnerAliveForTests = (_, _) => false; var listed = Assert.Single(connected.List()["batches"]!.AsArray())!;
             Assert.True((bool?)listed["identified"]); Assert.False((bool?)listed["currentSession"]);
             Assert.Equal(batch["sessionId"]!.ToString(), listed["sessionId"]!.ToString());
             var preview = connected.Cleanup(id); Assert.True((bool?)preview["folderRetained"]);
@@ -201,27 +213,130 @@ namespace TiaMcpServer.Tests
             Assert.True(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
             var result = connected.Run("CleanupStagedImportFiles", batchId: id, dryRun: false);
             Assert.True(result.Ok); Assert.Equal(TiaMcp.Logic.V4.Execution.Completed, result.Meta.Execution);
-            Assert.Single(result.Meta.Warnings); Assert.False(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
+            Assert.Equal(TiaMcp.Logic.V4.WarningCode.StagingFolderRetained, Assert.Single(result.Meta.Warnings).Code); Assert.False(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
             Assert.Equal("private export", System.IO.File.ReadAllText(Path.Combine(folder, "caller.xml")));
             Assert.True((bool?)JsonNode.Parse(result.Data!.Value.GetRawText())!["folderRetained"]);
             Assert.Empty(connected.List()["batches"]![0]!["files"]!.AsArray());
             System.IO.File.Delete(Path.Combine(folder, "caller.xml")); connected.Cleanup(id, false);
             Assert.False(Directory.Exists(folder)); Assert.Empty(old.List()["batches"]!.AsArray());
         }
-        [Fact]
-        public void Missing_invalid_or_traversing_manifests_are_listed_but_never_deleted()
+        [Theory]
+        [InlineData(false)][InlineData(true)]
+        public void Modified_or_locked_owned_files_are_retained_as_unknown(bool locked)
         {
             var store = Store(); var batch = store.Stage(new[] { File() }, false);
-            string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!;
-            string manifest = Path.Combine(folder, ".staging-batch.json");
+            string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!, leaf = Path.Combine(folder, "F.scl");
+            string replacement = new string('x', (int)new FileInfo(leaf).Length);
+            if (!locked) System.IO.File.WriteAllText(leaf, replacement);
+            using var stream = locked ? new FileStream(leaf, FileMode.Open, FileAccess.ReadWrite, FileShare.None) : null;
+            var result = store.Cleanup(id, false);
+            Assert.True((bool)result["folderRetained"]!); Assert.Contains(result["unknownEntries"]!.AsArray(), x => x!.ToString() == "F.scl");
+            Assert.True(System.IO.File.Exists(leaf));
+            if (!locked) Assert.Equal(replacement, System.IO.File.ReadAllText(leaf));
+        }
+        [Fact]
+        public void Live_owner_is_refused_but_a_reused_PID_or_dead_owner_is_cleanable()
+        {
+            var old = Store(); var batch = old.Stage(new[] { File() }, false); var store = Store();
+            Assert.Throws<ArgumentException>(() => store.Cleanup((string)batch["batchId"]!, false));
+            string manifest = Path.Combine((string)batch["directory"]!, ".staging-batch.json");
             var metadata = JsonNode.Parse(System.IO.File.ReadAllText(manifest))!;
-            metadata["files"]![0]!["fileName"] = "../outside.scl"; System.IO.File.WriteAllText(manifest, metadata.ToJsonString());
+            metadata["hostStartedUtc"] = DateTimeOffset.UtcNow.AddYears(-1).ToString("O"); System.IO.File.WriteAllText(manifest, metadata.ToJsonString());
+            store.Cleanup((string)batch["batchId"]!, false); Assert.Empty(store.List()["batches"]!.AsArray());
+        }
+        [Theory]
+        [InlineData(false)][InlineData(true)]
+        public void Truncated_primary_uses_last_valid_companion_without_following_mismatched_identity(bool structural)
+        {
+            var store = Store(); var batch = store.Stage(new[] { File() }, false);
+            string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!, manifest = Path.Combine(folder, ".staging-batch.json");
+            System.IO.File.WriteAllText(manifest, structural ? System.IO.File.ReadAllText(manifest).Replace("\"manifestVersion\":1", "\"manifestVersion\":999") : "{\"manifestVersion\":");
+            var listed = Assert.Single(store.List()["batches"]!.AsArray())!;
+            Assert.Equal("manifest-invalid", (string?)listed["reason"]); Assert.Single(listed["files"]!.AsArray());
+            var metadata = JsonNode.Parse(System.IO.File.ReadAllText(Path.Combine(folder, ".staging-batch.previous.json")))!;
+            metadata["sessionId"] = Guid.NewGuid().ToString("N"); System.IO.File.WriteAllText(manifest, metadata.ToJsonString());
             Assert.False((bool?)Assert.Single(store.List()["batches"]!.AsArray())!["identified"]);
             Assert.Throws<ArgumentException>(() => store.Cleanup(id, false));
-            System.IO.File.Delete(manifest);
-            Assert.False((bool?)Assert.Single(Store().List()["batches"]!.AsArray())!["identified"]);
-            Assert.Throws<ArgumentException>(() => Store().Cleanup(id, false));
-            Assert.True(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
+            System.IO.File.WriteAllText(manifest, "{"); store.Cleanup(id, false); Assert.False(Directory.Exists(folder));
+        }
+        [Fact]
+        public void Interrupted_atomic_publication_keeps_valid_metadata_and_hash_matching_files_cleanable()
+        {
+            var store = Store(); int publications = 0;
+            store.BeforeManifestPublishForTests = _ => { if (++publications == 3) throw new IOException("Interrupted before replacement"); };
+            var result = store.Run("StageImportFiles", new[] { File() }, dryRun: false); Assert.False(result.Ok);
+            var batch = Assert.Single(store.List()["batches"]!.AsArray())!; Assert.True((bool?)batch["identified"]);
+            Assert.Single(batch["files"]!.AsArray()); Assert.Empty(batch["unknownEntries"]!.AsArray());
+            store.BeforeManifestPublishForTests = null; store.Cleanup((string)batch["batchId"]!, false); Assert.Empty(store.List()["batches"]!.AsArray());
+        }
+        [Fact]
+        public void Manifest_fields_are_whitelisted_and_other_session_faults_do_not_block_stage_or_cleanup()
+        {
+            var old = Store(); var batch = old.Stage(new[] { File() }, false); string folder = (string)batch["directory"]!;
+            string manifest = Path.Combine(folder, ".staging-batch.json"); var json = JsonNode.Parse(System.IO.File.ReadAllText(manifest))!;
+            json["privateCallerContent"] = "secret"; json["files"]![0]!["callerContent"] = "secret"; System.IO.File.WriteAllText(manifest, json.ToJsonString());
+            var store = Store(); var listed = Assert.Single(store.List()["batches"]!.AsArray())!;
+            Assert.Null(listed["privateCallerContent"]); Assert.Null(listed["files"]![0]!["callerContent"]);
+            store.DiscoverForTests = path => { if (path == Path.GetDirectoryName(folder)) throw new UnauthorizedAccessException(); };
+            Assert.Contains(store.List()["batches"]!.AsArray(), b => (string?)b?["reason"] == "unreadable-or-missing-session");
+            var unknown = Assert.Single(store.List()["batches"]!.AsArray())!;
+            Assert.Equal((string?)batch["sessionId"], (string?)unknown["sessionId"]); Assert.Null(unknown["batchId"]);
+            var own = store.Stage(new[] { File() }, false); store.Cleanup((string)own["batchId"]!, false);
+            store.DiscoverForTests = path => { if (path == folder) throw new DirectoryNotFoundException(); };
+            Assert.Contains(store.List()["batches"]!.AsArray(), b => (string?)b?["reason"] == "unreadable-or-missing-batch");
+            string owner = Path.GetDirectoryName(folder)!;
+            Assert.Equal(Path.Combine(bundle, "staging", (string)batch["sessionId"]!), owner);
+            store.DiscoverForTests = path => { if (path == owner) Directory.Move(owner, owner + "-gone"); };
+            var vanished = Assert.Single(store.List()["batches"]!.AsArray())!;
+            Assert.Equal("unreadable-or-missing-session", (string?)vanished["reason"]);
+            Assert.Equal((string?)batch["sessionId"], (string?)vanished["sessionId"]); Assert.Null(vanished["batchId"]);
+        }
+        [Fact]
+        public void List_is_bounded_and_keeps_newest_batches_with_total_counts()
+        {
+            var store = Store();
+            for (int i = 0; i < 201; i++)
+            {
+                var batch = Store().Stage(new[] { File() }, false);
+                string path = Path.Combine((string)batch["directory"]!, ".staging-batch.json");
+                var json = JsonNode.Parse(System.IO.File.ReadAllText(path))!; json["createdUtc"] = DateTimeOffset.UtcNow.AddDays(i).ToString("O");
+                System.IO.File.WriteAllText(path, json.ToJsonString());
+            }
+            var result = store.List(); Assert.Equal(201, (int)result["totalBatches"]!);
+            Assert.Equal(200, result["batches"]!.AsArray().Count); Assert.True((bool)result["truncated"]!);
+            Assert.True(DateTimeOffset.Parse((string)result["batches"]![0]!["createdUtc"]!) > DateTimeOffset.Parse((string)result["batches"]![199]!["createdUtc"]!));
+        }
+        [Theory]
+        [InlineData(false)][InlineData(true)]
+        public void Cleanup_failure_counts_its_own_deletions_and_guards_after_deletion_are_partial(bool guard)
+        {
+            var store = Store(); int writes = 0;
+            store.BeforeWriteForTests = _ => { if (++writes == 2) throw new IOException("Unrelated partial stage"); };
+            store.Run("StageImportFiles", new[] { File("X.scl"), File("Y.scl"), File("Z.scl") }, dryRun: false);
+            store.BeforeWriteForTests = null;
+            var batch = store.Stage(new[] { File("A.scl"), File("B.scl") }, false); string id = (string)batch["batchId"]!;
+            store.BeforeDeleteForTests = _ => throw new IOException("First deletion refused");
+            var initial = store.Run("CleanupStagedImportFiles", batchId: id, dryRun: false);
+            Assert.Equal(TiaMcp.Logic.V4.Execution.NotStarted, initial.Meta.Execution); Assert.IsType<TiaMcp.Logic.V4.IoFailedDetails>(initial.Error!.Details);
+            int deletes = 0; store.BeforeDeleteForTests = _ => { if (++deletes == 2) throw guard ? new ArgumentException("Ancestry changed") : new IOException("Second deletion refused"); };
+            var partial = store.Run("CleanupStagedImportFiles", batchId: id, dryRun: false);
+            Assert.Equal(TiaMcp.Logic.V4.Execution.Partial, partial.Meta.Execution); Assert.Equal(TiaMcp.Logic.V4.Outcome.Partial, partial.Meta.Outcome);
+            var details = Assert.IsType<TiaMcp.Logic.V4.PartialFailureDetails>(partial.Error!.Details);
+            Assert.Equal(1, details.Succeeded); Assert.Equal(1, details.Failed); Assert.Equal(0, details.NotExecuted);
+            Assert.Equal(id, (string?)JsonNode.Parse(partial.Data!.Value.GetRawText())!["batchId"]);
+        }
+        [Theory]
+        [InlineData("groupPath")][InlineData("softwarePath")]
+        public void Single_import_keeps_typed_target_refusals_and_never_creates_a_directory_for_all_blocked_targets(string parameter)
+        {
+            int directories = 0;
+            System.Collections.Generic.IEnumerable<NativeExportPolicy.RecoveryTarget> InvalidTargets()
+            { yield return Fail(); }
+            NativeExportPolicy.RecoveryTarget Fail() => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact destination unavailable", parameter, false);
+            var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => NativeExportPolicy.SingleImportRecovery(InvalidTargets(), () => { directories++; return bundle; }, bundle));
+            Assert.Equal(parameter, refusal.ParamName); Assert.Equal(0, directories);
+            var result = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget { Object = "Group/A", InspectBlocker = () => throw new IOException() } }, () => { directories++; return bundle; }, bundle);
+            Assert.Equal(0, directories); Assert.Equal("unknown-consistency", result.Skipped[0]["reason"]); Assert.Contains("Group/A", result.Warning);
         }
         [Fact]
         public void Existing_staging_directory_needs_no_add_file_right_on_bundle_root()

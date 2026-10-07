@@ -6,6 +6,7 @@
     <Compile Include="../TiaMcpServer.Tests/BehaviorParityCases.cs" Link="BehaviorParityCases.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../TiaMcpServer.Tests/BatchReplacementPolicyTests.cs" Link="BatchReplacementPolicyTests.cs" />
     <Compile Include="../TiaMcpServer.Tests/ImportStagingTests.cs" Link="ImportStagingTests.cs" />
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />

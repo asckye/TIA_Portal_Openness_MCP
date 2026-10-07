@@ -29,7 +29,7 @@ namespace TiaMcp.PlcFoundation
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
             if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
-            return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group,BackupBlocker=TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected)};
+            return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
         {
@@ -51,7 +51,7 @@ namespace TiaMcp.PlcFoundation
             foreach(var group in BatchGroupsBounded(BlockGroups(PlcNative.BlockGroup(software))))
                 foreach(var block in PlcNative.Blocks(group.Value)) yield return BatchBlock(block,group.Path);
             foreach(var group in BatchGroupsBounded(TypeGroups(PlcNative.TypeGroup(software))))
-                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path,BackupBlocker=TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(type.IsConsistent)};
+                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path};
             foreach(var group in BatchGroupsBounded(TagGroups(software.TagTableGroup)))
                 foreach(var table in PlcNative.TagTables(group.Value)) yield return new PlcBatchImportObject {Name=table.Name,Kind="TagTable",GroupPath=group.Path};
         }
@@ -89,6 +89,13 @@ namespace TiaMcp.PlcFoundation
                 if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
                 return PlcNative.Import(PlcNative.Blocks(blocks),file,option).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
             }
+            string Blocker(PlcBatchImportObject target)
+            {
+                if(target.Kind=="UDT") return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).IsConsistent);
+                if(target.Kind=="TagTable") return "";
+                var block=PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name);
+                return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected);
+            }
             void Backup(PlcBatchImportObject target,FileInfo file)
             {
                 PlcExportPublication.Publish(file,output=>
@@ -99,7 +106,7 @@ namespace TiaMcp.PlcFoundation
                 });
             }
             return PlcBatchImportPolicy.Run(request,inventory,check,(file,target)=>Import(file,target,request.Overwrite ? ImportOptions.Override : ImportOptions.None),
-                Backup,(file,target)=>Import(file,target,ImportOptions.Override),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck);
+                Backup,(file,target)=>Import(file,target,ImportOptions.Override),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,Blocker);
         }
     }
 }

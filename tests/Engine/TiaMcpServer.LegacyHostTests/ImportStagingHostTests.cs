@@ -29,10 +29,17 @@ public sealed class ImportStagingHostTests : IDisposable
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")]
     public void Unknown_single_import_retains_unavailable_backup_warning(string release)
     {
-        var failure = new WorkerOperationException("fixture", -32603, "unknown", JsonSerializer.Serialize(new { exceptionType = "IOException", recoveryStatus = "backup-skipped", attemptedPath = "C:/bundle/data/recovery" }));
+        var failure = new WorkerOperationException("fixture", -32603, "unknown", JsonSerializer.Serialize(new { exceptionType = "IOException", recoveryStatus = "backup-skipped",
+            recoveryDirectory = "C:/bundle/data/recovery", recoveryWarning = "Backup skipped for Group/Uncompiled: inconsistent.",
+            recoverySkipped = new[] { new { @object = "Group/Uncompiled", reason = "inconsistent" } }, attemptedPath = "C:/bundle/data/recovery" }));
         var result = FoundationV4Result.Failure(release, "ImportPlcBlock", "fixture", true, true, null, failure).StructuredContent!;
         Assert.Equal("backup-skipped", (string?)result["data"]!["evidence"]!["recoveryStatus"]);
-        Assert.Contains(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "BACKUP_SKIPPED");
+        var warning = Assert.Single(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "BACKUP_SKIPPED")!;
+        Assert.Equal("Backup skipped for Group/Uncompiled: inconsistent.", (string?)warning["message"]);
+        Assert.Equal("Group/Uncompiled", (string?)warning["details"]?["objects"]?[0]?["object"]);
+        Assert.Equal("inconsistent", (string?)warning["details"]?["objects"]?[0]?["reason"]);
+        Assert.Equal("C:/bundle/data/recovery", (string?)warning["details"]?["recoveryDirectory"]);
+        Assert.DoesNotContain(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "NATIVE_WARNING");
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
         Assert.True((bool)result["meta"]!["requiresSessionReset"]!);
     }

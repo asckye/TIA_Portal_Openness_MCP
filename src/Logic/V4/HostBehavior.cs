@@ -38,6 +38,7 @@ namespace TiaMcp.Logic.V4
             return args["confirm"] is JsonValue confirm && confirm.TryGetValue<bool>(out var accepted) && accepted ? null : "confirm";
         }
 
+        internal static bool IsSingleXmlImport(string tool) => tool is "ImportPlcBlock" or "ImportPlcType" or "ImportPlcTagTable";
         internal static bool IsBatchImport(string tool) => tool is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory";
         internal static bool LegacyBatchImport(string tool, JsonObject args) => tool == "ImportPlcBlocksFromDirectory"
             && (bool?)args["overwrite"] != true && (bool?)args["dryRun"] == false && string.IsNullOrEmpty((string?)args["expectedPlanHash"]);
@@ -127,10 +128,16 @@ namespace TiaMcp.Logic.V4
         internal static JsonObject RetainedRecoveryEvidence(Exception error)
         {
             var retained = new JsonObject();
-            foreach (string key in new[] { "recoveryDirectory", "recoveryFiles", "recoveryStatus", "attemptedPath" })
+            foreach (string key in new[] { "recoveryDirectory", "recoveryFiles", "recoveryStatus", "recoveryWarning", "recoverySkipped", "attemptedPath" })
                 if (error.Data[key] != null) retained[key] = JsonSerializer.SerializeToNode(error.Data[key]);
             return retained;
         }
+
+        internal static Warning? BackupSkipped(JsonObject? data) => (string?)data?["recoveryStatus"] != "backup-skipped" ? null
+            : new Warning(WarningCode.BackupSkipped, (string?)data?["recoveryWarning"] ?? "Recovery backup was skipped.",
+                new Dictionary<string, JsonElement> {
+                    ["objects"] = JsonSerializer.SerializeToElement(data?["recoverySkipped"] ?? new JsonArray()),
+                    ["recoveryDirectory"] = JsonSerializer.SerializeToElement(data?["recoveryDirectory"]) });
 
         internal static Error SessionReset() => new Error(SessionBehavior.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"));
         internal static Error Confirmation(string reason, string? hash, string? id)

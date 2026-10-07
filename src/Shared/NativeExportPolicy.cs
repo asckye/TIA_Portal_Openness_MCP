@@ -13,6 +13,27 @@ namespace TiaOpenness.Shared
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, ExactSpelling = true)]
         private static extern SafeFileHandle CreateFileW(string path, uint access, uint share, IntPtr security, uint creation, uint flags, IntPtr template);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetFileInformationByHandle(SafeFileHandle handle, int information, ref int disposition, uint size);
+        internal static bool DeleteVerifiedFile(string path, Func<Stream, bool> matches)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                // Keep exclusive read/delete access through verification and delete the opened object.
+                using var handle = CreateFileW(path, 0x80010000, 0, IntPtr.Zero, 3, 0, IntPtr.Zero);
+                if (handle.IsInvalid) throw new IOException("Cannot exclusively open staged file: " + path);
+                using var stream = new FileStream(handle, FileAccess.Read);
+                if (!matches(stream)) return false;
+                int disposition = 1;
+                if (!SetFileInformationByHandle(handle, 4, ref disposition, 4)) throw new IOException("Cannot delete verified staged file: " + path);
+                return true;
+            }
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                if (!matches(stream)) return false;
+                File.Delete(path); return true;
+            }
+        }
         internal static void CheckWritableDirectory(string path, Action<string>? accessCheck = null)
         {
             var parent = new DirectoryInfo(path);
@@ -33,16 +54,26 @@ namespace TiaOpenness.Shared
         internal sealed class RecoveryEvidence
         {
             internal string? Directory, Warning;
+            internal readonly List<Dictionary<string, string>> Skipped = new List<Dictionary<string, string>>();
             internal readonly Dictionary<string, string> Files = new Dictionary<string, string>();
             internal string Status => Warning != null ? "backup-skipped" : Directory != null ? "backup-ready" : "not-needed";
         }
         internal sealed class RecoveryTarget
         {
             internal string Object = "", Blocker = "";
+            internal Func<string>? InspectBlocker;
             internal Action<FileInfo> Export = _ => { };
         }
         internal static string ExportBlocker(bool consistent, bool protectedObject = false) =>
             !consistent ? "inconsistent" : protectedObject ? "know-how-protected" : "";
+        internal static string InspectBlocker(Func<string> inspect)
+        {
+            try { return inspect(); }
+            catch (Exception) /* swallow(native-fallback): unreadable consistency/protection blocks only this replacement */
+            { return "unknown-consistency"; }
+        }
+        internal static string BackupWarning(IEnumerable<Dictionary<string, string>> skipped) => "Backup skipped for "
+            + string.Join("; ", skipped.Select(x => x["object"] + ": " + x["reason"])) + ". Import proceeds without a complete recovery backup.";
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<Action<FileInfo>> backups, Func<string> directory, string attemptedPath)
             => SingleImportRecovery(backups.Select((export, index) => new RecoveryTarget { Object = index.ToString(), Export = export }), directory, attemptedPath);
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<RecoveryTarget> backups, Func<string> directory, string attemptedPath)
@@ -50,29 +81,46 @@ namespace TiaOpenness.Shared
             var result = new RecoveryEvidence();
             RecoveryTarget[] exports;
             try { exports = backups.ToArray(); }
-            catch (Exception error) /* swallow(native-fallback): backup target inspection is best effort for single imports */
-            { result.Warning = "Backup skipped: target inspection failed (" + error.GetType().Name + ")."; return result; }
-            if (exports.Length == 0) return result;
-            try { result.Directory = directory(); }
-            catch (Exception error) /* swallow(native-fallback): single import recovery is best effort; retain the location and reason */
-            { result.Warning = "Backup skipped for " + string.Join(", ", exports.Select(x => x.Object)) + ": recovery location unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath; return result; }
-            var skipped = new List<string>(); long total = 0;
-            for (int i = 0; i < exports.Length; i++)
+            catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
+            catch (Exception error) /* swallow(native-fallback): unexpected backup enumeration failure is best effort */
             {
-                var target = exports[i];
-                if (target.Blocker != "") { skipped.Add(target.Object + ": " + target.Blocker); continue; }
-                try
-                {
-                    var file = new FileInfo(Path.Combine(result.Directory, i.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
-                    target.Export(file);
-                    using var saved = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024) throw new IOException("Recovery export exceeds the admitted byte budget.");
-                    using var sha = SHA256.Create(); result.Files[file.FullName] = BitConverter.ToString(sha.ComputeHash(saved)).Replace("-", "").ToLowerInvariant();
-                }
-                catch (Exception error) /* swallow(native-fallback): export refusal must not prevent a single overwrite import */
-                { skipped.Add(target.Object + ": export or validation refused (" + error.GetType().Name + ")"); }
+                result.Skipped.Add(new Dictionary<string, string> { ["object"] = "<target-inspection>", ["reason"] = "target-inspection-failed (" + error.GetType().Name + ")" });
+                result.Warning = BackupWarning(result.Skipped); return result;
             }
-            if (skipped.Count > 0) result.Warning = "Backup skipped for " + string.Join("; ", skipped) + ". Import proceeds without a complete recovery backup.";
+            if (exports.Length == 0) return result;
+            var ready = new List<KeyValuePair<int, RecoveryTarget>>();
+            void Skip(RecoveryTarget target, string reason) => result.Skipped.Add(new Dictionary<string, string> { ["object"] = target.Object, ["reason"] = reason });
+            for (int index = 0; index < exports.Length; index++)
+            {
+                var target = exports[index];
+                string blocker = target.InspectBlocker == null ? target.Blocker : InspectBlocker(target.InspectBlocker);
+                if (blocker != "") Skip(target, blocker); else ready.Add(new KeyValuePair<int, RecoveryTarget>(index, target));
+            }
+            if (ready.Count > 0)
+            {
+                try { result.Directory = directory(); }
+                catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
+                catch (Exception error) /* swallow(native-fallback): recovery location failures do not block a single import */
+                { foreach (var target in ready) Skip(target.Value, "recovery-location-unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath); }
+            }
+            long total = 0;
+            if (result.Directory != null)
+                for (int i = 0; i < ready.Count; i++)
+                {
+                    var target = ready[i].Value;
+                    try
+                    {
+                        var file = new FileInfo(Path.Combine(result.Directory, ready[i].Key.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
+                        target.Export(file);
+                        using var saved = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024) throw new IOException("Recovery export exceeds the admitted byte budget.");
+                        using var sha = SHA256.Create(); result.Files[file.FullName] = BitConverter.ToString(sha.ComputeHash(saved)).Replace("-", "").ToLowerInvariant();
+                    }
+                    catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
+                    catch (Exception error) /* swallow(native-fallback): export refusal must not prevent a single overwrite import */
+                    { Skip(target, "export-or-validation-refused (" + error.GetType().Name + ")"); }
+                }
+            if (result.Skipped.Count > 0) result.Warning = BackupWarning(result.Skipped);
             return result;
         }
         internal static void RequireConsistent(string kind, IEnumerable<string> inconsistent, string parameter)

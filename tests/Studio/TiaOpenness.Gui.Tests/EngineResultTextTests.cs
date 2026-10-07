@@ -37,6 +37,13 @@ public sealed class EngineResultTextTests(WpfContext wpf)
         Assert.Contains(chinese, c => c >= '\u4e00' && c <= '\u9fff');
     }
 
+    [Fact]
+    public void CompileErrorsHasFriendlyTextInBothLanguages()
+    {
+        wpf.RunWithLanguage(AppLanguage.English, () => Assert.Contains("Compilation", EngineResultText.Error("COMPILE_ERRORS")));
+        wpf.RunWithLanguage(AppLanguage.Chinese, () => Assert.Contains("编译", EngineResultText.Error("COMPILE_ERRORS")));
+    }
+
     [Theory]
     [InlineData("PARTIAL_FAILURE", "Partial result", "部分结果")]
     [InlineData("OUTCOME_UNKNOWN", "Unknown outcome", "结果未知")]
