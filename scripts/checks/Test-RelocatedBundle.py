@@ -201,7 +201,9 @@ class StdioSession:
 
 def foundation_stdio_command(root: Path, key: str) -> list[str]:
     exe = product_executable(root, key)
-    return [str(exe), "--bundle-root", str(root), "--release-key", key, "--offline"]
+    command = [str(exe), "--bundle-root", str(root), "--release-key", key, "--offline"]
+    # V20/V21 default to the lite profile; the baseline roster is the full profile.
+    return command + ["--profile", "full"] if key in ("20", "21") else command
 
 
 def fake_engine_installations(public_api_root: Path, temp_root: Path) -> dict[str, Path]:
@@ -389,9 +391,14 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted the Openness cause/fix: {doctor}")
         if not any(check.get("fix") for check in doctor_checks if isinstance(check, dict)):
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted repair steps: {doctor}")
+        # P6-54b: session services are not registered while Openness is not ready, so the session
+        # diagnostic reports the same readiness refusal (with cause) before dispatch.
         diagnostic = call("GetSessionState")
-        if diagnostic.get("ok") is not True:
-            raise CheckFailure(f"V{key} {transport} {mode}: read-only session diagnostic stopped: {diagnostic}")
+        if (diagnostic.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
+                or diagnostic.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
+                or diagnostic.get("meta", {}).get("execution") != "not-started"
+                or not diagnostic.get("data", {}).get("environment", {}).get("cause")):
+            raise CheckFailure(f"V{key} {transport} {mode}: session diagnostic did not report the readiness refusal: {diagnostic}")
 
         refusal = call("SaveProject")
         if (refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
@@ -418,6 +425,11 @@ def stage_packaged_engine_without_siemens(root: Path, key: str, temp_root: Path)
 
     if not runtime.exists():
         shutil.copytree(source, runtime, ignore=omit_siemens)
+    # The engine resolves its bundle from the package manifest above runtime/vXX.
+    manifest = runtime.parent.parent / "manifest" / "package-manifest.json"
+    if not manifest.is_file():
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(root / "manifest" / "package-manifest.json", manifest)
     remaining = [path for path in runtime.rglob("*.dll")
                  if path.name.lower().startswith("siemens.engineering")]
     if remaining:
@@ -570,18 +582,19 @@ def write_approval_probe(root: Path, temp_root: Path, installation: Path, expect
             changed.append(path)
     if not changed:
         raise CheckFailure("Approval probe did not append a user-fallback audit event")
-    matching = False
+    request_id = (body.get("meta") or {}).get("requestId")
+    events = []
     for path in changed:
         for line in path.read_text(encoding="utf-8").splitlines():
             try:
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if row.get("release") == key and row.get("tool") == "CreateDevice":
-                matching = True
-                break
-    if not matching:
-            raise CheckFailure("Audit fallback has no CreateDevice/V21 admission evidence")
+            if row.get("release") == key and row.get("tool") == "CreateDevice" and row.get("requestId") == request_id:
+                events.append((row.get("event"), row.get("outcome")))
+    # A write stopped by readiness is audited as request then end; it never started.
+    if [event for event, _ in events] != ["request", "end"] or events[-1][1] != "rejected-before-operation":
+        raise CheckFailure(f"Audit fallback has no request/end rows for the refused CreateDevice ({request_id}): {events}")
     config_lock = paths["config"] / "approval.settings.lock"
     if not config_lock.is_file():
         raise CheckFailure(f"Approval settings did not resolve to the user config fallback: {config_lock}")
