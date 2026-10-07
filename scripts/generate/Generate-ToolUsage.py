@@ -107,6 +107,38 @@ def validate_coverage(rosters, calls):
                                                           expected ^ set(calls['profiles'][profile]))
 
 
+def validate_foundation_examples(calls, sequences):
+    """Keep the VM argument lessons in every maintained call and reusable flow."""
+    batch = {'ExportPlcBlocks', 'ExportPlcTypes', 'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory'}
+    imports = {'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory'}
+    builders = {'BuildPlcTagTable', 'BuildStructuredText', 'BuildFlgNetCall',
+                'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock', 'BuildPlcGlobalDb', 'BuildPlcUdt'}
+
+    def check(name, arguments, location):
+        if name in batch:
+            path = arguments.get('softwarePath', '')
+            assert path.startswith('devices/') or ('exact softwarePath' in path and 'GetProjectTree' in path), (location, 'batch requires exact software path')
+        if arguments.get('dryRun') is False or arguments.get('confirm') is True:
+            assert arguments.get('expectedProjectFile'), (location, 'real call requires expectedProjectFile')
+        if name in imports:
+            pattern = arguments.get('regexName', '')
+            assert pattern and re.fullmatch(pattern, 'Main.xml') and not re.fullmatch(pattern, 'Main'), (location, 'regex must select the file name including extension')
+        if name in builders:
+            assert arguments.get('outputReleaseKey') == '21', (location, 'Foundation VM builder example must select V21')
+
+    for name, entry in calls['profiles']['plc-foundation'].items():
+        check(name, entry['arguments'], name)
+        execution = entry.get('execution', {}).get('arguments')
+        if execution:
+            check(name, dict(entry['arguments'], **execution), name + '/execution')
+        for operation, example in entry.get('operations', {}).items():
+            check(name, example['arguments'], name + '/' + operation)
+    for sequence in sequences:
+        if sequence['profile'] == 'plc-foundation':
+            for index, step in enumerate(sequence['steps']):
+                check(step['tool'], step['arguments'], sequence['id'] + '/' + str(index))
+
+
 def source_metadata(sources):
     """Usage topics follow registrations; tools-list staleness belongs to Check-ToolsList."""
     full = {}
@@ -258,13 +290,55 @@ def generate():
     meta = read(base / 'metadata.json')
     calls = read(base / 'calls.json')
     validate_coverage(rosters, calls)
+    sequences = read(base / 'sequences.json')
+    validate_foundation_examples(calls, sequences)
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
-            'calls': calls, 'sequences': read(base / 'sequences.json'), **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
+            'calls': calls, 'sequences': sequences, **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 
 class RosterTests(unittest.TestCase):
+    def test_foundation_vm_lessons(self):
+        validate_foundation_examples(read(ROOT / 'reference/tool-examples/calls.json'),
+                                     read(ROOT / 'reference/tool-examples/sequences.json'))
+
+    def test_foundation_batch_aliases_are_rejected(self):
+        for name in ('ExportPlcBlocks', 'ExportPlcTypes', 'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory'):
+            calls = read(ROOT / 'reference/tool-examples/calls.json')
+            calls['profiles']['plc-foundation'][name]['arguments']['softwarePath'] = 'PLC_1'
+            with self.subTest(name=name), self.assertRaises(AssertionError):
+                validate_foundation_examples(calls, [])
+
+    def test_foundation_real_calls_require_project_identity(self):
+        calls = read(ROOT / 'reference/tool-examples/calls.json')
+        calls['profiles']['plc-foundation']['SaveProject']['execution']['arguments']['expectedProjectFile'] = ''
+        with self.assertRaises(AssertionError):
+            validate_foundation_examples(calls, [])
+        sequences = read(ROOT / 'reference/tool-examples/sequences.json')
+        sequence = next(s for s in sequences if s['id'] == 'sequence/foundation-write-tags')
+        next(s for s in sequence['steps'] if s['arguments'].get('dryRun') is False)['arguments'].pop('expectedProjectFile')
+        with self.assertRaises(AssertionError):
+            validate_foundation_examples(read(ROOT / 'reference/tool-examples/calls.json'), sequences)
+
+    def test_foundation_directory_regex_includes_extension(self):
+        for name in ('ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory'):
+            calls = read(ROOT / 'reference/tool-examples/calls.json')
+            calls['profiles']['plc-foundation'][name]['arguments']['regexName'] = '^Main$'
+            with self.subTest(name=name), self.assertRaises(AssertionError):
+                validate_foundation_examples(calls, [])
+
+    def test_foundation_builders_do_not_inherit_the_host_release(self):
+        calls = read(ROOT / 'reference/tool-examples/calls.json')
+        for name, entry in calls['profiles']['plc-foundation'].items():
+            if 'outputReleaseKey' not in entry['arguments']:
+                continue
+            previous = entry['arguments']['outputReleaseKey']
+            entry['arguments']['outputReleaseKey'] = '{release}'
+            with self.subTest(name=name), self.assertRaises(AssertionError):
+                validate_foundation_examples(calls, [])
+            entry['arguments']['outputReleaseKey'] = previous
+
     def test_generation_does_not_read_the_guard_manifest(self):
         original_read = read
         def without_manifest(path):

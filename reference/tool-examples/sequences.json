@@ -865,7 +865,7 @@
     "topic": "plc-scl-block",
     "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
     "preconditions": "Intended TIA/project already attached. An operator-reviewed ASCII FC_Add.scl is on the TIA host; generation may overwrite same-named PLC objects.",
-    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. A real write (dryRun:false, confirm:true) waits for the Workbench decision; denial returns error.code=CONFIRMATION_REQUIRED, error.details.reason=denied, meta.outcome=rejected-before-operation and meta.execution=not-started. The write was not started.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -891,7 +891,7 @@
       {
         "tool": "ImportPlcExternalSource",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true
@@ -901,12 +901,12 @@
       {
         "tool": "ImportPlcExternalSource",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
           "filePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetSessionState>",
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
           "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
         },
         "expect": "data.status=completed, data.executed=true; retain returned data.sourceName. No generation/compile yet."
@@ -914,7 +914,7 @@
       {
         "tool": "GenerateBlocksFromExternalSource",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "externalSourceName": "<exact SourceName from completed import>",
           "dryRun": true
         },
@@ -923,11 +923,11 @@
       {
         "tool": "GenerateBlocksFromExternalSource",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "externalSourceName": "<exact SourceName from completed import>",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetSessionState>",
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
           "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
         },
         "expect": "data.status=completed; inspect data.generatedObjects or V14 SP1 inventory observations. Same-named PLC objects may be overwritten. Compilation remains notRun."
@@ -935,7 +935,7 @@
       {
         "tool": "CompilePlcDiagnostics",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "dryRun": true
         },
         "expect": "Preview only; state/counts are null and meta.execution=read-only."
@@ -943,20 +943,393 @@
       {
         "tool": "CompilePlcDiagnostics",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<ProjectFile from GetSessionState>"
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
         },
         "expect": "All project devices must be offline; check native compiler state, errorCount and nested rawMessages. Do not treat transport success as compile success. Inspect data.offlineStateNotExposedByDevices for devices whose state cannot be confirmed by these PLC services. meta.outcome=failed when native diagnostics contain errors, including nested messages."
       },
       {
         "tool": "GetPlcBlockInfo",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "FC_Add"
         },
         "expect": "Confirm the expected generated block and its consistency. No implicit project save or PLC download."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-connect-project",
+    "topic": "foundation-connect-project",
+    "purpose": "Discover, connect, attach and resolve the exact Foundation project/software/table identities.",
+    "preconditions": "Select the intended currently open project and bind all placeholders; local directories already exist. Read the schema for this exact release.",
+    "notes": "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. A real write (dryRun:false, confirm:true) waits for the Workbench decision; denial returns error.code=CONFIRMATION_REQUIRED, error.details.reason=denied, meta.outcome=rejected-before-operation and meta.execution=not-started. The write was not started. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Session/read flow exercised on all three hosts. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "ListPortalProcessProjects",
+        "arguments": {},
+        "expect": "Select one current row; retain processId, exact projectPath and file name without extension."
+      },
+      {
+        "tool": "ConnectPortal",
+        "arguments": {
+          "processId": 12345
+        },
+        "expect": "Replace integer placeholder 12345 with the selected row processId; connect to that process only."
+      },
+      {
+        "tool": "AttachOpenProject",
+        "arguments": {
+          "projectName": "<file name without extension from selected projectPath>",
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Bind the already-open project by file name without extension and exact listed projectPath."
+      },
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify data.projectFile equals the selected discovery path; retain it for every real call."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Copy softwarePath from data.value. Preserve station URL encoding; batch tools require the exact path."
+      },
+      {
+        "tool": "ListPlcTagTables",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
+        },
+        "expect": "Raw Chinese 默认变量表 may be passed directly to list tools."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "默认变量表"
+        },
+        "expect": "Bind PLC_1 to the unique PLC in the tree; results carry encoded paths."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-write-tags",
+    "topic": "foundation-write-tags",
+    "purpose": "Create a fresh table, PLC-wide unique tag and constant, verify them and explicitly save.",
+    "preconditions": "foundation-connect-project completed; the exact bound projectFile and unique PLC alias are known. Inspect all PLC table inventories and choose fresh PLC-wide symbol names before previews.",
+    "notes": "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. A real write (dryRun:false, confirm:true) waits for the Workbench decision; denial returns error.code=CONFIRMATION_REQUIRED, error.details.reason=denied, meta.outcome=rejected-before-operation and meta.execution=not-started. The write was not started. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview/real writes, readback, save and approval decisions exercised. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify the exact intended bound file before any write."
+      },
+      {
+        "tool": "ListPlcTagTables",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
+        },
+        "expect": "Select a fresh table name; inspect all PLC table inventories to choose unique symbols."
+      },
+      {
+        "tool": "CreatePlcTagTable",
+        "arguments": {
+          "plc": "PLC_1",
+          "group": "",
+          "name": "<fresh caller-selected table name; verify ListPlcTagTables>",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Preview only; no Workbench queue. Review the new name and intended table/PLC."
+      },
+      {
+        "tool": "CreatePlcTagTable",
+        "arguments": {
+          "plc": "PLC_1",
+          "group": "",
+          "name": "<fresh caller-selected table name; verify ListPlcTagTables>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for Workbench approval; stop on denied/not-started. Confirm data.executed and the operation outcome."
+      },
+      {
+        "tool": "CreatePlcTag",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>",
+          "name": "<fresh PLC-wide tag name>",
+          "dataType": "Bool",
+          "address": "%M100.0",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Preview only; no Workbench queue. Review the new name and intended table/PLC."
+      },
+      {
+        "tool": "CreatePlcTag",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>",
+          "name": "<fresh PLC-wide tag name>",
+          "dataType": "Bool",
+          "address": "%M100.0",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for Workbench approval; stop on denied/not-started. Confirm data.executed and the operation outcome."
+      },
+      {
+        "tool": "CreatePlcUserConstant",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>",
+          "name": "<fresh PLC-wide constant name>",
+          "dataType": "Int",
+          "value": "5",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Preview only; no Workbench queue. Review the new name and intended table/PLC."
+      },
+      {
+        "tool": "CreatePlcUserConstant",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>",
+          "name": "<fresh PLC-wide constant name>",
+          "dataType": "Int",
+          "value": "5",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for Workbench approval; stop on denied/not-started. Confirm data.executed and the operation outcome."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>"
+        },
+        "expect": "Confirm the chosen new Bool tag at %M100.0 on this table."
+      },
+      {
+        "tool": "ListPlcUserConstants",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<new table name from completed CreatePlcTagTable; verify ListPlcTagTables>"
+        },
+        "expect": "Confirm the chosen new Int constant with value 5 on this table."
+      },
+      {
+        "tool": "SaveProject",
+        "arguments": {
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review explicit save; preview does not queue approval."
+      },
+      {
+        "tool": "SaveProject",
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for approval before saving the intended project; inspect V4 outcome/execution."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-compile-export",
+    "topic": "foundation-compile-export",
+    "purpose": "Compile, export Main to a directory, export the Chinese table to a new XML file and export blocks with the reviewed inventory hash.",
+    "preconditions": "foundation-connect-project completed; retain the exact softwarePath and bound projectFile. Export directories already exist, output files are new and all project devices required by compile are offline.",
+    "notes": "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. A real write (dryRun:false, confirm:true) waits for the Workbench decision; denial returns error.code=CONFIRMATION_REQUIRED, error.details.reason=denied, meta.outcome=rejected-before-operation and meta.execution=not-started. The write was not started. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Compile/export previews and real calls exercised; V15.1 export followed real compilation. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify and retain the exact project file."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Retain the exact softwarePath for batch export."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Preview does not compile."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Check compiler state and error counts; inconsistent blocks must compile before export."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "blockPath": "Main",
+          "exportPath": "<existing caller-selected export directory>",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review new outputs in existing directories; batch preview returns data.inventoryHash."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "blockPath": "Main",
+          "exportPath": "<existing caller-selected export directory>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Retain data.outputFile or per-item result data.outputFile. Existing files are refused; block batch outputs are blocks-<hash>.xml."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "tagTableName": "默认变量表",
+          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review new outputs in existing directories; batch preview returns data.inventoryHash."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "tagTableName": "默认变量表",
+          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Retain data.outputFile or per-item result data.outputFile. Existing files are refused; block batch outputs are blocks-<hash>.xml."
+      },
+      {
+        "tool": "ExportPlcBlocks",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "exportPath": "<existing caller-selected batch export directory>",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review new outputs in existing directories; batch preview returns data.inventoryHash."
+      },
+      {
+        "tool": "ExportPlcBlocks",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "exportPath": "<existing caller-selected batch export directory>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+          "expectedInventoryHash": "<data.inventoryHash from this same batch export preview>"
+        },
+        "expect": "Retain data.outputFile or per-item result data.outputFile. Existing files are refused; block batch outputs are blocks-<hash>.xml."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-render-exports",
+    "topic": "foundation-render-exports",
+    "purpose": "Render native block exports and extract symbols from separate tag-table/global DB exports.",
+    "preconditions": "foundation-compile-export completed for block and tag-table XML. Retain the actual block outputFile, keep symbol exports in a separate immutable directory, and choose new .html outputs in existing directories.",
+    "notes": "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. A real write (dryRun:false, confirm:true) waits for the Workbench decision; denial returns error.code=CONFIRMATION_REQUIRED, error.details.reason=denied, meta.outcome=rejected-before-operation and meta.execution=not-started. The write was not started. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Block/atlas rendering succeeded on exports from all three hosts. Initial symbol-manifest inputs failed; corrected extraction acceptance NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "RenderPlcBlock",
+        "arguments": {
+          "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+          "outputPath": "<new absolute Block.html in an existing caller-selected directory>"
+        },
+        "expect": "New self-contained HTML; input is the completed block export data.outputFile."
+      },
+      {
+        "tool": "RenderPlcProgramAtlas",
+        "arguments": {
+          "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+          "outputPath": "<new absolute Atlas.html in an existing caller-selected directory>"
+        },
+        "expect": "One block XML is valid; alternatively select a block-only directory. A tag-table XML causes Every XML input must contain a PLC block."
+      },
+      {
+        "tool": "BuildPlcSymbolManifestFromPath",
+        "arguments": {
+          "inputRoot": "<existing caller-owned immutable symbol export directory>",
+          "files": [
+            "<relative tag-table XML from ExportPlcTagTable or global DB export>"
+          ],
+          "expectedOrigin": "caller-owned-immutable-export-snapshot"
+        },
+        "expect": "Inspect data.files/errors/symbols/warnings. Select tag-table/global DB exports; OBs return unsupported-document-kind. Empty tables/comments/constants are accepted; system constants are skipped with a warning."
       }
     ]
   }

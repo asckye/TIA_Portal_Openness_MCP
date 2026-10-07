@@ -28,7 +28,10 @@ internal static class ToolExampleLibraryTests
 
         var pathSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""path""],""properties"":{""path"":{""type"":""string""}}}")!.AsObject();
         var oldPath = ToolUsageCatalog.Describe("OpenProject", "15.1", "plc-foundation", "", pathSchema);
-        check(((string)oldPath["example"]!["request"]!["params"]!["arguments"]!["path"]!).EndsWith(".ap15_1"), "V15.1 project example uses its exact extension");
+        check((bool?)oldPath["parameterSources"]!["path"]!["requiresBinding"] == true
+            && oldPath["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "path")
+            && ((string?)oldPath["example"]!["request"]!["params"]!["arguments"]!["path"])?.Contains("closed project file for this release") == true,
+            "Foundation open example binds an exact closed target file for the selected release");
         var modernPath = ToolUsageCatalog.InlineCalls("20").First(r => (string?)r!["tool"] == "OpenProject")!;
         check(((string)modernPath["arguments"]!["path"]!).EndsWith(".ap20"), "inline discovery uses the same V20 example");
         var objectSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath"",""objectPath"",""properties""],""properties"":{""softwarePath"":{""type"":""string""},""objectPath"":{""type"":""array""},""properties"":{""type"":""object""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();

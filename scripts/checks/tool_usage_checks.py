@@ -108,7 +108,8 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert len(list(root.iter())) > 3, name + ': empty XML'
             if name in ('BuildPlcUdt', 'BuildPlcGlobalDb'):
                 target = args['outputReleaseKey']
-                assert target == str(release), (name, target, release)
+                expected_target = str(release) if str(release) in ('20', '21') else '21'
+                assert target == expected_target, (name, target, release)
                 engineering, interface = {
                     '14sp1': ('V14 SP1', 2), '15.1': ('V15.1', 3),
                     '16': ('V16', 4), '17': ('V17', 4), '18': ('V18', 5),
@@ -132,8 +133,10 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             offline_calls.append(name)
         if exhaustive and name == 'PlanArtifactImportOrder':
             built = call(name, args)
-            plan = built['data']['plan'] if built.get('schemaVersion') == 4 else built.get('meta', {}).get('plan', built)
-            assert plan['Valid'] and plan['Order'] == ['UDT_Status', 'FB_Motor'], built
+            data = built['data'] if built.get('schemaVersion') == 4 else built.get('meta', {})
+            plan = data['plan'] if str(release) in ('20', '21') else data
+            valid, order = ('Valid', 'Order') if str(release) in ('20', '21') else ('valid', 'order')
+            assert plan[valid] and plan[order] == ['UDT_Status', 'FB_Motor'], built
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
             built = call(name, args)
