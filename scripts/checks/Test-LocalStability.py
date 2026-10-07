@@ -15,6 +15,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import statistics
 import time
 import urllib.error
@@ -22,6 +23,26 @@ from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[2]
+TARGET_DISPATCHERS = {'calltool', 'runreadonlytoolbatch', 'previewtoolbatch', 'applytoolbatch'}
+LOCAL_LANE_BOUND = 8
+WORKER_PIPE_BOUND = 8  # OpennessWorkerSupervisor forwarding gate
+
+
+def openness_lane_classifier():
+    """Same source as ToolDispatchLanes: ToolTaxonomy.UsesOpennessLane and DispatchesTargets."""
+    source = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8')
+    def names(field):
+        body = re.search(r'HashSet<string> ' + field + r' = new HashSet<string>\([^)]*\)\s*\{(.*?)\};', source, re.S)
+        if body is None:
+            raise AssertionError('ToolTaxonomy.' + field + ' not found')
+        return {name.lower() for name in re.findall(r'"([^"]+)"', body.group(1))}
+    without_tia, session_readers = names('WithoutTia'), names('SessionReaders')
+    def lane(tool):
+        name = tool.lower()
+        if name in TARGET_DISPATCHERS:
+            return None
+        return 'openness' if name not in without_tia or name in session_readers else 'local'
+    return lane
 spec = importlib.util.spec_from_file_location('resource_discovery', Path(__file__).with_name('Test-ResourceDiscovery.py'))
 resources = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(resources)
@@ -220,10 +241,15 @@ def run_profile(args, transport, profile, run_dir):
         sample = process_sample(owned[0])
         require(sample['privateBytes'] < args.max_private_mib * 1024 * 1024, 'Host exceeded private memory bound')
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
-        require(max(s['handleCount'] for s in samples) - samples[0]['handleCount'] <= args.max_handle_growth, 'Sampled handles exceeded growth bound')
+        # Concurrent HTTP dispatch (P6-58) grows the thread pool once when the first concurrent batch starts
+        # (+60..95 handles, then flat over 120 rounds); leak detection starts from the round-10 sample.
+        def handle_growth(series):
+            baseline = series[1] if len(series) > 2 else series[0]
+            return max(s['handleCount'] for s in series) - baseline['handleCount']
+        require(handle_growth(samples) <= args.max_handle_growth, 'Sampled handles exceeded growth bound')
         if worker_samples:
             require(max(s['privateBytes'] for s in worker_samples) < args.max_private_mib * 1024 * 1024, 'Worker exceeded private memory bound')
-            require(max(s['handleCount'] for s in worker_samples) - worker_samples[0]['handleCount'] <= args.max_handle_growth, 'Worker handles exceeded growth bound')
+            require(handle_growth(worker_samples) <= args.max_handle_growth, 'Worker handles exceeded growth bound')
     # The context shuts down only this owned test host. It never stops a TIA process.
     rows = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
     # Call-projection rows (Workbench call panel) are written at the transport boundary, outside the serialized gate.
@@ -237,25 +263,41 @@ def run_profile(args, transport, profile, run_dir):
     require(all(phases[0] == 'BEFORE' and phases[-1] in ('RETURNED', 'INTERRUPTED') and len(phases) == 2
                 for phases in projection_phases.values()), 'Every call projection pairs one BEFORE with one terminal row')
     outstanding = Counter()
-    stacks = {}
+    active = {}
     forwarded, executed = set(), set()
-    max_nesting = 0
+    max_nesting = max_local = max_openness = 0
+    lane_of = openness_lane_classifier()
     for process_log, row in entries:
         require(not row['tool'].startswith('native:'), 'A native stage was entered during a local-only soak')
         worker_dispatch = row['tool'].startswith('worker:')
-        # Host controls intentionally remain independent of the blocked worker queue.
-        # Each process's tool gate and the host dispatch gate must serialize separately.
-        stack = stacks.setdefault((process_log, worker_dispatch), [])
+        tool = row['tool'][7:] if worker_dispatch else row['tool']
+        # Host controls intentionally remain independent of the blocked worker queue, so each process's tool
+        # dispatch and the host's worker dispatch are checked separately. P6-58 lanes: Openness-lane tools never
+        # overlap within one process (the soak has one TIA session per host); local tools run concurrently up to
+        # the local lane bound; target dispatchers (CallTool, batches) take their targets' lanes. The isolation
+        # parent forwards up to WORKER_PIPE_BOUND requests (the child asks for approval before its exclusive
+        # portal lane), so its worker: rows are bounded, and the child's own journal must show no overlap.
+        lanes = active.setdefault((process_log, worker_dispatch), {'openness': Counter(), 'local': Counter(), None: Counter()})
+        # Journal labels are method names: a V4 implementation row (e.g. GetOpennessCompatibilityV4) nests
+        # inside its tool's row with the same id. Lanes are held per call id.
+        lane = lane_of(re.sub('V4$', '', tool))
         key = (process_log, row['id'], row['tool'])
         if row['phase'] == 'BEFORE':
-            require(not stack or len(stack) == 1 and stack[0][2] == 'CallTool', 'Concurrent top-level tool invocations entered the serialized gate')
-            stack.append(key)
-            max_nesting = max(max_nesting, len(stack))
+            require(lane != 'openness' or worker_dispatch or not any(count and other[1] != row['id'] for other, count in lanes['openness'].items()),
+                    'Openness-lane tool invocations overlapped')
+            lanes[lane][key] += 1
+            local = len({other[1] for other, count in lanes['local'].items() if count})
+            opened = len({other[1] for other, count in lanes['openness'].items() if count})
+            require(local <= LOCAL_LANE_BOUND, 'Local tool invocations exceeded the local lane bound')
+            require(opened <= WORKER_PIPE_BOUND, 'Forwarded worker requests exceeded the supervisor bound')
+            max_local, max_openness = max(max_local, local), max(max_openness, opened)
+            max_nesting = max(max_nesting, sum(sum(keys.values()) for keys in lanes.values()))
             outstanding[key] += 1
-            (forwarded if worker_dispatch else executed).add((row['id'], row['tool'][7:] if worker_dispatch else row['tool']))
+            (forwarded if worker_dispatch else executed).add((row['id'], tool))
         else:
             require(row['phase'] in ('RETURNED', 'THREW') and outstanding[key] > 0, 'Uncorrelated journal completion')
-            require(stack and stack.pop() == key, 'Tool invocations overlapped or completed out of order')
+            require(lanes[lane][key] > 0, 'Tool invocation completed outside its lane')
+            lanes[lane][key] -= 1
             outstanding[key] -= 1
     require(not any(outstanding.values()), 'Incomplete invocation after all responses returned')
     if args.isolate_openness:
@@ -270,7 +312,7 @@ def run_profile(args, transport, profile, run_dir):
         'latencyMilliseconds': {'median': round(statistics.median(latencies) * 1000, 3),
             'p95': round(ordered[math.ceil(len(ordered) * .95) - 1] * 1000, 3), 'max': round(max(latencies) * 1000, 3)},
         'processSamples': samples, 'journalEntries': len(entries), 'unmatchedJournalEntries': 0,
-        'maxInvocationNesting': max_nesting,
+        'maxInvocationNesting': max_nesting, 'maxConcurrentLocal': max_local, 'maxConcurrentOpenness': max_openness,
         'unexpectedExits': 0, 'unexpectedFailures': 0, 'tiaConnected': False}
 
 
