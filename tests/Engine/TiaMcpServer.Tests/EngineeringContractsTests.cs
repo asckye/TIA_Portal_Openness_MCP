@@ -403,7 +403,8 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ExportTechnologyObject(
             string softwarePath,
             string toName,
-            string exportPath) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true } }; }
+            string exportPath,
+            bool dryRun = false) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true, ["executed"] = !dryRun } }; }
         public ResponseImportBatch ExportTechnologyObjectsToDirectory(
             string softwarePath,
             string exportDir,

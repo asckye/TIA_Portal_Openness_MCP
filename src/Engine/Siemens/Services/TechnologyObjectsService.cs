@@ -208,7 +208,7 @@ namespace TiaMcpServer.Siemens.Services
             return result;
         }
 
-        public ResponseMessage ExportTechnologyObject(string softwarePath, string toName, string exportPath)
+        public ResponseMessage ExportTechnologyObject(string softwarePath, string toName, string exportPath, bool dryRun = false)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
             var plc = _session.GetPlcSoftware(softwarePath);
@@ -222,6 +222,9 @@ namespace TiaMcpServer.Siemens.Services
 
                 TiaOpenness.Shared.NativeExportPolicy.RequireApply(to.IsConsistent ? "planned" : "inconsistent");
                 exportPath = TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath);
+                if (to.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Know-how protected technology objects are outside this export scope.", "export-plan", false);
+                if (dryRun) return new ResponseMessage { Message = "Technology-object export preview completed.",
+                    Meta = ResponseMeta.Unstamped(true, ("exportPath", exportPath), ("toName", toName), ("executed", false)) };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 _session.TryExportEngineeringObject(to, exportPath, out var err);
                 if (err != null)

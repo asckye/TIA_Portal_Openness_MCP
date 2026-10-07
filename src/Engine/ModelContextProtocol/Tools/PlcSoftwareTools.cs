@@ -74,7 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CompilePlcSoftware"), Description("[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returns basic success/failure. For structured error/warning details use CompilePlcDiagnostics instead. Must compile before ExportPlcBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "CompilePlcSoftware"), Description("[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returned compile errors use COMPILE_ERRORS with execution completed, native counts and the first ten errors with object paths; data retains full diagnostics. Must compile before export or batch overwrite if objects are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CompileSoftwareV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("password: the password to access adminsitration, default: no password")] string password = "")

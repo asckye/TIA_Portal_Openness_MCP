@@ -10,6 +10,7 @@ namespace TiaMcp.PlcFoundation
         public string Kind { get; internal set; } = "";
         public string GroupPath { get; internal set; } = "";
         public int? Number { get; internal set; }
+        public string BackupBlocker { get; internal set; } = "";
     }
     public sealed class PlcBatchImportItem
     {

@@ -29,7 +29,7 @@ namespace TiaMcp.PlcFoundation
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
             if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
-            return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
+            return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group,BackupBlocker=TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected)};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
         {
@@ -51,7 +51,7 @@ namespace TiaMcp.PlcFoundation
             foreach(var group in BatchGroupsBounded(BlockGroups(PlcNative.BlockGroup(software))))
                 foreach(var block in PlcNative.Blocks(group.Value)) yield return BatchBlock(block,group.Path);
             foreach(var group in BatchGroupsBounded(TypeGroups(PlcNative.TypeGroup(software))))
-                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path};
+                foreach(var type in PlcNative.Types(group.Value)) yield return new PlcBatchImportObject {Name=PlcNative.Name(type),Kind="UDT",GroupPath=group.Path,BackupBlocker=TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(type.IsConsistent)};
             foreach(var group in BatchGroupsBounded(TagGroups(software.TagTableGroup)))
                 foreach(var table in PlcNative.TagTables(group.Value)) yield return new PlcBatchImportObject {Name=table.Name,Kind="TagTable",GroupPath=group.Path};
         }

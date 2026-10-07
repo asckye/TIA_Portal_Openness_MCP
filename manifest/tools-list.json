@@ -1,19 +1,19 @@
 {
-  "package": "manifest/package-manifest.json",
-  "generatedAt": "2026-10-07T11:35:07.6524683+00:00",
+  "package": "D:\\Code\\TIA_wt\\P6-68\\manifest\\package-manifest.json",
+  "generatedAt": "2026-10-07T14:54:08.6085713+00:00",
   "source": "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
   "fileVersion": "3.3.0.0",
-  "exeSha256": "699a39b81b22864fa4d3ae1c65fc3ee82188b788969fa6665f372c4efebfa933",
+  "exeSha256": "251f34b3db30575999f41303931e61b98d4b4d2c2601b5600c29acc4520a7ffe",
   "toolCount": 491,
   "note": "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2370,
+    "parameters": 2371,
     "parametersUndocumented": 856,
     "parametersFromVocabulary": 718,
     "toolsWithUndocumentedParameters": 196,
     "toolsWithEnumHints": 146,
     "enumHints": 228,
-    "defaultHints": 1280,
+    "defaultHints": 1281,
     "examplesCurated": 87,
     "recipes": 17
   },
@@ -2142,7 +2142,7 @@
       "method": "ListStagedImportFiles",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L1][PLC-Software][READ] List retained staged import batches in this MCP session, including absolute TIA-machine paths and SHA-256. No TIA calls or file writes.",
+      "description": "[L1][PLC-Software][READ] List every retained batch under bundle staging, including sessionId, batchId, createdUtc, files, bytes and currentSession. Missing/invalid manifests are identified=false and cannot be cleaned. Includes absolute TIA-machine paths and SHA-256. No TIA calls or file writes.",
       "example": null
     },
     {
@@ -6691,7 +6691,7 @@
         "softwarePath",
         "password"
       ],
-      "description": "[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returns basic success/failure. For structured error/warning details use CompilePlcDiagnostics instead. Must compile before ExportPlcBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L1][PLC-Software] Compile all blocks in the PLC software. Requires: ConnectPortal + OpenProject. Returned compile errors use COMPILE_ERRORS with execution completed, native counts and the first ten errors with object paths; data retains full diagnostics. Must compile before export or batch overwrite if objects are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
@@ -6908,7 +6908,7 @@
         "batchId",
         "dryRun"
       ],
-      "description": "[L1][PLC-Software][FILE] Delete one server-owned staged batch selected by batchId from this session's list. Preview by default; dryRun=false requires Workbench approval when enabled. No caller filesystem path or recursive deletion. Import recovery exports are separate and retained.",
+      "description": "[L1][PLC-Software][FILE] Delete staging-owned leaves of an identified batchId from ListStagedImportFiles, including earlier sessions. Unknown entries are listed by preview and retained on apply with folderRetained=true and a warning. Preview by default; dryRun=false requires Workbench approval when enabled. No caller filesystem path or recursive deletion. Import recovery exports are separate and retained.",
       "example": null
     },
     {
@@ -8441,9 +8441,10 @@
       "parameters": [
         "softwarePath",
         "toName",
-        "exportPath"
+        "exportPath",
+        "dryRun"
       ],
-      "description": "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject] Export a single Technology Object (axis, cam, measuring input, etc.) to an XML file. The XML can be inspected, modified offline, and re-imported with ImportTechnologyObject. Use ListTechnologyObjects first to confirm the exact TO name. Current native policy; V4 safety behavior is not yet accepted.",
+      "description": "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject] Export a single Technology Object (axis, cam, measuring input, etc.) to an XML file. The XML can be inspected, modified offline, and re-imported with ImportTechnologyObject. Use ListTechnologyObjects first to confirm the exact TO name. Preview by default; inconsistent objects are refused in preview and apply. Compile first. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {

@@ -1412,7 +1412,7 @@
           "batchId": {
             "type": "string",
             "default": null,
-            "description": "Exact batchId from ListStagedImportFiles in this session."
+            "description": "Exact identified batchId from ListStagedImportFiles, including earlier sessions."
           },
           "dryRun": {
             "type": "bool",
@@ -4939,12 +4939,19 @@
             "type": "string",
             "default": null,
             "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'"
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview consistency and destination before export; false executes.",
+            "value": true
           }
         },
         "arguments": {
           "softwarePath": "PLC_1",
           "toName": "Axis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
+          "dryRun": true
         },
         "renamedFrom": [],
         "typedParameters": {}
@@ -20602,7 +20609,7 @@
           "batchId": {
             "type": "string",
             "default": null,
-            "description": "Exact batchId from ListStagedImportFiles in this session."
+            "description": "Exact identified batchId from ListStagedImportFiles, including earlier sessions."
           },
           "dryRun": {
             "type": "bool",
@@ -24129,12 +24136,19 @@
             "type": "string",
             "default": null,
             "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'"
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview consistency and destination before export; false executes.",
+            "value": true
           }
         },
         "arguments": {
           "softwarePath": "PLC_1",
           "toName": "Axis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
+          "dryRun": true
         },
         "renamedFrom": [],
         "typedParameters": {}

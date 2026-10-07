@@ -11,6 +11,52 @@ namespace TiaMcpServer.Tests
 {
     public sealed class V4EnvelopeTests
     {
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Returned_compile_errors_are_completed_and_preserve_diagnostic_coverage(bool incomplete)
+        {
+            var response = new System.Text.Json.Nodes.JsonObject { ["state"] = "Error", ["errorCount"] = 6, ["warningCount"] = 0,
+                ["errors"] = new System.Text.Json.Nodes.JsonArray("State=Error; Path=ASIS (DB1); Description=Drive telegram address missing."),
+                ["meta"] = new System.Text.Json.Nodes.JsonObject { ["incomplete"] = incomplete } };
+            var result = TiaMcpServer.ModelContextProtocol.PlcToolContract.Map("CompilePlcSoftware", response, true, true);
+            var body = result.StructuredContent!;
+            Assert.True(result.IsError);
+            Assert.Equal("COMPILE_ERRORS", (string?)body["error"]?["code"]);
+            Assert.Equal("completed", (string?)body["meta"]?["execution"]);
+            Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+            Assert.Equal(incomplete ? "partial" : "complete", (string?)body["meta"]?["completeness"]);
+            Assert.Equal(6, (int?)body["error"]?["details"]?["errorCount"]);
+            Assert.Equal("ASIS (DB1)", (string?)body["error"]?["details"]?["errors"]?[0]?["path"]);
+            Assert.Equal(response["errors"]!.ToJsonString(), body["data"]!["errors"]!.ToJsonString());
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Compile_errors_retain_leaf_paths_counts_and_bounded_details(bool flat)
+        {
+            var leaves = new System.Text.Json.Nodes.JsonArray();
+            for (int i = 0; i < 12; i++) leaves.Add(new System.Text.Json.Nodes.JsonObject {
+                ["State"] = "Error", ["Description"] = "Drive telegram address missing.", ["Path"] = "",
+                ["treePath"] = "messages/0/messages/" + i, ["parentPath"] = "messages/0/messages" });
+            var parent = new System.Text.Json.Nodes.JsonObject { ["State"] = "Error", ["Description"] = "Compilation summary",
+                ["Path"] = "ASIS (DB1)", ["treePath"] = "messages/0", ["parentPath"] = "messages" };
+            var nodes = new System.Text.Json.Nodes.JsonArray(parent);
+            if (flat) foreach (var leaf in leaves) nodes.Add(leaf!.DeepClone());
+            else parent["Messages"] = leaves;
+            var data = new System.Text.Json.Nodes.JsonObject { ["state"] = "Error", ["errorCount"] = 12, ["warningCount"] = 2, ["diagnosticMessages"] = nodes };
+            var error = CompileResultMapping.Errors(data)!;
+            var details = Assert.IsType<CompileErrorsDetails>(error.Details);
+            Assert.Equal(12, details.ErrorCount); Assert.Equal(2, details.WarningCount);
+            Assert.Equal(10, details.Errors.Count);
+            Assert.All(details.Errors, message => Assert.Equal("ASIS (DB1)", message.Path));
+            Assert.Contains("first: ASIS (DB1): Drive telegram address missing.", error.Message);
+            Assert.DoesNotContain("summary", error.Message);
+            Assert.Equal(flat ? 13 : 1, nodes.Count);
+            Assert.Equal("COMPILE_ERRORS", Json(V4Json.Serialize(error)).GetProperty("code").GetString());
+        }
+
         private const string Hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         private static readonly DateTimeOffset Stamp = new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero);
         private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
@@ -66,6 +112,7 @@ namespace TiaMcpServer.Tests
                 (new ResourceUnavailableDetails("SDK"), """{"code":"RESOURCE_UNAVAILABLE","message":"Failure.","details":{"resource":"SDK"}}"""),
                 (new IoFailedDetails("read", "input.xml"), """{"code":"IO_FAILED","message":"Failure.","details":{"operation":"read","path":"input.xml"}}"""),
                 (new NativeOperationFailedDetails("E1", "Native failure", Evidence()), """{"code":"NATIVE_OPERATION_FAILED","message":"Failure.","details":{"nativeCode":"E1","nativeMessage":"Native failure","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}}}}"""),
+                (new CompileErrorsDetails(6, 0, new[] { new CompileErrorMessage("ASIS (DB1)", "Drive telegram address missing.") }), """{"code":"COMPILE_ERRORS","message":"Failure.","details":{"errorCount":6,"warningCount":0,"errors":[{"path":"ASIS (DB1)","description":"Drive telegram address missing."}]}}"""),
                 (new CancelledDetails("before dispatch"), """{"code":"CANCELLED","message":"Failure.","details":{"stage":"before dispatch"}}"""),
                 (new TimeoutDetails("read"), """{"code":"TIMEOUT","message":"Failure.","details":{"stage":"read"}}"""),
                 (new NotExecutedDetails(0), """{"code":"NOT_EXECUTED","message":"Failure.","details":{"causeIndex":0}}"""),
@@ -434,9 +481,9 @@ namespace TiaMcpServer.Tests
                 || reference.Name.StartsWith("ModelContextProtocol", StringComparison.OrdinalIgnoreCase));
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
-            Assert.Equal(25, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(9, Enum.GetValues<WarningCode>().Length);
-            Assert.Equal(25, types.Count(t => t.BaseType == typeof(ErrorDetails)));
+            Assert.Equal(26, Enum.GetValues<ErrorCode>().Length);
+            Assert.Equal(10, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(26, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 
         private static void InCulture(string culture, Action action)

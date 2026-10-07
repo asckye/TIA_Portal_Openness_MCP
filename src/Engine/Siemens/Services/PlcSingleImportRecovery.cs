@@ -45,8 +45,13 @@ namespace TiaMcpServer.Siemens.Services
                 var software = session.ExactPlcForEngineering(softwarePath, true);
                 void Check() { session.VerifyBinding(tool); if (!object.Equals(software, session.ExactPlcForEngineering(softwarePath, true))) throw new AdapterPreconditionException("PLC binding changed.", "softwarePath", false); }
                 var adapter = new PlcImportAdapter(McpServer.ReleaseKey, () => throw new NotSupportedException(), () => software, Check, true);
-                var targets = adapter.ReadRecoveryTargets(kind, groupPath, names).ToArray();
-                var saved = TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(targets.Select(target => (Action<FileInfo>)(file => { Check(); adapter.ExportRecovery(target, file); })),
+                IEnumerable<TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget> Backups()
+                {
+                    foreach (var target in adapter.ReadRecoveryTargets(kind, groupPath, names))
+                        yield return new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget { Object = target.GroupPath + "/" + target.Name,
+                            Blocker = adapter.RecoveryBlocker(target), Export = file => { Check(); adapter.ExportRecovery(target, file); } };
+                }
+                var saved = TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(Backups(),
                     PlcBatchImportRunner.SingleImportRecoveryDirectory, TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
                 recovery = saved.Directory; warning = saved.Warning;
                 foreach (var file in saved.Files) files[file.Key] = file.Value;
@@ -64,8 +69,8 @@ namespace TiaMcpServer.Siemens.Services
             var body = McpServer.ResultBody(result)!.DeepClone().AsObject();
             if (body["data"] == null) body["data"] = new JsonObject();
             body["data"]!["recoveryDirectory"] = directory; body["data"]!["recoveryFiles"] = files.DeepClone();
-            body["data"]!["recoveryStatus"] = warning != null ? "unavailable-import-without-backup" : (string?)body["error"]?["code"] == "PRECONDITION_FAILED" ? "backup-failed-before-import" : "backup-ready";
-            if (warning != null) body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "NATIVE_WARNING", ["message"] = warning, ["details"] = new JsonObject() });
+            body["data"]!["recoveryStatus"] = warning != null ? "backup-skipped" : (string?)body["error"]?["code"] == "PRECONDITION_FAILED" ? "backup-failed-before-import" : "backup-ready";
+            if (warning != null) body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "BACKUP_SKIPPED", ["message"] = warning, ["details"] = new JsonObject() });
             if ((string?)body["error"]?["code"] is "OUTCOME_UNKNOWN" or "NATIVE_OPERATION_FAILED" && body["error"]?["details"] is JsonObject details)
             {
                 if (details["evidence"] == null) details["evidence"] = new JsonObject();

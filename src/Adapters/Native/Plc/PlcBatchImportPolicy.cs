@@ -182,15 +182,16 @@ namespace TiaMcp.PlcFoundation
                     var replaced=collisions.SingleOrDefault();
                     string NumberSpace(string kind)=>kind=="GlobalDB" || kind=="InstanceDB" ? "DB" : kind;
                     if(planned.Number.HasValue && inventory.Where(x=>x!=replaced).Concat(items.Select(x=>x.Planned)).Any(x=>NumberSpace(x.Kind)==NumberSpace(planned.Kind) && x.Number==planned.Number)) throw new AdapterPreconditionException("Fixed number collision within block-kind namespace.",request.InputParameter);
-                    items.Add(new PlcBatchImportItem {RelativePath=path,InputSha256=Hash(bytes),Planned=planned,Action=replaced==null ? "create" : "replace",Replaced=replaced,RecognizedDependencies=dependencies.Select(x=>x.Kind+":"+x.Name).ToArray()});
+                    items.Add(new PlcBatchImportItem {RelativePath=path,InputSha256=Hash(bytes),Planned=planned,Action=replaced==null ? "create" : replaced.BackupBlocker=="" ? "replace" : "replace-blocked: "+replaced.BackupBlocker,Status=replaced?.BackupBlocker.Length>0 ? "replace-blocked" : "planned",Failure=replaced?.BackupBlocker ?? "",Replaced=replaced,RecognizedDependencies=dependencies.Select(x=>x.Kind+":"+x.Name).ToArray()});
                 }
                     return true;
                 });
                 result.Items=items.ToArray();
                 var canonical=string.Concat(new[]{"batch-import-v1",request.Release,request.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),request.Project,request.Software,root,request.BlockGroup,request.TypeGroup,request.TagGroup,request.Program.ToString(),request.Regex,request.Overwrite ? "Override" : "None","stop-on-first-failure"}.Select(Field));
                 canonical+=string.Concat(inventory.Select(Identity).OrderBy(x=>x,StringComparer.Ordinal).Select(Field));
-                canonical+=string.Concat(items.Select(x=>Field(x.RelativePath)+Field(x.InputSha256)+Field(Identity(x.Planned))+(request.Overwrite ? Field(x.Action)+Field(x.Replaced==null ? "" : Identity(x.Replaced)) : "")));
+                canonical+=string.Concat(items.Select(x=>Field(x.RelativePath)+Field(x.InputSha256)+Field(Identity(x.Planned))+(request.Overwrite ? Field(x.Action)+Field(x.Replaced==null ? "" : Identity(x.Replaced))+Field(x.Replaced?.BackupBlocker ?? "") : "")));
                 result.PlanHash=Hash(Encoding.UTF8.GetBytes(canonical));
+                if(items.Any(x=>x.Status=="replace-blocked")) { result.Executed=false; return result; }
                 if(items.Any(x=>x.Action=="replace")) recoveryPrecheck?.Invoke();
                 if(request.DryRun) return result;
                 if(!string.Equals(result.PlanHash,request.ExpectedHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Plan changed; preview and review the full manifest again.","expectedPlanHash");

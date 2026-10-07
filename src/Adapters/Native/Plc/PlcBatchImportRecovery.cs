@@ -50,7 +50,7 @@ namespace TiaMcp.PlcFoundation
             foreach(var group in new[]{request.BlockGroup,request.TypeGroup,request.TagGroup}) PlcExchangePolicy.ObjectPath(group,true);
             var adapter=new PlcImportAdapter(request.Release,()=>throw new NotSupportedException(),()=>software,recheck,true);
             var inventory=adapter.ReadBatchInventory().Where(x=>!x.Kind.StartsWith("group-",StringComparison.Ordinal)).ToArray();
-            PlcBatchImportObject Map(PlcImportObject item)=>new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number};
+            PlcBatchImportObject Map(PlcImportObject item)=>new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number,BackupBlocker=adapter.RecoveryBlocker(item)};
             PlcImportInput Input(FileInfo file,PlcBatchImportObject item)=>new PlcImportInput {Path=file.FullName,Target=new PlcImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number}};
             foreach(var target in new[]{new PlcImportObject {Kind="FC",GroupPath=request.BlockGroup},new PlcImportObject {Kind="UDT",GroupPath=request.TypeGroup},new PlcImportObject {Kind="TagTable",GroupPath=request.TagGroup}})
                 if((request.Program || target.Kind=="FC") && adapter.TargetGroupIdentity(target)=="") throw new AdapterPreconditionException("Exact destination group is unavailable.","groupPath");

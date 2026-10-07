@@ -42,23 +42,19 @@ internal static class SpecialExportTests
                 check(technology.Status=="planned","Manual-backed TO release plans without native export: "+release);
                 SpecialExportContract.Validate(Wire(technology),true);
             }
-            var badWatch=Run(true,consistent:false);
-            check(badWatch.Status=="inconsistent","Inconsistent watch-table preview explicitly rejected for apply");
-            Refuse(()=>Run(false,badWatch.PlanHash,consistent:false),"Watch consistency gates native export");
+            Refuse(()=>Run(true,consistent:false),"Inconsistent watch-table preview refuses before export");
+            Refuse(()=>Run(false,preview.PlanHash,consistent:false),"Watch consistency gates native export");
             var oldWatch=Run(true,release:"15.1");
             Refuse(()=>Run(false,oldWatch.PlanHash,release:"15.1"),"Watch15.1 signature presence does not bypass missing manual semantics");
             Refuse(()=>Run(true,release:"14sp1"),"Known absent V14 SP1 watch API refused");
-            var inconsistent=Run(true,kind:"technology-object",consistent:false);
-            Refuse(()=>Run(false,inconsistent.PlanHash,kind:"technology-object",consistent:false),"Inconsistent technology object cannot export");
+            Refuse(()=>Run(true,kind:"technology-object",consistent:false),"Inconsistent technology-object preview refuses before approval");
+            Refuse(()=>Run(false,preview.PlanHash,kind:"technology-object",consistent:false),"Inconsistent technology object cannot export");
             check(exports==0 && offline==0,"Rejected special export plans reach no native callbacks");
             var executed=Run(false,preview.PlanHash,publisher:(_,_)=>null);
             check(executed.Status=="exported" && offline==1 && !executed.RequiresSessionReset,"Special export gates exact offline target before publication");
             var failed=Run(false,preview.PlanHash,publisher:(_,_)=>{var error=new IOException("private native text"); error.Data["stagedFile"]="retained.xml"; error.Data["secret"]="hidden"; throw error;});
             check(failed.Status=="failed" && failed.RequiresSessionReset && failed.Evidence.Count==1,"Unknown export outcome requires fail-stop and preserves only allowlisted evidence");
             SpecialExportContract.Validate(Wire(failed),false);
-            var blockedWire=TiaMcp.LegacyHost.FoundationV4Result.Worker("16",FoundationTools.Definitions.Single(x=>x.Name=="ExportTechnologyObject"),"blocked-preview",
-                new JsonObject { ["dryRun"]=true },Wire(inconsistent),Wire(inconsistent)).StructuredContent!;
-            check((bool?)blockedWire["data"]?["applyBlocked"]==true && !string.IsNullOrEmpty((string?)blockedWire["data"]?["applyBlockedReason"]),"Actual special export preview discloses why apply is blocked");
             var classification=WorkerFailurePolicy.Classify(new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Blocked policy","export-plan",false),true,false);
             check(classification.Outcome==TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,"Typed worker export policy refusal never becomes unknown");
             var request=new JsonObject { ["dryRun"]=false,["softwarePath"]="devices/Station/PLC",["watchTableName"]="folder/WT",["exportPath"]=output,["expectedProjectFile"]="/project.ap17",["expectedPlanHash"]=preview.PlanHash };

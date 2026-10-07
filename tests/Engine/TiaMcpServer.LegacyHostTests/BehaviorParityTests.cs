@@ -23,6 +23,27 @@ public sealed class BehaviorParityTests
         {
             bool preview = (bool?)args["dryRun"] == true || operation == "ListTags";
             if (preview) Previews++; else Writes++;
+            if (scenario == "compile-errors")
+            {
+                var data = BehaviorParityCases.CompileData();
+                data["executed"] = !preview;
+                data["messages"] = data["errors"]!.DeepClone(); data["warnings"] = new JsonArray(); data["info"] = new JsonArray();
+                if (preview) { data["state"] = null; data["errorCount"] = null; data["warningCount"] = null; data["errors"] = new JsonArray(); data["messages"] = new JsonArray(); }
+                return Task.FromResult<JsonNode?>(new JsonObject(data.Select(p => new KeyValuePair<string, JsonNode?>(char.ToUpperInvariant(p.Key[0]) + p.Key.Substring(1), p.Value?.DeepClone()))));
+            }
+            if (scenario is "batch-inconsistent" or "batch-protected")
+            {
+                var data = BehaviorParityCases.BatchData(scenario);
+                // Foundation mapping accepts the worker's PascalCase transport fields.
+                JsonNode? Pascal(JsonNode? node) => node is JsonArray rows ? new JsonArray(rows.Select(Pascal).ToArray()) : node is JsonObject obj
+                    ? new JsonObject(obj.Select(p => new KeyValuePair<string, JsonNode?>(char.ToUpperInvariant(p.Key[0]) + p.Key.Substring(1), Pascal(p.Value)))) : node?.DeepClone();
+                return Task.FromResult(Pascal(data));
+            }
+            if (scenario.StartsWith("single-", StringComparison.Ordinal))
+            {
+                var data = BehaviorParityCases.SingleBackup(scenario, preview);
+                return Task.FromResult<JsonNode?>(new JsonObject(data.Select(p => new KeyValuePair<string, JsonNode?>(char.ToUpperInvariant(p.Key[0]) + p.Key.Substring(1), p.Value?.DeepClone()))));
+            }
             if (scenario == "batch-stale") return Task.FromResult(JsonSerializer.SerializeToNode(new PlcBatchImportResult { Executed = !preview, ProjectFile = "C:/fixture.ap19", SoftwarePath = "CPU/PLC_1", Release = "19", PlanHash = new string('a', 64),
                 Items = new[] { new PlcBatchImportItem { RelativePath = "A.xml", InputSha256 = new string('a',64), Planned = new PlcBatchImportObject { Name = "A", Kind = "FC", Number = 1 } } } }));
             if (Followup && operation == "ListTags") return Task.FromResult<JsonNode?>(new JsonArray());
@@ -42,7 +63,7 @@ public sealed class BehaviorParityTests
                 BehaviorParityCases.ExportAdmission(scenario);
                 if (scenario.StartsWith("blocked-export", StringComparison.Ordinal))
                 {
-                    if (!preview) NativeExportPolicy.RequireApply("inconsistent");
+                    NativeExportPolicy.RequireApply("inconsistent");
                     return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = false, ["Kind"] = "technology-object", ["Status"] = "inconsistent", ["PlanHash"] = new string('a',64) });
                 }
                 if (error != null) throw error;
@@ -83,10 +104,11 @@ public sealed class BehaviorParityTests
                 var store = new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); int approvals = 0;
                 try
                 {
-                    string source = scenario == "staging-cleanup" ? "CleanupStagedImportFiles" : "StageImportFiles";
+                    string source = BehaviorParityCases.StagingTool(scenario);
+                    var arguments = BehaviorParityCases.StagingArguments(scenario, store, bundle, release);
                     var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new Worker(scenario), store);
                     var tool = new FoundationV4Tool(inner, release, null, () => new(true, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "staging-refused" ? "denied" : null)); });
-                    var body = (await tool.InvokeAsync(Request(source, BehaviorParityCases.Arguments(scenario)))).StructuredContent!;
+                    var body = (await tool.InvokeAsync(Request(source, arguments))).StructuredContent!;
                     var row = BehaviorParityCases.Project(body);
                     Assert.Equal(code, (string?)row["code"]); Assert.Equal(outcome, (string?)row["outcome"]); Assert.Equal(execution, (string?)row["execution"]);
                     var stagedFoundation = new JsonObject { ["results"] = new JsonArray(row), ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 };
@@ -100,10 +122,13 @@ public sealed class BehaviorParityTests
                 () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "refused-approval" ? "denied" : null)); });
             async Task<JsonObject> Call(string source, JsonObject args)
             {
+                if (source == "CompileSoftware") { args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 var tool = Tool(source);
-                return BehaviorParityCases.Project((await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!);
+                var body = (await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!;
+                if (source == "CompileSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
+                return BehaviorParityCases.Project(body);
             }
-            var results = new JsonArray(await Call(scenario == "native-read" ? "ReadPlcTags"
+            var results = new JsonArray(await Call(scenario == "compile-errors" ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
                 : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
             if (scenario.StartsWith("blocked-export", StringComparison.Ordinal) || scenario == "typed-export-refusal")

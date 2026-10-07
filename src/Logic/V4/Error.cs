@@ -6,7 +6,7 @@ namespace TiaMcp.Logic.V4
 {
     public enum ErrorCode
     {
-        InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists, ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired, ResourceUnavailable, IoFailed, NativeOperationFailed, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown, InternalError
+        InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists, ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired, ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown, InternalError
     }
 
     public sealed class Error
@@ -272,6 +272,25 @@ namespace TiaMcp.Logic.V4
             NativeMessage = nativeMessage;
             Evidence = V4Validation.Object(evidence);
             V4Validation.Details(this);
+        }
+    }
+
+    public sealed class CompileErrorMessage
+    {
+        public string Path { get; }
+        public string Description { get; }
+        public CompileErrorMessage(string path, string description) { Path = path; Description = description; }
+    }
+    public sealed class CompileErrorsDetails : ErrorDetails
+    {
+        internal override ErrorCode Code => ErrorCode.CompileErrors;
+        public int ErrorCount { get; }
+        public int WarningCount { get; }
+        public IReadOnlyList<CompileErrorMessage> Errors { get; }
+        public CompileErrorsDetails(int errorCount, int warningCount, IReadOnlyList<CompileErrorMessage> errors)
+        {
+            V4Validation.Require(errorCount >= 0 && warningCount >= 0, "Compiler counts must be nonnegative.");
+            ErrorCount = errorCount; WarningCount = warningCount; Errors = V4Validation.List(errors);
         }
     }
 

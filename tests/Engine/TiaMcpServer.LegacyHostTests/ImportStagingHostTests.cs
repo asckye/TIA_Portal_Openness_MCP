@@ -29,10 +29,10 @@ public sealed class ImportStagingHostTests : IDisposable
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")]
     public void Unknown_single_import_retains_unavailable_backup_warning(string release)
     {
-        var failure = new WorkerOperationException("fixture", -32603, "unknown", JsonSerializer.Serialize(new { exceptionType = "IOException", recoveryStatus = "unavailable-import-without-backup", attemptedPath = "C:/bundle/data/recovery" }));
+        var failure = new WorkerOperationException("fixture", -32603, "unknown", JsonSerializer.Serialize(new { exceptionType = "IOException", recoveryStatus = "backup-skipped", attemptedPath = "C:/bundle/data/recovery" }));
         var result = FoundationV4Result.Failure(release, "ImportPlcBlock", "fixture", true, true, null, failure).StructuredContent!;
-        Assert.Equal("unavailable-import-without-backup", (string?)result["data"]!["evidence"]!["recoveryStatus"]);
-        Assert.Contains(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "NATIVE_WARNING");
+        Assert.Equal("backup-skipped", (string?)result["data"]!["evidence"]!["recoveryStatus"]);
+        Assert.Contains(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "BACKUP_SKIPPED");
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
         Assert.True((bool)result["meta"]!["requiresSessionReset"]!);
     }

@@ -199,6 +199,7 @@ namespace TiaMcp.Logic.V4
                 [ErrorCode.ResourceUnavailable] = typeof(ResourceUnavailableDetails),
                 [ErrorCode.IoFailed] = typeof(IoFailedDetails),
                 [ErrorCode.NativeOperationFailed] = typeof(NativeOperationFailedDetails),
+                [ErrorCode.CompileErrors] = typeof(CompileErrorsDetails),
                 [ErrorCode.Cancelled] = typeof(CancelledDetails),
                 [ErrorCode.Timeout] = typeof(TimeoutDetails),
                 [ErrorCode.NotExecuted] = typeof(NotExecutedDetails),

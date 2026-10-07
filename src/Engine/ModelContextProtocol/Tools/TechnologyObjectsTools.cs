@@ -78,12 +78,13 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject]" +
             " Export a single Technology Object (axis, cam, measuring input, etc.) to an XML file." +
             " The XML can be inspected, modified offline, and re-imported with ImportTechnologyObject." +
-            " Use ListTechnologyObjects first to confirm the exact TO name. Current native policy; V4 safety behavior is not yet accepted.")]
+            " Use ListTechnologyObjects first to confirm the exact TO name. Preview by default; inconsistent objects are refused in preview and apply. Compile first. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportTechnologyObjectV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("toName: exact name of the technology object, e.g. 'Axis_1'")] string toName,
-            [Description("exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'")] string exportPath)
-            => EngineeringToolContract.Run("ExportTechnologyObject", true, () => ExportTechnologyObject(softwarePath, toName, exportPath));
+            [Description("exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'")] string exportPath,
+            [Description("Preview consistency and destination before export; false executes.")] bool dryRun = true)
+            => EngineeringToolContract.Run("ExportTechnologyObject", !dryRun, () => _service.ExportTechnologyObject(softwarePath, toName, exportPath, dryRun));
 
         public ResponseMessage ExportTechnologyObject(
             string softwarePath,

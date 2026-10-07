@@ -92,6 +92,11 @@ namespace TiaMcpServer.ModelContextProtocol
             bool? success = evidence.ContainsKey("operationSuccess") ? Flag(evidence, "operationSuccess") : Flag(evidence, "success");
             if (response is ResponseJsonReport verdict) success = verdict.Ok ?? success;
             foreach (var pair in data) if (!evidence.ContainsKey(pair.Key)) evidence[pair.Key] = pair.Value?.DeepClone();
+            if (tool == "CompileDevice" && CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) is Error compileError)
+            {
+                data["evidence"] = evidence;
+                return Result(tool, data, compileError, Outcome.Failed, Execution.Completed, Incomplete(evidence) ? Completeness.Partial : Completeness.Complete, current);
+            }
 
             // The topology explicitly excludes grouped devices; an empty root list
             // is still an observed list, while an unbound project has no such list.

@@ -7848,12 +7848,12 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "8d552a6e23f9f8bd0f92b09f6cd33830f75114af2e2e374eddce1c2cd69ea064",
+      "descriptionSha256": "cdbbd8e52b22723fdd1a504f11867ed5d29704bc52679730a6981c132c1b1c18",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "batchId": {
-            "description": "Exact batchId from ListStagedImportFiles in this session.",
+            "description": "Exact identified batchId from ListStagedImportFiles, including earlier sessions.",
             "type": "string"
           },
           "dryRun": {
@@ -12192,7 +12192,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "4453a16187650981d20ef44aa74cd0791fc056bde97fe372b9e061949395322d",
+      "descriptionSha256": "e0a8a37bd07823d6014e3ac174b2cd90c6b29faf1657e504f39a640b32eab987",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15362,10 +15362,15 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "193b16ac32d766e00ade4004f519c2f495a5db0edcdc17ca4f232d82d0fb0039",
+      "descriptionSha256": "aaf32d58c80914935c8a8e1ce2e4af95ea5b1836782225d38a79fca2a0a43742",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "Preview consistency and destination before export; false executes.",
+            "type": "boolean"
+          },
           "exportPath": {
             "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\Axis_1.xml'",
             "type": "string"
@@ -21971,7 +21976,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "d69dc6a4cfd663099a893bb15341ae14d080e55a3844d3ab58933a002a44983f",
+      "descriptionSha256": "74b4ca42ae2efdf2fd1c4f418a95920b9476ad2e3b19c66ad8cefecc4db50a4a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},

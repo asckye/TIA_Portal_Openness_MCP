@@ -34,36 +34,46 @@ namespace TiaOpenness.Shared
         {
             internal string? Directory, Warning;
             internal readonly Dictionary<string, string> Files = new Dictionary<string, string>();
-            internal string Status => Warning != null ? "unavailable-import-without-backup" : Directory != null ? "backup-ready" : "not-needed";
+            internal string Status => Warning != null ? "backup-skipped" : Directory != null ? "backup-ready" : "not-needed";
         }
+        internal sealed class RecoveryTarget
+        {
+            internal string Object = "", Blocker = "";
+            internal Action<FileInfo> Export = _ => { };
+        }
+        internal static string ExportBlocker(bool consistent, bool protectedObject = false) =>
+            !consistent ? "inconsistent" : protectedObject ? "know-how-protected" : "";
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<Action<FileInfo>> backups, Func<string> directory, string attemptedPath)
+            => SingleImportRecovery(backups.Select((export, index) => new RecoveryTarget { Object = index.ToString(), Export = export }), directory, attemptedPath);
+        internal static RecoveryEvidence SingleImportRecovery(IEnumerable<RecoveryTarget> backups, Func<string> directory, string attemptedPath)
         {
             var result = new RecoveryEvidence();
-            var exports = backups.ToArray();
+            RecoveryTarget[] exports;
+            try { exports = backups.ToArray(); }
+            catch (Exception error) /* swallow(native-fallback): backup target inspection is best effort for single imports */
+            { result.Warning = "Backup skipped: target inspection failed (" + error.GetType().Name + ")."; return result; }
             if (exports.Length == 0) return result;
             try { result.Directory = directory(); }
-            catch (AdapterPreconditionException) /* swallow(native-fallback): no writable recovery location permits a single import with an explicit warning */
-            { result.Warning = "Imported without a recovery backup: no writable recovery location; attempted path: " + attemptedPath; return result; }
-            try
+            catch (Exception error) /* swallow(native-fallback): single import recovery is best effort; retain the location and reason */
+            { result.Warning = "Backup skipped for " + string.Join(", ", exports.Select(x => x.Object)) + ": recovery location unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath; return result; }
+            var skipped = new List<string>(); long total = 0;
+            for (int i = 0; i < exports.Length; i++)
             {
-                long total = 0;
-                for (int i = 0; i < exports.Length; i++)
+                var target = exports[i];
+                if (target.Blocker != "") { skipped.Add(target.Object + ": " + target.Blocker); continue; }
+                try
                 {
                     var file = new FileInfo(Path.Combine(result.Directory, i.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
-                    exports[i](file);
+                    target.Export(file);
                     using var saved = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
                     if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024) throw new IOException("Recovery export exceeds the admitted byte budget.");
                     using var sha = SHA256.Create(); result.Files[file.FullName] = BitConverter.ToString(sha.ComputeHash(saved)).Replace("-", "").ToLowerInvariant();
                 }
-                return result;
+                catch (Exception error) /* swallow(native-fallback): export refusal must not prevent a single overwrite import */
+                { skipped.Add(target.Object + ": export or validation refused (" + error.GetType().Name + ")"); }
             }
-            catch (Exception error) /* swallow(privacy): all backups precede import, so export/validation failures are typed refusals */
-            {
-                var refusal = new AdapterPreconditionException("Recovery export or validation failed before import.", "importPath", false, error);
-                refusal.Data["recoveryDirectory"] = result.Directory; refusal.Data["recoveryFiles"] = result.Files;
-                refusal.Data["recoveryStatus"] = "backup-failed-before-import";
-                throw refusal;
-            }
+            if (skipped.Count > 0) result.Warning = "Backup skipped for " + string.Join("; ", skipped) + ". Import proceeds without a complete recovery backup.";
+            return result;
         }
         internal static void RequireConsistent(string kind, IEnumerable<string> inconsistent, string parameter)
         {

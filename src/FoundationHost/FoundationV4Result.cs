@@ -74,9 +74,9 @@ internal static class FoundationV4Result
             var retained = JsonNode.Parse(worker.EvidenceJson);
             data ??= new JsonObject();
             data["evidence"] = retained;
-            if ((string?)retained?["recoveryStatus"] == "unavailable-import-without-backup")
+            if ((string?)retained?["recoveryStatus"] == "backup-skipped")
             {
-                data["recoveryStatus"] = "unavailable-import-without-backup";
+                data["recoveryStatus"] = "backup-skipped";
                 data["warnings"] = new JsonArray("No recovery backup was available for this import; inspect the attempted recovery location in data.evidence.");
             }
             exceptionType = (string?)retained?["exceptionType"];
@@ -128,7 +128,7 @@ internal static class FoundationV4Result
                 unknown |= childOutcome == Outcome.Unknown;
                 Error? childError = childOutcome == Outcome.Unknown ? Unknown()
                     : state == "not-attempted" ? new Error("Not executed after an earlier failure.", new NotExecutedDetails(causeIndex))
-                    : childOutcome != Outcome.Succeeded ? NativeFailure() : null;
+                    : childOutcome != Outcome.Succeeded ? NativeFailure(item) : null;
                 var child = EnvelopeFor(release, name, id, item, childOutcome, Execute(childOutcome, mutation),
                     childOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, childError, true, childOutcome == Outcome.Unknown);
                 mapped.Add(new JsonObject { ["index"] = mapped.Count, ["target"] = Text(item, "objectPath") ?? Text(item, "relativePath"), ["result"] = JsonNode.Parse(V4Json.Serialize(child)) });
@@ -143,7 +143,7 @@ internal static class FoundationV4Result
             && ((data["errorCount"]?.GetValue<int>() ?? 0) > 0 || Text(data, "state") == "Error" || data["errors"] is JsonArray { Count: > 0 }))
             outcome = Outcome.Failed;
         if (outcome == Outcome.Unknown) error = Unknown();
-        else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = NativeFailure();
+        else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping.Errors(data) ?? NativeFailure(data) : NativeFailure(data);
         // Preserve the void API's observations without inventing a native return value.
         if (definition.Operation == "GenerateBlocksFromExternalSource" && release == "14sp1")
         {
@@ -188,11 +188,12 @@ internal static class FoundationV4Result
         var success = !isError && (Flag(data, "success") ?? Flag(data, "ok") ?? Flag(data, "valid") ?? Flag(data["checks"] as JsonObject, "passed") ?? name == "GetToolUsage");
         return Wire(release, name, id, data, success ? Outcome.Succeeded : Outcome.ReadFailed, Execution.ReadOnly,
             name is "InitializeEnvironment" or "RunCapabilitySelfTest" ? Completeness.Partial : Completeness.Complete,
-            success ? null : NativeFailure(), false, false, candidate, paging);
+            success ? null : NativeFailure(data), false, false, candidate, paging);
     }
 
     private static Error Unknown() => new("The operation outcome is unknown; do not replay the request.", new OutcomeUnknownDetails("worker", Empty));
-    private static Error NativeFailure() => new("The operation did not complete successfully; see retained evidence.", new NativeOperationFailedDetails(null, null, Empty));
+    private static Error NativeFailure(JsonObject data) => new("The operation did not establish success; inspect the returned result.",
+        new NativeOperationFailedDetails(null, Text(data, "summary"), data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
     private static Execution Execute(Outcome outcome, bool mutation) => HostBehavior.ExecutionOf(outcome, mutation);
     private static bool? Flag(JsonObject? data, string key) => data?[key] is JsonValue v && v.TryGetValue<bool>(out var b) ? b : null;
     private static string? Text(JsonObject data, string key) => data[key] is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;
@@ -221,7 +222,9 @@ internal static class FoundationV4Result
         var warnings = new List<Warning>();
         if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
         if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
-        if (current && data?["warnings"] is JsonArray { Count: > 0 })
+        if ((string?)data?["recoveryStatus"] == "backup-skipped")
+            warnings.Add(new Warning(WarningCode.BackupSkipped, string.Join("; ", data?["warnings"]?.AsArray().Select(x => x?.ToString()) ?? Array.Empty<string>()), Empty));
+        else if (current && data?["warnings"] is JsonArray { Count: > 0 })
             warnings.Add(new Warning(WarningCode.NativeWarning, "Native diagnostics include warnings; see data.warnings.", Empty));
         if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
         return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,

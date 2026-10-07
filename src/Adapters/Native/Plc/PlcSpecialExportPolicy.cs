@@ -43,6 +43,7 @@ namespace TiaMcp.PlcFoundation
                 MethodEvidence="static-sdk-signature-verified",SemanticsEvidence=Documented(release,kind)?"official-manual-source-candidate":"unverified",
                 Status=!Documented(release,kind)?"semantics-unverified":!consistent?"inconsistent":"planned" };
             result.PlanHash=Hash(kind,release,project,software,path,destination.FullName,result.Scope,result.ExportOptions,result.MethodEvidence,result.SemanticsEvidence,result.Status);
+            if(!consistent) TiaOpenness.Shared.NativeExportPolicy.RequireApply("inconsistent");
             if(dryRun) return result;
             if(expectedPlanHash!=result.PlanHash) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Execution requires the exact plan hash from a fresh preview.");
             TiaOpenness.Shared.NativeExportPolicy.RequireApply(result.Status);

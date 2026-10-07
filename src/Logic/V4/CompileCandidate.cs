@@ -74,7 +74,7 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, error, partial ? Outcome.Partial : Outcome.Failed, partial ? Execution.Partial : Execution.Completed, attempt);
                 }
                 var d = attempt.Diagnostics ?? throw new InvalidOperationException("Missing compile diagnostics.");
-                if (!Good(d)) return Result(release, tool, id, data, new Error("Compilation reported errors or inconsistent root and leaf diagnostic counts.",
+                if (!Good(d)) return Result(release, tool, id, data, CompileResultMapping.Errors(new JsonObject { ["state"] = d.State, ["errorCount"] = d.RootErrorCount, ["warningCount"] = d.RootWarningCount, ["diagnosticMessages"] = JsonNode.Parse(V4Json.Serialize(d.Messages)) }) ?? new Error("Compilation finished with inconsistent root and leaf diagnostic counts.",
                     new NativeOperationFailedDetails(null, null, Evidence(attempt))), Outcome.Failed, Execution.Completed, attempt);
                 return Result(release, tool, id, data, null, Outcome.Succeeded, Execution.Completed, attempt);
             }

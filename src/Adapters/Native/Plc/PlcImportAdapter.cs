@@ -163,6 +163,12 @@ namespace TiaMcp.Adapters.Native.Plc
             if (imported.Length != 1) throw new InvalidDataException("Native import must return exactly one reviewed object.");
             return Describe(imported[0], group, input.Target.GroupPath);
         }
+        public string RecoveryBlocker(PlcImportObject item)
+        {
+            var value = objects[item.Id];
+            return value is PlcBlock block ? TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent, block.IsKnowHowProtected)
+                : value is PlcType type ? TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(type.IsConsistent) : "";
+        }
         public void ExportRecovery(PlcImportObject item, FileInfo file)
         {
             TiaMcp.PlcFoundation.PlcExportPublication.Publish(file, output =>

@@ -40,6 +40,25 @@ public sealed class BatchOverwriteTests : IDisposable
         Assert.Throws< TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => Run(Apply(preview)));
         Assert.Empty(calls);
     }
+    [Theory]
+    [InlineData(false, "inconsistent")][InlineData(true, "inconsistent")]
+    [InlineData(false, "know-how-protected")][InlineData(true, "know-how-protected")]
+    public void Replacement_blockers_are_planned_hashed_and_refused_before_backup(bool program, string blocker)
+    {
+        Inputs(("A", "FC", ""), ("B", "FC", "")); var request = Request(); request.Program = program;
+        var ready = Run(request); inventory[1].BackupBlocker = blocker;
+        var preview = Run(request); Assert.Empty(calls); Assert.NotEqual(ready.PlanHash, preview.PlanHash);
+        Assert.Equal("replace-blocked: " + blocker, preview.Items[1].Action);
+        BatchImportContract.Validate(Wire(preview), true);
+        var envelope = Envelope(preview); Assert.Equal(ErrorCode.PreconditionFailed, envelope.Error!.Code);
+        Assert.Equal(Execution.NotStarted, envelope.Meta.Execution); Assert.Contains("B", envelope.Error.Message);
+        Assert.Contains("CompilePlcSoftware", envelope.Error.Message);
+        var apply = Apply(preview); apply.Program = program;
+        var rejected = Run(apply); Assert.Empty(calls); Assert.False(rejected.Executed);
+        BatchImportContract.Validate(Wire(rejected), false); Assert.Equal(envelope.Error.Message, Envelope(rejected).Error!.Message);
+        inventory[1].BackupBlocker = "";
+        Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => Run(apply)); Assert.Empty(calls);
+    }
     [Fact]
     public void All_backups_precede_first_import_and_are_hashed()
     {

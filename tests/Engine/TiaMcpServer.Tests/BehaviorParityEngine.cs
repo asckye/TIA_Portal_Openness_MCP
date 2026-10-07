@@ -29,12 +29,19 @@ namespace TiaMcpServer.Tests
                 bool dryRun = true, bool confirm = false, string expectedProjectFile = "")
             {
                 if (dryRun) previews++; else writes++;
+                if (scenario.StartsWith("single-", StringComparison.Ordinal))
+                {
+                    var data = BehaviorParityCases.SingleBackup(scenario, dryRun);
+                    var body = McpServer.ResultBody(McpServer.V4Result("CreatePlcTag", data, completed: !dryRun))!.AsObject();
+                    if (!dryRun) body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "BACKUP_SKIPPED", ["message"] = data["warnings"]![0]!.ToString(), ["details"] = new JsonObject() });
+                    return new CallToolResult { IsError = false, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+                }
                 BehaviorParityCases.ExportAdmission(scenario);
                 if (scenario.StartsWith("blocked-export", StringComparison.Ordinal))
                 {
                     var data = new JsonObject { ["kind"] = "technology-object", ["status"] = "inconsistent", ["planHash"] = new string('a',64) };
                     TiaMcp.Logic.V4.HostBehavior.ExportPreview(data);
-                    if (!dryRun) NativeExportPolicy.RequireApply("inconsistent");
+                    NativeExportPolicy.RequireApply("inconsistent");
                     return McpServer.V4Result("CreatePlcTag", data);
                 }
                 if (scenario == "argument") throw new AdapterPreconditionException("Fixture argument refusal.", "name");
@@ -61,7 +68,20 @@ namespace TiaMcpServer.Tests
                 string[]? importOrder = null, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
             {
                 if (dryRun) previews++; else writes++;
+                if (scenario is "batch-inconsistent" or "batch-protected")
+                {
+                    var envelope = TiaMcp.Logic.V4.PlcBatchImportResultMapping.Result(BehaviorParityCases.BatchData(scenario), McpServer.ReleaseKey, "ImportPlcBlocksFromDirectory", "fixture", dryRun);
+                    var wire = TiaMcp.Logic.V4.McpResult.From(envelope);
+                    return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
+                }
                 return McpServer.V4Result("ImportPlcBlocksFromDirectory", new JsonObject { ["projectFile"] = "C:/fixture.ap19", ["planHash"] = new string('a', 64) });
+            }
+            [McpServerTool(Name = "CompilePlcSoftware"), ToolClassification("L1", "PLC-Software", "EXECUTE")]
+            public static CallToolResult Compile(string softwarePath, bool dryRun = true)
+            {
+                if (dryRun) { previews++; return McpServer.V4Result("CompilePlcSoftware", new JsonObject { ["executed"] = false }); }
+                writes++; var data = BehaviorParityCases.CompileData();
+                return PlcToolContract.Map("CompilePlcSoftware", data, true, true);
             }
             [McpServerTool(Name = "ListPlcTags"), ToolClassification("L1", "PLC-Software", "READ")]
             public static CallToolResult Read(string plc, string table)
@@ -90,7 +110,7 @@ namespace TiaMcpServer.Tests
                     scenario == "refused-approval" ? "denied" : null)); };
                 JsonNode Call(string tool, JsonObject args) => McpServer.ResultBody(McpServer.CallTool(tool,
                     new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
-                var results = new JsonArray(BehaviorParityCases.Project(Call(value == "native-read" ? "ListPlcTags"
+                var results = new JsonArray(BehaviorParityCases.Project(Call(value == "compile-errors" ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
                     : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
                 if (value.StartsWith("blocked-export", StringComparison.Ordinal) || value == "typed-export-refusal")
                 {
@@ -122,7 +142,8 @@ namespace TiaMcpServer.Tests
             {
                 new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
                 McpServer.ApprovalWaitOverrideForTests = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, value == "staging-refused" ? "denied" : null)); };
-                var body = McpServer.ResultBody(McpServer.CallTool(value == "staging-cleanup" ? "CleanupStagedImportFiles" : "StageImportFiles", new ToolArguments(JsonSerializer.SerializeToElement(BehaviorParityCases.Arguments(value)))))!;
+                var args = BehaviorParityCases.StagingArguments(value, store, bundle, McpServer.ReleaseKey);
+                var body = McpServer.ResultBody(McpServer.CallTool(BehaviorParityCases.StagingTool(value), new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
                 return new JsonObject { ["engineRelease"] = McpServer.ReleaseKey, ["results"] = new JsonArray(BehaviorParityCases.Project(body)),
                     ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 }.ToJsonString();
             }

@@ -170,18 +170,58 @@ namespace TiaMcpServer.Tests
             store.Cleanup((string)batch["batchId"]!, false); Assert.Empty(store.List()["batches"]!.AsArray());
         }
         [Fact]
-        public void Single_import_recovery_can_be_unavailable_and_backup_failures_are_typed_refusals()
+        public void Single_import_recovery_is_best_effort_and_identifies_skipped_objects()
         {
             Directory.CreateDirectory(bundle); int exports = 0;
             var missing = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] { _ => exports++ },
                 () => throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("No writable recovery location.", "overwrite", false), bundle);
-            Assert.Equal(0, exports); Assert.Equal("unavailable-import-without-backup", missing.Status); Assert.Contains(bundle, missing.Warning);
-            var failed = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
-                file => System.IO.File.WriteAllText(file.FullName,"<Document/>"), _ => throw new IOException("Export failed before import.") }, () => bundle, bundle));
-            Assert.False(failed.IsArgument); Assert.Equal(HostFailureKind.Precondition, HostFailurePolicy.Classify(failed, true, false));
-            Assert.Equal(bundle, failed.Data["recoveryDirectory"]); Assert.Single((System.Collections.Generic.Dictionary<string,string>)failed.Data["recoveryFiles"]!);
-            Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
-                file => System.IO.File.WriteAllText(file.FullName,new string('x',4194305)) }, () => bundle, bundle));
+            Assert.Equal(0, exports); Assert.Equal("backup-skipped", missing.Status); Assert.Contains(bundle, missing.Warning);
+            var failed = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
+                file => System.IO.File.WriteAllText(file.FullName,"<Document/>"), _ => throw new IOException("Export failed before import.") }, () => bundle, bundle);
+            Assert.Equal("backup-skipped", failed.Status); Assert.Single(failed.Files);
+            var inconsistent = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Uncompiled", Blocker = "inconsistent", Export = _ => exports++ } }, () => bundle, bundle);
+            Assert.Equal(0, exports); Assert.Contains("Group/Uncompiled: inconsistent", inconsistent.Warning);
+            var oversized = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
+                file => System.IO.File.WriteAllText(file.FullName,new string('x',4194305)) }, () => bundle, bundle);
+            Assert.Equal("backup-skipped", oversized.Status);
+        }
+        [Theory]
+        [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+        public void Reconnected_store_lists_and_cleans_old_batches_but_retains_unknown_content(string release)
+        {
+            var old = Store(release); var batch = old.Stage(new[] { File() }, false);
+            string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!;
+            System.IO.File.WriteAllText(Path.Combine(folder, "caller.xml"), "private export");
+            var connected = Store(release); var listed = Assert.Single(connected.List()["batches"]!.AsArray())!;
+            Assert.True((bool?)listed["identified"]); Assert.False((bool?)listed["currentSession"]);
+            Assert.Equal(batch["sessionId"]!.ToString(), listed["sessionId"]!.ToString());
+            var preview = connected.Cleanup(id); Assert.True((bool?)preview["folderRetained"]);
+            Assert.Equal("caller.xml", preview["unknownEntries"]![0]!.ToString());
+            Assert.True(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
+            var result = connected.Run("CleanupStagedImportFiles", batchId: id, dryRun: false);
+            Assert.True(result.Ok); Assert.Equal(TiaMcp.Logic.V4.Execution.Completed, result.Meta.Execution);
+            Assert.Single(result.Meta.Warnings); Assert.False(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
+            Assert.Equal("private export", System.IO.File.ReadAllText(Path.Combine(folder, "caller.xml")));
+            Assert.True((bool?)JsonNode.Parse(result.Data!.Value.GetRawText())!["folderRetained"]);
+            Assert.Empty(connected.List()["batches"]![0]!["files"]!.AsArray());
+            System.IO.File.Delete(Path.Combine(folder, "caller.xml")); connected.Cleanup(id, false);
+            Assert.False(Directory.Exists(folder)); Assert.Empty(old.List()["batches"]!.AsArray());
+        }
+        [Fact]
+        public void Missing_invalid_or_traversing_manifests_are_listed_but_never_deleted()
+        {
+            var store = Store(); var batch = store.Stage(new[] { File() }, false);
+            string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!;
+            string manifest = Path.Combine(folder, ".staging-batch.json");
+            var metadata = JsonNode.Parse(System.IO.File.ReadAllText(manifest))!;
+            metadata["files"]![0]!["fileName"] = "../outside.scl"; System.IO.File.WriteAllText(manifest, metadata.ToJsonString());
+            Assert.False((bool?)Assert.Single(store.List()["batches"]!.AsArray())!["identified"]);
+            Assert.Throws<ArgumentException>(() => store.Cleanup(id, false));
+            System.IO.File.Delete(manifest);
+            Assert.False((bool?)Assert.Single(Store().List()["batches"]!.AsArray())!["identified"]);
+            Assert.Throws<ArgumentException>(() => Store().Cleanup(id, false));
+            Assert.True(System.IO.File.Exists(Path.Combine(folder, "F.scl")));
         }
         [Fact]
         public void Existing_staging_directory_needs_no_add_file_right_on_bundle_root()

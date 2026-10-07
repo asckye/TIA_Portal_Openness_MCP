@@ -75,7 +75,8 @@ internal static class BatchImportContract
             if(planned && (string.IsNullOrWhiteSpace(Text(o,"Name")) || Text(o,"Kind") is not ("FC" or "FB" or "OB" or "GlobalDB" or "InstanceDB" or "UDT" or "TagTable"))) throw new InvalidDataException("Invalid native identity.");
             Text(o,"Name");Text(o,"Kind");Text(o,"GroupPath"); if(o["Number"]!=null && (o["Number"] is not JsonValue n || !n.TryGetValue<int>(out var number) || number<0)) throw new InvalidDataException("Invalid native number.");
         }
-        if(Flag(result,"Executed")==dryRun || string.IsNullOrWhiteSpace(Text(result,"ProjectFile")) || string.IsNullOrWhiteSpace(Text(result,"SoftwarePath")) || Text(result,"DependencyStatus")!="unverified-caller-order-required") throw new InvalidDataException("Conflicting batch identity/state.");
+        bool blocked = result["Items"] is JsonArray plan && plan.Any(x => (string?)x?["Status"] == "replace-blocked");
+        if((Flag(result,"Executed")==dryRun && !(blocked && !Flag(result,"Executed"))) || string.IsNullOrWhiteSpace(Text(result,"ProjectFile")) || string.IsNullOrWhiteSpace(Text(result,"SoftwarePath")) || Text(result,"DependencyStatus")!="unverified-caller-order-required") throw new InvalidDataException("Conflicting batch identity/state.");
         if(Text(result,"Release") is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21")) throw new InvalidDataException("Unknown release.");
         Flag(result,"Recursive");Hash(Text(result,"PlanHash"));
         if(result["Items"] is not JsonArray items || items.Count is <1 or >256) throw new InvalidDataException("Invalid batch item count.");
@@ -87,9 +88,9 @@ internal static class BatchImportContract
             if(item["Action"] is JsonValue action)
             {
                 string value=action.GetValue<string>();
-                if(value is not ("create" or "replace") || value=="replace" && item["Replaced"] is not JsonObject) throw new InvalidDataException("Invalid replacement action/evidence.");
+                if(value is not ("create" or "replace" or "replace-blocked: inconsistent" or "replace-blocked: know-how-protected") || value.StartsWith("replace",StringComparison.Ordinal) && item["Replaced"] is not JsonObject) throw new InvalidDataException("Invalid replacement action/evidence.");
                 if(item["Replaced"] is JsonObject replaced) Object(replaced);
-                if(value=="replace" && item["Replaced"] is JsonObject old)
+                if(value.StartsWith("replace",StringComparison.Ordinal) && item["Replaced"] is JsonObject old)
                     foreach(var key in new[]{"Name","Kind","GroupPath"}) if(Text(old,key)!=Text(planned,key)) throw new InvalidDataException("Replacement identity differs from the planned namespace target.");
                 if(item["RecoverySha256"] is JsonValue recoveryHash && recoveryHash.GetValue<string>()!="") Hash(recoveryHash.GetValue<string>());
                 if((string?)item["RestoreStatus"]=="restored" && (value!="replace" || (string?)item["RecoveryPath"]=="" || (string?)item["RecoverySha256"]=="")) throw new InvalidDataException("Restoration lacks backup evidence.");
@@ -103,7 +104,13 @@ internal static class BatchImportContract
             }
             Object(planned);Hash(Text(item,"InputSha256"));var status=Text(item,"Status");var attempted=Flag(item,"Attempted");var failure=Text(item,"Failure");
             foreach(var actual in returned) {if(actual==null && status=="failed" && attempted) continue;if(actual is not JsonObject obj) throw new InvalidDataException("Malformed returned identity.");Object(obj,status!="failed");}
-            if(dryRun) {if(status!="planned" || attempted || returned.Count!=0 || failure!="") throw new InvalidDataException("Preview mutated.");continue;}
+            if(dryRun || blocked)
+            {
+                if(attempted || returned.Count!=0 || status is not ("planned" or "replace-blocked")
+                    || status=="planned" && failure!="" || status=="replace-blocked" && (failure is not ("inconsistent" or "know-how-protected")
+                        || (string?)item["Action"]!="replace-blocked: "+failure || (string?)item["Replaced"]?["BackupBlocker"]!=failure)) throw new InvalidDataException("Blocked/preview plan mutated or has conflicting blockers.");
+                continue;
+            }
             if(status=="imported" || status=="rolled-back")
             {
                 if(failed || !attempted || returned.Count!=1 || failure!="") throw new InvalidDataException("Invalid import success sequence.");

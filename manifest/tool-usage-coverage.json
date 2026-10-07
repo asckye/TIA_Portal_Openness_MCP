@@ -1,13 +1,13 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "bafc9000e80724b53a291c19c039d42ff5ef68771925ced187db90d675ddfe04",
-  "uniqueTools": 496,
+  "catalogSha256": "5eec0a2db56f2d2f7e7a17071d3f5a8962cfb6d375305efb8e1374e561048342",
+  "uniqueTools": 499,
   "documents": 89,
-  "versionToolPairs": 1334,
+  "versionToolPairs": 1358,
   "offlineCallExecutions": 74,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 22,
+  "callSequences": 28,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 259,
-  "noDirectVendoredExampleMappings": 237,
+  "noDirectVendoredExampleMappings": 240,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 59,
-      "checkedToolCount": 59,
+      "registeredToolCount": 62,
+      "checkedToolCount": 62,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -137,6 +137,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -575,6 +582,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -637,19 +651,26 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         }
       ]
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 60,
-      "checkedToolCount": 60,
+      "registeredToolCount": 63,
+      "checkedToolCount": 63,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -732,6 +753,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1182,6 +1210,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1244,19 +1279,26 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         }
       ]
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 62,
-      "checkedToolCount": 62,
+      "registeredToolCount": 65,
+      "checkedToolCount": 65,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -1339,6 +1381,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1811,6 +1860,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1873,19 +1929,26 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         }
       ]
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 62,
-      "checkedToolCount": 62,
+      "registeredToolCount": 65,
+      "checkedToolCount": 65,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -1968,6 +2031,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -2440,6 +2510,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2502,19 +2579,26 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         }
       ]
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 62,
-      "checkedToolCount": 62,
+      "registeredToolCount": 65,
+      "checkedToolCount": 65,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -2597,6 +2681,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3069,6 +3160,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3132,18 +3230,25 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
           "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 64,
-      "checkedToolCount": 64,
+      "registeredToolCount": 67,
+      "checkedToolCount": 67,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -3226,6 +3331,13 @@
         },
         {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3711,6 +3823,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStagedImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3787,18 +3906,25 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
           "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 477,
-      "checkedToolCount": 477,
+      "registeredToolCount": 480,
+      "checkedToolCount": 480,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 493,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -4184,6 +4310,13 @@
         },
         {
           "toolName": "CheckProductUpdate",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -6740,6 +6873,13 @@
         },
         {
           "toolName": "ListSivarcRules",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -10610,6 +10750,13 @@
           "operations": []
         },
         {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SynchronizeLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10771,13 +10918,13 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 488,
-      "checkedToolCount": 488,
+      "registeredToolCount": 491,
+      "checkedToolCount": 491,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 545,
       "programmingExampleCount": 25,
-      "callSequenceCount": 22,
+      "callSequenceCount": 28,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -11163,6 +11310,13 @@
         },
         {
           "toolName": "CheckProductUpdate",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CleanupStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -13739,6 +13893,13 @@
         },
         {
           "toolName": "ListSivarcRules",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListStagedImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -17961,6 +18122,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {

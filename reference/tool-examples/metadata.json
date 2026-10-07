@@ -281,6 +281,20 @@
         },
         {
           "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
             "errorCount": 2,
             "errors": [
               "<nested error diagnostic>"
@@ -313,15 +327,29 @@
         },
         {
           "example": {
-            "errorCount": 2,
-            "messages": [
-              "<nested error diagnostic>"
-            ]
+            "ok": false,
+            "error": {
+              "code": "COMPILE_ERRORS",
+              "details": {
+                "errorCount": 6,
+                "warningCount": 0,
+                "errors": [
+                  {
+                    "path": "ASIS (DB1)",
+                    "description": "The input address of the drive telegram is not set."
+                  }
+                ]
+              }
+            },
+            "meta": {
+              "outcome": "failed",
+              "execution": "completed"
+            }
           },
-          "meaning": "Compilation failed despite a returned tool response."
+          "meaning": "The compile completed and returned errors; inspect all messages in data and fix the project before compiling again."
         }
       ],
-      "result": "Read the V4 envelope first, then inspect data.effectiveState, data.rootCounts and data.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. data.incomplete, data.truncated and data.collectFailures explain partial diagnostics. Compilation does not imply save or download.",
+      "result": "A returned compilation with errors is ok=false, error.code=COMPILE_ERRORS, meta.outcome=failed and meta.execution=completed. error.details contains errorCount, warningCount and the first 10 leaf error messages with inherited object paths. data retains the full native message list and diagnostic completeness evidence. Root/subtree counts overlap; never add them. Compilation does not imply save or download.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -331,66 +359,29 @@
       "resultCases": [
         {
           "example": {
-            "schemaVersion": 4,
-            "ok": true,
-            "data": {
-              "apiCallSuccess": true,
-              "effectiveState": "Warning",
-              "rootCounts": {
-                "errors": 0,
-                "warnings": 1
-              },
-              "warnings": [
-                "<native warning diagnostic>"
-              ],
-              "incomplete": false
-            },
-            "error": null,
-            "meta": {
-              "outcome": "succeeded",
-              "execution": "completed",
-              "completeness": "complete",
-              "behaviorPolicy": "current"
-            }
-          },
-          "meaning": "The hardware compile returned with a warning. Inspect warnings and nodes; no save/download is implied."
-        },
-        {
-          "example": {
-            "schemaVersion": 4,
             "ok": false,
-            "data": {
-              "apiCallSuccess": true,
-              "effectiveState": "Error",
-              "rootCounts": {
-                "errors": 0,
-                "warnings": 0
-              },
-              "errors": [
-                "<nested error diagnostic>"
-              ],
-              "incomplete": false
-            },
             "error": {
-              "code": "NATIVE_OPERATION_FAILED",
-              "message": "The hardware operation did not establish a successful result.",
+              "code": "COMPILE_ERRORS",
               "details": {
-                "nativeCode": null,
-                "nativeMessage": null,
-                "evidence": {}
+                "errorCount": 6,
+                "warningCount": 0,
+                "errors": [
+                  {
+                    "path": "ASIS (DB1)",
+                    "description": "The input address of the drive telegram is not set."
+                  }
+                ]
               }
             },
             "meta": {
               "outcome": "failed",
-              "execution": "completed",
-              "completeness": "complete",
-              "behaviorPolicy": "current"
+              "execution": "completed"
             }
           },
-          "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
+          "meaning": "The compile completed and returned errors; inspect all messages in data and fix the project before compiling again."
         }
       ],
-      "result": "Compilation evidence is under data: effectiveState, rootCounts, errors, warnings and nodes, including nested diagnostics. The V4 outcome reflects effectiveState, so a nested error remains failed when root counts are zero. apiCallSuccess only means the API returned. incomplete, truncated and collectFailures describe partial diagnostics; root/subtree counts overlap and must not be added. meta.behaviorPolicy remains current; no save/download is implied.",
+      "result": "A returned compilation with errors is ok=false, error.code=COMPILE_ERRORS, meta.outcome=failed and meta.execution=completed. error.details contains errorCount, warningCount and the first 10 leaf error messages with inherited object paths. data retains the full native message list and diagnostic completeness evidence. Root/subtree counts overlap; never add them. Compilation does not imply save or download.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
       ],
@@ -398,6 +389,20 @@
     },
     "CompileHmiDiagnostics": {
       "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
         {
           "example": {
             "state": "Warning",

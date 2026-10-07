@@ -5993,7 +5993,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "toName": "Axis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -13467,7 +13468,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "toName": "Axis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },

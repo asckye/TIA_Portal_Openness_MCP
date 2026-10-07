@@ -78,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             Outcome outcome;
             if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
-            else if (compileFailed) { outcome = Outcome.Failed; error = Failure(false); }
+            else if (compileFailed) { outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
             else if (knownMismatch) { outcome = Outcome.Partial; error = new Error("The script was imported but its readback differs.", new PartialFailureDetails(0, 0, 0)); }
             else if (!issued && (error = Rejection(status)) != null) outcome = Outcome.RejectedBeforeOperation;
             else if (success == true) outcome = Outcome.Succeeded;
@@ -89,7 +89,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool incomplete = Incomplete(evidence);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown ? Completeness.Unknown : incomplete ? Completeness.Partial
-                : outcome == Outcome.ReadFailed || outcome == Outcome.Failed ? Completeness.None : Completeness.Complete;
+                : outcome == Outcome.ReadFailed || outcome == Outcome.Failed && !compileFailed ? Completeness.None : Completeness.Complete;
             Paging? paging = null;
             if (pageSize > 0 && evidence.ContainsKey("collectionId"))
             {

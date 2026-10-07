@@ -1234,7 +1234,7 @@
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          "expectedProjectFile": "<exact projectPath from ListPortalProcessProjects; verify GetSessionState>"
         },
         "expect": "Check compiler state and error counts; inconsistent blocks must compile before export."
       },
@@ -1699,7 +1699,7 @@
           "softwarePath": "PLC_1",
           "dryRun": false,
           "confirm": true,
-          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          "expectedProjectFile": "<exact projectPath from ListPortalProcessProjects; verify GetSessionState>"
         },
         "expect": "Wait for approval; inspect state=Success, errorCount=0 and nested diagnostics after real compilation."
       }
@@ -1991,7 +1991,7 @@
     "topic": "stage-program-overwrite",
     "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
     "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
-    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -2028,6 +2028,53 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "sourceDir": "<directory from staging>",
+          "overwrite": false,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": true,
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Preview initial create-only import and retain its planHash."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": false,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from program preview>",
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Approve the initial import using its preview hash; newly imported objects can remain inconsistent."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from ListPortalProcessProjects; verify GetSessionState>",
+          "softwarePath": "<exact PLC path from GetProjectTree>"
+        },
+        "expect": "Run compilation and resolve COMPILE_ERRORS before overwrite. The native result is completed even when it contains errors; inspect counts and full messages."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
           "overwrite": true,
           "importOrder": [
             "ExampleUDT.xml",
@@ -2038,7 +2085,7 @@
           "dryRun": true,
           "regexName": "^(ExampleUDT|Main)\\.xml$"
         },
-        "expect": "Review data.planHash, each create/replace, file hashes, destinations and explicit dependency order."
+        "expect": "Review planHash and replacement blockers. If replace-blocked appears, compile/resolve protection and preview again before approval."
       },
       {
         "tool": "ImportPlcProgramFromDirectory",
@@ -2210,7 +2257,7 @@
     "topic": "stage-program-overwrite",
     "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
     "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
-    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning.",
     "releaseKeys": [
       "20",
       "21"
@@ -2243,6 +2290,50 @@
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
           "sourceDir": "<directory from staging>",
+          "overwrite": false,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": true,
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Preview initial create-only import and retain its planHash."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": false,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from program preview>",
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Approve the initial import using its preview hash; newly imported objects can remain inconsistent."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
+        },
+        "expect": "Run compilation and resolve COMPILE_ERRORS before overwrite. The native result is completed even when it contains errors; inspect counts and full messages."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
           "overwrite": true,
           "importOrder": [
             "ExampleUDT.xml",
@@ -2253,7 +2344,7 @@
           "dryRun": true,
           "regexName": "^(ExampleUDT|Main)\\.xml$"
         },
-        "expect": "Review data.planHash, each create/replace, file hashes, destinations and explicit dependency order."
+        "expect": "Review planHash and replacement blockers. If replace-blocked appears, compile/resolve protection and preview again before approval."
       },
       {
         "tool": "ImportPlcProgramFromDirectory",

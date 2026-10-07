@@ -98,13 +98,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(root[key]);
             string? Text(string key) => (evidence[key] ?? root[key])?.ToString();
+            bool incomplete = Flag("dataComplete") == false || Flag("incomplete") == true || Flag("truncated") == true
+                || Flag("diagnosticsComplete") == false || Flag("coverageComplete") == false
+                || Flag("crossReferenceAvailable") == false || Flag("apiCallSuccess") == true && Flag("dataComplete") == false;
+            if (writes && tool is "CompilePlcSoftware" or "CompilePlcDiagnostics" or "CompileDevice" or "CompileHmiDiagnostics"
+                && CompileResultMapping.Errors(root) is Error compileError)
+                return Result(tool, root, compileError, Outcome.Failed, incomplete ? Completeness.Partial : Completeness.Complete, current, true);
             bool preview = !writes;
             bool? success = Flag("operationSuccess") ?? Flag("success") ?? Flag("ok");
             // A positive outer wrapper cannot override an explicit negative domain verdict.
             if (Flag("ok") == false || Flag("operationSuccess") == false) success = false;
-            bool incomplete = Flag("dataComplete") == false || Flag("incomplete") == true || Flag("truncated") == true
-                || Flag("diagnosticsComplete") == false || Flag("coverageComplete") == false
-                || Flag("crossReferenceAvailable") == false || Flag("apiCallSuccess") == true && Flag("dataComplete") == false;
             int succeeded = Count(root, "imported") + Count(root, "importedTypes") + Count(root, "importedTagTables")
                 + Count(root, "importedTechnologyObjects") + Count(root, "importedBlocks");
             int failed = Count(root, "failed");
