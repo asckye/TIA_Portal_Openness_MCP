@@ -15,6 +15,7 @@
 ## 代码
 
 - C# 源码使用无 BOM UTF-8 和 LF；保持周围代码的命名、注释密度和写法。
+- 构建与发布入口使用 `dotnet run --project build-tools/release -- <command>`；不要新增受跟踪的 `.ps1`、`.psm1`、`.bat` 或 `.cmd` 文件。
 - 移动或重命名源文件时同步更新所有 `<Compile Include>` 链接、测试工程和文档中的路径。
 - 已迁移套件（offline、offline-v20、version-policy）用 `python scripts/checks/Test-DotnetSuites.py --suite <name>` 执行并检查 trx 最低数量；开发时可直接用 `dotnet test <csproj> -c Release`。未迁移的控制台工程仍用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行其断言。
 - 需要 Siemens 程序集的编译使用任务说明给出的 `-p:SiemensEngineeringDirectory=<绝对路径>`。

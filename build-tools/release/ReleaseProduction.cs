@@ -19,6 +19,7 @@ internal static partial class ReleaseCommands
         if (options.Has("NoReuse") && options.Has("SkipBuild")) throw new ReleaseException("-NoReuse and -SkipBuild cannot be combined");
         var git = options.Get("Git", "git");
         var python = options.Get("Python", Py);
+        var parallelism = GetMaxParallelism(options).ToString(System.Globalization.CultureInfo.InvariantCulture);
         var publicApiRoot = ResolveReleaseApiRoot(options);
         var nugetConfig = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
         var v20 = ResolveReleaseApi(options.Get("V20ReferenceRoot"), publicApiRoot, 20);
@@ -98,7 +99,7 @@ internal static partial class ReleaseCommands
                 {
                     if (multiReason.Length == 0) { Console.WriteLine("Reused Build-MultiVersion: recorded inputs, binaries and validation match"); return; }
                     Console.WriteLine("Preparing build-multi-version: " + multiReason);
-                    var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", "-Test", "-Offline" };
+                    var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
                     if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
                     RunReleaseCommand(args.ToArray(), "multi-version preparation", logRoot, runTemp, publicApiRoot);
                 },
@@ -113,7 +114,7 @@ internal static partial class ReleaseCommands
                         return;
                     }
                     if (options.Has("SkipBuild")) throw new ReleaseException("-SkipBuild refused: engine build is not reusable");
-                    var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date };
+                    var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
                     if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
                     RunReleaseCommand(args.ToArray(), "build-release", logRoot, runTemp, publicApiRoot);
                 },
@@ -121,7 +122,7 @@ internal static partial class ReleaseCommands
                 {
                     if (multiReason.Length != 0)
                     {
-                        var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", "-Test", "-Offline" };
+                        var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
                         if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
                         RunReleaseCommand(args.ToArray(), "multi-version completion", logRoot, runTemp, publicApiRoot);
                     }
@@ -137,8 +138,16 @@ internal static partial class ReleaseCommands
             if (string.IsNullOrWhiteSpace(GetJsonString(delivery.RootElement, "multiVersionBuildSha256")))
                 throw new ReleaseException("A tested eight-version build is required for publication; run build-multi-version -Test");
 
+        var plan = ReleasePlan(options);
+        WriteTierRecord(plan, passed: false);
+        var candidateOutput = Path.Combine(logRoot, "candidate");
+        RunReleaseExternal(python, [Path.Combine(Root, "scripts/build/Package-Release.py"), "--local", "--output-directory", candidateOutput],
+            "candidate-package", logRoot, runTemp, publicApiRoot);
+        RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python);
+        WriteTierRecord(plan, passed: true);
+
         var paths = EnumerateReleaseChanges(Root, git);
-        if (!options.Has("Resume"))
+        if (!options.Has("Resume") || paths.Length != 0)
         {
             var head = CommitReleaseChanges(Root, git, "Release " + version + ": " + summary);
             Console.WriteLine("Release commit created: " + head);
@@ -147,6 +156,7 @@ internal static partial class ReleaseCommands
         var packageDir = Path.Combine(Root, "bin-build/releases", "v" + version);
         var packageName = ReadDeliveryPackage(deliveryPath);
         RunReleaseExternal(python, [Path.Combine(Root, "scripts/build/Package-Release.py"), "--git", gitExecutable], "package", logRoot, runTemp, publicApiRoot);
+        ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.Combine(packageDir, packageName + ".zip"));
         RunReleaseExternal(python, [Path.Combine(Root, "scripts/checks/Verify-ReleaseAsset.py"), Path.Combine(packageDir, packageName + ".zip"), "--git", gitExecutable], "verify-package", logRoot, runTemp, publicApiRoot);
         if (options.Has("NoPush")) { Console.WriteLine("stopped before push (-NoPush)"); return 0; }
         RunGitChecked(git, ["push", "origin", "master"], "push master");
@@ -297,7 +307,7 @@ internal static partial class ReleaseCommands
     private static void RunReleaseCommand(string[] args, string description, string output, string runTemp, string apiRoot)
     {
         var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-        var command = new List<string> { "run", "--project", "build-tools/release", "--" };
+        var command = new List<string> { typeof(ReleaseCommands).Assembly.Location };
         command.AddRange(args);
         var cliHome = Path.Combine(output, "dotnet-home");
         Directory.CreateDirectory(cliHome);
@@ -377,6 +387,7 @@ internal static partial class ReleaseCommands
         var path = Path.Combine(Root, "manifest/multi-version-build.json");
         if (!File.Exists(path)) return "multi-version build record missing";
         using var record = JsonDocument.Parse(File.ReadAllText(path));
+        if (GetJsonString(record.RootElement, "tier") != "full") return "full multi-version checks are required";
         return ReleaseRecords.ReuseReason(Root, record.RootElement, version, ReleaseRecords.GetSources(Root, "multi"), "files");
     }
 

@@ -1,0 +1,1013 @@
+{
+  "checks": [
+    "preflight",
+    "binary-build",
+    "offline-suites",
+    "native-coverage",
+    "resource-discovery",
+    "prompt-registration",
+    "product-smoke",
+    "engine-functional",
+    "engine-worker-isolation",
+    "engine-approval",
+    "engine-ecosystem",
+    "engine-stability",
+    "engine-isolated-stability",
+    "engine-contracts",
+    "engine-responses",
+    "foundation-transport",
+    "foundation-approval",
+    "foundation-responses",
+    "gui-tests",
+    "relocation",
+    "approval-self-test",
+    "relocation-self-test",
+    "contracts-self-test",
+    "responses-self-test",
+    "ecosystem-self-test",
+    "package",
+    "bundle-validation",
+    "smoke-self-test",
+    "adapterboundary-self-test",
+    "bundlelayout-self-test",
+    "commenthygiene-self-test",
+    "enveloperewrite-self-test",
+    "mcptext-self-test",
+    "repository-self-test",
+    "scripttoolcalls-self-test",
+    "swallowedexceptions-self-test",
+    "toolslist-self-test",
+    "nativecallorder-self-test",
+    "sharednativepaths-self-test",
+    "responseenvelopes-self-test",
+    "domaintools-self-test",
+    "dotnetsuites-self-test",
+    "nativelifecycle-self-test",
+    "releaseasset-self-test",
+    "dead-tool-references-self-test",
+    "native-mcp-session-self-test",
+    "resource-discovery-self-test"
+  ],
+  "always": [
+    "preflight",
+    "binary-build",
+    "offline-suites",
+    "native-coverage",
+    "resource-discovery",
+    "prompt-registration",
+    "product-smoke",
+    "package",
+    "bundle-validation",
+    "smoke-self-test"
+  ],
+  "rules": [
+    {
+      "path": "build-tools/release/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test",
+        "package",
+        "bundle-validation",
+        "smoke-self-test",
+        "adapterboundary-self-test",
+        "bundlelayout-self-test",
+        "commenthygiene-self-test",
+        "enveloperewrite-self-test",
+        "mcptext-self-test",
+        "repository-self-test",
+        "scripttoolcalls-self-test",
+        "swallowedexceptions-self-test",
+        "toolslist-self-test",
+        "nativecallorder-self-test",
+        "sharednativepaths-self-test",
+        "responseenvelopes-self-test",
+        "domaintools-self-test",
+        "dotnetsuites-self-test",
+        "nativelifecycle-self-test",
+        "releaseasset-self-test",
+        "dead-tool-references-self-test",
+        "native-mcp-session-self-test",
+        "resource-discovery-self-test"
+      ]
+    },
+    {
+      "path": "src/Engine/",
+      "checks": [
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-contracts",
+        "engine-responses"
+      ]
+    },
+    {
+      "path": "src/FoundationHost/",
+      "checks": [
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses"
+      ]
+    },
+    {
+      "path": "src/Worker/",
+      "checks": [
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "engine-worker-isolation",
+        "engine-responses"
+      ]
+    },
+    {
+      "path": "src/Studio/",
+      "checks": [
+        "gui-tests"
+      ]
+    },
+    {
+      "path": "tests/Studio/",
+      "checks": [
+        "gui-tests"
+      ]
+    },
+    {
+      "path": "src/Logic/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "src/Runtime/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "src/WorkerChannel/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "src/Adapters/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "src/Adapters.Contracts/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "src/Shared/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "tests/Engine/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "third_party/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "reference/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "templates/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "scripts/build/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "scripts/generate/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "scripts/diagnostics/",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "Version.props",
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "docs/",
+      "checks": []
+    },
+    {
+      "path": "README.md",
+      "checks": []
+    },
+    {
+      "path": "README.zh-CN.md",
+      "checks": []
+    },
+    {
+      "path": "AGENTS.md",
+      "checks": []
+    },
+    {
+      "path": "CLAUDE.md",
+      "checks": []
+    },
+    {
+      "path": ".github/",
+      "checks": []
+    },
+    {
+      "path": ".gitattributes",
+      "checks": []
+    },
+    {
+      "path": ".gitignore",
+      "checks": []
+    },
+    {
+      "path": "scripts/README.md",
+      "checks": []
+    },
+    {
+      "path": "LICENSE",
+      "checks": []
+    },
+    {
+      "path": "NOTICE.md",
+      "checks": []
+    },
+    {
+      "path": "scripts/checks/Test-ReleaseApprovalGate.py",
+      "checks": [
+        "approval-self-test",
+        "engine-approval",
+        "foundation-approval"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-RelocatedBundle.py",
+      "checks": [
+        "relocation-self-test",
+        "relocation"
+      ]
+    },
+    {
+      "path": "scripts/checks/Snapshot-ToolContracts.py",
+      "checks": [
+        "contracts-self-test",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "scripts/checks/Snapshot-ToolResponses.py",
+      "checks": [
+        "responses-self-test",
+        "engine-responses",
+        "foundation-responses"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-V21Ecosystem.py",
+      "checks": [
+        "ecosystem-self-test",
+        "engine-ecosystem"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-FoundationTransport.py",
+      "checks": [
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-WorkerIsolation.py",
+      "checks": [
+        "engine-worker-isolation"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-LocalStability.py",
+      "checks": [
+        "engine-stability",
+        "engine-isolated-stability"
+      ]
+    },
+    {
+      "path": "src/Engine/ModelContextProtocol/NativeMcpSession.cs",
+      "checks": [
+        "engine-stability",
+        "engine-isolated-stability"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-ReleaseSmoke.py",
+      "checks": [
+        "product-smoke",
+        "smoke-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-AdapterBoundary.py",
+      "checks": [
+        "adapterboundary-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-BundleLayout.py",
+      "checks": [
+        "bundlelayout-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-CommentHygiene.py",
+      "checks": [
+        "commenthygiene-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-EnvelopeRewrite.py",
+      "checks": [
+        "enveloperewrite-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-McpText.py",
+      "checks": [
+        "mcptext-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-Repository.py",
+      "checks": [
+        "repository-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-ScriptToolCalls.py",
+      "checks": [
+        "scripttoolcalls-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-SwallowedExceptions.py",
+      "checks": [
+        "swallowedexceptions-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-ToolsList.py",
+      "checks": [
+        "toolslist-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Compare-NativeCallOrder.py",
+      "checks": [
+        "nativecallorder-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Compare-SharedNativePaths.py",
+      "checks": [
+        "sharednativepaths-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Inventory-ResponseEnvelopes.py",
+      "checks": [
+        "responseenvelopes-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-DomainTools.py",
+      "checks": [
+        "domaintools-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-DotnetSuites.py",
+      "checks": [
+        "dotnetsuites-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-NativeLifecycle.py",
+      "checks": [
+        "nativelifecycle-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Verify-ReleaseAsset.py",
+      "checks": [
+        "releaseasset-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Check-DeadToolReferences.py",
+      "checks": [
+        "dead-tool-references-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-NativeMcpSession.py",
+      "checks": [
+        "native-mcp-session-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-ResourceDiscovery.py",
+      "checks": [
+        "resource-discovery-self-test"
+      ]
+    },
+    {
+      "path": "scripts/checks/Test-NativeDiagnostics.py",
+      "checks": [
+        "native-coverage"
+      ]
+    }
+  ],
+  "selfTests": [
+    {
+      "check": "approval-self-test",
+      "script": "scripts/checks/Test-ReleaseApprovalGate.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "relocation-self-test",
+      "script": "scripts/checks/Test-RelocatedBundle.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "contracts-self-test",
+      "script": "scripts/checks/Snapshot-ToolContracts.py",
+      "arguments": [
+        "self-test"
+      ]
+    },
+    {
+      "check": "responses-self-test",
+      "script": "scripts/checks/Snapshot-ToolResponses.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "ecosystem-self-test",
+      "script": "scripts/checks/Test-V21Ecosystem.py",
+      "arguments": [
+        "--self-test",
+        "--output",
+        "{output}"
+      ]
+    },
+    {
+      "check": "smoke-self-test",
+      "script": "scripts/checks/Test-ReleaseSmoke.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "adapterboundary-self-test",
+      "script": "scripts/checks/Check-AdapterBoundary.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "bundlelayout-self-test",
+      "script": "scripts/checks/Check-BundleLayout.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "commenthygiene-self-test",
+      "script": "scripts/checks/Check-CommentHygiene.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "enveloperewrite-self-test",
+      "script": "scripts/checks/Check-EnvelopeRewrite.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "mcptext-self-test",
+      "script": "scripts/checks/Check-McpText.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "repository-self-test",
+      "script": "scripts/checks/Check-Repository.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "scripttoolcalls-self-test",
+      "script": "scripts/checks/Check-ScriptToolCalls.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "swallowedexceptions-self-test",
+      "script": "scripts/checks/Check-SwallowedExceptions.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "toolslist-self-test",
+      "script": "scripts/checks/Check-ToolsList.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "nativecallorder-self-test",
+      "script": "scripts/checks/Compare-NativeCallOrder.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "sharednativepaths-self-test",
+      "script": "scripts/checks/Compare-SharedNativePaths.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "responseenvelopes-self-test",
+      "script": "scripts/checks/Inventory-ResponseEnvelopes.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "domaintools-self-test",
+      "script": "scripts/checks/Test-DomainTools.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "dotnetsuites-self-test",
+      "script": "scripts/checks/Test-DotnetSuites.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "nativelifecycle-self-test",
+      "script": "scripts/checks/Test-NativeLifecycle.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "releaseasset-self-test",
+      "script": "scripts/checks/Verify-ReleaseAsset.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "dead-tool-references-self-test",
+      "script": "scripts/checks/Check-DeadToolReferences.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "native-mcp-session-self-test",
+      "script": "scripts/checks/Test-NativeMcpSession.py",
+      "arguments": [
+        "--self-test"
+      ]
+    },
+    {
+      "check": "resource-discovery-self-test",
+      "script": "scripts/checks/Test-ResourceDiscovery.py",
+      "arguments": [
+        "--self-test"
+      ]
+    }
+  ],
+  "groups": {
+    "binary-build": "Same engines, native instrumentation, Foundation hosts, all eight adapters/workers, Studio, configurator, updater, WriteGuard and bundled runtime in both tiers.",
+    "offline-suites": "All unit/offline suite gates; tier selection never alters compiler or publish arguments.",
+    "native-coverage": "Engine and adapter inventories, JIT diagnostics, native safety and diagnostic fixtures.",
+    "resource-discovery": "Both engine rosters/resources and all Foundation catalogs; produces the mandatory usage inventory.",
+    "product-smoke": "Eight real stdio MCP products: initialize, tools/list, InitializeEnvironment, one safe readiness/approval refusal; Studio starts against its bundled runtime.",
+    "engine-functional": "example-library, process-leases, software-lookup, engineering-api, http, hmi, native-export, hmi-snapshot, global-script, graphic-selection, runtime-settings, migration-assembly, ecosystem-assembly, download-route, match-plc-name.",
+    "engine-worker-isolation": "worker-supervisor and worker-protocol for V20/V21.",
+    "engine-approval": "Default-on engine approval and real EXE readiness for V20/V21.",
+    "engine-ecosystem": "V21 ecosystem adapters on both engines.",
+    "engine-stability": "Four stdio/HTTP full/lite stability runs per engine.",
+    "engine-isolated-stability": "Four isolated-worker stdio/HTTP full/lite stability runs per engine.",
+    "foundation-transport": "Explicit fixture stdio/HTTP transports for all six Foundation releases.",
+    "foundation-approval": "Three default-approval/readiness checks per Foundation release.",
+    "foundation-responses": "Capture and compare all six Foundation response snapshots.",
+    "engine-contracts": "Capture and compare V20/V21 contracts.",
+    "engine-responses": "Capture and compare V20/V21 responses through HttpTests.",
+    "gui-tests": "Studio GUI process tests; configuration and core unit suites always run.",
+    "relocation": "Extracted bundle check from outside the checkout, with an SDK root and user outside the Openness group."
+  }
+}

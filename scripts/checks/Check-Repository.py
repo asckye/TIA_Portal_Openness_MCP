@@ -69,7 +69,7 @@ def product_name_errors(root, names):
 
 
 def forbidden_script_errors(names):
-    """Reject tracked Windows command and PowerShell files after the C# migration."""
+    """Reject tracked Windows command and PowerShell files."""
     forbidden = {'.ps1', '.psm1', '.bat', '.cmd'}
     return ['Forbidden tracked script file: ' + name for name in sorted(set(names))
             if Path(name).suffix.lower() in forbidden]
@@ -112,7 +112,7 @@ def product_name_self_test():
         scratch.rmdir()
 
 
-def check(root, no_binaries=False, package_mode=False, enforce_script_free=False):
+def check(root, no_binaries=False, package_mode=False):
     rules = layout.load_delivery(root)
     package_mode = package_mode or not (root / 'Version.props').is_file()
     errors = archive_errors(root) if not package_mode else []
@@ -124,11 +124,8 @@ def check(root, no_binaries=False, package_mode=False, enforce_script_free=False
     else:
         names = [path.relative_to(root).as_posix() for path in root.rglob('*') if path.is_file()]
         tracked_names = names
-    remaining_scripts = forbidden_script_errors(filter(None, tracked_names))
-    if enforce_script_free:
-        errors.extend(remaining_scripts)
-    elif remaining_scripts:
-        print(f'[INFO] {len(remaining_scripts)} tracked Windows script file(s) remain during migration.')
+    remaining_scripts = forbidden_script_errors(name for name in tracked_names if name and (root / name).is_file())
+    errors.extend(remaining_scripts)
     errors.extend(product_name_errors(root, filter(None, names)))
     count = 0
     for source in documents(root):
@@ -165,8 +162,9 @@ def check(root, no_binaries=False, package_mode=False, enforce_script_free=False
             errors.append(f'{label}: missing or external path: {name}')
     package = read('manifest/package-manifest.json')
     for key, value in package['entrypoints'].items():
-        # Historical generated metadata retains this repository-only entry.
-        if package_mode and key == 'bundleValidationScript':
+        # The generated manifest schema still carries this legacy repository-only key;
+        # the validator now lives in the C# release tool and is not shipped.
+        if key == 'bundleValidationScript' and (package_mode or not (root / value).is_file()):
             continue
         required(value, 'package entry ' + key)
     required(package['cli']['exe'], 'CLI')
@@ -210,6 +208,10 @@ def check(root, no_binaries=False, package_mode=False, enforce_script_free=False
         required('src/' + name, 'engine adapter wiring')
     required('tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs', 'engine adapter checks')
     required('src/Shared/BundleLayout.cs', 'bundle layout')
+    for name in ('ReleaseTiers.cs', 'ReleaseCandidateChecks.cs', 'release-checks.json'):
+        required('build-tools/release/' + name, 'release tier policy')
+    required('scripts/checks/Test-ReleaseSmoke.py', 'release smoke check')
+    required('tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs', 'release tier tests')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
     for name in ('TiaMcp.Updater.csproj', 'Program.cs', 'Updater.cs', 'UpdaterText.cs', 'UpdaterMessages.resx', 'app.manifest', 'App.config'):
@@ -302,8 +304,6 @@ def main():
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--self-test', action='store_true', help='Exercise retired product reference rejection and historical/namespace exemptions')
     parser.add_argument('--package-mode', action='store_true', help='Validate the runtime-only delivery, also detected when Version.props is absent')
-    parser.add_argument('--enforce-script-free', action='store_true',
-                        help='Reject tracked PowerShell/batch files after their migration is complete')
     parser.add_argument('--no-binaries', action='store_true',
                         help='source checkout without build outputs: skip the existence of runtime/*/TiaMcp.Engine.V21.exe and TiaOpenness.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
@@ -321,7 +321,7 @@ def main():
     assert local_target(args.root, source, '../README.md') is None
     assert local_target(args.root, source, '../__missing_repository_check__.md')
     assert local_target(args.root, source, '../../../__outside__.md')
-    count, errors = check(args.root, args.no_binaries, args.package_mode, args.enforce_script_free)
+    count, errors = check(args.root, args.no_binaries, args.package_mode)
     for error in errors:
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')

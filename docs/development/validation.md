@@ -16,6 +16,25 @@
 旧日期报告里的“SDK 未提供”“仅 Linux 源码验证”属于历史修订，不覆盖当前构建记录。
 机器证据中的历史字段仍保留原意；不要将历史通过数复制成当前测试结果。
 
+## 发布层级的检查证据
+
+审查链显式使用 `run-release-build -Tier quick|full`；完整命令和 baseline 规则见
+[发布流程](release-workflow.md#quick-测试包与-full-发布候选包)。两层的编译和交付二进制相同。
+quick 始终运行单元/离线套件、strict 包校验、prompt 注册及八版真实 STDIO smoke，再根据最近成功 full 的源码变化选择检查。
+full 运行全部 transport/approval、GUI、快照/比较、稳定性/隔离稳定性、重定位检查。二者都不证明真实 TIA 工程验收。
+
+路径映射为 [`release-checks.json`](../../build-tools/release/release-checks.json)；release 工具测试验证每个检查可达、
+未知路径与无可信 baseline 选择全集、必需项不能被跳过、Release 拒绝 quick/pending/不完整 full 包。
+包记录 `tier`、`checkStatus`、`checksRan`、`checksSkipped`；跳过的 runtime proof 为 null 或未执行计数，不伪造通过。
+日志中的完整 wall time 和 quick 选择集合一起报告；15 分钟是目标，不能由单元测试或 dry run 宣称达到。
+
+```powershell
+dotnet test tests/Release/TiaMcp.ReleaseTool.Tests -c Release
+python scripts/checks/Test-ReleaseSmoke.py --self-test
+dotnet run --project build-tools/release -- run-release-build -Tier quick -DryRun
+dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
+```
+
 ## 运行资源包校验
 
 交付内容以 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 为准；规则、打包预览和许可保留见
@@ -43,7 +62,8 @@ bin-build/updater/TiaMcp.Updater.exe -SelfTest
 
 ## 重定位与只读安装检查
 
-在 Windows 上对已提取的候选包运行下面的脚本。它将整包复制到仓库外、带空格和中文的临时路径，
+完整审查链会在包验证后运行重定位检查。单独运行时，启动目录和已提取候选包都放在源 checkout 外；传入本机 SDK 根目录。
+检查会将整包复制到仓库外、带空格和中文的临时路径，
 用临时只读 ACL 检查根目录，再通过 STDIO `tools/list` 检查六个 Foundation 发布键和 V20/V21 引擎的
 工具数量。Foundation 宿主使用 `--offline`；该检查不调用 TIA 工具。它还验证根启动器指向随包 Studio、
 无效显式 `--bundle-root` 不回退、缺少所选引擎会被拒绝，以及更新入口拒绝 source checkout。
@@ -55,8 +75,15 @@ bin-build/updater/TiaMcp.Updater.exe -SelfTest
 传入 `--keep-relocation` 可保留复制件供审查。
 
 ```powershell
+$Repo = (git rev-parse --show-toplevel)
+$ExtractedBundle = '<external extracted-bundle-root>'
+$Sdk = 'D:\Code\TIA_Portal_Openness_MCP\sdk'
+Push-Location $env:TEMP
+python "$Repo\scripts\checks\Test-RelocatedBundle.py" --bundle-root $ExtractedBundle --public-api-root $Sdk
+Pop-Location
+
+# Unit/self tests do not perform the relocation run and can be launched from the checkout.
 python scripts/checks/Test-RelocatedBundle.py --self-test
-python scripts/checks/Test-RelocatedBundle.py --bundle-root <extracted-bundle-root>
 ```
 
 ## 一次构建全部开发工程
@@ -386,7 +413,7 @@ dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicA
 伴随 Python 用 `TIA_MCP_PLC_TOOLS_PYTHON` 指定；构建中的 V21 生态夹具也使用该解释器，避免预检与执行环境不同。
 
 预检、复用、CHANGELOG 和并发自测均报告通过/失败数量；复用覆盖相同输入、改源码、增删源码、改/缺二进制、改 release/fileVersion，
-以及旧输出目录的保留移动、准备→完整引擎→完成记录的顺序、准备阶段输入/产物变化拒绝和哈希绑定审计证据恢复。审查链自测覆盖错误顺序、尾点 bundle 路径，以及成功、PowerShell 异常和 native 非零退出时的记录恢复。发布链自测由 .NET 10 测试套件运行。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
+以及旧输出目录的保留移动、准备→完整引擎→完成记录的顺序、准备阶段输入/产物变化拒绝和哈希绑定审计证据恢复。审查链自测覆盖错误顺序、bundle 路径以及成功、托管异常和 native 非零退出时的记录恢复。发布链自测由 .NET 10 测试套件运行。完整发布的 dry run 和性能比较在干净 master 上执行，步骤与并发资源清单见[发布流程](release-workflow.md)。
 沙箱内 Python 3.12 的 `TemporaryDirectory` 可能因私有 ACL 返回 `WinError 5`；原生监督器/MCP 的离线自测遇到该错误应记录为未通过，
 由维护者在普通本机环境复跑，不跳过门禁、不进入 live 分支。
 

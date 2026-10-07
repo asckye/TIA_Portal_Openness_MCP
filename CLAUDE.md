@@ -6,3 +6,4 @@
 - 引擎或测试源码变动后按 `docs/development/validation.md` 完成对应构建及全部版本检查。文档变动核对链接、路径、工具适用版本和引用；不手工改测试哈希。
 - 仅维护 master。使用明确的 `git add` 路径，不用 `git add -A`。运行二进制不进 Git；英文提交，不添加 AI 署名。
 - 发布使用 `dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "..."`，流程见 `docs/development/release-workflow.md`。发布后更新当前交接及 `manifest/publication-vX.Y.Z.json`，历史变化记录在 CHANGELOG 和 GitHub Releases。
+- 构建和发布自动化维护在 `build-tools/release`；仓库检查拒绝新增 PowerShell、batch 和 cmd 文件。审查链可用 `-MaxParallelism 1` 串行执行。

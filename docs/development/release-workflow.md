@@ -8,7 +8,7 @@
 
 [`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
 `include.files` 为精确路径，`include.prefixes` 为以 `/` 结尾的目录前缀，`exclude` 优先；未匹配的跟踪文件不交付。
-Python 打包器、资产核验、仓库/布局检查与 PowerShell 校验器、更新器均读取它。运行文件仍只来自三份构建记录，
+Python 打包器、资产核验、仓库/布局检查与 .NET release tool 校验器、更新器均读取它。运行文件仍只来自三份构建记录，
 不会把磁盘上任意新文件塞入 ZIP。`runtime/verification/` 只用于发布前的 IL 验证，不分发。
 
 保留 BundleLayout 的九项资源、全部模板、生态与操作脚本、Claude Code 插件及其 skill、用户说明和许可证。
@@ -41,6 +41,37 @@ dotnet run --project build-tools/release -- validate-bundle -BundleRoot bin-buil
 仓库的 `-NoBinaries` 模式允许 CHANGELOG 最新条目高于已发布版本，但必须有同版本发布说明；
 各份旧 manifest 仍须相互一致。包模式和带二进制的发布模式继续要求精确一致，不能手改记录哈希。
 
+## quick 测试包与 full 发布候选包
+
+审查入口必须显式选择 `-Tier quick` 或 `-Tier full`。两者编译相同的全部交付二进制；层级仅控制检查数量，
+不改变编译参数、运行功能或交付文件集。`quick` 用于 VM 回归测试，目标在本机不超过 15 分钟；实际耗时以日志为准。
+`full` 执行全部检查，包含普通/隔离稳定性、八版快照及比较、重定位。`release` 默认 `full`，拒绝 `-Tier quick`，
+并在发布前验证包记录为 `tier=full`、`checkStatus=passed`、全部检查已运行且无跳过项。quick 包不能直接升级为 full 证据。
+
+```powershell
+dotnet run --project build-tools/release -- run-release-build -Tier full -PublicApiRoot <SDK-root> -CompanionPython <python.exe> -NuGetConfig <offline.config> -OutputDirectory bin-build/full-candidate
+dotnet run --project build-tools/release -- run-release-build -Tier quick -PublicApiRoot <SDK-root> -CompanionPython <python.exe> -NuGetConfig <offline.config> -OutputDirectory bin-build/quick-test
+```
+
+两层都执行 preflight、全部产品编译、单元/离线套件、原生调用覆盖与 JIT 检查、资源发现、打包、严格包验证、prompt 注册，
+以及真实进程 smoke。smoke 经 STDIO 检查六个 Foundation 和 V20/V21 引擎的启动、完整工具目录、InitializeEnvironment 响应，
+以及一次在派发前被就绪/审批门禁拒绝的写请求；使用没有 TIA EXE 的 SDK-only 夹具。Studio/配置器无 MCP 目录，
+通过无效网络参数的启动拒绝检查；更新器运行帮助入口。smoke 不连接 TIA、PLC 或 VM。
+
+[`release-checks.json`](../../build-tools/release/release-checks.json) 是唯一审查过的路径到检查映射。quick 对比最近成功 full 候选包的
+源码内容清单（包括新增、删除和未提交文件），追加对应检查。FoundationHost/Worker 选择 Foundation transport、默认审批与 responses；
+Engine 选择审批、worker isolation、V20/V21 responses 等；Studio 选择 GUI；检查器选择自身 self-test（无 self-test 的检查器运行原检查）。
+未识别路径、缺少/损坏 baseline、候选 ZIP 丢失或哈希不一致均选择全部检查。首次 quick 因而会运行 full 数量的检查，仍标为 quick。
+
+默认 baseline 在忽略的 `bin-build/release-review/last-full.json`；`-FullBaseline` 可选择本 worktree 的 bin-build 下其他文件。
+仅 full 全部成功、最终包再次严格验证且源文件未在运行中改变时更新。baseline 绑定候选 ZIP 的 SHA-256、tier 与检查清单，
+不以 Git 提交时间推断成功。构建记录和包内 `package-manifest.json` 保存实际计划；最终包的 `checksRan`/`checksSkipped` 记录执行/跳过的检查组。
+构建中包标为 `checkStatus=pending`，全部选择的检查成功后重新打包为 `passed`。本地审查运行退出后恢复跟踪的 manifest 和生成文档。
+
+两层均使用 `-MaxParallelism`（默认 CPU 数，设为 1 则串行）的 continue 6 有界并行器；快照 compare 等待自己的 capture，
+失败停止新任务并等待已启动任务完成。各步骤和任务日志记录耗时；比较 wall time 必须注明 quick 的 selected/skipped 清单，
+不能把 dry run 或失败构建的时间当作候选包耗时。正式 release 在提交和上传前也执行 full 候选包检查。
+
 ## 准备和执行
 
 在 Windows 的 master 工作区操作，审查全部改动，停止该安装目录下的 MCP 和 Studio 进程。需要 .NET 10 SDK、Git、Framework 开发环境、Python 和八版 SDK。设置 TIA_MCP_PLC_TOOLS_PYTHON 指向已有 PLC Tools 伴随环境。SDK 目录结构见[构建说明](../reference/version-tools.md#build-test-and-package)。
@@ -55,7 +86,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "Con
 
 脚本依次执行：
 
-1. 首先运行 `prerequisites`：汇总检查 .NET 10 SDK、PowerShell 7、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
+1. 首先运行 `prerequisites`：汇总检查 .NET 10 SDK、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
 2. 更新 `Version.props`、插件版本、文档当前发布链接及路线图标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/路线图断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
 3. 分别判断两份记录能否复用。先复用多版本准备产物，或运行 `dotnet run --project build-tools/release -- build-multi-version -PrepareOnly -Test`，生成 Foundation、worker、Studio 和 bundled .NET；版本从 `Version.props` 读取。完整引擎不能复用时，`Build-release` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。随后用 `dotnet run --project build-tools/release -- build-multi-version -CompleteOnly -Test` 核对准备阶段的输入、运行文件和审计证据，执行依赖完整引擎的八版本 API/示例审计，生成最终记录并绑定交付。完整引擎重建时，多版本记录也重新验证；两份记录都可复用时保持原记录不变。
 4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
@@ -112,7 +143,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 
 ## 离线审查完整构建链
 
-维护脚本 `dotnet run --project build-tools/release -- run-release-build` 可从没有运行产物的 checkout 开始。
+维护命令 `dotnet run --project build-tools/release -- run-release-build` 可从没有运行产物的 checkout 开始。
 它不修改版本、不提交、不发布，每步独立记录日志，在 `finally` 中逐字节恢复全部已跟踪的 manifest 和生成的版本工具文档；
 后续步骤在执行期间使用上一步保存的构建记录。日志及执行中的记录副本保存在 `bin-build/release-review/<时间戳>-<GUID>/`。
 
@@ -121,8 +152,13 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 dotnet run --project build-tools/release -- run-release-build -DryRun
 dotnet run --project build-tools/release -- run-release-build -SelfTest
 # 审查者预先准备好离线依赖后，实际执行；输出必须是新目录，仓库内仅允许 bin-build 下。
-dotnet run --project build-tools/release -- run-release-build -PublicApiRoot <SDK-root> -OutputDirectory <new-output-directory> -CompanionPython <prepared-python.exe> -NuGetConfig <offline-nuget.config>
+dotnet run --project build-tools/release -- run-release-build -Tier full -PublicApiRoot <SDK-root> -OutputDirectory <new-output-directory> -CompanionPython <prepared-python.exe> -NuGetConfig <offline-nuget.config>
 ```
+
+`-MaxParallelism` 默认使用处理器数，可设为较小正整数；`-MaxParallelism 1` 使用串行执行。步骤 0–4 顺序完成并记录每步耗时。
+之后 prompt-registration、契约捕获及比较、响应捕获及比较、重定位检查作为四个有界任务并行；两个 compare 各自等待其 capture 完成。
+V20/V21 契约和响应捕获各运行独立进程，使用独立输出与临时目录，再合并为比较输入。多版本检查先串行构建套件，
+然后并行运行互不共享构建目录、结果文件和宿主数据目录的测试套件。失败会停止启动排队任务，等待已运行任务结束，并保留每个步骤日志。
 
 步骤顺序为（第 0 步为预检）：
 
@@ -132,12 +168,14 @@ dotnet run --project build-tools/release -- run-release-build -PublicApiRoot <SD
 1. `Build-MultiVersion -PrepareOnly -Offline -Test`：八版 worker/Studio、六版 Foundation、bundled .NET 和功能/传输检查。
 2. `Build-Release`：V20/V21 完整门禁、配置器及严格交付验证；随后 `Build-MultiVersion -CompleteOnly -Offline -Test`，验证准备证据并完成八版本记录与交付绑定。
 3. `Package-Release.py --local`，生成 ZIP、sidecar 和 `package-result.json`。
-4. 从 package-result 的 ZIP 父目录与无扩展名文件名计算实际 bundle 路径，执行 `Validate-Bundle -Strict -PackageMode`，保留二进制检查。不能使用 `ChangeExtension(path,$null)`：PowerShell 将字符串参数中的 `$null` 传为 `''`，会留下尾点。
+4. 从 package-result 的 ZIP 父目录与无扩展名文件名计算实际 bundle 路径，执行 `validate-bundle -Strict -PackageMode`，保留二进制检查；路径计算按 ZIP 扩展名移除最后一段，不能留下尾点。
 5. prompt-registration TRX 门禁。
-6. 普通 V4 tool contracts capture（V20/V21）。
-7. 与 `manifest/contracts/v4/baseline` 普通 compare。
-8. 普通 V4 response capture（V20/V21）。
-9. 与 `manifest/contracts/v4/responses` 普通 compare；差异直接失败，不刷新基线。
+6. 普通 V4 tool contracts capture（V20/V21）；参数与 master 现行调用一致，传 repo root、PublicAPI root 和真实 EXE，不传 `--harness`。
+7. 与 `manifest/contracts/v4/baseline` 普通 compare；只在两版捕获完成后运行。
+8. 普通 V4 response capture（V20/V21），传 `--harness <HttpTests.exe>`；SDK-only 捕获通过测试宿主设置仅测试用的 readiness 标记。
+9. 与 `manifest/contracts/v4/responses` 普通 compare；只在两版捕获完成后运行，差异直接失败，不刷新基线。
+10. `Test-RelocatedBundle.py --bundle-root <extracted-package> --public-api-root <SDK-root>` 检查候选包在仓库外复制和读取时可用。
+    当前用户必须位于 Siemens TIA Openness 组之外，检查会拒绝组内用户。该步骤只依赖已验证包，可与步骤 5–9 并行。
 
 第 08 步通过 `HttpTests.exe --harness` 加载真实 V20/V21 引擎宿主方法。`sdk-only-fixture` 仍复制 SDK 到临时安装布局；
 HttpTests 进程用仅测试用的 readiness 标记模拟 Openness 组已就绪，使 capture 能读取断开状态，并让产品默认审批在派发前拒绝写操作。

@@ -34,7 +34,7 @@ public sealed class ReleaseRecordSnapshotTests
             if (mode == "throw")
             {
                 var caught = false;
-                try { throw new InvalidOperationException("synthetic PowerShell exception"); }
+                try { throw new InvalidOperationException("synthetic command exception"); }
                 catch (InvalidOperationException) { caught = true; }
                 Assert.True(caught);
             }

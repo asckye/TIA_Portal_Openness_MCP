@@ -15,7 +15,7 @@ internal static partial class ReleaseCommands
         {
             ["nativeMcpSafety"] = (8, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
             ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
-            ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (3, true),
+            ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (4, true),
             ["softwareLookup"] = (45, false), ["engineeringApiV20"] = (2840, false), ["engineeringApiV21"] = (3126, false),
             ["v21Ecosystem"] = (75, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
             ["runtimeSettingsV20"] = (8, false), ["runtimeSettingsV21"] = (9, false), ["ecosystem"] = (31, false)
@@ -84,11 +84,15 @@ internal static partial class ReleaseCommands
         var jobs = majors.Select(major => ($"release-v{major}", (Func<PipelineResult>)(() =>
         {
             var majorOut = Path.Combine(sharedOut, "v" + major);
+            var majorTemp = Path.Combine(runTemp, "v" + major);
+            var majorCliHome = Path.Combine(outputDirectory, "dotnet-home-v" + major);
             Directory.CreateDirectory(majorOut);
+            Directory.CreateDirectory(majorTemp);
+            Directory.CreateDirectory(majorCliHome);
             try
             {
                 var record = RunBuildReleaseMajor(options, dotnet, python, nuget, major, major == 20 ? v20Api : v21Api,
-                    v21Api, apiRoot, release, fileVersion, common, majorOut, runTemp, cliHome);
+                    v21Api, apiRoot, release, fileVersion, common, majorOut, majorTemp, majorCliHome);
                 WriteJson(Path.Combine(majorOut, "pipeline-result.json"), record);
                 return new PipelineResult("release-v" + major, 0, $"V{major} pipeline passed; logs: {majorOut}{Environment.NewLine}", "");
             }
@@ -97,7 +101,7 @@ internal static partial class ReleaseCommands
                 return new PipelineResult("release-v" + major, 1, "", ex.ToString());
             }
         }))).ToArray();
-        ParallelPipeline.Run(jobs, Path.Combine(outputDirectory, "pipeline-logs"));
+        ParallelPipeline.Run(jobs, Path.Combine(outputDirectory, "pipeline-logs"), GetMaxParallelism(options));
 
         if (pipelineMajor != 0)
         {
@@ -114,7 +118,7 @@ internal static partial class ReleaseCommands
             runtimeRecords.Add("V" + major, result.RootElement.Clone());
         }
 
-        RunShippedRuntimeChecks(dotnet, v21Api, apiRoot, package, sharedOut, runTemp, cliHome);
+        RunShippedRuntimeChecks(dotnet, v21Api, apiRoot, package, sharedOut, runTemp, cliHome, ReleasePlan(options));
         RefreshPackageManifest(release, fileVersion, releaseDate, package);
         if (!SameArtifacts(sourceFiles, ReleaseRecords.GetSources(Root, "engine"))) throw new ReleaseException("Build inputs changed while validation was running; refusing to record results");
         if (!SameArtifacts(validationInputs, ReleaseRecords.GetValidationInputs(Root, "engine"))) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
@@ -134,6 +138,7 @@ internal static partial class ReleaseCommands
             }
         var record = new
         {
+            tier = ReleasePlan(options).Tier, checkPlan = ReleasePlan(options),
             release, releaseDate, fileVersion, package, generatedAt = DateTimeOffset.UtcNow.ToString("o"),
             validation = new
             {
@@ -234,6 +239,7 @@ internal static partial class ReleaseCommands
     private static object RunBuildReleaseMajor(Options options, string dotnet, string python, string? nuget, int major, string api, string v21Api,
         string apiRoot, string release, string fileVersion, JsonElement common, string outputDirectory, string runTemp, string cliHome)
     {
+        var plan = ReleasePlan(options);
         var engineSource = Path.Combine(Root, "src/Engine");
         var nativeProject = Path.Combine(Root, $"tests/Engine/TiaMcpServer.NativeTests/V{major}/NativeTests.V{major}.csproj");
         var project = Path.Combine(engineSource, $"TiaMcpServer.V{major}.csproj");
@@ -290,7 +296,8 @@ internal static partial class ReleaseCommands
         var exe = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Engine.V{major}.exe");
         RequireFile(exe, "Built engine EXE missing");
         if (FileVersionInfo.GetVersionInfo(exe).FileVersion != fileVersion) throw new ReleaseException($"V{major} runtime version mismatch");
-        RunBuildSpec("example-library", harness, [exe, "example-library-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
+        if (plan.Includes("engine-functional"))
+            RunBuildSpec("example-library", harness, [exe, "example-library-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
         var coveragePath = Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json");
         RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
         using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
@@ -309,85 +316,123 @@ internal static partial class ReleaseCommands
         var adapterJournal = RequireCount("adapter journal", nativeJitText, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
         var nativeJournal = RequireCount("native journal", nativeJitText, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
 
-        var leaseText = RunBuildSpec("process-leases", harness, [exe, "process-leases-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var processLeases = RequireCount("process lease", leaseText, "COMPLETE: (\\d+) process lease checks passed", "processLeases");
-        var workerText = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var workerFaults = RequireCount("worker supervisor", workerText, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
-        var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py"), "--exe", exe,
-            "--major", major.ToString(), "--host-harness", harness, "--public-api", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) isolated MCP checks passed; no TIA connection attempted", "workerProtocol");
+        var processLeases = 0;
+        if (plan.Includes("engine-functional"))
+        {
+            var leaseText = RunBuildSpec("process-leases", harness, [exe, "process-leases-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
+            processLeases = RequireCount("process lease", leaseText, "COMPLETE: (\\d+) process lease checks passed", "processLeases");
+        }
 
-        var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
-        var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
-        Directory.CreateDirectory(approvalTemp);
-        var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
-            "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
-        using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
-        var approval = approvalDoc.RootElement.Clone();
-        CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
-        var approvalResults = approval.GetProperty("results");
-        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 3 || GetJsonBool(approval, "workbenchConnected") ||
-            GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
-            GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
+        var workerFaults = 0;
+        var workerProtocol = 0;
+        if (plan.Includes("engine-worker-isolation"))
+        {
+            var workerText = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
+            workerFaults = RequireCount("worker supervisor", workerText, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
+            var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py"), "--exe", exe,
+                "--major", major.ToString(), "--host-harness", harness, "--public-api", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) isolated MCP checks passed; no TIA connection attempted", "workerProtocol");
 
-        var softwareText = RunBuildSpec("software-lookup", harness, [exe, "software-lookup-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var software = RequireCount("software lookup", softwareText, "COMPLETE: (\\d+) software lookup checks passed", "softwareLookup");
-        var engineeringText = RunBuildSpec("engineering-api", harness, [exe, "engineering-api-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var engineering = RequireCount("engineering API", engineeringText, "COMPLETE: (\\d+) engineering API checks passed", major == 20 ? "engineeringApiV20" : "engineeringApiV21");
-        var httpText = RunBuildSpec("http", harness, [exe], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var http = RequireCount("HTTP regression", httpText, "COMPLETE: (\\d+) passed");
-        var hmiText = RunBuildSpec("hmi", harness, [exe, "hmi-only", major.ToString(), fileVersion], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var hmiMatch = Regex.Match(hmiText, "(\\d+) HMI traversal assertions, 0 failed");
-        if (!hmiMatch.Success) throw new ReleaseException("HMI traversal regression did not report complete success");
-        var hmi = int.Parse(hmiMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        JsonElement approval = default;
+        if (plan.Includes("engine-approval"))
+        {
+            var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
+            var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
+            Directory.CreateDirectory(approvalTemp);
+            var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
+                "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
+            using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
+            approval = approvalDoc.RootElement.Clone();
+            CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
+            var approvalResults = approval.GetProperty("results");
+            if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 4 || GetJsonBool(approval, "workbenchConnected") ||
+                GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
+                GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
+
+        }
+
+        int software = 0, engineering = 0, http = 0, hmi = 0;
+        if (plan.Includes("engine-functional"))
+        {
+            var softwareText = RunBuildSpec("software-lookup", harness, [exe, "software-lookup-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            software = RequireCount("software lookup", softwareText, "COMPLETE: (\\d+) software lookup checks passed", "softwareLookup");
+            var engineeringText = RunBuildSpec("engineering-api", harness, [exe, "engineering-api-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            engineering = RequireCount("engineering API", engineeringText, "COMPLETE: (\\d+) engineering API checks passed", major == 20 ? "engineeringApiV20" : "engineeringApiV21");
+            var httpText = RunBuildSpec("http", harness, [exe], outputDirectory, runTemp, cliHome, apiRoot, major);
+            http = RequireCount("HTTP regression", httpText, "COMPLETE: (\\d+) passed");
+            var hmiText = RunBuildSpec("hmi", harness, [exe, "hmi-only", major.ToString(), fileVersion], outputDirectory, runTemp, cliHome, apiRoot, major);
+            var hmiMatch = Regex.Match(hmiText, "(\\d+) HMI traversal assertions, 0 failed");
+            if (!hmiMatch.Success) throw new ReleaseException("HMI traversal regression did not report complete success");
+            hmi = int.Parse(hmiMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+
+        }
 
         var usagePath = Path.Combine(outputDirectory, $"tool-usage-v{major}.json");
         var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", exe,
             "--portal-root", api, "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--usage-output", usagePath], outputDirectory, runTemp, cliHome, apiRoot, major);
         var resources = RequireCount("resource discovery", resourcesText, "COMPLETE: (\\d+) resource discovery checks passed");
-        var schemas = Path.Combine(Path.GetDirectoryName(v21Api)!, "Schemas");
-        var ecosystemOut = Path.Combine(outputDirectory, "v21-ecosystem-v" + major + "-" + Guid.NewGuid().ToString("N"));
-        var ecosystemPython = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? python;
-        RunBuildSpec("v21-ecosystem", ecosystemPython, [Path.Combine(Root, "scripts/checks/Test-V21Ecosystem.py"), "--exe", exe,
-            "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--schema-root", schemas, "--output", ecosystemOut], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var ecosystemFiles = Directory.Exists(ecosystemOut) ? Directory.GetFiles(ecosystemOut, "result.json", SearchOption.AllDirectories) : [];
-        if (ecosystemFiles.Length != 1) throw new ReleaseException("V21 ecosystem evidence missing or ambiguous");
-        using var v21EcosystemDoc = JsonDocument.Parse(File.ReadAllText(ecosystemFiles[0]));
-        var v21Ecosystem = v21EcosystemDoc.RootElement.Clone();
-        CheckReleaseCount("v21Ecosystem", GetJsonInt(v21Ecosystem, "checks"), "V21 ecosystem adapter checks incomplete");
-        if (GetJsonString(v21Ecosystem, "status") != "passed" || GetJsonBool(v21Ecosystem, "selfTestOnly") || GetJsonBool(v21Ecosystem, "nativeTiaExecuted") ||
-            GetJsonString(v21Ecosystem, "runtimeSha256") != ReleaseRecords.HashFile(exe)) throw new ReleaseException("V21 ecosystem adapter evidence does not match the selected EXE");
+        JsonElement v21Ecosystem = default;
+        if (plan.Includes("engine-ecosystem"))
+        {
+            var schemas = Path.Combine(Path.GetDirectoryName(v21Api)!, "Schemas");
+            var ecosystemOut = Path.Combine(outputDirectory, "v21-ecosystem-v" + major + "-" + Guid.NewGuid().ToString("N"));
+            var ecosystemPython = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? python;
+            RunBuildSpec("v21-ecosystem", ecosystemPython, [Path.Combine(Root, "scripts/checks/Test-V21Ecosystem.py"), "--exe", exe,
+                "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--schema-root", schemas, "--output", ecosystemOut], outputDirectory, runTemp, cliHome, apiRoot, major);
+            var ecosystemFiles = Directory.Exists(ecosystemOut) ? Directory.GetFiles(ecosystemOut, "result.json", SearchOption.AllDirectories) : [];
+            if (ecosystemFiles.Length != 1) throw new ReleaseException("V21 ecosystem evidence missing or ambiguous");
+            using var v21EcosystemDoc = JsonDocument.Parse(File.ReadAllText(ecosystemFiles[0]));
+            v21Ecosystem = v21EcosystemDoc.RootElement.Clone();
+            CheckReleaseCount("v21Ecosystem", GetJsonInt(v21Ecosystem, "checks"), "V21 ecosystem adapter checks incomplete");
+            if (GetJsonString(v21Ecosystem, "status") != "passed" || GetJsonBool(v21Ecosystem, "selfTestOnly") || GetJsonBool(v21Ecosystem, "nativeTiaExecuted") ||
+                GetJsonString(v21Ecosystem, "runtimeSha256") != ReleaseRecords.HashFile(exe)) throw new ReleaseException("V21 ecosystem adapter evidence does not match the selected EXE");
+
+        }
 
         var stabilityRounds = options.Get("LocalStabilityRounds", "50");
-        var stabilityOut = Path.Combine(outputDirectory, "stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
-        RunBuildSpec("local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
-            "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", stabilityOut], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var isolatedOut = Path.Combine(outputDirectory, "isolated-stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
-        RunBuildSpec("isolated-local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
-            "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", isolatedOut, "--isolate-openness"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var isolatedDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(isolatedOut, "result.json")));
-        var isolatedStability = isolatedDoc.RootElement.Clone();
-        using var stabilityDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(stabilityOut, "result.json")));
-        var stability = stabilityDoc.RootElement.Clone();
-        if (GetJsonString(isolatedStability, "status") != "passed" || GetArrayLength(isolatedStability, "runs") != 4 || !GetJsonBool(isolatedStability, "isolatedWorker") || GetJsonString(isolatedStability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
-            throw new ReleaseException("Isolated local stability checks failed or used a different EXE");
-        if (GetJsonString(stability, "status") != "passed" || GetArrayLength(stability, "runs") != 4 || GetJsonString(stability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
-            throw new ReleaseException("Local stability validation incomplete or used a different EXE");
+        JsonElement stability = default, isolatedStability = default;
+        if (plan.Includes("engine-stability"))
+        {
+            var stabilityOut = Path.Combine(outputDirectory, "stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
+            RunBuildSpec("local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
+                "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", stabilityOut], outputDirectory, runTemp, cliHome, apiRoot, major);
+            using var stabilityDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(stabilityOut, "result.json")));
+            stability = stabilityDoc.RootElement.Clone();
+            if (GetJsonString(stability, "status") != "passed" || GetArrayLength(stability, "runs") != 4 || GetJsonString(stability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
+                throw new ReleaseException("Local stability validation incomplete or used a different EXE");
+        }
+        if (plan.Includes("engine-isolated-stability"))
+        {
+            var isolatedOut = Path.Combine(outputDirectory, "isolated-stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
+            RunBuildSpec("isolated-local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
+                "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", isolatedOut, "--isolate-openness"], outputDirectory, runTemp, cliHome, apiRoot, major);
+            using var isolatedDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(isolatedOut, "result.json")));
+            isolatedStability = isolatedDoc.RootElement.Clone();
+            if (GetJsonString(isolatedStability, "status") != "passed" || GetArrayLength(isolatedStability, "runs") != 4 || !GetJsonBool(isolatedStability, "isolatedWorker") || GetJsonString(isolatedStability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
+                throw new ReleaseException("Isolated local stability checks failed or used a different EXE");
+        }
 
-        var nativeExportText = RunBuildSpec("native-export", harness, [exe, "native-export-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var nativeExport = RequireCount("native export remoting", nativeExportText, "COMPLETE: (\\d+) native export remoting checks passed");
-        var snapshotText = RunBuildSpec("hmi-snapshot", harness, [exe, "hmi-snapshot-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var snapshot = RequireCount("HMI snapshot", snapshotText, "COMPLETE: (\\d+) HMI snapshot remoting checks passed");
-        var globalText = RunBuildSpec("global-script", harness, [exe, "global-script-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var globalScripts = RequireCount("global script bridge", globalText, "COMPLETE: (\\d+) global script bridge checks passed", major == 21 ? "globalScriptV21" : null);
-        var graphicText = RunBuildSpec("graphic-selection", harness, [exe, "graphic-selection-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var graphic = RequireCount("graphic selection", graphicText, "COMPLETE: (\\d+) graphical selection checks passed", "graphicSelection");
-        var settingsText = RunBuildSpec("runtime-settings", harness, [exe, "runtime-settings-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var settings = RequireCount("runtime settings", settingsText, "COMPLETE: (\\d+) runtime settings checks passed", major == 20 ? "runtimeSettingsV20" : "runtimeSettingsV21");
-        var migrationText = RunBuildSpec("migration-assembly", harness, [exe, "test-migration-read-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        if (!migrationText.Contains("migration assembly checks passed", StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Migration assembly file checks did not complete");
-        var ecosystemText = RunBuildSpec("ecosystem-assembly", harness, [exe, "test-ecosystem-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var ecosystemCount = RequireCount("ecosystem assembly", ecosystemText, "COMPLETE: (\\d+) ecosystem assembly checks passed", "ecosystem");
+        int nativeExport = 0, snapshot = 0, globalScripts = 0, graphic = 0, settings = 0, ecosystemCount = 0;
+        if (plan.Includes("engine-functional"))
+        {
+            var nativeExportText = RunBuildSpec("native-export", harness, [exe, "native-export-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
+            nativeExport = RequireCount("native export remoting", nativeExportText, "COMPLETE: (\\d+) native export remoting checks passed");
+            var snapshotText = RunBuildSpec("hmi-snapshot", harness, [exe, "hmi-snapshot-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
+            snapshot = RequireCount("HMI snapshot", snapshotText, "COMPLETE: (\\d+) HMI snapshot remoting checks passed");
+            var globalText = RunBuildSpec("global-script", harness, [exe, "global-script-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            globalScripts = RequireCount("global script bridge", globalText, "COMPLETE: (\\d+) global script bridge checks passed", major == 21 ? "globalScriptV21" : null);
+            var graphicText = RunBuildSpec("graphic-selection", harness, [exe, "graphic-selection-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            graphic = RequireCount("graphic selection", graphicText, "COMPLETE: (\\d+) graphical selection checks passed", "graphicSelection");
+            var settingsText = RunBuildSpec("runtime-settings", harness, [exe, "runtime-settings-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            settings = RequireCount("runtime settings", settingsText, "COMPLETE: (\\d+) runtime settings checks passed", major == 20 ? "runtimeSettingsV20" : "runtimeSettingsV21");
+            var migrationText = RunBuildSpec("migration-assembly", harness, [exe, "test-migration-read-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            if (!migrationText.Contains("migration assembly checks passed", StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Migration assembly file checks did not complete");
+            var ecosystemText = RunBuildSpec("ecosystem-assembly", harness, [exe, "test-ecosystem-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+            ecosystemCount = RequireCount("ecosystem assembly", ecosystemText, "COMPLETE: (\\d+) ecosystem assembly checks passed", "ecosystem");
+
+        }
 
         var categories = new Dictionary<string, int>(StringComparer.Ordinal);
         if (coverage.TryGetProperty("sites", out var sites) && sites.ValueKind == JsonValueKind.Array)
@@ -404,13 +449,15 @@ internal static partial class ReleaseCommands
         return new
         {
             httpPassed = http, hmiPassed = hmi, resourceDiscoveryPassed = resources, nativeExportRemotingPassed = nativeExport,
-            migrationAssembly = "passed", realProjectAcceptance = "NOT PERFORMED for this release", hmiSnapshotRemotingPassed = snapshot,
+            migrationAssembly = plan.Includes("engine-functional") ? "passed" : "skipped", realProjectAcceptance = "NOT PERFORMED for this release", hmiSnapshotRemotingPassed = snapshot,
             softwareLookupPassed = software, engineeringApiShapePassed = engineering,
             nativeHarness = new { compiled = true, safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/NativeTests.V{major}.exe")), supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
-            localStability = stability, v21EcosystemAdapters = v21Ecosystem, isolatedLocalStability = isolatedStability,
+            localStability = plan.Includes("engine-stability") ? (JsonElement?)stability : null,
+            v21EcosystemAdapters = plan.Includes("engine-ecosystem") ? (JsonElement?)v21Ecosystem : null,
+            isolatedLocalStability = plan.Includes("engine-isolated-stability") ? (JsonElement?)isolatedStability : null,
             sessionStability = new { processLeaseChecksPassed = processLeases, nativeMcpSafetyChecksPassed = GetJsonInt(common, "nativeMcpSafetyChecksPassed"), crashEvidenceChecksPassed = GetJsonInt(common, "crashEvidenceChecksPassed"), nativeMcpExecuted = false },
-            nativeDiagnostics, workerIsolation = new { enabledByDefault = false, faultChecksPassed = workerFaults, protocolChecksPassed = workerProtocol, nativeAcceptance = "NOT RUN", protocolScriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py")) },
-            approvalSafety = new { status = "passed", checksPassed = GetJsonInt(approval, "checksPassed"), defaultEnabled = true, directWriteRefusedBeforeDispatch = true, callToolWriteRefusedBeforeDispatch = true, readSucceeded = true, workbenchConnected = false, tiaConnected = false, scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py")) },
+            nativeDiagnostics, workerIsolation = plan.Includes("engine-worker-isolation") ? new { enabledByDefault = false, faultChecksPassed = workerFaults, protocolChecksPassed = workerProtocol, nativeAcceptance = "NOT RUN", protocolScriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py")) } : null,
+            approvalSafety = plan.Includes("engine-approval") ? new { status = "passed", checksPassed = GetJsonInt(approval, "checksPassed"), defaultEnabled = true, directWriteRefusedBeforeDispatch = true, callToolWriteRefusedBeforeDispatch = true, readSucceeded = true, workbenchConnected = false, tiaConnected = false, scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py")) } : null,
             engineeringLiveEdits = "NOT TESTED; preview/API shape and offline behavior only",
             unifiedGraphicLists = major == 21 ? "API present; native import not live-tested" : "not exposed by supplied V20 API",
             globalScriptBridgePassed = globalScripts, graphicSelectionPassed = graphic, runtimeSettingsPassed = settings,
@@ -418,12 +465,12 @@ internal static partial class ReleaseCommands
         };
     }
 
-    private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome)
+    private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome, ReleaseCheckPlan plan)
     {
         var exe = Path.Combine(Root, "runtime/v21/TiaMcp.Engine.V21.exe");
         var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
-        RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
-        RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
+        if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
+        if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, Path.Combine(Root, "manifest/tools-list.json"), package], outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildSpec("tool-capability-matrix", dotnet, ["run", Path.Combine(Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"), "--", "--tools-list", Path.Combine(Root, "manifest/tools-list.json"), "--out-file", Path.Combine(Root, "docs/reference/tool-matrix.md")], outputDirectory, runTemp, cliHome, apiRoot);
     }

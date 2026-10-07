@@ -28,7 +28,7 @@ internal static class ReleaseCommandTable
         new("process-leases", "HttpTests.exe process-leases-only", "process-leases-v{major}.log", "minimum 2", "sessionStability.processLeaseChecksPassed"),
         new("worker-supervisor", "HttpTests.exe worker-supervisor-only", "worker-supervisor-v{major}.log", "minimum 25; no TIA", "workerIsolation.faultChecksPassed"),
         new("worker-protocol", "Test-WorkerIsolation.py", "worker-protocol-v{major}.log", "minimum 58; no TIA", "workerIsolation.protocolChecksPassed"),
-        new("approval-safety", "Test-ReleaseApprovalGate.py --product engine", "approval-safety-v{major}.log", "exactly 3; no workbench/TIA", "approvalSafety"),
+        new("approval-safety", "Test-ReleaseApprovalGate.py --product engine", "approval-safety-v{major}.log", "exactly 4; no workbench/TIA", "approvalSafety"),
         new("software-lookup", "HttpTests.exe software-lookup-only", "software-lookup-v{major}.log", "minimum 45", "softwareLookupPassed"),
         new("engineering-api", "HttpTests.exe engineering-api-only", "engineering-api-v{major}.log", "V20 >= 2840; V21 >= 3126", "engineeringApiShapePassed"),
         new("http", "HttpTests.exe", "http-v{major}.log", "complete runtime regressions", "httpPassed"),

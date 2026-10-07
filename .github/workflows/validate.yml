@@ -40,18 +40,14 @@ jobs:
           dotnet run --project build-tools/release -- release -DocumentationOnly
           dotnet run --project build-tools/release -- run-release-build -DryRun
       - name: Release safety suites and production PLC name fixture
-        shell: powershell
+        shell: bash
         run: |
+          set -euo pipefail
           python scripts/checks/Test-NativeLifecycle.py --self-test
-          if ($LASTEXITCODE) { throw 'Native supervisor self-tests failed' }
           python scripts/checks/Test-NativeMcpSession.py --self-test
-          if ($LASTEXITCODE) { throw 'Native MCP self-tests failed' }
           python scripts/checks/Test-DotnetSuites.py --suite crash-evidence
-          if ($LASTEXITCODE) { throw 'Crash evidence suite failed' }
           python scripts/checks/Test-DotnetSuites.py --suite write-guard
-          if ($LASTEXITCODE) { throw 'Write guard suite failed' }
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
-          if ($LASTEXITCODE) { throw 'PLC name fixture failed' }
       - name: Script calls must use registered V4 tools
         shell: bash
         run: |

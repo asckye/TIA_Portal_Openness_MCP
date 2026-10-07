@@ -8,7 +8,7 @@ internal sealed record ReleaseArtifact(string Path, string Sha256);
 internal static class ReleaseRecords
 {
     private static readonly string[] EngineSourceRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Updater", "src/Tools/WriteGuard", "tests/Engine", "tests/Updater", "tests/Tools", "tests/test-suites.json", "build-tools/native-call-weaver", "build-tools/release", "src/Shared", "third_party/TiaGitAddIn.Core", "third_party/SiemensOpcUaModelled"];
-    private static readonly string[] MultiSourceRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Tools/WriteGuard", "tests/Engine", "tests/Tools", "tests/test-suites.json", "src/Shared", "src/Studio", "tests/Studio", "third_party/tia-openness-studio", "build-tools/native-call-weaver", "scripts/build", "scripts/checks", "scripts/diagnostics", "scripts/generate"];
+    private static readonly string[] MultiSourceRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Tools/WriteGuard", "tests/Engine", "tests/Tools", "tests/test-suites.json", "src/Shared", "src/Studio", "tests/Studio", "third_party/tia-openness-studio", "build-tools/native-call-weaver", "build-tools/release", "scripts/build", "scripts/checks", "scripts/diagnostics", "scripts/generate"];
     private static readonly string[] ValidationRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Updater", "src/Tools/WriteGuard", "tests/Engine", "tests/Updater", "tests/Tools", "tests/test-suites.json", "build-tools/native-call-weaver", "build-tools/release", "src/Shared", "third_party/eido-import-planner", "third_party/siemens-plc-tools", "third_party/SiemensOpcUaModelled", "third_party/simaticml-decoder", "third_party/TiaGitAddIn.Core", "scripts/build", "scripts/checks", "scripts/diagnostics", "scripts/generate", "scripts/ecosystem", "reference", "templates"];
     private static readonly string[] BinaryExtensions = [".exe", ".dll", ".config"];
 
@@ -123,8 +123,21 @@ internal static class ReleaseRecords
         return "";
     }
 
-    internal static string EngineReuseReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources)
+    internal static string EngineReuseReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources, string requiredTier = "full")
     {
+        if (requiredTier == "full" && GetString(record, "tier") == "quick") return "quick evidence cannot be reused for a full release";
+        var selected = new HashSet<string>(StringComparer.Ordinal);
+        if (GetString(record, "tier") == "quick")
+        {
+            try
+            {
+                var plan = JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!;
+                ReleaseCheckPolicy.Load(root).ValidatePlan(plan);
+                selected.UnionWith(plan.SelectedChecks);
+            }
+            catch { return "quick check selection is missing or invalid"; }
+        }
+        bool includes(string check) => GetString(record, "tier") != "quick" || selected.Contains(check);
         var auditReason = AuditEvidenceReason(root, release, record);
         if (auditReason.Length != 0) return auditReason;
         try
@@ -138,15 +151,16 @@ internal static class ReleaseRecords
                 if (!validation.TryGetProperty("runtimes", out var runtimes) || !runtimes.TryGetProperty("V" + major, out var runtime)) return $"V{major} validation incomplete";
                 foreach (var name in new[] { "localStability", "isolatedLocalStability" })
                 {
+                    if (!includes(name == "localStability" ? "engine-stability" : "engine-isolated-stability")) continue;
                     if (!runtime.TryGetProperty(name, out var stability) || GetString(stability, "status") != "passed" ||
                         !stability.TryGetProperty("runs", out var runs) || runs.ValueKind != JsonValueKind.Array || runs.GetArrayLength() != 4)
                         return $"V{major} validation incomplete";
                     if (name == "isolatedLocalStability" && !GetBool(stability, "isolatedWorker")) return $"V{major} validation incomplete";
                 }
-                if (!runtime.TryGetProperty("approvalSafety", out var approval) || GetString(approval, "status") != "passed" ||
-                    GetInt(approval, "checksPassed") != 3 || !GetBool(approval, "defaultEnabled") ||
+                if (includes("engine-approval") && (!runtime.TryGetProperty("approvalSafety", out var approval) || GetString(approval, "status") != "passed" ||
+                    GetInt(approval, "checksPassed") != 4 || !GetBool(approval, "defaultEnabled") ||
                     !GetBool(approval, "directWriteRefusedBeforeDispatch") || !GetBool(approval, "callToolWriteRefusedBeforeDispatch") ||
-                    !GetBool(approval, "readSucceeded") || GetBool(approval, "workbenchConnected") || GetBool(approval, "tiaConnected"))
+                    !GetBool(approval, "readSucceeded") || GetBool(approval, "workbenchConnected") || GetBool(approval, "tiaConnected")))
                     return $"V{major} default-approval gate incomplete";
                 if (!runtime.TryGetProperty("sessionStability", out var session) || GetInt(session, "nativeMcpSafetyChecksPassed") < 8 ||
                     GetInt(session, "crashEvidenceChecksPassed") < 7 || GetBool(session, "nativeMcpExecuted"))

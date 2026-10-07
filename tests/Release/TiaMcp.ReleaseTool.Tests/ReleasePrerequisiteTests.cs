@@ -33,7 +33,7 @@ public sealed class ReleasePrerequisiteTests
     [Fact]
     [Trait("Category", "Prerequisites")]
     public void DirtyNonManagedTreeIsRejected() =>
-        Assert.False(ReleaseValidation.IsReleaseManagedChange(" M tracked.ps1"));
+        Assert.False(ReleaseValidation.IsReleaseManagedChange(" M tracked-script.txt"));
 
     [Fact]
     [Trait("Category", "Prerequisites")]
@@ -94,7 +94,7 @@ public sealed class ReleasePrerequisiteTests
     [Trait("Category", "Prerequisites")]
     [InlineData(" M manifest/release-build.json", true)]
     [InlineData(" M Version.props", true)]
-    [InlineData(" M scripts/build/Release.ps1", false)]
+    [InlineData(" M build-tools/release/ReleaseCommands.cs", false)]
     [InlineData("?? manifest/new.json", false)]
     [InlineData(" M manifest/history/contracts-v3/baseline/21.json", false)]
     public void ReleaseManagedFileFilterIsNarrow(string status, bool expected) =>

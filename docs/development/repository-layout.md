@@ -8,7 +8,7 @@
 |---|---|
 | `TiaPortalOpenness.slnx` | 51 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
 | `TiaPortalOpenness.Offline.slnx` | 30 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
-| `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由发布脚本收录源码哈希 |
+| `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `src/Engine`、`src/FoundationHost`、`src/Worker` | V20/V21 完整引擎、六版 Foundation 宿主及八版 worker；程序集、命名空间和 EXE 名称不变 |
 | `src/Adapters`、`src/Adapters.Contracts`、`src/Runtime`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
@@ -61,7 +61,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 `src/Studio/Directory.Build.props` 保留 Studio 公共构建设置；
 `tests/Studio/Directory.Build.props` 显式导入它，保持原先的导入顺序及测试包引用。
 `tests/Engine/Shared` 保留 xunit 共享适配器。原 `tools/README.md` 的源码与工具导航已并入上表，
-仓库不再保留 `tools/`。发布脚本将构建日志写入 `bin-build/releases/v<Version>/`。
+仓库不再保留 `tools/`。release tool 将构建日志写入 `bin-build/releases/v<Version>/`。
 
 ## 测试工程
 

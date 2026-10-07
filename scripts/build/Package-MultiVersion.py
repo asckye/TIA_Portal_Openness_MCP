@@ -5,12 +5,16 @@ The existing Package-Release.py remains the versioned V20/V21 publication workfl
 """
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("bundle_layout", ROOT / "scripts/checks/Check-BundleLayout.py")
+layout = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(layout)
 
 
 def sha(data):
@@ -57,13 +61,17 @@ def main():
     assert not args.output.exists(), 'Choose a new output file'
     assert not subprocess.check_output(['git', 'diff', 'HEAD', '--name-only'], cwd=ROOT).strip(), 'Commit reviewed source/manifests before packaging'
     tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode('utf-8').split('\0')
-    tracked = [name for name in tracked if name]
+    tracked = [name for name in tracked if name and (ROOT / name).is_file()]
     files = {name: (ROOT / name).read_bytes() for name in tracked}
     for name in ('release-build', 'configurator-build', 'multi-version-build'):
         assert f'manifest/{name}.json' in files, f'Missing {name} record; run the complete release build chain first'
     records = {name: json.loads(files[f'manifest/{name}.json'].decode('utf-8-sig')) for name in ('release-build', 'configurator-build', 'multi-version-build')}
     multi = records['multi-version-build']
-    assert multi['validation']['foundationTransportExecuted'] and multi['validation']['studioFunctionalTestsExecuted'], 'Run dotnet run --project build-tools/release -- build-multi-version -Test first'
+    candidate = json.loads((ROOT / 'manifest/package-manifest.json').read_text('utf-8-sig'))
+    selected = layout.release_checks(ROOT, candidate, records['release-build'], multi)
+    assert candidate['checkStatus'] == 'passed', 'Complete the candidate chain before packaging'
+    if 'foundation-transport' in selected: assert multi['validation']['foundationTransportExecuted']
+    if 'gui-tests' in selected: assert multi['validation']['studioFunctionalTestsExecuted']
     assert set(multi['studioReleaseKeys']) == {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'}
     for record in records.values():
         for row in record['sourceFiles']:
@@ -85,7 +93,7 @@ def main():
         assert f"runtime/v{key}/{'TiaMcp.Engine.V' + key if key in ('20', '21') else 'TiaMcp.FoundationHost'}.exe" in files
         assert f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
-    files['MULTIVERSION-BUILD.json'] = json.dumps({'commit': commit, 'nativeAcceptance': 'NOT RUN for newly enabled targets', 'buildRecord': 'manifest/multi-version-build.json', 'toolMatrix': 'manifest/version-tools.json'}, indent=2).encode()
+    files['MULTIVERSION-BUILD.json'] = json.dumps({'commit': commit, 'tier': candidate['tier'], 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'nativeAcceptance': 'NOT RUN for newly enabled targets', 'buildRecord': 'manifest/multi-version-build.json', 'toolMatrix': 'manifest/version-tools.json'}, indent=2).encode()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(args.output, 'x', zipfile.ZIP_DEFLATED) as archive:
         for name, data in sorted(files.items()): archive.writestr(name, data)

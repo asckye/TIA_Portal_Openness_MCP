@@ -1,6 +1,41 @@
 """Check the BCL resource table against Git and the C# bundle validator; no dotnet."""
 import argparse
 import json
+
+
+def release_checks(root, package, *records):
+    """Validate candidate tier evidence before delivery projection removes sources."""
+    policy = json.loads((root / 'build-tools/release/release-checks.json').read_text('utf-8'))
+    tier = package.get('tier')
+    if tier not in ('quick', 'full'):
+        raise ValueError('Package needs an explicit quick/full tier; run run-release-build -Tier')
+    selected = package.get('checksSelected', [])
+    skipped = package.get('checksSkipped', [])
+    if (len(selected + skipped) != len(policy['checks']) or len(set(selected + skipped)) != len(selected + skipped)
+            or set(selected + skipped) != set(policy['checks']) or not set(policy['always']) <= set(selected)
+            or (tier == 'full' and skipped)):
+        raise ValueError('Invalid candidate check selection')
+    required = set(policy['always'])
+    for path in package.get('changedPaths', []):
+        matches = [rule for rule in policy['rules'] if
+                   (path.startswith(rule['path']) if rule['path'].endswith('/') else path == rule['path'])]
+        if not matches:
+            required.update(policy['checks'])
+        for rule in matches:
+            required.update(rule['checks'])
+    if not required <= set(selected):
+        raise ValueError('Changed paths require additional candidate checks')
+    status = package.get('checkStatus')
+    if status not in ('pending', 'passed') or package.get('checksRan') != (selected if status == 'passed' else []):
+        raise ValueError('Invalid candidate check completion evidence')
+    for record in records:
+        if record is None:
+            continue
+        plan = record.get('checkPlan', {})
+        if (record.get('tier') != tier or plan.get('tier') != tier or plan.get('selectedChecks') != selected
+                or plan.get('skippedChecks') != skipped or plan.get('changedPaths') != package.get('changedPaths', [])):
+            raise ValueError('Build record check plan differs from candidate package')
+    return set(selected)
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -140,6 +175,36 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
+    def test_quick_package_requires_the_same_build_plan(self):
+        policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
+        selected = [check for check in policy['checks'] if check in policy['always']]
+        skipped = [check for check in policy['checks'] if check not in selected]
+        package = dict(tier='quick', checkStatus='passed', checksSelected=selected, checksRan=selected,
+                       checksSkipped=skipped, changedPaths=['docs/development/validation.md'])
+        record = dict(tier='quick', checkPlan=dict(tier='quick', selectedChecks=selected,
+                                                  skippedChecks=skipped, changedPaths=package['changedPaths']))
+        self.assertEqual(set(selected), release_checks(ROOT, package, record))
+        with self.assertRaises(ValueError):
+            release_checks(ROOT, package, dict(tier='full', checkPlan=record['checkPlan']))
+
+    def test_package_rejects_unknown_path_with_reduced_checks(self):
+        policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
+        selected = policy['always']
+        package = dict(tier='quick', checkStatus='passed', checksSelected=selected, checksRan=selected,
+                       checksSkipped=[check for check in policy['checks'] if check not in selected],
+                       changedPaths=['unreviewed/Example.cs'])
+        with self.assertRaises(ValueError):
+            release_checks(ROOT, package)
+
+    def test_full_package_requires_all_checks_and_complete_pass_list(self):
+        policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
+        package = dict(tier='full', checkStatus='passed', checksSelected=policy['checks'], checksRan=policy['checks'],
+                       checksSkipped=[], changedPaths=[])
+        self.assertEqual(set(policy['checks']), release_checks(ROOT, package))
+        package['checksRan'] = policy['always']
+        with self.assertRaises(ValueError):
+            release_checks(ROOT, package)
+
     def test_csharp_installer_covers_external_runtime_dependencies(self):
         expected = set()
         for path in (ROOT / 'third_party/siemens-plc-tools').rglob('pyproject.toml'):

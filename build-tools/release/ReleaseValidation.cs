@@ -77,7 +77,7 @@ internal static class ReleaseValidation
 
     internal static string? AssertStepOrder(IReadOnlyList<string> names)
     {
-        const string expected = "00-preflight,01-multi-version,02-build-release,03-package-local,04-validate-bundle,05-prompt-registration,06-v4-contracts-capture,07-v4-contracts-compare,08-v4-responses-capture,09-v4-responses-compare";
+        const string expected = "00-preflight,01-multi-version,02-build-release,03-package-local,04-validate-bundle,05-prompt-registration,06-v4-contracts-capture,07-v4-contracts-compare,08-v4-responses-capture,09-v4-responses-compare,10-relocated-bundle";
         return string.Join(',', names) == expected ? null : "Reviewer chain order changed; preparation must precede full engines and snapshots must follow binary validation";
     }
 }

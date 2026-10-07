@@ -10,6 +10,7 @@
 | 构建 | `dotnet run --project build-tools/release -- build-release` | 使用 Siemens PublicAPI 构建/验证两版引擎 |
 | 构建 | `dotnet run --project build-tools/release -- prepare-delivery` | 沿用已验证引擎，更新交付与 GUI 记录 |
 | 发布 | `dotnet run --project build-tools/release -- release` | 一键发布：前置检查 → 组件版本 → build-release / build-multi-version → 本地闸门 → 一次提交 → Package-Release → Verify-ReleaseAsset → 推送 → CI（API）→ tag → Publish-Release 上传 → 等验证工作流检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |
+| 审查 | `dotnet run --project build-tools/release -- run-release-build -PublicApiRoot <SDK-root> -OutputDirectory <new-dir> -MaxParallelism <n>` | 本地完整构建链，构建后并行运行注册、V4 契约/响应比较和重定位检查；`-MaxParallelism 1` 可串行复现 |
 | 发布 | [Package-Release.py](build/Package-Release.py)、`dotnet run --project build-tools/release -- publish` | 干净提交 + 本机二进制打包；本机建草稿 Release、上传 ZIP 与 `.sha256`、回读校验后发布（2.8.1 起二进制不入库、不再由 Actions 打包） |
 | 构建 | `dotnet run --project build-tools/release -- build-multi-version` / [Package-MultiVersion.py](build/Package-MultiVersion.py) | 八版本构建、功能验证和 API 对照；正式发布调用该构建，Package-MultiVersion 另用于本地开发包 |
 | 构建 | `dotnet run --project build-tools/release -- build-studio` | 构建 Studio、本地 Bridge 和 八版本原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
@@ -35,4 +36,4 @@
 | 操作 | [vci-watch](operations/vci-watch/watch.py) | `python watch.py --register-task [--interval-minutes 10]` 注册当前用户的 `pythonw.exe` 计划任务；`python watch.py --register-task --remove` 删除 |
 | 操作 | `runtime/tools/TiaMcp.Updater.exe` | 在已解压的交付包里更新或回滚；手动运行时从包根传入 `-InstallRoot .`；支持 `-Check`、`-Version`、`-Force`、`-Repository`、`-TimeoutSeconds`、`-WaitForPid`、`-Rollback` 和 `-RelaunchConfigurator`；不连接 TIA、不结束进程，保留用户数据及未归更新器所有的文件 |
 
-详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。按旧版本构建/打包脚本和 Python 预热桥接已由统一流程替代并删除。
+详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。PowerShell、batch、cmd 构建发布入口已由 .NET release tool 替代并删除。

@@ -40,14 +40,16 @@ public sealed class ReleaseValidationTests
                 {
                     Assert.NotNull(failure);
                     if (shouldFail20) Assert.Contains("release-v20", failure!.Message);
-                    if (shouldFail21) Assert.Contains("release-v21", failure!.Message);
+                    var v21Log = File.ReadAllText(Path.Combine(directory, "release-v21.log"));
+                    if (shouldFail21 && !v21Log.Contains("Not started", StringComparison.Ordinal)) Assert.Contains("release-v21", failure!.Message);
                 }
             }
             else
             {
                 var major = assertion == "v20-log" ? "20" : "21";
                 var expectedText = "V" + major + " passed";
-                Assert.Contains(expectedText, File.ReadAllText(Path.Combine(directory, "release-v" + major + ".log")));
+                var log = File.ReadAllText(Path.Combine(directory, "release-v" + major + ".log"));
+                Assert.True(log.Contains(expectedText, StringComparison.Ordinal) || (major == "21" && log.Contains("Not started", StringComparison.Ordinal)));
             }
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
@@ -143,7 +145,7 @@ public sealed class ReleaseValidationTests
     [Trait("Category", "ReviewerChain")]
     public void ReleaseReviewStepsKeepTheirOrder()
     {
-        var names = new[] { "00-preflight", "01-multi-version", "02-build-release", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare" };
+        var names = new[] { "00-preflight", "01-multi-version", "02-build-release", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare", "10-relocated-bundle" };
         Assert.Null(ReleaseValidation.AssertStepOrder(names));
     }
 
@@ -151,7 +153,7 @@ public sealed class ReleaseValidationTests
     [Trait("Category", "ReviewerChain")]
     public void ReorderedReleaseReviewStepsAreRejected()
     {
-        var names = new[] { "00-preflight", "02-build-release", "01-multi-version", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare" };
+        var names = new[] { "00-preflight", "02-build-release", "01-multi-version", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare", "10-relocated-bundle" };
         Assert.NotNull(ReleaseValidation.AssertStepOrder(names));
     }
 
@@ -165,7 +167,7 @@ public sealed class ReleaseValidationTests
     [Theory]
     [InlineData(" M manifest/release-build.json", true)]
     [InlineData(" M Version.props", true)]
-    [InlineData(" M scripts/build/Release.ps1", false)]
+    [InlineData(" M build-tools/release/ReleaseCommands.cs", false)]
     [InlineData("?? manifest/new.json", false)]
     [InlineData(" M manifest/history/contracts-v3/baseline/21.json", false)]
     public void ManagedReleaseChangesRemainNarrow(string status, bool expected) =>
@@ -356,8 +358,59 @@ public sealed class ReleaseValidationTests
                 [("release-v20", () => Execute("release-v20")), ("release-v21", () => Execute("release-v21"))], directory);
             Assert.Equal(2, results.Count);
             Assert.True(maximum > 1, "Both version pipelines should overlap.");
-            Assert.Equal("release-v20 output", File.ReadAllText(Path.Combine(directory, "release-v20.log")));
-            Assert.Equal("release-v21 output", File.ReadAllText(Path.Combine(directory, "release-v21.log")));
+            Assert.StartsWith("release-v20 output", File.ReadAllText(Path.Combine(directory, "release-v20.log")));
+            Assert.StartsWith("release-v21 output", File.ReadAllText(Path.Combine(directory, "release-v21.log")));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    [Fact]
+    [Trait("Category", "Pipeline")]
+    public void ParallelPipelinesHonorSerialAndBoundedLimits()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "release-pipeline-limit-" + Guid.NewGuid().ToString("N"));
+        var active = 0;
+        var maximum = 0;
+        PipelineResult Execute(string name)
+        {
+            var current = Interlocked.Increment(ref active);
+            InterlockedExtensions.Max(ref maximum, current);
+            Thread.Sleep(40);
+            Interlocked.Decrement(ref active);
+            return new PipelineResult(name, 0, name, "");
+        }
+        try
+        {
+            var jobs = Enumerable.Range(0, 6).Select(index => ($"job-{index}", (Func<PipelineResult>)(() => Execute($"job-{index}")))).ToArray();
+            var serialResults = ParallelPipeline.Run(jobs, Path.Combine(directory, "serial"), maxParallelism: 1);
+            Assert.Equal(1, maximum);
+            maximum = 0;
+            var boundedResults = ParallelPipeline.Run(jobs, Path.Combine(directory, "bounded"), maxParallelism: 2);
+            Assert.InRange(maximum, 1, 2);
+            Assert.Equal(serialResults.Select(result => (result.Name, result.ExitCode, result.StandardOutput, result.StandardError)),
+                boundedResults.Select(result => (result.Name, result.ExitCode, result.StandardOutput, result.StandardError)));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    [Fact]
+    [Trait("Category", "Pipeline")]
+    public void ParallelPipelineFailureStopsQueuedJobsAndWaitsForRunningJobs()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "release-pipeline-cancel-" + Guid.NewGuid().ToString("N"));
+        var runningFinished = false;
+        var queuedStarted = false;
+        try
+        {
+        using var runningStarted = new ManualResetEventSlim();
+        var error = Assert.Throws<ReleaseException>(() => ParallelPipeline.Run(
+                [("failure", () => { Assert.True(runningStarted.Wait(TimeSpan.FromSeconds(5))); return new PipelineResult("failure", 7, "", "failed"); }),
+                 ("running", () => { runningStarted.Set(); Thread.Sleep(80); runningFinished = true; return new PipelineResult("running", 0, "", ""); }),
+                 ("queued", () => { queuedStarted = true; return new PipelineResult("queued", 0, "", ""); })], directory, maxParallelism: 2));
+            Assert.Contains("failure", error.Message);
+            Assert.True(runningFinished);
+            Assert.False(queuedStarted);
+            Assert.Contains("Not started", File.ReadAllText(Path.Combine(directory, "queued.log")));
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
@@ -367,15 +420,23 @@ public sealed class ReleaseValidationTests
     public void ParallelPipelinesReportEveryFailureAndRetainBothLogs()
     {
         var directory = Path.Combine(Path.GetTempPath(), "release-pipeline-" + Guid.NewGuid().ToString("N"));
+        using var bothStarted = new CountdownEvent(2);
+        PipelineResult FailAfterBothStart(string name, int exitCode)
+        {
+            bothStarted.Signal();
+            Assert.True(bothStarted.Wait(TimeSpan.FromSeconds(5)));
+            var version = name == "release-v20" ? "20" : "21";
+            return new PipelineResult(name, exitCode, "v" + version, "failure " + version);
+        }
         try
         {
             var error = Assert.Throws<ReleaseException>(() => ParallelPipeline.Run(
-                [("release-v20", () => new PipelineResult("release-v20", 7, "v20", "failure 20")),
-                 ("release-v21", () => new PipelineResult("release-v21", 8, "v21", "failure 21"))], directory));
+                [("release-v20", () => FailAfterBothStart("release-v20", 7)),
+                 ("release-v21", () => FailAfterBothStart("release-v21", 8))], directory, maxParallelism: 2));
             Assert.Contains("release-v20", error.Message);
             Assert.Contains("release-v21", error.Message);
-            Assert.Equal("v20failure 20", File.ReadAllText(Path.Combine(directory, "release-v20.log")));
-            Assert.Equal("v21failure 21", File.ReadAllText(Path.Combine(directory, "release-v21.log")));
+            Assert.StartsWith("v20failure 20", File.ReadAllText(Path.Combine(directory, "release-v20.log")));
+            Assert.StartsWith("v21failure 21", File.ReadAllText(Path.Combine(directory, "release-v21.log")));
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }

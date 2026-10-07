@@ -4,7 +4,7 @@ The ZIP must equal the tag tree filtered by scripts/operations/delivery-files.js
 recorded runtime binaries, excluding runtime/verification/. No generated extras are allowed.
 The sidecar, tracked bytes, binary hashes and delivery package name are checked independently.
 
-Run locally by Release.ps1 before the upload and by the "Verify published release" workflow after it.
+Run locally by the .NET release tool before upload and by the "Verify published release" workflow after it.
 Exit code 0 = verified; anything else prints the first mismatch and exits 1.
 """
 import argparse

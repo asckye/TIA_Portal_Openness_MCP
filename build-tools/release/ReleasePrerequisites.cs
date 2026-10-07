@@ -34,13 +34,6 @@ internal static class ReleasePrerequisites
         return text;
     }
 
-    internal static string RequirePowerShell(string output, string label)
-    {
-        var text = output.Trim();
-        if (!int.TryParse(text, out var major) || major < 7) throw new ReleaseException(label + " 7 is required");
-        return text;
-    }
-
     internal static string RequireEcosystemPython(string executable, string bridge, string python)
     {
         var code = "import runpy,sys; assert sys.version_info >= (3,12); import reportlab; m=runpy.run_path(sys.argv[1]); group,errors=m['load_groups'](); assert not errors, errors; assert len(m['catalog'](group)) >= 49";

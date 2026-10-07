@@ -104,13 +104,6 @@ internal static partial class ReleaseCommands
                 ProcessRunner.RequireSuccess(result, "dotnet --list-sdks");
                 return executable + " " + ReleasePrerequisites.RequireSdk(result.StandardOutput, "10", ".NET 10 SDK");
             }),
-            new("PowerShell 7", () =>
-            {
-                var executable = ResolveApplication(options.Get("PowerShell7", "pwsh"));
-                var result = ProcessRunner.Run(executable, ["-NoProfile", "-NonInteractive", "-Command", "$PSVersionTable.PSVersion.Major"], repo);
-                ProcessRunner.RequireSuccess(result, "PowerShell version check");
-                return executable + " " + ReleasePrerequisites.RequirePowerShell(result.StandardOutput, "PowerShell");
-            }),
             new("Python >= 3.12", () =>
             {
                 var executable = ResolveApplication(python);
@@ -239,6 +232,8 @@ internal static partial class ReleaseCommands
             Console.WriteLine("Release documentation assertions passed.");
             return 0;
         }
+        if (ReleaseCheckPolicy.Tier(options.Get("Tier")) != "full" || ReleasePlan(options).Tier != "full") throw new ReleaseException("Release requires -Tier full.");
+        if (options.Get("PackagePath") is { } packagePath) ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.GetFullPath(packagePath));
         var version = options.Get("Version");
         if (version is null || !System.Text.RegularExpressions.Regex.IsMatch(version, "^\\d+\\.\\d+\\.\\d+$"))
             throw new ReleaseException("-Version must be X.Y.Z");
@@ -253,15 +248,30 @@ internal static partial class ReleaseCommands
 
     private static int RunReleaseBuild(Options options)
     {
-        var steps = new[] { "00-preflight", "01-multi-version", "02-build-release", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare" };
+        var wallTime = Stopwatch.StartNew();
+        var steps = new[] { "00-preflight", "01-multi-version", "02-build-release", "03-package-local", "04-validate-bundle", "05-prompt-registration", "06-v4-contracts-capture", "07-v4-contracts-compare", "08-v4-responses-capture", "09-v4-responses-compare", "10-relocated-bundle" };
+        var policy = ReleaseCheckPolicy.Load(Root);
+        var tier = options.Has("SelfTest") ? "full" : ReleaseCheckPolicy.Tier(options.Get("Tier"), required: true);
+        var baseline = Path.GetFullPath(options.Get("FullBaseline", Path.Combine(Root, "bin-build/release-review/last-full.json")));
+        if (!baseline.StartsWith(Path.Combine(Root, "bin-build") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new ReleaseException("FullBaseline must be under this worktree's bin-build directory.");
+        var candidateSources = ReleaseCheckPolicy.SourceInventory(Root, options.Get("Git", "git"));
+        var plan = policy.Select(tier, tier == "full" ? null : policy.ChangesSinceFull(baseline, candidateSources));
+        var maxParallelism = GetMaxParallelism(options);
         var orderError = ReleaseValidation.AssertStepOrder(steps);
         if (orderError is not null) throw new ReleaseException(orderError);
         if (options.Has("SelfTest"))
             return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=ReviewerChain"], Root, "Reviewer chain tests");
         if (options.Has("DryRun"))
         {
-            foreach (var step in steps) Console.WriteLine("DRY " + step);
-            Console.WriteLine("02: full engines -> multi-version completion; 04: ZIP parent + filename without extension.");
+            foreach (var step in steps)
+            {
+                var check = step[..2] switch { "06" or "07" => "engine-contracts", "08" or "09" => "engine-responses", "10" => "relocation", _ => null };
+                Console.WriteLine((check is null || plan.Includes(check) ? "DRY " : "SKIP ") + step);
+            }
+            Console.WriteLine($"Tier={plan.Tier}; checks selected: {string.Join(", ", plan.SelectedChecks)}; checks skipped: {string.Join(", ", plan.SkippedChecks)}");
+            Console.WriteLine($"02: full engines -> multi-version completion; 04: ZIP parent + filename without extension; max parallelism={maxParallelism}.");
+            Console.WriteLine("After step 04, selected checks run as bounded jobs; each snapshot comparison waits for its capture.");
             return 0;
         }
 
@@ -312,20 +322,22 @@ internal static partial class ReleaseCommands
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0",
             ["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false"
         };
+        var planPath = Path.Combine(logs, "check-plan.json");
+        WriteJson(planPath, plan);
+        processEnv["TIA_MCP_RELEASE_CHECK_PLAN"] = planPath;
         var releaseTemp = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8]));
         if (releaseTemp.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Release temp root must be outside the repository");
         processEnv["TIA_MCP_RELEASE_TEMP_ROOT"] = releaseTemp;
         var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
-        var snapshotArgs = new[] { "--repo-root", Root, "--harness", harness, "--public-api-root", api, "--releases", "20", "21", "--exe", "20=" + Path.Combine(Root, "runtime/v20/TiaMcp.Engine.V20.exe"), "--exe", "21=" + Path.Combine(Root, "runtime/v21/TiaMcp.Engine.V21.exe") };
-        string? activeLog = null;
+        var activeLog = new AsyncLocal<string?>();
         var failedHostDataRetained = false;
         void RecordProcessOutput(CommandResult result)
         {
-            if (activeLog is not null) File.AppendAllText(activeLog, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
+            if (activeLog.Value is { } logPath) File.AppendAllText(logPath, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
         }
 
         void RestoreOriginal() => recordSnapshot.RestoreOriginal();
-        CommandResult RunIsolated(string name, string executable, IReadOnlyList<string> args, bool productDefaults = false)
+        CommandResult RunIsolated(string name, string executable, IReadOnlyList<string> args, bool productDefaults = false, string? workingDirectory = null)
         {
             var root = Path.Combine(releaseTemp, "rc", Guid.NewGuid().ToString("N")[..8]);
             foreach (var directory in new[] { "config", "temp", "local-app-data", "app-data" }) Directory.CreateDirectory(Path.Combine(root, directory));
@@ -341,7 +353,7 @@ internal static partial class ReleaseCommands
                 ["TEMP"] = Path.Combine(root, "temp"),
                 ["TMP"] = Path.Combine(root, "temp")
             };
-            var result = ProcessRunner.Run(executable, args, Root, env);
+            var result = ProcessRunner.Run(executable, args, workingDirectory ?? Root, env);
             RecordProcessOutput(result);
             if (result.ExitCode == 0)
             {
@@ -350,23 +362,23 @@ internal static partial class ReleaseCommands
             }
             else
             {
-                failedHostDataRetained = true;
+                Interlocked.Exchange(ref failedHostDataRetained, true);
                 Console.WriteLine($"Retained failed release check data ({name}): {root}");
             }
             return result;
         }
-        void RunStep(string name, Action action)
+        void RunStep(string name, Action action, bool tracksReleaseRecords = true)
         {
             var logPath = Path.Combine(logs, name + ".log");
-            activeLog = logPath;
+            activeLog.Value = logPath;
             File.WriteAllText(logPath, "", new System.Text.UTF8Encoding(false));
             Console.WriteLine($"START {name}; {logPath}");
-            recordSnapshot.RestoreStepState();
+            var timer = Stopwatch.StartNew();
             try
             {
+                if (tracksReleaseRecords) recordSnapshot.RestoreStepState();
                 action();
-                recordSnapshot.CaptureStepState();
-                Console.WriteLine($"PASS {name}; {logPath}");
+                if (tracksReleaseRecords) recordSnapshot.CaptureStepState();
             }
             catch (Exception ex)
             {
@@ -375,9 +387,12 @@ internal static partial class ReleaseCommands
             }
             finally
             {
-                try { RestoreOriginal(); }
-                finally { activeLog = null; }
+                timer.Stop();
+                File.AppendAllText(logPath, $"Elapsed: {timer.Elapsed.TotalSeconds:F3} seconds{Environment.NewLine}", new System.Text.UTF8Encoding(false));
+                try { if (tracksReleaseRecords) RestoreOriginal(); }
+                finally { activeLog.Value = null; }
             }
+            Console.WriteLine($"PASS {name}; elapsed={timer.Elapsed.TotalSeconds:F3}s; {logPath}");
         }
         void RunTool(string command, params string[] args)
         {
@@ -416,12 +431,13 @@ internal static partial class ReleaseCommands
             Directory.CreateDirectory(output);
             Directory.CreateDirectory(logs);
             RunStep("00-preflight", () => RunTool("preflight"));
-            RunStep("01-multi-version", () => RunTool("build-multi-version", "-PublicApiRoot", api, "-PrepareOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig));
+            RunStep("01-multi-version", () => RunTool("build-multi-version", "-PublicApiRoot", api, "-PrepareOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig, "-MaxParallelism", maxParallelism.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             RunStep("02-build-release", () =>
             {
-                RunTool("build-release", "-V20ReferenceRoot", Path.Combine(api, "TIA_V20_PublicAPI/V20"), "-V21ReferenceRoot", Path.Combine(api, "TIA_V21_PublicAPI/V21/net48"), "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig);
-                RunTool("build-multi-version", "-PublicApiRoot", api, "-CompleteOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig);
+                RunTool("build-release", "-V20ReferenceRoot", Path.Combine(api, "TIA_V20_PublicAPI/V20"), "-V21ReferenceRoot", Path.Combine(api, "TIA_V21_PublicAPI/V21/net48"), "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig, "-MaxParallelism", maxParallelism.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                RunTool("build-multi-version", "-PublicApiRoot", api, "-CompleteOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig, "-MaxParallelism", maxParallelism.ToString(System.Globalization.CultureInfo.InvariantCulture));
             });
+            RunStep("02-tier-record", () => WriteTierRecord(plan, passed: false));
             RunStep("03-package-local", () => RunPython("scripts/build/Package-Release.py", "--local", "--output-directory", output));
             RunStep("04-validate-bundle", () =>
             {
@@ -433,20 +449,36 @@ internal static partial class ReleaseCommands
                 if (bundle.EndsWith(".", StringComparison.Ordinal)) throw new ReleaseException("Bundle directory must not have a trailing dot");
                 RunTool("validate-bundle", "-Strict", "-BundleRoot", bundle, "-PackageMode");
             });
-            RunStep("05-prompt-registration", () => RunPython("scripts/checks/Test-DotnetSuites.py", "--suite", "prompt-registration", "--dotnet", dotnet, "--results-directory", Path.Combine(logs, "dotnet-suites")));
-            RunStep("06-v4-contracts-capture", () => RunPythonProductDefaults("scripts/checks/Snapshot-ToolContracts.py", ["capture", .. snapshotArgs, "--output", Path.Combine(logs, "contracts")]));
-            RunStep("07-v4-contracts-compare", () => RunPython("scripts/checks/Snapshot-ToolContracts.py", "compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "contracts"), "--releases", "20", "21"));
-            RunStep("08-v4-responses-capture", () => RunPythonProductDefaults("scripts/checks/Snapshot-ToolResponses.py", ["capture", .. snapshotArgs, "--output", Path.Combine(logs, "responses"), "--temp-root", logs]));
-            RunStep("09-v4-responses-compare", () => RunPython("scripts/checks/Snapshot-ToolResponses.py", "compare", "--baseline", "manifest/contracts/v4/responses", "--current", Path.Combine(logs, "responses"), "--releases", "20", "21"));
+            RunCandidateChecks(plan, api, logs, output, releaseTemp, dotnet, python, maxParallelism,
+                (name, action) => RunStep(name, action, tracksReleaseRecords: false), RunPython, RunPythonProductDefaults, RunIsolated);
+            RunStep("13-finalize-package", () =>
+            {
+                WriteTierRecord(plan, passed: true);
+                var finalOutput = Path.Combine(output, "validated");
+                RunPython("scripts/build/Package-Release.py", "--local", "--output-directory", finalOutput);
+                File.Copy(Path.Combine(finalOutput, "package-result.json"), Path.Combine(output, "package-result.json"), true);
+                using var package = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "package-result.json")));
+                RunTool("validate-bundle", "-Strict", "-BundleRoot", ReleaseValidation.GetBundleDirectory(package.RootElement.GetProperty("path").GetString()!), "-PackageMode");
+            });
             var resultPath = Path.Combine(output, "package-result.json");
             using var finalPackage = JsonDocument.Parse(File.ReadAllText(resultPath));
             var finalZip = finalPackage.RootElement.GetProperty("path").GetString()!;
-            Console.WriteLine($"COMPLETE: bundle={ReleaseValidation.GetBundleDirectory(finalZip)}; logs={logs}; all release records restored");
+            if (plan.Tier == "full")
+            {
+                policy.RequireFullPackage(finalZip);
+                var currentSources = ReleaseCheckPolicy.SourceInventory(Root, options.Get("Git", "git"));
+                if (!candidateSources.SequenceEqual(currentSources)) throw new ReleaseException("Candidate inputs changed during validation; full baseline was not advanced.");
+                WriteJson(baseline, new { tier = "full", package = finalZip, packageSha256 = ReleaseRecords.HashFile(finalZip), sourceFiles = candidateSources });
+            }
+            WriteJson(Path.Combine(logs, "run-result.json"), new { tier = plan.Tier, status = "passed", elapsedSeconds = wallTime.Elapsed.TotalSeconds,
+                checksRan = plan.SelectedChecks, checksSkipped = plan.SkippedChecks, package = finalZip });
+            Console.WriteLine($"COMPLETE: tier={plan.Tier}; bundle={ReleaseValidation.GetBundleDirectory(finalZip)}; logs={logs}; all release records restored");
             return 0;
         }
         catch (Exception ex)
         {
             File.AppendAllText(Path.Combine(logs, "failure.log"), ex.Message + Environment.NewLine, new System.Text.UTF8Encoding(false));
+            WriteJson(Path.Combine(logs, "run-result.json"), new { tier = plan.Tier, status = "failed", elapsedSeconds = wallTime.Elapsed.TotalSeconds, error = ex.Message });
             throw;
         }
         finally
@@ -619,6 +651,10 @@ internal static partial class ReleaseCommands
 
     private static void ValidateBuildRecords(string root, bool package, bool noBinaries, bool skipSourceHashes)
     {
+        if (!package)
+            foreach (var relative in new[] { "build-tools/release/ReleaseTiers.cs", "build-tools/release/ReleaseCandidateChecks.cs",
+                "build-tools/release/release-checks.json", "scripts/checks/Test-ReleaseSmoke.py", "tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs" })
+                if (!File.Exists(Path.Combine(root, relative))) throw new ReleaseException("Required release tier file missing: " + relative);
         using var deliveryDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
         using var buildDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/release-build.json")));
         using var configuratorDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/configurator-build.json")));
@@ -637,7 +673,20 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("Delivery version differs from CHANGELOG or engine build record");
         var sourceRelease = package ? release : (string?)XDocument.Load(Path.Combine(root, "Version.props")).Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
         if (sourceRelease != engineRelease || sourceRelease + ".0" != fileVersion) throw new ReleaseException("Engine build version differs from Version.props");
-        var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")));
+        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")));
+        if (!noBinaries && manifest.RootElement.TryGetProperty("tier", out var tier))
+        {
+            var plan = JsonSerializer.Deserialize<ReleaseCheckPlan>(build.GetProperty("checkPlan").GetRawText(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
+                ?? throw new ReleaseException("Candidate check plan missing");
+            ReleaseCheckPolicy.Load(Root).ValidatePlan(plan);
+            if (tier.GetString() != plan.Tier || JsonString(build, "tier") != plan.Tier ||
+                !JsonStringArray(manifest.RootElement, "checksSelected").SequenceEqual(plan.SelectedChecks) ||
+                !JsonStringArray(manifest.RootElement, "checksSkipped").SequenceEqual(plan.SkippedChecks))
+                throw new ReleaseException("Package tier/check selection differs from the validated engine build");
+            var status = JsonString(manifest.RootElement, "checkStatus");
+            if (status is not ("pending" or "passed") || !JsonStringArray(manifest.RootElement, "checksRan").SequenceEqual(status == "passed" ? plan.SelectedChecks : []))
+                throw new ReleaseException("Package check completion record is invalid");
+        }
         var bundleVersion = JsonString(manifest.RootElement, "bundleVersion");
         if (bundleVersion != newest) throw new ReleaseException($"Version mismatch: CHANGELOG says {newest}, manifest bundleVersion says {bundleVersion}");
         var packageName = JsonString(manifest.RootElement, "packageName");
@@ -875,7 +924,7 @@ internal static partial class ReleaseCommands
             WriteLog(Path.Combine(logs, "configuration-tests.log"), result);
             ProcessRunner.RequireSuccess(result, "Embedded configuration tests");
             RunDotnetLogged(options, logs, ["test", "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj", "-c", "Release", "--nologo"], "client-tests.log", shared);
-            RunDotnetLogged(options, logs, ["test", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj", "-c", "Release", "--nologo"], "gui-tests.log", shared);
+            if (ReleasePlan(options).Includes("gui-tests")) RunDotnetLogged(options, logs, ["test", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj", "-c", "Release", "--nologo"], "gui-tests.log", shared);
         }
         if (Directory.Exists(app) && Directory.EnumerateFiles(app, "Siemens.*.dll", SearchOption.AllDirectories).Any()) throw new ReleaseException("Studio output contains a Siemens assembly");
         if (Directory.Exists(app) && Directory.EnumerateFiles(app, "Newtonsoft.Json.dll", SearchOption.AllDirectories).Any()) throw new ReleaseException("Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging");
@@ -983,6 +1032,7 @@ internal static partial class ReleaseCommands
         }
         manifest["validationStatus"] = $"Delivery {release}; engine {fileVersion} validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending";
         WriteJson(manifestPath, manifest);
+        if (build.RootElement.TryGetProperty("checkPlan", out _)) WriteTierRecord(ReleasePlan(options), passed: false);
         code = RunSelfCommand(["validate-bundle", "-Strict"], "Delivery validation");
         if (code != 0) return code;
         Console.WriteLine($"Prepared {package} using engine {fileVersion}. Review and commit before packaging.");
@@ -1027,6 +1077,7 @@ internal static partial class ReleaseCommands
         }
         Environment.SetEnvironmentVariable("TIA_MCP_RELEASE_TEMP_ROOT", releaseTempRoot);
         var test = options.Has("Test");
+        var plan = ReleasePlan(options);
         var pendingPath = Path.Combine(logs, "prepared-build.json");
         var sources = ReleaseRecords.GetSources(Root, "multi");
         var validationInputs = ReleaseRecords.GetValidationInputs(Root, "multi");
@@ -1158,7 +1209,7 @@ internal static partial class ReleaseCommands
 
             var validationNode = new JsonObject
             {
-                ["nativeTiaExecuted"] = false, ["studioFunctionalTestsExecuted"] = test,
+                ["nativeTiaExecuted"] = false, ["studioFunctionalTestsExecuted"] = test && plan.Includes("gui-tests"),
                 ["configurationFunctionalTestsExecuted"] = test, ["foundationTransportExecuted"] = false,
                 ["toolUsageCoverageExecuted"] = false, ["approvalSafetyExecuted"] = false
             };
@@ -1166,17 +1217,43 @@ internal static partial class ReleaseCommands
             {
                 var suiteResults = Path.Combine(logs, "dotnet-suites");
                 Directory.CreateDirectory(suiteResults);
-                foreach (var suite in new[] { "foundation-api", "prompt-registration", "software-read", "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership" })
+                var suites = new[] { "foundation-api", "prompt-registration", "software-read", "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership" };
+                var catalogPath = Path.Combine(Root, "tests/test-suites.json");
+                using var suiteCatalog = JsonDocument.Parse(File.ReadAllText(catalogPath));
+                foreach (var suite in suites)
                 {
-                    var suiteArgs = new List<string> { "scripts/checks/Test-DotnetSuites.py", "--suite", suite, "--dotnet", dotnet, "--results-directory", suiteResults };
-                    if (!string.IsNullOrWhiteSpace(nuget)) suiteArgs.Add("--dotnet-arg=-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
-                    WithIsolatedHost(runTemp, "dotnet-suite-" + suite, approvalEnabled: false, _ =>
+                    if (!suiteCatalog.RootElement.TryGetProperty(suite, out var spec)) throw new ReleaseException("Suite is missing from tests/test-suites.json: " + suite);
+                    var project = spec.GetProperty("project").GetString() ?? throw new ReleaseException("Suite project missing: " + suite);
+                    var buildArgs = new List<string> { "build", project, "-c", "Release", "-v:q" };
+                    foreach (var argument in spec.GetProperty("arguments").EnumerateArray()) buildArgs.Add(argument.GetString()!);
+                    if (spec.TryGetProperty("publicApiRoot", out var usesApi) && usesApi.ValueKind == JsonValueKind.True)
+                        buildArgs.Add("-p:TiaPublicApiRoot=" + api);
+                    ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, buildArgs, logs, suite + "-build.log", nuget), "Suite build failed: " + suite);
+                }
+                var suiteJobs = suites.Select(suite => (suite, (Func<PipelineResult>)(() =>
+                {
+                    var host = CreateIsolatedHost(runTemp, "dotnet-suite-" + suite, approvalEnabled: false, apiRoot: api);
+                    try
                     {
-                        var result = RunLoggedProcess(python, suiteArgs, logs, suite + "-tests.log", null);
+                        var suiteArgs = new List<string> { "scripts/checks/Test-DotnetSuites.py", "--suite", suite, "--dotnet", dotnet,
+                            "--no-restore", "--dotnet-arg=--no-build", "--results-directory", Path.Combine(suiteResults, suite) };
+                        if (!string.IsNullOrWhiteSpace(nuget)) suiteArgs.Add("--dotnet-arg=-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
+                        var result = RunLoggedProcess(python, suiteArgs, logs, suite + "-tests.log", null, host.Environment);
                         ProcessRunner.RequireSuccess(result, "TRX suite gate failed: " + suite);
-                        return 0;
-                    });
-                    using var summary = JsonDocument.Parse(File.ReadAllText(Path.Combine(suiteResults, suite + ".json")));
+                        try { Directory.Delete(host.Root, true); }
+                        catch (Exception ex) { Console.Error.WriteLine("WARNING release check data still in use (kept): " + host.Root + " (" + ex.Message + ")"); }
+                        return new PipelineResult(suite, 0, result.StandardOutput, result.StandardError);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Retained failed release check data ({suite}): {host.Root}");
+                        return new PipelineResult(suite, 1, "", ex.ToString());
+                    }
+                }))).ToArray();
+                ParallelPipeline.Run(suiteJobs, Path.Combine(logs, "dotnet-suite-pipeline"), GetMaxParallelism(options));
+                foreach (var suite in suites)
+                {
+                    using var summary = JsonDocument.Parse(File.ReadAllText(Path.Combine(suiteResults, suite, suite + ".json")));
                     var row = summary.RootElement;
                     validationNode["dotnetSuites"] ??= new JsonObject();
                     ((JsonObject)validationNode["dotnetSuites"]!)[suite] = new JsonObject
@@ -1186,15 +1263,18 @@ internal static partial class ReleaseCommands
                         ["minimumPassed"] = row.GetProperty("minimumPassed").GetInt32(), ["maximumSkipped"] = row.GetProperty("maximumSkipped").GetInt32()
                     };
                 }
-                var fixture = "tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj";
-                ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
-                WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
+                if (plan.Includes("foundation-transport"))
                 {
-                    var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
-                    ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
-                    return 0;
-                });
-                validationNode["foundationTransportExecuted"] = true;
+                    var fixture = "tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj";
+                    ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
+                    WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
+                    {
+                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
+                        ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
+                        return 0;
+                    });
+                    validationNode["foundationTransportExecuted"] = true;
+                }
             }
 
             if (File.Exists(pendingPath)) File.Delete(pendingPath);
@@ -1203,9 +1283,9 @@ internal static partial class ReleaseCommands
             var evidencePaths = new List<string>(adapterEvidence);
             evidencePaths.AddRange(Directory.EnumerateFiles(logs, "tools-*.json"));
             evidencePaths.AddRange(releaseCheckEvidence);
-            if (test) evidencePaths.Add(Path.Combine(logs, "transport/tool-usage.json"));
+            if (test && plan.Includes("foundation-transport")) evidencePaths.Add(Path.Combine(logs, "transport/tool-usage.json"));
 
-            if (!options.Has("CompleteOnly"))
+            if (!options.Has("CompleteOnly") && plan.Includes("foundation-approval"))
             {
                 var approvalOutput = Path.Combine(logs, "foundation-approval-default-" + Guid.NewGuid().ToString("N"));
                 WithIsolatedHost(runTemp, "foundation-default-approval", approvalEnabled: true, _ =>
@@ -1253,6 +1333,7 @@ internal static partial class ReleaseCommands
                 .Select(path => new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), sha256 = ReleaseRecords.HashFile(path) }).ToArray();
             var prepared = new
             {
+                tier = plan.Tier, checkPlan = plan,
                 release, fileVersion = release + ".0", publicApiRoot = api, test,
                 releases = releaseRows, validation = validationNode, sourceFiles = sources,
                 validationInputs, files = preparedFiles, evidence
@@ -1276,6 +1357,7 @@ internal static partial class ReleaseCommands
             }
             pending?.Dispose();
             pending = JsonDocument.Parse(File.ReadAllText(pendingPath));
+            if (JsonString(pending.RootElement, "tier") != plan.Tier) throw new ReleaseException("Prepared tier differs from completion tier.");
             validation = pending.RootElement.GetProperty("validation");
         }
 
@@ -1284,7 +1366,7 @@ internal static partial class ReleaseCommands
             var engineRecordPath = Path.Combine(Root, "manifest/release-build.json");
             if (!File.Exists(engineRecordPath)) throw new ReleaseException("Full-engine build record missing; run build-release before multi-version completion");
             using var engineRecord = JsonDocument.Parse(File.ReadAllText(engineRecordPath));
-            var engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"));
+            var engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
             if (engineReuse.Length != 0)
                 throw new ReleaseException("Full-engine inputs, binaries or audit evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
             var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
@@ -1297,7 +1379,7 @@ internal static partial class ReleaseCommands
             var audit = RunLoggedProcess(python, ["scripts/diagnostics/Audit-VersionTools.py", "--public-api-root", api], logs, "api-audit.log", null);
             ProcessRunner.RequireSuccess(audit, "Per-version tool/API audit failed; build full engines first");
             var validationAfter = JsonNode.Parse(validation.GetRawText())!.AsObject();
-            if (test)
+            if (test && plan.Includes("foundation-transport"))
             {
                 var usage = RunLoggedProcess(python, ["scripts/diagnostics/Audit-ToolUsage.py"], logs, "tool-usage.log", null);
                 ProcessRunner.RequireSuccess(usage, "All-release usage coverage failed");
@@ -1308,10 +1390,11 @@ internal static partial class ReleaseCommands
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending!.RootElement, "validationInputs"), currentValidation)) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending.RootElement, "sourceFiles"), ReleaseRecords.GetSources(Root, "multi"))) throw new ReleaseException("Multi-version inputs changed during validation; refusing to record results");
             if (!SameArtifacts(files, ReleaseRecords.GetRuntimeFiles(Root))) throw new ReleaseException("Runtime files changed during multi-version audits; refusing to record results");
-            engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"));
+            engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
             if (engineReuse.Length != 0) throw new ReleaseException("Full-engine inputs or evidence changed during multi-version audits: " + engineReuse);
             var record = new
             {
+                tier = plan.Tier, checkPlan = plan,
                 createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = release + ".0",
                 releases = pending.RootElement.GetProperty("releases"),
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
@@ -1347,7 +1430,8 @@ internal static partial class ReleaseCommands
         return ReleasePublisher.PublishAsync(Root, publisherOptions).GetAwaiter().GetResult();
     }
 
-    private static CommandResult RunLoggedProcess(string executable, IEnumerable<string> arguments, string logDirectory, string logName, string? nugetConfig)
+    private static CommandResult RunLoggedProcess(string executable, IEnumerable<string> arguments, string logDirectory, string logName, string? nugetConfig,
+        IDictionary<string, string?>? additionalEnvironment = null)
     {
         var args = arguments.ToList();
         if (Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
@@ -1368,9 +1452,40 @@ internal static partial class ReleaseCommands
             ["UseSharedCompilation"] = "false",
             ["NuGetAudit"] = "false"
         };
+        if (additionalEnvironment is not null)
+            foreach (var (key, value) in additionalEnvironment) environment[key] = value;
         var result = ProcessRunner.Run(executable, args, Root, environment);
         WriteLog(Path.Combine(logDirectory, logName), result);
         return result;
+    }
+
+    private static (string Root, Dictionary<string, string?> Environment) CreateIsolatedHost(string runTemp, string name, bool approvalEnabled, string apiRoot)
+    {
+        var hostRoot = Path.Combine(runTemp, Guid.NewGuid().ToString("N")[..8]);
+        foreach (var directory in new[] { "config", "temp", "local-app-data", "app-data" }) Directory.CreateDirectory(Path.Combine(hostRoot, directory));
+        File.WriteAllText(Path.Combine(hostRoot, "check.txt"), name, new System.Text.UTF8Encoding(false));
+        File.WriteAllText(Path.Combine(hostRoot, "config/approval.settings"), $"enabled={approvalEnabled.ToString().ToLowerInvariant()}\ntimeoutSeconds=120\n", new System.Text.UTF8Encoding(false));
+        var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["TIA_MCP_DATA_DIRECTORY"] = hostRoot,
+            ["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(hostRoot, "diagnostics"),
+            ["TIA_MCP_RELEASE_TEMP_ROOT"] = runTemp,
+            ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = apiRoot,
+            ["LOCALAPPDATA"] = Path.Combine(hostRoot, "local-app-data"),
+            ["APPDATA"] = Path.Combine(hostRoot, "app-data"),
+            ["TEMP"] = Path.Combine(hostRoot, "temp"),
+            ["TMP"] = Path.Combine(hostRoot, "temp")
+        };
+        return (hostRoot, environment);
+    }
+
+    private static int GetMaxParallelism(Options options)
+    {
+        var configured = options.Get("MaxParallelism");
+        if (configured is null) return Math.Max(1, Environment.ProcessorCount);
+        if (!int.TryParse(configured, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 1)
+            throw new ReleaseException("-MaxParallelism must be a positive integer.", 64);
+        return value;
     }
 
     private static T WithIsolatedHost<T>(string runTemp, string name, bool approvalEnabled, Func<string, T> action)
@@ -1474,7 +1589,7 @@ internal static partial class ReleaseCommands
 
     private static int RunSelfCommand(string[] args, string description)
     {
-        var command = new List<string> { "run", "--project", "build-tools/release", "--" };
+        var command = new List<string> { typeof(ReleaseCommands).Assembly.Location };
         command.AddRange(args);
         var result = ProcessRunner.Run(Dotnet, command, Root);
         Console.Write(result.StandardOutput);

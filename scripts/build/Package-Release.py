@@ -68,10 +68,12 @@ def main():
     def git(*values):
         return subprocess.check_output([args.git, *values], cwd=root)
 
-    tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
+    tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
+    if args.local:
+        tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
     if args.dry_run:
         if args.include_untracked:
-            tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name]
+            tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
         preview(root, tracked, rules, args.stage_directory)
         return
     require(not args.include_untracked and args.stage_directory is None, 'Preview options require --dry-run')
@@ -88,11 +90,18 @@ def main():
     delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
     multi_path = root / 'manifest/multi-version-build.json'
     multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
+    candidate = json.loads((root / 'manifest/package-manifest.json').read_text('utf-8-sig'))
+    selected = layout.release_checks(root, candidate, metadata, multi)
+    require(args.local or (candidate['tier'] == 'full' and candidate['checkStatus'] == 'passed'), 'Publication packaging requires passed tier=full checks')
     inventory = metadata['runtimeFiles'].copy()
     if multi is not None:
         require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
         require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
-        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'configurationFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run build-multi-version -Test before publication')
+        flags = ['configurationFunctionalTestsExecuted']
+        if 'foundation-transport' in selected: flags += ['foundationTransportExecuted', 'toolUsageCoverageExecuted']
+        if 'gui-tests' in selected: flags += ['studioFunctionalTestsExecuted']
+        if 'foundation-approval' in selected: flags += ['approvalSafetyExecuted']
+        require(all(multi['validation'].get(key) for key in flags), 'Selected multi-version checks have not passed')
     if multi is not None:
         require(multi['studioReleaseKeys'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], 'Eight release adapters are required')
         existing = {row['path']: row['sha256'] for row in inventory}
@@ -169,24 +178,28 @@ def main():
         require(proof['jitPrepared'] + proof['openGenericWrappers'] == proof['sites'], f'{major}: wrapper inventory/JIT mismatch')
         require(proof['scriptSha256'] == sha(files['scripts/checks/Test-NativeDiagnostics.py']), f'{major}: diagnostic test driver changed after validation')
     extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
-    if extended is not None:
+    if extended is not None and 'engine-stability' in selected:
         require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')
     for major in (20, 21):
         checks = metadata['validation']['runtimes'][f'V{major}']
-        require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
+        if 'engine-functional' in selected:
+            require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
         require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
-        require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
-        proofs = [checks.get('localStability', {})]
+        if 'engine-functional' in selected:
+            require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
+        proofs = [checks.get('localStability') or {}] if 'engine-stability' in selected else []
         isolation = checks.get('workerIsolation')
-        if isolation is not None:
+        if 'engine-worker-isolation' in selected:
+            require(isinstance(isolation, dict), f'V{major} worker isolation proof missing')
             require(isolation.get('faultChecksPassed', 0) >= 25 and isolation.get('protocolChecksPassed', 0) >= 58,
                     f'V{major} worker fault/protocol validation incomplete')
             require(isolation.get('protocolScriptSha256') == sha(files['scripts/checks/Test-WorkerIsolation.py']),
                     f'V{major} worker protocol script changed after validation')
-            require(checks.get('isolatedLocalStability', {}).get('isolatedWorker') is True,
+        if 'engine-isolated-stability' in selected:
+            require((checks.get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
                     f'V{major} isolated stability proof missing')
             proofs.append(checks['isolatedLocalStability'])
-        if extended is not None:
+        if extended is not None and 'engine-stability' in selected:
             proofs.append(extended['runtimes'][f'V{major}'])
             if 'isolatedRuntimes' in extended:
                 isolated_extended = extended['isolatedRuntimes'][f'V{major}']
@@ -239,7 +252,8 @@ def main():
                 'src/Updater/app.manifest', 'src/Updater/App.config', 'src/Updater/UpdaterText.cs', 'src/Updater/UpdaterMessages.resx',
                 'tests/Updater/TiaMcp.Updater.Tests.csproj', 'tests/Updater/UpdaterTests.cs',
                 'src/Shared/BundleLayout.cs',
-                'scripts/checks/Check-BundleLayout.py',
+                'scripts/checks/Check-BundleLayout.py', 'scripts/checks/Test-ReleaseSmoke.py',
+                'build-tools/release/release-checks.json', 'build-tools/release/ReleaseTiers.cs', 'build-tools/release/ReleaseCandidateChecks.cs',
                 'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
                 'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
                 'src/Adapters.Contracts/packages.lock.json',
@@ -328,7 +342,7 @@ def main():
             require(z.read(package + '/' + name) == data, f'ZIP content differs: {name}')
     digest = sha(archive.read_bytes())
     archive.with_suffix('.sha256').write_text(digest + '  ' + archive.name + '\n', encoding='ascii')
-    result = {'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
+    result = {'tier': candidate['tier'], 'checkStatus': candidate['checkStatus'], 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
     if args.local:
         result['sourceState'] = 'worktree; local review only, not for publication'
     (out / 'package-result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
