@@ -37,6 +37,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly AsyncLocal<Func<object?>?> ApprovalSessionOverride = new AsyncLocal<Func<object?>?>();
         internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
         static partial void ApprovalSessionKey(ref object? key);
+        static partial void IsolationParent(ref bool parent);
         private static object? CurrentApprovalSession()
         {
             if (ApprovalSessionOverride.Value is { } test) return test();
@@ -49,16 +50,19 @@ namespace TiaMcpServer.ModelContextProtocol
             return key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown
                 ? V4Reject(name, new Error(ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"))) : null;
         }
-        internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write)
+        // Only a call that reached Openness (a journaled native boundary in this call, or native-issued evidence from a
+        // worker) can leave the session in an unknown state; an unknown refusal before the first native call cannot.
+        internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, bool nativeCallIssued)
         {
-            var key = CurrentApprovalSession();
             var body = ResultBody(result);
+            bool parent = false; IsolationParent(ref parent);
+            if (parent || (string?)body?["meta"]?["outcome"] != "unknown" || !ToolTaxonomy.UsesOpennessLane(name)) return result;
             var data = body?["data"] as JsonObject;
             bool True(JsonNode? value) => value is JsonValue flag && flag.TryGetValue<bool>(out var truth) && truth;
-            bool nativeIssued = True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
-            bool mutation = write || nativeIssued && ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
-            if (mutation && key != null && ToolTaxonomy.UsesOpennessLane(name) && (string?)body?["meta"]?["outcome"] == "unknown")
-                SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
+            bool nativeIssued = nativeCallIssued || True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
+            bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
+            var key = nativeIssued && mutation ? CurrentApprovalSession() : null;
+            if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
             return result;
         }
         internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
@@ -206,7 +210,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
                 ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
-            try { return FinishApproval(ObserveSessionOutcome(name, invoke(), ApprovalWrite(name, arguments)), approval, McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
+            try
+            {
+                var invoked = invoke();
+                return FinishApproval(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
+                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
+            }
             catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
         }
         static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane);

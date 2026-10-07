@@ -29,7 +29,9 @@ namespace TiaMcpServer.Tests
                 if (dryRun) Previews++; else Writes++;
                 if (condition == "cancel") throw new OperationCanceledException();
                 if (condition.Length > 0 || Fault == "changed") throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Fixture precondition.", condition.Length > 0 ? condition : "name");
-                if (!dryRun && Fault == "unknown") return McpServer.V4Result("CreatePlcTag", null, new Error("Fixture unknown.", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown);
+                // "unknown" reaches a journaled native boundary first; "unknown-unissued" fails before any native call.
+                if (!dryRun && Fault == "unknown") InvocationJournal.NativeCallStarted();
+                if (!dryRun && Fault is "unknown" or "unknown-unissued") return McpServer.V4Result("CreatePlcTag", null, new Error("Fixture unknown.", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown);
                 return McpServer.V4Result("CreatePlcTag", new JsonObject { ["planned"] = dryRun }, completed: !dryRun);
             }
             [McpServerTool(Name = "CompileDevice"), ToolClassification("L2", "Hardware", "EXECUTE")]
@@ -113,6 +115,21 @@ namespace TiaMcpServer.Tests
                 Assert.Equal(original == "CreatePlcTag" ? 1 : 0, waits); Assert.Equal(original == "CreatePlcTag" ? 1 : 0, Probe.Previews); Assert.Equal(1, Probe.Writes);
             }
             finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = wait; McpServer.ApprovalSessionKeyForTests = key; settings.Save(ApprovalSettings.SettingsPath); }
+        }
+        [Fact]
+        public void Unknown_write_without_a_native_call_keeps_the_session_usable()
+        {
+            using var fixture = new InfrastructureContractsTests(); Configure(); Probe.Fault = "unknown-unissued";
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath); var key = McpServer.ApprovalSessionKeyForTests; var session = new object();
+            bool context = McpServer.EnterMcpApprovalContext();
+            try
+            {
+                McpServer.ApprovalSessionKeyForTests = () => session; new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+                Assert.Equal("OUTCOME_UNKNOWN", (string?)McpServer.ResultBody(McpServer.CallTool("CreatePlcTag", Args("{\"dryRun\":false}")))?["error"]?["code"]);
+                var read = McpServer.ResultBody(McpServer.CallTool("ListPlcTags", Args("{}")))!;
+                Assert.True((bool?)read["ok"] == true, read.ToJsonString());
+            }
+            finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalSessionKeyForTests = key; settings.Save(ApprovalSettings.SettingsPath); }
         }
         [Fact]
         public void Warm_fixture_reports_added_preview_latency()

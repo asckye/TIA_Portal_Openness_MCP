@@ -120,9 +120,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 .String("durability", "best-effort; successful writes flushed to disk")
                 .String("nativeBoundaryCoverage", typeof(InvocationJournal).Assembly.GetType("TiaMcpServer.Diagnostics.GeneratedNativeCalls", false) != null ? "build-instrumented" : "not-instrumented");
         }
+        internal static string NewId(string? correlation = null)
+            => Guid.TryParseExact(correlation ?? correlationSource?.Invoke(), "N", out var parsed) ? parsed.ToString("N") : Guid.NewGuid().ToString("N");
         internal static string Begin(string name, string? correlation = null)
         {
-            string id = Guid.TryParseExact(correlation ?? correlationSource?.Invoke(), "N", out var parsed) ? parsed.ToString("N") : Guid.NewGuid().ToString("N");
+            string id = NewId(correlation);
             Current.Value = id;
             Emit(() => FormatRow(DateTime.UtcNow, id, name, "BEFORE", ProcessId, null, null,
                 ReadBinding(), Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.GetApartmentState().ToString(), null), flush: false);

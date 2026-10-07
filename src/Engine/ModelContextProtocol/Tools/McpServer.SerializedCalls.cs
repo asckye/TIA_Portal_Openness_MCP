@@ -46,6 +46,8 @@ namespace TiaMcpServer.ModelContextProtocol
             internal object Key = new object();
         }
         private static readonly ConditionalWeakTable<object, WorkerGenerationKey> WorkerApprovalSessions = new ConditionalWeakTable<object, WorkerGenerationKey>();
+        // The isolation child keeps the session fault; a worker lost mid-call is faulted by the supervisor.
+        static partial void IsolationParent(ref bool parent) => parent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
         static partial void ApprovalSessionKey(ref object? key)
         {
             if (Isolation.IsolatedWorkerHost.Current is { } worker)
@@ -176,8 +178,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     rejectedAudit?.Complete(bridgeReset.StructuredContent?.ToJsonString());
                     return bridgeReset;
                 }
+                using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
                 var bridgeResult = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(targetName ?? ProtocolTool.Name, bridgeResult, McpServer.ApprovalResultWrite(ProtocolTool.Name, System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))), null, callToolDisabled);
+                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(targetName ?? ProtocolTool.Name, bridgeResult, McpServer.ApprovalResultWrite(ProtocolTool.Name, System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())), bridgeNativeCalls.NativeCallIssued), null, callToolDisabled);
             }
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
@@ -195,8 +198,9 @@ namespace TiaMcpServer.ModelContextProtocol
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
                 "engine", McpServer.ReleaseKey, ProtocolTool.Name, correlation);
             var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             var result = reset ?? await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-            result = McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, write), null, disabled);
+            result = McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, write, nativeCalls.NativeCallIssued), null, disabled);
             if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ??
                 (result.Content.Count == 1 && result.Content[0] is TextContentBlock text ? text.Text : null));
             return result;
@@ -220,7 +224,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 catch /* swallow(parse-fallback): malformed optional correlation metadata uses a new journal id without leaking the call gate */ { /* Malformed optional metadata must not leak the serialization gate. */ }
             }
-            string id = InvocationJournal.Begin(ProtocolTool.Name, correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+            // The call projection starts at the transport boundary. The tool's BEFORE row is written inside its lane,
+            // after approval, so journal BEFORE/terminal pairs never overlap on the Openness lane.
+            string id = InvocationJournal.NewId(correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
             using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, "engine", McpServer.ReleaseKey,
                 McpServer.IsWriteTool(ProtocolTool.Name),
                 () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
@@ -235,10 +241,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 var previewLane = await Isolation.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false);
                 using var heldPreviewLane = previewLane;
                 Isolation.ToolDispatchLanes.Activate(previewLane);
+                // The precheck preview is journaled as its own pair inside the lane; its native reads correlate with this id.
+                InvocationJournal.Begin(ProtocolTool.Name, id);
                 var original = request!.Params;
                 request.Params = new CallToolRequestParams { Name = ProtocolTool.Name,
                     Arguments = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(previewArguments) };
-                try { return McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)); }
+                try
+                {
+                    var preview = McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false));
+                    InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
+                    return preview;
+                }
+                catch { InvocationJournal.Write(id, ProtocolTool.Name, "THREW"); throw; }
                 finally { request.Params = original; }
             }, cancellationToken).ConfigureAwait(false);
             if (precheck != null)
@@ -257,8 +271,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 McpServer.CurrentBehaviorTargets(ProtocolTool.Name, System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()))), approval, completion: "unknown"); }
             using var dispatchLane = lane;
             Isolation.ToolDispatchLanes.Activate(lane);
+            InvocationJournal.Begin(ProtocolTool.Name, id);
             bool previousContext = McpServer.EnterMcpApprovalContext();
             bool issued = false;
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             try
             {
                 var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
@@ -286,7 +302,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ExitFaultedWorker(id, approval);
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
-                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments)), approval);
+                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), nativeCalls.NativeCallIssued), approval);
             }
             catch (System.Exception ex)
             {
@@ -296,7 +312,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var result = McpServer.DiscloseTargets(McpServer.TargetFailure(ProtocolTool.Name, ex, issued), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
-                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments)), approval, completion: "unknown");
+                return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), nativeCalls.NativeCallIssued), approval, completion: "unknown");
             }
             finally { McpServer.LeaveMcpApprovalContext(previousContext); }
         }
