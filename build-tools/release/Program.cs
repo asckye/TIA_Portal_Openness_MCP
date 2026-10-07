@@ -9,7 +9,7 @@ internal static class Program
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft"
+        "DraftOnly", "DeleteDraft", "NoBuildCache"
     };
 
     public static int Main(string[] args)
@@ -56,7 +56,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "release", "build-release", "build-multi-version", "run-release-build", "preflight", "prerequisites", "publish",
+        "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
         "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle"
     ];
 }

@@ -93,11 +93,12 @@ def main():
     candidate = json.loads((root / 'manifest/package-manifest.json').read_text('utf-8-sig'))
     selected = layout.release_checks(root, candidate, metadata, multi)
     require(args.local or (candidate['tier'] == 'full' and candidate['checkStatus'] == 'passed'), 'Publication packaging requires passed tier=full checks')
+    require(args.local or candidate.get('buildCacheEnabled') is False, 'Publication packaging requires a cold rebuild with -NoBuildCache')
     inventory = metadata['runtimeFiles'].copy()
     if multi is not None:
         require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
         require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
-        flags = ['configurationFunctionalTestsExecuted']
+        flags = ['configurationFunctionalTestsExecuted'] if 'gui-tests' in selected else []
         if 'foundation-transport' in selected: flags += ['foundationTransportExecuted', 'toolUsageCoverageExecuted']
         if 'gui-tests' in selected: flags += ['studioFunctionalTestsExecuted']
         if 'foundation-approval' in selected: flags += ['approvalSafetyExecuted']
@@ -170,8 +171,9 @@ def main():
         for row in multi['sourceFiles']:
             data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
             require(sha(data) == row['sha256'], f"Multi-version source changed after validation: {row['path']}")
-    require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
-    for major in ('V20', 'V21'):
+    if 'offline-suites' in selected:
+        require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
+    for major in ('V20', 'V21') if 'native-diagnostics' in selected else []:
         proof = metadata['validation']['runtimes'][major].get('nativeDiagnostics', {})
         require(proof.get('status') == 'passed' and proof.get('uncoveredSupportedBoundaries') == 0 and proof.get('sites', 0) > 1000,
                 f'{major}: missing native diagnostic coverage validation')
@@ -184,7 +186,8 @@ def main():
         checks = metadata['validation']['runtimes'][f'V{major}']
         if 'engine-functional' in selected:
             require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
-        require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
+        if 'resource-discovery' in selected:
+            require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
         if 'engine-functional' in selected:
             require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
         proofs = [checks.get('localStability') or {}] if 'engine-stability' in selected else []
@@ -223,7 +226,8 @@ def main():
                     f'V{major} local stability checks failed')
         require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
-    require(gui['testsPassed'] > 0, 'Missing configurator test result')
+    if 'gui-tests' in selected:
+        require(gui['testsPassed'] > 0, 'Missing configurator test result')
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
     studio = 'src/Studio/'
     desktop_projects = tuple(studio + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
@@ -254,6 +258,8 @@ def main():
                 'src/Shared/BundleLayout.cs',
                 'scripts/checks/Check-BundleLayout.py', 'scripts/checks/Test-ReleaseSmoke.py',
                 'build-tools/release/release-checks.json', 'build-tools/release/ReleaseTiers.cs', 'build-tools/release/ReleaseCandidateChecks.cs',
+                'build-tools/release/BuildOutputCache.cs', 'build-tools/release/BranchGate.cs',
+                'tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs',
                 'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
                 'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
                 'src/Adapters.Contracts/packages.lock.json',
@@ -342,7 +348,7 @@ def main():
             require(z.read(package + '/' + name) == data, f'ZIP content differs: {name}')
     digest = sha(archive.read_bytes())
     archive.with_suffix('.sha256').write_text(digest + '  ' + archive.name + '\n', encoding='ascii')
-    result = {'tier': candidate['tier'], 'checkStatus': candidate['checkStatus'], 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
+    result = {'tier': candidate['tier'], 'checkStatus': candidate['checkStatus'], 'buildCacheEnabled': candidate.get('buildCacheEnabled'), 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
     if args.local:
         result['sourceState'] = 'worktree; local review only, not for publication'
     (out / 'package-result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')

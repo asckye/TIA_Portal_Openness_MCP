@@ -208,10 +208,11 @@ def check(root, no_binaries=False, package_mode=False):
         required('src/' + name, 'engine adapter wiring')
     required('tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs', 'engine adapter checks')
     required('src/Shared/BundleLayout.cs', 'bundle layout')
-    for name in ('ReleaseTiers.cs', 'ReleaseCandidateChecks.cs', 'release-checks.json'):
+    for name in ('ReleaseTiers.cs', 'ReleaseCandidateChecks.cs', 'BuildOutputCache.cs', 'BranchGate.cs', 'release-checks.json'):
         required('build-tools/release/' + name, 'release tier policy')
     required('scripts/checks/Test-ReleaseSmoke.py', 'release smoke check')
     required('tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs', 'release tier tests')
+    required('tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs', 'build cache tests')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
     for name in ('TiaMcp.Updater.csproj', 'Program.cs', 'Updater.cs', 'UpdaterText.cs', 'UpdaterMessages.resx', 'app.manifest', 'App.config'):
@@ -243,7 +244,7 @@ def check(root, no_binaries=False, package_mode=False):
     names = [row['name'] for row in roster['tools']]
     if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:
         errors.append('Tool inventory count/uniqueness differs from package metadata')
-    for name in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat'):
+    for name in ('tia.cmd', 'tia-v20.cmd', '閰嶇疆MCP.bat', '閰嶇疆MCP-v20.bat'):
         if (root / name).exists():
             errors.append('Replaced launcher returned: ' + name)
     for version in ('20', '21'):

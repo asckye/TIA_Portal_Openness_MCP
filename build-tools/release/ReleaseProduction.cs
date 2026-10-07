@@ -62,7 +62,7 @@ internal static partial class ReleaseCommands
         var runTemp = CreateReleaseTempRoot();
         var logRoot = Path.Combine(Root, "bin-build/release-runs", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(logRoot);
-        var resumed = options.Has("Resume") && !options.Has("NoReuse") && IsResumableRelease(git, version);
+        // Publication never trusts cached outputs or prior validation records, including -Resume.
         var archiveRecord = TryReadBuildRecord("manifest/release-build.json");
         var archiveOutput = ReleaseRecords.MovePreviousReleaseOutput(Root, version);
         if (archiveOutput is not null)
@@ -72,64 +72,34 @@ internal static partial class ReleaseCommands
                 ReleaseRecords.RestoreArchivedAuditEvidence(Root, version, archiveOutput, old);
         }
 
-        if (resumed)
-        {
-            RunReleaseEarlyGates(version, python, v21, publicApiRoot, runTemp, nugetConfig);
-            RunReleaseCommand(["validate-bundle", "-Strict"], "resumed binaries validation", logRoot, runTemp, publicApiRoot);
-        }
-        else
-        {
-            BumpReleaseVersion(version);
-            if (!File.ReadAllText(Path.Combine(Root, "docs/reference/capabilities.md")).Contains(version, StringComparison.Ordinal))
-                Console.WriteLine("WARNING docs/reference/capabilities.md does not mention " + version + " - add the release entry by hand");
-            if (!File.ReadAllText(Path.Combine(Root, "docs/development/roadmap.md")).Contains(version, StringComparison.Ordinal))
-                Console.WriteLine("WARNING docs/development/roadmap.md does not mention " + version + " - add the roadmap entry by hand");
-            RunReleaseEarlyGates(version, python, v21, publicApiRoot, runTemp, nugetConfig);
+        BumpReleaseVersion(version);
+        if (!File.ReadAllText(Path.Combine(Root, "docs/reference/capabilities.md")).Contains(version, StringComparison.Ordinal))
+            Console.WriteLine("WARNING docs/reference/capabilities.md does not mention " + version + " - add the release entry by hand");
+        if (!File.ReadAllText(Path.Combine(Root, "docs/development/roadmap.md")).Contains(version, StringComparison.Ordinal))
+            Console.WriteLine("WARNING docs/development/roadmap.md does not mention " + version + " - add the roadmap entry by hand");
+        RunReleaseEarlyGates(version, python, v21, publicApiRoot, runTemp, nugetConfig);
 
-            var engineReason = BuildEngineReuseReason(version);
-            var multiReason = BuildMultiReuseReason(version);
-            if (options.Has("NoReuse")) { engineReason = "forced by -NoReuse"; multiReason = "forced by -NoReuse"; }
-            if (options.Has("SkipBuild") && (engineReason.Length != 0 || multiReason.Length != 0))
-                throw new ReleaseException("-SkipBuild refused: engine=" + engineReason + "; multi=" + multiReason);
-            if (engineReason.Length != 0 && multiReason.Length == 0) multiReason = "full engines will be rebuilt; revalidate the combined inventory";
-
-            var offlineConfig = nugetConfig;
-            var stages = new ReleaseBuildStages(
-                Prepare: () =>
-                {
-                    if (multiReason.Length == 0) { Console.WriteLine("Reused Build-MultiVersion: recorded inputs, binaries and validation match"); return; }
-                    Console.WriteLine("Preparing build-multi-version: " + multiReason);
-                    var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
-                    if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
-                    RunReleaseCommand(args.ToArray(), "multi-version preparation", logRoot, runTemp, publicApiRoot);
-                },
-                BuildEngines: () =>
-                {
-                    if (BuildEngineReuseReason(version).Length == 0)
-                    {
-                        Console.WriteLine("Reused build-release: source and binary hashes match");
-                        var deliveryArgs = new List<string> { "prepare-delivery", "-Release", version, "-ReleaseDate", date };
-                        if (offlineConfig is not null) deliveryArgs.AddRange(["-NuGetConfig", offlineConfig]);
-                        RunReleaseCommand(deliveryArgs.ToArray(), "delivery refresh", logRoot, runTemp, publicApiRoot);
-                        return;
-                    }
-                    if (options.Has("SkipBuild")) throw new ReleaseException("-SkipBuild refused: engine build is not reusable");
-                    var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
-                    if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
-                    RunReleaseCommand(args.ToArray(), "build-release", logRoot, runTemp, publicApiRoot);
-                },
-                Complete: () =>
-                {
-                    if (multiReason.Length != 0)
-                    {
-                        var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
-                        if (offlineConfig is not null) args.AddRange(["-NuGetConfig", offlineConfig]);
-                        RunReleaseCommand(args.ToArray(), "multi-version completion", logRoot, runTemp, publicApiRoot);
-                    }
-                    else BindReusedMultiVersionToDelivery(version);
-                });
-            ReleaseStageRunner.Invoke(stages);
-        }
+        var stages = new ReleaseBuildStages(
+            Prepare: () =>
+            {
+                Console.WriteLine("Preparing build-multi-version: publication requires a cold rebuild");
+                var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-PrepareOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
+                if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
+                RunReleaseCommand(args.ToArray(), "multi-version preparation", logRoot, runTemp, publicApiRoot);
+            },
+            BuildEngines: () =>
+            {
+                var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
+                if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
+                RunReleaseCommand(args.ToArray(), "build-release", logRoot, runTemp, publicApiRoot);
+            },
+            Complete: () =>
+            {
+                var args = new List<string> { "build-multi-version", "-PublicApiRoot", publicApiRoot, "-Python", python, "-CompleteOnly", "-Test", "-Offline", "-MaxParallelism", parallelism };
+                if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
+                RunReleaseCommand(args.ToArray(), "multi-version completion", logRoot, runTemp, publicApiRoot);
+            });
+        ReleaseStageRunner.Invoke(stages);
 
         RunReleaseCommand(["preflight"], "release preflight", logRoot, runTemp, publicApiRoot);
         RunReleaseCommand(["validate-bundle", "-Strict"], "strict delivery validation", logRoot, runTemp, publicApiRoot);

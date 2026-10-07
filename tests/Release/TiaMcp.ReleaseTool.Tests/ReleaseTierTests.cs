@@ -42,7 +42,8 @@ public sealed class ReleaseTierTests
     {
         var plan = ReleaseCheckPolicy.Load(Root).Select("quick", [path]);
         Assert.Contains(expected, plan.SelectedChecks);
-        Assert.Contains("engine-stability", plan.SkippedChecks);
+        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/Worker/"))) Assert.Contains("engine-stability", plan.SelectedChecks);
+        else Assert.Contains("engine-stability", plan.SkippedChecks);
     }
 
     [Fact]
@@ -65,15 +66,26 @@ public sealed class ReleaseTierTests
     public void ReviewerChainRequiresAnExplicitValidTier(string? tier) =>
         Assert.Throws<ReleaseException>(() => ReleaseCheckPolicy.Tier(tier, required: true));
 
-    [Fact]
+    [Theory]
+    [InlineData("quick")]
+    [InlineData("package")]
     [Trait("Category", "ReleaseParity")]
-    public void ReleaseRejectsQuickBeforePrerequisitesOrOtherEffects()
+    public void ReleaseRejectsQuickBeforePrerequisitesOrOtherEffects(string tier)
     {
-        var options = Options.Parse(["-Tier", "quick", "-Version", "3.3.1", "-DryRun"], new HashSet<string>(["DryRun"]));
+        var options = Options.Parse(["-Tier", tier, "-Version", "3.3.1", "-DryRun"], new HashSet<string>(["DryRun"]));
         Assert.Contains("full", Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("release", options)).Message);
     }
 
+    [Fact]
+    [Trait("Category", "ReleaseParity")]
+    public void PublicationCannotSkipItsColdBuild()
+    {
+        var options = Options.Parse(["-Tier", "full", "-Version", "3.3.1", "-DryRun", "-SkipBuild"], new HashSet<string>(["DryRun", "SkipBuild"]));
+        Assert.Contains("cold rebuild", Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("release", options)).Message);
+    }
+
     [Theory]
+    [InlineData("package", "passed", true)]
     [InlineData("quick", "passed", false)]
     [InlineData("full", "pending", false)]
     [InlineData("full", "passed", false)]
@@ -92,6 +104,30 @@ public sealed class ReleaseTierTests
             else Assert.Throws<ReleaseException>(() => policy.RequireFullPackage(path));
         }
         finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void PackageSelectsExactlyTheInstallableChecksEvenWithoutABaseline()
+    {
+        var policy = ReleaseCheckPolicy.Load(Root);
+        var plan = policy.Select("package", null);
+        policy.ValidatePlan(plan);
+        Assert.Equal(ReleaseCheckPolicy.PackageChecks.Order(), plan.SelectedChecks.Order());
+        Assert.DoesNotContain("offline-suites", plan.SelectedChecks);
+        Assert.Throws<ReleaseException>(() => policy.ValidatePlan(plan with { SelectedChecks = policy.Checks, SkippedChecks = [] }));
+    }
+
+    [Theory]
+    [InlineData("src/Studio/Gui/MainWindow.xaml", "gui-tests")]
+    [InlineData("src/Shared/ProcessArguments.cs", "gui-tests")]
+    public void StudioOwnershipDoesNotSelectEngineSoaks(string path, string expected)
+    {
+        var policy = ReleaseCheckPolicy.Load(Root);
+        var plan = policy.Select("quick", [path]);
+        policy.ValidatePlan(plan);
+        Assert.Contains(expected, plan.SelectedChecks);
+        Assert.DoesNotContain("engine-stability", plan.SelectedChecks);
+        Assert.DoesNotContain("engine-isolated-stability", plan.SelectedChecks);
     }
 
     [Fact]

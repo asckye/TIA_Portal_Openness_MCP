@@ -13,6 +13,7 @@ internal sealed record ReleaseCheckPlan(string Tier, string[] SelectedChecks, st
 
 internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, ReleaseCheckRule[] Rules, ReleaseSelfTest[] SelfTests)
 {
+    internal static readonly string[] PackageChecks = ["preflight", "binary-build", "product-smoke", "relocation", "package", "bundle-validation"];
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     internal static ReleaseCheckPolicy Load(string root)
@@ -38,7 +39,7 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
     internal static string Tier(string? tier, bool required = false)
     {
         if (tier is null && !required) return "full";
-        if (tier is not ("quick" or "full")) throw new ReleaseException("-Tier must be explicitly quick or full.", 64);
+        if (tier is not ("package" or "quick" or "full")) throw new ReleaseException("-Tier must be explicitly package, quick or full.", 64);
         return tier;
     }
 
@@ -47,12 +48,14 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         Tier(tier);
         var paths = changes?.Select(path => path.Replace('\\', '/')).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray() ?? [];
         var selected = new HashSet<string>(Always, StringComparer.Ordinal);
-        if (tier == "full" || changes is null) selected.UnionWith(Checks);
+        if (tier == "package") selected = new HashSet<string>(PackageChecks, StringComparer.Ordinal);
+        else if (tier == "full" || changes is null) selected.UnionWith(Checks);
         else foreach (var path in paths)
         {
             var matches = Rules.Where(rule => rule.Path.EndsWith('/') ? path.StartsWith(rule.Path, StringComparison.Ordinal) : path == rule.Path).ToArray();
             if (matches.Length == 0) { selected.UnionWith(Checks); break; }
-            selected.UnionWith(matches.SelectMany(rule => rule.Checks));
+            var specificity = matches.Max(rule => rule.Path.Length);
+            selected.UnionWith(matches.Where(rule => rule.Path.Length == specificity).SelectMany(rule => rule.Checks));
         }
         return new ReleaseCheckPlan(tier, Checks.Where(selected.Contains).ToArray(), Checks.Where(check => !selected.Contains(check)).ToArray(), paths);
     }
@@ -63,7 +66,8 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         var all = plan.SelectedChecks.Concat(plan.SkippedChecks).ToArray();
         if (all.Length != Checks.Length || all.Distinct(StringComparer.Ordinal).Count() != all.Length ||
             all.Except(Checks, StringComparer.Ordinal).Any() || Always.Except(plan.SelectedChecks, StringComparer.Ordinal).Any() ||
-            (plan.Tier == "full" && plan.SkippedChecks.Length != 0)) throw new ReleaseException("Invalid release check selection.");
+            (plan.Tier == "full" && plan.SkippedChecks.Length != 0) ||
+            (plan.Tier == "package" && !plan.SelectedChecks.SequenceEqual(Checks.Where(PackageChecks.Contains)))) throw new ReleaseException("Invalid release check selection.");
         if (plan.Tier == "quick" && Select("quick", plan.ChangedPaths).SelectedChecks.Except(plan.SelectedChecks, StringComparer.Ordinal).Any())
             throw new ReleaseException("Quick selection omits a check required by its changed paths.");
     }
@@ -97,7 +101,7 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         catch { return null; }
     }
 
-    internal void RequireFullPackage(string package)
+    internal void RequireFullPackage(string package, bool requireColdBuild = false)
     {
         using var archive = ZipFile.OpenRead(package);
         var records = archive.Entries.Where(entry => entry.FullName.EndsWith("/manifest/package-manifest.json", StringComparison.Ordinal)).ToArray();
@@ -105,6 +109,8 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         using var recordStream = records[0].Open();
         using var record = JsonDocument.Parse(recordStream);
         RequireFullRecord(record.RootElement);
+        if (requireColdBuild && (!record.RootElement.TryGetProperty("buildCacheEnabled", out var cacheEnabled) || cacheEnabled.ValueKind != JsonValueKind.False))
+            throw new ReleaseException("Publication requires a full cold rebuild with -NoBuildCache; cached or unknown build provenance is refused.");
         var ran = record.RootElement.GetProperty("checksRan").EnumerateArray().Select(item => item.GetString()!).ToArray();
         var skipped = record.RootElement.GetProperty("checksSkipped").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (skipped.Length != 0 || ran.Length != Checks.Length || ran.Distinct(StringComparer.Ordinal).Count() != ran.Length ||
@@ -121,6 +127,10 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
 
 internal static partial class ReleaseCommands
 {
+    private static ReleaseCheckPlan ReleasePlanFromRecord(JsonElement record) => JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new ReleaseException("Check plan missing");
+
+    private static BuildCacheEvent[] ReadCacheEvents(string directory) => Directory.Exists(directory) ? Directory.EnumerateFiles(directory, "*.json").Order(StringComparer.Ordinal).Select(path => JsonSerializer.Deserialize<BuildCacheEvent>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!).ToArray() : [];
+
     private static ReleaseCheckPlan ReleasePlan(Options options)
     {
         var policy = ReleaseCheckPolicy.Load(Root);
@@ -133,11 +143,13 @@ internal static partial class ReleaseCommands
         return plan;
     }
 
-    private static void WriteTierRecord(ReleaseCheckPlan plan, bool passed)
+    private static void WriteTierRecord(ReleaseCheckPlan plan, bool passed, BuildCacheEvent[]? cache = null, bool? cacheDisabled = null)
     {
         var path = Path.Combine(Root, "manifest/package-manifest.json");
         var record = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         record["tier"] = plan.Tier;
+        record["buildCache"] = JsonSerializer.SerializeToNode(cache ?? CacheEvents());
+        record["buildCacheEnabled"] = !(cacheDisabled ?? Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1");
         record["checkStatus"] = passed ? "passed" : "pending";
         record["checksSelected"] = JsonSerializer.SerializeToNode(plan.SelectedChecks);
         record["checksRan"] = JsonSerializer.SerializeToNode(passed ? plan.SelectedChecks : Array.Empty<string>());

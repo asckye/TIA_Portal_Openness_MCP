@@ -1,4 +1,5 @@
 using System.Net;
+using System.IO.Compression;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -109,6 +110,30 @@ public sealed class ReleasePublisherTests
         Assert.Empty(server.Requests);
     }
 
+    [Theory]
+    [InlineData("package")]
+    [InlineData("quick")]
+    public async Task NonFullPackageRefusedBeforeAnyRequest(string tier)
+    {
+        using var fixture = new PackageFixture();
+        var path = Path.Combine(fixture.Output, "package-result.json");
+        var result = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+        result["tier"] = tier;
+        File.WriteAllText(path, result.ToJsonString());
+        var options = new PublishOptions("4.0.0", "", "test/repo", "invalid", false, false, GitExecutable: "must-not-run");
+        Assert.Contains("tier=full", (await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.PublishAsync(fixture.Root, options))).Message);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(null)]
+    public async Task CachedOrUnknownFullBuildRefusedBeforeCredentialsOrAnyRequest(bool? cacheEnabled)
+    {
+        using var fixture = new PackageFixture(cacheEnabled);
+        var options = new PublishOptions("4.0.0", "", "test/repo", "invalid", false, false, GitExecutable: "must-not-run");
+        Assert.Contains("-NoBuildCache", (await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.PublishAsync(fixture.Root, options))).Message);
+    }
+
     private static PublishOptions Options(LoopbackGitHubApi server, bool draftOnly, bool deleteDraft) =>
         new("4.0.0", "test-token", "acme/project", server.ApiBaseUrl, draftOnly, deleteDraft, RetryCount: 2, RetryDelaySeconds: 0);
 
@@ -117,19 +142,23 @@ public sealed class ReleasePublisherTests
         internal string Root { get; } = Path.Combine(Path.GetTempPath(), "release-publish-fixture-" + Guid.NewGuid().ToString("N"));
         internal string Output => Path.Combine(Root, "bin-build/releases/v4.0.0");
 
-        internal PackageFixture()
+        internal PackageFixture(bool? buildCacheEnabled = false)
         {
             Directory.CreateDirectory(Output);
             Directory.CreateDirectory(Path.Combine(Root, "manifest"));
             Directory.CreateDirectory(Path.Combine(Root, "docs/releases"));
             var zip = Path.Combine(Output, "pkg.zip");
-            File.WriteAllBytes(zip, [0, 1, 2, 3, 4]);
+            Directory.CreateDirectory(Path.Combine(Root, "build-tools/release"));
+            File.WriteAllText(Path.Combine(Root, "build-tools/release/release-checks.json"), JsonSerializer.Serialize(new { checks = new[] { "test" }, always = new[] { "test" }, rules = new[] { new { path = "test/", checks = new[] { "test" } } }, selfTests = Array.Empty<object>() }));
+            using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))
+            using (var writer = new StreamWriter(archive.CreateEntry("bundle/manifest/package-manifest.json").Open()))
+                writer.Write(JsonSerializer.Serialize(new { tier = "full", checkStatus = "passed", buildCacheEnabled, checksRan = new[] { "test" }, checksSkipped = Array.Empty<string>() }));
             var sidecar = Path.ChangeExtension(zip, ".sha256");
             File.WriteAllText(sidecar, Hash(zip) + "  pkg.zip\n");
             var digest = Hash(zip);
             File.WriteAllText(Path.Combine(Output, "package-result.json"), JsonSerializer.Serialize(new
             {
-                path = zip, sha256 = digest, size = new FileInfo(zip).Length, sourceCommit = new string('a', 40), files = 3
+                tier = "full", checkStatus = "passed", path = zip, sha256 = digest, size = new FileInfo(zip).Length, sourceCommit = new string('a', 40), files = 3
             }));
             File.WriteAllText(Path.Combine(Root, "manifest/delivery.json"), JsonSerializer.Serialize(new { release = "4.0.0", package = "pkg" }));
             File.WriteAllText(Path.Combine(Root, "docs/releases/v4.0.0.md"), "# Test release\n\nSee [guide](../guides/test.md).\n");

@@ -41,36 +41,63 @@ dotnet run --project build-tools/release -- validate-bundle -BundleRoot bin-buil
 仓库的 `-NoBinaries` 模式允许 CHANGELOG 最新条目高于已发布版本，但必须有同版本发布说明；
 各份旧 manifest 仍须相互一致。包模式和带二进制的发布模式继续要求精确一致，不能手改记录哈希。
 
-## quick 测试包与 full 发布候选包
+## package、quick 测试包与 full 发布候选包
 
-审查入口必须显式选择 `-Tier quick` 或 `-Tier full`。两者编译相同的全部交付二进制；层级仅控制检查数量，
-不改变编译参数、运行功能或交付文件集。`quick` 用于 VM 回归测试，目标在本机不超过 15 分钟；实际耗时以日志为准。
-`full` 执行全部检查，包含普通/隔离稳定性、八版快照及比较、重定位。`release` 默认 `full`，拒绝 `-Tier quick`，
-并在发布前验证包记录为 `tier=full`、`checkStatus=passed`、全部检查已运行且无跳过项。quick 包不能直接升级为 full 证据。
+VM 测试包使用 `-Tier package`。它只执行源码预检、全部交付二进制构建、打包、严格验包、重定位和八版产品 smoke；
+不执行套件、自测、稳定性压测、快照捕获或生态检查。预检保留仓库、文档链接、死引用、版本和静态包规则。
+`quick` 在这些必需项上按变化路径追加检查；`full` 执行全部检查。三档交付相同的产品集合，都不证明真实 TIA 工程验收。
 
 ```powershell
-dotnet run --project build-tools/release -- run-release-build -Tier full -PublicApiRoot <SDK-root> -CompanionPython <python.exe> -NuGetConfig <offline.config> -OutputDirectory bin-build/full-candidate
-dotnet run --project build-tools/release -- run-release-build -Tier quick -PublicApiRoot <SDK-root> -CompanionPython <python.exe> -NuGetConfig <offline.config> -OutputDirectory bin-build/quick-test
+# VM test package; use prepared local SDK/runtime archives and offline NuGet config.
+dotnet run --project build-tools/release -- run-release-build -Tier package -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/test-package
+# Branch checks before spending time on the complete candidate.
+dotnet run --project build-tools/release -- branch-gate -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/branch-checks
 ```
 
-两层都执行 preflight、全部产品编译、单元/离线套件、原生调用覆盖与 JIT 检查、资源发现、打包、严格包验证、prompt 注册，
-以及真实进程 smoke。smoke 经 STDIO 检查六个 Foundation 和 V20/V21 引擎的启动、完整工具目录、InitializeEnvironment 响应，
-以及一次在派发前被就绪/审批门禁拒绝的写请求；使用没有 TIA EXE 的 SDK-only 夹具。Studio/配置器无 MCP 目录，
-通过无效网络参数的启动拒绝检查；更新器运行帮助入口。smoke 不连接 TIA、PLC 或 VM。
+构建缓存默认在主仓库软件目录的 `TiaMcp_Output/build-cache/`（Git 忽略），在清理 worktree 后仍可复用。
+`-BuildCacheDirectory <absolute-directory>` 可指定其他目录；`-NoBuildCache` 禁用缓存。
+每个构建单元一个可读名称的子目录，`index.json` 列出 unit、inputHash、createdUtc、lastHitUtc 和 sizeBytes；
+每个输入哈希保存独立的完整输出。默认总容量上限为 10 GiB（条目的输出文件和元数据字节数，不含单元索引），
+可用 `-BuildCacheMaxBytes <positive-byte-count>` 覆盖；每次存入或命中后按最近成功命中时间跨单元淘汰最旧条目。
+超出上限的单个条目不保留。索引损坏可从条目元数据恢复；命中仍验证完整文件清单和 SHA-256。
 
-[`release-checks.json`](../../build-tools/release/release-checks.json) 是唯一审查过的路径到检查映射。quick 对比最近成功 full 候选包的
-源码内容清单（包括新增、删除和未提交文件），追加对应检查。FoundationHost/Worker 选择 Foundation transport、默认审批与 responses；
-Engine 选择审批、worker isolation、V20/V21 responses 等；Studio 选择 GUI；检查器选择自身 self-test（无 self-test 的检查器运行原检查）。
-未识别路径、缺少/损坏 baseline、候选 ZIP 丢失或哈希不一致均选择全部检查。首次 quick 因而会运行 full 数量的检查，仍标为 quick。
+```powershell
+# 显示默认路径、容量上限、实际大小和全部单元索引；也可传 -BuildCacheDirectory。
+dotnet run --project build-tools/release -- cache-info
+# 清空默认缓存；可传 -Unit <index 中的完整 unit 值> 只清一个单元。
+dotnet run --project build-tools/release -- cache-clear
+```
 
-默认 baseline 在忽略的 `bin-build/release-review/last-full.json`；`-FullBaseline` 可选择本 worktree 的 bin-build 下其他文件。
-仅 full 全部成功、最终包再次严格验证且源文件未在运行中改变时更新。baseline 绑定候选 ZIP 的 SHA-256、tier 与检查清单，
-不以 Git 提交时间推断成功。构建记录和包内 `package-manifest.json` 保存实际计划；最终包的 `checksRan`/`checksSkipped` 记录执行/跳过的检查组。
-构建中包标为 `checkStatus=pending`，全部选择的检查成功后重新打包为 `passed`。本地审查运行退出后恢复跟踪的 manifest 和生成文档。
+缓存目录应在产品输出和清理目录之外。同一工作树内按每个 worker 发布键、引擎、Foundation host、Studio、
+原生适配器、配置器、harness、weaver 和 release tool 分别缓存。
+键覆盖 MSBuild 实际求值的源码、链接资源和项目引用闭包、导入后的 props/targets、项目本地输入集合、NuGet assets/锁/config
+及实际包文件、编译器和 Framework 引用、SDK 副本、固定 bundled .NET 版本、构建参数与环境属性。
+绝对源码路径也参与键，避免含路径的产物跨工作树错误复用。求值失败或输入缺失时重建且不写缓存；构建后再次求值，输入变化则不保存。
+先在唯一暂存目录保存完整产物及文件哈希，再原子移动为完整条目；复用前验证全部文件、清单与哈希，损坏或缺失均重建。
+缓存只复用编译结果，各档选择的检查每次重新执行。包内 tier record 和运行结果保存 `buildCache` 命中/缺失记录。
 
-两层均使用 `-MaxParallelism`（默认 CPU 数，设为 1 则串行）的 continue 6 有界并行器；快照 compare 等待自己的 capture，
-失败停止新任务并等待已启动任务完成。各步骤和任务日志记录耗时；比较 wall time 必须注明 quick 的 selected/skipped 清单，
-不能把 dry run 或失败构建的时间当作候选包耗时。正式 release 在提交和上传前也执行 full 候选包检查。
+正式 `release` 强制完整档冷构建并禁用构建缓存，避免把缓存的正确性当作发布信任边界。
+`-SkipBuild` 因此会被拒绝；`-Resume` 也重新构建。`publish` 在访问凭据或 GitHub 前验证结果记录和 ZIP 内完整档记录，
+拒绝 package、quick、pending、缺少任一 full 检查，以及缓存启用或缺少冷构建来源的包。
+需要独立 publish 的候选用 `run-release-build -Tier full -NoBuildCache` 生成；记录中的 `buildCacheEnabled=false` 是必需证据。
+
+[`release-checks.json`](../../build-tools/release/release-checks.json) 是路径到检查的映射；quick 使用最具体的匹配规则。
+Studio 视图只选择 GUI 检查，不选择引擎压测；文档路径只运行必需项，示例路径追加用法/响应检查。
+构建依赖由缓存的实际 MSBuild 输入决定，文档/示例变化不会使无关 worker 或适配器失效。
+未映射路径或缺少可信 baseline 继续选择全部检查。
+默认 baseline 在 `bin-build/release-review/last-full.json`，`-FullBaseline` 可选择本 worktree 的 bin-build 下其他文件。
+仅 full 全部成功、最终包再次严格验证且源码未变化时更新；baseline 绑定 ZIP 哈希与源码集合。
+
+`branch-gate` 构建当前分支的两版引擎及夹具，可复用同一缓存，然后运行普通/隔离各四组合的稳定性检查（默认 10 轮，
+不能低于 10）、诊断夹具（行为至少 36、拒绝至少 5）、两版诊断 JIT/织入清单、worker supervisor（至少 25）、
+HTTP concurrency mode、默认审批门禁及其自测、两种快照的 `verify`。
+它复用完整链的检查代码和成功判定，不捕获快照，不启动 live 分支。输出 `result.json` 与逐项日志，任何检查失败即失败。
+目标为热缓存 package ≤ 10 分钟、branch gate ≤ 8 分钟；必须用成功的实际运行证明。
+
+构建中包标为 `checkStatus=pending`，选择的检查全部通过后重新打包为 `passed`。
+退出后逐字节恢复跟踪的 manifest 和生成文档；运行中的记录副本、计时和日志保存在 `bin-build/release-review/`。
+`-MaxParallelism` 控制检查并发；快照 compare 等待自己的 capture，失败停止新任务并等待已启动任务完成。
+比较时间必须同时记录冷/热缓存、机器空闲状态和 quick 的选择集合，不能将失败运行或 dry run 当成成功包时间。
 
 ## 准备和执行
 
@@ -88,7 +115,8 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "Con
 
 1. 首先运行 `prerequisites`：汇总检查 .NET 10 SDK、Python 3.12、实际伴随环境的模块/命令目录、八版 PublicAPI、固定 SHA-512 的 .NET 缓存包、令牌、干净工作树和至少 10 GiB 空间。没有缓存时先下载并验哈希；任何缺项均在修改版本或构建前失败。随后检查 master、上游和进程。
 2. 更新 `Version.props`、插件版本、文档当前发布链接及路线图标题，立即执行早期门禁：版本/CHANGELOG/发布说明/README/路线图断言、仓库及链接、失效工具引用、仓库模式包验证、布局与交付集合自测、示例目录、版本目录接线、原生监督器与 MCP 安全自测、崩溃证据和写保护测试。路由选择与 PLC 名称匹配从当前生产源码提取方法并编译小型夹具运行，不需要完整引擎产物。
-3. 分别判断两份记录能否复用。先复用多版本准备产物，或运行 `dotnet run --project build-tools/release -- build-multi-version -PrepareOnly -Test`，生成 Foundation、worker、Studio 和 bundled .NET；版本从 `Version.props` 读取。完整引擎不能复用时，`Build-release` 运行公共离线套件及夹具构建，再启动 V20/V21 两条并行流水线，保留全部功能、协议、普通/隔离稳定性门禁；每版普通和隔离稳定性仍各四组。汇合后生成清单、构建记录与配置器。随后用 `dotnet run --project build-tools/release -- build-multi-version -CompleteOnly -Test` 核对准备阶段的输入、运行文件和审计证据，执行依赖完整引擎的八版本 API/示例审计，生成最终记录并绑定交付。完整引擎重建时，多版本记录也重新验证；两份记录都可复用时保持原记录不变。
+3. 冷构建多版本准备产物，运行 `build-multi-version -PrepareOnly -Test`；再运行两版 `build-release` 的完整检查，最后用 `build-multi-version -CompleteOnly -Test` 核对输入、运行文件和证据并绑定交付。发布期间禁用构建缓存和旧完整构建记录的复用。
+
 4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
 
 5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
@@ -103,15 +131,14 @@ Build-Release 的程序集反射检查和工具清单生成运行在 net48 HttpT
 
 ## 分阶段与恢复
 
--NoPush 完成本地提交、打包和验证后停止；检查具体产物后用相同参数加 -Resume 继续推送、CI、tag 和发布。-NoTag 在推送及 CI 后停止；-DryRun 只到构建与本地检查，且不写 Git 暂存区。`-Resume` 仍重跑预检和早期门禁；只有输入及产物与记录相同时才跳过构建和提交，否则回到构建/提交路径。
+-NoPush 完成本地提交、打包和验证后停止；-NoTag 在推送及 CI 后停止；-DryRun 不执行构建、暂存或远程操作。
+`-Resume` 重跑预检、早期门禁和冷构建。`-NoReuse` 仍可显式表达冷构建；`-SkipBuild` 不能用于正式发布。
 
-默认自动复用：release/fileVersion、完整源码文件集合（含新增/删除）、源码哈希、补充验证输入和运行文件集合/哈希均一致，且原有验证完整时，才跳过对应引擎或多版本构建及测试。日志写明复用或重建原因。`-NoReuse` 强制两部分都重建；`-SkipBuild` 保留为严格断言，任何不匹配立即失败，不能与 `-NoReuse` 同用。
-
-原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。复用不改写两份构建记录的日期、版本、哈希或测试结果；配置器/交付元数据单独刷新，随后重新绑定原多版本记录。`prepare-delivery` 要求多版本运行产物和匹配的完整引擎记录已存在，缺项在重建配置器前明确失败；它刷新引擎/配置器交付绑定并执行严格验证。正式发布仍需多版本完成记录及最终严格验证。准备阶段的 `bin-build/multi-version/prepared-build.json` 不是发布记录，不能通过最终八版本发布门禁。
+原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。缓存命中只恢复编译产物；当前档位的检查、记录时间和交付绑定每次重新生成，正式发布始终冷构建。`prepare-delivery` 要求多版本运行产物和匹配的完整引擎记录已存在，缺项在重建配置器前明确失败；它刷新引擎/配置器交付绑定并执行严格验证。正式发布仍需多版本完成记录及最终严格验证。准备阶段的 `bin-build/multi-version/prepared-build.json` 不是发布记录，不能通过最终八版本发布门禁。
 
 长路径环境可用 `Package-Release.py --output-directory <较短的新目录>`，保留生成的 package-result.json 所记录的实际 ZIP 路径；恢复 Release 流程时将该结果记录及同名 ZIP/SHA-256 放到默认版本目录。
 
-每次新运行或 `-Resume` 都将已有 `bin-build/releases/v<版本>` 完整移动到同级 `v<版本>.previous-<时间戳>-<唯一后缀>`，保留原归档和日志，再从当前 HEAD 生成并验证候选；完整引擎记录新增 `validationArtifacts`，绑定 API 织入清单和实际 GetToolUsage 证据的哈希。归档后只恢复哈希匹配的这四个审计输入，缺失或改写则重建完整引擎；移动前检查绝对父目录和重解析点，不覆盖历史目录。无需手动归档。
+每次新运行或 `-Resume` 都将已有 `bin-build/releases/v<版本>` 完整移动到同级 `v<版本>.previous-<时间戳>-<唯一后缀>`，保留原归档和日志，再从当前 HEAD 生成并验证候选；完整引擎记录新增 `validationArtifacts`，绑定 API 织入清单和实际 GetToolUsage 证据的哈希。归档后保留哈希匹配的四个历史审计输入，冷构建仍重新生成全部当前证据；移动前检查绝对父目录和重解析点，不覆盖历史目录。无需手动归档。
 
 已公开的 Release、tag 和资产不改写；发现问题应修正并发布新补丁版本。发布不自动更新运行中的服务或虚拟机。
 
@@ -149,7 +176,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 
 ```powershell
 # 只展示顺序，不要求本地 SDK/cache，也不构建。
-dotnet run --project build-tools/release -- run-release-build -DryRun
+dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
 dotnet run --project build-tools/release -- run-release-build -SelfTest
 # 审查者预先准备好离线依赖后，实际执行；输出必须是新目录，仓库内仅允许 bin-build 下。
 dotnet run --project build-tools/release -- run-release-build -Tier full -PublicApiRoot <SDK-root> -OutputDirectory <new-output-directory> -CompanionPython <prepared-python.exe> -NuGetConfig <offline-nuget.config>

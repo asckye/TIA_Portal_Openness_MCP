@@ -7,22 +7,24 @@ def release_checks(root, package, *records):
     """Validate candidate tier evidence before delivery projection removes sources."""
     policy = json.loads((root / 'build-tools/release/release-checks.json').read_text('utf-8'))
     tier = package.get('tier')
-    if tier not in ('quick', 'full'):
-        raise ValueError('Package needs an explicit quick/full tier; run run-release-build -Tier')
+    if tier not in ('package', 'quick', 'full'):
+        raise ValueError('Package needs an explicit package/quick/full tier; run run-release-build -Tier')
     selected = package.get('checksSelected', [])
     skipped = package.get('checksSkipped', [])
     if (len(selected + skipped) != len(policy['checks']) or len(set(selected + skipped)) != len(selected + skipped)
             or set(selected + skipped) != set(policy['checks']) or not set(policy['always']) <= set(selected)
-            or (tier == 'full' and skipped)):
+            or (tier == 'full' and skipped)
+            or (tier == 'package' and set(selected) != set(policy['always']))):
         raise ValueError('Invalid candidate check selection')
     required = set(policy['always'])
-    for path in package.get('changedPaths', []):
+    for path in package.get('changedPaths', []) if tier == 'quick' else []:
         matches = [rule for rule in policy['rules'] if
                    (path.startswith(rule['path']) if rule['path'].endswith('/') else path == rule['path'])]
         if not matches:
             required.update(policy['checks'])
         for rule in matches:
-            required.update(rule['checks'])
+            if len(rule['path']) == max(len(match['path']) for match in matches):
+                required.update(rule['checks'])
     if not required <= set(selected):
         raise ValueError('Changed paths require additional candidate checks')
     status = package.get('checkStatus')
@@ -186,6 +188,17 @@ class LayoutChecks(unittest.TestCase):
         self.assertEqual(set(selected), release_checks(ROOT, package, record))
         with self.assertRaises(ValueError):
             release_checks(ROOT, package, dict(tier='full', checkPlan=record['checkPlan']))
+
+    def test_package_tier_has_only_installable_checks(self):
+        policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
+        selected = [check for check in policy['checks'] if check in policy['always']]
+        package = dict(tier='package', checkStatus='passed', checksSelected=selected, checksRan=selected,
+                       checksSkipped=[check for check in policy['checks'] if check not in selected], changedPaths=['unknown/new.cs'])
+        self.assertEqual(set(policy['always']), release_checks(ROOT, package))
+        package['checksSelected'] += ['offline-suites']
+        package['checksSkipped'].remove('offline-suites')
+        with self.assertRaises(ValueError):
+            release_checks(ROOT, package)
 
     def test_package_rejects_unknown_path_with_reduced_checks(self):
         policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))

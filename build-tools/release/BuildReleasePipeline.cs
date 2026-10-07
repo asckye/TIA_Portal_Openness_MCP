@@ -138,7 +138,11 @@ internal static partial class ReleaseCommands
             foreach (var name in new[] { $"native-call-coverage-v{major}.json", $"tool-usage-v{major}.json" })
             {
                 var path = Path.Combine(sharedOut, "v" + major, name);
-                if (!File.Exists(path)) throw new ReleaseException("Validation artifact missing: " + path);
+                if (!File.Exists(path))
+                {
+                    if (name.StartsWith("native-call-coverage", StringComparison.Ordinal) ? ReleasePlan(options).Includes("native-coverage") : ReleasePlan(options).Includes("resource-discovery")) throw new ReleaseException("Validation artifact missing: " + path);
+                    continue;
+                }
                 artifacts.Add(new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), sha256 = ReleaseRecords.HashFile(path) });
             }
         var record = new
@@ -165,46 +169,50 @@ internal static partial class ReleaseCommands
     private static JsonElement RunBuildReleaseCommon(Options options, string dotnet, string python, string? nuget, string v20Api,
         string apiRoot, string outputDirectory, string runTemp, string cliHome)
     {
+        var plan = ReleasePlan(options);
         var suiteResults = Path.Combine(outputDirectory, "dotnet-suites");
         Directory.CreateDirectory(suiteResults);
-        RunBuildSpec("approval-gate-self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
-        var lifecycle = RunBuildSpec("native-supervisor", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
-        var lifecycleMatch = Regex.Match(lifecycle, "COMPLETE: (\\d+) native supervisor checks passed; live TIA tests NOT RUN");
-        if (!lifecycleMatch.Success || int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) < 1)
-            throw new ReleaseException("Native supervisor offline checks incomplete");
-        var mcpSafetyText = RunBuildSpec("native-mcp-safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeMcpSession.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
-        var nativeMcpSafety = RequireCount("nativeMcpSafety", mcpSafetyText, "COMPLETE: (\\d+) native MCP safety checks passed");
-        RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunDotnetSuiteForRelease("write-guard", "write-guard", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var writeGuardPassed = ReadSuitePassed(suiteResults, "write-guard");
-        RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var crashEvidencePassed = ReadSuitePassed(suiteResults, "crash-evidence");
-        RunBuildRaw(dotnet, ["publish", Path.Combine(Root, "src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj"), "-c", "Release", "-o", Path.Combine(Root, "runtime/tools"), "--no-restore", "-p:PublishAot=false", "-p:UseAppHost=true"], Path.Combine(outputDirectory, "write-guard-publish.log"), runTemp, cliHome, apiRoot, nuget, "write-guard publish");
-        RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
-        RunBuildSpec("version-catalog", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
+        int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
+        Match lifecycleMatch = Match.Empty;
+        if (plan.Includes("offline-suites"))
+        {
+            RunBuildSpec("approval-gate-self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
+            var lifecycle = RunBuildSpec("native-supervisor", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
+            lifecycleMatch = Regex.Match(lifecycle, "COMPLETE: (\\d+) native supervisor checks passed; live TIA tests NOT RUN");
+            if (!lifecycleMatch.Success || (lifecycleMatch.Success ? int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0) < 1)
+                throw new ReleaseException("Native supervisor offline checks incomplete");
+            var mcpSafetyText = RunBuildSpec("native-mcp-safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeMcpSession.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
+            nativeMcpSafety = RequireCount("nativeMcpSafety", mcpSafetyText, "COMPLETE: (\\d+) native MCP safety checks passed");
+            RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunDotnetSuiteForRelease("write-guard", "write-guard", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            writeGuardPassed = ReadSuitePassed(suiteResults, "write-guard");
+            RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            crashEvidencePassed = ReadSuitePassed(suiteResults, "crash-evidence");
+            RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
+            RunBuildSpec("version-catalog", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
 
-        var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj");
-        RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunDotnetSuiteForRelease("offline", "offline", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var offlinePassed = ReadSuitePassed(suiteResults, "offline");
-        RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
-        var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj");
-        RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var versionPolicyPassed = ReadSuitePassed(suiteResults, "version-policy");
-        var updaterSuiteProject = Path.Combine(Root, "tests/Updater/TiaMcp.Updater.Tests.csproj");
-        RestoreBuildProject(dotnet, updaterSuiteProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunDotnetSuiteForRelease("updater", "updater", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var updaterPassed = ReadSuitePassed(suiteResults, "updater");
+            var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj");
+            RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunDotnetSuiteForRelease("offline", "offline", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            offlinePassed = ReadSuitePassed(suiteResults, "offline");
+            RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
+            var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj");
+            RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            versionPolicyPassed = ReadSuitePassed(suiteResults, "version-policy");
+            var updaterSuiteProject = Path.Combine(Root, "tests/Updater/TiaMcp.Updater.Tests.csproj");
+            RestoreBuildProject(dotnet, updaterSuiteProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunDotnetSuiteForRelease("updater", "updater", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            updaterPassed = ReadSuitePassed(suiteResults, "updater");
+        }
+        var writeGuardProject = Path.Combine(Root, "src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj");
+        RestoreBuildProject(dotnet, writeGuardProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+        RunBuildRaw(dotnet, ["publish", writeGuardProject, "-c", "Release", "-o", Path.Combine(Root, "runtime/tools"), "--no-restore", "-p:PublishAot=false", "-p:UseAppHost=true"], Path.Combine(outputDirectory, "write-guard-publish.log"), runTemp, cliHome, apiRoot, nuget, "write-guard publish");
         var updaterProject = Path.Combine(Root, "src/Updater/TiaMcp.Updater.csproj");
         RestoreBuildProject(dotnet, updaterProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunBuildRaw(dotnet, ["build", updaterProject, "-c", "Release", "-f", "net48", "--no-restore", "-v:q"],
-            Path.Combine(outputDirectory, "build-updater.log"), runTemp, cliHome, apiRoot, nuget, "Updater build");
-        RequireFile(Path.Combine(Root, "bin-build/updater/TiaMcp.Updater.exe"), "The .NET Framework updater output is incomplete");
-        RequireFile(Path.Combine(Root, "bin-build/updater/TiaMcp.Updater.exe.config"), "The .NET Framework updater output is incomplete");
-
+        RunBuildRaw(dotnet, ["build", updaterProject, "-c", "Release", "-f", "net48", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-updater.log"), runTemp, cliHome, apiRoot, nuget, "Updater build");
         var harnessProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
         RestoreBuildProject(dotnet, harnessProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", harnessProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, nuget, "HTTP harness build");
@@ -221,20 +229,17 @@ internal static partial class ReleaseCommands
             File.Copy(source, Path.Combine(verifierDirectory, name), true);
         }
 
-        var diagnosticProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj");
-        RestoreBuildProject(dotnet, diagnosticProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        RunBuildRaw(dotnet, ["build", diagnosticProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "native-diagnostics-build.log"), runTemp, cliHome, apiRoot, nuget, "native diagnostics fixture build");
-        var diagnosticFixture = Path.Combine(Path.GetDirectoryName(diagnosticProject)!, "bin/Release/net48/DiagnosticsTests.exe");
-        var diagnosticOut = Path.Combine(outputDirectory, "native-diagnostics-" + Guid.NewGuid().ToString("N"));
-        RunBuildSpec("native-diagnostics-fixture", python, [Path.Combine(Root, "scripts/checks/Test-NativeDiagnostics.py"), "--fixture", diagnosticFixture,
-            "--weaver", Path.Combine(weaverOutput, "NativeCallWeaver.dll"), "--output", diagnosticOut], outputDirectory, runTemp, cliHome, apiRoot);
-        using var diagnosticsDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(diagnosticOut, "result.json")));
-        var diagnostics = diagnosticsDoc.RootElement.Clone();
-        CheckReleaseCount("diagnosticBehavior", GetJsonInt(diagnostics, "behaviorChecks"), "Native diagnostic fixture behavior checks incomplete");
-        CheckReleaseCount("diagnosticRejection", GetJsonInt(diagnostics, "rejectionChecks"), "Native diagnostic fixture rejection checks incomplete");
-        if (GetJsonBool(diagnostics, "nativeTiaExecuted")) throw new ReleaseException("Native diagnostic fixture gate ran live TIA tests");
+        JsonElement diagnostics = JsonSerializer.SerializeToElement(new { status = "skipped" });
+        if (plan.Includes("native-diagnostics"))
+        {
+            var diagnosticProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj");
+            RestoreBuildProject(dotnet, diagnosticProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunBuildRaw(dotnet, ["build", diagnosticProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "native-diagnostics-build.log"), runTemp, cliHome, apiRoot, nuget, "native diagnostics fixture build");
+            var diagnosticFixture = Path.Combine(Path.GetDirectoryName(diagnosticProject)!, "bin/Release/net48/DiagnosticsTests.exe");
+            diagnostics = VerifyDiagnosticFixture(python, diagnosticFixture, Path.Combine(weaverOutput, "NativeCallWeaver.dll"), outputDirectory, runTemp, cliHome, apiRoot);
+        }
         var common = new { diagnosticTests = diagnostics, crashEvidenceChecksPassed = crashEvidencePassed, writeGuardChecksPassed = writeGuardPassed, updaterPassed,
-            nativeMcpSafetyChecksPassed = nativeMcpSafety, nativeSupervisorChecksPassed = int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
+            nativeMcpSafetyChecksPassed = nativeMcpSafety, nativeSupervisorChecksPassed = (lifecycleMatch.Success ? int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0),
             offlinePassed, offlineV20Passed, versionPolicySdkPassed = versionPolicyPassed };
         WriteJson(Path.Combine(outputDirectory, "common.json"), common);
         using var result = JsonDocument.Parse(JsonSerializer.Serialize(common, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
@@ -265,14 +270,17 @@ internal static partial class ReleaseCommands
             try
             {
                 try { locked = buildMutex.WaitOne(); } catch (AbandonedMutexException) { locked = true; }
-                RestoreBuildProject(dotnet, nativeProject, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
-                RunBuildRaw(dotnet, ["build", nativeProject, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"native-build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} native tests build");
-                var nativeOutput = Path.Combine(Path.GetDirectoryName(nativeProject)!, "bin/Release/net48");
-                var nativeExe = Path.Combine(nativeOutput, $"NativeTests.V{major}.exe");
-                if (Directory.Exists(nativeOutput) && Directory.EnumerateFiles(nativeOutput, "Siemens.Engineering*.dll").Any())
-                    throw new ReleaseException("Native test harness must not copy Siemens assemblies locally");
-                var nativeSafetyText = RunBuildSpec("native-safety", nativeExe, ["--self-test"], outputDirectory, runTemp, cliHome, apiRoot, major);
-                nativeSafety = RequireCount("native safety", nativeSafetyText, "COMPLETE: (\\d+) native harness safety checks passed; live TIA tests NOT RUN");
+                if (plan.Includes("offline-suites"))
+                {
+                    RestoreBuildProject(dotnet, nativeProject, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
+                    RunBuildRaw(dotnet, ["build", nativeProject, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"native-build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} native tests build");
+                    var nativeOutput = Path.Combine(Path.GetDirectoryName(nativeProject)!, "bin/Release/net48");
+                    var nativeExe = Path.Combine(nativeOutput, $"NativeTests.V{major}.exe");
+                    if (Directory.Exists(nativeOutput) && Directory.EnumerateFiles(nativeOutput, "Siemens.Engineering*.dll").Any())
+                        throw new ReleaseException("Native test harness must not copy Siemens assemblies locally");
+                    var nativeSafetyText = RunBuildSpec("native-safety", nativeExe, ["--self-test"], outputDirectory, runTemp, cliHome, apiRoot, major);
+                    nativeSafety = RequireCount("native safety", nativeSafetyText, "COMPLETE: (\\d+) native harness safety checks passed; live TIA tests NOT RUN");
+                }
                 RestoreBuildProject(dotnet, project, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
                 RunBuildRaw(dotnet, ["build", project, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} engine build");
 
@@ -303,24 +311,29 @@ internal static partial class ReleaseCommands
         if (FileVersionInfo.GetVersionInfo(exe).FileVersion != fileVersion) throw new ReleaseException($"V{major} runtime version mismatch");
         if (plan.Includes("engine-functional"))
             RunBuildSpec("example-library", harness, [exe, "example-library-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var coveragePath = Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json");
-        RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
-        var coverage = coverageDoc.RootElement.Clone();
-        var adapterCoveragePath = Path.Combine(outputDirectory, $"adapter-native-call-coverage-v{major}.json");
-        var adapter = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Adapter.{major}.dll");
-        RunBuildSpec("adapter-native-coverage", dotnet, [packagedWeaver, "verify", adapter, adapterCoveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var adapterCoverageDoc = JsonDocument.Parse(File.ReadAllText(adapterCoveragePath));
-        var adapterCoverage = adapterCoverageDoc.RootElement.Clone();
+        JsonElement coverage = JsonSerializer.SerializeToElement(new { count = 0 });
+        Match nativeJit = Match.Empty;
+        if (plan.Includes("native-coverage") || plan.Includes("native-diagnostics"))
+        {
+            var coveragePath = Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json");
+            RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
+            using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
+            coverage = coverageDoc.RootElement.Clone();
+            var adapterCoveragePath = Path.Combine(outputDirectory, $"adapter-native-call-coverage-v{major}.json");
+            var adapter = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Adapter.{major}.dll");
+            RunBuildSpec("adapter-native-coverage", dotnet, [packagedWeaver, "verify", adapter, adapterCoveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
+            using var adapterCoverageDoc = JsonDocument.Parse(File.ReadAllText(adapterCoveragePath));
+            var adapterCoverage = adapterCoverageDoc.RootElement.Clone();
 
-        var nativeJitText = RunBuildSpec("native-diagnostics-jit", harness, [exe, "native-diagnostics-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var nativeJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!nativeJit.Success || int.Parse(nativeJit.Groups[1].Value) + int.Parse(nativeJit.Groups[2].Value) != GetJsonInt(coverage, "count")) throw new ReleaseException("Diagnostic wrapper JIT/inventory mismatch");
-        var adapterJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!adapterJit.Success || int.Parse(adapterJit.Groups[1].Value) + int.Parse(adapterJit.Groups[2].Value) != GetJsonInt(adapterCoverage, "count")) throw new ReleaseException("Adapter diagnostic wrapper JIT/inventory mismatch");
-        var adapterJournal = RequireCount("adapter journal", nativeJitText, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
-        var nativeJournal = RequireCount("native journal", nativeJitText, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
-
+            if (plan.Includes("native-diagnostics"))
+            {
+                nativeJit = VerifyNativeJit(dotnet, harness, exe, api, outputDirectory, runTemp, cliHome, apiRoot, major);
+            }
+        }
+        if (plan.Includes("http-concurrency"))
+        {
+            VerifyHttpConcurrency(harness, exe, api, outputDirectory, runTemp, cliHome, apiRoot, major);
+        }
         var processLeases = 0;
         if (plan.Includes("engine-functional"))
         {
@@ -343,19 +356,7 @@ internal static partial class ReleaseCommands
         JsonElement approval = default;
         if (plan.Includes("engine-approval"))
         {
-            var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
-            var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
-            Directory.CreateDirectory(approvalTemp);
-            var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
-                "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
-            using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
-            approval = approvalDoc.RootElement.Clone();
-            CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
-            var approvalResults = approval.GetProperty("results");
-            if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 4 || GetJsonBool(approval, "workbenchConnected") ||
-                GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
-                GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
-
+            approval = VerifyEngineApproval(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major);
         }
 
         int software = 0, engineering = 0, http = 0, hmi = 0;
@@ -374,10 +375,14 @@ internal static partial class ReleaseCommands
 
         }
 
+        var resources = 0;
+        if (plan.Includes("resource-discovery"))
+        {
         var usagePath = Path.Combine(outputDirectory, $"tool-usage-v{major}.json");
         var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", exe,
             "--portal-root", api, "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--usage-output", usagePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        var resources = RequireCount("resource discovery", resourcesText, "COMPLETE: (\\d+) resource discovery checks passed");
+        resources = RequireCount("resource discovery", resourcesText, "COMPLETE: (\\d+) resource discovery checks passed");
+        }
         JsonElement v21Ecosystem = default;
         if (plan.Includes("engine-ecosystem"))
         {
@@ -398,26 +403,8 @@ internal static partial class ReleaseCommands
 
         var stabilityRounds = options.Get("LocalStabilityRounds", "50");
         JsonElement stability = default, isolatedStability = default;
-        if (plan.Includes("engine-stability"))
-        {
-            var stabilityOut = Path.Combine(outputDirectory, "stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
-            RunBuildSpec("local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
-                "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", stabilityOut], outputDirectory, runTemp, cliHome, apiRoot, major);
-            using var stabilityDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(stabilityOut, "result.json")));
-            stability = stabilityDoc.RootElement.Clone();
-            if (GetJsonString(stability, "status") != "passed" || GetArrayLength(stability, "runs") != 4 || GetJsonString(stability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
-                throw new ReleaseException("Local stability validation incomplete or used a different EXE");
-        }
-        if (plan.Includes("engine-isolated-stability"))
-        {
-            var isolatedOut = Path.Combine(outputDirectory, "isolated-stability-v" + major + "-" + Guid.NewGuid().ToString("N"));
-            RunBuildSpec("isolated-local-stability", python, [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(),
-                "--host-harness", harness, "--public-api", api, "--rounds", stabilityRounds, "--output", isolatedOut, "--isolate-openness"], outputDirectory, runTemp, cliHome, apiRoot, major);
-            using var isolatedDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(isolatedOut, "result.json")));
-            isolatedStability = isolatedDoc.RootElement.Clone();
-            if (GetJsonString(isolatedStability, "status") != "passed" || GetArrayLength(isolatedStability, "runs") != 4 || !GetJsonBool(isolatedStability, "isolatedWorker") || GetJsonString(isolatedStability, "runtimeSha256") != ReleaseRecords.HashFile(exe))
-                throw new ReleaseException("Isolated local stability checks failed or used a different EXE");
-        }
+        if (plan.Includes("engine-stability")) stability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, false);
+        if (plan.Includes("engine-isolated-stability")) isolatedStability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, true);
 
         int nativeExport = 0, snapshot = 0, globalScripts = 0, graphic = 0, settings = 0, ecosystemCount = 0;
         if (plan.Includes("engine-functional"))
@@ -444,10 +431,10 @@ internal static partial class ReleaseCommands
             foreach (var group in sites.EnumerateArray().GroupBy(site => GetJsonString(site, "category"), StringComparer.Ordinal)) categories[group.Key] = group.Count();
         var nativeDiagnostics = new
         {
-            status = "passed", sites = GetJsonInt(coverage, "count"), categories, uncoveredSupportedBoundaries = 0,
-            coverageSha256 = ReleaseRecords.HashFile(Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json")),
-            instrumenterSha256 = GetJsonString(coverage, "instrumenterSha256"), jitPrepared = int.Parse(nativeJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
-            openGenericWrappers = int.Parse(nativeJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), fixture = common.GetProperty("diagnosticTests").Clone(),
+            status = plan.Includes("native-diagnostics") ? "passed" : "skipped", sites = GetJsonInt(coverage, "count"), categories, uncoveredSupportedBoundaries = 0,
+            coverageSha256 = File.Exists(Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json")) ? ReleaseRecords.HashFile(Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json")) : "",
+            instrumenterSha256 = GetJsonString(coverage, "instrumenterSha256"), jitPrepared = nativeJit.Success ? int.Parse(nativeJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0,
+            openGenericWrappers = nativeJit.Success ? int.Parse(nativeJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) : 0, fixture = common.GetProperty("diagnosticTests").Clone(),
             scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeDiagnostics.py")), liveTiaExecuted = false,
             scope = "Engine-owned Openness call sites; not SDK/server internals or a native stability claim"
         };
@@ -456,7 +443,7 @@ internal static partial class ReleaseCommands
             httpPassed = http, hmiPassed = hmi, resourceDiscoveryPassed = resources, nativeExportRemotingPassed = nativeExport,
             migrationAssembly = plan.Includes("engine-functional") ? "passed" : "skipped", realProjectAcceptance = "NOT PERFORMED for this release", hmiSnapshotRemotingPassed = snapshot,
             softwareLookupPassed = software, engineeringApiShapePassed = engineering,
-            nativeHarness = new { compiled = true, safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/NativeTests.V{major}.exe")), supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
+            nativeHarness = new { compiled = plan.Includes("offline-suites"), safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = plan.Includes("offline-suites") ? ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/NativeTests.V{major}.exe")) : "", supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
             localStability = plan.Includes("engine-stability") ? (JsonElement?)stability : null,
             v21EcosystemAdapters = plan.Includes("engine-ecosystem") ? (JsonElement?)v21Ecosystem : null,
             isolatedLocalStability = plan.Includes("engine-isolated-stability") ? (JsonElement?)isolatedStability : null,
@@ -468,6 +455,79 @@ internal static partial class ReleaseCommands
             globalScriptBridgePassed = globalScripts, graphicSelectionPassed = graphic, runtimeSettingsPassed = settings,
             ecosystemAssemblyPassed = ecosystemCount, globalScriptNativeApiSignature = major == 21 ? "verified in referenced V21 DLL; live import not tested" : "not established; bridge checks only"
         };
+    }
+
+    private static JsonElement VerifyDiagnosticFixture(string python, string diagnosticFixture, string weaver, string outputDirectory, string runTemp, string cliHome, string apiRoot)
+    {
+        var diagnosticOut = Path.Combine(outputDirectory, "native-diagnostics-" + Guid.NewGuid().ToString("N"));
+        RunBuildSpec("native-diagnostics-fixture", python, [Path.Combine(Root, "scripts/checks/Test-NativeDiagnostics.py"), "--fixture", diagnosticFixture,
+            "--weaver", weaver, "--output", diagnosticOut], outputDirectory, runTemp, cliHome, apiRoot);
+        using var diagnosticsDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(diagnosticOut, "result.json")));
+        var diagnostics = diagnosticsDoc.RootElement.Clone();
+        CheckReleaseCount("diagnosticBehavior", GetJsonInt(diagnostics, "behaviorChecks"), "Native diagnostic fixture behavior checks incomplete");
+        CheckReleaseCount("diagnosticRejection", GetJsonInt(diagnostics, "rejectionChecks"), "Native diagnostic fixture rejection checks incomplete");
+        if (GetJsonBool(diagnostics, "nativeTiaExecuted")) throw new ReleaseException("Native diagnostic fixture gate ran live TIA tests");
+        return diagnostics;
+    }
+
+    private static void VerifyHttpConcurrency(string harness, string exe, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major)
+    {
+        var text = RunBuildSpec("http-concurrency", harness, [exe, "concurrency-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+        if (!text.Contains("PASS classification", StringComparison.Ordinal) || !text.Contains("PASS concurrent audit", StringComparison.Ordinal))
+            throw new ReleaseException("HTTP concurrency regression did not complete");
+    }
+
+    private static JsonElement VerifyEngineApproval(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major)
+    {
+        var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
+        var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
+        Directory.CreateDirectory(approvalTemp);
+        var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
+            "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
+        using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
+        var approval = approvalDoc.RootElement.Clone();
+        CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
+        var approvalResults = approval.GetProperty("results");
+        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 4 || GetJsonBool(approval, "workbenchConnected") ||
+            GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
+            GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
+        return approval;
+    }
+
+    private static JsonElement VerifyStability(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, string rounds, bool isolated)
+    {
+        var output = Path.Combine(outputDirectory, (isolated ? "isolated-stability-v" : "stability-v") + major + "-" + Guid.NewGuid().ToString("N"));
+        RunBuildSpec(isolated ? "isolated-local-stability" : "local-stability", python,
+            [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(), "--host-harness", harness,
+             "--public-api", api, "--rounds", rounds, "--output", output, .. isolated ? new[] { "--isolate-openness" } : Array.Empty<string>()], outputDirectory, runTemp, cliHome, apiRoot, major);
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "result.json")));
+        var result = doc.RootElement.Clone();
+        if (GetJsonString(result, "status") != "passed" || GetArrayLength(result, "runs") != 4 ||
+            (isolated && !GetJsonBool(result, "isolatedWorker")) || GetJsonString(result, "runtimeSha256") != ReleaseRecords.HashFile(exe))
+            throw new ReleaseException("Local stability checks failed or used a different EXE");
+        return result;
+    }
+
+    private static Match VerifyNativeJit(string dotnet, string harness, string exe, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major)
+    {
+        var weaver = Path.Combine(Root, "runtime/verification/NativeCallWeaver.dll");
+        var coveragePath = Path.Combine(outputDirectory, $"jit-coverage-v{major}.json");
+        RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
+        using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
+        var coverage = coverageDoc.RootElement;
+        var adapterPath = Path.Combine(outputDirectory, $"jit-adapter-v{major}.json");
+        RunBuildSpec("adapter-native-coverage", dotnet, [weaver, "verify", Path.Combine(Root, $"runtime/v{major}/TiaMcp.Adapter.{major}.dll"), adapterPath], outputDirectory, runTemp, cliHome, apiRoot, major);
+        using var adapterDoc = JsonDocument.Parse(File.ReadAllText(adapterPath));
+        var adapterCoverage = adapterDoc.RootElement;
+        var nativeJitText = RunBuildSpec("native-diagnostics-jit", harness, [exe, "native-diagnostics-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
+        var nativeJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
+        if (!nativeJit.Success || int.Parse(nativeJit.Groups[1].Value) + int.Parse(nativeJit.Groups[2].Value) != GetJsonInt(coverage, "count")) throw new ReleaseException("Diagnostic wrapper JIT/inventory mismatch");
+        var adapterJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
+        if (!adapterJit.Success || int.Parse(adapterJit.Groups[1].Value) + int.Parse(adapterJit.Groups[2].Value) != GetJsonInt(adapterCoverage, "count")) throw new ReleaseException("Adapter diagnostic wrapper JIT/inventory mismatch");
+        var adapterJournal = RequireCount("adapter journal", nativeJitText, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
+        var nativeJournal = RequireCount("native journal", nativeJitText, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
+
+        return nativeJit;
     }
 
     private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome, ReleaseCheckPlan plan)
@@ -520,7 +580,12 @@ internal static partial class ReleaseCommands
         string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
     {
         var spec = ReleaseCommandTable.Get(tableName);
-        var args = new[] { Path.Combine(Root, "scripts/checks/Test-DotnetSuites.py"), "--suite", name, "--dotnet", dotnet, "--no-restore", "--results-directory", resultDirectory };
+        using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "tests/test-suites.json")));
+        var suite = catalog.RootElement.GetProperty(name);
+        var buildProperties = suite.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToArray();
+        RunBuildRaw(dotnet, ["build", suite.GetProperty("project").GetString()!, "-c", "Release", "--no-restore", "-v:q", .. buildProperties],
+            Path.Combine(outputDirectory, name + "-harness-build.log"), runTemp, cliHome, apiRoot, nuget, name + " harness build");
+        var args = new[] { Path.Combine(Root, "scripts/checks/Test-DotnetSuites.py"), "--suite", name, "--dotnet", dotnet, "--no-restore", "--dotnet-arg=--no-build", "--results-directory", resultDirectory };
         RunBuildSpec(tableName, python, args, outputDirectory, runTemp, cliHome, apiRoot);
     }
 
@@ -592,7 +657,7 @@ internal static partial class ReleaseCommands
             ["DOTNET_CLI_HOME"] = cliHome, ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1", ["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
-        var result = ProcessRunner.Run(executable, args, Root, env);
+        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env));
         WriteLog(log, result);
         if (result.ExitCode == 0)
         {

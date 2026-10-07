@@ -31,6 +31,7 @@ internal static class ReleaseCommandTable
         new("approval-safety", "Test-ReleaseApprovalGate.py --product engine", "approval-safety-v{major}.log", "exactly 4; no workbench/TIA", "approvalSafety"),
         new("software-lookup", "HttpTests.exe software-lookup-only", "software-lookup-v{major}.log", "minimum 45", "softwareLookupPassed"),
         new("engineering-api", "HttpTests.exe engineering-api-only", "engineering-api-v{major}.log", "V20 >= 2840; V21 >= 3126", "engineeringApiShapePassed"),
+        new("http-concurrency", "HttpTests.exe concurrency-only", "concurrency-v{major}.log", "exit 0; classification and concurrent audit", "httpConcurrency"),
         new("http", "HttpTests.exe", "http-v{major}.log", "complete runtime regressions", "httpPassed"),
         new("hmi", "HttpTests.exe hmi-only", "hmi-v{major}.log", "18 assertions", "hmiPassed"),
         new("resource-discovery", "Test-ResourceDiscovery.py", "resources-v{major}.log", "complete result", "resourceDiscoveryPassed"),

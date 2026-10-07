@@ -15,15 +15,13 @@ internal static class ReleasePublisher
     internal static async Task<int> PublishAsync(string root, PublishOptions options, HttpClient? client = null, CancellationToken cancellationToken = default)
     {
         if (!Regex.IsMatch(options.Version, "^\\d+\\.\\d+\\.\\d+$")) throw new ReleaseException("-Version must be X.Y.Z");
-        var token = ReleasePrerequisites.GetToken(options.Token, options.GitExecutable, root, localOnly: false);
-        if (string.IsNullOrWhiteSpace(token)) throw new ReleaseException("No GitHub token: pass -Token, set GITHUB_TOKEN, or sign in with Git Credential Manager; token value is never printed");
         if (options.RetryCount < 1 || options.RetryDelaySeconds < 0) throw new ReleaseException("RetryCount must be positive and RetryDelaySeconds cannot be negative");
         using var ownedClient = client is null ? new HttpClient() : null;
         var http = client ?? ownedClient!;
         http.Timeout = Timeout.InfiniteTimeSpan;
-        var baseUri = new Uri(options.ApiBaseUrl.TrimEnd('/') + "/");
+
         var repoPath = "repos/" + options.Repository.Trim('/');
-        var api = new GitHubApi(http, baseUri, repoPath, token);
+
 
         var tag = "v" + options.Version;
         var output = Path.Combine(root, "bin-build/releases", tag);
@@ -31,6 +29,7 @@ internal static class ReleasePublisher
         if (!File.Exists(resultPath)) throw new ReleaseException("no package-result.json in " + output + " - run Package-Release.py first");
         using var result = JsonDocument.Parse(File.ReadAllText(resultPath));
         var resultRoot = result.RootElement;
+        ReleaseCheckPolicy.RequireFullRecord(resultRoot);
         var zip = JsonString(resultRoot, "path");
         if (zip.Length == 0) throw new ReleaseException("package-result.json is missing its path");
         zip = Path.GetFullPath(Path.IsPathRooted(zip) ? zip : Path.Combine(root, zip));
@@ -40,6 +39,11 @@ internal static class ReleasePublisher
         var digest = HashFile(zip);
         if (digest != JsonString(resultRoot, "sha256") || zipInfo.Length != JsonLong(resultRoot, "size"))
             throw new ReleaseException("ZIP differs from package-result.json (size or sha256)");
+        ReleaseCheckPolicy.Load(root).RequireFullPackage(zip, requireColdBuild: true);
+        var token = ReleasePrerequisites.GetToken(options.Token, options.GitExecutable, root, localOnly: false);
+        if (string.IsNullOrWhiteSpace(token)) throw new ReleaseException("No GitHub token: pass -Token, set GITHUB_TOKEN, or sign in with Git Credential Manager; token value is never printed");
+        var baseUri = new Uri(options.ApiBaseUrl.TrimEnd('/') + "/");
+        var api = new GitHubApi(http, baseUri, repoPath, token);
         var commit = JsonString(resultRoot, "sourceCommit");
         if (commit.Length == 0) throw new ReleaseException("package-result.json is missing sourceCommit");
         var deliveryPath = Path.Combine(root, "manifest/delivery.json");

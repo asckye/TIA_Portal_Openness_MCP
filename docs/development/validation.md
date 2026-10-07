@@ -18,22 +18,26 @@
 
 ## 发布层级的检查证据
 
-审查链显式使用 `run-release-build -Tier quick|full`；完整命令和 baseline 规则见
-[发布流程](release-workflow.md#quick-测试包与-full-发布候选包)。两层的编译和交付二进制相同。
-quick 始终运行单元/离线套件、strict 包校验、prompt 注册及八版真实 STDIO smoke，再根据最近成功 full 的源码变化选择检查。
-full 运行全部 transport/approval、GUI、快照/比较、稳定性/隔离稳定性、重定位检查。二者都不证明真实 TIA 工程验收。
+审查链显式使用 `run-release-build -Tier package|quick|full`；命令、缓存与 baseline 规则见
+[发布流程](release-workflow.md#packagequick-测试包与-full-发布候选包)。package 是 VM 测试包入口：
+只做源码预检、构建、打包、strict 验包、重定位和产品 smoke。quick 按最具体的源码所有权追加检查；full 运行全部检查。
+文档或 Studio 视图变化不会选择引擎压测，无映射路径或无可信 baseline 仍选择全集。
 
-路径映射为 [`release-checks.json`](../../build-tools/release/release-checks.json)；release 工具测试验证每个检查可达、
-未知路径与无可信 baseline 选择全集、必需项不能被跳过、Release 拒绝 quick/pending/不完整 full 包。
-包记录 `tier`、`checkStatus`、`checksRan`、`checksSkipped`；跳过的 runtime proof 为 null 或未执行计数，不伪造通过。
-日志中的完整 wall time 和 quick 选择集合一起报告；15 分钟是目标，不能由单元测试或 dry run 宣称达到。
+发布工具套件覆盖档位选择、MSBuild 输入变化对依赖单元的精确失效、缓存文件新增/丢失/损坏、完整输出恢复、单元索引恢复、最近命中更新、跨单元 LRU 容量淘汰和定向清理、
+release/publish 拒绝非 full 记录。跳过的检查保存零计数、null 或 skipped，不复制历史通过数。
+包记录 `tier`、`checkStatus`、`checksRan`、`checksSkipped` 与 `buildCache`；正式 release 禁用缓存并冷构建。
 
 ```powershell
-dotnet test tests/Release/TiaMcp.ReleaseTool.Tests -c Release
-python scripts/checks/Test-ReleaseSmoke.py --self-test
-dotnet run --project build-tools/release -- run-release-build -Tier quick -DryRun
-dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
+dotnet test tests/Release/TiaMcp.ReleaseTool.Tests -c Release -p:RestoreConfigFile=<offline-nuget.config> -p:NuGetAudit=false
+python scripts/checks/Check-BundleLayout.py --self-test
+dotnet run --project build-tools/release -- preflight
+dotnet run --project build-tools/release -- branch-gate -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/branch-checks
+dotnet run --project build-tools/release -- run-release-build -Tier package -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/vm-test-package
 ```
+
+branch-gate 运行两版引擎普通/隔离稳定性（每组合至少 10 轮）、native diagnostics fixture/JIT、worker supervisor、
+HTTP concurrency、release approval gate 和快照 verify；复用完整链的判定。它不替代 full 的全部套件和快照捕获比较。
+日志必须记录成功运行的冷/热缓存 wall time、机器空闲情况与命中/缺失数；package 热缓存 ≤ 10 分钟、branch gate ≤ 8 分钟是实测目标。
 
 ## 运行资源包校验
 
@@ -530,3 +534,5 @@ python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/
 沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`HttpTests.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 
 原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。
+
+独立 publish 还要求包内 `buildCacheEnabled=false`；使用 `run-release-build -Tier full -NoBuildCache` 生成待发布候选。缓存启用的 full 包可用于分支验收及 quick baseline，不能直接发布。

@@ -125,9 +125,9 @@ internal static class ReleaseRecords
 
     internal static string EngineReuseReason(string root, string release, JsonElement record, IReadOnlyList<ReleaseArtifact> sources, string requiredTier = "full")
     {
-        if (requiredTier == "full" && GetString(record, "tier") == "quick") return "quick evidence cannot be reused for a full release";
+        if (requiredTier == "full" && GetString(record, "tier") is "quick" or "package") return "non-full evidence cannot be reused for a full release";
         var selected = new HashSet<string>(StringComparer.Ordinal);
-        if (GetString(record, "tier") == "quick")
+        if (GetString(record, "tier") is "quick" or "package")
         {
             try
             {
@@ -137,14 +137,14 @@ internal static class ReleaseRecords
             }
             catch { return "quick check selection is missing or invalid"; }
         }
-        bool includes(string check) => GetString(record, "tier") != "quick" || selected.Contains(check);
-        var auditReason = AuditEvidenceReason(root, release, record);
+        bool includes(string check) => GetString(record, "tier") is not ("quick" or "package") || selected.Contains(check);
+        var auditReason = includes("native-coverage") && includes("resource-discovery") ? AuditEvidenceReason(root, release, record) : "";
         if (auditReason.Length != 0) return auditReason;
         try
         {
-            if (!record.TryGetProperty("validation", out var validation) ||
-                GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "offlineV20Passed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
-                GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20)
+            if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
+            if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "offlineV20Passed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
+                GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20))
                 return "offline validation missing";
             foreach (var major in new[] { 20, 21 })
             {
@@ -162,8 +162,8 @@ internal static class ReleaseRecords
                     !GetBool(approval, "directWriteRefusedBeforeDispatch") || !GetBool(approval, "callToolWriteRefusedBeforeDispatch") ||
                     !GetBool(approval, "readSucceeded") || GetBool(approval, "workbenchConnected") || GetBool(approval, "tiaConnected")))
                     return $"V{major} default-approval gate incomplete";
-                if (!runtime.TryGetProperty("sessionStability", out var session) || GetInt(session, "nativeMcpSafetyChecksPassed") < 8 ||
-                    GetInt(session, "crashEvidenceChecksPassed") < 7 || GetBool(session, "nativeMcpExecuted"))
+                if (includes("offline-suites") && (!runtime.TryGetProperty("sessionStability", out var session) || GetInt(session, "nativeMcpSafetyChecksPassed") < 8 ||
+                    GetInt(session, "crashEvidenceChecksPassed") < 7 || GetBool(session, "nativeMcpExecuted")))
                     return $"V{major} session safety evidence incomplete";
             }
 
