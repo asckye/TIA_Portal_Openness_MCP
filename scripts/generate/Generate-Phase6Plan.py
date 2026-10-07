@@ -668,6 +668,8 @@ TASK_PATHS = {
     "P6-54": [E+"Program.cs", E+"Isolation", "src/Logic/CliOptions.cs", E+"ModelContextProtocol/Tools/McpServer.Worker.cs", E+"ModelContextProtocol/Tools/SessionTools.cs", E+"Runtime/EnvironmentDoctor.cs", S+"Gui/Configuration", "scripts/checks/Test-RelocatedBundle.py", "docs/reference/real-machine-ledger.md"],
     "P6-55": ["src/FoundationHost", "src/Worker", "src/Adapters/Native/Plc", "src/Adapters/Native/Session/PlcFoundationEngine.cs", "src/Adapters.Contracts/AdapterPreconditionException.cs", "src/Shared/AuditInvocation.cs", "src/Shared/ApprovalPipe.cs", E+"ModelContextProtocol/Tools/McpServer.Approval.cs", "reference/tool-examples/calls.json"],
     "P6-56": ["scripts/checks/Snapshot-ToolResponses.py", "scripts/checks/Test-ResourceDiscovery.py", "scripts/build/Run-ReleaseBuild.ps1", E+"Runtime/EnvironmentDoctor.cs", E+"ModelContextProtocol/Tools/McpServer.Doctor.cs", E+"ModelContextProtocol/Tools/SessionTools.cs", E+"Isolation/OpennessReadinessGuard.cs", "src/FoundationHost/LegacyHostPassiveDiagnostics.cs", "src/FoundationHost/LegacyHostPassiveDiagnosticTools.cs", TE+"TiaMcpServer.HttpTests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.Tests", "manifest/contracts/v4", "docs/development/release-workflow.md", "docs/development/validation.md"],
+    "P6-57": ["src/Studio/Gui", "src/Studio/Core", "src/Shared/CallJournalPayload.cs", "src/Shared/ApprovalSettings.cs", "tests/Studio", "docs/getting-started", "docs/reference"],
+    "P6-58": [E+"ModelContextProtocol/Tools/McpServer.SerializedCalls.cs", E+"ModelContextProtocol/Tools/McpServer.ToolBridge.cs", E+"ModelContextProtocol/Tools/McpServer.Batch.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"Isolation", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/InvocationJournal.cs", "src/Shared/InvocationJournal.cs", "src/Shared/AuditInvocation.cs", "src/Shared/AuditLog.cs", "src/Shared/JournalFileLock.cs", "src/FoundationHost", TE+"TiaMcpServer.HttpTests", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", "manifest/contracts/v4", "docs/reference"],
 }
 for task in MIGRATION_GROUPS:
     paths = sorted(p for p in owners if owners[p] == task)
@@ -678,7 +680,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 57)}
+    expected = {f"P6-{i:02}" for i in range(1, 59)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():
