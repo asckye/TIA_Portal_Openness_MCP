@@ -67,12 +67,16 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ApprovalPreviewDepth.Value > 0) return null;
             var reset = SessionPrecheckRefusal(name);
             if (reset != null) return reset;
-            // A missing or unreadable caller file is a typed argument refusal for every tool, reads included.
-            try { ValidateCallerInputFiles(name, arguments); }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            // A write that will wait for approval refuses a missing or unreadable caller file first, so no approval is
+            // requested. Other calls validate inside their journaled lane (isolated host/child journals stay correlated).
+            if (settings.Enabled && ApprovalWrite(name, arguments))
+            {
+                try { ValidateCallerInputFiles(name, arguments); }
+                catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
+            }
             var args = JsonNode.Parse(arguments)!.AsObject();
             bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
-            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || candidate)) return null;
             string? identity = null; ApprovalBindingIdentity(ref identity);
