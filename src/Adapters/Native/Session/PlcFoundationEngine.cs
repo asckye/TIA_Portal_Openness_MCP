@@ -354,6 +354,7 @@ namespace TiaMcp.PlcFoundation
             if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(address)) throw new AdapterPreconditionException("Data type and logical address are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "address");
             var target = Table(plc, table);
             if (target.Tags.Find(name) != null) throw new AdapterPreconditionException("Tag already exists.","name");
+            RequireUniqueSymbol(plc, name);
             if (!dryRun) target.Tags.Create(name, dataType, address);
             return Mutation("CreateTag", dryRun, new[] { name });
         }
@@ -363,8 +364,21 @@ namespace TiaMcp.PlcFoundation
             if (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(value)) throw new AdapterPreconditionException("Data type and value are required.",string.IsNullOrWhiteSpace(dataType) ? "dataType" : "value");
             var target = Table(plc, table);
             if (target.UserConstants.Find(name) != null) throw new AdapterPreconditionException("User constant already exists.","name");
+            RequireUniqueSymbol(plc, name);
             if (!dryRun) target.UserConstants.Create(name, dataType, value);
             return Mutation("CreateUserConstant", dryRun, new[] { name });
+        }
+        // Tags and constants share one symbol namespace per PLC: TIA refuses a duplicate in any table only inside the
+        // native Create (seen on the V14 SP1 VM as an unknown outcome). Check every table first, case-insensitively.
+        private void RequireUniqueSymbol(string plc, string name)
+        {
+            foreach (var table in Tables(plc))
+            {
+                bool clash = table.Value.Tags.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
+                    || table.Value.UserConstants.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))
+                    || table.Value.SystemConstants.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
+                if (clash) throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Value.Name + "'; PLC symbol names are unique per PLC.", "name");
+            }
         }
         public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true)
         {
