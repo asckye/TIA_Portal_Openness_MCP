@@ -26,7 +26,7 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
     internal static string Key(IEnumerable<ReleaseArtifact> inputs, IEnumerable<string> properties) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
         {
-            schema = 2, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
+            schema = 3, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
         }, JsonOptions)))).ToLowerInvariant();
 
     internal bool Restore(string key, string output)
@@ -281,7 +281,8 @@ internal static partial class ReleaseCommands
     private static BuildCacheEvent[] CacheEvents() => Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_RECORDS") is { } directory && Directory.Exists(directory)
         ? Directory.EnumerateFiles(directory, "*.json").Order(StringComparer.Ordinal).Select(path => JsonSerializer.Deserialize<BuildCacheEvent>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!).ToArray() : [];
 
-    private static CommandResult CachedBuild(string executable, IReadOnlyList<string> arguments, Func<CommandResult> build)
+    internal static CommandResult CachedBuild(string executable, IReadOnlyList<string> arguments, Func<CommandResult> build,
+        IDictionary<string, string?>? environment = null)
     {
         var cacheDirectory = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY");
         if (cacheDirectory is null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1" ||
@@ -318,7 +319,18 @@ internal static partial class ReleaseCommands
         string key = "", output = "";
         try
         {
-            (key, output) = BuildKey(executable, project, arguments);
+            // Use the same runner/environment and effective properties as compilation. A fresh
+            // worktree needs assets and generated NuGet imports before its inputs can be evaluated.
+            if (arguments is not List<string> mutable) throw new IOException("Cached restore requires mutable command arguments");
+            var original = mutable.ToArray();
+            try
+            {
+                mutable.Clear();
+                mutable.AddRange(CacheRestoreArguments(project, original));
+                ProcessRunner.RequireSuccess(build(), "Restore build cache inputs");
+            }
+            finally { mutable.Clear(); mutable.AddRange(original); }
+            (key, output) = BuildKey(executable, project, arguments, environment: environment);
             var cache = new BuildOutputCache(cacheDirectory!, unit, CacheLimit());
             if (cache.Restore(key, output))
             {
@@ -338,7 +350,7 @@ internal static partial class ReleaseCommands
         {
             try
             {
-                var after = BuildKey(executable, project, arguments);
+                var after = BuildKey(executable, project, arguments, environment: environment);
                 if (after.Key == key) new BuildOutputCache(cacheDirectory!, unit, CacheLimit()).Populate(key, output);
                 else Console.WriteLine("Cache not populated: build inputs changed during compilation: " + unit);
             }
@@ -347,7 +359,60 @@ internal static partial class ReleaseCommands
         return result;
     }
 
-    internal static string[] CacheArguments(string project, IReadOnlyList<string> arguments)
+    internal static string CacheInputPath(string path, string root)
+    {
+        path = Path.GetFullPath(path);
+        root = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+            ? Path.GetRelativePath(root, path).Replace('\\', '/') : path;
+    }
+
+    internal static string NormalizeCacheText(string text, string root)
+    {
+        var parts = Path.GetFullPath(root).TrimEnd('\\', '/').Split(['\\', '/']);
+        // MSBuild uses either separator; JSON doubles backslashes. Match the root on a
+        // path boundary so a similarly named external directory remains a distinct input.
+        var separator = @"(?:\\\\|[\\/])";
+        var pattern = string.Join(separator, parts.Select(Regex.Escape));
+        return Regex.Replace(text, pattern + "(" + separator + @"|(?=$|[\""'<>;\s]))", match =>
+            "<repo>" + (match.Groups[1].Value.Length == 0 ? "" : "/"), RegexOptions.IgnoreCase);
+    }
+
+    internal static string[] CacheEnvironment(string root, IEnumerable<KeyValuePair<string, string?>> values) => values
+        .Where(row => Regex.IsMatch(row.Key, "^(DOTNET_.*|MSBUILD.*|NUGET_.*|Configuration|Platform|UseSharedCompilation|NuGetAudit|LIB|TIA_MCP_.*)$", RegexOptions.IgnoreCase) &&
+            !Regex.IsMatch(row.Key, "^(DOTNET_CLI_HOME|TIA_MCP_(DATA_DIRECTORY|DIAGNOSTICS_DIRECTORY|RELEASE_TEMP_ROOT|RELEASE_CHECK_PLAN|TEST_PUBLIC_API_ROOT|BUILD_CACHE_.*)|TIA_MCP_OFFLINE_NUGET_CONFIG)$", RegexOptions.IgnoreCase))
+        .Where(row => row.Value is not null)
+        .Select(row => row.Key.ToUpperInvariant() + "=" + NormalizeCacheText(row.Value!, root)).Order(StringComparer.Ordinal).ToArray();
+
+    private static string[] EffectiveCacheEnvironment(string root, IDictionary<string, string?>? environment = null)
+    {
+        var values = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>()
+            .ToDictionary(row => (string)row.Key, row => (string?)row.Value, StringComparer.OrdinalIgnoreCase);
+        if (environment is not null) foreach (var (name, value) in environment) values[name] = value;
+        return CacheEnvironment(root, values);
+    }
+
+    private static List<string> CacheProperties(IReadOnlyList<string> arguments)
+    {
+        var result = arguments.Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToList();
+        for (var i = 2; i < arguments.Count; i++)
+        {
+            var property = arguments[i] switch
+            {
+                "-c" or "--configuration" => "Configuration", "-f" or "--framework" => "TargetFramework",
+                "-r" or "--runtime" => "RuntimeIdentifier", "-o" or "--output" => "PublishDir", _ => null
+            };
+            if (property is not null) result.Add("-p:" + property + "=" + arguments[++i]);
+        }
+        if (!result.Any(prop => prop.StartsWith("-p:Configuration=", StringComparison.OrdinalIgnoreCase))) result.Add("-p:Configuration=Debug");
+        if (arguments[0] == "publish") result.Add("-p:_IsPublishing=true");
+        return result;
+    }
+
+    internal static string[] CacheRestoreArguments(string project, IReadOnlyList<string> arguments) =>
+        ["msbuild", project, "-nologo", "-t:Restore", "-m:1", "-nodeReuse:false", .. CacheProperties(arguments)];
+
+    internal static string[] CacheArguments(string project, IReadOnlyList<string> arguments, string? root = null)
     {
         var result = new List<string> { arguments[0], project };
         var properties = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -365,26 +430,22 @@ internal static partial class ReleaseCommands
             else result.Add(arg);
         }
         result.AddRange(properties.Select(row => row.Key + "=" + row.Value));
-        return result.ToArray();
+        return result.Select(arg => NormalizeCacheText(arg, root ?? Root)).ToArray();
     }
 
-    internal static (string Key, string Output) BuildKey(string dotnet, string project, IReadOnlyList<string> arguments)
+    internal static (string Key, string Output) BuildKey(string dotnet, string project, IReadOnlyList<string> arguments,
+        string? root = null, IDictionary<string, string?>? environment = null)
     {
-        var properties = arguments.Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToList();
-        var configuration = "Debug";
-        for (var i = 0; i < arguments.Count - 1; i++)
-        {
-            if (arguments[i] is "-c" or "--configuration") configuration = arguments[i + 1];
-            if (arguments[i] is "-f" or "--framework") properties.Add("-p:TargetFramework=" + arguments[i + 1]);
-        }
-        properties.Add("-p:Configuration=" + configuration);
+        root = Path.GetFullPath(root ?? Root);
+        var properties = CacheProperties(arguments);
         var inputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        void Add(string path)
+        void Add(string path, bool normalizeText = false)
         {
             path = Path.GetFullPath(path);
-            if (inputs.ContainsKey(path)) return;
+            var name = CacheInputPath(path, root);
+            if (inputs.ContainsKey(name)) return;
             if (!File.Exists(path)) throw new IOException("Build input missing: " + path);
-            inputs[path] = ReleaseRecords.HashFile(path);
+            inputs[name] = normalizeText ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(NormalizeCacheText(File.ReadAllText(path), root)))) : ReleaseRecords.HashFile(path);
         }
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         string Visit(string file, List<string> props)
@@ -393,7 +454,7 @@ internal static partial class ReleaseCommands
             Add(file);
             var probe = ProcessRunner.Run(dotnet, ["msbuild", file, "-nologo", .. props,
                 "-getProperty:TargetDir,TargetFramework,TargetFrameworks,ProjectAssetsFile,MSBuildAllProjects,MSBuildSDKsPath,NetCoreTargetingPackRoot",
-                "-getItem:Compile,EmbeddedResource,Resource,Page,ApplicationDefinition,Content,None,Reference,ProjectReference,AdditionalFiles,Analyzer,KnownFrameworkReference"], Root);
+                "-getItem:Compile,EmbeddedResource,Resource,Page,ApplicationDefinition,Content,None,Reference,ProjectReference,AdditionalFiles,Analyzer,KnownFrameworkReference"], root, environment);
             ProcessRunner.RequireSuccess(probe, "Evaluate build cache inputs");
             using var doc = JsonDocument.Parse(probe.StandardOutput);
             var values = doc.RootElement.GetProperty("Properties");
@@ -403,20 +464,21 @@ internal static partial class ReleaseCommands
                 foreach (var framework in frameworks.Split(';')) Visit(file, [.. props, "-p:TargetFramework=" + framework]);
                 return "";
             }
-            foreach (var import in values.GetProperty("MSBuildAllProjects").GetString()!.Split(';', StringSplitOptions.RemoveEmptyEntries)) Add(import);
+            // MSBuildAllProjects can name only the most recently modified import. Hash the
+            // complete preprocessed import closure instead; restore timestamps are not inputs.
             var pp = Path.Combine(Path.GetTempPath(), "tia-cache-" + Guid.NewGuid().ToString("N") + ".xml");
             try
             {
-                ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["msbuild", file, "-nologo", .. props, "-preprocess:" + pp], Root), "Evaluate imports");
-                var text = File.ReadAllText(pp);
-                inputs[file + "#imports:" + BuildOutputCache.Key([], props.Order(StringComparer.Ordinal))] = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
+                ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["msbuild", file, "-nologo", .. props, "-preprocess:" + pp], root, environment), "Evaluate imports");
+                var text = NormalizeCacheText(File.ReadAllText(pp), root);
+                inputs[CacheInputPath(file, root) + "#imports:" + BuildOutputCache.Key([], props.Select(prop => NormalizeCacheText(prop, root)).Order(StringComparer.Ordinal))] = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
             }
             finally { if (File.Exists(pp)) File.Delete(pp); }
             // Also cover target-read files and default globs, including additions and deletions.
             foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(file)!, "*", SearchOption.AllDirectories).Where(path => !IsBuildOutput(path))) Add(path);
             var assets = values.GetProperty("ProjectAssetsFile").GetString()!;
             if (!File.Exists(assets)) throw new IOException("Restore required before caching " + file);
-            Add(assets);
+            Add(assets, normalizeText: true);
             using (var assetDoc = JsonDocument.Parse(File.ReadAllText(assets)))
             {
                 foreach (var config in assetDoc.RootElement.GetProperty("project").GetProperty("restore").GetProperty("configFilePaths").EnumerateArray()) Add(config.GetString()!);
@@ -459,29 +521,27 @@ internal static partial class ReleaseCommands
             return values.GetProperty("TargetDir").GetString()!;
         }
         var output = Visit(project, properties);
-        for (var i = 0; i < arguments.Count - 1; i++) if (arguments[i] is "-o" or "--output") output = Path.GetFullPath(arguments[i + 1], Root);
-        if (output.Length == 0 || !Path.GetFullPath(output).StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Uncertain build output location");
+        for (var i = 0; i < arguments.Count - 1; i++) if (arguments[i] is "-o" or "--output") output = Path.GetFullPath(arguments[i + 1], root);
+        if (output.Length == 0 || !Path.GetFullPath(output).StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new IOException("Uncertain build output location");
         if (properties.FirstOrDefault(prop => prop.StartsWith("-p:SiemensEngineeringDirectory=", StringComparison.OrdinalIgnoreCase)) is { } api)
             foreach (var path in Directory.EnumerateFiles(api[(api.IndexOf('=') + 1)..], "*", SearchOption.AllDirectories)) Add(path);
         foreach (var config in arguments.Where(arg => arg.StartsWith("-p:RestoreConfigFile=", StringComparison.OrdinalIgnoreCase))) Add(config[(config.IndexOf('=') + 1)..]);
-        var compiler = ProcessRunner.Run(dotnet, ["msbuild", project, "-nologo", .. properties, "-getProperty:MSBuildSDKsPath"], Root);
+        var compiler = ProcessRunner.Run(dotnet, ["msbuild", project, "-nologo", .. properties, "-getProperty:MSBuildSDKsPath"], root, environment);
         ProcessRunner.RequireSuccess(compiler, "Locate SDK compiler");
         var sdkRoot = Directory.GetParent(compiler.StandardOutput.Trim())!.FullName;
         foreach (var path in Directory.EnumerateFiles(sdkRoot, "*.dll", SearchOption.TopDirectoryOnly)) Add(path);
         foreach (var path in Directory.EnumerateFiles(Path.Combine(sdkRoot, "Roslyn"), "*", SearchOption.AllDirectories)) Add(path);
         var framework = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8");
         if (Directory.Exists(framework)) foreach (var path in Directory.EnumerateFiles(framework, "*.dll", SearchOption.AllDirectories)) Add(path);
-        Add(Path.Combine(Root, "scripts/build/bundled-dotnet.json"));
+        Add(Path.Combine(root, "scripts/build/bundled-dotnet.json"));
         // Hash the build orchestrator too: changes to arguments, weaving or payload rules invalidate outputs.
-        foreach (var path in Directory.EnumerateFiles(Path.Combine(Root, "build-tools/release"), "*", SearchOption.TopDirectoryOnly)) Add(path);
-        var sdk = ProcessRunner.Run(dotnet, ["--version"], Root);
+        foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "build-tools/release"), "*", SearchOption.TopDirectoryOnly)) Add(path);
+        var sdk = ProcessRunner.Run(dotnet, ["--version"], root, environment);
         ProcessRunner.RequireSuccess(sdk, "Identify .NET SDK");
-        var environment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>()
-            .Where(row => !Regex.IsMatch((string)row.Key, "^(TEMP|TMP|DOTNET_CLI_HOME|TIA_MCP_(DATA_DIRECTORY|DIAGNOSTICS_DIRECTORY|RELEASE_TEMP_ROOT|RELEASE_CHECK_PLAN|TEST_PUBLIC_API_ROOT|BUILD_CACHE_.*)|LOCALAPPDATA|APPDATA|RestoreConfigFile|TIA_MCP_OFFLINE_NUGET_CONFIG)$", RegexOptions.IgnoreCase))
-            .Select(row => row.Key + "=" + row.Value).Order(StringComparer.Ordinal);
-        var key = BuildOutputCache.Key(inputs.Select(row => new ReleaseArtifact(row.Key, row.Value)), [.. CacheArguments(project, arguments), sdk.StandardOutput.Trim(), .. environment]);
+        var buildEnvironment = EffectiveCacheEnvironment(root, environment);
+        var key = BuildOutputCache.Key(inputs.Select(row => new ReleaseArtifact(row.Key, row.Value)), [.. CacheArguments(project, arguments, root), sdk.StandardOutput.Trim(), .. buildEnvironment]);
         if (Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DEBUG") is { } debug)
-            WriteJson(Path.Combine(debug, key + ".json"), new { project, inputs, environmentHash = BuildOutputCache.Key([], environment), arguments });
+            WriteJson(Path.Combine(debug, key + ".json"), new { project, inputs, environmentHash = BuildOutputCache.Key([], buildEnvironment), arguments = CacheArguments(project, arguments, root) });
         return (key, output);
     }
 }

@@ -835,9 +835,10 @@ internal static partial class ReleaseCommands
         args.AddRange(references);
         args.AddRange([Path.Combine(studio, "Launcher", "Launcher.cs"), Path.Combine(Root, "src", "Shared", "ProcessArguments.cs"), metadata]);
         var cacheDirectory = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY");
-        var cacheKey = BuildOutputCache.Key(args.Where(File.Exists).Select(path => new ReleaseArtifact(path, ReleaseRecords.HashFile(path)))
+        var cacheKey = BuildOutputCache.Key(args.Where(File.Exists).Select(path => new ReleaseArtifact(CacheInputPath(path, Root), ReleaseRecords.HashFile(path)))
             .Concat(Directory.EnumerateFiles(Path.GetDirectoryName(compiler)!, "*.dll").Concat(Directory.EnumerateFiles(wpf, "*.dll")).Append(compiler)
-                .Select(path => new ReleaseArtifact(path, ReleaseRecords.HashFile(path)))), args);
+                .Select(path => new ReleaseArtifact(CacheInputPath(path, Root), ReleaseRecords.HashFile(path)))),
+            [.. args.Select(arg => NormalizeCacheText(arg, Root)), .. EffectiveCacheEnvironment(Root)]);
         var cacheOutput = Path.Combine(resourceOutput, "payload");
         var hit = cacheDirectory is not null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1" && new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Restore(cacheKey, cacheOutput);
         if (hit) File.Copy(Path.Combine(cacheOutput, "TiaOpenness.exe"), output, true);
@@ -1011,6 +1012,8 @@ internal static partial class ReleaseCommands
             build.AddRange(["-m:1", "-nodeReuse:false"]);
             if (options.Has("Rebuild")) build.Add("--no-incremental");
             build.AddRange(props);
+            var cacheConfig = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
+            if (!string.IsNullOrWhiteSpace(cacheConfig)) build.Add("-p:RestoreConfigFile=" + Path.GetFullPath(cacheConfig));
             var buildResult = CachedBuild(options.Get("Dotnet", Dotnet), build, () => ProcessRunner.Run(options.Get("Dotnet", Dotnet), build, Root));
             WriteLog(Path.Combine(output, $"build-{key}.log"), buildResult);
             ProcessRunner.RequireSuccess(buildResult, $"Worker compile failed for {key}; no native code was run");
@@ -1506,7 +1509,7 @@ internal static partial class ReleaseCommands
         };
         if (additionalEnvironment is not null)
             foreach (var (key, value) in additionalEnvironment) environment[key] = value;
-        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, environment));
+        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, environment), environment);
         WriteLog(Path.Combine(logDirectory, logName), result);
         return result;
     }
@@ -1669,7 +1672,7 @@ internal static partial class ReleaseCommands
         var config = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
         if (!string.IsNullOrWhiteSpace(config)) args.Add("-p:RestoreConfigFile=" + Path.GetFullPath(config));
         var environment = new Dictionary<string, string?> { ["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false", ["NuGetAudit"] = "false" };
-        var result = CachedBuild(options.Get("Dotnet", Dotnet), args, () => ProcessRunner.Run(options.Get("Dotnet", Dotnet), args, Root, environment));
+        var result = CachedBuild(options.Get("Dotnet", Dotnet), args, () => ProcessRunner.Run(options.Get("Dotnet", Dotnet), args, Root, environment), environment);
         WriteLog(Path.Combine(logDirectory, logName), result);
         ProcessRunner.RequireSuccess(result, $"Studio build/test failed; see {logDirectory}/{logName}");
     }

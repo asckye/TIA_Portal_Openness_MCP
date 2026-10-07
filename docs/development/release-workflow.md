@@ -68,11 +68,18 @@ dotnet run --project build-tools/release -- cache-info
 dotnet run --project build-tools/release -- cache-clear
 ```
 
-缓存目录应在产品输出和清理目录之外。同一工作树内按每个 worker 发布键、引擎、Foundation host、Studio、
+缓存目录应在产品输出和清理目录之外。不同路径的工作树按每个 worker 发布键、引擎、Foundation host、Studio、
 原生适配器、配置器、harness、weaver 和 release tool 分别缓存。
 键覆盖 MSBuild 实际求值的源码、链接资源和项目引用闭包、导入后的 props/targets、项目本地输入集合、NuGet assets/锁/config
 及实际包文件、编译器和 Framework 引用、SDK 副本、固定 bundled .NET 版本、构建参数与环境属性。
-绝对源码路径也参与键，避免含路径的产物跨工作树错误复用。求值失败或输入缺失时重建且不写缓存；构建后再次求值，输入变化则不保存。
+工作树内输入用仓库相对路径（正斜杠），外部包、SDK 和 Framework 引用保留绝对路径。
+预处理项目文本、NuGet assets、构建参数与环境值中的工作树根路径统一为固定 token，兼容大小写、两种分隔符和 JSON 转义。
+求值前使用构建相同的离线配置、有效属性和环境执行 restore；publish 的 restore 同时设置 `_IsPublishing=true`。
+环境仅计入 `DOTNET_*`、`MSBUILD*`、`NUGET_*`、`Configuration`、`Platform`、`UseSharedCompilation`、`NuGetAudit`、配置器编译器的 `LIB` 和 `TIA_MCP_*`（名称不区分大小写）。
+排除 `DOTNET_CLI_HOME`、`TIA_MCP_DATA_DIRECTORY`、`TIA_MCP_DIAGNOSTICS_DIRECTORY`、`TIA_MCP_RELEASE_TEMP_ROOT`、`TIA_MCP_RELEASE_CHECK_PLAN`、
+`TIA_MCP_TEST_PUBLIC_API_ROOT`、`TIA_MCP_BUILD_CACHE_*` 和 `TIA_MCP_OFFLINE_NUGET_CONFIG`；离线配置文件内容另行哈希。
+其他会影响构建的设置应通过显式 `-p:` 参数或已哈希的 props/targets 提供。
+求值失败或输入缺失时重建且不写缓存；构建后再次求值，输入变化则不保存。
 先在唯一暂存目录保存完整产物及文件哈希，再原子移动为完整条目；复用前验证全部文件、清单与哈希，损坏或缺失均重建。
 缓存只复用编译结果，各档选择的检查每次重新执行。包内 tier record 和运行结果保存 `buildCache` 命中/缺失记录。
 

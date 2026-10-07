@@ -27,6 +27,156 @@ public sealed class BuildOutputCacheTests
         Assert.NotEqual(first, ReleaseCommands.CacheArguments("project.csproj", ["build", "project.csproj", "-c", "Release", "-p:Version=4.0.0", "-p:TiaReleaseKey=21"]));
     }
 
+    [Fact]
+    public void RootNormalizationCoversCaseSeparatorsJsonAndPathBoundaries()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "cache-repo");
+        foreach (var spelling in new[] { root, root.ToUpperInvariant(), root.Replace('\\', '/'), root.Replace("\\", "\\\\") })
+        {
+            Assert.Equal("<repo>/src/input.cs", ReleaseCommands.NormalizeCacheText(spelling + "/src/input.cs", root));
+            Assert.Equal("<repo>", ReleaseCommands.NormalizeCacheText(spelling, root));
+        }
+        Assert.Equal(root + "-external/input.cs", ReleaseCommands.NormalizeCacheText(root + "-external/input.cs", root));
+        Assert.Equal("src/input.cs", ReleaseCommands.CacheInputPath(Path.Combine(root, "src/input.cs"), root));
+        var external = Path.GetFullPath(root + "-external/input.cs");
+        Assert.Equal(external, ReleaseCommands.CacheInputPath(external, root));
+    }
+
+    [Fact]
+    public void OnlyBuildEnvironmentIsKeyedAndItsRepositoryPathsArePortable()
+    {
+        var firstRoot = Path.Combine(Path.GetTempPath(), "first-cache-repo");
+        var secondRoot = Path.Combine(Path.GetTempPath(), "second-cache-repo");
+        var first = new Dictionary<string, string?>
+        {
+            ["DOTNET_ROLL_FORWARD"] = "LatestMajor", ["MSBuildSDKsPath"] = Path.Combine(firstRoot, "sdk"),
+            ["NUGET_PACKAGES"] = Path.Combine(firstRoot, "packages"), ["Configuration"] = "Release", ["Platform"] = "x64",
+            ["TIA_MCP_SHARED_INPUT"] = Path.Combine(firstRoot, "input"), ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false",
+            ["UNRELATED_RELEASE_SESSION"] = "one", ["DOTNET_CLI_HOME"] = "one", ["TIA_MCP_BUILD_CACHE_DIRECTORY"] = "one",
+            ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = "one", ["TIA_MCP_OFFLINE_NUGET_CONFIG"] = "one", ["TEMP"] = "one"
+        };
+        var second = first.ToDictionary(row => row.Key.ToLowerInvariant(), row => (string?)row.Value!.Replace(firstRoot, secondRoot));
+        foreach (var name in new[] { "unrelated_release_session", "dotnet_cli_home", "tia_mcp_build_cache_directory", "tia_mcp_test_public_api_root", "tia_mcp_offline_nuget_config", "temp" }) second[name] = "two";
+        var before = ReleaseCommands.CacheEnvironment(firstRoot, first);
+        Assert.Equal(8, before.Length);
+        Assert.Equal(before, ReleaseCommands.CacheEnvironment(secondRoot, second));
+        second["configuration"] = "Debug";
+        Assert.NotEqual(before, ReleaseCommands.CacheEnvironment(secondRoot, second));
+    }
+
+    [Fact]
+    public void CacheRestoreUsesTheBuildPropertiesIncludingPublishAndOfflineConfig()
+    {
+        var args = ReleaseCommands.CacheRestoreArguments("project.csproj", ["publish", "project.csproj", "-c", "Release", "-f", "net10.0",
+            "-r", "win-x64", "-o", "published", "--no-restore", "--nologo", "-p:RestoreConfigFile=offline.config", "-p:TiaReleaseKey=20"]);
+        Assert.Equal("msbuild", args[0]);
+        foreach (var property in new[] { "-t:Restore", "-p:Configuration=Release", "-p:TargetFramework=net10.0", "-p:RuntimeIdentifier=win-x64",
+            "-p:PublishDir=published", "-p:RestoreConfigFile=offline.config", "-p:TiaReleaseKey=20", "-p:_IsPublishing=true" }) Assert.Contains(property, args);
+        Assert.DoesNotContain("--no-restore", args);
+    }
+
+    [Theory]
+    [InlineData("build")]
+    [InlineData("publish")]
+    public void CleanProjectRestoresBeforeKeyingAndHitsWithoutCompilingAgain(string command)
+    {
+        var repo = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repo is not null && !File.Exists(Path.Combine(repo.FullName, "TiaPortalOpenness.slnx"))) repo = repo.Parent;
+        var root = Path.Combine(repo!.FullName, "bin-build/P6-66/key-tests", Guid.NewGuid().ToString("N"));
+        var cacheVariable = "TIA_MCP_BUILD_CACHE_DIRECTORY";
+        var disabledVariable = "TIA_MCP_BUILD_CACHE_DISABLED";
+        var priorCache = Environment.GetEnvironmentVariable(cacheVariable);
+        var priorDisabled = Environment.GetEnvironmentVariable(disabledVariable);
+        try
+        {
+            var projectFolder = Path.Combine(root, "unit");
+            System.IO.Directory.CreateDirectory(projectFolder);
+            var project = Path.Combine(projectFolder, "unit.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+            File.WriteAllText(Path.Combine(projectFolder, "input.cs"), "public class Input {}\n");
+            var config = Path.Combine(root, "nuget.config");
+            File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
+            var args = new List<string> { command, project, "-c", "Release", "--no-restore", "-p:RestoreConfigFile=" + config, "-p:NuGetAudit=false" };
+            var published = Path.Combine(root, "published");
+            if (command == "publish") args.AddRange(["-o", published]);
+            var original = args.ToArray();
+            var invocations = new List<string[]>();
+            CommandResult Run()
+            {
+                invocations.Add(args.ToArray());
+                return ProcessRunner.Run("dotnet", args, repo.FullName);
+            }
+            Environment.SetEnvironmentVariable(cacheVariable, Path.Combine(root, "cache"));
+            Environment.SetEnvironmentVariable(disabledVariable, "0");
+            Assert.False(File.Exists(Path.Combine(projectFolder, "obj/project.assets.json")));
+            Assert.Equal(0, ReleaseCommands.CachedBuild("dotnet", args, Run).ExitCode);
+            Assert.Equal("msbuild", invocations[0][0]);
+            Assert.Contains("-t:Restore", invocations[0]);
+            Assert.Equal(command == "publish" ? 3 : 2, invocations.Count);
+            var output = command == "publish" ? Path.Combine(published, "unit.dll") : Path.Combine(projectFolder, "bin/Release/net10.0/unit.dll");
+            var hash = ReleaseRecords.HashFile(output);
+            System.IO.Directory.Delete(Path.Combine(projectFolder, "obj"), true);
+            System.IO.Directory.Delete(Path.Combine(projectFolder, "bin"), true);
+            if (System.IO.Directory.Exists(published)) System.IO.Directory.Delete(published, true);
+            invocations.Clear();
+            Assert.Equal(0, ReleaseCommands.CachedBuild("dotnet", args, Run).ExitCode);
+            Assert.Equal("msbuild", Assert.Single(invocations)[0]);
+            Assert.Equal(hash, ReleaseRecords.HashFile(output));
+            Assert.Equal(original, args);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(cacheVariable, priorCache);
+            Environment.SetEnvironmentVariable(disabledVariable, priorDisabled);
+            if (System.IO.Directory.Exists(root)) System.IO.Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void EveryBuildUnitHasTheSameKeyInTwoRepositoryLocations()
+    {
+        var repo = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repo is not null && !File.Exists(Path.Combine(repo.FullName, "TiaPortalOpenness.slnx"))) repo = repo.Parent;
+        var parent = Path.Combine(repo!.FullName, "bin-build/P6-66/key-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var roots = new[] { Path.Combine(parent, "first"), Path.Combine(parent, "different-second") };
+            var units = new[] { "worker-14sp1", "worker-15.1", "worker-16", "worker-17", "worker-18", "worker-19", "worker-20", "worker-21",
+                "engine-20", "engine-21", "foundation-host", "studio", "gui", "adapter", "harness", "weaver", "release-tool" };
+            foreach (var root in roots)
+            {
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
+                File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
+                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                File.WriteAllText(Path.Combine(root, "nuget.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
+                File.WriteAllText(Path.Combine(root, "linked.cs"), "public class Linked {}\n");
+                var folder = Path.Combine(root, "unit");
+                System.IO.Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "input.cs"), "public class Input {}\n");
+                File.WriteAllText(Path.Combine(folder, "unit.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>" +
+                    "<ItemGroup><Compile Include=\"../linked.cs\" /></ItemGroup></Project>");
+                ProcessRunner.RequireSuccess(ProcessRunner.Run("dotnet", ["restore", Path.Combine(folder, "unit.csproj"), "--configfile", Path.Combine(root, "nuget.config"), "-p:NuGetAudit=false"], root), "Restore portable key fixture");
+            }
+            foreach (var unit in units)
+            {
+                string Key(string root, string session)
+                {
+                    var project = Path.Combine(root, "unit/unit.csproj");
+                    return ReleaseCommands.BuildKey("dotnet", project, [unit is "foundation-host" or "gui" ? "publish" : "build", project, "-c", "Release",
+                        "-p:TiaReleaseKey=" + unit, "-p:AdapterSourceRoot=" + root, "-p:RestoreConfigFile=" + Path.Combine(root, "nuget.config")], root,
+                        new Dictionary<string, string?> { ["UNRELATED_RELEASE_SESSION"] = session }).Key;
+                }
+                Assert.Equal(Key(roots[0], "first"), Key(roots[1], "second"));
+            }
+            // The legacy csc unit shares the same input and argument normalization.
+            string Configurator(string root) => BuildOutputCache.Key([new(ReleaseCommands.CacheInputPath(Path.Combine(root, "linked.cs"), root), ReleaseRecords.HashFile(Path.Combine(root, "linked.cs")))],
+                new[] { "/out:" + Path.Combine(root, "TiaOpenness.exe"), Path.Combine(root, "linked.cs") }.Select(arg => ReleaseCommands.NormalizeCacheText(arg, root)));
+            Assert.Equal(Configurator(roots[0]), Configurator(roots[1]));
+        }
+        finally { if (System.IO.Directory.Exists(parent)) System.IO.Directory.Delete(parent, true); }
+    }
+
     [Theory]
     [InlineData("change")]
     [InlineData("remove")]

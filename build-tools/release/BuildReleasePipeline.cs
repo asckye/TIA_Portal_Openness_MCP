@@ -657,7 +657,7 @@ internal static partial class ReleaseCommands
             ["DOTNET_CLI_HOME"] = cliHome, ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1", ["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
-        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env));
+        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env);
         WriteLog(log, result);
         if (result.ExitCode == 0)
         {

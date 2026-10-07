@@ -23,7 +23,8 @@
 只做源码预检、构建、打包、strict 验包、重定位和产品 smoke。quick 按最具体的源码所有权追加检查；full 运行全部检查。
 文档或 Studio 视图变化不会选择引擎压测，无映射路径或无可信 baseline 仍选择全集。
 
-发布工具套件覆盖档位选择、MSBuild 输入变化对依赖单元的精确失效、缓存文件新增/丢失/损坏、完整输出恢复、单元索引恢复、最近命中更新、跨单元 LRU 容量淘汰和定向清理、
+发布工具套件覆盖档位选择、不同工作树路径的全部构建单元键一致、无关环境变量不使缓存失效、求值前离线 restore、
+MSBuild 输入变化对依赖单元的精确失效、缓存文件新增/丢失/损坏、完整输出恢复、单元索引恢复、最近命中更新、跨单元 LRU 容量淘汰和定向清理、
 release/publish 拒绝非 full 记录。跳过的检查保存零计数、null 或 skipped，不复制历史通过数。
 包记录 `tier`、`checkStatus`、`checksRan`、`checksSkipped` 与 `buildCache`；正式 release 禁用缓存并冷构建。
 
@@ -38,6 +39,7 @@ dotnet run --project build-tools/release -- run-release-build -Tier package -Pub
 branch-gate 运行两版引擎普通/隔离稳定性（每组合至少 10 轮）、native diagnostics fixture/JIT、worker supervisor、
 HTTP concurrency、release approval gate 和快照 verify；复用完整链的判定。它不替代 full 的全部套件和快照捕获比较。
 日志必须记录成功运行的冷/热缓存 wall time、机器空闲情况与命中/缺失数；package 热缓存 ≤ 10 分钟、branch gate ≤ 8 分钟是实测目标。
+跨工作树缓存证明使用两个不同路径的干净 HEAD worktree，先后运行 package，显式指定同一个工作树外的缓存目录，记录两次命中/缺失与耗时。
 
 ## 运行资源包校验
 
