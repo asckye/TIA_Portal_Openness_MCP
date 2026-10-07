@@ -655,6 +655,7 @@ internal static partial class ReleaseCommands
             ["APPDATA"] = Path.Combine(host, "app-data"),
             ["TEMP"] = Path.Combine(host, "temp"), ["TMP"] = Path.Combine(host, "temp"),
             ["DOTNET_CLI_HOME"] = cliHome, ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1", ["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false",
+            ["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
         var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env);

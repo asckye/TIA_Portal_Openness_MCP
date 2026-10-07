@@ -14,6 +14,10 @@ internal static class Program
 
     public static int Main(string[] args)
     {
+        // Every run uses fresh DOTNET_CLI_HOME folders; the SDK's first run would append each one's
+        // tools folder to the user's persistent PATH until cmd.exe can no longer resolve dotnet.
+        Environment.SetEnvironmentVariable("DOTNET_ADD_GLOBAL_TOOLS_TO_PATH", "false");
+        Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
         if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
         {
             PrintUsage();
