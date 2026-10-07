@@ -18,6 +18,7 @@ public partial class BlocksView : UserControl, IDisposable
     public BlocksView()
     {
         InitializeComponent();
+        BlocksList.AddHandler(PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnBlockRowClick));
         DataContextChanged += (_, _) =>
         {
             Atlas?.Dispose();
@@ -41,9 +42,11 @@ public partial class BlocksView : UserControl, IDisposable
     private void OnSelectNone(object sender, RoutedEventArgs e) => Model.Engineering.SelectAll(false);
     private void OnBlockRowClick(object sender, MouseButtonEventArgs e)
     {
-        for (var source = e.OriginalSource as DependencyObject; source != null && source != sender; source = VisualTreeHelper.GetParent(source))
+        var item = ItemsControl.ContainerFromElement(BlocksList, e.OriginalSource as DependencyObject) as ListBoxItem;
+        if (item == null) return;
+        for (var source = e.OriginalSource as DependencyObject; source != null && source != item; source = VisualTreeHelper.GetParent(source))
             if (source is CheckBox) return;
-        var row = (BlockRow)((ListBoxItem)sender).DataContext;
+        var row = (BlockRow)item.DataContext;
         row.Selected = !row.Selected;
     }
     private async void OnViewLadder(object sender, RoutedEventArgs e) { if (Atlas != null) await Atlas.GenerateAsync(true); }

@@ -233,9 +233,8 @@ def check(root, no_binaries=False, package_mode=False):
     for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
         required('runtime/studio/bridge/' + name, 'Studio bridge channel dependency')
     required(studio + 'Launcher/Launcher.cs', 'GUI entry')
-    for name in ('Themes/Glass.xaml', 'Controls/GlassLogView.cs',
-                 'Fonts/Manrope-Regular.ttf', 'Fonts/Manrope-Medium.ttf',
-                 'Fonts/Manrope-SemiBold.ttf', 'Fonts/Manrope-Bold.ttf', 'Fonts/Manrope-OFL.txt',
+    for name in ('Themes/Primer.xaml', 'Themes/Palette.Light.xaml', 'Themes/Palette.Dark.xaml',
+                 'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs',
                  'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf',
                  'Fonts/JetBrainsMono-OFL.txt', 'Fonts/NotoSansSC-Regular.otf',
                  'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt', 'Fonts/SOURCES.txt'):

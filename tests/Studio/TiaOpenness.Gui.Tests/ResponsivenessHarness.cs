@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using TiaDesktop.Glass;
+using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.ViewModels;
 using TiaOpenness.Shared;
@@ -36,7 +36,7 @@ public sealed class ResponsivenessHarness(WpfContext wpf)
         FakeApprovals source = null!;
         ApprovalService approvals = null!;
         AuditLogService audit = null!;
-        GlassLogView log = null!;
+        WorkbenchLogView log = null!;
         var journal = new FeaturePageFixtures.Journal();
         var rows = Enumerable.Range(0, 5000).Select(i => journal.Calls[0] with
         { RequestId = "call-" + i, JournalKey = "call-" + i, Time = DateTimeOffset.UtcNow.AddMilliseconds(-i) }).ToArray();
@@ -48,7 +48,7 @@ public sealed class ResponsivenessHarness(WpfContext wpf)
             audit = new AuditLogService(directory, Path.Combine(root, "diagnostics"), Path.Combine(root, "config", "retention"), _ => { });
             source = new FakeApprovals(approvals);
             model = new FeaturePagesViewModel(source, journal, audit, new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics());
-            log = new GlassLogView();
+            log = new WorkbenchLogView();
             model.PropertyChanged += (_, e) =>
             {
                 notifications++;

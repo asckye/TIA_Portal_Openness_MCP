@@ -7,14 +7,14 @@ using TiaOpenness.Gui.Localization;
 
 namespace TiaOpenness.Gui.Controls;
 
-internal sealed class GlassMessageBox : Window
+internal sealed class WorkbenchMessageBox : Window
 {
     internal MessageBoxResult Result { get; private set; }
 
-    internal GlassMessageBox(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)
+    internal WorkbenchMessageBox(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)
     {
         Title = caption;
-        Width = 560;
+        Width = 420;
         SizeToContent = SizeToContent.Height;
         MaxHeight = Math.Max(360, SystemParameters.WorkArea.Height - 80);
         WindowStyle = WindowStyle.None;
@@ -25,7 +25,7 @@ internal sealed class GlassMessageBox : Window
         Result = buttons == MessageBoxButton.OK ? MessageBoxResult.OK : MessageBoxResult.Cancel;
 
         var panel = new DockPanel { Margin = new Thickness(24) };
-        var heading = new TextBlock { Text = caption, FontSize = 18, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 18) };
+        var heading = new TextBlock { Text = caption, FontSize = 15, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 12) };
         heading.MouseLeftButtonDown += (_, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
         DockPanel.SetDock(heading, Dock.Top);
         panel.Children.Add(heading);
@@ -33,7 +33,7 @@ internal sealed class GlassMessageBox : Window
         DockPanel.SetDock(actions, Dock.Bottom);
         panel.Children.Add(actions);
         var message = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, LineHeight = 22 };
-        message.SetResourceReference(ForegroundProperty, icon == MessageBoxImage.Error ? "Ui.Red" : "Ui.Label");
+        message.SetResourceReference(ForegroundProperty, icon == MessageBoxImage.Error ? "Primer.diffRed" : "Primer.text");
         panel.Children.Add(new ScrollViewer { Content = message, MaxHeight = MaxHeight - 160, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         var choices = buttons switch
         {
@@ -51,13 +51,12 @@ internal sealed class GlassMessageBox : Window
             };
             var button = new Button { MinWidth = 84, Margin = new Thickness(8, 0, 0, 0), IsDefault = choice == choices[0], IsCancel = choice == MessageBoxResult.Cancel || buttons == MessageBoxButton.OK };
             button.SetBinding(ContentControl.ContentProperty, label);
-            button.SetResourceReference(StyleProperty, choice == choices[0] ? "Glass.Primary" : "Glass.Button");
+            button.SetResourceReference(StyleProperty, choice == choices[0] && icon == MessageBoxImage.Warning ? "Primer.WarningAction" : "Primer.Secondary");
             button.Click += (_, _) => { Result = choice; Close(); };
             actions.Children.Add(button);
         }
-        var card = new Border { Child = panel, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(12) };
-        card.SetResourceReference(Border.BackgroundProperty, "Ui.CardBackground");
-        card.SetResourceReference(Border.BorderBrushProperty, "Ui.Separator");
+        var card = new Border { Child = panel, Padding = new Thickness(0) };
+        card.SetResourceReference(StyleProperty, "Primer.Dialog");
         Content = card;
     }
 
@@ -66,7 +65,7 @@ internal sealed class GlassMessageBox : Window
 
     internal static MessageBoxResult Show(Window? owner, string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)
     {
-        var dialog = new GlassMessageBox(text, caption, buttons, icon);
+        var dialog = new WorkbenchMessageBox(text, caption, buttons, icon);
         if (owner?.IsVisible == true) dialog.Owner = owner;
         else dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         dialog.ShowDialog();

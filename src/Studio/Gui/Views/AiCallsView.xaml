@@ -1,78 +1,155 @@
-<UserControl x:Class="TiaOpenness.Gui.Views.AiCallsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
   <Grid>
-    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="16"/><ColumnDefinition Width="284"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition Width="20"/>
+      <ColumnDefinition Width="300"/>
+    </Grid.ColumnDefinitions>
     <Grid>
-      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="14"/><RowDefinition/></Grid.RowDefinitions>
-      <Border Style="{StaticResource Glass.Card}" Padding="20,14">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition/>
+      </Grid.RowDefinitions>
+      <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
           <DockPanel Height="30">
-            <Button x:Name="FollowButton" DockPanel.Dock="Right" Content="{Binding FollowLabel}" Style="{StaticResource Glass.Button}" Foreground="{DynamicResource Ui.Accent}" Height="30" FontSize="11" Click="OnFollow"/>
-            <StackPanel Orientation="Horizontal"><TextBlock Text="{l:Tr Shell.Calls}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/><TextBlock Text="{Binding CallsCount}" Style="{StaticResource Glass.Muted}" Margin="12,0,0,0"/></StackPanel>
+            <Button x:Name="FollowButton" DockPanel.Dock="Right" Content="{Binding FollowLabel}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnFollow"/>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="{l:Tr Shell.Calls}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding CallsCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
+            </StackPanel>
           </DockPanel>
           <DockPanel Margin="0,10,0,0">
-            <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="170" Height="30" Style="{StaticResource Glass.Field}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="170" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <ToggleButton x:Name="WriteFilter" Style="{StaticResource Feature.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}" Margin="0,0,6,0"/>
-              <ToggleButton x:Name="FailFilter" Style="{StaticResource Feature.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}" Margin="0,0,6,0"/>
-              <ToggleButton x:Name="ReleaseFilter" Style="{StaticResource Feature.Filter}" Content="{Binding ReleaseFilter}" IsChecked="{Binding ReleaseOnly}"/>
+              <ToggleButton x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}" Margin="0,0,6,0"/>
+              <ToggleButton x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}" Margin="0,0,6,0"/>
+              <ToggleButton x:Name="ReleaseFilter" Style="{StaticResource Primer.Filter}" Content="{Binding ReleaseFilter}" IsChecked="{Binding ReleaseOnly}"/>
             </StackPanel>
           </DockPanel>
         </StackPanel>
       </Border>
-      <Border Grid.Row="2" Style="{StaticResource Glass.Card}" Padding="16,14">
+      <Border Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
         <Grid>
-          <Grid.RowDefinitions><RowDefinition Height="24"/><RowDefinition/></Grid.RowDefinitions>
-          <Grid Margin="10,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="44"/><ColumnDefinition Width="10"/><ColumnDefinition Width="90"/><ColumnDefinition Width="10"/><ColumnDefinition Width="54"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/></Grid.ColumnDefinitions>
-            <TextBlock Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Time}"/>
-            <TextBlock Grid.Column="2" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Host}"/>
-            <TextBlock Grid.Column="4" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Tool}"/>
-            <TextBlock Grid.Column="6" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
-            <TextBlock Grid.Column="8" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Result}"/>
-            <TextBlock Grid.Column="10" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Duration}"/>
-            <TextBlock Grid.Column="12" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Target}"/>
-          </Grid>
-          <ListBox x:Name="CallList" Grid.Row="1" Style="{StaticResource Feature.VirtualList}" ItemsSource="{Binding Calls}"><ListBox.ItemTemplate><DataTemplate>
-              <Button Style="{StaticResource Feature.Row}" Click="OnCall" ToolTip="{Binding Tool}">
-                <Grid>
-                  <Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="44"/><ColumnDefinition Width="10"/><ColumnDefinition Width="90"/><ColumnDefinition Width="10"/><ColumnDefinition Width="54"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/></Grid.ColumnDefinitions>
-                  <TextBlock Text="{Binding Time}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
-                  <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Glass.Muted}" ToolTip="{Binding Host}"/>
-                  <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.Label}" FontWeight="Bold"/>
-                  <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Feature.Text}" Tag="{Binding WriteTone}"/>
-                  <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Feature.Text}" Tag="{Binding Tone}" FontSize="10.5" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
-                  <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Glass.Mono}" FontSize="10.5"/>
-                  <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Glass.Muted}" ToolTip="{Binding Target}"/>
-                </Grid>
-              </Button>
-            </DataTemplate></ListBox.ItemTemplate></ListBox>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+          <Border Style="{StaticResource Primer.ColumnHeaderStrip}">
+            <Grid>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="62"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="1*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="1.4*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="44"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="90"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="54"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="1.4*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
+                <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
+                <TextBlock Grid.Column="4" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Tool}"/>
+                <TextBlock Grid.Column="6" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
+                <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
+                <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
+                <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
+              </Grid>
+            </Grid>
+          </Border>
+          <ListBox x:Name="CallList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Button Style="{StaticResource Primer.TableButton}" Click="OnCall" ToolTip="{Binding Tool}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="62"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="1*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="1.4*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="44"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="90"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="54"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="1.4*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
+                    <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
+                    <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="10.5" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
+                    <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="10.5"/>
+                    <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
           <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="390" Visibility="{Binding CallsEmpty, Converter={StaticResource BoolToVisibility}}">
-            <TextBlock Text="{Binding CallEmptyTitle}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>
+            <TextBlock Text="{Binding CallEmptyTitle}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>
           </StackPanel>
         </Grid>
       </Border>
     </Grid>
     <Grid Grid.Column="2">
-      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="14"/><RowDefinition/></Grid.RowDefinitions>
-      <Border Style="{StaticResource Glass.Card}" Padding="20,18">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition/>
+      </Grid.RowDefinitions>
+      <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
-          <TextBlock Text="{l:Tr Feature.Connection}" Style="{StaticResource Glass.Heading}" Margin="0,0,0,12"/>
-          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="74"/><ColumnDefinition/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="26"/><RowDefinition Height="26"/><RowDefinition Height="26"/></Grid.RowDefinitions>
-            <TextBlock Text="{l:Tr Feature.Address}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Column="1" Text="{Binding Address}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.Label}" ToolTip="{Binding Address}"/>
-            <TextBlock Grid.Row="1" Text="{l:Tr Feature.Transport}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Transport}" Style="{StaticResource Glass.Text}"/>
-            <TextBlock Grid.Row="2" Text="{l:Tr Settings.Approval}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ApprovalSetting}" Style="{StaticResource Glass.Text}" FontWeight="SemiBold"/>
+          <TextBlock Text="{l:Tr Feature.Connection}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="74"/>
+              <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="26"/>
+              <RowDefinition Height="26"/>
+              <RowDefinition Height="26"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="{l:Tr Feature.Address}" Style="{StaticResource Primer.Muted}"/>
+            <TextBlock Grid.Column="1" Text="{Binding Address}" Style="{StaticResource Primer.ListMonoValue}" ToolTip="{Binding Address}"/>
+            <TextBlock Grid.Row="1" Text="{l:Tr Feature.Transport}" Style="{StaticResource Primer.Muted}"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Transport}" Style="{StaticResource Primer.ListValue}"/>
+            <TextBlock Grid.Row="2" Text="{l:Tr Settings.Approval}" Style="{StaticResource Primer.Muted}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ApprovalSetting}" Style="{StaticResource Primer.ListValue}"/>
           </Grid>
-          <Border Background="{DynamicResource Ui.CodeBackground}" CornerRadius="10" Padding="12,10" Margin="0,8,0,12"><ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"><TextBlock x:Name="ConnectionCode" Text="{Binding ConnectionJson}" Style="{StaticResource Feature.Code}"/></ScrollViewer></Border>
-          <Button Content="{l:Tr Calls.CopyConnection}" Style="{StaticResource Glass.Button}" Height="32" Click="OnCopyConnection"/>
-          <TextBlock Text="{l:Tr Calls.SecretPlaceholder}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,12,0,0"/>
+          <Border Padding="12,10" Margin="0,8,0,12" Style="{StaticResource Primer.CodeBlock}">
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+              <TextBlock x:Name="ConnectionCode" Text="{Binding ConnectionJson}" Style="{StaticResource Primer.CodeText}"/>
+            </ScrollViewer>
+          </Border>
+          <Button Content="{l:Tr Calls.CopyConnection}" Style="{StaticResource Primer.Secondary}" Click="OnCopyConnection"/>
+          <TextBlock Text="{l:Tr Calls.SecretPlaceholder}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,12,0,0"/>
         </StackPanel>
       </Border>
-      <Border Grid.Row="2" Style="{StaticResource Glass.Card}" Padding="20,18"><StackPanel>
-        <DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PendingCount}" Style="{StaticResource Glass.Muted}"/><TextBlock Text="{l:Tr Shell.PendingTitle}" Style="{StaticResource Glass.Heading}"/></DockPanel>
-        <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource Glass.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,12"/>
-        <Button Content="{l:Tr Calls.OpenPending}" Style="{StaticResource Glass.Primary}" Tag="" Height="32" Click="OnApprovals"/>
-      </StackPanel></Border>
+      <Border Grid.Row="2" Style="{StaticResource Primer.Container}">
+        <StackPanel>
+          <DockPanel>
+            <Border DockPanel.Dock="Right" Style="{StaticResource Primer.PendingCountBadge}" Tag="{Binding Approvals.PendingCount}">
+              <TextBlock Text="{Binding PendingCount}" Style="{StaticResource Primer.CountText}"/>
+            </Border>
+            <TextBlock Text="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
+          </DockPanel>
+          <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource Primer.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,12"/>
+          <Button Content="{l:Tr Calls.OpenPending}" Style="{StaticResource Primer.Secondary}" Tag="" Click="OnApprovals"/>
+        </StackPanel>
+      </Border>
     </Grid>
   </Grid>
 </UserControl>

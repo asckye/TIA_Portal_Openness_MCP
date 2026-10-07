@@ -224,12 +224,31 @@ class LayoutChecks(unittest.TestCase):
                 ('third_party/SiemensOpcUaModelled/LICENSE.md', 'SiemensOpcUaModelled-LICENSE.md'),
                 ('third_party/eido-import-planner/LICENSE', 'Eido-LICENSE.txt'),
                 ('third_party/tia-openness-studio/LICENSE', 'TiaOpennessStudio-LICENSE.txt'),
-                ('src/Studio/Gui/Fonts/Manrope-OFL.txt', 'Manrope-OFL.txt'),
                 ('src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt', 'JetBrainsMono-OFL.txt'),
+                ('src/Studio/Gui/Fonts/NotoSansSC-OFL.txt', 'NotoSansSC-OFL.txt'),
                 ('reference/siemens-code-snippets/LICENSE.md', 'SiemensCodeSnippets-LICENSE.md')):
             with self.subTest(source=source):
                 self.assertEqual((ROOT / source).read_text(encoding='utf-8-sig'),
                                  (ROOT / 'docs/licenses' / copy).read_text(encoding='utf-8-sig'))
+
+    def test_primer_sources_and_retained_fonts_stay_in_all_required_lists(self):
+        gui = 'src/Studio/Gui/'
+        required = ('Themes/Primer.xaml', 'Themes/Palette.Light.xaml', 'Themes/Palette.Dark.xaml',
+                    'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs',
+                    'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf', 'Fonts/JetBrainsMono-OFL.txt',
+                    'Fonts/NotoSansSC-Regular.otf', 'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt')
+        manifest = (ROOT / 'build-tools/release/BundleManifestRequirements.cs').read_text('utf-8')
+        package = (ROOT / 'scripts/build/Package-Release.py').read_text('utf-8')
+        repository = (ROOT / 'scripts/checks/Check-Repository.py').read_text('utf-8')
+        for path in required:
+            with self.subTest(path=path):
+                self.assertTrue((ROOT / gui / path).is_file())
+                self.assertIn('"' + gui + path + '"', manifest)
+                self.assertIn("'" + gui + path + "'", package)
+                self.assertIn("'" + path + "'", repository)
+        self.assertEqual({p.name for p in (ROOT / gui / 'Fonts').iterdir() if p.suffix in ('.ttf', '.otf')},
+                         {'JetBrainsMono-Regular.ttf', 'JetBrainsMono-Medium.ttf', 'NotoSansSC-Regular.otf', 'NotoSansSC-Bold.otf'})
+        self.assertFalse((ROOT / 'docs/licenses/Manrope-OFL.txt').exists())
 
     def test_delivery_includes_runtime_resources_and_plugin(self):
         rules = load_delivery(ROOT)

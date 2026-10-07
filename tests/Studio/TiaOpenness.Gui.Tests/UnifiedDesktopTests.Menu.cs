@@ -55,7 +55,8 @@ public sealed partial class UnifiedDesktopTests
                 window.ShowConfiguration(false);
                 Assert.Null(window.FindName("MenuBar"));
                 Assert.Null(window.FindName("SidebarCard"));
-                Assert.Equal(184, ((Border)window.FindName("RailCard")).Parent is Grid grid ? grid.ColumnDefinitions[0].Width.Value : 0);
+                Assert.Null(window.FindName("RailCard"));
+                Assert.Equal(38, ((RadioButton)window.FindName("RailOverview")).Height);
                 var pages = new[] { "Mcp", "Engineering", "Blocks", "VersionControl", "Calls", "Audit", "Environment", "Log" };
                 for (int i = 0; i < pages.Length; i++)
                 {
@@ -141,8 +142,8 @@ public sealed partial class UnifiedDesktopTests
     {
         wpf.Run(() =>
         {
-            using var lifetime = new DialogLifetime(new GlassMessageBox("fixture", "fixture", buttons, MessageBoxImage.Warning));
-            var dialog = (GlassMessageBox)lifetime.Window;
+            using var lifetime = new DialogLifetime(new WorkbenchMessageBox("fixture", "fixture", buttons, MessageBoxImage.Warning));
+            var dialog = (WorkbenchMessageBox)lifetime.Window;
             dialog.Show(); FlushMenu();
             var choice = DesktopCapture.Descendants<Button>((FrameworkElement)dialog.Content).ElementAt(index);
             typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(choice, null);

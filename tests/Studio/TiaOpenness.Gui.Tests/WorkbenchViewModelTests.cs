@@ -338,7 +338,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
         {
             var client = new FakeStudioClient();
             using var model = new MainViewModel(client, new FakeDialogService());
-            using var results = new GlassResults(model);
+            using var results = new ResultPresentation(model);
             SelectDevice(model, client);
             model.Engineering.SelectAll(true);
             Assert.Contains("1 selected", results.BlocksSummary);

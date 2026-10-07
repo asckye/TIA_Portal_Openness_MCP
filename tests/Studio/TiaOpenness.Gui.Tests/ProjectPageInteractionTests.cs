@@ -87,7 +87,7 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
             {
                 model.Session.Connect.Execute(null);
                 model.Engineering.Compile.Execute(null); WpfContext.Drain();
-                var results = (GlassResults)((FrameworkElement)window.FindName("Root")).Tag;
+                var results = (ResultPresentation)((FrameworkElement)window.FindName("Root")).Tag;
                 Assert.True(results.HasCompile);
                 window.Navigate("Blocks");
                 string history = model.Activity.Log;

@@ -1,177 +1,177 @@
 <UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="PageRoot" x:Class="TiaOpenness.Gui.Views.ProjectOperationsView">
   <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="14" />
-      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="14"/>
+      <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <Border x:Name="ProjectCard" Style="{StaticResource Glass.Card}">
+    <Border x:Name="ProjectCard" Style="{StaticResource Primer.Container}">
       <Grid>
         <StackPanel Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}">
-          <TextBlock Text="{l:Tr Blocks.Empty.Title}" FontSize="20" FontWeight="Bold" />
-          <TextBlock Text="{l:Tr Pages.ConnectDescription}" Style="{StaticResource Glass.Muted}" FontSize="12.5" Margin="0,4,0,14" />
+          <TextBlock Text="{l:Tr Blocks.Empty.Title}" FontSize="20" FontWeight="SemiBold"/>
+          <TextBlock Text="{l:Tr Pages.ConnectDescription}" Style="{StaticResource Primer.Muted}" FontSize="12.5" Margin="0,4,0,14"/>
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="ProjectPathInput" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Glass.Field}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11.5" Height="36" />
-            <Button Grid.Column="1" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Glass.Button}" Height="36" Margin="8,0,0,0" />
-            <Button x:Name="ConnectButton" Grid.Column="2" Content="{l:Tr Toolbar.Connect}" Click="OnConnect" Style="{StaticResource Glass.Primary}" Height="36" Margin="8,0,0,0" Effect="{DynamicResource Glass.AccentShadow}" IsEnabled="{Binding Tag.CanConnect,ElementName=PageRoot}" />
+            <TextBox x:Name="ProjectPathInput" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11.5" Height="36"/>
+            <Button Grid.Column="1" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+            <Button x:Name="ConnectButton" Grid.Column="2" Content="{l:Tr Toolbar.Connect}" Click="OnConnect" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" IsEnabled="{Binding Tag.CanConnect,ElementName=PageRoot}"/>
           </Grid>
           <DockPanel Margin="0,14,0,0">
-            <Button DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" Click="OnProjectOptions" Style="{StaticResource Glass.Quiet}" Height="22" />
-            <TextBlock Text="{l:Tr Pages.ConnectHint}" Style="{StaticResource Glass.Muted}" FontSize="11.5" Foreground="{DynamicResource Ui.TertiaryLabel}" />
+            <Button DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" Click="OnProjectOptions" Style="{StaticResource Primer.Quiet}" Height="22"/>
+            <TextBlock Text="{l:Tr Pages.ConnectHint}" Style="{StaticResource Primer.Muted.textFaint}" FontSize="11.5"/>
           </DockPanel>
         </StackPanel>
         <Grid Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="140" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
           <StackPanel Margin="0,0,12,0">
             <DockPanel>
-              <Border DockPanel.Dock="Right" Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" Margin="6,0,0,0">
-                <TextBlock Text="{Binding Tag.ProjectKind,ElementName=PageRoot}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
+              <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Chip}" Margin="6,0,0,0">
+                <TextBlock Text="{Binding Tag.ProjectKind,ElementName=PageRoot}" Style="{StaticResource Primer.Text.textMuted}"/>
               </Border>
-              <Border DockPanel.Dock="Right" Style="{StaticResource Glass.Chip}" Margin="8,0,0,0">
-                <TextBlock Text="{l:Tr Glass.Bound}" />
-              </Border>
-              <TextBlock Text="{Binding Session.ProjectName}" FontSize="18" FontWeight="Bold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Session.ProjectName}" />
+              <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}" Margin="8,0,0,0">
+                <TextBlock Text="{l:Tr Primer.Bound}" Style="{StaticResource Primer.StatusText}"/>
+              </ContentControl>
+              <TextBlock Text="{Binding Session.ProjectName}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Session.ProjectName}"/>
             </DockPanel>
             <DockPanel Margin="0,5,0,0">
-              <Button DockPanel.Dock="Right" Content="⋯" Click="OnProjectOptions" ToolTip="{l:Tr Pages.Options}" Style="{StaticResource Glass.Quiet}" Width="20" Height="16" />
-              <TextBlock Text="{Binding Session.ProjectPath}" Style="{StaticResource Glass.Mono}" ToolTip="{Binding Session.ProjectPath}" />
+              <Button DockPanel.Dock="Right" Content="⋯" Click="OnProjectOptions" ToolTip="{l:Tr Pages.Options}" Style="{StaticResource Primer.Quiet}" Width="20" Height="16"/>
+              <TextBlock Text="{Binding Session.ProjectPath}" Style="{StaticResource Primer.Mono}" ToolTip="{Binding Session.ProjectPath}"/>
             </DockPanel>
           </StackPanel>
-          <ComboBox x:Name="SoftwarePicker" Grid.Column="1" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Glass.Combo}" VerticalAlignment="Center">
+          <ComboBox x:Name="SoftwarePicker" Grid.Column="1" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Primer.Select}" VerticalAlignment="Center">
             <ComboBox.ItemTemplate>
               <DataTemplate>
                 <TextBlock>
-                  <Run Text="{Binding Name}" />
-                  <Run Text=" · Software" />
+                  <Run Text="{Binding Name}"/>
+                  <Run Text=" · Software"/>
                 </TextBlock>
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button Grid.Column="2" Content="{l:Tr Pages.Save}" Command="{Binding Engineering.Save}" Style="{StaticResource Glass.Button}" Margin="8,0,0,0" Padding="12,0" />
-          <Button x:Name="DisconnectButton" Grid.Column="3" Content="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}" Style="{StaticResource Glass.Outline}" BorderBrush="{DynamicResource Ui.FieldBorder}" Foreground="{DynamicResource Ui.SecondaryLabel}" Margin="8,0,0,0" Padding="12,0" />
+          <Button Grid.Column="2" Content="{l:Tr Pages.Save}" Command="{Binding Engineering.Save}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+          <Button x:Name="DisconnectButton" Grid.Column="3" Content="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}" Style="{StaticResource Primer.OutlinedAccent}" Margin="8,0,0,0"/>
         </Grid>
       </Grid>
     </Border>
     <Grid Grid.Row="2">
       <Grid.RowDefinitions>
-        <RowDefinition Height="*" />
-        <RowDefinition Height="14" />
-        <RowDefinition Height="*" />
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="14" />
-        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="14"/>
+        <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
-      <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Glass.Card}" Padding="20,18" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
+      <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Primer.Container}" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
         <Grid>
           <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <Grid>
-            <TextBlock Text="{l:Tr Toolbar.Compile}" Style="{StaticResource Glass.Heading}" FontSize="14" />
-            <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" HorizontalAlignment="Right">
-              <TextBlock Text="{Binding Tag.CompileOperationState,ElementName=PageRoot}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
-            </Border>
+            <TextBlock Text="{l:Tr Toolbar.Compile}" Style="{StaticResource Primer.ContainerTitle}" FontSize="14"/>
+            <ContentControl Style="{StaticResource Primer.StatusChip}" HorizontalAlignment="Right">
+              <TextBlock Text="{Binding Tag.CompileOperationState,ElementName=PageRoot}" Style="{StaticResource Primer.StatusText}"/>
+            </ContentControl>
           </Grid>
-          <TextBlock Text="{l:Tr Pages.CompileDescription}" Style="{StaticResource Glass.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0" />
-          <TextBlock Grid.Row="3" Text="{Binding Tag.CompileSummary,ElementName=PageRoot}" Style="{StaticResource Glass.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock Text="{l:Tr Pages.CompileDescription}" Style="{StaticResource Primer.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
+          <TextBlock Grid.Row="3" Text="{Binding Tag.CompileSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8"/>
           <WrapPanel Grid.Row="4" IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}">
-            <Button Content="{l:Tr Glass.CompileSoftware}" Style="{StaticResource Glass.Outline}" Command="{Binding Engineering.Compile}" />
+            <Button Content="{l:Tr Primer.CompileSoftware}" Style="{StaticResource Primer.OutlinedAccent}" Command="{Binding Engineering.Compile}"/>
           </WrapPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource Glass.Card}" Padding="20,18" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
+      <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource Primer.Container}" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
         <Grid>
           <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <Grid>
-            <TextBlock Text="{l:Tr Glass.Transfer}" Style="{StaticResource Glass.Heading}" FontSize="14" />
-            <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" HorizontalAlignment="Right">
-              <TextBlock Text="{Binding Tag.ReadyState,ElementName=PageRoot}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
-            </Border>
+            <TextBlock Text="{l:Tr Primer.Transfer}" Style="{StaticResource Primer.ContainerTitle}" FontSize="14"/>
+            <ContentControl Style="{StaticResource Primer.StatusChip}" HorizontalAlignment="Right">
+              <TextBlock Text="{Binding Tag.ReadyState,ElementName=PageRoot}" Style="{StaticResource Primer.StatusText}"/>
+            </ContentControl>
           </Grid>
-          <TextBlock Text="{l:Tr Pages.TransferDescription}" Style="{StaticResource Glass.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0" />
-          <TextBlock Grid.Row="3" Text="{Binding Tag.SelectedSummary,ElementName=PageRoot}" Style="{StaticResource Glass.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock Text="{l:Tr Pages.TransferDescription}" Style="{StaticResource Primer.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
+          <TextBlock Grid.Row="3" Text="{Binding Tag.SelectedSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8"/>
           <WrapPanel Grid.Row="4" IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}">
-            <Button Style="{StaticResource Glass.Button}" Click="OnExport" Margin="0,0,8,8">
+            <Button Style="{StaticResource Primer.Secondary}" Click="OnExport" Margin="0,0,8,8">
               <Button.Content>
-                <MultiBinding Converter="{StaticResource Glass.Value}" ConverterParameter="export">
-                  <Binding Path="Engineering.SourceFormat" />
-                  <Binding Source="{x:Static l:Loc.Current}" Path="Language" />
+                <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="export">
+                  <Binding Path="Engineering.SourceFormat"/>
+                  <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
                 </MultiBinding>
               </Button.Content>
             </Button>
-            <Button Content="{l:Tr Pages.Import}" Style="{StaticResource Glass.Button}" Command="{Binding Engineering.Import}" Margin="0,0,0,8" />
-            <Button Content="{l:Tr Pages.Options}" Style="{StaticResource Glass.Quiet}" Click="OnExportOptions" />
+            <Button Content="{l:Tr Pages.Import}" Style="{StaticResource Primer.Secondary}" Command="{Binding Engineering.Import}" Margin="0,0,0,8"/>
+            <Button Content="{l:Tr Pages.Options}" Style="{StaticResource Primer.Quiet}" Click="OnExportOptions"/>
           </WrapPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Glass.Card}" Padding="20,18" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
+      <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Primer.Container}" Opacity="{Binding Tag.OperationOpacity,ElementName=PageRoot}">
         <Grid>
           <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <Grid>
-            <TextBlock Text="{l:Tr Glass.Inspection}" Style="{StaticResource Glass.Heading}" FontSize="14" />
-            <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" HorizontalAlignment="Right">
-              <TextBlock Text="{Binding Tag.InspectionOperationState,ElementName=PageRoot}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
-            </Border>
+            <TextBlock Text="{l:Tr Primer.Inspection}" Style="{StaticResource Primer.ContainerTitle}" FontSize="14"/>
+            <ContentControl Style="{StaticResource Primer.StatusChip}" HorizontalAlignment="Right">
+              <TextBlock Text="{Binding Tag.InspectionOperationState,ElementName=PageRoot}" Style="{StaticResource Primer.StatusText}"/>
+            </ContentControl>
           </Grid>
-          <TextBlock Text="{l:Tr Pages.InspectDescription}" Style="{StaticResource Glass.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0" />
-          <TextBlock Grid.Row="3" Text="{Binding Tag.InspectionSummary,ElementName=PageRoot}" Style="{StaticResource Glass.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock Text="{l:Tr Pages.InspectDescription}" Style="{StaticResource Primer.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
+          <TextBlock Grid.Row="3" Text="{Binding Tag.InspectionSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8"/>
           <WrapPanel Grid.Row="4" IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}">
-            <Button Content="{l:Tr Pages.Run}" Style="{StaticResource Glass.Outline}" Command="{Binding Engineering.Inspect}" Margin="0,0,12,0" />
-            <Button Content="{l:Tr Pages.Rules}" Style="{StaticResource Glass.Quiet}" Click="OnInspectOptions" />
+            <Button Content="{l:Tr Pages.Run}" Style="{StaticResource Primer.OutlinedAccent}" Command="{Binding Engineering.Inspect}" Margin="0,0,12,0"/>
+            <Button Content="{l:Tr Pages.Rules}" Style="{StaticResource Primer.Quiet}" Click="OnInspectOptions"/>
           </WrapPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource Glass.Card}" Padding="20,18">
+      <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource Primer.Container}">
         <Grid>
           <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <Grid>
-            <TextBlock Text="{l:Tr Shell.Environment}" Style="{StaticResource Glass.Heading}" FontSize="14" />
-            <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ControlBackground}" HorizontalAlignment="Right">
-              <TextBlock Text="{Binding Tag.EnvironmentState,ElementName=PageRoot}" Foreground="{DynamicResource Ui.SecondaryLabel}" />
-            </Border>
+            <TextBlock Text="{l:Tr Shell.Environment}" Style="{StaticResource Primer.ContainerTitle}" FontSize="14"/>
+            <ContentControl Style="{StaticResource Primer.StatusChip}" HorizontalAlignment="Right">
+              <TextBlock Text="{Binding Tag.EnvironmentState,ElementName=PageRoot}" Style="{StaticResource Primer.StatusText}"/>
+            </ContentControl>
           </Grid>
-          <TextBlock Text="{l:Tr Pages.EnvironmentDescription}" Style="{StaticResource Glass.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0" />
-          <TextBlock Grid.Row="3" Text="{Binding Tag.EnvironmentSummary,ElementName=PageRoot}" Style="{StaticResource Glass.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock Text="{l:Tr Pages.EnvironmentDescription}" Style="{StaticResource Primer.Muted}" Grid.Row="1" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
+          <TextBlock Grid.Row="3" Text="{Binding Tag.EnvironmentSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,0,8"/>
           <WrapPanel Grid.Row="4">
-            <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.Run}" Style="{StaticResource Glass.Button}" Click="OnEnvironment" />
+            <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.Run}" Style="{StaticResource Primer.Secondary}" Click="OnEnvironment"/>
           </WrapPanel>
         </Grid>
       </Border>
     </Grid>
-    <views:EngineeringOptionsView x:Name="Options" Grid.RowSpan="3" />
+    <views:EngineeringOptionsView x:Name="Options" Grid.RowSpan="3"/>
   </Grid>
 </UserControl>

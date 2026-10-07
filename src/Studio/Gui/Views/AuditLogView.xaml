@@ -1,60 +1,145 @@
-<UserControl x:Class="TiaOpenness.Gui.Views.AuditLogView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AuditLogView">
   <Grid>
-    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="16"/><ColumnDefinition Width="284"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition Width="20"/>
+      <ColumnDefinition Width="300"/>
+    </Grid.ColumnDefinitions>
     <Grid>
-      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="14"/><RowDefinition/></Grid.RowDefinitions>
-      <Border Style="{StaticResource Glass.Card}" Padding="20,14"><StackPanel>
-        <DockPanel Height="30"><Button x:Name="VerifyButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Verify}" Style="{StaticResource Glass.Outline}" Height="30" FontSize="11" Click="OnVerify"/><StackPanel Orientation="Horizontal"><TextBlock Text="{l:Tr Shell.Audit}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/><TextBlock Text="{Binding AuditCount}" Style="{StaticResource Glass.Muted}" Margin="12,0,0,0"/></StackPanel></DockPanel>
-        <Border x:Name="VerificationBanner" Style="{StaticResource Feature.Tint}" Tag="{Binding VerificationTone}" MinHeight="38" Padding="12,10" Margin="0,10,0,0" Visibility="{Binding HasVerification, Converter={StaticResource BoolToVisibility}}"><DockPanel>
-          <Button x:Name="JumpButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Jump}" Style="{StaticResource Glass.Quiet}" Foreground="{DynamicResource Ui.Orange}" FontWeight="Bold" Height="18" Visibility="{Binding VerificationBroken, Converter={StaticResource BoolToVisibility}}" Click="OnJump"/>
-          <Ellipse Style="{StaticResource Feature.Dot}" Tag="{Binding VerificationTone}" Margin="0,0,10,0"/>
-          <TextBlock Text="{Binding VerificationText}" Style="{StaticResource Feature.Text}" Tag="{Binding VerificationTone}" FontWeight="Bold" FontSize="12"/>
-        </DockPanel></Border>
-        <ProgressBar Value="{Binding VerificationProgress, Mode=OneWay}" Maximum="100" Height="4" Margin="0,8,0,0" IsIndeterminate="True" Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}"/>
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,0"><Button Content="{l:Tr Audit.Older}" Style="{StaticResource Glass.Quiet}" Click="OnOlder"/><Button Content="{l:Tr Audit.Latest}" Style="{StaticResource Glass.Quiet}" Margin="14,0,0,0" Click="OnLatest"/></StackPanel>
-        <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,10,0,0" TextWrapping="Wrap"/>
-      </StackPanel></Border>
-      <Border Grid.Row="2" Style="{StaticResource Glass.Card}" Padding="16,14"><Grid>
-        <Grid.RowDefinitions><RowDefinition Height="24"/><RowDefinition/></Grid.RowDefinitions>
-        <Grid Margin="10,0"><Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.6*"/><ColumnDefinition Width="10"/><ColumnDefinition Width=".8*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
-          <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="2" Text="{l:Tr Audit.Event}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="4" Text="{l:Tr Audit.Object}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="6" Text="{l:Tr Calls.Result}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="8" Text="{l:Tr Audit.Hash}" Style="{StaticResource Feature.Header}" Margin="0"/>
-        </Grid>
-        <ListBox x:Name="AuditList" Grid.Row="1" Style="{StaticResource Feature.VirtualList}" ItemsSource="{Binding AuditRows}"><ListBox.ItemTemplate><DataTemplate>
-          <Border CornerRadius="10" Padding="10,0" Height="34">
-            <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="Transparent"/><Style.Triggers><DataTrigger Binding="{Binding Selected}" Value="True"><Setter Property="Background" Value="{DynamicResource Ui.WarningSoft}"/></DataTrigger></Style.Triggers></Style></Border.Style>
-            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.6*"/><ColumnDefinition Width="10"/><ColumnDefinition Width=".8*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
-              <TextBlock Text="{Binding Time}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
-              <TextBlock Grid.Column="2" Text="{Binding Type}" Style="{StaticResource Feature.Text}" Tag="{Binding Tone}" FontSize="11.5" FontWeight="SemiBold"/>
-              <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Glass.Mono}" ToolTip="{Binding Record.ToolObject}"/>
-              <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Glass.Muted}"/>
-              <TextBlock Grid.Column="8" Text="{Binding Record.Hash}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition/>
+      </Grid.RowDefinitions>
+      <Border Style="{StaticResource Primer.Container}">
+        <StackPanel>
+          <DockPanel Height="30">
+            <Button x:Name="VerifyButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnVerify"/>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="{l:Tr Shell.Audit}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
+            </StackPanel>
+          </DockPanel>
+          <Border x:Name="VerificationBanner" Style="{StaticResource Primer.ToneChip}" Tag="{Binding VerificationTone}" MinHeight="38" Padding="12,10" Margin="0,10,0,0" Visibility="{Binding HasVerification, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel>
+              <Button x:Name="JumpButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Jump}" Style="{StaticResource Primer.Quiet}" Height="18" Visibility="{Binding VerificationBroken, Converter={StaticResource BoolToVisibility}}" Click="OnJump"/>
+              <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding VerificationTone}" Margin="0,0,10,0"/>
+              <TextBlock Text="{Binding VerificationText}" Style="{StaticResource Primer.ToneText}" Tag="{Binding VerificationTone}" FontWeight="SemiBold" FontSize="12"/>
+            </DockPanel>
+          </Border>
+          <ProgressBar Value="{Binding VerificationProgress, Mode=OneWay}" Maximum="100" Height="4" Margin="0,8,0,0" IsIndeterminate="True" Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}"/>
+          <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Content="{l:Tr Audit.Older}" Style="{StaticResource Primer.Quiet}" Click="OnOlder"/>
+            <Button Content="{l:Tr Audit.Latest}" Style="{StaticResource Primer.Quiet}" Margin="14,0,0,0" Click="OnLatest"/>
+          </StackPanel>
+          <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+          <Border Style="{StaticResource Primer.ColumnHeaderStrip}">
+            <Grid>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="62"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="1.1*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="1.6*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width=".8*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="70"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+                <TextBlock Grid.Column="2" Text="{l:Tr Audit.Event}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+                <TextBlock Grid.Column="4" Text="{l:Tr Audit.Object}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+                <TextBlock Grid.Column="6" Text="{l:Tr Calls.Result}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+                <TextBlock Grid.Column="8" Text="{l:Tr Audit.Hash}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+              </Grid>
             </Grid>
           </Border>
-        </DataTemplate></ListBox.ItemTemplate></ListBox>
-        <TextBlock Grid.Row="1" Text="{l:Tr Shell.AuditEmpty}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
-      </Grid></Border>
-    </Grid>
-    <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="14"/><RowDefinition/></Grid.RowDefinitions>
-      <Border Style="{StaticResource Glass.Card}" Padding="20,18"><StackPanel>
-        <TextBlock Text="{l:Tr Audit.Retention}" Style="{StaticResource Glass.Heading}" Margin="0,0,0,12"/>
-        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="74"/><ColumnDefinition/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Glass.Muted}"/>
-          <Border Grid.Column="1" Background="{DynamicResource Ui.ControlBackground}" CornerRadius="16" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="Size128" Tag="128" Content="128 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
-            <RadioButton x:Name="Size256" Tag="256" Content="256 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
-            <RadioButton x:Name="Size50" Tag="50" Content="50 MB" Style="{StaticResource Shell.Segment}" Padding="9,0" FontSize="10.5" GroupName="AuditSize" Click="OnSize"/>
-          </StackPanel></Border>
-          <TextBlock Grid.Row="1" Text="{l:Tr Audit.Copies}" Style="{StaticResource Glass.Muted}"/>
-          <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Ui.ControlBackground}" CornerRadius="16" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="Copies16" Tag="16" Content="16" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
-            <RadioButton x:Name="Copies32" Tag="32" Content="32" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
-            <RadioButton x:Name="Copies64" Tag="64" Content="64" Style="{StaticResource Shell.Segment}" Padding="10,0" GroupName="AuditCopies" Click="OnCopies"/>
-          </StackPanel></Border>
-          <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Glass.Muted}"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" TextWrapping="Wrap" Style="{StaticResource Glass.Text}" FontWeight="SemiBold" FontSize="11.5"/>
+          <ListBox x:Name="AuditList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding AuditRows}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border Padding="10,0" Height="34" Style="{StaticResource Primer.AuditSelectionRow}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="62"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="1.1*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="1.6*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width=".8*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="70"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Type}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="11.5" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Primer.Mono}" ToolTip="{Binding Record.ToolObject}"/>
+                    <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Primer.Muted}"/>
+                    <TextBlock Grid.Column="8" Text="{Binding Record.Hash}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Grid.Row="1" Text="{l:Tr Shell.AuditEmpty}" Style="{StaticResource Primer.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
         </Grid>
-        <Button Content="{l:Tr Audit.OpenFolder}" Style="{StaticResource Glass.Button}" Height="32" Margin="0,4,0,0" Click="OnOpenFolder"/>
-      </StackPanel></Border>
-      <Border Grid.Row="2" Style="{StaticResource Glass.Card}" Padding="20,18"><StackPanel><TextBlock Text="{l:Tr Audit.About}" Style="{StaticResource Glass.Heading}"/><TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Glass.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel></Border>
+      </Border>
+    </Grid>
+    <Grid Grid.Column="2">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="14"/>
+        <RowDefinition/>
+      </Grid.RowDefinitions>
+      <Border Style="{StaticResource Primer.Container}">
+        <StackPanel>
+          <TextBlock Text="{l:Tr Audit.Retention}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="74"/>
+              <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="38"/>
+              <RowDefinition Height="38"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Primer.Muted}"/>
+            <Border Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="Size5" Tag="5" Content="{l:Tr Audit.Size5}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
+                <RadioButton x:Name="Size10" Tag="10" Content="{l:Tr Audit.Size10}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
+                <RadioButton x:Name="Size50" Tag="50" Content="{l:Tr Audit.Size50}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
+              </StackPanel>
+            </Border>
+            <TextBlock Grid.Row="1" Text="{l:Tr Audit.Copies}" Style="{StaticResource Primer.Muted}"/>
+            <Border Grid.Row="1" Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="Copies3" Tag="3" Content="3" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
+                <RadioButton x:Name="Copies5" Tag="5" Content="5" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
+                <RadioButton x:Name="Copies10" Tag="10" Content="10" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
+              </StackPanel>
+            </Border>
+            <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Primer.Muted}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" TextWrapping="Wrap" Style="{StaticResource Primer.ListValue}" FontSize="11.5"/>
+          </Grid>
+          <Button Content="{l:Tr Audit.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="0,4,0,0" Click="OnOpenFolder"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="2" Style="{StaticResource Primer.Container}">
+        <StackPanel>
+          <TextBlock Text="{l:Tr Audit.About}" Style="{StaticResource Primer.ContainerTitle}"/>
+          <TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Primer.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+        </StackPanel>
+      </Border>
     </Grid>
   </Grid>
 </UserControl>

@@ -14,7 +14,7 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
     [InlineData(400, "Regular")]
     // Only Regular and Bold ship (2026-10-06, package size); medium text uses the nearest embedded face.
     [InlineData(500, "Regular")]
-    [InlineData(700, "Bold")]
+    [InlineData(600, "Bold")]
     public void Chinese_faces_resolve_to_the_embedded_font(int weight, string face)
     {
         wpf.Run(() =>
@@ -26,7 +26,7 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
             Assert.Contains((int)'中', glyph.CharacterToGlyphMap.Keys);
             Assert.False(typeface.IsBoldSimulated);
             string chain = ((FontFamily)Application.Current.FindResource("Ui.Font")).Source;
-            Assert.Contains("#Manrope, /TiaOpenness;component/Fonts/#Noto Sans SC, Microsoft YaHei UI", chain);
+            Assert.Equal("Segoe UI, /TiaOpenness;component/Fonts/#Noto Sans SC", chain);
             Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Fonts", "NotoSansSC-OFL.txt")));
         });
     }

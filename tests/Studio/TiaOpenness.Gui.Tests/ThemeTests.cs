@@ -49,8 +49,8 @@ public class ThemeTests(WpfContext wpf)
 
             Assert.NotEmpty(light.Keys);
 
-            var lightWindow = Assert.IsType<SolidColorBrush>(light["Ui.WindowBackground"]);
-            var darkWindow = Assert.IsType<SolidColorBrush>(dark["Ui.WindowBackground"]);
+            var lightWindow = Assert.IsType<SolidColorBrush>(light["Primer.bg"]);
+            var darkWindow = Assert.IsType<SolidColorBrush>(dark["Primer.bg"]);
 
             Assert.NotEqual(lightWindow.Color, darkWindow.Color);
         });
@@ -69,7 +69,7 @@ public class ThemeTests(WpfContext wpf)
             var first = Application.Current.Resources.MergedDictionaries[0];
 
             Assert.Contains("Palette.", first.Source.OriginalString, StringComparison.Ordinal);
-            Assert.True(first.Contains("Ui.WindowBackground"));
+            Assert.True(first.Contains("Primer.bg"));
         });
     }
 
@@ -112,10 +112,10 @@ public class ThemeTests(WpfContext wpf)
             try
             {
                 ThemeManager.Current.Theme = AppTheme.Light;
-                var light = ((SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground")).Color;
+                var light = ((SolidColorBrush)Application.Current.FindResource("Primer.bg")).Color;
 
                 ThemeManager.Current.Theme = AppTheme.Dark;
-                var dark = ((SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground")).Color;
+                var dark = ((SolidColorBrush)Application.Current.FindResource("Primer.bg")).Color;
 
                 Assert.NotEqual(light, dark);
                 Assert.True(ThemeManager.Current.EffectivelyDark);

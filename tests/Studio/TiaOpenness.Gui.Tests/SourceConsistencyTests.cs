@@ -37,7 +37,7 @@ public class SourceConsistencyTests(WpfContext wpf)
         new(@"(?:[?:]|=>)\s*""((?:Config|Shell|Mcp|Feature|Calls|Approval|Audit|Env)\.[\w.]+)""", RegexOptions.Compiled),
     ];
 
-    // {StaticResource Ui.Button} / {DynamicResource Ui.Accent}
+    // {StaticResource Ui.Button} / {DynamicResource Primer.accent}
     private static readonly Regex ResourceKey =
         new(@"\{(?:Static|Dynamic)Resource\s+([A-Za-z][\w.]*)\s*\}", RegexOptions.Compiled);
 

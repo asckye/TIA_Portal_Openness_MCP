@@ -216,7 +216,7 @@ namespace TiaMcpConfigurator
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
                         (chinese ? "Chinese" : "English") + " save both label");
-                    Assert(((System.Windows.Controls.TextBlock)window.FindName("McpStatusText")).Text.StartsWith(chinese ? "MCP 服务 ·" : "MCP service ·")
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("McpStatusText")).Text.StartsWith("MCP ·")
                         && ((System.Windows.Controls.RadioButton)window.FindName("RailMcp")).IsChecked == true
                         && ((System.Windows.Controls.RadioButton)window.FindName("RailEngineering")).IsChecked == false,
                         (chinese ? "Chinese" : "English") + " caption and rail track the configuration page");
@@ -278,14 +278,14 @@ namespace TiaMcpConfigurator
                 var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
                 var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
                 Assert(list.ActualHeight <= clientPane.ActualHeight && list.ActualHeight < 400, "client list fits inside its card");
-                Assert(Math.Abs(serverPane.ActualHeight - 158) < 1 && clientPane.ActualHeight > 200 && clientPane.ActualHeight < 400, "Glass service and client cards use the handoff heights");
+                Assert(Math.Abs(serverPane.ActualHeight - 162) < 1 && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400, "Primer service halves and client container use the handoff heights");
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
                 var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
                 Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
-                Assert(caption.ActualHeight == 40 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 0, "title bar occupies the top 40 pixels");
+                Assert(caption.ActualHeight == 44 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 44 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
                     Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                         >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
@@ -295,14 +295,14 @@ namespace TiaMcpConfigurator
                 Assert(window.MinWidth == 1200 && window.MinHeight == 780 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
                     "minimum window size keeps the three-column client layout");
                 window.Width = 1200; window.Height = 780;
-                var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Manrope");
+                var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Noto Sans SC");
                 System.Windows.Media.GlyphTypeface glyph;
                 Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
-                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");
+                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("notosanssc"), "Noto Sans SC is loaded from the embedded font resource");
                 ThemeManager.Current.Theme = AppTheme.Dark;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF0B1420", "dark palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF0D1117", "dark palette switches live");
                 ThemeManager.Current.Theme = AppTheme.Light;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFE7ECF1", "light palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF6F8FA", "light palette switches live");
                 string preservedSecret = "language-switch-fixture";
                 password.Password = preservedSecret;
                 Loc.Current.Language = AppLanguage.Chinese;
@@ -321,7 +321,7 @@ namespace TiaMcpConfigurator
                     && ((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
                 ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
                 // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
-                string capture = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
+                string capture = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
                 if (!String.IsNullOrEmpty(capture))
                 {
                     Directory.CreateDirectory(capture);
@@ -334,10 +334,10 @@ namespace TiaMcpConfigurator
                     list.ItemsSource = fixture;
                     for (int i=0;i<3;i++) list.SelectedItems.Add(fixture[i]);
                     password.Password="visual-fixture-not-a-real-secret";
-                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● Detected via registry";
-                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
+                    ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
                     ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, auth passed, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
-                    ((TiaDesktop.Glass.GlassLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
+                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
                     form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
                     ThemeManager.Current.Theme = AppTheme.Dark;
@@ -345,10 +345,10 @@ namespace TiaMcpConfigurator
                     form.CapturePage(Path.Combine(capture,"configurator-local-dark.png"),1);
                     Loc.Current.Language = AppLanguage.Chinese;
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● 已通过注册表检测";
-                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                    ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
+                    ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
                     ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
-                    ((TiaDesktop.Glass.GlassLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
+                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
                     form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
                     form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);

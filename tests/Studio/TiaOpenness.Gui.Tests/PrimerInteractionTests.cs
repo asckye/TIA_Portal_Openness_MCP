@@ -13,8 +13,37 @@ using Xunit;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public class GlassInteractionTests(WpfContext wpf)
+public class PrimerInteractionTests(WpfContext wpf)
 {
+    [Fact]
+    public void Count_badges_hide_zero_and_pending_counts_use_the_warning_palette()
+    {
+        wpf.Run(() =>
+        {
+            var count = new Border { Style = (Style)Application.Current.FindResource("Primer.TabCountBadge"), Tag = 0 };
+            var pending = new Border { Style = (Style)Application.Current.FindResource("Primer.PendingCountBadge"), Tag = 0, Child = new TextBlock() };
+            var panel = new StackPanel(); panel.Children.Add(count); panel.Children.Add(pending);
+            var window = new Window { Content = panel };
+            WpfContext.Drain();
+            Assert.Equal(Visibility.Collapsed, count.Visibility);
+            Assert.Equal(Visibility.Collapsed, pending.Visibility);
+            count.Tag = pending.Tag = 3; WpfContext.Drain();
+            Assert.Equal(Visibility.Visible, count.Visibility);
+            Assert.Equal(Visibility.Visible, pending.Visibility);
+            var previous = ThemeManager.Current.Theme;
+            try
+            {
+                foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+                {
+                    ThemeManager.Current.Theme = theme; WpfContext.Drain();
+                    Assert.Equal(theme == AppTheme.Light ? Color.FromRgb(255, 241, 229) : ((SolidColorBrush)Application.Current.FindResource("Primer.warnBg")).Color, ((SolidColorBrush)pending.Background).Color);
+                    Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.warn")).Color, ((SolidColorBrush)pending.BorderBrush).Color);
+                }
+            }
+            finally { window.Close(); ThemeManager.Current.Theme = previous; }
+        });
+    }
+
     private sealed class ProbeCommand(Action action) : ICommand
     {
         public bool CanExecute(object? parameter) => true;

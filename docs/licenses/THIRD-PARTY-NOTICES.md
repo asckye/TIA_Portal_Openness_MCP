@@ -76,11 +76,12 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 - [Provenance and archive hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/upstream.json); [integration and behavior](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md). The full original source and complete Git history are retained as reference archives.
 - Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.
 
-## Glass Layers desktop fonts
+## Primer desktop fonts
 
-Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The original [Manrope license](Manrope-OFL.txt) and [JetBrains Mono license](JetBrainsMono-OFL.txt) are included here; font source URLs and hashes remain in the source repository. Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
-
-Noto Sans SC Regular and Bold are embedded as the desktop's Chinese fallback under SIL Open Font License 1.1. The original [Noto Sans SC license](NotoSansSC-OFL.txt) is included here and copied to the application output. The unmodified OTFs come from [notofonts/noto-cjk, Sans/SubsetOTF/SC](https://github.com/notofonts/noto-cjk/tree/main/Sans/SubsetOTF/SC), downloaded 2026-10-05; their SHA-256 values remain in the source repository. No system-wide font installation is performed.
+JetBrains Mono (JetBrains) and Noto Sans SC (Noto CJK) are embedded in the WPF
+workbench under SIL Open Font License 1.1. Their original [JetBrains Mono license](JetBrainsMono-OFL.txt)
+and [Noto Sans SC license](NotoSansSC-OFL.txt) are included here. Source URLs and hashes
+remain in the source repository. Segoe UI is supplied by Windows. No fonts are installed system-wide.
 
 ## Eido import dependency planner
 

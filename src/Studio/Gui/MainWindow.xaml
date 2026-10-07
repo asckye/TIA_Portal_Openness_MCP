@@ -1,6 +1,6 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:glass="clr-namespace:TiaDesktop.Glass" x:Class="TiaOpenness.Gui.MainWindow" Title="{l:Tr App.Title}" Width="1200" Height="780" MinWidth="1200" MinHeight="780" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" Style="{StaticResource Ui.Window}">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" x:Class="TiaOpenness.Gui.MainWindow" Title="{l:Tr App.Title}" Width="1200" Height="780" MinWidth="1200" MinHeight="780" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" Style="{StaticResource Ui.Window}">
   <shell:WindowChrome.WindowChrome>
-    <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="12" UseAeroCaptionButtons="False"/>
+    <shell:WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="6" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
   <Window.InputBindings>
     <KeyBinding Key="O" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Open}"/>
@@ -21,119 +21,139 @@
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnPageExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Navigate}" Executed="OnNavigateExecuted" CanExecute="OnCanNavigate"/>
   </Window.CommandBindings>
-  <Grid x:Name="Root" Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource Ui.Label}">
-    <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-420,-322,0,0" IsHitTestVisible="False"/>
-    <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-380,-302" IsHitTestVisible="False"/>
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="40"/>
-        <RowDefinition Height="*"/>
-      </Grid.RowDefinitions>
-      <Grid x:Name="CaptionBar" Margin="18,0,10,0">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="150"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal">
-          <Border Width="16" Height="16" CornerRadius="5" Background="{DynamicResource Ui.Accent}" VerticalAlignment="Center"/>
-          <TextBlock Text="{l:Tr Shell.Brand}" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,0,0"/>
-        </StackPanel>
-        <Grid Grid.Column="1" Margin="0,0,8,0" HorizontalAlignment="Left">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <DockPanel VerticalAlignment="Center" MouseLeftButtonUp="OnMcpMenu">
-            <DockPanel.ContextMenu><ContextMenu><MenuItem x:Name="McpApprovalSwitch" Header="{l:Tr Settings.Approval}" IsCheckable="True" Click="OnApprovalMenu"/></ContextMenu></DockPanel.ContextMenu>
-            <Ellipse x:Name="McpStatusDot" Width="6" Height="6" Fill="{DynamicResource Ui.StatusIdle}" Margin="0,0,8,0"/>
-            <TextBlock x:Name="McpStatusText" Style="{StaticResource Glass.Muted}" FontSize="11.5"/>
-          </DockPanel>
-          <Button x:Name="PendingBadge" Grid.Column="1" Style="{StaticResource Shell.WarningPill}" Click="OnApprovals" Visibility="Collapsed" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
-          <Border x:Name="ApprovalOffPill" Grid.Column="2" Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.WarningSoft}" Visibility="Collapsed">
-            <TextBlock Text="{l:Tr Shell.ApprovalOff}" Foreground="{DynamicResource Ui.Orange}"/>
-          </Border>
-        </Grid>
-        <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-          <Button x:Name="ExportDiagnostics" Content="{l:Tr Shell.Diagnostics}" Style="{StaticResource Glass.Button}" Height="28" FontSize="11.5" Click="OnDiagnostics" Margin="0,0,8,0"/>
-          <Button x:Name="SettingsButton" Content="{l:Tr Shell.Settings}" Style="{StaticResource Glass.Button}" Height="28" FontSize="11.5" Padding="11.5,0" Click="OnSettings" Margin="0,0,8,0"/>
-          <Button x:Name="MinimizeWindowButton" Style="{StaticResource Shell.WindowButton}" Click="OnMinimize">
-            <Path Width="10" Height="10" Data="M0,5 L10,5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
-          </Button>
-          <Button x:Name="MaximizeWindowButton" Style="{StaticResource Shell.WindowButton}" Click="OnMaximize">
-            <Path Width="10" Height="10" Data="M0.5,0.5 H9.5 V9.5 H0.5 Z" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
-          </Button>
-          <Button x:Name="CloseWindowButton" Style="{StaticResource Shell.WindowButton}" Click="OnClose">
-            <Path Width="10" Height="10" Data="M0.5,0.5 L9.5,9.5 M9.5,0.5 L0.5,9.5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
-          </Button>
-        </StackPanel>
-      </Grid>
-      <Grid Grid.Row="1" Margin="20,8,20,20">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="184"/>
-          <ColumnDefinition Width="16"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Border x:Name="RailCard" Style="{StaticResource Glass.Card}" Effect="{x:Null}" Background="{DynamicResource Ui.SidebarBackground}" Padding="8,12">
-          <DockPanel>
-            <TextBlock x:Name="RailVersion" DockPanel.Dock="Bottom" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}" FontSize="10.5" Margin="12,8,12,2"/>
-            <StackPanel>
-              <TextBlock Text="{l:Tr Shell.Pages}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.TertiaryLabel}" FontSize="10" FontWeight="Bold" Height="14" Margin="12,4,12,10"/>
-              <RadioButton x:Name="RailMcp" Content="{l:Tr Desktop.Configuration}" GroupName="Rail" Tag="Mcp" Style="{StaticResource Shell.RailItem}" Click="OnRailClick"/>
-              <RadioButton x:Name="RailEngineering" Content="{l:Tr Shell.Engineering}" GroupName="Rail" Tag="Engineering" Style="{StaticResource Shell.RailItem}" Click="OnRailClick"/>
-              <Border BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="1,0,0,0" CornerRadius="10" Margin="14,0,0,4">
-                <RadioButton x:Name="RailBlocks" Content="{l:Tr Tree.ProgramBlocks}" GroupName="Rail" Tag="Blocks" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Margin="0" Height="28" FontSize="12" Padding="10,0"/>
-              </Border>
-              <Border BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="1,0,0,0" CornerRadius="10" Margin="14,0,0,4">
-                <RadioButton x:Name="RailVersionControl" Content="{l:Tr Shell.VersionControl}" GroupName="Rail" Tag="VersionControl" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Margin="0" Height="28" FontSize="12" Padding="10,0"/>
-              </Border>
-              <RadioButton x:Name="RailCalls" Content="{l:Tr Shell.Calls}" GroupName="Rail" Tag="Calls" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Height="34" Margin="0,0,0,3"/>
-              <RadioButton x:Name="RailAudit" Content="{l:Tr Shell.Audit}" GroupName="Rail" Tag="Audit" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Height="34" Margin="0,0,0,3"/>
-              <RadioButton x:Name="RailEnvironment" Content="{l:Tr Shell.Environment}" GroupName="Rail" Tag="Environment" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Height="34" Margin="0,0,0,3"/>
-              <RadioButton x:Name="RailLog" Content="{l:Tr Tab.Log}" GroupName="Rail" Tag="Log" Style="{StaticResource Shell.RailItem}" Click="OnRailClick" Height="34" Margin="0,0,0,3"/>
+  <Grid x:Name="Root" Background="{DynamicResource Primer.bg}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="12.5" TextElement.Foreground="{DynamicResource Primer.text}">
+    <Border Style="{StaticResource Primer.Frame}">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="44"/>
+          <RowDefinition Height="40"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+        <Border Style="{StaticResource Primer.HeaderBar}">
+          <Grid x:Name="CaptionBar" Margin="20,0,10,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+              <Border VerticalAlignment="Center" Style="{StaticResource Primer.BrandDot}"/>
+              <TextBlock Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" FontSize="13"/>
             </StackPanel>
-          </DockPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+              <Button x:Name="ExportDiagnostics" Content="{l:Tr Shell.Diagnostics}" Style="{StaticResource Primer.Secondary}" Click="OnDiagnostics" Margin="0,0,8,0"/>
+              <Button x:Name="SettingsButton" Content="{l:Tr Shell.Settings}" Style="{StaticResource Primer.Secondary}" Click="OnSettings" Margin="0,0,8,0"/>
+              <Button x:Name="MinimizeWindowButton" Style="{StaticResource Primer.WindowButton}" Click="OnMinimize">
+                <Path Width="10" Height="10" Data="M0,5 L10,5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+              </Button>
+              <Button x:Name="MaximizeWindowButton" Style="{StaticResource Primer.WindowButton}" Click="OnMaximize">
+                <Path Width="10" Height="10" Data="M0.5,0.5 H9.5 V9.5 H0.5 Z" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+              </Button>
+              <Button x:Name="CloseWindowButton" Style="{StaticResource Primer.WindowButton}" Click="OnClose">
+                <Path Width="10" Height="10" Data="M0.5,0.5 L9.5,9.5 M9.5,0.5 L0.5,9.5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+              </Button>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+              <TextBlock Text="/" Style="{StaticResource Primer.Text.textFaint}"/>
+              <TextBlock x:Name="CurrentPageTitle" FontSize="13" FontWeight="SemiBold" Margin="12,0,0,0"/>
+            </StackPanel>
+          </Grid>
         </Border>
-        <Grid Grid.Column="2">
+        <Border Grid.Row="1" Style="{StaticResource Primer.TabStrip}">
+          <StackPanel Orientation="Horizontal" Margin="16,0">
+            <RadioButton x:Name="RailMcp" Content="{l:Tr Desktop.Configuration}" GroupName="Pages" Tag="Mcp" Style="{StaticResource Primer.Tab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailEngineering" Content="{l:Tr Shell.Engineering}" GroupName="Pages" Tag="Engineering" Style="{StaticResource Primer.Tab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailCalls" GroupName="Pages" Tag="Calls" Style="{StaticResource Primer.Tab}" Click="OnRailClick">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{l:Tr Shell.Calls}"/>
+                <Border x:Name="CallsCountBadge" Style="{StaticResource Primer.TabCountBadge}" Tag="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Margin="6,0,0,0">
+                  <TextBlock Text="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Style="{StaticResource Primer.CountText}"/>
+                </Border>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="RailAudit" Content="{l:Tr Shell.Audit}" GroupName="Pages" Tag="Audit" Style="{StaticResource Primer.Tab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailEnvironment" Content="{l:Tr Shell.Environment}" GroupName="Pages" Tag="Environment" Style="{StaticResource Primer.Tab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailLog" Content="{l:Tr Tab.Log}" GroupName="Pages" Tag="Log" Style="{StaticResource Primer.Tab}" Click="OnRailClick"/>
+          </StackPanel>
+        </Border>
+        <Border x:Name="SubTabs" Grid.Row="2" Style="{StaticResource Primer.SubTabStrip}">
+          <StackPanel Orientation="Horizontal" Margin="20,0">
+            <RadioButton x:Name="RailOverview" Content="{l:Tr Shell.Overview}" Tag="Engineering" GroupName="ProjectPages" Style="{StaticResource Primer.SubTab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailBlocks" Content="{l:Tr Tree.ProgramBlocks}" Tag="Blocks" GroupName="ProjectPages" Style="{StaticResource Primer.SubTab}" Click="OnRailClick"/>
+            <RadioButton x:Name="RailVersionControl" Content="{l:Tr Shell.VersionControl}" Tag="VersionControl" GroupName="ProjectPages" Style="{StaticResource Primer.SubTab}" Click="OnRailClick"/>
+          </StackPanel>
+        </Border>
+        <Grid Grid.Row="3" Margin="24,20">
           <ContentControl x:Name="ConfigurationHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
+          <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
+          <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
+          <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
           <Grid x:Name="EngineeringPage">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="284"/></Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="20"/>
+              <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
             <views:ProjectOperationsView x:Name="OperationsContent" Tag="{Binding Tag,ElementName=Root}"/>
             <views:BlocksView x:Name="BlocksContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             <views:EngineeringSideView x:Name="EngineeringSideContent" Grid.Column="2" Tag="{Binding Tag,ElementName=Root}"/>
             <views:VersionControlView x:Name="VersionControlContent" Grid.ColumnSpan="3" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             <views:LogView x:Name="LogContent" Grid.ColumnSpan="3" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
           </Grid>
-          <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
-          <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
-          <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
         </Grid>
+        <Border Grid.Row="4" Style="{StaticResource Primer.StatusBar}">
+          <DockPanel LastChildFill="True" Margin="12,0">
+            <StackPanel x:Name="StatusActions" Orientation="Horizontal" DockPanel.Dock="Right">
+              <Button x:Name="PendingBadge" Style="{StaticResource Primer.PendingBadge}" Click="OnApprovals" Visibility="Collapsed" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+              <Border x:Name="ApprovalOffPill" Style="{StaticResource Primer.WarningBadge}" Visibility="Collapsed">
+                <TextBlock Text="{l:Tr Shell.ApprovalOff}" Style="{StaticResource Primer.Text.warn}"/>
+              </Border>
+              <TextBlock x:Name="RailVersion" Style="{StaticResource Primer.Mono}" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel x:Name="StatusInformation" Orientation="Horizontal">
+              <DockPanel VerticalAlignment="Center" MouseLeftButtonUp="OnMcpMenu">
+                <DockPanel.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem x:Name="McpApprovalSwitch" Header="{l:Tr Settings.Approval}" IsCheckable="True" Click="OnApprovalMenu"/>
+                  </ContextMenu>
+                </DockPanel.ContextMenu>
+                <Ellipse x:Name="McpStatusDot" Width="7" Height="7" Fill="{DynamicResource Primer.textFaint}" Margin="0,0,8,0"/>
+                <TextBlock x:Name="McpStatusText" Style="{StaticResource Primer.Muted}" FontSize="11.5"/>
+              </DockPanel>
+              <Border Height="14" Margin="12,0" Style="{StaticResource Primer.VerticalDivider}"/>
+              <TextBlock x:Name="SessionStatus" Style="{StaticResource Primer.Mono}"/>
+            </StackPanel>
+          </DockPanel>
+        </Border>
       </Grid>
-    </Grid>
-    <Border VerticalAlignment="Bottom" Margin="246,0,360,20" CornerRadius="10" Background="{DynamicResource Ui.WindowBackground}" Padding="12,8" Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}">
+    </Border>
+    <Border VerticalAlignment="Bottom" Margin="24,0,348,44" Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Container}">
       <StackPanel>
-        <TextBlock Text="{Binding Activity.Status}" Style="{StaticResource Glass.Muted}"/>
+        <TextBlock Text="{Binding Activity.Status}" Style="{StaticResource Primer.Muted}"/>
         <ProgressBar Height="3" Margin="0,6,0,0" Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
       </StackPanel>
     </Border>
-    <Grid x:Name="DrawerOverlay" Margin="0,40,0,0" Visibility="Collapsed">
-      <Border Background="{DynamicResource Ui.Overlay}" MouseLeftButtonDown="OnDrawerBackdrop"/>
-      <Border x:Name="DrawerPanel" Width="400" Margin="0,8,12,12" HorizontalAlignment="Right" Background="{DynamicResource Ui.MenuBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Effect="{DynamicResource Glass.DrawerShadow}">
+    <Grid x:Name="DrawerOverlay" Visibility="Collapsed">
+      <Border MouseLeftButtonDown="OnDrawerBackdrop" Style="{StaticResource Primer.Overlay}"/>
+      <Border x:Name="DrawerPanel" Width="400" Margin="0,96,16,44" HorizontalAlignment="Right" Style="{StaticResource Primer.Drawer}">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="58"/>
             <RowDefinition Height="*"/>
           </Grid.RowDefinitions>
-          <Border BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="0,0,0,1" Padding="22,0">
+          <Border Padding="22,0" Style="{StaticResource Primer.Divider}">
             <DockPanel x:Name="DrawerHeading" DataContext="{x:Null}">
-              <Button DockPanel.Dock="Right" Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnCloseDrawer"/>
+              <Button DockPanel.Dock="Right" Content="" Style="{StaticResource Primer.CaptionButton}" Click="OnCloseDrawer"/>
               <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock x:Name="DrawerTitle" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" MaxWidth="270"/>
-                <TextBlock x:Name="DrawerCount" Text="{Binding PendingCount}" Style="{StaticResource Glass.Muted}" FontSize="12" Margin="10,0,0,0" Visibility="Collapsed"/>
-                <Border x:Name="DrawerCallResult" Style="{StaticResource Feature.Tint}" Tag="{Binding SelectedCall.Tone}" Padding="8,3" Margin="10,0,0,0" Visibility="Collapsed">
-                  <TextBlock Text="{Binding SelectedCall.Result}" Style="{StaticResource Feature.Text}" Tag="{Binding SelectedCall.Tone}" FontSize="10.5" FontWeight="Bold"/>
+                <TextBlock x:Name="DrawerTitle" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="270"/>
+                <Border Style="{StaticResource Primer.PendingCountBadge}" Tag="{Binding Approvals.PendingCount}" Margin="10,0,0,0">
+                  <TextBlock x:Name="DrawerCount" Text="{Binding PendingCount}" Style="{StaticResource Primer.CountText}" Visibility="Collapsed"/>
                 </Border>
+                <ContentControl x:Name="DrawerCallResult" Style="{StaticResource Primer.StatusChip}" Tag="{Binding SelectedCall.Tone}" Margin="10,0,0,0" Visibility="Collapsed">
+                  <TextBlock Text="{Binding SelectedCall.Result}" Style="{StaticResource Primer.StatusText}"/>
+                </ContentControl>
               </StackPanel>
             </DockPanel>
           </Border>
@@ -143,27 +163,28 @@
         </Grid>
       </Border>
     </Grid>
-    <Grid x:Name="ConfirmOverlay" Visibility="Collapsed" Background="{DynamicResource Ui.DialogOverlay}">
-      <Border Width="420" VerticalAlignment="Center" Background="{DynamicResource Ui.MenuBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Padding="24,22" Effect="{DynamicResource Glass.DrawerShadow}">
+    <Grid x:Name="ConfirmOverlay" Visibility="Collapsed">
+      <Border Style="{StaticResource Primer.Overlay}"/>
+      <Border Width="420" VerticalAlignment="Center" Style="{StaticResource Primer.Dialog}">
         <StackPanel>
-          <TextBlock Text="{l:Tr Settings.ConfirmOffTitle}" FontSize="15" FontWeight="Bold"/>
-          <TextBlock Text="{l:Tr Settings.ConfirmOffDescription}" FontSize="12.5" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" Margin="0,12,0,18"/>
+          <TextBlock Text="{l:Tr Settings.ConfirmOffTitle}" FontSize="15" FontWeight="SemiBold"/>
+          <TextBlock Text="{l:Tr Settings.ConfirmOffDescription}" FontSize="12.5" TextWrapping="Wrap" Margin="0,12,0,18" Style="{StaticResource Primer.Text.textMuted}"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="CancelApprovalOff" Content="{l:Tr Shell.Cancel}" Style="{StaticResource Glass.Button}" Click="OnCancelApprovalOff" Margin="0,0,8,0"/>
-            <Button x:Name="ConfirmApprovalOff" Content="{l:Tr Settings.TurnOff}" Style="{StaticResource Glass.Button}" Background="{DynamicResource Ui.Orange}" Foreground="{DynamicResource Ui.OnWarning}" Click="OnConfirmApprovalOff"/>
+            <Button x:Name="CancelApprovalOff" Content="{l:Tr Shell.Cancel}" Style="{StaticResource Primer.Secondary}" Click="OnCancelApprovalOff" Margin="0,0,8,0"/>
+            <Button x:Name="ConfirmApprovalOff" Content="{l:Tr Settings.TurnOff}" Style="{StaticResource Primer.WarningAction}" Click="OnConfirmApprovalOff"/>
           </StackPanel>
         </StackPanel>
       </Border>
     </Grid>
-    <Border x:Name="Toast" Width="320" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" Padding="14,12" Background="{DynamicResource Ui.MenuBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="14" Visibility="Collapsed" MouseLeftButtonDown="OnToastClick">
+    <Border x:Name="Toast" Width="320" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,44" Visibility="Collapsed" MouseLeftButtonDown="OnToastClick" Style="{StaticResource Primer.Toast}">
       <DockPanel>
-        <Button Content="" DockPanel.Dock="Right" Style="{StaticResource Glass.CaptionButton}" Click="OnDismissToast"/>
-        <Border Width="34" Height="34" Background="{DynamicResource Ui.WarningSoft}" CornerRadius="10" Margin="0,0,12,0">
-          <TextBlock Text="!" Foreground="{DynamicResource Ui.Orange}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Button Content="" DockPanel.Dock="Right" Style="{StaticResource Primer.CaptionButton}" Click="OnDismissToast"/>
+        <Border Width="34" Height="34" Margin="0,0,12,0" Style="{StaticResource Primer.WarningIcon}">
+          <TextBlock Text="!" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource Primer.Text.warn}"/>
         </Border>
         <StackPanel>
-          <TextBlock x:Name="ToastTitle" FontSize="12.5" FontWeight="Bold"/>
-          <TextBlock x:Name="ToastMessage" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          <TextBlock x:Name="ToastTitle" FontSize="12.5" FontWeight="SemiBold"/>
+          <TextBlock x:Name="ToastMessage" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,2,0,0" FontSize="11"/>
         </StackPanel>
       </DockPanel>
     </Border>

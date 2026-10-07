@@ -53,17 +53,19 @@ The GUI build also builds and deploys the API-independent bridge. Native adapter
 by the explicit SDK build above. Runtime compiler downloads and automatic adapter compilation
 are removed. Doctor remains available without loading a native TIA session.
 
-## Glass Layers interface
+## Primer interface
 
-The native WPF view uses the [Glass styles](Gui/Themes/Glass.xaml) and bundled [OFL fonts](Gui/Fonts). The minimum
-window size is 1200 x 780; the center column expands with the window. One title-bar menu
-provides Project, View, Tools and Help. View selects English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
-project session, selection and commands. Ctrl+S saves the project; Ctrl+1 and Ctrl+2 switch
-between Engineering and MCP & clients, also available from View. The caption shows the current
-page beside the app title and updates with the language; the taskbar title remains the app name.
-The release picker and window buttons remain in the title bar, with free space for dragging.
-Help exposes updates, client instructions and About from either page. Save both configurations
-is a visible button in the AI clients card header on the configuration page.
+The native WPF view uses one [Primer vocabulary](Gui/Themes/Primer.xaml), light/dark palettes,
+Segoe UI with bundled Noto Sans SC, and bundled JetBrains Mono for values and code.
+The minimum window size is 1200 x 780. Underline tabs sit below the 44-pixel header;
+Engineering adds Overview, Program blocks and Version control sub-tabs. The body has
+an expanding main column and a 300-pixel side column. The 28-pixel status bar shows the
+MCP state, TIA version/address/project, and a clickable pending-approval badge.
+Engine & MCP settings opens the settings drawer with English/中文 and Auto/Light/Dark
+choices. Language and theme changes keep the same ViewModel, session, selection and commands.
+Ctrl+S saves the project; Ctrl+1 selects MCP & clients, Ctrl+2 selects Engineering, and
+Ctrl+3–8 select the remaining pages. The release picker lives in the installation card
+and project options. Save both configurations is in the clients container footer.
 
 Cards, logs, local diffs, summaries, menus and application message dialogs follow the selected
 palette. System file/folder pickers keep the Windows shell appearance.
@@ -78,9 +80,10 @@ Compile and inspection cards display results already recorded by the existing op
 Clearing that log returns the cards to Not run. Object names, paths, code and native diagnostic
 messages keep their original text when the interface language changes. The MCP page configures clients and service lifecycle; it is not a generic tool invoker.
 
-Set `TIA_GLASS_SCREENSHOTS` to a local output directory before running the WPF tests below to
+Set `TIA_PRIMER_SCREENSHOTS` to a local output directory before running the WPF tests below to
 capture the English and Chinese fixtures in both themes. These are actual WPF renderings at
-1200 x 780 with synthetic data, without connecting to TIA.
+1200 x 780 with synthetic data, without connecting to TIA. `TIA_WORKBENCH_RENDER_DIR`
+enables the full page, drawer, toast and confirmation matrix in both languages and themes.
 
 ## Bridge channel
 

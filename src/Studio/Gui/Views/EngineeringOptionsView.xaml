@@ -1,63 +1,63 @@
 <UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringOptionsView" x:Name="PageRoot">
-  <Grid x:Name="OptionsOverlay" Visibility="Collapsed" Background="{DynamicResource Ui.Overlay}">
-    <Border x:Name="OptionsPanel" Style="{StaticResource Glass.Card}" Effect="{DynamicResource Glass.DrawerShadow}" Background="{DynamicResource Ui.MenuBackground}" Padding="24" Width="400" HorizontalAlignment="Right" Margin="0,0,0,0" VerticalAlignment="Stretch">
+  <Grid x:Name="OptionsOverlay" Visibility="Collapsed" Background="{DynamicResource Primer.text}">
+    <Border x:Name="OptionsPanel" Style="{StaticResource Primer.Container}" Width="400" HorizontalAlignment="Right" Margin="0,0,0,0" VerticalAlignment="Stretch">
       <Grid>
         <Grid.RowDefinitions>
-          <RowDefinition Height="32" />
-          <RowDefinition Height="*" />
+          <RowDefinition Height="32"/>
+          <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="OptionsTitle" Style="{StaticResource Glass.Heading}" />
-        <Button Content="" Click="OnCloseOptions" Style="{StaticResource Glass.CaptionButton}" HorizontalAlignment="Right" />
+        <TextBlock x:Name="OptionsTitle" Style="{StaticResource Primer.ContainerTitle}"/>
+        <Button Content="" Click="OnCloseOptions" Style="{StaticResource Primer.CaptionButton}" HorizontalAlignment="Right"/>
         <StackPanel Grid.Row="1">
           <StackPanel x:Name="ProjectOptions">
-            <ComboBox x:Name="ReleasePicker" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Width="110" HorizontalAlignment="Left" />
-            <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Glass.Muted}" Margin="0,8,0,6" />
+            <ComboBox x:Name="ReleasePicker" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.Select}" Width="110" HorizontalAlignment="Left"/>
+            <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Glass.Button}" Margin="8,0,0,0" />
-              <TextBox Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Glass.Field}" />
+              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <TextBox Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
             <WrapPanel Margin="0,12">
-              <CheckBox Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Glass.Check}" Margin="0,0,20,0" />
-              <CheckBox Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Glass.Check}" />
+              <CheckBox Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
+              <CheckBox Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Primer.Checkbox}"/>
             </WrapPanel>
             <StackPanel Orientation="Horizontal">
-              <Button Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Glass.Button}" Margin="0,0,8,0" />
-              <Button Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Command="{Binding Session.RunDoctor}" Style="{StaticResource Glass.Button}" Margin="0,0,8,0" />
-              <Button Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}" Command="{Binding Session.Connect}" Style="{StaticResource Glass.Primary}" Margin="0,0,8,0" />
-              <Button Content="{l:Tr Common.Open}" Command="{Binding Session.OpenProject}" Style="{StaticResource Glass.Primary}" />
+              <Button Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+              <Button Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Command="{Binding Session.RunDoctor}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+              <Button Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}" Command="{Binding Session.Connect}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
+              <Button Content="{l:Tr Common.Open}" Command="{Binding Session.OpenProject}" Style="{StaticResource Primer.Run}"/>
             </StackPanel>
-            <TextBlock Text="{l:Tr Sidebar.Devices}" Style="{StaticResource Glass.Heading}" Margin="0,20,0,8" />
-            <TextBlock Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}" />
-            <TreeView ItemsSource="{Binding Engineering.DeviceTree}" SelectedItemChanged="OnDeviceSelected" MaxHeight="200" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource Ui.DeviceNodeTemplate}" />
+            <TextBlock Text="{l:Tr Sidebar.Devices}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,20,0,8"/>
+            <TextBlock Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}"/>
+            <TreeView ItemsSource="{Binding Engineering.DeviceTree}" SelectedItemChanged="OnDeviceSelected" MaxHeight="200" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource Ui.DeviceNodeTemplate}"/>
           </StackPanel>
           <StackPanel x:Name="ExportOptions">
-            <TextBlock Text="{l:Tr Blocks.ExportTo}" Style="{StaticResource Glass.Muted}" Margin="0,8,0,6" />
+            <TextBlock Text="{l:Tr Blocks.ExportTo}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput" Style="{StaticResource Glass.Button}" Margin="8,0,0,0" />
-              <TextBox Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Glass.Field}" />
+              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <TextBox Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
-            <CheckBox Content="{l:Tr Blocks.SourceFormat}" ToolTip="{l:Tr Blocks.SourceFormat.Tip}" IsChecked="{Binding Engineering.SourceFormat}" Style="{StaticResource Glass.Check}" Margin="0,12" />
+            <CheckBox Content="{l:Tr Blocks.SourceFormat}" ToolTip="{l:Tr Blocks.SourceFormat.Tip}" IsChecked="{Binding Engineering.SourceFormat}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
             <StackPanel Orientation="Horizontal">
-              <Button Content="{l:Tr Blocks.Export}" Command="{Binding Engineering.Export}" Style="{StaticResource Glass.Primary}" Margin="0,0,8,0" />
-              <Button Content="{l:Tr Toolbar.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Glass.Button}" />
+              <Button Content="{l:Tr Blocks.Export}" Command="{Binding Engineering.Export}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
+              <Button Content="{l:Tr Toolbar.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}"/>
             </StackPanel>
           </StackPanel>
           <StackPanel x:Name="InspectOptions">
-            <TextBlock Text="{l:Tr Glass.NamingPattern}" Style="{StaticResource Glass.Muted}" Margin="0,8,0,6" />
-            <TextBox Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Glass.Field}" />
-            <Button Content="{l:Tr Toolbar.Inspect}" Command="{Binding Engineering.Inspect}" Style="{StaticResource Glass.Primary}" HorizontalAlignment="Left" Margin="0,12,0,0" />
+            <TextBlock Text="{l:Tr Primer.NamingPattern}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
+            <TextBox Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
+            <Button Content="{l:Tr Toolbar.Inspect}" Command="{Binding Engineering.Inspect}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
           </StackPanel>
           <StackPanel x:Name="WorkspaceOptions">
-            <TextBlock Text="{l:Tr Vc.New}" Style="{StaticResource Glass.Muted}" Margin="0,8,0,6" />
-            <TextBox Text="{Binding VersionControl.NewWorkspaceName,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Glass.Field}" />
-            <TextBlock Text="{l:Tr Vc.In}" Style="{StaticResource Glass.Muted}" Margin="0,12,0,6" />
+            <TextBlock Text="{l:Tr Vc.New}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
+            <TextBox Text="{Binding VersionControl.NewWorkspaceName,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
+            <TextBlock Text="{l:Tr Vc.In}" Style="{StaticResource Primer.Muted}" Margin="0,12,0,6"/>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseWorkspace" Style="{StaticResource Glass.Button}" Margin="8,0,0,0" />
-              <TextBox Text="{Binding VersionControl.NewWorkspaceFolder,UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:Tr Vc.Folder.Tip}" Style="{StaticResource Glass.Field}" />
+              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseWorkspace" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <TextBox Text="{Binding VersionControl.NewWorkspaceFolder,UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:Tr Vc.Folder.Tip}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
-            <Button Content="{l:Tr Vc.Create}" Command="{Binding VersionControl.VcCreate}" Style="{StaticResource Glass.Primary}" HorizontalAlignment="Left" Margin="0,12,0,0" />
+            <Button Content="{l:Tr Vc.Create}" Command="{Binding VersionControl.VcCreate}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
           </StackPanel>
-          <TextBlock Text="{Binding Activity.Status}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" Margin="0,16,0,0" />
+          <TextBlock Text="{Binding Activity.Status}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,16,0,0"/>
         </StackPanel>
       </Grid>
     </Border>

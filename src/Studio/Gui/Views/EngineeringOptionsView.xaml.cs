@@ -13,7 +13,7 @@ public partial class EngineeringOptionsView : UserControl
     {
         foreach (var item in new[] { ProjectOptions, ExportOptions, InspectOptions, WorkspaceOptions })
             item.Visibility = item.Name == section + "Options" ? Visibility.Visible : Visibility.Collapsed;
-        string key = section switch { "Project" => "Project.Label", "Export" => "Glass.Transfer", "Inspect" => "Toolbar.Inspect", _ => "Glass.NewWorkspace" };
+        string key = section switch { "Project" => "Project.Label", "Export" => "Primer.Transfer", "Inspect" => "Toolbar.Inspect", _ => "Primer.NewWorkspace" };
         OptionsTitle.SetBinding(TextBlock.TextProperty, Localization.TrExtension.CreateBinding(key));
         OptionsOverlay.Visibility = Visibility.Visible;
     }

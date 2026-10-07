@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,32 +34,30 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
     {
         string output = Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!);
         Directory.CreateDirectory(output);
-        foreach (var state in new[]
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+        foreach (var fixture in new[]
         {
-            ("ops-zh-light", "Engineering", false, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("ops-zh-light-connected", "Engineering", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("blocks-zh-light", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("atlas-running-zh-light", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Light, "running"),
-            ("atlas-done-zh-light", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Light, "done"),
-            ("atlas-failed-zh-light", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Light, "failed"),
-            ("vc-zh-light", "VersionControl", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("log-zh-light", "Log", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("log-zh-dark", "Log", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
-            ("ops-zh-dark-connected", "Engineering", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
-            ("blocks-zh-dark", "Blocks", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
-            ("vc-zh-dark", "VersionControl", true, false, AppLanguage.Chinese, AppTheme.Dark, ""),
-            ("ops-results-zh-light", "Engineering", true, true, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("blocks-results-zh-dark", "Blocks", true, true, AppLanguage.Chinese, AppTheme.Dark, ""),
-            ("vc-empty-zh-light", "VersionControl", true, false, AppLanguage.Chinese, AppTheme.Light, ""),
-            ("blocks-en-light", "Blocks", true, false, AppLanguage.English, AppTheme.Light, ""),
+            ("ops", "Engineering", false, false, ""),
+            ("ops-connected", "Engineering", true, false, ""),
+            ("ops-results", "Engineering", true, true, ""),
+            ("blocks", "Blocks", true, false, ""),
+            ("blocks-results", "Blocks", true, true, ""),
+            ("atlas-running", "Blocks", true, false, "running"),
+            ("atlas-done", "Blocks", true, false, "done"),
+            ("atlas-failed", "Blocks", true, false, "failed"),
+            ("vc", "VersionControl", true, false, ""),
+            ("vc-empty", "VersionControl", true, false, ""),
+            ("log", "Log", true, false, ""),
         })
         {
+            var state = (fixture.Item1 + "-" + (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant(), fixture.Item2, fixture.Item3, fixture.Item4, language, theme, fixture.Item5);
             wpf.RunWithLanguage(state.Item5, () =>
             {
                 using var trace = new BindingPathTests.BindingTrace();
                 var previous = ThemeManager.Current.Theme;
                 ThemeManager.Current.Theme = state.Item6;
-                var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, state.Item1 != "vc-empty-zh-light");
+                var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, !state.Item1.StartsWith("vc-empty", StringComparison.Ordinal));
                 if (state.Item2 == "Log")
                 {
                     model.Activity.Append("[INFO] 工程已加载 · Project loaded", Services.WorkbenchActivity.Severity.Info);
@@ -84,9 +83,27 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         Assert.Equal(Visibility.Visible, bar.Visibility);
                         Assert.True(bar.ActualHeight > 0);
                     }
+                    else if (state.Item2 == "Blocks")
+                    {
+                        var blocks = (BlocksView)window.FindName("BlocksContent");
+                        Assert.Equal(Visibility.Collapsed, ((Border)blocks.FindName("AtlasFooter")).Visibility);
+                        var card = (Border)blocks.FindName("BlocksCard");
+                        var rows = (Grid)card.Child;
+                        var footer = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 3);
+                        Assert.InRange(card.ActualHeight - footer.TranslatePoint(new Point(0, footer.ActualHeight), card).Y, 1, 3);
+                    }
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
                     if (state.Item2 is "Engineering" or "Blocks")
-                        Assert.Equal(284, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
+                    {
+                        Assert.Equal(300, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
+                        var tail = (Controls.LogTailView)((EngineeringSideView)window.FindName("EngineeringSideContent")).FindName("LogTail");
+                        if (tail.Items.Count > 0 && tail.ActualHeight >= 24)
+                        {
+                            var last = (ListBoxItem)tail.ItemContainerGenerator.ContainerFromIndex(tail.Items.Count - 1);
+                            Assert.NotNull(last);
+                            Assert.InRange(last.TranslatePoint(new Point(), tail).Y, 0, tail.ActualHeight - last.ActualHeight);
+                        }
+                    }
                 }
                 finally { window.Close(); ThemeManager.Current.Theme = previous; }
                 Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);

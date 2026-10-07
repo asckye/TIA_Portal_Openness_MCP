@@ -1,14 +1,8 @@
-Manrope: https://github.com/google/fonts/tree/main/ofl/manrope
-Static instances at weights 400, 500, 600 and 700, generated with fontTools 4.66.1.
 JetBrains Mono: https://github.com/JetBrains/JetBrainsMono/tree/master/fonts/ttf
-Downloaded 2026-10-03; both families licensed under SIL OFL 1.1.
+Downloaded 2026-10-03; the family licensed under SIL OFL 1.1.
 
 JetBrainsMono-Medium.ttf  d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109
 JetBrainsMono-Regular.ttf  e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1
-Manrope-Bold.ttf  fbd7be7920420c6b578fed97bf3cf5f290ccc57d6d5133f2e7b86f8e920bc428
-Manrope-Medium.ttf  35bdfc2887027213040e5767c6bc15a0294686a637fff516e5517e51bd59d577
-Manrope-Regular.ttf  d51189da4d8784379aa44ef261730c24c241e98ed272d1c4c513789a1f448f6e
-Manrope-SemiBold.ttf  857ad79181f4aff33a51bdaaeedbae6595888086580295ff438fc331c7ba4dba
 
 Noto Sans SC: https://github.com/notofonts/noto-cjk (Sans/SubsetOTF/SC)
 Downloaded 2026-10-05; licensed under SIL OFL 1.1.

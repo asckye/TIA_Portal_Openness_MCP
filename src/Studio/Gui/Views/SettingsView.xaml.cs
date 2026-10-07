@@ -89,7 +89,7 @@ public partial class SettingsView : UserControl
     private async Task SaveApproval(Action action)
     {
         try { await Task.Run(action); }
-        catch (Exception ex) { Controls.GlassMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
         UpdateApproval();
     }
 
@@ -103,7 +103,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            Controls.GlassMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

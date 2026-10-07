@@ -166,8 +166,8 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 var otherFiles = Descendants<ItemsControl>(host).Single(items => BindingOperations.GetBinding(items, ItemsControl.ItemsSourceProperty)?.Path.Path == "Tag.OtherMappedFiles");
                 RealizeItems(host, otherFiles, 1);
 
-                var preview = Descendants<Button>(host).Single(button => ReferenceEquals(button.Style, window.FindResource("Glass.SyncPreview")));
-                var run = Descendants<Button>(host).Single(button => ReferenceEquals(button.Style, window.FindResource("Glass.SyncRun")));
+                var preview = Descendants<Button>(host).Single(button => ReferenceEquals(button.Style, window.FindResource("Primer.SyncPreview")));
+                var run = Descendants<Button>(host).Single(button => ReferenceEquals(button.Style, window.FindResource("Primer.SyncRun")));
                 foreach (bool toWorkspace in new[] { true, false, true })
                 {
                     Find<RadioButton>(window, "ToWorkspace").IsChecked = toWorkspace;
@@ -192,7 +192,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 {
                     Find<RadioButton>(configuration, mode).IsChecked = true;
                     Layout(host);
-                    Assert.Equal(960, configuration.ActualWidth);
+                    Assert.Equal(1150, configuration.ActualWidth);
                     var clients = Find<ListBox>(configuration, "ClientChoices");
                     RealizeItems(host, clients, clients.Items.Count);
                     RealizePickers(configuration);

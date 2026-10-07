@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using TiaDesktop.Glass;
+using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Settings;
@@ -124,7 +124,7 @@ public sealed class ResponsivenessTests(WpfContext wpf)
         => Assert.Equal(expected, ThemeManager.ResolveLowEffects(mode, tier, remote, vm));
 
     [Fact]
-    public void Low_effects_switch_removes_effects_and_round_trips_without_rebuilding_the_window()
+    public void Compatibility_effects_setting_round_trips_and_Primer_has_no_effects_in_either_mode()
     {
         wpf.Run(() =>
         {
@@ -132,12 +132,12 @@ public sealed class ResponsivenessTests(WpfContext wpf)
             try
             {
                 manager.LowEffects = LowEffectsMode.Off;
-                var card = new Border { Style = (Style)Application.Current.FindResource("Glass.Card") };
+                var card = new Border { Style = (Style)Application.Current.FindResource("Primer.Container") };
                 var host = new Window { Content = card };
-                Assert.NotNull(card.Effect);
+                Assert.Null(card.Effect);
                 manager.LowEffects = LowEffectsMode.On; WpfContext.Drain(); Assert.Null(card.Effect);
-                Assert.Equal(System.Windows.Controls.Primitives.PopupAnimation.None, Application.Current.FindResource("Glass.PopupAnimation"));
-                manager.LowEffects = LowEffectsMode.Off; WpfContext.Drain(); Assert.NotNull(card.Effect); host.Close();
+                Assert.Equal(System.Windows.Controls.Primitives.PopupAnimation.None, Application.Current.FindResource("Primer.PopupAnimation"));
+                manager.LowEffects = LowEffectsMode.Off; WpfContext.Drain(); Assert.Null(card.Effect); host.Close();
                 string path = Path.Combine(Scratch(), "ui"); new UiSettings { LowEffects = LowEffectsMode.On }.Save(path);
                 Assert.Equal(LowEffectsMode.On, UiSettings.Load(path).LowEffects);
             }
@@ -150,7 +150,7 @@ public sealed class ResponsivenessTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var view = new GlassLogView { LogText = "12:34:56  first\n12:34:57  second\n" }; WpfContext.Drain();
+            var view = new WorkbenchLogView { LogText = "12:34:56  first\n12:34:57  second\n" }; WpfContext.Drain();
             var table = (Table)view.Document.Blocks.Single(); var row = table.RowGroups[0].Rows[1];
             view.LogText += "12:34:58  third\n"; WpfContext.Drain();
             Assert.Same(table, view.Document.Blocks.Single()); Assert.Same(row, table.RowGroups[0].Rows[1]);
@@ -165,7 +165,7 @@ public sealed class ResponsivenessTests(WpfContext wpf)
         wpf.Run(() =>
         {
             using var main = new MainViewModel(new FakeStudioClient(), new FakeDialogService());
-            using var results = new Controls.GlassResults(main); int notifications = 0;
+            using var results = new Controls.ResultPresentation(main); int notifications = 0;
             main.Activity.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(WorkbenchActivity.Log)) notifications++; };
             var rows = results.LogRows;
             for (int i = 0; i < 2000; i++) main.Activity.Append("entry-" + i);

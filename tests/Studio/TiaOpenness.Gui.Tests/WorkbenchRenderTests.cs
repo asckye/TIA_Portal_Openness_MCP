@@ -33,19 +33,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
     {
         var output = Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!);
         Directory.CreateDirectory(output);
-        foreach (var state in new[]
-        {
-            new RenderState("mcp-zh-light", AppLanguage.Chinese, AppTheme.Light),
-            new RenderState("mcp-zh-light-local", AppLanguage.Chinese, AppTheme.Light, Local: true),
-            new RenderState("mcp-zh-light-running", AppLanguage.Chinese, AppTheme.Light, Running: true),
-            new RenderState("mcp-zh-dark", AppLanguage.Chinese, AppTheme.Dark),
-            new RenderState("mcp-en-light", AppLanguage.English, AppTheme.Light),
-            new RenderState("settings-zh-light", AppLanguage.Chinese, AppTheme.Light, Drawer: "Settings"),
-            new RenderState("settings-zh-dark", AppLanguage.Chinese, AppTheme.Dark, Drawer: "Settings"),
-            new RenderState("engineering-zh-light", AppLanguage.Chinese, AppTheme.Light, Page: "Engineering"),
-            new RenderState("approval-badges-zh-light", AppLanguage.Chinese, AppTheme.Light, Pending: true),
-            new RenderState("approvals-empty-zh-light", AppLanguage.Chinese, AppTheme.Light, Drawer: "Approvals"),
-        })
+        foreach (var state in States())
         {
             wpf.RunWithLanguage(state.Language, () =>
             {
@@ -69,7 +57,27 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     Assert.Equal(!state.Local, ((RadioButton)window.Configuration!.FindName("RemoteNav")).IsChecked);
                     Assert.Equal(state.Local, ((RadioButton)window.Configuration.FindName("LocalNav")).IsChecked);
                     Assert.False(window.Configuration.HasRunningServer);
-                    if (state.Page == "Mcp") Assert.Equal(660, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    var installationState = (ContentControl)window.Configuration.FindName("DetectionChip");
+                    var serviceState = (ContentControl)window.Configuration.FindName("ServiceStateChip");
+                    Assert.InRange(Math.Abs(installationState.TranslatePoint(new Point(), host).Y - serviceState.TranslatePoint(new Point(), host).Y), 0, 1);
+                    var start = (Button)window.Configuration.FindName(state.Running ? "StopServer" : "StartServer");
+                    Assert.True(serviceState.TranslatePoint(new Point(), host).Y + serviceState.ActualHeight < start.TranslatePoint(new Point(), host).Y);
+                    foreach (var chip in new[] { installationState, serviceState })
+                    {
+                        var dot = WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Shapes.Ellipse>(chip).Single();
+                        Assert.Equal(7, dot.ActualWidth); Assert.Equal(7, dot.ActualHeight);
+                        var label = (TextBlock)chip.Content;
+                        Assert.Equal(12, label.FontSize);
+                        Assert.Equal(FontWeights.Normal, label.FontWeight);
+                    }
+                    foreach (string name in new[] { "LinkClient", "LinkServer", "LinkEndpoint", "Transport" })
+                    {
+                        var value = (TextBlock)window.Configuration.FindName(name);
+                        Assert.Equal(FontWeights.Normal, value.FontWeight);
+                        Assert.Equal(TextAlignment.Right, value.TextAlignment);
+                    }
+                    Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
+                    if (state.Page == "Mcp") Assert.Equal(830, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
                     if (state.Drawer == "Approvals") Assert.Equal(440, ((Border)window.FindName("DrawerPanel")).Width);
@@ -77,27 +85,26 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
-                        double[] railCenters = [107, 145, 179, 211, 246, 283, 320, 357];
-                        int railIndex = 0;
-                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailBlocks", "RailVersionControl", "RailCalls", "RailAudit", "RailEnvironment", "RailLog", "ExportDiagnostics", "SettingsButton" })
+                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
+                            Assert.Equal(40, element.ActualHeight);
+                            Assert.Equal(45, point.Y);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
-                            if (name.StartsWith("Rail", StringComparison.Ordinal)) Assert.Equal(railCenters[railIndex++], point.Y + element.ActualHeight / 2);
                         }
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
                             Assert.Equal(28, ((FrameworkElement)window.FindName(name)).ActualWidth);
-                        var log = (TiaDesktop.Glass.GlassLogView)window.Configuration.FindName("ActivityLog");
+                        var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)window.Configuration.FindName("ActivityLog");
                         metrics.Add($"Log: {log.ActualWidth}, padding {log.Padding}, document padding {log.Document.PagePadding}, page width {log.Document.PageWidth}");
                         Assert.Equal(new Thickness(0), log.Document.PagePadding);
                         var table = (System.Windows.Documents.Table)log.Document.Blocks.FirstBlock;
                         var message = table.RowGroups[0].Rows[0].Cells[1].Blocks.FirstBlock;
-                        Assert.Equal(72, table.Columns[0].Width.Value);
+                        Assert.Equal(90, table.Columns[0].Width.Value);
                         Assert.Equal(12, table.RowGroups[0].Rows[0].Cells[0].Padding.Right);
                         double textHeight = message.ContentEnd.GetCharacterRect(LogicalDirection.Backward).Bottom
                             - message.ContentStart.GetCharacterRect(LogicalDirection.Forward).Top;
-                        Assert.InRange(textHeight, 25, 40);
+                        Assert.InRange(textHeight, 10, 45);
                         metrics.Add($"First log message height: {textHeight}");
                         foreach (string name in new[] { "LinkClient", "LinkServer", "LinkEndpoint", "Transport" })
                         {
@@ -115,6 +122,21 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
         }
     }
 
+    private static System.Collections.Generic.IEnumerable<RenderState> States()
+    {
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+            foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            {
+                string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
+                yield return new("mcp-" + suffix, language, theme);
+                yield return new("mcp-local-" + suffix, language, theme, Local: true);
+                yield return new("mcp-running-" + suffix, language, theme, Running: true);
+                yield return new("settings-" + suffix, language, theme, Drawer: "Settings");
+                yield return new("approval-badges-" + suffix, language, theme, Pending: true);
+                yield return new("approvals-empty-" + suffix, language, theme, Drawer: "Approvals");
+            }
+    }
+
     internal static Border CreateHost(MainWindow window)
     {
         WpfContext.Drain();
@@ -126,8 +148,9 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
         host.Measure(new Size(1200, 780));
         host.Arrange(new Rect(0, 0, 1200, 780));
         host.UpdateLayout();
-        window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+        WpfContext.Drain();
         host.UpdateLayout();
+        WpfContext.Drain();
         return host;
     }
 

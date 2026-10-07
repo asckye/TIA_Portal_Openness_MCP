@@ -21,7 +21,7 @@ public sealed class EnumIndexConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Enum.ToObject(targetType, value);
 }
 
-public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
+public sealed class DisplayValueConverter : IValueConverter, IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => Convert(values[0], targetType, parameter, culture);
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotSupportedException();
@@ -34,15 +34,15 @@ public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
         {
             "group" => GroupPath(value.ToString() ?? ""),
             "version" => value.ToString()!.Replace("TIA V", "V"),
-            "export" => (bool)value ? Loc.Current["Glass.ExportSource"] : Loc.Current["Glass.ExportXml"],
-            "consistent" => (bool)value ? Loc.Current["Glass.Yes"] : Loc.Current["Glass.No"],
-            "protected" => (bool)value ? Loc.Current["Glass.Protected"] : "—",
+            "export" => (bool)value ? Loc.Current["Primer.ExportSource"] : Loc.Current["Primer.ExportXml"],
+            "consistent" => (bool)value ? Loc.Current["Primer.Yes"] : Loc.Current["Primer.No"],
+            "protected" => (bool)value ? Loc.Current["Primer.Protected"] : "—",
             "compare" => (VcCompareState)value switch
             {
-                VcCompareState.Equal => Loc.Current["Glass.Identical"],
-                VcCompareState.Unequal => Loc.Current["Glass.Differs"],
-                VcCompareState.WorkspaceFileMissing => Loc.Current["Glass.Missing"],
-                _ => Loc.Current["Glass.Unknown"],
+                VcCompareState.Equal => Loc.Current["Primer.Identical"],
+                VcCompareState.Unequal => Loc.Current["Primer.Differs"],
+                VcCompareState.WorkspaceFileMissing => Loc.Current["Primer.Missing"],
+                _ => Loc.Current["Primer.Unknown"],
             },
             _ => value,
         };
@@ -59,7 +59,7 @@ public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
 /// View-only projection of the existing, timestamped operation log. Never invokes an operation
 /// or treats an absent result as success. The VM and bridge remain the source of all outcomes.
 /// </summary>
-public sealed class GlassResults : INotifyPropertyChanged, IDisposable
+public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
 {
     private readonly MainViewModel model;
     private int _resultLogStart;
@@ -72,9 +72,9 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         nameof(InspectionDisplay), nameof(CompileOperationState), nameof(InspectionOperationState), nameof(CompileSummary), nameof(Errors), nameof(Warnings),
         nameof(CompileState), nameof(InspectionTime), nameof(InspectionSummary), nameof(Mapped), nameof(Unsupported), nameof(Failed),
         nameof(MappingSummary), nameof(SyncSummary), nameof(Diagnostics), nameof(Rules)
-    }.Select(name => typeof(GlassResults).GetProperty(name)!).ToArray();
-    private static readonly string[] PresentationProperties = typeof(GlassResults).GetProperties().Select(p => p.Name).Where(name => name != nameof(LogRows)).ToArray();
-    public GlassResults(MainViewModel model)
+    }.Select(name => typeof(ResultPresentation).GetProperty(name)!).ToArray();
+    private static readonly string[] PresentationProperties = typeof(ResultPresentation).GetProperties().Select(p => p.Name).Where(name => name != nameof(LogRows)).ToArray();
+    public ResultPresentation(MainViewModel model)
     {
         this.model = model;
         model.Activity.PropertyChanged += Changed;
@@ -117,7 +117,7 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public string InspectionOperationState => OperationState(model.Engineering.Inspect.IsRunning, HasInspection);
     public string EnvironmentState => Loc.Current["Pages.Ready"];
     public string EnvironmentSummary => Loc.Current["Pages.NotRun"];
-    public string CompileSummary => HasCompile ? model.Engineering.SelectedDevice?.Name + " · " + Errors + " " + Loc.Current["Glass.Errors"] + " · " + Warnings + " " + Loc.Current["Glass.Warnings"] : Loc.Current["Pages.NotRun"];
+    public string CompileSummary => HasCompile ? model.Engineering.SelectedDevice?.Name + " · " + Errors + " " + Loc.Current["Primer.Errors"] + " · " + Warnings + " " + Loc.Current["Primer.Warnings"] : Loc.Current["Pages.NotRun"];
     public string LogCount => Loc.Current.T("Pages.LogCount", model.Activity.Log.Split('\n').Count(line => !string.IsNullOrWhiteSpace(line)));
     private string OperationState(bool running, bool completed) => !HasProject ? Loc.Current["Pages.NeedConnection"]
         : running ? Loc.Current["Pages.Running"]
@@ -127,12 +127,12 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public string DiffFileName => model.VersionControl.SelectedVcItem?.FilePath ?? model.VersionControl.VcDiffCaption;
     public IReadOnlyList<MappedObjectInfo> OtherMappedFiles => model.VersionControl.VcStatusItems
         .Where(i=>i!=model.VersionControl.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
-    public string BlocksSummary => Loc.Current.T("Glass.BlocksSummary", model.Engineering.Blocks.Count,
+    public string BlocksSummary => Loc.Current.T("Primer.BlocksSummary", model.Engineering.Blocks.Count,
         model.Engineering.Blocks.Count(b=>b.Selected), model.Engineering.BlocksView.Cast<BlockRow>().Count());
-    public string DifferenceLabel => Loc.Current["Glass.Differ"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
-    public string MissingLabel => Loc.Current["Glass.Missing"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
+    public string DifferenceLabel => Loc.Current["Primer.Differ"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
+    public string MissingLabel => Loc.Current["Primer.Missing"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
     public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
-        : Loc.Current.T("Glass.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
+        : Loc.Current.T("Primer.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
             model.VersionControl.SelectedWorkspace.MappedObjectCount, model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal));
     public string Errors { get; private set; } = "—";
     public string Warnings { get; private set; } = "—";
@@ -187,17 +187,17 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 
     private static string RuleLabel(string id) => id switch
     {
-        "NAMING-001" => Loc.Current["Glass.RuleNaming"],
-        "DOC-001" => Loc.Current["Glass.RuleAuthor"],
-        "BUILD-001" => Loc.Current["Glass.RuleConsistency"],
-        "PROT-001" => Loc.Current["Glass.RuleKnowHow"],
-        "DEAD-001" => Loc.Current["Glass.RuleUnused"],
+        "NAMING-001" => Loc.Current["Primer.RuleNaming"],
+        "DOC-001" => Loc.Current["Primer.RuleAuthor"],
+        "BUILD-001" => Loc.Current["Primer.RuleConsistency"],
+        "PROT-001" => Loc.Current["Primer.RuleKnowHow"],
+        "DEAD-001" => Loc.Current["Primer.RuleUnused"],
         _ => id,
     };
 
     private void Refresh()
     {
-        string notRun = Loc.Current["Glass.NotRun"];
+        string notRun = Loc.Current["Primer.NotRun"];
         Errors = Warnings = Mapped = Unsupported = Failed = "—";
         InspectionTime = "";
         CompileState = InspectionSummary = MappingSummary = SyncSummary = notRun;
@@ -214,8 +214,8 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
             {
                 case "Status.CompileResult":
                     Errors = Arg(1); Warnings = Arg(2);
-                    CompileState = Convert.ToInt32(entry.Arguments[1], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Glass.CompileErrors"]
-                        : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Glass.CompileWarnings"] : Loc.Current["Glass.CompileCompleted"];
+                    CompileState = Convert.ToInt32(entry.Arguments[1], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileErrors"]
+                        : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileWarnings"] : Loc.Current["Primer.CompileCompleted"];
                     diagnostics = [.. pendingDiagnostics];
                     pendingDiagnostics.Clear();
                     break;
@@ -231,8 +231,8 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
                     break;
                 case "Status.InspectResult":
                     InspectionTime = entry.Time;
-                    InspectionSummary = Loc.Current.T("Glass.InspectionSummary", Arg(1), Arg(0));
-                    if (!protectionRule) rules.Add(Loc.Current["Glass.RuleKnowHow"] + " · 0");
+                    InspectionSummary = Loc.Current.T("Primer.InspectionSummary", Arg(1), Arg(0));
+                    if (!protectionRule) rules.Add(Loc.Current["Primer.RuleKnowHow"] + " · 0");
                     inspection = false;
                     break;
                 case "Status.VcMapApplied":
@@ -242,7 +242,7 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
                     Failed = entry.Key == "Status.VcMapApplied" ? Arg(3) : "—";
                     break;
                 case "Status.VcSyncDry":
-                    SyncSummary = Loc.Current.T("Glass.SyncPreview", Arg(0), Arg(2));
+                    SyncSummary = Loc.Current.T("Primer.SyncPreview", Arg(0), Arg(2));
                     break;
                 case "Status.VcSyncApplied":
                     SyncSummary = Loc.Current.T(entry.Key, entry.Arguments);

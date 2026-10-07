@@ -121,7 +121,7 @@ public class MainWindowTests(WpfContext wpf)
             using var rendered = Render();
 
             var labels = Descendants<TextBlock>(rendered.Host).Select(t => t.Text).ToList();
-            Assert.Contains("功能页", labels);
+            Assert.Contains("概览", labels);
             Assert.Contains("尚未打开项目", labels);
         });
     }
@@ -154,12 +154,11 @@ public class MainWindowTests(WpfContext wpf)
                 ThemeManager.Current.Theme = AppTheme.Light;
                 using var rendered = Render();
 
-                var expected = ((SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground")).Color;
+                var expected = ((SolidColorBrush)Application.Current.FindResource("Primer.card")).Color;
                 var actual = PixelAt(rendered.Bitmap, Width / 2, 6);
 
                 Assert.Equal(255, actual.A);
-                Assert.InRange(actual.R, expected.R - 45, expected.R);
-                Assert.InRange(actual.B, expected.B - 30, expected.B);
+                Assert.Equal(expected, actual);
             }
             finally
             {
@@ -174,7 +173,7 @@ public class MainWindowTests(WpfContext wpf)
     /// means its binding did not resolve.
     /// </summary>
     [Theory]
-    [InlineData("Rail", 8)]
+    [InlineData("Pages", 6)]
     [InlineData("SyncDirection", 2)]
     public void Every_picker_group_has_one_and_only_one_choice(string group, int expectedSegments)
     {
@@ -292,7 +291,8 @@ public class MainWindowTests(WpfContext wpf)
     }
 
     /// <summary>
-    /// Every button is drawn by one shared template. If a style ever loses it, the button falls
+    /// Every action uses shared button chrome, while navigation uses the underline template.
+    /// If a style ever loses its template, the button falls
     /// back to the stock WPF chrome and quietly stops matching the rest of the window, so the
     /// check is that each one really is using the theme's template.
     /// </summary>
@@ -302,13 +302,13 @@ public class MainWindowTests(WpfContext wpf)
         wpf.Run(() =>
         {
             using var rendered = Render();
-            var themed = (ControlTemplate)Application.Current.FindResource("Glass.ButtonTemplate");
+            var themed = (ControlTemplate)Application.Current.FindResource("Primer.ButtonTemplate");
 
             var buttons = Descendants<ButtonBase>(rendered.Host)
                 .Where(IsShown)
                 .Where(b => b is Button or RadioButton)
                 // The language switch is text-only and has a template of its own.
-                .Where(b => (b as RadioButton)?.GroupName != "Rail")
+                .Where(b => (b as RadioButton)?.GroupName is not ("Pages" or "ProjectPages"))
                 .ToList();
 
             Assert.True(buttons.Count >= 12, "only found " + buttons.Count + " buttons");
@@ -316,7 +316,7 @@ public class MainWindowTests(WpfContext wpf)
             foreach (var button in buttons)
             {
                 Assert.Same(themed, button.Template);
-                Assert.True(button.ActualHeight >= 22, button.Content + " has no height");
+                Assert.True(button.ActualHeight >= 16, button.Content + " has no height");
             }
         });
     }

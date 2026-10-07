@@ -20,7 +20,7 @@ public partial class VersionControlView : UserControl
         catch (Exception ex) { _model.Activity.Append(ex.Message); }
     }
     private void OnGitTools(object sender, RoutedEventArgs e)
-        => Controls.GlassMessageBox.Show(Window.GetWindow(this), Localization.Loc.Current["Pages.GitHint"], Localization.Loc.Current["Pages.GitTools"], MessageBoxButton.OK, MessageBoxImage.Information);
+        => Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), Localization.Loc.Current["Pages.GitHint"], Localization.Loc.Current["Pages.GitTools"], MessageBoxButton.OK, MessageBoxImage.Information);
     private void OnWorkspaceOptions(object sender, RoutedEventArgs e) => Options.Show("Workspace");
     private void OnMappedFile(object sender, RoutedEventArgs e) => _model.VersionControl.SelectedVcItem = (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
     private void OnMappedFilter(object sender, RoutedEventArgs e)

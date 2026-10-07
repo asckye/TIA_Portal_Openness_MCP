@@ -20,8 +20,8 @@ public partial class AuditLogView : UserControl
     { if (e.PropertyName is nameof(Model.RetentionSize) or nameof(Model.RetentionCopies)) UpdateRetention(); }
     private void UpdateRetention()
     {
-        foreach (var button in new[] { Size50, Size128, Size256 }) button.IsChecked = int.Parse((string)button.Tag) == Model.Audit.FileSizeMb;
-        foreach (var button in new[] { Copies16, Copies32, Copies64 }) button.IsChecked = int.Parse((string)button.Tag) == Model.Audit.Copies;
+        foreach (var button in new[] { Size50, Size5, Size10 }) button.IsChecked = int.Parse((string)button.Tag) == Model.Audit.FileSizeMb;
+        foreach (var button in new[] { Copies3, Copies5, Copies10 }) button.IsChecked = int.Parse((string)button.Tag) == Model.Audit.Copies;
     }
     private void OnVerify(object sender, RoutedEventArgs e) => Model.Verify();
     private void OnJump(object sender, RoutedEventArgs e)

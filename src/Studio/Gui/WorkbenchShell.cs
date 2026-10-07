@@ -73,7 +73,13 @@ public partial class MainWindow
         McpApprovalSwitch.IsChecked = Approvals.Enabled;
         UpdateMcpStatus();
         RailBlocks.IsEnabled = RailVersionControl.IsEnabled = HasProject;
-        RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v') + " · " + TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
+        RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v');
+        CurrentPageTitle.Text = Loc.Current[_page switch
+        {
+            "Mcp" => "Desktop.Configuration", "Blocks" => "Tree.ProgramBlocks", "VersionControl" => "Shell.VersionControl",
+            "Calls" => "Shell.Calls", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Tab.Log",
+            _ => "Shell.Engineering",
+        }];
         if (_drawer != null)
         {
             DrawerTitle.Text = _drawer == "CallDetail" ? Features.SelectedCall?.Tool ?? Loc.Current["Calls.Detail"]
@@ -108,7 +114,10 @@ public partial class MainWindow
         if (page == "VersionControl") _model.IsVcTab = true;
         else if (page == "Log") _model.IsLogTab = true;
         else if (page is "Engineering" or "Blocks") _model.IsBlocksTab = true;
-        ((RadioButton)FindName("Rail" + page)).IsChecked = true;
+        SubTabs.Visibility = page is "Engineering" or "Blocks" or "VersionControl" ? Visibility.Visible : Visibility.Collapsed;
+        ((RadioButton)FindName("Rail" + (page is "Blocks" or "VersionControl" ? "Engineering" : page))).IsChecked = true;
+        if (page is "Engineering" or "Blocks" or "VersionControl")
+            ((RadioButton)FindName("Rail" + (page == "Engineering" ? "Overview" : page))).IsChecked = true;
         UpdateShell();
     }
 
@@ -118,7 +127,7 @@ public partial class MainWindow
     private void NavigateGuarded(string page)
     {
         try { Navigate(page); }
-        catch (Exception ex) { Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
     }
 
     internal void OpenSettings()
@@ -139,8 +148,8 @@ public partial class MainWindow
         ApprovalsContent.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
         CallDetailContent.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
         DrawerOverlay.Visibility = Visibility.Visible;
-        SettingsButton.SetResourceReference(Control.BackgroundProperty, name == "Settings" ? "Ui.Accent" : "Ui.ControlBackground");
-        SettingsButton.SetResourceReference(Control.ForegroundProperty, name == "Settings" ? "Ui.OnAccent" : "Ui.Label");
+        SettingsButton.SetResourceReference(Control.BackgroundProperty, name == "Settings" ? "Primer.accent" : "Primer.pill");
+        SettingsButton.SetResourceReference(Control.ForegroundProperty, name == "Settings" ? "Primer.onAccent" : "Primer.text");
         UpdateShell();
     }
 
@@ -148,7 +157,7 @@ public partial class MainWindow
     {
         if (_drawer == "Settings") { CloseDrawer(); return; }
         try { OpenSettings(); }
-        catch (Exception ex) { Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
     }
     private void OnApprovals(object sender, RoutedEventArgs e) => OpenDrawer("Approvals");
     private void OnCloseDrawer(object sender, RoutedEventArgs e) => CloseDrawer();
@@ -158,8 +167,8 @@ public partial class MainWindow
         _drawer = null;
         Features.SetVisibility(_page == "Calls", _page == "Audit", false);
         DrawerOverlay.Visibility = Visibility.Collapsed;
-        SettingsButton.SetResourceReference(Control.BackgroundProperty, "Ui.ControlBackground");
-        SettingsButton.SetResourceReference(Control.ForegroundProperty, "Ui.Label");
+        SettingsButton.SetResourceReference(Control.BackgroundProperty, "Primer.pill");
+        SettingsButton.SetResourceReference(Control.ForegroundProperty, "Primer.text");
     }
     private void OnDisableApprovalRequested(object? sender, EventArgs e) => ConfirmOverlay.Visibility = Visibility.Visible;
     private void OnMcpMenu(object sender, MouseButtonEventArgs e) { ((FrameworkElement)sender).ContextMenu.IsOpen = true; e.Handled = true; }
@@ -174,7 +183,7 @@ public partial class MainWindow
     private async Task SetApprovalEnabled(bool enabled)
     {
         try { await Task.Run(() => Approvals.Enabled = enabled); }
-        catch (Exception ex) { Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) { Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
         SettingsContent.UpdateApproval();
     }
     private void OnDiagnostics(object sender, RoutedEventArgs e)

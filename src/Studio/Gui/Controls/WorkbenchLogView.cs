@@ -5,21 +5,21 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace TiaDesktop.Glass
+namespace TiaOpenness.Gui.Controls
 {
     // A selectable, view-only rendering of the existing timestamped log string.
     // The original text remains the source for Copy/Clear and all operation state.
-    public sealed class GlassLogView : RichTextBox
+    public sealed class WorkbenchLogView : RichTextBox
     {
         public static readonly DependencyProperty LogTextProperty = DependencyProperty.Register(
-            "LogText", typeof(string), typeof(GlassLogView), new PropertyMetadata("", Refresh));
+            "LogText", typeof(string), typeof(WorkbenchLogView), new PropertyMetadata("", Refresh));
         public string LogText
         {
             get { return (string)GetValue(LogTextProperty); }
             set { SetValue(LogTextProperty, value); }
         }
 
-        public GlassLogView()
+        public WorkbenchLogView()
         {
             IsReadOnly = true;
             IsVisibleChanged += (_, _) => { if (IsVisible) Schedule(); };
@@ -44,7 +44,7 @@ namespace TiaDesktop.Glass
         private string _rendered = "";
         private TableRowGroup? _rows;
         private bool _queued;
-        private static void Refresh(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((GlassLogView)sender).Schedule();
+        private static void Refresh(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((WorkbenchLogView)sender).Schedule();
         private void Schedule()
         {
             if (_queued || IsLoaded && !IsVisible) return;
@@ -79,7 +79,7 @@ namespace TiaDesktop.Glass
             {
                 Document.Blocks.Clear();
                 var table = new Table { CellSpacing = 0, Margin = new Thickness(0) };
-                table.Columns.Add(new TableColumn { Width = new GridLength(72) }); table.Columns.Add(new TableColumn());
+                table.Columns.Add(new TableColumn { Width = new GridLength(90) }); table.Columns.Add(new TableColumn());
                 _rows = new TableRowGroup(); table.RowGroups.Add(_rows); Document.Blocks.Add(table);
             }
             while (removed-- > 0 && _rows.Rows.Count > 0) _rows.Rows.RemoveAt(0);
@@ -91,11 +91,14 @@ namespace TiaDesktop.Glass
                 string time = timed ? line.Substring(0, 8) : "";
                 string message = timed ? line.Substring(8).TrimStart() : line;
                 var stamp = new Paragraph(new Run(time)) { Margin = new Thickness(0), LineHeight = 17 };
-                stamp.SetResourceReference(TextElement.ForegroundProperty, "Ui.TertiaryLabel");
+                stamp.SetResourceReference(TextElement.ForegroundProperty, "Primer.textFaint");
                 var body = new Paragraph(new Run(message)) { Margin = new Thickness(0), LineHeight = 17 };
                 var row = new TableRow();
-                row.Cells.Add(new TableCell(stamp) { Padding = new Thickness(0, 0, 12, 6) });
-                row.Cells.Add(new TableCell(body) { Padding = new Thickness(0, 0, 0, 6) }); _rows.Rows.Add(row);
+                var timeCell = new TableCell(stamp) { Padding = new Thickness(14, 9, 12, 9), BorderThickness = new Thickness(0, 0, 0, 1) };
+                var messageCell = new TableCell(body) { Padding = new Thickness(0, 9, 14, 9), BorderThickness = new Thickness(0, 0, 0, 1) };
+                timeCell.SetResourceReference(TableCell.BorderBrushProperty, "Primer.divider");
+                messageCell.SetResourceReference(TableCell.BorderBrushProperty, "Primer.divider");
+                row.Cells.Add(timeCell); row.Cells.Add(messageCell); _rows.Rows.Add(row);
             }
             while (_rows.Rows.Count > 1000) _rows.Rows.RemoveAt(0);
             _rendered = text;

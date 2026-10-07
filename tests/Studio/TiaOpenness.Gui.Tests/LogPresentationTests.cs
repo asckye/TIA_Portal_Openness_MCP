@@ -13,6 +13,44 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class LogPresentationTests(WpfContext wpf)
 {
     [Theory]
+    [InlineData(53)]
+    [InlineData(121)]
+    [InlineData(278)]
+    public void Sidebar_tails_show_whole_rows_and_follow_replacement_at_the_same_count(int height)
+    {
+        wpf.Run(() =>
+        {
+            var view = new LogTailView { Style = (Style)Application.Current.FindResource("Primer.LogTail") };
+            var host = new Grid { Width = 262, Height = height };
+            host.Children.Add(view);
+            void Layout()
+            {
+                host.Measure(new Size(262, height)); host.Arrange(new Rect(0, 0, 262, height)); host.UpdateLayout();
+                WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain();
+            }
+            foreach (int start in new[] { 0, 12 })
+            {
+                view.LogText = string.Join("\n", Enumerable.Range(start, 12).Select(n => $"20:45:00 row {n}"));
+                Layout();
+                var last = (ListBoxItem)view.ItemContainerGenerator.ContainerFromIndex(view.Items.Count - 1);
+                Assert.NotNull(last);
+                double lastTop = last.TransformToAncestor(view).Transform(new Point()).Y;
+                Assert.InRange(lastTop, 0, view.ActualHeight - last.ActualHeight);
+                var visibleRows = WorkbenchRenderFeaturePagesTests.Descendants<ListBoxItem>(view)
+                    .Select(row => (row, top: row.TransformToAncestor(view).Transform(new Point()).Y))
+                    .Where(item => item.top < view.ActualHeight && item.top + item.row.ActualHeight > 0).ToArray();
+                Assert.NotEmpty(visibleRows);
+                foreach (var (row, top) in visibleRows)
+                {
+                    Assert.InRange(top, 0, view.ActualHeight - row.ActualHeight);
+                    Assert.Equal(24, row.ActualHeight);
+                }
+                Assert.Contains(WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(last), text => text.Text == $"row {start + 11}");
+            }
+        });
+    }
+
+    [Theory]
     [InlineData("[INFO] 工程已加载", LogLevel.Info)]
     [InlineData("Information: project loaded", LogLevel.Info)]
     [InlineData("信息：工程已加载", LogLevel.Info)]
@@ -32,7 +70,7 @@ public sealed class LogPresentationTests(WpfContext wpf)
     [InlineData("Compiled · 0 errors, 0 warnings", LogLevel.Default)]
     public void Typed_severity_controls_colour_independently_of_message_language(string message, LogLevel level)
     {
-        var row = new GlassResults.LogRow("20:45:00", message, level);
+        var row = new ResultPresentation.LogRow("20:45:00", message, level);
         Assert.Equal(level, row.Level);
         Assert.Equal(message, row.Message);
     }
@@ -63,9 +101,9 @@ public sealed class LogPresentationTests(WpfContext wpf)
                     ThemeManager.Current.Theme = theme;
                     WorkbenchRenderFeaturePagesTests.Layout(host);
                     var messages = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(view)
-                        .Where(t => t.DataContext is GlassResults.LogRow row && t.Text == row.Message).ToArray();
+                        .Where(t => t.DataContext is ResultPresentation.LogRow row && t.Text == row.Message).ToArray();
                     Assert.Equal(5, messages.Length);
-                    string[] tokens = ["Ui.Accent", "Ui.Orange", "Ui.Red", "Ui.SecondaryLabel", "Ui.LogText"];
+                    string[] tokens = ["Primer.accent", "Primer.warn", "Primer.diffRed", "Primer.textMuted", "Primer.text"];
                     for (int i = 0; i < messages.Length; i++)
                         Assert.Equal(((SolidColorBrush)Application.Current.FindResource(tokens[i])).Color,
                             ((SolidColorBrush)messages[i].Foreground).Color);

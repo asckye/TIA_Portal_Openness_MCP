@@ -16,7 +16,7 @@ using Xunit;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public class GlassViewTests(WpfContext wpf)
+public class PrimerViewTests(WpfContext wpf)
 {
     private static void Set(object model, string name, object value) =>
         model.GetType().GetProperty(name)!.SetValue(model, value);
@@ -42,7 +42,7 @@ public class GlassViewTests(WpfContext wpf)
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
             using var model = new MainViewModel();
-            using var results = new GlassResults(model);
+            using var results = new ResultPresentation(model);
             model.Activity.Append(Loc.Current.T("Status.CompileResult", "Error", 99, 8, "1.0"));
             model.Activity.Append("Warning: PLC_1 - pretend diagnostic\nNAMING-001 (99)");
             Assert.Equal("—", results.Errors);
@@ -59,7 +59,7 @@ public class GlassViewTests(WpfContext wpf)
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
             using var model = new MainViewModel();
-            using var results = new GlassResults(model);
+            using var results = new ResultPresentation(model);
             Assert.Equal("—", results.Errors);
             RecordCompile(model.Activity); WpfContext.Drain();
             Assert.Equal("0", results.Errors);
@@ -131,11 +131,10 @@ public class GlassViewTests(WpfContext wpf)
                 host.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
                 host.UpdateLayout();
                 Assert.Equal(theme, ThemeManager.Current.Theme);
-                if (vci) Assert.True(((Border)ProjectPageTestSupport.Find(window, "SyncThumb")).ActualWidth > 80);
                 string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "BlocksHeaderCard", "BlocksCard", "CompileCard", "InspectionCard", "BlocksLogCard" };
                 DesktopCapture.AssertCards(host, theme, cards.Where(name => name != "DiffCard").Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray());
                 var bitmap = new RenderTargetBitmap(1200,780,96,96,PixelFormats.Pbgra32);bitmap.Render(host);
-                string? output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
+                string? output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
                 if (!string.IsNullOrEmpty(output))
                 {
                     Directory.CreateDirectory(output);

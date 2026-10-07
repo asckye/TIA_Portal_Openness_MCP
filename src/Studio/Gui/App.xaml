@@ -9,17 +9,8 @@
              appearance. Adding a dictionary above it silently breaks the light/dark switch. -->
         <ResourceDictionary Source="Themes/Palette.Light.xaml" />
 
-        <ResourceDictionary Source="Themes/Typography.xaml" />
         <ResourceDictionary Source="Themes/Icons.xaml" />
-        <ResourceDictionary Source="Themes/Controls.Buttons.xaml" />
-        <ResourceDictionary Source="Themes/Controls.Inputs.xaml" />
-        <ResourceDictionary Source="Themes/Controls.Collections.xaml" />
-        <ResourceDictionary Source="Themes/Controls.Navigation.xaml" />
-        <ResourceDictionary Source="Themes/Window.xaml" />
-        <ResourceDictionary Source="Themes/Glass.xaml" />
-        <ResourceDictionary Source="Themes/Glass.Studio.xaml" />
-        <ResourceDictionary Source="Themes/Shell.xaml" />
-        <ResourceDictionary Source="Themes/FeaturePages.xaml" />
+        <ResourceDictionary Source="Themes/Primer.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />

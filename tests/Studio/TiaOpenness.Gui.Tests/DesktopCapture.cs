@@ -44,7 +44,7 @@ internal static class DesktopCapture
 
     internal static void Save(FrameworkElement root, string name, params FrameworkElement[] popups)
     {
-        string? output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
+        string? output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
         if (string.IsNullOrEmpty(output)) return;
         Directory.CreateDirectory(output);
         var encoder = new PngBitmapEncoder();

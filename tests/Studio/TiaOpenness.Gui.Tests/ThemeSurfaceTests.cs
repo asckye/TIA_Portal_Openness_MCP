@@ -12,28 +12,34 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class ThemeSurfaceTests(WpfContext wpf)
 {
     [Fact]
-    public void Colors_live_only_in_the_palettes()
+    public void Colors_live_in_the_palettes_and_the_vocabulary_warning_count_variant()
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
+        // The authoritative count-badge vocabulary specifies peach separately from the 29 palette tokens.
+        const string countVariant = "<SolidColorBrush x:Key=\"Primer.CountWarningLight\" Color=\"#FFF1E5\"/>";
+        var vocabulary = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Primer.xaml", StringComparison.Ordinal));
+        Assert.Single(Regex.Matches(vocabulary.Text, Regex.Escape(countVariant)));
         // Transparent carries no hue and intentionally lets the active palette show through.
         var violations = SourceScan.Markup.Concat(SourceScan.Code)
             .Where(file => !file.Name.Contains(".Themes.Palette.", StringComparison.Ordinal))
-            .SelectMany(file => literal.Matches(file.Text).Select(match => file.Name + ": " + match.Value));
+            .SelectMany(file => literal.Matches(file.Name == vocabulary.Name ? file.Text.Replace(countVariant, "") : file.Text)
+                .Select(match => file.Name + ": " + match.Value));
         Assert.Empty(violations);
     }
 
     [Theory]
-    [InlineData("Light", "#E7ECF1", "#B8FFFFFF", "#15202B", "#5B6B7A", "#8A98A6", "#3E9D62", "#B8741A", "#C25A5A")]
-    [InlineData("Dark", "#0B1420", "#0FFFFFFF", "#E6EBEF", "#8A98A6", "#5F6F7D", "#6FCF97", "#F0B35A", "#F08080")]
-    public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, params string[] expected)
+    [InlineData("Light", "#F6F8FA #FFFFFF #F6F8FA #F0F8FA #D0D7DE #D8DEE4 #FFFFFF #D0D7DE #F6F8FA #EAEEF2 #FFFFFF #1F2328 #656D76 #8C959F #8C959F #0B7A99 #FFFFFF #1F883D #9A6700 #FFF8C5 #1A7F37 #DAFBE1 #DDF4FF #6654AEFF #0969DA #F6F8FA #1F2328 #1A7F37 #CF222E")]
+    [InlineData("Dark", "#0D1117 #161B22 #0D1117 #1A2730 #30363D #21262D #0D1117 #30363D #21262D #30363D #161B22 #E6EDF3 #8D96A0 #6E7681 #6E7681 #4FC3E0 #0D1117 #238636 #D29922 #26D29922 #3FB950 #263FB950 #26388BFD #66388BFD #58A6FF #0D1117 #E6EDF3 #3FB950 #F85149")]
+    public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            string[] keys = ["WindowBackground", "CardBackground", "Label", "SecondaryLabel", "TertiaryLabel", "Green", "Orange", "Red"];
+            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed"];
+            string[] expected = colors.Split(' ');
+            Assert.Equal(keys.Length, palette.Count);
             for (int i = 0; i < keys.Length; i++)
-                Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette["Ui." + keys[i]]).Color);
-            Assert.Equal(theme == "Dark" ? 0 : .08, ((System.Windows.Media.Effects.DropShadowEffect)palette["Glass.SurfaceShadow"]).Opacity);
+                Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette["Primer." + keys[i]]).Color);
         });
     }
 
@@ -45,8 +51,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            Color Token(string key) => ((SolidColorBrush)palette["Ui." + key]).Color;
-            var window = Token("WindowBackground");
+            Color Token(string key) => ((SolidColorBrush)palette["Primer." + key]).Color;
+            var window = Token("bg");
             void Check(string text, string surface, double minimum = 4.5)
             {
                 var background = Composite(Token(surface), window);
@@ -55,17 +61,17 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 double contrast = (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
                 Assert.True(contrast >= minimum, $"{theme}: {text} on {surface} = {contrast:F2}, expected {minimum}");
             }
-            foreach (string surface in new[] { "WindowBackground", "CardBackground", "FieldBackground" })
-                foreach (string text in new[] { "Label", "SecondaryLabel" }) Check(text, surface);
-            foreach (string surface in new[] { "CardBackground", "InsetBackground" }) Check("LogText", surface);
-            Check("Label", "ChipBackground");
-            Check("AccentText", "AccentSoft", 3);
+            foreach (string surface in new[] { "bg", "card", "input" })
+                foreach (string text in new[] { "text", "textMuted" }) Check(text, surface);
+            Check("codeText", "codeBg");
+            Check("text", "pill");
+            Check("accent", "cardSel", 3);
             // The handoff uses lighter semantic colors and faint labels; assert their exact tokens separately.
-            foreach (string text in new[] { "Green", "Red", "Orange" }) Check(text, "CardBackground", 2.5);
-            Check("TertiaryLabel", "CardBackground", 2);
-            Check("Orange", "WarningSoft", 2.5);
-            Check("SelectionText", "SelectionFill");
-            Check("OnAccent", "Accent");
+            foreach (string text in new[] { "ok", "diffRed", "warn" }) Check(text, "card", 2.5);
+            Check("textFaint", "card", 2);
+            Check("warn", "warnBg", 2.5);
+            Check("text", "cardSel");
+            Check("onAccent", "accent");
         });
     }
 

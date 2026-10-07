@@ -27,7 +27,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
     [InlineData(AppLanguage.English, AppTheme.Light, true)]
     [InlineData(AppLanguage.English, AppTheme.Dark, true)]
     public void Engineering_renders_blocks_and_vci(AppLanguage language, AppTheme theme, bool vci)
-        => new GlassViewTests(wpf).RenderEngineeringFixture(theme, vci, language);
+        => new PrimerViewTests(wpf).RenderEngineeringFixture(theme, vci, language);
 
     [Theory]
     [InlineData(AppLanguage.Chinese, AppTheme.Light)]
@@ -35,7 +35,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
     [InlineData(AppLanguage.English, AppTheme.Light)]
     [InlineData(AppLanguage.English, AppTheme.Dark)]
     public void Engineering_renders_log(AppLanguage language, AppTheme theme)
-        => new GlassViewTests(wpf).RenderEngineeringFixture(theme, false, language, true);
+        => new PrimerViewTests(wpf).RenderEngineeringFixture(theme, false, language, true);
 
     [Theory]
     [InlineData(AppLanguage.Chinese, AppTheme.Light)]
@@ -85,10 +85,10 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
-                Assert.Equal(960, page.ActualWidth);
+                Assert.Equal(1150, page.ActualWidth);
                 var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(host);
-                var output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS") ??
+                var output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS") ??
                     Path.Combine(MainWindow.FindBundleRoot(AppContext.BaseDirectory), "bin-build", "unified-desktop");
                 Directory.CreateDirectory(output);
                 var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -113,7 +113,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 ThemeManager.Current.Theme = AppTheme.Dark;
                 var page = window.Configuration!;
                 Assert.Equal("zh-cn", page.Language.IetfLanguageTag);
-                var expected = (SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground");
+                var expected = (SolidColorBrush)Application.Current.FindResource("Primer.bg");
                 Assert.Same(expected, ((Panel)window.FindName("Root")).Background);
                 window.Close();
                 Loc.Current.Language = AppLanguage.English;
@@ -151,7 +151,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 address.Text = "192.0.2.77";
                 var secret = (PasswordBox)page.FindName("Key");
                 secret.Password = "language-switch-fixture";
-                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog"); WpfContext.Drain();
+                var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)page.FindName("ActivityLog"); WpfContext.Drain();
                 string history = log.LogText;
                 int entries = history.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
                 var brush = ((Border)page.FindName("InstallationCard")).Background;
@@ -182,8 +182,8 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 {
                     FlushBindings();
                     Assert.Equal(language == AppLanguage.Chinese ? "zh-cn" : "en-us", page.Language.IetfLanguageTag);
-                    Assert.False(page.Resources.Contains("Ui.WindowBackground"));
-                    Assert.Same(Application.Current.FindResource("Ui.CardBackground"), ((Border)page.FindName("InstallationCard")).Background);
+                    Assert.False(page.Resources.Contains("Primer.bg"));
+                    Assert.Same(Application.Current.FindResource("Primer.card"), ((Border)page.FindName("InstallationCard")).Background);
                     Assert.Same(Application.Current.FindResource("Ui.Font"), page.FontFamily);
                     Assert.Equal(Loc.Current["Config.RemoteTitle"], Text("PageTitle"));
                     Assert.Equal(Loc.Current["Config.Write"], ((Button)page.FindName("SaveClient")).Content);
@@ -194,7 +194,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                     Assert.Equal(Loc.Current.T("Config.Entries", entries), Text("LogCount"));
                     Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Mcp.TestNotRun"]), Text("LastTest"));
                     Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestNotRun"]), ((TextBlock)page.FindName("LastTest")).ToolTip);
-                    Assert.Equal(detected ? "● " + Loc.Current["Config.Detected"] : Loc.Current["Config.NotDetected"], Text("DetectionSource"));
+                    Assert.Equal(Loc.Current[detected ? "Config.Detected" : "Config.NotDetected"], Text("DetectionSource"));
                     Assert.Equal(Loc.Current.T("Config.ClientInstructionsDetected", "First", "first hint", "first evidence") + "\n" +
                         Loc.Current.T("Config.ClientInstructionsNotDetected", "Second", "second hint", "second evidence"), Text("ClientInstructions"));
                     Assert.Equal(Text("ClientInstructions"), ((TextBlock)page.FindName("ClientSelection")).ToolTip);
@@ -220,7 +220,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
             {
                 window.ShowConfiguration(false);
                 var page = window.Configuration!;
-                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog"); WpfContext.Drain();
+                var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)page.FindName("ActivityLog"); WpfContext.Drain();
                 Assert.Contains(detection, log.LogText);
                 Assert.Contains(ready, log.LogText);
                 string history = log.LogText;
@@ -239,7 +239,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
                 Assert.Equal(Loc.Current.T("Config.ClientsConfigured", 3), ((TextBlock)page.FindName("Status")).Text);
                 Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]), TextContent((TextBlock)page.FindName("LastTest")));
-                Assert.Equal("● " + Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
+                Assert.Equal(Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
                 Assert.Equal(Loc.Current.T("Config.UpdateAvailable", "9.0", Loc.Current.T("Config.UpdateSize", "15.4 MB")),
                     ((TextBlock)((TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent")).FindName("UpdateStateItem")).Text);
                 var installed = (TextBlock)((TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent")).FindName("UpdateInstalledItem");

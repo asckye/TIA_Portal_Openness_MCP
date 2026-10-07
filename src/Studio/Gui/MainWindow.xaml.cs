@@ -20,12 +20,12 @@ public partial class MainWindow : Window
         _model.SelectedReleaseKey = preview?.ReleaseKey ?? InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
         DataContext = _model;
-        Root.Tag = new Controls.GlassResults(_model);
+        Root.Tag = new Controls.ResultPresentation(_model);
         InitializeShell(approvals, diagnostics);
         UpdateMcpStatus();
         Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
         Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
-        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeShell(); DisposeConfiguration(); BlocksContent.Dispose(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
+        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeShell(); DisposeConfiguration(); BlocksContent.Dispose(); ((Controls.ResultPresentation)Root.Tag).Dispose(); _model.Dispose(); };
         Loaded += async (_, _) => {
             if (!_loadExistingConfiguration) return;
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());

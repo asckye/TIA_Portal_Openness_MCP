@@ -154,12 +154,10 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待 Workbench 审批后才
 
 ## Workbench rendering and history
 
-Settings → **Low effects** offers **Auto / On / Off**. Auto is the default: software
-rendering (WPF tier 0), a remote Windows session, or a detected virtual-machine BIOS
-uses opaque card surfaces, removes shadows and blur, and disables hover animations.
-On always uses this mode; Off keeps the normal appearance. The choice takes effect
-immediately and is saved with language and appearance when the Workbench closes.
-VM detection is a local hint; choose On if your VM is not detected.
+The Primer workbench uses opaque bordered containers, flat divided rows and underline
+tabs in both Light and Dark themes. Settings → **Appearance** switches language and
+Auto / Light / Dark immediately. The previous low-effects preference remains readable
+for compatibility; Primer has no shadows or blur and uses the same appearance in every mode.
 
 The AI calls, approvals, audit and activity lists use recycling virtualization.
 Following calls keeps the newest entries visible while at the top; scrolling down

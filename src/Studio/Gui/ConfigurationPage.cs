@@ -67,7 +67,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             ShowEngineering();
-            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     private void OnServiceStateChanged(object? sender, EventArgs e)
@@ -83,10 +83,11 @@ public partial class MainWindow
         var version = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
         var endpoint = Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"];
         var status = state == "Config.Local" ? "stdio" : Loc.Current[state];
-        McpStatusText.Text = Loc.Current.T("Shell.Status", status, version, endpoint) + (HasProject ? " · " + _model.Session.ProjectName : "");
-        if (Approvals != null) McpStatusText.Text += " · " + Loc.Current[Approvals.Enabled ? "Approval.EnabledStatus" : "Shell.ApprovalOff"];
-        McpStatusText.ToolTip = McpStatusText.Text;
-        McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Ui.Accent" : "Ui.StatusIdle");
+        McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
+        SessionStatus.Text = Loc.Current.T("Shell.SessionStatus", version, endpoint, HasProject ? " · " + _model.Session.ProjectName : "");
+        McpStatusText.ToolTip = Loc.Current.T("Shell.Status", status, version, endpoint);
+        SessionStatus.ToolTip = SessionStatus.Text + " · " + (Approvals.Enabled ? Loc.Current["Approval.EnabledStatus"] : Loc.Current["Shell.ApprovalOff"]);
+        McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Primer.accent" : "Primer.textFaint");
     }
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
     {

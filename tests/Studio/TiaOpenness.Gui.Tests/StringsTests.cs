@@ -119,6 +119,8 @@ public class StringsTests(WpfContext wpf)
             // prose, so translating them would be inventing a difference rather than removing one.
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
+            // Product names, protocol identifiers and units stay the same in both languages.
+            "Shell.McpStatus", "Shell.SessionStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50",
         ];
 
         var untranslated = Strings.Catalogue
@@ -264,12 +266,12 @@ public class StringsTests(WpfContext wpf)
     [Theory]
     [InlineData(AppLanguage.English)]
     [InlineData(AppLanguage.Chinese)]
-    public void Glass_results_retranslate_recorded_outcomes_without_changing_the_log(AppLanguage initial)
+    public void Primer_results_retranslate_recorded_outcomes_without_changing_the_log(AppLanguage initial)
     {
         wpf.RunWithLanguage(initial, () =>
         {
             using var model = new MainViewModel(new FakeStudioClient(), new FakeDialogService());
-            using var results = new GlassResults(model);
+            using var results = new ResultPresentation(model);
             model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 2, "1.4");
             model.Activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
             model.Activity.AppendRule("NAMING-001", 1);
@@ -286,7 +288,7 @@ public class StringsTests(WpfContext wpf)
                 Assert.Equal(Loc.Current.T("Status.VcMapApplied", 3, 0, 2, 1), results.MappingSummary);
                 Assert.Equal(Loc.Current.T("Status.VcSyncApplied", 2, 1, 3), results.SyncSummary);
                 Assert.Equal(history, model.Activity.Log);
-                var converter = new GlassValueConverter();
+                var converter = new DisplayValueConverter();
                 Assert.Equal(language == AppLanguage.English ? "Export · Source text" : "导出 · 源文本", converter.Convert(true, typeof(string), "export", CultureInfo.InvariantCulture));
                 Assert.Equal(language == AppLanguage.English ? "Differs" : "有差异", converter.Convert(VcCompareState.Unequal, typeof(string), "compare", CultureInfo.InvariantCulture));
             }
@@ -315,7 +317,7 @@ public class StringsTests(WpfContext wpf)
                 choices.SelectedItems.Add(profile);
                 string instructions = (string)((TextBlock)page.FindName("ClientSelection")).ToolTip;
                 if (language == AppLanguage.English) Assert.DoesNotMatch(@"[\u4e00-\u9fff]", instructions);
-                var dialog = new GlassMessageBox(instructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+                var dialog = new WorkbenchMessageBox(instructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
                 try
                 {
                     var card = (Border)dialog.Content;

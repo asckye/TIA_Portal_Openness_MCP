@@ -4,8 +4,6 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] FeaturePageCatalogue =>
     [
-        ("Settings.LowEffects", "Low effects", "低效果模式"),
-        ("Settings.EffectsAuto", "Auto", "自动"),
         ("Audit.Older", "Older 1,000", "前 1,000 条"),
         ("Audit.Latest", "Latest 1,000", "最近 1,000 条"),
         ("Feature.NotConnected", "Not connected yet.", "尚未接入。"),
@@ -101,6 +99,9 @@ internal static partial class Strings
         ("Audit.End", "Execution end", "执行结束"),
         ("Audit.Toggle", "Approval toggled", "审批开关变化"),
         ("Audit.Retention", "Call log retention", "调用日志保留"),
+        ("Audit.Size5", "5 MB", "5 MB"),
+        ("Audit.Size10", "10 MB", "10 MB"),
+        ("Audit.Size50", "50 MB", "50 MB"),
         ("Audit.FileSize", "File size limit", "单文件上限"),
         ("Audit.Copies", "Files kept", "保留份数"),
         ("Audit.Coverage", "Coverage", "当前覆盖"),
