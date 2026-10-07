@@ -160,7 +160,9 @@ internal static class OfflineSymbolManifest
             if (obj.Name == "SW.Tags.PlcTagTable")
             {
                 Require(obj.Elements().All(x => x.Name == "AttributeList" || x.Name == "ObjectList") && obj.Elements("AttributeList").Count() <= 1, "unsupported-tag-table-shape");
-                var list = Single(obj, "ObjectList");
+                // A native export of an empty table has no ObjectList at all (V14 SP1 VM sample), not an empty one.
+                Require(obj.Elements("ObjectList").Count() <= 1, "missing-ambiguous-or-unsupported-structure");
+                var list = obj.Element("ObjectList") ?? new XElement("ObjectList");
                 Require(list.Elements().All(x => x.Name == "SW.Tags.PlcTag" || x.Name == "SW.Tags.PlcUserConstant" || x.Name == "SW.Tags.PlcSystemConstant"), "unsupported-tag-list-shape");
                 int skippedSystemConstants = 0;
                 foreach (var declaration in list.Elements())

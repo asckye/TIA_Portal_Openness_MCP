@@ -36,6 +36,12 @@ internal static class OfflineSymbolManifestTests
             Write("empty-table.xml", emptyTable);
             result = Build("empty-table.xml");
             check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 0, "manifest accepts an empty native tag table");
+            // Real V14 SP1 export of an empty Chinese default table (VM .131): no ObjectList element at all.
+            Write("empty-native-v14sp1.xml", "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><Document><Engineering version=\"V14 SP1\" /><DocumentInfo><Created>2026-10-07T00:59:09.0516413Z</Created><ExportSetting>None</ExportSetting><InstalledProducts><Product><DisplayName>Totally Integrated Automation Portal</DisplayName><DisplayVersion>V14 SP1 Update 10</DisplayVersion></Product></InstalledProducts></DocumentInfo><SW.Tags.PlcTagTable ID=\"0\"><AttributeList><Name>默认变量表</Name></AttributeList></SW.Tags.PlcTagTable></Document>");
+            result = Build("empty-native-v14sp1.xml");
+            check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 0, "manifest accepts a real empty V14 SP1 table export without ObjectList");
+            Write("two-object-lists.xml", "<Document><Engineering version='V14 SP1'/><SW.Tags.PlcTagTable><ObjectList/><ObjectList/></SW.Tags.PlcTagTable></Document>");
+            check(!Build("two-object-lists.xml")["ok"]!.GetValue<bool>(), "manifest rejects an ambiguous tag table with two ObjectLists");
             Write("comment-table.xml", tagWithComment);
             result = Build("comment-table.xml");
             check(result["ok"]!.GetValue<bool>() && result["symbolCount"]!.GetValue<int>() == 1, "manifest ignores native tag comments and accepts tag metadata");
