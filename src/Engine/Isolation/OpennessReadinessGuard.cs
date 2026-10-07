@@ -88,13 +88,9 @@ namespace TiaMcpServer.Isolation
                 var data = new JsonObject { ["environment"] = new JsonObject {
                     ["ready"] = false, ["cause"] = cause, ["recommendedFix"] = fix, ["recommendedFixZh"] = fixZh } };
                 var error = new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment"));
-                var refusal = McpServer.DiscloseTargets(McpServer.V4Reject(ProtocolTool.Name, error, data), ProtocolTool.Name, arguments);
-                // A write stopped by readiness is still audited like the Foundation host does: request and end, no start.
-                var body = refusal.StructuredContent;
-                using (var audit = TiaOpenness.Shared.AuditInvocation.Begin(McpServer.ApprovalResultWrite(ProtocolTool.Name, arguments.GetRawText()),
-                    "engine", McpServer.ReleaseKey, ProtocolTool.Name, (string?)body?["meta"]?["requestId"]))
-                    audit?.Complete(body?.ToJsonString());
-                return new ValueTask<CallToolResult>(refusal);
+                // The surrounding serialized-call audit records this refusal (request and end, no start) and shares its requestId.
+                var refusal = McpServer.V4Reject(ProtocolTool.Name, error, data);
+                return new ValueTask<CallToolResult>(McpServer.DiscloseTargets(refusal, ProtocolTool.Name, arguments));
             }
         }
     }

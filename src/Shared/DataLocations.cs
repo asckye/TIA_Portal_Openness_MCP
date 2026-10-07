@@ -63,9 +63,12 @@ namespace TiaOpenness.Shared
                 var cached = AppDomain.CurrentDomain.GetData(ProcessCacheKey) as string[];
                 if (cached == null)
                 {
+                    // LOCALAPPDATA normally equals the known folder; honouring it keeps isolated test profiles out of the real one.
+                    string? localOverride = Environment.GetEnvironmentVariable("LOCALAPPDATA");
                     var locations = Resolve(AppContext.BaseDirectory,
                         Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY"),
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.GetTempPath());
+                        !string.IsNullOrWhiteSpace(localOverride) && Path.IsPathRooted(localOverride) ? localOverride
+                            : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.GetTempPath());
                     cached = new[] { locations.Root, locations.localApplicationData, locations.temporaryDirectory, locations.explicitDataRoot.ToString(), locations.primaryDataRoot };
                     AppDomain.CurrentDomain.SetData(ProcessCacheKey, cached);
                 }
