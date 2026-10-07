@@ -28,6 +28,9 @@ namespace TiaMcpServer.Tests
             {
                 if (dryRun) Previews++; else Writes++;
                 if (condition == "cancel") throw new OperationCanceledException();
+                if (condition == "no-effect") return McpServer.V4Result("CreatePlcTag", new JsonObject {
+                    ["status"] = "not-found-not-deleted", ["attempted"] = false, ["executed"] = false,
+                    ["deleted"] = false, ["targetIdentity"] = "" });
                 if (condition.Length > 0 || Fault == "changed") throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Fixture precondition.", condition.Length > 0 ? condition : "name");
                 // "unknown" reaches a journaled native boundary first; "unknown-unissued" fails before any native call.
                 if (!dryRun && Fault == "unknown") InvocationJournal.NativeCallStarted();
@@ -48,6 +51,24 @@ namespace TiaMcpServer.Tests
         {
             McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(Probe) }), () => false, new HashSet<string>());
             Probe.Previews = Probe.Writes = 0; Probe.Fault = "";
+        }
+        [Fact]
+        public void Bridge_no_effect_preview_finishes_without_approval_or_apply()
+        {
+            using var fixture = new InfrastructureContractsTests(); Configure();
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath); var wait = McpServer.ApprovalWaitOverrideForTests;
+            bool context = McpServer.EnterMcpApprovalContext(); int waits = 0;
+            try
+            {
+                new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
+                McpServer.ApprovalWaitOverrideForTests = (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
+                var body = McpServer.ResultBody(McpServer.CallTool("CreatePlcTag", Args("{\"dryRun\":false,\"condition\":\"no-effect\"}")))!;
+                Assert.True((bool?)body["ok"]); Assert.Equal("not-found-not-deleted", (string?)body["data"]?["status"]);
+                Assert.Equal(1, Probe.Previews); Assert.Equal(0, Probe.Writes); Assert.Equal(0, waits);
+                Assert.False(McpServer.PreviewHasNoEffect(new JsonObject { ["ok"] = true,
+                    ["data"] = new JsonObject { ["attempted"] = false, ["executed"] = false, ["status"] = "planned" } }));
+            }
+            finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = wait; settings.Save(ApprovalSettings.SettingsPath); }
         }
         [Theory]
         [InlineData("plc")][InlineData("table")][InlineData("name")][InlineData("overwrite")][InlineData("importPath")]

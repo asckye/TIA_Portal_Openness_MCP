@@ -1,5 +1,6 @@
 using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 using System;
+using TiaMcp.Adapters.Contracts;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,29 +13,29 @@ namespace TiaMcp.PlcFoundation
     public sealed partial class PlcFoundationEngine
     {
         private bool externalSourceOutcomeUnknown;
-        private Action ExternalSourceTargetCheck(string softwarePath,out PlcSoftware software,out string projectFile,out int processId)
+        private Action ExternalSourceTargetCheck(string softwarePath,out PlcSoftware software,out string exactPath,out string projectFile,out int processId)
         {
-            if(externalSourceOutcomeUnknown) throw new InvalidOperationException("Prior external-source outcome is unknown; inspect the project and start a new explicit session before another write.");
+            if(externalSourceOutcomeUnknown) throw new AdapterPreconditionException("Prior external-source outcome is unknown; inspect the project and start a new explicit session before another write.","softwarePath",false);
             var selected=ReadSelection(softwarePath);
-            if(selected.ExactPath!=softwarePath) throw new ArgumentException("Use an exact softwarePath from GetProjectTree.");
+            exactPath=selected.ExactPath;
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             software=selected.Value; projectFile=Project().Path.FullName;
-            processId=lifecycle.ProcessId ?? throw new InvalidOperationException("An explicitly attached process is required.");
+            processId=lifecycle.ProcessId ?? throw new AdapterPreconditionException("An explicitly attached process is required.","softwarePath",false);
             var expectedProject=projectFile; var expectedProcess=processId;
             return ()=> {
                 RequireProjectIdentity(expectedProject);
                 var current=ReadSelection(softwarePath);
-                if(lifecycle.ProcessId!=expectedProcess || !object.Equals(current.Value,selected.Value) || !object.Equals(current.Context,selected.Context)) throw new InvalidOperationException("Selected PLC identity changed.");
+                if(lifecycle.ProcessId!=expectedProcess || !object.Equals(current.Value,selected.Value) || !object.Equals(current.Context,selected.Context)) throw new AdapterPreconditionException("Selected PLC identity changed.","softwarePath",false);
                 RequireTargetOffline(current);
             };
         }
         public PlcExternalSourceImportResult ImportPlcExternalSource(string softwarePath,string groupPath,string filePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
             PlcExternalSourceWorkflowPolicy.RequireRoot(groupPath);
-            var input=new FileInfo(MutationIdentityPolicy.AbsoluteFile(filePath));
-            var check=ExternalSourceTargetCheck(softwarePath,out var software,out var projectFile,out var processId);
+            var input=new FileInfo(PlcExternalSourceImportPolicy.ValidateFile(filePath));
+            var check=ExternalSourceTargetCheck(softwarePath,out var software,out var exactPath,out var projectFile,out var processId);
             var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
-            var result=new PlcExternalSourceImportResult {Operation="ImportPlcExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=softwarePath,FilePath=input.FullName,RequestedSourceName=input.Name};
+            var result=new PlcExternalSourceImportResult {Operation="ImportPlcExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=exactPath,FilePath=input.FullName,RequestedSourceName=input.Name};
             using(var stream=new FileStream(input.FullName,FileMode.Open,FileAccess.Read,FileShare.Read))
                 PlcExternalSourceWorkflowPolicy.Import(result,stream,dryRun,expectedPlanHash,confirm,expectedProjectFile,()=>sources.Select(x=>Documents.Name(x)),check,(name,path)=> {
                     // Exact SDK signature on all eight releases: name first, full path second.
@@ -62,12 +63,12 @@ namespace TiaMcp.PlcFoundation
         public PlcExternalSourceGenerationResult GenerateBlocksFromExternalSource(string softwarePath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
             PlcExternalSourceWorkflowPolicy.RequireSourceName(externalSourceName);
-            var checkTarget=ExternalSourceTargetCheck(softwarePath,out var software,out var projectFile,out var processId);
+            var checkTarget=ExternalSourceTargetCheck(softwarePath,out var software,out var exactPath,out var projectFile,out var processId);
             var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
-            var source=Documents.Find(sources,externalSourceName) ?? throw new ArgumentException("External source not found: "+externalSourceName);
-            if(Documents.Name(source)!=externalSourceName) throw new ArgumentException("Use the exact external source name including its extension.");
-            var result=new PlcExternalSourceGenerationResult {Operation="GenerateBlocksFromExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=softwarePath,SourceName=Documents.Name(source),SourceIdentity=externalDeleteIdentities.Get(source)};
-            Action check=()=> { checkTarget(); if(!object.Equals(Documents.Find(sources,externalSourceName),source)) throw new InvalidOperationException("Selected external source changed."); };
+            var source=Documents.Find(sources,externalSourceName) ?? throw new AdapterPreconditionException("External source not found: "+externalSourceName,"externalSourceName");
+            if(Documents.Name(source)!=externalSourceName) throw new AdapterPreconditionException("Use the exact external source name including its extension.","externalSourceName");
+            var result=new PlcExternalSourceGenerationResult {Operation="GenerateBlocksFromExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=exactPath,SourceName=Documents.Name(source),SourceIdentity=externalDeleteIdentities.Get(source)};
+            Action check=()=> { checkTarget(); if(!object.Equals(Documents.Find(sources,externalSourceName),source)) throw new AdapterPreconditionException("Selected external source changed.","softwarePath",false); };
 #if PLC_SOURCE_RESULTS
             IList<IEngineeringObject>? generated=null;
 #endif

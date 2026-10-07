@@ -196,6 +196,11 @@ internal sealed class FoundationV4Tool : McpServerTool
         using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name, id);
         var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
+        if (TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(body, (name, key, operation) =>
+            name == tool.Name && key == release ? TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation",
+                tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), operation: operation)["example"] as JsonObject : null))
+            result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         if (write && (string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool uncertain)
             uncertain.MarkSessionUncertain();
         if (body != null && (approval != null || write && !settings.Enabled))
@@ -295,6 +300,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                             return Recorded(new CallToolResult { IsError = true, StructuredContent = marked,
                                 Content = new[] { new TextContentBlock { Text = marked.ToJsonString() } } });
                         }
+                        if (FoundationV4Result.PreviewHasNoEffect(refusal.StructuredContent)) return Recorded(refusal);
                         cancellationToken.ThrowIfCancellationRequested();
                     }
                 }

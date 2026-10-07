@@ -19071,9 +19071,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -19189,7 +19189,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -19403,9 +19403,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -19516,9 +19516,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -19998,9 +19998,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -20116,7 +20116,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -20342,9 +20342,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -20455,9 +20455,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -20937,9 +20937,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -21087,7 +21087,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -21313,9 +21313,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -21426,9 +21426,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -21908,9 +21908,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -22058,7 +22058,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -22284,9 +22284,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -22397,9 +22397,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -22879,9 +22879,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -23029,7 +23029,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -23255,9 +23255,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -23368,9 +23368,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -23867,9 +23867,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "externalSourceName": "FC_Add",
+          "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -24017,7 +24017,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
@@ -24243,9 +24243,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "dryRun": true,
           "confirm": false
         },
@@ -24356,9 +24356,9 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl",
+          "filePath": "C:/Examples/FC_Add.scl",
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false

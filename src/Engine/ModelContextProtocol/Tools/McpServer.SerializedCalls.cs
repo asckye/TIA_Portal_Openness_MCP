@@ -176,7 +176,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     using var rejectedAudit = TiaOpenness.Shared.AuditInvocation.Begin(bridgeWrite, "engine", McpServer.ReleaseKey, targetName!);
                     bridgeReset = McpServer.SessionPrecheckRefusal(targetName!)!;
                     rejectedAudit?.Complete(bridgeReset.StructuredContent?.ToJsonString());
-                    return bridgeReset;
+                    return McpHints.WithRecovery(bridgeReset);
                 }
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
                 var bridgeResult = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);

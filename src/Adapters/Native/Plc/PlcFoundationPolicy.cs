@@ -62,9 +62,17 @@ namespace TiaMcp.PlcFoundation
             }
         }
 
-        internal static bool SymbolExists<T>(System.Collections.Generic.IEnumerable<T> items, Func<string, T?> find, Func<T, string> name, string selected) where T : class
+        internal static T? SymbolOwner<T>(System.Collections.Generic.IEnumerable<T> owners, Func<T, bool> exact, Func<T, bool> folded) where T : class
         {
-            if (find(selected) != null) return true;
+            var snapshot = owners.ToArray();
+            foreach (var owner in snapshot) if (exact(owner)) return owner;
+            foreach (var owner in snapshot) if (folded(owner)) return owner;
+            return null;
+        }
+
+        internal static bool SymbolExists<T>(System.Collections.Generic.IEnumerable<T> items, Func<string, T?> find, Func<T, string> name, string selected, bool exactChecked = false) where T : class
+        {
+            if (!exactChecked && find(selected) != null) return true;
             // SDK Find forwards the spelling to TIA; its XML does not promise casing.
             // Probe the selected composition with one existing name. If it cannot
             // demonstrate case-insensitive lookup, retain the conservative scan.

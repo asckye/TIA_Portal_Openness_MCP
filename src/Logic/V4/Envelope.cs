@@ -12,7 +12,7 @@ namespace TiaMcp.Logic.V4
     public enum WarningCode
     {
         IncompleteData, NativeWarning, CandidateOnly, UnverifiedBehavior, CleanupFailed,
-        NativeCapabilityLimit, DiagnosticWriteFailed, ApprovalDisabled
+        NativeCapabilityLimit, DiagnosticWriteFailed, ApprovalDisabled, RecoveryGuidance
     }
 
     // Data is frozen JSON at the host boundary; domain DTOs enter and leave through V4Json.

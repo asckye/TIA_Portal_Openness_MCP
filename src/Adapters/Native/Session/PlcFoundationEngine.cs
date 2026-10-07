@@ -376,13 +376,13 @@ namespace TiaMcp.PlcFoundation
         // native Create (seen on the V14 SP1 VM as an unknown outcome). Look up each composition before Create.
         private void RequireUniqueSymbol(string plc, string name)
         {
-            foreach (var table in Tables(plc))
-            {
-                bool clash = PlcFoundationPolicy.SymbolExists(table.Value.Tags, selectedName => table.Value.Tags.Find(selectedName), t => t.Name, name)
-                    || PlcFoundationPolicy.SymbolExists(table.Value.UserConstants, selectedName => table.Value.UserConstants.Find(selectedName), c => c.Name, name)
-                    || PlcFoundationPolicy.SymbolExists(table.Value.SystemConstants, selectedName => table.Value.SystemConstants.Find(selectedName), c => c.Name, name);
-                if (clash) throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Value.Name + "'; PLC symbol names are unique per PLC.", "name");
-            }
+            // Finish cheap exact lookups across all tables before any case probe or symbol enumeration.
+            var table = PlcFoundationPolicy.SymbolOwner(Tables(plc).Select(t => t.Value),
+                t => t.Tags.Find(name) != null || t.UserConstants.Find(name) != null || t.SystemConstants.Find(name) != null,
+                t => PlcFoundationPolicy.SymbolExists(t.Tags, selectedName => t.Tags.Find(selectedName), tag => tag.Name, name, true)
+                    || PlcFoundationPolicy.SymbolExists(t.UserConstants, selectedName => t.UserConstants.Find(selectedName), c => c.Name, name, true)
+                    || PlcFoundationPolicy.SymbolExists(t.SystemConstants, selectedName => t.SystemConstants.Find(selectedName), c => c.Name, name, true));
+            if (table != null) throw new AdapterPreconditionException("A tag or constant with this name already exists in tag table '" + table.Name + "'; PLC symbol names are unique per PLC.", "name");
         }
         public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true)
         {

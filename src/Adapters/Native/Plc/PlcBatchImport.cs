@@ -41,7 +41,7 @@ namespace TiaMcp.PlcFoundation
         }
         private static string BatchReturnedGroup(IEngineeringObject item,object expected,string exactPath)
         {
-            try {if(ReferenceEquals(PlcNative.Parent(item),expected)) return exactPath;}
+            try {if(object.Equals(PlcNative.Parent(item),expected)) return exactPath;}
             catch(Exception) /* swallow(native-fallback): unreadable native ownership falls through to the sentinel rejected by the batch policy */ { /* Preserve a visible ownership-verification failure. */ }
             // A traversal segment is impossible in an accepted canonical destination.
             return "../<unverified-native-owner>";
@@ -78,9 +78,9 @@ namespace TiaMcp.PlcFoundation
                 RequireProjectIdentity(request.Project);
                 if(lifecycle.ProcessId!=request.ProcessId) throw new InvalidOperationException("Process identity changed.");
                 var fresh=ReadSelection(request.Software);
-                if(fresh.ExactPath!=selected.ExactPath || !ReferenceEquals(fresh.Value,selected.Value) || !ReferenceEquals(fresh.Context,selected.Context)) throw new InvalidOperationException("Selected target identity changed.");
-                if(!ReferenceEquals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
-                   (request.Program && (!ReferenceEquals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !ReferenceEquals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new InvalidOperationException("Destination group identity changed.");
+                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new InvalidOperationException("Selected target identity changed.");
+                if(!object.Equals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
+                   (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new InvalidOperationException("Destination group identity changed.");
                 RequireTargetOffline(fresh);
             };
             return PlcBatchImportPolicy.Run(request,inventory,check,(file,planned)=>

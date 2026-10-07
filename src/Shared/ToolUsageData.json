@@ -11977,26 +11977,26 @@
         },
         "DeletePlcExternalSource": {
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "groupPath": "",
-            "externalSourceName": "FC_Add",
+            "externalSourceName": "FC_Add.scl",
             "dryRun": true,
             "confirm": false
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Use the exact softwarePath from GetProjectTree, preserving escaped segments, or the unique short PLC host name PLC_1. Ambiguous or unknown names are refused; the preview binds the resolved exact path. Batch tools still require an exact path.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
               ],
-              "exampleValue": "<exact softwarePath from GetProjectTree>"
+              "exampleValue": "PLC_1"
             },
             "groupPath": {
               "meaning": "The ordinary external-source root is required; pass an empty string."
             },
             "externalSourceName": {
-              "meaning": "Supply externalSourceName according to this tool description; values below refer to the example project."
+              "meaning": "Copy data.sourceName from import or a source name from ListPlcExternalSources verbatim, including its extension and casing."
             },
             "expectedPlanHash": {
               "exampleValue": "<expectedPlanHash from this same preview>",
@@ -12035,9 +12035,10 @@
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-SOURCE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
-            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+            "Argument and precondition refusals retain the worker message in error.message, with INVALID_ARGUMENT and error.details.parameter or PRECONDITION_FAILED; outcome=rejected-before-operation and execution=not-started. A DeletePlcExternalSource preview with status=not-found-not-deleted has no effect, so the real request returns that result without Workbench approval."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+          "note": "Foundation external sources require ASCII text without a BOM. filePath and allowedFilePath accept C:/Examples/FC_Add.scl or C:\\Examples\\FC_Add.scl; separator normalization preserves all other canonical local-drive rules (no traversal, redundant separators, device names or UNC). Import, generation and deletion each require their own preview, then dryRun=false, confirm=true, expectedProjectFile and expectedPlanHash from that same operation. PlanPlcExternalSourceImport is planning only: its hash cannot execute ImportPlcExternalSource. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
         },
         "GetPortalConnectionReadiness": {
           "arguments": {
@@ -13515,30 +13516,31 @@
         },
         "PlanPlcExternalSourceImport": {
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "groupPath": "",
-            "filePath": "C:\\Examples\\FC_Add.scl",
+            "filePath": "C:/Examples/FC_Add.scl",
             "allowedFilePath": "C:\\Examples\\FC_Add.scl",
             "dryRun": true,
             "confirm": false
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Use the exact softwarePath from GetProjectTree, preserving escaped segments, or the unique short PLC host name PLC_1. Ambiguous or unknown names are refused; the preview binds the resolved exact path. Batch tools still require an exact path.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
               ],
-              "exampleValue": "<exact softwarePath from GetProjectTree>"
+              "exampleValue": "PLC_1"
             },
             "groupPath": {
               "meaning": "The ordinary external-source root is required; pass an empty string."
             },
             "filePath": {
-              "meaning": "Supply filePath according to this tool description; values below refer to the example project."
+              "meaning": "Existing local ASCII .scl/.awl/.db/.udt file without a BOM. Forward and backslashes normalize before canonical local-drive validation; no traversal, device names, UNC or redundant separators.",
+              "exampleValue": "C:/Examples/FC_Add.scl"
             },
             "allowedFilePath": {
-              "meaning": "Supply allowedFilePath according to this tool description; values below refer to the example project."
+              "meaning": "The single allowed file must match filePath exactly after slash normalization, including casing."
             },
             "expectedPlanHash": {
               "exampleValue": "<expectedPlanHash from this same preview>",
@@ -13572,9 +13574,10 @@
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-SOURCE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
-            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+            "Argument and precondition refusals retain the worker message in error.message, with INVALID_ARGUMENT and error.details.parameter or PRECONDITION_FAILED; outcome=rejected-before-operation and execution=not-started. A DeletePlcExternalSource preview with status=not-found-not-deleted has no effect, so the real request returns that result without Workbench approval."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+          "note": "Foundation external sources require ASCII text without a BOM. filePath and allowedFilePath accept C:/Examples/FC_Add.scl or C:\\Examples\\FC_Add.scl; separator normalization preserves all other canonical local-drive rules (no traversal, redundant separators, device names or UNC). Import, generation and deletion each require their own preview, then dryRun=false, confirm=true, expectedProjectFile and expectedPlanHash from that same operation. PlanPlcExternalSourceImport is planning only: its hash cannot execute ImportPlcExternalSource. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
         },
         "ListPlcSystemConstants": {
           "arguments": {
@@ -13795,20 +13798,20 @@
         },
         "ImportPlcExternalSource": {
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "groupPath": "",
-            "filePath": "C:\\Examples\\FC_Add.scl",
+            "filePath": "C:/Examples/FC_Add.scl",
             "dryRun": true,
             "confirm": false
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Use the exact softwarePath from GetProjectTree, preserving escaped segments, or the unique short PLC host name PLC_1. Ambiguous or unknown names are refused; the preview binds the resolved exact path. Batch tools still require an exact path.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
               ],
-              "exampleValue": "<exact softwarePath from GetProjectTree>"
+              "exampleValue": "PLC_1"
             },
             "expectedProjectFile": {
               "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -13829,8 +13832,8 @@
               "meaning": "The ordinary external-source root is required; pass an empty string."
             },
             "filePath": {
-              "exampleValue": "C:\\Examples\\FC_Add.scl",
-              "meaning": "Absolute Windows path to the actual local ASCII source; import derives the requested source name from this filename."
+              "exampleValue": "C:/Examples/FC_Add.scl",
+              "meaning": "Existing local ASCII .scl/.awl/.db/.udt file without a BOM. Forward and backslashes normalize before canonical local-drive validation; no traversal, device names, UNC or redundant separators."
             }
           },
           "operations": {},
@@ -13844,7 +13847,7 @@
             },
             "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Review the intended source/PLC and the preview. Reuse the exact project and this operation's PlanHash; import and generation have separate plans."
           },
-          "note": "Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups. Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code. Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+          "note": "Foundation external sources require ASCII text without a BOM. filePath and allowedFilePath accept C:/Examples/FC_Add.scl or C:\\Examples\\FC_Add.scl; separator normalization preserves all other canonical local-drive rules (no traversal, redundant separators, device names or UNC). Import, generation and deletion each require their own preview, then dryRun=false, confirm=true, expectedProjectFile and expectedPlanHash from that same operation. PlanPlcExternalSourceImport is planning only: its hash cannot execute ImportPlcExternalSource. Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups. Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code. Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -13856,24 +13859,25 @@
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-SOURCE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
-            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+            "Argument and precondition refusals retain the worker message in error.message, with INVALID_ARGUMENT and error.details.parameter or PRECONDITION_FAILED; outcome=rejected-before-operation and execution=not-started. A DeletePlcExternalSource preview with status=not-found-not-deleted has no effect, so the real request returns that result without Workbench approval."
           ]
         },
         "GenerateBlocksFromExternalSource": {
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "externalSourceName": "FC_Add.scl",
             "dryRun": true,
             "confirm": false
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Use the exact softwarePath from GetProjectTree, preserving escaped segments, or the unique short PLC host name PLC_1. Ambiguous or unknown names are refused; the preview binds the resolved exact path. Batch tools still require an exact path.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
               ],
-              "exampleValue": "<exact softwarePath from GetProjectTree>"
+              "exampleValue": "PLC_1"
             },
             "expectedProjectFile": {
               "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -13891,7 +13895,7 @@
             },
             "externalSourceName": {
               "exampleValue": "FC_Add.scl",
-              "meaning": "Copy SourceName from the completed import. Do not strip the file extension or guess the generated block name."
+              "meaning": "Copy data.sourceName from import or a source name from ListPlcExternalSources verbatim, including its extension and casing."
             }
           },
           "operations": {},
@@ -13905,7 +13909,7 @@
             },
             "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Review the intended source/PLC and the preview. Reuse the exact project and this operation's PlanHash; import and generation have separate plans."
           },
-          "note": "Use the exact SourceName returned by import or ListPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution. Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompilePlcDiagnostics and inspect state, aggregate counts and nested diagnostics. V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list. Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import. Status=outcome-unknown requires inspection; do not repeat generation automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+          "note": "Foundation external sources require ASCII text without a BOM. filePath and allowedFilePath accept C:/Examples/FC_Add.scl or C:\\Examples\\FC_Add.scl; separator normalization preserves all other canonical local-drive rules (no traversal, redundant separators, device names or UNC). Import, generation and deletion each require their own preview, then dryRun=false, confirm=true, expectedProjectFile and expectedPlanHash from that same operation. PlanPlcExternalSourceImport is planning only: its hash cannot execute ImportPlcExternalSource. Use the exact SourceName returned by import or ListPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution. Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompilePlcDiagnostics and inspect state, aggregate counts and nested diagnostics. V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list. Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import. Status=outcome-unknown requires inspection; do not repeat generation automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -13917,7 +13921,8 @@
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-SOURCE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
-            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+            "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+            "Argument and precondition refusals retain the worker message in error.message, with INVALID_ARGUMENT and error.details.parameter or PRECONDITION_FAILED; outcome=rejected-before-operation and execution=not-started. A DeletePlcExternalSource preview with status=not-found-not-deleted has no effect, so the real request returns that result without Workbench approval."
           ]
         },
         "RenderPlcBlock": {
@@ -28717,8 +28722,8 @@
       "id": "sequence/plc-scl-block-foundation",
       "topic": "plc-scl-block",
       "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
-      "preconditions": "Intended TIA/project already attached. An operator-reviewed ASCII FC_Add.scl is on the TIA host; generation may overwrite same-named PLC objects.",
-      "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+      "preconditions": "Intended TIA/project explicitly attached. An operator-reviewed ASCII FC_Add.scl without a BOM exists on the TIA host. Use exact softwarePath or unique PLC_1; generation may overwrite same-named PLC objects.",
+      "notes": "External-source file paths accept either slash spelling while all canonical local-drive restrictions remain. Review each operation preview and use only its own data.planHash for execution. PlanPlcExternalSourceImport is planning only; its plan does not execute import. Delete preview status=not-found-not-deleted returns directly without approval. Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires inspection and session reset. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
       "releaseKeys": [
         "14sp1",
         "15.1",
@@ -28744,9 +28749,9 @@
         {
           "tool": "ImportPlcExternalSource",
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "groupPath": "",
-            "filePath": "C:\\Examples\\FC_Add.scl",
+            "filePath": "C:/Examples/FC_Add.scl",
             "dryRun": true
           },
           "expect": "data.status=planned; review source/target and copy this operation's data.planHash."
@@ -28754,9 +28759,9 @@
         {
           "tool": "ImportPlcExternalSource",
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "groupPath": "",
-            "filePath": "C:\\Examples\\FC_Add.scl",
+            "filePath": "C:/Examples/FC_Add.scl",
             "dryRun": false,
             "confirm": true,
             "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -28767,7 +28772,7 @@
         {
           "tool": "GenerateBlocksFromExternalSource",
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "externalSourceName": "<exact SourceName from completed import>",
             "dryRun": true
           },
@@ -28776,7 +28781,7 @@
         {
           "tool": "GenerateBlocksFromExternalSource",
           "arguments": {
-            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "softwarePath": "PLC_1",
             "externalSourceName": "<exact SourceName from completed import>",
             "dryRun": false,
             "confirm": true,
@@ -28810,6 +28815,30 @@
             "blockPath": "FC_Add"
           },
           "expect": "Confirm the expected generated block and its consistency. No implicit project save or PLC download."
+        },
+        {
+          "tool": "DeletePlcExternalSource",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "externalSourceName": "<data.sourceName from import or ListPlcExternalSources>",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review data.status and data.planHash; not-found-not-deleted means no change."
+        },
+        {
+          "tool": "DeletePlcExternalSource",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "externalSourceName": "<same exact source name>",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact bound project file>",
+            "expectedPlanHash": "<data.planHash from this deletion preview>"
+          },
+          "expect": "deleted-verified after approval, or not-found-not-deleted without approval; generated PLC objects remain."
         }
       ]
     },

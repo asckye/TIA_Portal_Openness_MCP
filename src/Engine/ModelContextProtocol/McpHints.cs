@@ -1,4 +1,7 @@
 using System;
+using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
+using TiaMcp.Logic.ModelContextProtocol;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -26,18 +29,19 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         public static string RecoveryCode(string code)
+            => RecoveryHints.RecoveryCode(code);
+
+        internal static CallToolResult WithRecovery(CallToolResult result)
         {
-            switch (code)
+            var body = McpServer.ResultBody(result);
+            if (!RecoveryHints.Attach(body, (tool, release, operation) =>
             {
-                case "NOT_FOUND": return Tip("verify the exact target names with GetProjectTree / GetSoftwareTree / ListPlcBlocks before another call.");
-                case "INVALID_ARGUMENT": return Tip("read GetToolUsage and the tool input schema, then correct the argument without issuing the operation again automatically.");
-                case "UNSUPPORTED_CAPABILITY": return Tip("check this release's capabilities with GetToolUsage; do not substitute an unverified operation.");
-                case "ACCESS_DENIED": return Tip("check the required permissions; do not bypass the access restriction.");
-                case "OFFLINE_REQUIRED": return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online connection.");
-                case "OUTCOME_UNKNOWN": return Tip("verify the actual target state and reset the session before continuing; do not replay the write automatically.");
-                default: return "";
-            }
+                if (release != McpServer.ReleaseKey || !McpServer.AllToolMethods().ContainsKey(tool)) return null;
+                var usage = McpServer.ResultBody(new ToolUsageTools().GetToolUsage(toolName: tool, operation: operation));
+                return usage?["data"]?["example"] as JsonObject;
+            })) return result;
+            return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         }
-        private static string Tip(string text) => "  ▶ RECOVERY: " + text;
     }
 }

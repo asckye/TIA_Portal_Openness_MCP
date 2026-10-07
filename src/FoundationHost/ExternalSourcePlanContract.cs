@@ -2,6 +2,10 @@ using System.Text.Json.Nodes;
 namespace TiaMcp.LegacyHost;
 internal static class ExternalSourcePlanContract
 {
+    // The worker resolves a unique short PLC host name before returning the exact address.
+    internal static bool SameSoftware(string actual,string? requested) => actual==requested
+        || requested!=null && requested.Length>0 && requested is not ("." or "..") && requested.IndexOf('/')<0
+            && string.Equals(Uri.UnescapeDataString(actual.Split('/').Last()),requested,StringComparison.OrdinalIgnoreCase);
     internal static JsonObject Validate(JsonNode? payload)
     {
         if(payload is not JsonObject result) throw new InvalidDataException("Missing external-source plan.");
@@ -23,7 +27,9 @@ internal static class ExternalSourcePlanContract
     {
         var result=Validate(payload);
         if(request["dryRun"]?.GetValue<bool>()==false) throw new InvalidDataException("External-source apply is blocked.");
-        foreach(var pair in new[]{("SoftwarePath","softwarePath"),("GroupPath","groupPath"),("FilePath","filePath"),("FilePath","allowedFilePath")}) if(result[pair.Item1]!.GetValue<string>()!=request[pair.Item2]?.GetValue<string>()) throw new InvalidDataException("External-source plan differs from requested scope.");
+        if(!SameSoftware(result["SoftwarePath"]!.GetValue<string>(),request["softwarePath"]?.GetValue<string>())) throw new InvalidDataException("External-source plan differs from requested software.");
+        if(result["GroupPath"]!.GetValue<string>()!=request["groupPath"]?.GetValue<string>()) throw new InvalidDataException("External-source plan differs from requested group.");
+        foreach(var key in new[]{"filePath","allowedFilePath"}) if(result["FilePath"]!.GetValue<string>()!=request[key]?.GetValue<string>().Replace('/', '\\')) throw new InvalidDataException("External-source plan differs from requested file.");
         var hash=request["expectedPlanHash"]?.GetValue<string>()??"";
         var project=request["expectedProjectFile"]?.GetValue<string>()??"";
         if(hash!="" && (hash!=result["PlanHash"]!.GetValue<string>() || request["confirm"]?.GetValue<bool>()!=true || project=="")) throw new InvalidDataException("External-source reviewed plan differs from request.");

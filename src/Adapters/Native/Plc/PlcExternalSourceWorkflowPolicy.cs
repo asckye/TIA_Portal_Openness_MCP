@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,9 @@ namespace TiaMcp.PlcFoundation
     internal static class PlcExternalSourceWorkflowPolicy
     {
         internal static void RequireRoot(string group)
-        { if(group != "") throw new ArgumentException("External-source subgroups are not supported by Openness; groupPath must be empty."); }
+        { if(group != "") throw new AdapterPreconditionException("External-source subgroups are not supported by Openness; groupPath must be empty.","groupPath"); }
         internal static void RequireSourceName(string name)
-        { if(string.IsNullOrWhiteSpace(name) || name.IndexOfAny(new[]{'/', '\\', '\0'}) >= 0) throw new ArgumentException("Use the exact external source name returned by GetPlcExternalSources, including its extension."); }
+        { if(string.IsNullOrWhiteSpace(name) || name.IndexOfAny(new[]{'/', '\\', '\0'}) >= 0) throw new AdapterPreconditionException("Use the exact external source name returned by GetPlcExternalSources, including its extension.","externalSourceName"); }
         private static string Hash(byte[] bytes)
         { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
         private static string HashFields(IEnumerable<string> values) => Hash(Encoding.UTF8.GetBytes(string.Concat(values.Select(x => x.Length + ":" + x))));
@@ -21,7 +22,7 @@ namespace TiaMcp.PlcFoundation
         {
             if(dryRun) return;
             MutationIdentityPolicy.RequireSameProject(expectedProjectFile,result.ProjectFile);
-            if(!confirm || expectedPlanHash!=result.PlanHash) throw new ArgumentException("Execution requires confirm=true and expectedPlanHash from the unchanged preview.");
+            if(!confirm || expectedPlanHash!=result.PlanHash) throw new AdapterPreconditionException("Execution requires confirm=true and expectedPlanHash from the unchanged preview.","expectedPlanHash");
         }
         private static void Execute(PlcExternalSourceWorkflowResult result,Action action)
         {
@@ -31,7 +32,7 @@ namespace TiaMcp.PlcFoundation
         }
         internal static string InputHash(Stream stream)
         {
-            if(!stream.CanRead || !stream.CanSeek || stream.Length==0) throw new ArgumentException("An existing nonempty source file is required.");
+            if(!stream.CanRead || !stream.CanSeek || stream.Length==0) throw new AdapterPreconditionException("An existing nonempty source file is required.","filePath");
             // The official GenerateBlocksFromSource contract admits ASCII external files.
             // Do not transcode source text or reject valid large sources with an arbitrary size limit.
             stream.Position=0;
@@ -40,7 +41,7 @@ namespace TiaMcp.PlcFoundation
             {
                 while((read=stream.Read(buffer,0,buffer.Length))!=0)
                 {
-                    for(var i=0;i<read;i++) if(buffer[i]>127 || buffer[i]==0) throw new ArgumentException("External-source generation requires ASCII text; save this source as ASCII without a BOM.");
+                    for(var i=0;i<read;i++) if(buffer[i]>127 || buffer[i]==0) throw new AdapterPreconditionException("External-source generation requires ASCII text; save this source as ASCII without a BOM.","filePath");
                     sha.TransformBlock(buffer,0,read,buffer,0);
                 }
                 sha.TransformFinalBlock(new byte[0],0,0);
@@ -50,16 +51,16 @@ namespace TiaMcp.PlcFoundation
         internal static PlcExternalSourceImportResult Import(PlcExternalSourceImportResult result,Stream input,bool dryRun,string expectedPlanHash,bool confirm,string expectedProjectFile,Func<IEnumerable<string>> readNames,Action check,Func<string,string,string> create)
         {
             RequireSourceName(result.RequestedSourceName);
-            if(!new[]{".scl",".awl",".db",".udt"}.Contains(Path.GetExtension(result.RequestedSourceName).ToLowerInvariant())) throw new ArgumentException("External sources must use .scl, .awl, .db or .udt.");
+            if(!new[]{".scl",".awl",".db",".udt"}.Contains(Path.GetExtension(result.RequestedSourceName).ToLowerInvariant())) throw new AdapterPreconditionException("External sources must use .scl, .awl, .db or .udt.","filePath");
             result.SourceName=result.RequestedSourceName;
             result.InputSha256=InputHash(input); result.ByteCount=input.Length;
             check(); var before=readNames().OrderBy(x=>x,StringComparer.Ordinal).ToArray();
-            if(before.Contains(result.RequestedSourceName,StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("An external source with this name already exists; choose another source name/file or explicitly delete it first.");
+            if(before.Contains(result.RequestedSourceName,StringComparer.OrdinalIgnoreCase)) throw new AdapterPreconditionException("An external source with this name already exists; choose another source name/file or explicitly delete it first.","filePath");
             result.PlanHash=HashFields(Identity(result).Concat(new[]{result.FilePath,result.InputSha256}).Concat(before));
             RequireReview(result,dryRun,expectedPlanHash,confirm,expectedProjectFile);
             if(dryRun) return result;
             check();
-            if(!before.SequenceEqual(readNames().OrderBy(x=>x,StringComparer.Ordinal),StringComparer.Ordinal) || InputHash(input)!=result.InputSha256) throw new InvalidOperationException("Source file or target inventory changed after preview.");
+            if(!before.SequenceEqual(readNames().OrderBy(x=>x,StringComparer.Ordinal),StringComparer.Ordinal) || InputHash(input)!=result.InputSha256) throw new AdapterPreconditionException("Source file or target inventory changed after preview.","softwarePath",false);
             Execute(result,()=> {
                 result.SourceName=create(result.RequestedSourceName,result.FilePath);
                 RequireSourceName(result.SourceName);
@@ -81,7 +82,7 @@ namespace TiaMcp.PlcFoundation
             if(dryRun) return result;
             check();
             var fresh=readObjects();
-            if(HashFields(fresh.OrderBy(ObjectKey,StringComparer.Ordinal).SelectMany(ObjectFields))!=HashFields(result.ObjectsBefore.OrderBy(ObjectKey,StringComparer.Ordinal).SelectMany(ObjectFields))) throw new InvalidOperationException("PLC block/type inventory changed after preview.");
+            if(HashFields(fresh.OrderBy(ObjectKey,StringComparer.Ordinal).SelectMany(ObjectFields))!=HashFields(result.ObjectsBefore.OrderBy(ObjectKey,StringComparer.Ordinal).SelectMany(ObjectFields))) throw new AdapterPreconditionException("PLC block/type inventory changed after preview.","softwarePath",false);
             result.Attempted=true;
             try { generate(); }
             catch(Exception ex)

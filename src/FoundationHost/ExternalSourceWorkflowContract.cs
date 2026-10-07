@@ -10,7 +10,7 @@ internal static class ExternalSourceWorkflowContract
         string Text(string key)=>result[key] is JsonValue value && value.TryGetValue<string>(out var text) ? text : throw new InvalidDataException("Missing external-source field: "+key);
         bool Flag(string key)=>result[key] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : throw new InvalidDataException("Missing external-source flag: "+key);
         var dryRun=request["dryRun"]?.GetValue<bool>() ?? true;
-        if(Text("Operation")!=operation || Text("SoftwarePath")!=request["softwarePath"]?.GetValue<string>() || Text("GroupPath")!="") throw new InvalidDataException("External-source result target mismatch.");
+        if(Text("Operation")!=operation || !ExternalSourcePlanContract.SameSoftware(Text("SoftwarePath"),request["softwarePath"]?.GetValue<string>()) || Text("GroupPath")!="") throw new InvalidDataException("External-source result target mismatch.");
         if(Text("Release") is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21") || Text("PlanHash").Length!=64 || string.IsNullOrWhiteSpace(Text("ProjectFile")) || string.IsNullOrWhiteSpace(Text("SourceName")) || result["ProcessId"] is not JsonValue pid || !pid.TryGetValue<int>(out var processId) || processId<=0) throw new InvalidDataException("External-source result lacks an exact target and plan hash.");
         if(!dryRun && (request["confirm"]?.GetValue<bool>()!=true || Text("PlanHash")!=request["expectedPlanHash"]?.GetValue<string>() || !SameFile(Text("ProjectFile"),request["expectedProjectFile"]?.GetValue<string>()))) throw new InvalidDataException("External-source execution review mismatch.");
         var status=Text("Status");

@@ -98,9 +98,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception ex) /* swallow(privacy): preview failures are classified before a write is issued */
                 { result = TargetFailure(name, ex, false); }
             }
-            if (ResultSucceeded(ResultBody(result)) == true) return null;
+            if (ResultSucceeded(ResultBody(result)) == true) return PreviewHasNoEffect(ResultBody(result)) ? result : null;
             var body = ApprovalPrecheck.Mark(ResultBody(result)!, AuditInvocation.CurrentRequestId);
             return new CallToolResult { IsError = true, StructuredContent = body, Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+        }
+        internal static bool PreviewHasNoEffect(JsonNode? body)
+        {
+            if (ResultSucceeded(body) != true || body?["data"] is not JsonObject data) return false;
+            return (string?)data["status"] == "not-found-not-deleted" && (bool?)data["attempted"] == false
+                    && (bool?)data["executed"] == false && (bool?)data["deleted"] == false && (string?)data["targetIdentity"] == ""
+                || data["plan"]?["operations"] is JsonArray { Count: 0 }
+                || (bool?)data["inventoryComplete"] == true && data["items"] is JsonArray { Count: 0 };
         }
         internal static bool ApprovalWrite(string tool, string arguments)
         {
@@ -173,6 +181,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult FinishApproval(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
         {
+            result = McpHints.WithRecovery(result);
             if (approval == null && !disabled) return result;
             var body = ResultBody(result);
             if (body == null)

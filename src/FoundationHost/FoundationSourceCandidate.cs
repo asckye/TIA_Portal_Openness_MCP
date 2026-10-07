@@ -19,7 +19,7 @@ internal sealed partial class FoundationTool
         string name = Text("sourceName"), file = Text("filePath");
         if (tool == "PlanPlcExternalSourceImport")
         {
-            if (Text("allowedFilePath") != file || Text("mode", "preview") != "preview") return FoundationV4Result.ImportCandidate(SourceSession.Result(release, tool, id, null,
+            if (Text("allowedFilePath").Replace('/', '\\') != file.Replace('/', '\\') || Text("mode", "preview") != "preview") return FoundationV4Result.ImportCandidate(SourceSession.Result(release, tool, id, null,
                 new Error("The plan requires the exact allowed file and preview mode.", new InvalidArgumentDetails("allowedFilePath/mode", Array.Empty<string>())), Outcome.RejectedBeforeOperation, Execution.NotStarted));
             if (name == "") name = Path.GetFileName(file);
         }
@@ -55,7 +55,10 @@ internal sealed partial class FoundationCandidateSession
         }
         public SourceObservation Observe()
         {
-            var reply = Call(new() { Request = request }, "preview");
+            SourceReply reply;
+            try { reply = Call(new() { Request = request }, "preview"); }
+            catch (WorkerOperationException ex) when (ex.KnownNoMutation)
+            { throw new SourceRejection(FoundationV4Result.WorkerRejection(ex)); }
             if (reply.Fault != null) throw new CandidateObservationException(reply.Fault);
             return reply.Observation!;
         }

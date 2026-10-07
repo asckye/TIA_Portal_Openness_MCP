@@ -52,6 +52,30 @@ internal static class FoundationV4Result
         definition.Arguments.Any(p => p.Name == "dryRun") ? args["dryRun"]?.GetValue<bool>() == false
         : definition.ResponseMember is "Connection" or "Bind" or "Disconnect";
 
+    internal static bool PreviewHasNoEffect(JsonNode? body)
+    {
+        if (body?["ok"]?.GetValue<bool>() != true || body["data"] is not JsonObject data) return false;
+        // A false executed/attempted flag alone only describes a preview, not its proposed effect.
+        return Text(data, "status") == "not-found-not-deleted" && Flag(data, "attempted") == false
+                && Flag(data, "executed") == false && Flag(data, "deleted") == false && Text(data, "targetIdentity") == ""
+            || data["plan"]?["operations"] is JsonArray { Count: 0 }
+            || data["inventoryComplete"]?.GetValue<bool>() == true && data["items"] is JsonArray { Count: 0 };
+    }
+
+    internal static Error WorkerRejection(Exception exception)
+    {
+        string message = SafeWorkerMessage(exception.Message) ?? "Foundation precondition failed before operation.";
+        string parameter = (exception as WorkerOperationException)?.Parameter
+            ?? (exception is ArgumentException argument ? argument.ParamName : null) ?? "arguments";
+        return exception is OperationCanceledException
+            ? new Error("Request cancelled before operation.", new CancelledDetails("host"))
+            : exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: false }
+                ? new Error(message, new PreconditionFailedDetails("worker-admission", null))
+                : exception is ArgumentException or WorkerOperationException { Code: -32602 }
+                    ? new Error(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()))
+                    : new Error(message, new PreconditionFailedDetails("worker-admission", null));
+    }
+
     internal static CallToolResult Failure(string release, string name, string id, bool dispatched, bool mutation, JsonNode? evidence, Exception? exception = null)
     {
         var data = evidence == null ? null : Object(evidence);
@@ -67,17 +91,10 @@ internal static class FoundationV4Result
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
                 new Error(TiaOpenness.Shared.ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown")), true, true);
-        if (!dispatched || exception is WorkerOperationException { Outcome: "rejected-before-operation" })
+        if (!dispatched || exception is WorkerOperationException { Outcome: "rejected-before-operation" }
+            || exception is WorkerOperationException { Code: -32602, KnownNoMutation: true })
         {
-            var workerFailure = exception as WorkerOperationException;
-            string message = SafeWorkerMessage(exception?.Message) ?? "Foundation precondition failed before operation.";
-            string parameter = workerFailure?.Parameter ?? (exception is ArgumentException argument && !string.IsNullOrWhiteSpace(argument.ParamName)
-                ? argument.ParamName! : "arguments");
-            var error = exception is OperationCanceledException
-                ? new Error("Request cancelled before operation.", new CancelledDetails("host"))
-                : exception is ArgumentException or WorkerOperationException { Code: -32602 }
-                    ? new Error(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()))
-                    : new Error(message, new PreconditionFailedDetails("worker-admission", null));
+            var error = exception == null ? new Error("Foundation precondition failed before operation.", new PreconditionFailedDetails("worker-admission", null)) : WorkerRejection(exception);
             return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, error, true);
         }
         if (!mutation && exception is OperationCanceledException)
