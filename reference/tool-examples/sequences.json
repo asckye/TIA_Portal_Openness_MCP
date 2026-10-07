@@ -1332,5 +1332,434 @@
         "expect": "Inspect data.files/errors/symbols/warnings. Select tag-table/global DB exports; OBs return unsupported-document-kind. Empty tables/comments/constants are accepted; system constants are skipped with a warning."
       }
     ]
+  },
+  {
+    "id": "sequence/foundation-approval-precheck",
+    "topic": "foundation-approval-precheck",
+    "purpose": "Inspect independent real-write refusals without a Workbench approval request.",
+    "preconditions": "foundation-connect-project completed; approval is enabled and the project was opened in the TIA UI (borrowed). Bind PLC_1 to the unique PLC; select an existing table, a PLC-wide existing symbol and existing same-release XML exports. PLC_X must be absent. Block/type refusal examples additionally require those logical objects to exist; they were not separately VM-exercised.",
+    "notes": "V14 SP1 P6-60 package retest (2026-10-06 23:30), approval enabled: wrong PLC (parameter=softwarePath, \"PLC software not found at 'PLC_X'\"), duplicate PLC symbol (parameter=name, \"already exists in tag table '<t>'\"), existing table (parameter=name, \"Tag table already exists.\"), single-file import onto an existing object with overwrite:false (parameter=overwrite), and CloseProject on a borrowed UI-opened project (PRECONDITION_FAILED) returned in 0.1-6.5 seconds with rejected-before-operation/not-started and no Workbench request. These refusals need no approval click; inspect error.details.parameter. This retest covers Foundation 14sp1; the shared precheck rule applies where the selected schema has a preview. Other releases were not retested for these cases. Each step is an independent negative example: continue only after its expected precheck refusal; stop on an unexpected success or unknown outcome. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: the wrong PLC, duplicate symbol, existing table, overwrite:false table import and borrowed close refusals were all observed with no approval request. Block/type and missing-file cases are shared-rule contract examples, native retest NOT RUN. V15.1-V19 retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify and retain the exact borrowed project file."
+      },
+      {
+        "tool": "CreatePlcTagTable",
+        "arguments": {
+          "plc": "PLC_X",
+          "group": "",
+          "name": "<fresh table name>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "INVALID_ARGUMENT, parameter=softwarePath, \"PLC software not found at 'PLC_X'\"; rejected-before-operation/not-started; no Workbench request."
+      },
+      {
+        "tool": "CreatePlcTag",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing target table>",
+          "name": "<symbol already present in another table of this PLC>",
+          "dataType": "Bool",
+          "address": "%M100.0",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "INVALID_ARGUMENT, parameter=name, \"already exists in tag table '<t>'\"; rejected-before-operation/not-started; no Workbench request."
+      },
+      {
+        "tool": "CreatePlcTagTable",
+        "arguments": {
+          "plc": "PLC_1",
+          "group": "",
+          "name": "<existing table name>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "INVALID_ARGUMENT, parameter=name, \"Tag table already exists.\"; rejected-before-operation/not-started; no Workbench request."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:/Examples/exports/Tags.xml",
+          "overwrite": false,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "overwrite": false,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+      },
+      {
+        "tool": "ImportPlcType",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "overwrite": false,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:/Examples/exports/Missing.xml",
+          "overwrite": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Choose a file that does not exist on the TIA machine: INVALID_ARGUMENT, parameter=importPath, \"An existing Openness XML file is required.\"; rejected-before-operation/not-started; no Workbench request. This additional contract example was not part of the five VM refusals."
+      },
+      {
+        "tool": "CloseProject",
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "PRECONDITION_FAILED; borrowed project remains open; rejected-before-operation/not-started; no Workbench request."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-tag-table-round-trip",
+    "topic": "foundation-tag-table-round-trip",
+    "purpose": "Export, edit, explicitly replace and read back one PLC tag table.",
+    "preconditions": "foundation-connect-project completed; bind PLC_1, the existing table and exact projectFile. C:\\Examples\\exports already exists and Tags.xml is new. Use native XML exported from this same release. Choose a fresh PLC-wide probe symbol and review its address.",
+    "notes": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" Exports are file operations with no Workbench request; CreatePlcTag and import require approval. Edit the local XML between export and import, retaining table name and release; keep an intended tag and omit the post-export probe. Import replaces the table, so inspect the complete intended content. Stop on failed/unknown outcomes. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: overwrite:true forward-slash import and readback showing only the exported tag succeeded; earlier same-day back-slash replacement also succeeded. File-edit instructions are reusable guidance; this retest imported the earlier native export, not an independently validated XML edit. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify the exact bound projectFile."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing caller-selected table>"
+        },
+        "expect": "Retain the intended table content before export."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "<existing caller-selected table>",
+          "exportPath": "C:\\Examples\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review a NEW .xml file in an existing directory; preview does not export."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "<existing caller-selected table>",
+          "exportPath": "C:\\Examples\\exports\\Tags.xml",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Retain data.outputFile; no Workbench request. Edit this exported file on the TIA machine, preserving native format/release/table name and the intended tag content."
+      },
+      {
+        "tool": "CreatePlcTag",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing caller-selected table>",
+          "name": "<fresh PLC-wide post-export probe tag>",
+          "dataType": "Bool",
+          "address": "%M100.0",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review the probe symbol/address; keep it absent from the exported XML."
+      },
+      {
+        "tool": "CreatePlcTag",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing caller-selected table>",
+          "name": "<fresh PLC-wide post-export probe tag>",
+          "dataType": "Bool",
+          "address": "%M100.0",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Approve once; confirm the post-export probe was created."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing caller-selected table>"
+        },
+        "expect": "Confirm the probe is present before replacement."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Tags.xml",
+          "overwrite": true,
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review overwrite:true replacement of that same table/file. Back-slash and forward-slash spellings below refer to the same existing file; no approval for preview."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:/Examples/exports/Tags.xml",
+          "overwrite": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for Workbench approval; expect succeeded/completed and data.affectedNames containing the table."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "PLC_1",
+          "table": "<existing caller-selected table>"
+        },
+        "expect": "Verify imported content and that the tag added after export is gone; retained tags must match the edited XML."
+      }
+    ]
+  },
+  {
+    "id": "sequence/foundation-block-round-trip",
+    "topic": "foundation-block-round-trip",
+    "purpose": "Export, edit, explicitly replace Main and perform a real compile.",
+    "preconditions": "foundation-connect-project completed; bind PLC_1 and exact projectFile. Main is consistent (compile first if needed). C:\\Examples\\exports exists; remove or move an old Main.xml before export because exports never overwrite. All project devices required by compile are offline.",
+    "notes": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" Edit the native Main.xml after export and before import, retaining release, block name/number and intended logic. Exports need no Workbench approval; import and real CompilePlcSoftware do. Preview does not compile. Stop on failed/unknown outcomes and inspect compiler state/error counts. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: Main overwrite:true import, GetPlcBlockInfo readback and real compile succeeded. File-edit instructions are reusable guidance; the retest imported the earlier native export. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify the exact bound projectFile."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "exportPath": "C:\\Examples\\exports",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review the existing directory and new Main.xml; remove or move an old Main.xml first."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "exportPath": "C:\\Examples\\exports",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Retain data.outputFile=Main.xml in the existing directory; never overwrites and no Workbench request. Edit this file on the TIA machine before import, preserving native format/release and block identity."
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "overwrite": true,
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review explicit overwrite:true for the existing Main."
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml",
+          "overwrite": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for approval; expect succeeded/completed and data.affectedNames containing Main."
+      },
+      {
+        "tool": "GetPlcBlockInfo",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "expect": "Read the imported block and consistency state; import alone does not compile."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review offline prerequisites; preview does not compile."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Wait for approval; inspect state=Success, errorCount=0 and nested diagnostics after real compilation."
+      }
+    ]
+  },
+  {
+    "id": "sequence/plc-xml-round-trip",
+    "topic": "plc-xml-round-trip",
+    "purpose": "Export, edit, import and verify tag-table/block XML using the current full-engine schema.",
+    "preconditions": "The intended V20/V21 project is bound; use exact software/block/table paths from its tree. Choose new XML outputs in an existing directory on the TIA machine. Compile an inconsistent block before export and satisfy compile offline prerequisites.",
+    "notes": "The current full-engine import schema has no overwrite, dryRun, confirm or expectedProjectFile parameters; Foundation overwrite selection, normalized-path and precheck evidence must not be inferred here. Review the current native import behavior before replacing any existing object. Read the returned export path and edit that same native XML before import, preserving release and object identity. Imports and compile require Workbench approval. This flow has contract checks only; V20/V21 native round-trip acceptance NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "V20/V21 current public schema/source checked; native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify the intended bound project."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "<existing caller-selected table>",
+          "exportPath": "C:\\Examples\\exports\\Tags.xml"
+        },
+        "expect": "Read the returned export file path; edit the file on the TIA machine before import, retaining the table name and native format."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Tags.xml"
+        },
+        "expect": "Approve the current full-engine import; inspect its V4 outcome and domain evidence."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "<existing caller-selected table>",
+          "exportPath": "C:\\Examples\\exports\\Tags-verified.xml"
+        },
+        "expect": "Re-export to a second new file and compare the actual table content with the imported XML; the full engine has no ListPlcTags tool."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "exportPath": "C:\\Examples\\exports"
+        },
+        "expect": "Use the returned Main.xml path; move an old output first. Edit that file while retaining block name/number and native format."
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "expect": "Approve the current full-engine import and inspect readback evidence."
+      },
+      {
+        "tool": "GetPlcBlockInfo",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "expect": "Inspect the imported block and consistency state."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "Approve real compilation and inspect compiler state/errors."
+      }
+    ]
   }
 ]

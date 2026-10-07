@@ -73,6 +73,20 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         assert reference['relationship'] in ('related-api-patterns', 'no-direct-official-example')
         assert set(usage['parameterSources']) == set(props), name
         assert usage['resultContract'] and usage['resultReading']
+        if name in ('ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable'):
+            note = example['note']
+            if str(release) in ('20', '21'):
+                assert not {'overwrite', 'dryRun', 'confirm', 'expectedProjectFile'} & set(props), (release, name)
+                assert 'current V20/V21 schema has no overwrite' in note, (release, name)
+            else:
+                assert args['overwrite'] is False, (release, name, 'explicit replacement refusal')
+                execution = example['execution']['arguments']
+                assert execution['overwrite'] is True and execution['expectedProjectFile'], (release, name)
+                assert set(execution) <= set(props), (release, name, 'execution schema')
+                for token in ('overwrite=false refuses replacement.', 'parameter=overwrite',
+                              'no Workbench request', 'normalized full path', 'C:/Examples/exports/Tags.xml',
+                              'C:\\Examples\\exports\\Tags.xml', 'An existing Openness XML file is required.'):
+                    assert token in note, (release, name, token)
         result_fields = usage['resultContract'].get('fields')
         if result_fields:
             for case in usage.get('interpretation', {}).get('resultCases', []):
@@ -185,6 +199,18 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
                 target = schemas[step['tool']]
                 values = step['arguments']
                 assert set(target.get('required', [])) <= set(values) <= set(target['properties']), (summary['id'], step)
+            if example['profileMatches'] and example['releaseMatches']:
+                if example['id'] == 'sequence/foundation-tag-table-round-trip':
+                    assert example['steps'][-1]['tool'] == 'ListPlcTags'
+                    assert 'tag added after export is gone' in example['steps'][-1]['expect']
+                elif example['id'] == 'sequence/foundation-block-round-trip':
+                    assert example['steps'][-1]['tool'] == 'CompilePlcSoftware'
+                    assert example['steps'][-1]['arguments']['dryRun'] is False
+                    assert 'remove or move an old Main.xml' in example['preconditions']
+                elif example['id'] == 'sequence/foundation-approval-precheck':
+                    assert all('no Workbench request' in step['expect'] for step in example['steps'][1:])
+                elif example['id'] == 'sequence/plc-xml-round-trip':
+                    assert all('overwrite' not in step['arguments'] for step in example['steps'])
             if example['id'] in ('udt-builder-json', 'db-builder-json') and str(release) in ('20', '21'):
                 data = json.loads(example['files'][0]['content'])['json']
                 tool, argument = ('BuildPlcUdt', 'udt') if example['id'] == 'udt-builder-json' else ('BuildPlcGlobalDb', 'globalDb')

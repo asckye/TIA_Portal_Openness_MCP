@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import runpy
 import sys
 import unittest
 from unittest.mock import patch
@@ -12,6 +13,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / 'src/Shared/ToolUsageData.json'
+PROFILES = ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
 
 
 def read(path):
@@ -137,6 +139,73 @@ def validate_foundation_examples(calls, sequences):
         if sequence['profile'] == 'plc-foundation':
             for index, step in enumerate(sequence['steps']):
                 check(step['tool'], step['arguments'], sequence['id'] + '/' + str(index))
+
+
+def validate_retest_examples(calls, sequences, metadata):
+    """Guard retest lessons without advertising Foundation parameters on full engines."""
+    imports = ('ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable')
+    for name in imports:
+        entry = calls['profiles']['plc-foundation'][name]
+        assert entry['arguments']['overwrite'] is False, (name, 'explicit no-replacement preview')
+        execution = entry['execution']['arguments']
+        assert execution['overwrite'] is True and execution['expectedProjectFile'], (name, 'explicit bound replacement')
+        text = entry['note']
+        for required in ('overwrite=false refuses replacement.', 'INVALID_ARGUMENT', 'parameter=overwrite',
+                         'rejected-before-operation', 'not-started', 'no Workbench request',
+                         'C:/Examples/exports/Tags.xml', 'C:\\Examples\\exports\\Tags.xml',
+                         'normalized full path', 'An existing Openness XML file is required.', 'parameter=importPath'):
+            assert required in text, (name, required)
+        assert 'Native imports do not overwrite an existing logical object.' not in text, name
+        assert entry['parameters']['importPath']['requiresBinding'] is True, name
+        full = calls['profiles']['full-engine'][name]
+        assert not {'overwrite', 'dryRun', 'confirm', 'expectedProjectFile'} & full['arguments'].keys(), name
+        assert 'current V20/V21 schema has no overwrite' in full['note'], name
+
+    indexed = {entry['id']: entry for entry in sequences}
+    for topic in ('foundation-approval-precheck', 'foundation-tag-table-round-trip', 'foundation-block-round-trip', 'plc-xml-round-trip'):
+        sequence = indexed['sequence/' + topic]
+        full = topic == 'plc-xml-round-trip'
+        keys = ['20', '21'] if full else ['14sp1', '15.1', '16', '17', '18', '19']
+        assert sequence['releaseKeys'] == keys, topic
+        assert sequence['profile'] == ('full-engine' if full else 'plc-foundation'), topic
+        assert 'native' in sequence['validation'] and 'NOT RUN' in sequence['validation'], topic
+        for key in keys:
+            tools = {tool['name']: tool['inputSchema'] for tool in read(ROOT / f'manifest/contracts/v4/baseline/{key}.json')['tools']}
+            for step in sequence['steps']:
+                schema = tools[step['tool']]
+                arguments = step['arguments']
+                assert set(schema.get('required', [])) <= arguments.keys() <= schema['properties'].keys(), (key, topic, step)
+                if not full and arguments.get('dryRun') is False:
+                    assert arguments.get('confirm') is True and arguments.get('expectedProjectFile'), (key, topic, step)
+
+    table = indexed['sequence/foundation-tag-table-round-trip']
+    tools = [step['tool'] for step in table['steps']]
+    assert tools.index('ExportPlcTagTable') < tools.index('CreatePlcTag') < tools.index('ImportPlcTagTable'), tools
+    assert tools[-1] == 'ListPlcTags' and 'tag added after export is gone' in table['steps'][-1]['expect'], table['id']
+    assert 'Edit this exported file' in next(step['expect'] for step in table['steps']
+                                           if step['tool'] == 'ExportPlcTagTable' and step['arguments']['dryRun'] is False), table['id']
+    block = indexed['sequence/foundation-block-round-trip']
+    tools = [step['tool'] for step in block['steps']]
+    assert tools.index('ExportPlcBlock') < tools.index('ImportPlcBlock') < tools.index('CompilePlcSoftware'), tools
+    assert tools[-1] == 'CompilePlcSoftware' and block['steps'][-1]['arguments']['dryRun'] is False, block['id']
+    assert 'remove or move an old Main.xml' in block['preconditions'], block['id']
+    assert 'Exports need no Workbench approval' in block['notes'], block['id']
+    for sequence in (table, block):
+        for step in sequence['steps']:
+            if step['tool'] in imports:
+                assert step['arguments']['overwrite'] is True, (sequence['id'], step)
+    refusal = indexed['sequence/foundation-approval-precheck']
+    assert {step['tool'] for step in refusal['steps']} >= {*imports, 'CreatePlcTag', 'CreatePlcTagTable', 'CloseProject'}
+    for step in refusal['steps'][1:]:
+        assert all(token in step['expect'] for token in ('no Workbench request', 'rejected-before-operation', 'not-started')), step
+    approval = ' '.join(metadata['resultReading']['ResponseMessage'])
+    for required in ('0.1-6.5 seconds', 'need no approval click', 'PRECONDITION_FAILED', 'parameter=softwarePath', 'parameter=name', 'parameter=overwrite'):
+        assert required in approval, required
+
+
+def profiles_resource():
+    # Reuse the owning generator without writing its unrelated plans/manifests.
+    return runpy.run_path(str(ROOT / 'scripts/generate/Generate-Phase6Plan.py'))['resource_text']()
 
 
 def source_metadata(sources):
@@ -292,6 +361,7 @@ def generate():
     validate_coverage(rosters, calls)
     sequences = read(base / 'sequences.json')
     validate_foundation_examples(calls, sequences)
+    validate_retest_examples(calls, sequences, meta)
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
@@ -299,6 +369,41 @@ def generate():
 
 
 class RosterTests(unittest.TestCase):
+    def test_retest_lessons(self):
+        validate_retest_examples(read(ROOT / 'reference/tool-examples/calls.json'),
+                                 read(ROOT / 'reference/tool-examples/sequences.json'),
+                                 read(ROOT / 'reference/tool-examples/metadata.json'))
+
+    def test_retest_lessons_cannot_disappear(self):
+        for mutation in ('overwrite', 'path', 'full-parameters', 'sequence', 'readback', 'compile', 'approval', 'identity', 'release'):
+            calls = read(ROOT / 'reference/tool-examples/calls.json')
+            sequences = read(ROOT / 'reference/tool-examples/sequences.json')
+            metadata = read(ROOT / 'reference/tool-examples/metadata.json')
+            table = next(s for s in sequences if s['id'] == 'sequence/foundation-tag-table-round-trip')
+            block = next(s for s in sequences if s['id'] == 'sequence/foundation-block-round-trip')
+            entry = calls['profiles']['plc-foundation']['ImportPlcTagTable']
+            if mutation == 'overwrite': entry['execution']['arguments'].pop('overwrite')
+            elif mutation == 'path': entry['note'] = entry['note'].replace('normalized full path', '')
+            elif mutation == 'full-parameters': calls['profiles']['full-engine']['ImportPlcBlock']['arguments']['overwrite'] = True
+            elif mutation == 'sequence': sequences.remove(table)
+            elif mutation == 'readback': table['steps'].pop()
+            elif mutation == 'compile': block['steps'].pop()
+            elif mutation == 'approval': metadata['resultReading']['ResponseMessage'].pop()
+            elif mutation == 'identity': table['steps'][-2]['arguments'].pop('expectedProjectFile')
+            elif mutation == 'release': table['releaseKeys'].remove('19')
+            with self.subTest(mutation=mutation), self.assertRaises((AssertionError, KeyError)):
+                validate_retest_examples(calls, sequences, metadata)
+
+    def test_profiles_resource_uses_current_call_examples(self):
+        resource = ET.fromstring(profiles_resource())
+        catalog = json.loads(resource.find(".//data[@name='Catalog']/value").text)
+        calls = read(ROOT / 'reference/tool-examples/calls.json')
+        for key, release in catalog['releases'].items():
+            profile = 'full-engine' if key in ('20', '21') else 'plc-foundation'
+            for tool in release:
+                if tool['currentName'] in ('ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable'):
+                    self.assertEqual(tool['arguments'], calls['profiles'][profile][tool['currentName']]['arguments'])
+
     def test_foundation_vm_lessons(self):
         validate_foundation_examples(read(ROOT / 'reference/tool-examples/calls.json'),
                                      read(ROOT / 'reference/tool-examples/sequences.json'))
@@ -392,8 +497,11 @@ if __name__ == '__main__':
         sys.exit(0 if result.wasSuccessful() else 1)
     data = generate()
     encoded = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+    profiles = profiles_resource()
     if args.check:
         assert OUTPUT.read_text('utf-8') == encoded, 'ToolUsageData.json is stale; run Generate-ToolUsage.py'
+        assert PROFILES.read_text('utf-8') == profiles, 'ToolProfiles.resx is stale; run Generate-ToolUsage.py'
     else:
-        OUTPUT.write_text(encoded, encoding='utf-8')
+        OUTPUT.write_text(encoded, encoding='utf-8', newline='\n')
+        PROFILES.write_text(profiles, encoding='utf-8', newline='\n')
     print(f"Official catalog: {len(data['documents'])} complete documents, {sum(len(d['examples']) for d in data['documents'])} indexed example blocks/methods, {len(data['tools'])} tool mappings")

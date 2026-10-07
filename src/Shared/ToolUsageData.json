@@ -11381,7 +11381,7 @@
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Design refusal exercised for a project opened by the user in the TIA UI; successful owned-project close NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Design refusal exercised for a project opened by the user in the TIA UI; successful owned-project close NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. P6-60 V14 SP1 retest additionally verified the corresponding invalid real-call precheck with no Workbench request; see sequence/foundation-approval-precheck.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -11755,7 +11755,7 @@
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview/real creation and list readback exercised; approval success and denial also observed. Names must be chosen fresh for this PLC. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview/real creation and list readback exercised; approval success and denial also observed. Names must be chosen fresh for this PLC. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. P6-60 V14 SP1 retest additionally verified the corresponding invalid real-call precheck with no Workbench request; see sequence/foundation-approval-precheck.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -11818,7 +11818,7 @@
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview/real creation and list readback exercised; approval success and denial also observed. Names must be chosen fresh for this PLC. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview/real creation and list readback exercised; approval success and denial also observed. Names must be chosen fresh for this PLC. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. P6-60 V14 SP1 retest additionally verified the corresponding invalid real-call precheck with no Workbench request; see sequence/foundation-approval-precheck.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -12136,7 +12136,7 @@
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge these arguments after reviewing the same export preview and new output destination; bind expectedProjectFile. Export writes a file and does not queue Workbench approval."
           },
           "resultContract": {
             "type": "Envelope",
@@ -12150,12 +12150,13 @@
             "P6-35 behavior family P6-EXPORT is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
-            "blockPath:\"Main\" is the VM-tested block example. Run CompilePlcSoftware first if the block is inconsistent (worker reason: Compile the inconsistent block before export). Read data.outputFile after successful execution; Main.xml is written in exportPath and never overwritten."
+            "blockPath:\"Main\" is the VM-tested block example. Run CompilePlcSoftware first if the block is inconsistent (worker reason: Compile the inconsistent block before export). Read data.outputFile after successful execution; Main.xml is written in exportPath and never overwritten.",
+            "Export is a file operation and does not queue Workbench approval. Choose an existing export directory. Main.xml is never overwritten; remove or move an old Main.xml before exporting again. See sequence/foundation-block-round-trip."
           ],
           "releaseNotes": {
             "14sp1": "SCL XML contains only interfaces in this release; it is not a full SCL program backup or restore."
           },
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. blockPath:\"Main\" is the VM-tested block example. Run CompilePlcSoftware first if the block is inconsistent (worker reason: Compile the inconsistent block before export). Read data.outputFile after successful execution; Main.xml is written in exportPath and never overwritten."
+          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. blockPath:\"Main\" is the VM-tested block example. Run CompilePlcSoftware first if the block is inconsistent (worker reason: Compile the inconsistent block before export). Read data.outputFile after successful execution; Main.xml is written in exportPath and never overwritten. Export is a file operation and does not queue Workbench approval. Choose an existing export directory. Main.xml is never overwritten; remove or move an old Main.xml before exporting again. See sequence/foundation-block-round-trip."
         },
         "ExportPlcBlocks": {
           "arguments": {
@@ -12280,7 +12281,7 @@
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge these arguments after reviewing the same export preview and new output destination; bind expectedProjectFile. Export writes a file and does not queue Workbench approval."
           },
           "resultContract": {
             "type": "Envelope",
@@ -12294,9 +12295,10 @@
             "P6-35 behavior family P6-EXPORT is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
-            "Read data.outputFile; keep tag-table XML separate from a directory used as RenderPlcProgramAtlas input."
+            "Read data.outputFile; keep tag-table XML separate from a directory used as RenderPlcProgramAtlas input.",
+            "Export is a file operation and does not queue Workbench approval. Choose a new .xml file in an existing directory. Edit the exported file before explicit overwrite:true import, then verify the table with ListPlcTags. See sequence/foundation-tag-table-round-trip."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Read data.outputFile; keep tag-table XML separate from a directory used as RenderPlcProgramAtlas input."
+          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Read data.outputFile; keep tag-table XML separate from a directory used as RenderPlcProgramAtlas input. Export is a file operation and does not queue Workbench approval. Choose a new .xml file in an existing directory. Edit the exported file before explicit overwrite:true import, then verify the table with ListPlcTags. See sequence/foundation-tag-table-round-trip."
         },
         "ExportPlcWatchTable": {
           "arguments": {
@@ -13002,7 +13004,8 @@
             "groupPath": "",
             "importPath": "<data.outputFile from completed ExportPlcBlock>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "overwrite": false
           },
           "parameters": {
             "softwarePath": {
@@ -13017,7 +13020,7 @@
               "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
             },
             "importPath": {
-              "meaning": "Existing native block XML returned as data.outputFile by ExportPlcBlock for this same target release; root groupPath is empty.",
+              "meaning": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\"",
               "requiresBinding": true,
               "tools": [
                 "ExportPlcBlock"
@@ -13025,8 +13028,8 @@
               "exampleValue": "<data.outputFile from completed ExportPlcBlock>"
             },
             "overwrite": {
-              "exampleValue": false,
-              "meaning": "Supply overwrite according to this tool description; values below refer to the example project."
+              "meaning": "false refuses replacement of an existing logical object before native import; true explicitly replaces it after reviewing an overwrite:true preview and Workbench approval.",
+              "exampleValue": false
             },
             "expectedProjectFile": {
               "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -13039,14 +13042,15 @@
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview exercised on native exported Main.xml; successful real import into a new logical object NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: Main overwrite:true import, GetPlcBlockInfo readback and real CompilePlcSoftware succeeded. The overwrite:false guard is shared with the tested tag-table import; block refusal was not separately VM-exercised. Earlier V15.1/V16 evidence covers previews only; this replacement retest was not run on V15.1-V19. These examples do not change the current behavior policy or certify safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
-              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "overwrite": true
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "First change the preview arguments to overwrite:true and review that same file/target. Merge these execution arguments only to deliberately replace the object; bind the exact expectedProjectFile and wait for Workbench approval. overwrite:false on an existing object is a precheck refusal and needs no approval click."
           },
           "resultContract": {
             "type": "Envelope",
@@ -13060,12 +13064,13 @@
             "P6-35 behavior family P6-IMPORT is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
-            "Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+            "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result.",
+            "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\""
           ],
           "releaseNotes": {
             "14sp1": "SCL XML contains only interfaces in this release; it is not a full SCL program backup or restore."
           },
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" After replacement read GetPlcBlockInfo and run real approved CompilePlcSoftware; preview does not compile. See sequence/foundation-block-round-trip."
         },
         "ImportPlcBlocksFromDirectory": {
           "arguments": {
@@ -13275,7 +13280,8 @@
             "folderPath": "",
             "importPath": "<data.outputFile from completed ExportPlcTagTable>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "overwrite": false
           },
           "parameters": {
             "softwarePath": {
@@ -13290,7 +13296,7 @@
               "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
             },
             "importPath": {
-              "meaning": "Native tag-table XML from the completed ExportPlcTagTable for this target release; choose a target without a same-named table for real import.",
+              "meaning": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\"",
               "requiresBinding": true,
               "tools": [
                 "ExportPlcTagTable"
@@ -13298,8 +13304,8 @@
               "exampleValue": "<data.outputFile from completed ExportPlcTagTable>"
             },
             "overwrite": {
-              "exampleValue": false,
-              "meaning": "Supply overwrite according to this tool description; values below refer to the example project."
+              "meaning": "false refuses replacement of an existing logical object before native import; true explicitly replaces it after reviewing an overwrite:true preview and Workbench approval.",
+              "exampleValue": false
             },
             "expectedProjectFile": {
               "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -13312,14 +13318,15 @@
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview exercised on the native tag-table export; successful real import NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: overwrite:false existing-table precheck refusal and overwrite:true replacement using forward slashes succeeded; ListPlcTags showed the tag added after export was gone. Back-slash overwrite:true import also succeeded in the earlier same-day reviewer test. Earlier V15.1/V16 evidence covers previews only; this replacement retest was not run on V15.1-V19. These examples do not change the current behavior policy or certify safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
-              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "overwrite": true
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "First change the preview arguments to overwrite:true and review that same file/target. Merge these execution arguments only to deliberately replace the object; bind the exact expectedProjectFile and wait for Workbench approval. overwrite:false on an existing object is a precheck refusal and needs no approval click."
           },
           "resultContract": {
             "type": "Envelope",
@@ -13333,9 +13340,10 @@
             "P6-35 behavior family P6-IMPORT is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
-            "Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+            "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result.",
+            "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\""
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" On success inspect data.affectedNames, then ListPlcTags {plc, table}; a tag added after export must be absent when it is absent from the imported XML. See sequence/foundation-tag-table-round-trip."
         },
         "ImportPlcType": {
           "arguments": {
@@ -13343,7 +13351,8 @@
             "groupPath": "",
             "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "overwrite": false
           },
           "parameters": {
             "softwarePath": {
@@ -13358,11 +13367,12 @@
               "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
             },
             "importPath": {
-              "meaning": "Supply importPath according to this tool description; values below refer to the example project."
+              "meaning": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\"",
+              "requiresBinding": true
             },
             "overwrite": {
-              "exampleValue": false,
-              "meaning": "Supply overwrite according to this tool description; values below refer to the example project."
+              "meaning": "false refuses replacement of an existing logical object before native import; true explicitly replaces it after reviewing an overwrite:true preview and Workbench approval.",
+              "exampleValue": false
             },
             "expectedProjectFile": {
               "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
@@ -13375,14 +13385,15 @@
             }
           },
           "operations": {},
-          "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+          "validation": "Contract/source checked shared single-file guard and path normalization for Foundation 14sp1-19. ImportPlcType native execution was not exercised in this reviewer retest. These examples do not change the current behavior policy or certify safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
-              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "overwrite": true
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "First change the preview arguments to overwrite:true and review that same file/target. Merge these execution arguments only to deliberately replace the object; bind the exact expectedProjectFile and wait for Workbench approval. overwrite:false on an existing object is a precheck refusal and needs no approval click."
           },
           "resultContract": {
             "type": "Envelope",
@@ -13396,9 +13407,10 @@
             "P6-35 behavior family P6-IMPORT is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
-            "Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+            "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result.",
+            "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\""
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. Native imports do not overwrite an existing logical object. Preview and inspect the exact target/release; a successful preview does not prove a real import will succeed."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\""
         },
         "ListPortalProcessProjects": {
           "arguments": {},
@@ -16192,7 +16204,8 @@
           "inline": true,
           "resultReading": [
             "P6-35 behavior family P6-EXPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
-          ]
+          ],
+          "note": " Use a new output in an existing directory and read the returned export file path before import. See sequence/plc-xml-round-trip; full-engine arguments and result fields differ from Foundation."
         },
         "ExportPlcBlocks": {
           "arguments": {
@@ -16242,7 +16255,8 @@
           "inline": true,
           "resultReading": [
             "P6-35 behavior family P6-EXPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
-          ]
+          ],
+          "note": " Use a new output in an existing directory and read the returned export file path before import. See sequence/plc-xml-round-trip; full-engine arguments and result fields differ from Foundation."
         },
         "ExportPlcType": {
           "arguments": {
@@ -17305,7 +17319,7 @@
           "resultReading": [
             "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Use an existing XML file on the TIA machine. The current V20/V21 schema has no overwrite, dryRun, confirm or expectedProjectFile import arguments; do not copy Foundation calls or its overwrite=false precheck result. V14 SP1 slash normalization and explicit replacement evidence do not establish full-engine native acceptance. See sequence/plc-xml-round-trip."
         },
         "ImportPlcBlockVerified": {
           "arguments": {
@@ -17417,7 +17431,7 @@
           "resultReading": [
             "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Use an existing XML file on the TIA machine. The current V20/V21 schema has no overwrite, dryRun, confirm or expectedProjectFile import arguments; do not copy Foundation calls or its overwrite=false precheck result. V14 SP1 slash normalization and explicit replacement evidence do not establish full-engine native acceptance. See sequence/plc-xml-round-trip."
         },
         "ImportPlcTagTablesFromDirectory": {
           "arguments": {
@@ -17454,7 +17468,7 @@
           "resultReading": [
             "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Use an existing XML file on the TIA machine. The current V20/V21 schema has no overwrite, dryRun, confirm or expectedProjectFile import arguments; do not copy Foundation calls or its overwrite=false precheck result. V14 SP1 slash normalization and explicit replacement evidence do not establish full-engine native acceptance. See sequence/plc-xml-round-trip."
         },
         "ImportPlcWatchTableOffline": {
           "arguments": {
@@ -29171,6 +29185,435 @@
           "expect": "Inspect data.files/errors/symbols/warnings. Select tag-table/global DB exports; OBs return unsupported-document-kind. Empty tables/comments/constants are accepted; system constants are skipped with a warning."
         }
       ]
+    },
+    {
+      "id": "sequence/foundation-approval-precheck",
+      "topic": "foundation-approval-precheck",
+      "purpose": "Inspect independent real-write refusals without a Workbench approval request.",
+      "preconditions": "foundation-connect-project completed; approval is enabled and the project was opened in the TIA UI (borrowed). Bind PLC_1 to the unique PLC; select an existing table, a PLC-wide existing symbol and existing same-release XML exports. PLC_X must be absent. Block/type refusal examples additionally require those logical objects to exist; they were not separately VM-exercised.",
+      "notes": "V14 SP1 P6-60 package retest (2026-10-06 23:30), approval enabled: wrong PLC (parameter=softwarePath, \"PLC software not found at 'PLC_X'\"), duplicate PLC symbol (parameter=name, \"already exists in tag table '<t>'\"), existing table (parameter=name, \"Tag table already exists.\"), single-file import onto an existing object with overwrite:false (parameter=overwrite), and CloseProject on a borrowed UI-opened project (PRECONDITION_FAILED) returned in 0.1-6.5 seconds with rejected-before-operation/not-started and no Workbench request. These refusals need no approval click; inspect error.details.parameter. This retest covers Foundation 14sp1; the shared precheck rule applies where the selected schema has a preview. Other releases were not retested for these cases. Each step is an independent negative example: continue only after its expected precheck refusal; stop on an unexpected success or unknown outcome. These examples do not change the current behavior policy or certify safe-v4.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: the wrong PLC, duplicate symbol, existing table, overwrite:false table import and borrowed close refusals were all observed with no approval request. Block/type and missing-file cases are shared-rule contract examples, native retest NOT RUN. V15.1-V19 retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Verify and retain the exact borrowed project file."
+        },
+        {
+          "tool": "CreatePlcTagTable",
+          "arguments": {
+            "plc": "PLC_X",
+            "group": "",
+            "name": "<fresh table name>",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "INVALID_ARGUMENT, parameter=softwarePath, \"PLC software not found at 'PLC_X'\"; rejected-before-operation/not-started; no Workbench request."
+        },
+        {
+          "tool": "CreatePlcTag",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing target table>",
+            "name": "<symbol already present in another table of this PLC>",
+            "dataType": "Bool",
+            "address": "%M100.0",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "INVALID_ARGUMENT, parameter=name, \"already exists in tag table '<t>'\"; rejected-before-operation/not-started; no Workbench request."
+        },
+        {
+          "tool": "CreatePlcTagTable",
+          "arguments": {
+            "plc": "PLC_1",
+            "group": "",
+            "name": "<existing table name>",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "INVALID_ARGUMENT, parameter=name, \"Tag table already exists.\"; rejected-before-operation/not-started; no Workbench request."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:/Examples/exports/Tags.xml",
+            "overwrite": false,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+        },
+        {
+          "tool": "ImportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "overwrite": false,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+        },
+        {
+          "tool": "ImportPlcType",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
+            "overwrite": false,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:/Examples/exports/Missing.xml",
+            "overwrite": true,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Choose a file that does not exist on the TIA machine: INVALID_ARGUMENT, parameter=importPath, \"An existing Openness XML file is required.\"; rejected-before-operation/not-started; no Workbench request. This additional contract example was not part of the five VM refusals."
+        },
+        {
+          "tool": "CloseProject",
+          "arguments": {
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "PRECONDITION_FAILED; borrowed project remains open; rejected-before-operation/not-started; no Workbench request."
+        }
+      ]
+    },
+    {
+      "id": "sequence/foundation-tag-table-round-trip",
+      "topic": "foundation-tag-table-round-trip",
+      "purpose": "Export, edit, explicitly replace and read back one PLC tag table.",
+      "preconditions": "foundation-connect-project completed; bind PLC_1, the existing table and exact projectFile. C:\\Examples\\exports already exists and Tags.xml is new. Use native XML exported from this same release. Choose a fresh PLC-wide probe symbol and review its address.",
+      "notes": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" Exports are file operations with no Workbench request; CreatePlcTag and import require approval. Edit the local XML between export and import, retaining table name and release; keep an intended tag and omit the post-export probe. Import replaces the table, so inspect the complete intended content. Stop on failed/unknown outcomes. These examples do not change the current behavior policy or certify safe-v4.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: overwrite:true forward-slash import and readback showing only the exported tag succeeded; earlier same-day back-slash replacement also succeeded. File-edit instructions are reusable guidance; this retest imported the earlier native export, not an independently validated XML edit. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Verify the exact bound projectFile."
+        },
+        {
+          "tool": "ListPlcTags",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing caller-selected table>"
+          },
+          "expect": "Retain the intended table content before export."
+        },
+        {
+          "tool": "ExportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tagTableName": "<existing caller-selected table>",
+            "exportPath": "C:\\Examples\\exports\\Tags.xml",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review a NEW .xml file in an existing directory; preview does not export."
+        },
+        {
+          "tool": "ExportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tagTableName": "<existing caller-selected table>",
+            "exportPath": "C:\\Examples\\exports\\Tags.xml",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Retain data.outputFile; no Workbench request. Edit this exported file on the TIA machine, preserving native format/release/table name and the intended tag content."
+        },
+        {
+          "tool": "CreatePlcTag",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing caller-selected table>",
+            "name": "<fresh PLC-wide post-export probe tag>",
+            "dataType": "Bool",
+            "address": "%M100.0",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review the probe symbol/address; keep it absent from the exported XML."
+        },
+        {
+          "tool": "CreatePlcTag",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing caller-selected table>",
+            "name": "<fresh PLC-wide post-export probe tag>",
+            "dataType": "Bool",
+            "address": "%M100.0",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Approve once; confirm the post-export probe was created."
+        },
+        {
+          "tool": "ListPlcTags",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing caller-selected table>"
+          },
+          "expect": "Confirm the probe is present before replacement."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:\\Examples\\exports\\Tags.xml",
+            "overwrite": true,
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review overwrite:true replacement of that same table/file. Back-slash and forward-slash spellings below refer to the same existing file; no approval for preview."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:/Examples/exports/Tags.xml",
+            "overwrite": true,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Wait for Workbench approval; expect succeeded/completed and data.affectedNames containing the table."
+        },
+        {
+          "tool": "ListPlcTags",
+          "arguments": {
+            "plc": "PLC_1",
+            "table": "<existing caller-selected table>"
+          },
+          "expect": "Verify imported content and that the tag added after export is gone; retained tags must match the edited XML."
+        }
+      ]
+    },
+    {
+      "id": "sequence/foundation-block-round-trip",
+      "topic": "foundation-block-round-trip",
+      "purpose": "Export, edit, explicitly replace Main and perform a real compile.",
+      "preconditions": "foundation-connect-project completed; bind PLC_1 and exact projectFile. Main is consistent (compile first if needed). C:\\Examples\\exports exists; remove or move an old Main.xml before export because exports never overwrite. All project devices required by compile are offline.",
+      "notes": "The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" Edit the native Main.xml after export and before import, retaining release, block name/number and intended logic. Exports need no Workbench approval; import and real CompilePlcSoftware do. Preview does not compile. Stop on failed/unknown outcomes and inspect compiler state/error counts. These examples do not change the current behavior policy or certify safe-v4.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: Main overwrite:true import, GetPlcBlockInfo readback and real compile succeeded. File-edit instructions are reusable guidance; the retest imported the earlier native export. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Verify the exact bound projectFile."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main",
+            "exportPath": "C:\\Examples\\exports",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review the existing directory and new Main.xml; remove or move an old Main.xml first."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main",
+            "exportPath": "C:\\Examples\\exports",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Retain data.outputFile=Main.xml in the existing directory; never overwrites and no Workbench request. Edit this file on the TIA machine before import, preserving native format/release and block identity."
+        },
+        {
+          "tool": "ImportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "overwrite": true,
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review explicit overwrite:true for the existing Main."
+        },
+        {
+          "tool": "ImportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\exports\\Main.xml",
+            "overwrite": true,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Wait for approval; expect succeeded/completed and data.affectedNames containing Main."
+        },
+        {
+          "tool": "GetPlcBlockInfo",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main"
+          },
+          "expect": "Read the imported block and consistency state; import alone does not compile."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review offline prerequisites; preview does not compile."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Wait for approval; inspect state=Success, errorCount=0 and nested diagnostics after real compilation."
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-xml-round-trip",
+      "topic": "plc-xml-round-trip",
+      "purpose": "Export, edit, import and verify tag-table/block XML using the current full-engine schema.",
+      "preconditions": "The intended V20/V21 project is bound; use exact software/block/table paths from its tree. Choose new XML outputs in an existing directory on the TIA machine. Compile an inconsistent block before export and satisfy compile offline prerequisites.",
+      "notes": "The current full-engine import schema has no overwrite, dryRun, confirm or expectedProjectFile parameters; Foundation overwrite selection, normalized-path and precheck evidence must not be inferred here. Review the current native import behavior before replacing any existing object. Read the returned export path and edit that same native XML before import, preserving release and object identity. Imports and compile require Workbench approval. This flow has contract checks only; V20/V21 native round-trip acceptance NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "V20/V21 current public schema/source checked; native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Verify the intended bound project."
+        },
+        {
+          "tool": "ExportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tagTableName": "<existing caller-selected table>",
+            "exportPath": "C:\\Examples\\exports\\Tags.xml"
+          },
+          "expect": "Read the returned export file path; edit the file on the TIA machine before import, retaining the table name and native format."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:\\Examples\\exports\\Tags.xml"
+          },
+          "expect": "Approve the current full-engine import; inspect its V4 outcome and domain evidence."
+        },
+        {
+          "tool": "ExportPlcTagTable",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tagTableName": "<existing caller-selected table>",
+            "exportPath": "C:\\Examples\\exports\\Tags-verified.xml"
+          },
+          "expect": "Re-export to a second new file and compare the actual table content with the imported XML; the full engine has no ListPlcTags tool."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main",
+            "exportPath": "C:\\Examples\\exports"
+          },
+          "expect": "Use the returned Main.xml path; move an old output first. Edit that file while retaining block name/number and native format."
+        },
+        {
+          "tool": "ImportPlcBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Examples\\exports\\Main.xml"
+          },
+          "expect": "Approve the current full-engine import and inspect readback evidence."
+        },
+        {
+          "tool": "GetPlcBlockInfo",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main"
+          },
+          "expect": "Inspect the imported block and consistency state."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "Approve real compilation and inspect compiler state/errors."
+        }
+      ]
     }
   ],
   "parameterSources": {
@@ -29293,7 +29736,8 @@
       "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
       "Use error.code/details for failure information, data for tool-specific results, and the matching resultContract for outcome meaning. A transport response alone does not prove a project operation succeeded.",
       "On failure read error.details.parameter and the retained nativeMessage / workerMessage (including error.details.evidence) before changing arguments. Do not infer the worker reason from the generic error.message.",
-      "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+      "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=NATIVE_WARNING with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+      "V14 SP1 P6-60 package retest (2026-10-06 23:30), approval enabled: wrong PLC (parameter=softwarePath, \"PLC software not found at 'PLC_X'\"), duplicate PLC symbol (parameter=name, \"already exists in tag table '<t>'\"), existing table (parameter=name, \"Tag table already exists.\"), single-file import onto an existing object with overwrite:false (parameter=overwrite), and CloseProject on a borrowed UI-opened project (PRECONDITION_FAILED) returned in 0.1-6.5 seconds with rejected-before-operation/not-started and no Workbench request. These refusals need no approval click; inspect error.details.parameter. This retest covers Foundation 14sp1; the shared precheck rule applies where the selected schema has a preview. Other releases were not retested for these cases."
     ],
     "ResponseStringList": [
       "Read the schemaVersion=4 envelope first: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then read operation-specific fields in data and warnings in meta.warnings. If meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target and reset the session when required; never replay a write automatically. Continue only from meta.paging.nextOffset or meta.paging.nextCursor within the same release/session/binding/query snapshot. meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was fully observed. Batch data.items preserve each result envelope and order.",
