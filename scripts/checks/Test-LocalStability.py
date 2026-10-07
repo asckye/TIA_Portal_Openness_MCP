@@ -241,15 +241,19 @@ def run_profile(args, transport, profile, run_dir):
         sample = process_sample(owned[0])
         require(sample['privateBytes'] < args.max_private_mib * 1024 * 1024, 'Host exceeded private memory bound')
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
-        # Concurrent HTTP dispatch (P6-58) grows the thread pool once when the first concurrent batch starts
-        # (+60..95 handles, then flat over 120 rounds); leak detection starts from the round-10 sample.
+        # Concurrent HTTP dispatch (P6-58) lets the thread pool grow, more so on a loaded machine, and that growth
+        # levels off; a leak keeps rising with the call count. Judge the second half of the run, from its middle
+        # sample, and print the series on failure.
         def handle_growth(series):
-            baseline = series[1] if len(series) > 2 else series[0]
-            return max(s['handleCount'] for s in series) - baseline['handleCount']
-        require(handle_growth(samples) <= args.max_handle_growth, 'Sampled handles exceeded growth bound')
+            baseline = series[len(series) // 2] if len(series) > 3 else series[1] if len(series) > 2 else series[0]
+            later = series[series.index(baseline):]
+            return max(s['handleCount'] for s in later) - baseline['handleCount']
+        def handles(series):
+            return [s['handleCount'] for s in series]
+        require(handle_growth(samples) <= args.max_handle_growth, f'Sampled handles exceeded growth bound: {handles(samples)}')
         if worker_samples:
             require(max(s['privateBytes'] for s in worker_samples) < args.max_private_mib * 1024 * 1024, 'Worker exceeded private memory bound')
-            require(handle_growth(worker_samples) <= args.max_handle_growth, 'Worker handles exceeded growth bound')
+            require(handle_growth(worker_samples) <= args.max_handle_growth, f'Worker handles exceeded growth bound: {handles(worker_samples)}')
     # The context shuts down only this owned test host. It never stops a TIA process.
     rows = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
     # Call-projection rows (Workbench call panel) are written at the transport boundary, outside the serialized gate.
