@@ -38,11 +38,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
         static partial void ApprovalSessionKey(ref object? key);
         private static object? CurrentApprovalSession()
-        { object? key = null; ApprovalSessionKey(ref key); return ApprovalSessionOverride.Value?.Invoke() ?? key; }
+        {
+            if (ApprovalSessionOverride.Value is { } test) return test();
+            object? key = null; ApprovalSessionKey(ref key); return key;
+        }
         internal static CallToolResult? SessionPrecheckRefusal(string name)
         {
+            if (!ToolTaxonomy.UsesOpennessLane(name)) return null;
             var key = CurrentApprovalSession();
-            return ToolTaxonomy.UsesOpennessLane(name) && key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown
+            return key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown
                 ? V4Reject(name, new Error(ApprovalPrecheck.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"))) : null;
         }
         internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write)

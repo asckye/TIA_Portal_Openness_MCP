@@ -313,6 +313,10 @@ internal static partial class Program
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", data);
             foreach (var scenario in new[] { "read-exception", "write-exception", "legacy-result", "cancel-before-call" })
                 await Test("direct SDK dispatch guard returns V4: " + scenario, async () => {
+                    // Each scenario is its own session: write-exception leaves its session reset-required (P6-60).
+                    var session = new object();
+                    Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetProperty("ApprovalSessionKeyForTests", All)!
+                        .SetValue(null, (Func<object?>)(() => session));
                     var fixture = new SdkGuardFixture(scenario == "write-exception", scenario == "legacy-result");
                     var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.SerializedCallTool", true)!;
                     var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null, new object[] { fixture }, null)!;
@@ -387,6 +391,10 @@ internal static partial class Program
                 try
                 {
                     Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", data);
+                    // A configured isolation parent keys sessions by worker generation, never by Siemens types (P6-60).
+                    var session = new object();
+                    Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetProperty("ApprovalSessionKeyForTests", All)!
+                        .SetValue(null, (Func<object?>)(() => session));
                     using var fixture = new WorkerFixture(mode);
                     var wrapper = Server.GetType("TiaMcpServer.ModelContextProtocol.AuditCallTool", true)!;
                     var tool = (ModelContextProtocol.Server.McpServerTool)Activator.CreateInstance(wrapper, All, null,
